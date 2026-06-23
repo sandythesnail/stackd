@@ -18,7 +18,7 @@ document.getElementById('sso-btn').addEventListener('click', () => {
   }, 80);
 });
 
-// Email form — demo redirect
+// Email form - demo redirect
 document.getElementById('login-form').addEventListener('submit', e => {
   e.preventDefault();
   const email = document.getElementById('email').value;

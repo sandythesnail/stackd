@@ -1,24 +1,25 @@
 /* ── Shared base: variables, reset, common components ── */
 :root {
-  --green:       #3DC87E;
-  --green-light: #B8F0D4;
-  --green-pale:  #F0FFF8;
-  --green-dark:  #1A7A4A;
-  --pink:        #FF7BAC;
-  --pink-light:  #FFD6E7;
-  --pink-pale:   #FFF5F9;
-  --pink-dark:   #C84E7A;
-  --bg:          #F4FEF9;
-  --white:       #FFFFFF;
-  --text:        #1A2E24;
-  --text-mid:    #4A7060;
-  --text-soft:   #8AAE9A;
-  --border:      #D8EEE4;
-  --shadow-sm:   0 2px 10px rgba(0,0,0,0.07);
-  --shadow-md:   0 6px 24px rgba(0,0,0,0.10);
-  --radius:      16px;
-  --radius-sm:   10px;
-  --font:        'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --green: #7EC9A4;
+  --green-light: #C6E8D6;
+  --green-pale: #EDF7F2;
+  --green-dark: #3B8A63;
+  --pink: #E8879E;
+  --pink-light: #F7D4DE;
+  --pink-pale: #FEF3F6;
+  --pink-dark: #C4596F;
+  --bg: #FDFAF5;
+  --white: #FFFFFF;
+  --text: #263830;
+  --text-mid: #557565;
+  --text-soft: #8EAC9C;
+  --border: #DBE8DF;
+  --shadow-sm: 0 2px 12px rgba(38,56,48,0.05);
+  --shadow-md: 0 8px 30px rgba(38,56,48,0.08);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --font-display: 'Space Grotesk', -apple-system, sans-serif;
+  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -29,9 +30,10 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 
 /* ── Shared components ── */
 .logo {
-  font-size: 1.75rem;
-  font-weight: 900;
-  letter-spacing: -1.5px;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
   background: linear-gradient(135deg, var(--green), var(--pink));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -40,7 +42,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 }
 
 .grad {
-  background: linear-gradient(135deg, var(--green-dark), var(--green), var(--pink));
+  font-family: var(--font-display);
+  background: linear-gradient(120deg, var(--green), var(--pink));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -48,79 +51,79 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 
 .btn-primary-lg {
   display: inline-block;
-  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  background: var(--green-dark);
   color: #fff;
-  font-weight: 700;
-  font-size: 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
   padding: 0.85rem 2rem;
-  border-radius: 999px;
-  transition: opacity 0.15s, transform 0.12s;
+  border-radius: var(--radius);
+  transition: background 0.25s, transform 0.2s;
   cursor: pointer;
   font-family: inherit;
   border: none;
 }
-.btn-primary-lg:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-primary-lg:hover { background: #327A58; transform: translateY(-1px); }
 
 .btn-ghost-lg {
   display: inline-block;
   color: var(--text-mid);
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
   padding: 0.85rem 1.5rem;
-  border-radius: 999px;
-  border: 2px solid var(--border);
-  transition: border-color 0.15s, color 0.15s;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  transition: border-color 0.25s, color 0.25s;
 }
-.btn-ghost-lg:hover { border-color: var(--green-light); color: var(--green-dark); }
+.btn-ghost-lg:hover { border-color: var(--green); color: var(--green-dark); }
 
 .btn-sm {
   display: inline-block;
-  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  background: var(--green-dark);
   color: #fff;
-  font-weight: 700;
-  font-size: 0.85rem;
+  font-weight: 600;
+  font-size: 0.82rem;
   padding: 0.5rem 1.1rem;
-  border-radius: 999px;
-  transition: opacity 0.15s;
+  border-radius: var(--radius-sm);
+  transition: background 0.25s;
 }
-.btn-sm:hover { opacity: 0.88; }
+.btn-sm:hover { background: #327A58; }
 
 .btn-outline-sm {
   display: inline-block;
   color: var(--text-mid);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   padding: 0.5rem 1.1rem;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1.5px solid var(--border);
-  transition: border-color 0.15s;
+  transition: border-color 0.25s;
 }
-.btn-outline-sm:hover { border-color: var(--green-light); }
+.btn-outline-sm:hover { border-color: var(--green); }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  background: var(--green-dark);
   color: #fff;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.95rem;
   padding: 0.75rem 1.75rem;
-  border-radius: 999px;
-  transition: opacity 0.15s, transform 0.12s;
+  border-radius: var(--radius);
+  transition: background 0.25s, transform 0.2s;
   border: none;
   cursor: pointer;
   font-family: inherit;
 }
-.btn-primary:hover { opacity: 0.88; transform: scale(1.02); }
+.btn-primary:hover { background: #327A58; transform: translateY(-1px); }
 
 .btn-secondary {
   background: var(--white);
   color: var(--text-mid);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.95rem;
   padding: 0.75rem 1.75rem;
-  border-radius: 999px;
-  border: 2px solid var(--border);
-  transition: border-color 0.15s;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  transition: border-color 0.25s;
   cursor: pointer;
   font-family: inherit;
 }
-.btn-secondary:hover { border-color: var(--green-light); }
+.btn-secondary:hover { border-color: var(--green); }

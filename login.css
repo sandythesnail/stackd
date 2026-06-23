@@ -5,19 +5,19 @@ body { background: var(--bg); min-height: 100vh; }
 
 /* Left panel */
 .login-left {
-  background: linear-gradient(160deg, #1A7A4A 0%, #0D4A28 100%);
+  background: var(--green-dark);
   padding: 2.5rem; display: flex; flex-direction: column; gap: 2rem;
   position: relative; overflow: hidden;
 }
 .login-left::before {
   content: ''; position: absolute; top: -120px; right: -120px;
   width: 420px; height: 420px; border-radius: 50%;
-  background: rgba(61,200,126,0.12); pointer-events: none;
+  background: rgba(126,201,164,0.15); pointer-events: none;
 }
 .login-left::after {
   content: ''; position: absolute; bottom: -80px; left: -80px;
   width: 300px; height: 300px; border-radius: 50%;
-  background: rgba(255,123,172,0.08); pointer-events: none;
+  background: rgba(232,135,158,0.1); pointer-events: none;
 }
 
 .login-logo-link { position: relative; z-index: 1; }
@@ -28,18 +28,19 @@ body { background: var(--bg); min-height: 100vh; }
 .login-left-body { display: flex; flex-direction: column; gap: 2rem; margin-top: auto; position: relative; z-index: 1; }
 
 .testimonial-card {
-  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
   border-radius: var(--radius); padding: 1.5rem;
 }
 .testimonial-card p {
-  color: rgba(255,255,255,0.9); font-size: 1.02rem; line-height: 1.65;
-  margin-bottom: 0.75rem; font-style: italic;
+  font-family: var(--font-display); font-style: italic;
+  color: rgba(255,255,255,0.9); font-size: 1.05rem; line-height: 1.65;
+  margin-bottom: 0.75rem;
 }
-.t-author { font-size: 0.8rem; color: rgba(255,255,255,0.5); font-weight: 600; }
+.t-author { font-size: 0.8rem; color: rgba(255,255,255,0.45); font-weight: 600; }
 
 .login-features { display: flex; flex-direction: column; gap: 0.55rem; }
-.lf-item { font-size: 0.88rem; color: rgba(255,255,255,0.8); font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
-.lf-check { color: #3DC87E; font-size: 1rem; }
+.lf-item { font-size: 0.88rem; color: rgba(255,255,255,0.75); font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
+.lf-check { color: var(--green-light); font-size: 1rem; }
 
 /* Right panel */
 .login-right {
@@ -48,29 +49,33 @@ body { background: var(--bg); min-height: 100vh; }
 }
 .back-link {
   position: absolute; top: 1.5rem; left: 1.5rem;
-  font-size: 0.83rem; font-weight: 600; color: var(--text-mid); transition: color 0.15s;
+  font-size: 0.83rem; font-weight: 600; color: var(--text-mid); transition: color 0.2s;
 }
 .back-link:hover { color: var(--green-dark); }
 
 .login-box { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 1rem; }
 
 .login-brand {
-  font-size: 1.75rem; font-weight: 900; letter-spacing: -1.5px;
+  font-family: var(--font-display);
+  font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px;
   background: linear-gradient(135deg, var(--green), var(--pink));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.login-h1 { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.8px; }
+.login-h1 {
+  font-family: var(--font-display);
+  font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;
+}
 .login-sub { font-size: 0.88rem; color: var(--text-mid); line-height: 1.5; margin-bottom: 0.25rem; }
 
 /* SSO button */
 .sso-btn {
   display: flex; align-items: center; justify-content: center; gap: 0.75rem;
   width: 100%; padding: 0.85rem 1.5rem; background: var(--white);
-  border: 2px solid #D0D5DD; border-radius: var(--radius-sm);
-  font-size: 0.93rem; font-weight: 700; color: var(--text);
-  transition: border-color 0.15s, box-shadow 0.15s; font-family: inherit;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-size: 0.93rem; font-weight: 600; color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s; font-family: inherit;
 }
-.sso-btn:hover { border-color: #0078D4; box-shadow: 0 0 0 3px rgba(0,120,212,0.1); }
+.sso-btn:hover { border-color: #0078D4; box-shadow: 0 0 0 3px rgba(0,120,212,0.08); }
 
 .sso-note { font-size: 0.73rem; color: var(--text-soft); text-align: center; }
 
@@ -83,27 +88,27 @@ body { background: var(--bg); min-height: 100vh; }
 /* Form */
 .login-form { display: flex; flex-direction: column; gap: 0.75rem; }
 .field-group { display: flex; flex-direction: column; gap: 0.3rem; }
-.field-group label { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+.field-group label { font-size: 0.8rem; font-weight: 600; color: var(--text); }
 .field-group input {
-  width: 100%; padding: 0.68rem 0.9rem; border: 1.5px solid var(--border);
+  width: 100%; padding: 0.7rem 0.9rem; border: 1.5px solid var(--border);
   border-radius: var(--radius-sm); font-size: 0.88rem; font-family: inherit;
-  color: var(--text); background: var(--white); outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+  color: var(--text); background: var(--white); outline: none; transition: border-color 0.2s, box-shadow 0.2s;
 }
-.field-group input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(61,200,126,0.12); }
+.field-group input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(126,201,164,0.1); }
 
 .btn-login {
-  width: 100%; padding: 0.75rem; background: linear-gradient(135deg, var(--green), var(--green-dark));
-  color: var(--white); font-size: 0.93rem; font-weight: 700; border-radius: var(--radius-sm);
-  border: none; cursor: pointer; font-family: inherit; transition: opacity 0.15s; margin-top: 0.1rem;
+  width: 100%; padding: 0.75rem; background: var(--green-dark);
+  color: var(--white); font-size: 0.93rem; font-weight: 600; border-radius: var(--radius);
+  border: none; cursor: pointer; font-family: inherit; transition: background 0.25s; margin-top: 0.1rem;
 }
-.btn-login:hover { opacity: 0.88; }
+.btn-login:hover { background: #327A58; }
 
 .signup-note { font-size: 0.78rem; color: var(--text-soft); text-align: center; line-height: 1.5; }
 .signup-note a { color: var(--green-dark); font-weight: 600; }
 
 /* SSO overlay */
 .sso-overlay {
-  position: fixed; inset: 0; background: rgba(255,255,255,0.96);
+  position: fixed; inset: 0; background: rgba(253,250,245,0.95);
   backdrop-filter: blur(8px); z-index: 200; display: none; align-items: center; justify-content: center;
 }
 .sso-overlay.visible { display: flex; }
@@ -112,7 +117,7 @@ body { background: var(--bg); min-height: 100vh; }
   padding: 2.5rem 2rem; text-align: center; max-width: 320px; width: 100%;
   box-shadow: var(--shadow-md); display: flex; flex-direction: column; align-items: center; gap: 1rem;
 }
-.sso-connecting { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+.sso-connecting { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; color: var(--text); }
 .sso-prog-track { width: 100%; height: 4px; background: var(--border); border-radius: 999px; overflow: hidden; }
 .sso-prog-fill {
   height: 100%; width: 0%; border-radius: 999px;
