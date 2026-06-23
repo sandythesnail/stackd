@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stackd — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen active">
+    <header>
+      <div class="header-left">
+        <div class="logo">Stackd</div>
+        <div class="tier-chip" id="h-tier">Broke Freshman</div>
+      </div>
+      <div class="header-right">
+        <div class="level-chip">Level <span id="h-level">1</span></div>
+        <div class="xp-wrap">
+          <div class="xp-bar-track"><div class="xp-bar-fill" id="h-xp-fill"></div></div>
+          <span class="xp-label"><span id="h-xp">0</span> XP</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="home-main">
+      <section class="hero-home">
+        <div class="hero-home-text">
+          <h1>Build your financial foundation</h1>
+          <p>Six modules. Real scenarios. Knowledge that actually applies to your life right now.</p>
+        </div>
+        <div class="hero-stats-row">
+          <div class="stat-pill"><span id="h-streak">0</span>-day streak</div>
+          <div class="stat-pill"><span id="h-done">0</span> / 6 modules complete</div>
+        </div>
+      </section>
+
+      <section class="home-section">
+        <div class="section-head">
+          <h2>Modules</h2>
+          <span class="section-sub" id="modules-sub">Start earning XP</span>
+        </div>
+        <div class="modules-grid" id="modules-grid"></div>
+      </section>
+
+      <section class="home-section">
+        <div class="section-head">
+          <h2>Achievements</h2>
+          <span class="section-sub" id="achieve-sub">0 unlocked</span>
+        </div>
+        <div class="achievements-row" id="achievements-row"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- HOOK -->
+  <div id="screen-hook" class="screen">
+    <div class="hook-topbar">
+      <button class="exit-btn" id="hook-exit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="hook-chip" id="hook-chip"></div>
+    </div>
+    <div class="hook-body">
+      <div class="hook-label">Scenario</div>
+      <div class="hook-scenario" id="hook-scenario"></div>
+      <p class="hook-prompt">Sound familiar? Let's break it down.</p>
+      <button class="btn-primary hook-cta" id="hook-start">Start module</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="screen-quiz" class="screen">
+    <div class="quiz-topbar">
+      <button class="exit-btn" id="quiz-exit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="quiz-prog-track"><div class="quiz-prog-fill" id="quiz-prog-fill"></div></div>
+      <span class="quiz-counter" id="quiz-counter">1 / 5</span>
+    </div>
+    <div class="quiz-body">
+      <div class="quiz-chip" id="quiz-chip"></div>
+      <p class="question-text" id="question-text"></p>
+      <div class="options" id="options"></div>
+    </div>
+    <div class="feedback-panel" id="feedback-panel">
+      <div class="feedback-indicator" id="feedback-indicator"></div>
+      <div class="feedback-text">
+        <p class="feedback-label" id="feedback-label"></p>
+        <p class="feedback-exp" id="feedback-exp"></p>
+      </div>
+      <button class="btn-next" id="btn-next">Next</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="screen-results" class="screen">
+    <div class="results-wrap" id="results-wrap"></div>
+  </div>
+
+  <!-- LEVEL-UP OVERLAY -->
+  <div class="levelup-overlay" id="levelup-overlay">
+    <div class="levelup-card">
+      <div class="levelup-mark"></div>
+      <h2>Level Up</h2>
+      <p>You're now <strong><span id="new-tier"></span></strong></p>
+      <button class="btn-primary" id="levelup-ok">Continue</button>
+    </div>
+  </div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>

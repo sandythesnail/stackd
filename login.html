@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Stackd</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <div class="login-layout">
+
+    <!-- Left decorative panel -->
+    <div class="login-left">
+      <a href="index.html" class="logo login-logo-link">Stackd</a>
+      <div class="login-left-body">
+        <div class="testimonial-card">
+          <p>"I finally understand how taxes work. I used to think my employer was stealing from me every paycheck."</p>
+          <div class="t-author">— UConn student, Class of 2027</div>
+        </div>
+        <div class="login-features">
+          <div class="lf-item"><span class="lf-check">✓</span> 6 college-specific financial modules</div>
+          <div class="lf-item"><span class="lf-check">✓</span> XP, levels &amp; achievement badges</div>
+          <div class="lf-item"><span class="lf-check">✓</span> 5-minute lessons, no textbook walls</div>
+          <div class="lf-item"><span class="lf-check">✓</span> Completely free for enrolled students</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right login panel -->
+    <div class="login-right">
+      <a href="index.html" class="back-link">← Back to home</a>
+
+      <div class="login-box">
+        <div class="login-brand">Stackd</div>
+        <h1 class="login-h1">Sign in to Stackd</h1>
+        <p class="login-sub">Use your university credentials to access your account.</p>
+
+        <!-- Microsoft SSO -->
+        <button class="sso-btn" id="sso-btn">
+          <svg class="ms-logo" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+            <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+            <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+            <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+            <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+          </svg>
+          Sign in with UConn NetID
+        </button>
+        <p class="sso-note">Redirects to Microsoft identity services (netid.uconn.edu)</p>
+
+        <div class="divider"><span>or continue with email</span></div>
+
+        <!-- Email fallback -->
+        <form class="login-form" id="login-form">
+          <div class="field-group">
+            <label for="email">Email address</label>
+            <input type="email" id="email" placeholder="netid@uconn.edu" required autocomplete="email">
+          </div>
+          <div class="field-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn-login">Sign In</button>
+        </form>
+
+        <p class="signup-note">Student access is granted through your institution. <a href="index.html#universities">Is your university on Stackd?</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SSO redirect overlay -->
+  <div class="sso-overlay" id="sso-overlay">
+    <div class="sso-card">
+      <svg viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+      </svg>
+      <p class="sso-connecting">Connecting to UConn NetID...</p>
+      <div class="sso-prog-track"><div class="sso-prog-fill" id="sso-prog-fill"></div></div>
+      <p class="sso-fine">Redirecting to Microsoft identity services</p>
+    </div>
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>

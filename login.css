@@ -1,0 +1,127 @@
+/* ── Login page styles ── */
+body { background: var(--bg); min-height: 100vh; }
+
+.login-layout { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+
+/* Left panel */
+.login-left {
+  background: linear-gradient(160deg, #1A7A4A 0%, #0D4A28 100%);
+  padding: 2.5rem; display: flex; flex-direction: column; gap: 2rem;
+  position: relative; overflow: hidden;
+}
+.login-left::before {
+  content: ''; position: absolute; top: -120px; right: -120px;
+  width: 420px; height: 420px; border-radius: 50%;
+  background: rgba(61,200,126,0.12); pointer-events: none;
+}
+.login-left::after {
+  content: ''; position: absolute; bottom: -80px; left: -80px;
+  width: 300px; height: 300px; border-radius: 50%;
+  background: rgba(255,123,172,0.08); pointer-events: none;
+}
+
+.login-logo-link { position: relative; z-index: 1; }
+.login-logo-link.logo {
+  background: none; -webkit-text-fill-color: white; color: white;
+}
+
+.login-left-body { display: flex; flex-direction: column; gap: 2rem; margin-top: auto; position: relative; z-index: 1; }
+
+.testimonial-card {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--radius); padding: 1.5rem;
+}
+.testimonial-card p {
+  color: rgba(255,255,255,0.9); font-size: 1.02rem; line-height: 1.65;
+  margin-bottom: 0.75rem; font-style: italic;
+}
+.t-author { font-size: 0.8rem; color: rgba(255,255,255,0.5); font-weight: 600; }
+
+.login-features { display: flex; flex-direction: column; gap: 0.55rem; }
+.lf-item { font-size: 0.88rem; color: rgba(255,255,255,0.8); font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+.lf-check { color: #3DC87E; font-size: 1rem; }
+
+/* Right panel */
+.login-right {
+  background: var(--white); padding: 2.5rem; display: flex;
+  flex-direction: column; align-items: center; justify-content: center; position: relative;
+}
+.back-link {
+  position: absolute; top: 1.5rem; left: 1.5rem;
+  font-size: 0.83rem; font-weight: 600; color: var(--text-mid); transition: color 0.15s;
+}
+.back-link:hover { color: var(--green-dark); }
+
+.login-box { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 1rem; }
+
+.login-brand {
+  font-size: 1.75rem; font-weight: 900; letter-spacing: -1.5px;
+  background: linear-gradient(135deg, var(--green), var(--pink));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.login-h1 { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.8px; }
+.login-sub { font-size: 0.88rem; color: var(--text-mid); line-height: 1.5; margin-bottom: 0.25rem; }
+
+/* SSO button */
+.sso-btn {
+  display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+  width: 100%; padding: 0.85rem 1.5rem; background: var(--white);
+  border: 2px solid #D0D5DD; border-radius: var(--radius-sm);
+  font-size: 0.93rem; font-weight: 700; color: var(--text);
+  transition: border-color 0.15s, box-shadow 0.15s; font-family: inherit;
+}
+.sso-btn:hover { border-color: #0078D4; box-shadow: 0 0 0 3px rgba(0,120,212,0.1); }
+
+.sso-note { font-size: 0.73rem; color: var(--text-soft); text-align: center; }
+
+.divider {
+  display: flex; align-items: center; gap: 0.75rem;
+  color: var(--text-soft); font-size: 0.76rem; font-weight: 500;
+}
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* Form */
+.login-form { display: flex; flex-direction: column; gap: 0.75rem; }
+.field-group { display: flex; flex-direction: column; gap: 0.3rem; }
+.field-group label { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+.field-group input {
+  width: 100%; padding: 0.68rem 0.9rem; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 0.88rem; font-family: inherit;
+  color: var(--text); background: var(--white); outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field-group input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(61,200,126,0.12); }
+
+.btn-login {
+  width: 100%; padding: 0.75rem; background: linear-gradient(135deg, var(--green), var(--green-dark));
+  color: var(--white); font-size: 0.93rem; font-weight: 700; border-radius: var(--radius-sm);
+  border: none; cursor: pointer; font-family: inherit; transition: opacity 0.15s; margin-top: 0.1rem;
+}
+.btn-login:hover { opacity: 0.88; }
+
+.signup-note { font-size: 0.78rem; color: var(--text-soft); text-align: center; line-height: 1.5; }
+.signup-note a { color: var(--green-dark); font-weight: 600; }
+
+/* SSO overlay */
+.sso-overlay {
+  position: fixed; inset: 0; background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(8px); z-index: 200; display: none; align-items: center; justify-content: center;
+}
+.sso-overlay.visible { display: flex; }
+.sso-card {
+  background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius);
+  padding: 2.5rem 2rem; text-align: center; max-width: 320px; width: 100%;
+  box-shadow: var(--shadow-md); display: flex; flex-direction: column; align-items: center; gap: 1rem;
+}
+.sso-connecting { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+.sso-prog-track { width: 100%; height: 4px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.sso-prog-fill {
+  height: 100%; width: 0%; border-radius: 999px;
+  background: linear-gradient(90deg, #0078D4, var(--green)); transition: width 0.08s linear;
+}
+.sso-fine { font-size: 0.73rem; color: var(--text-soft); }
+
+@media (max-width: 700px) {
+  .login-layout { grid-template-columns: 1fr; }
+  .login-left { display: none; }
+  .login-right { padding: 2rem 1.5rem; justify-content: flex-start; padding-top: 4.5rem; }
+}
