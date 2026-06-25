@@ -6,15 +6,22 @@ window.addEventListener('scroll', () => {
 
 // Animate admin bars when they scroll into view
 const bars = document.querySelectorAll('.ab-fill');
-const observer = new IntersectionObserver(entries => {
+const barObserver = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) {
-      e.target.style.width = e.target.style.width; // trigger repaint
-      observer.unobserve(e.target);
+      e.target.style.width = e.target.style.width;
+      barObserver.unobserve(e.target);
     }
   });
 }, { threshold: 0.3 });
-bars.forEach(b => observer.observe(b));
+bars.forEach(b => barObserver.observe(b));
+
+// Scroll reveal (same pattern as crochet site)
+const ro = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.07, rootMargin: '0px 0px -36px 0px' });
+document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+document.querySelectorAll('.reveal-el').forEach(el => ro.observe(el));
 
 // Mobile nav burger (simple toggle)
 const burger = document.getElementById('nav-burger');

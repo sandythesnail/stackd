@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stackd | Financial Literacy for Students</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="landing.css">
 </head>
@@ -15,7 +15,8 @@
     <div class="l-nav-inner">
       <a href="index.html" class="logo">Stackd</a>
       <div class="l-nav-links" id="nav-links">
-        <a href="#how-it-works">How it works</a>
+        <a href="#about">About</a>
+        <a href="#story">My Story</a>
         <a href="#modules">Modules</a>
         <a href="#universities">For Universities</a>
         <a href="login.html" class="btn-outline-sm">Sign In</a>
@@ -28,174 +29,202 @@
   </nav>
 
   <!-- HERO -->
-  <section class="l-hero">
+  <section class="l-hero bg-green-grid scallop-bottom--white">
     <div class="l-container">
-      <h1 class="hero-h1">The financial skills your<br><span class="grad">university never taught you</span></h1>
-      <p class="hero-p">Loans, first paychecks, credit cards, budgeting. These decisions start on campus, and nobody teaches you how to make them.</p>
-      <div class="hero-ctas">
+      <h1 class="hero-h1 reveal">Learn money skills that<br><span class="grad">actually matter in college</span></h1>
+      <p class="hero-p reveal d1">Loans, first paychecks, credit cards, budgeting. These decisions start on campus, and nobody teaches you how to make them.</p>
+      <div class="hero-ctas reveal d2">
         <a href="login.html" class="btn-primary-lg">Get started</a>
-        <a href="#how-it-works" class="btn-ghost-lg">See how it works</a>
+        <a href="#about" class="btn-ghost-lg">Learn more</a>
       </div>
-      <div class="hero-stats">
-        <div class="hs-item"><strong>6</strong><span>Financial modules</span></div>
-        <div class="hs-div"></div>
-        <div class="hs-item"><strong>5 min</strong><span>Per lesson</span></div>
-        <div class="hs-div"></div>
-        <div class="hs-item"><strong>Free</strong><span>For students</span></div>
-        <div class="hs-div"></div>
-        <div class="hs-item"><strong>UConn</strong><span>NetID login</span></div>
+      <div class="hero-stats reveal d3">
+        <div class="hs-pill"><strong>6</strong><span>In-depth modules</span></div>
+        <div class="hs-pill"><strong>Quizzes</strong><span>Built into every lesson</span></div>
+        <div class="hs-pill"><strong>Free</strong><span>During beta</span></div>
+        <div class="hs-pill"><strong>UConn</strong><span>NetID login</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="l-section reveal-section bg-green-dots scallop-bottom--green" id="about">
+    <div class="l-container">
+      <div class="l-label reveal-el">About Stackd</div>
+      <h2 class="l-h2 reveal-el">A financial literacy platform built for the college experience.</h2>
+      <div class="about-layout">
+        <div class="about-block reveal-el">
+          <h3>What is Stackd?</h3>
+          <p>A gamified financial literacy platform for college students. Interactive modules, quizzes, and real campus scenarios that teach you the money skills nobody else will.</p>
+        </div>
+        <div class="about-block reveal-el">
+          <h3>How does it work?</h3>
+          <p>Log in with your university credentials, work through six modules, and test your knowledge with built-in assessments. Earn XP, unlock badges, and level up as you go.</p>
+        </div>
+        <div class="about-block reveal-el">
+          <h3>Who is it for?</h3>
+          <p>Any college student starting from zero. No financial background needed. Also built for universities that want a measurable financial wellness tool for their campus.</p>
+        </div>
+        <div class="about-block reveal-el">
+          <h3>Why does it matter?</h3>
+          <p>College is when finances get real: loans, credit cards, first paychecks. Existing tools skip this stage entirely. Stackd was built to fill that gap.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MY STORY -->
+  <section class="l-section founder-section reveal-section scallop-bottom" id="story">
+    <div class="l-container">
+      <div class="founder-headline reveal-el">
+        <span class="fh-script">hi, i'm</span>
+        <span class="fh-display">Sandra Nip.</span>
+      </div>
+      <div class="founder-layout reveal-el">
+        <!-- photo -->
+        <div class="founder-photo-wrap">
+          <div class="founder-photo-frame">
+            <img src="me.webp" alt="Sandra Nip" />
+          </div>
+          <div class="founder-photo-decor"></div>
+        </div>
+        <!-- text -->
+        <div class="founder-text">
+          <div class="founder-card-label">Who</div>
+          <p>I'm a first-year Analytics and Information Management student at UConn. I grew up in a household where money was the one topic nobody wanted to touch. Finances were seen as "too stressful to think about," so we just didn't.</p>
+
+          <div class="founder-card-label">What</div>
+          <p>When I got to campus, I realized how little I actually knew about money. I had to teach myself everything from scratch: how taxes work, what a credit score means, how to budget on a student income. Nobody handed me a guide. I had to figure it out on my own.</p>
+
+          <div class="founder-card-label">When</div>
+          <p>The transition from high school to college is the most financially vulnerable moment of your life. You're suddenly signing loan documents and managing real money with zero preparation and no safety net.</p>
+
+          <div class="founder-card-label">Why</div>
+          <p>I wished something existed that could've eased that transition. Something built for students like me that didn't feel like a textbook. So I built it. Not because I had all the answers, but because I didn't.</p>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- PROBLEM -->
-  <section class="l-section" id="problem">
+  <section class="l-section reveal-section bg-pink-dots scallop-bottom--pink" id="problem">
     <div class="l-container">
-      <div class="l-label">The Problem</div>
-      <h2 class="l-h2">Financial education ends at high school graduation.<br>Financial decisions don't.</h2>
+      <div class="l-label reveal-el">The Problem</div>
+      <h2 class="l-h2 reveal-el">Financial education ends at high school graduation.<br>Financial decisions don't.</h2>
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-num">1 in 5</div>
-          <p>student loan borrowers default within 12 years of entering repayment</p>
+        <div class="stat-card reveal-el">
+          <div class="stat-num">$1.77T</div>
+          <p>in total U.S. student loan debt, affecting over 43 million borrowers nationwide</p>
         </div>
-        <div class="stat-card stat-card-alt">
-          <div class="stat-num">67%</div>
-          <p>of first-gen students feel financially unprepared entering campus life</p>
+        <div class="stat-card stat-card-alt reveal-el">
+          <div class="stat-num">76%</div>
+          <p>of college students say they wish they had more help preparing for their financial futures</p>
         </div>
-        <div class="stat-card">
-          <div class="stat-num">$0</div>
-          <p>what most universities invest in interactive financial wellness tools</p>
+        <div class="stat-card reveal-el">
+          <div class="stat-num">38%</div>
+          <p>of students have skipped buying required course materials due to financial stress</p>
         </div>
       </div>
-      <div class="gap-callout">
-        <div class="gap-icons">
-          <div class="gap-chip">K–12 Tools<span>NGPF · Banzai</span></div>
-          <div class="gap-arrow">
-            <svg viewBox="0 0 80 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="80" height="20">
-              <line x1="0" y1="10" x2="70" y2="10" stroke="#8AAE9A" stroke-width="1.5" stroke-dasharray="4 3"/>
-              <polyline points="62,4 70,10 62,16" stroke="#8AAE9A" stroke-width="1.5" fill="none"/>
-            </svg>
-            <span>gap</span>
-            <svg viewBox="0 0 80 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="80" height="20" style="transform:scaleX(-1)">
-              <line x1="0" y1="10" x2="70" y2="10" stroke="#8AAE9A" stroke-width="1.5" stroke-dasharray="4 3"/>
-              <polyline points="62,4 70,10 62,16" stroke="#8AAE9A" stroke-width="1.5" fill="none"/>
-            </svg>
-          </div>
-          <div class="gap-chip gap-highlight">Stackd<span>Built for college</span></div>
-          <div class="gap-arrow-right">
-            <svg viewBox="0 0 80 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="80" height="20">
-              <line x1="0" y1="10" x2="70" y2="10" stroke="#8AAE9A" stroke-width="1.5" stroke-dasharray="4 3"/>
-              <polyline points="62,4 70,10 62,16" stroke="#8AAE9A" stroke-width="1.5" fill="none"/>
-            </svg>
-          </div>
-          <div class="gap-chip">Career Tools<span>NerdWallet · etc</span></div>
-        </div>
-        <p>Existing tools skip the most critical financial moment of a student's life.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section class="l-section alt-section" id="how-it-works">
-    <div class="l-container">
-      <div class="l-label">The Method</div>
-      <h2 class="l-h2">Every lesson follows the same loop</h2>
-      <div class="loop-row">
-        <div class="loop-card">
-          <div class="loop-num">01</div>
-          <h3>Hook</h3>
-          <p>A relatable campus scenario pulls you in before a single concept is introduced.</p>
-          <div class="loop-example">"Your first paycheck is $47 less than you expected. Why?"</div>
-        </div>
-        <div class="loop-connector">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="loop-card">
-          <div class="loop-num">02</div>
-          <h3>Learn</h3>
-          <p>Short, scannable content explains the concept. Target: under five minutes per lesson.</p>
-          <div class="loop-example">No textbook walls. Interactive, visual, direct.</div>
-        </div>
-        <div class="loop-connector">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="loop-card">
-          <div class="loop-num">03</div>
-          <h3>Apply</h3>
-          <p>Make real financial decisions in a simulated scenario with meaningful consequences.</p>
-          <div class="loop-example">Multiple choice and decision trees grounded in real numbers.</div>
-        </div>
-        <div class="loop-connector">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="loop-card loop-card-accent">
-          <div class="loop-num loop-num-accent">04</div>
-          <h3>Reward</h3>
-          <p>Earn XP, unlock badges, and extend your streak. Every lesson advances your standing.</p>
-          <div class="loop-example">Progress is visible, tangible, and motivating.</div>
-        </div>
+      <!-- Comparison Table -->
+      <div class="compare-table-wrap reveal-el">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Existing Tools</th>
+              <th>The Gap</th>
+              <th class="compare-stackd">What Stackd Offers</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>NGPF / Banzai</strong><br>Built for K-12 classrooms</td>
+              <td>Content stops at high school. Nothing for loans, credit cards, or campus jobs</td>
+              <td><span class="check">&#10003;</span> Lessons built around real college scenarios: first paychecks, meal plans, FAFSA</td>
+            </tr>
+            <tr>
+              <td><strong>NerdWallet / Investopedia</strong><br>Articles for adults</td>
+              <td>Walls of text aimed at 30-year-olds with no interactivity or engagement</td>
+              <td><span class="check">&#10003;</span> Interactive modules with quizzes, assessments, XP, and decision simulations</td>
+            </tr>
+            <tr>
+              <td><strong>University workshops</strong><br>One-off seminars</td>
+              <td>Low attendance, no follow-up, impossible to measure outcomes</td>
+              <td><span class="check">&#10003;</span> Always-on platform with admin dashboard tracking completion and performance</td>
+            </tr>
+            <tr>
+              <td><strong>Banking apps</strong><br>Budgeting features</td>
+              <td>Track spending but don't teach why or how to improve</td>
+              <td><span class="check">&#10003;</span> Teaches the concepts first, then lets students apply them in simulated scenarios</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </section>
 
   <!-- MODULES -->
-  <section class="l-section" id="modules">
+  <section class="l-section reveal-section bg-pink-grid scallop-bottom--white" id="modules">
     <div class="l-container">
-      <div class="l-label">The Curriculum</div>
-      <h2 class="l-h2">Six modules, all built for campus.</h2>
-      <p class="l-p">Real scenarios from dining halls, campus jobs, financial aid offices, and first apartments.</p>
+      <div class="l-label reveal-el">The Curriculum</div>
+      <h2 class="l-h2 reveal-el">Six modules, all built for campus.</h2>
+      <p class="l-p reveal-el">Real scenarios from dining halls, campus jobs, financial aid offices, and first apartments.</p>
       <div class="mp-grid">
-        <div class="mp-card">
+        <div class="mp-card reveal-el">
           <div class="mp-top">
             <div class="mp-num green-num-bg">01</div>
             <span class="mp-phase">Module 1</span>
           </div>
           <h3>Earning</h3>
+          <div class="mp-hook">Want to understand why your paycheck is smaller than you expected?</div>
           <p>First campus job paycheck, W-2s, work-study income, FICA deductions, and tax withholding.</p>
           <div class="mp-tags"><span>Paychecks</span><span>Taxes</span><span>W-2</span></div>
         </div>
-        <div class="mp-card">
+        <div class="mp-card reveal-el">
           <div class="mp-top">
             <div class="mp-num pink-num-bg">02</div>
             <span class="mp-phase">Module 2</span>
           </div>
           <h3>Spending</h3>
+          <div class="mp-hook">Where does all your money actually go each semester?</div>
           <p>Semester budgeting, meal plan math, subscriptions, and spending habits on a student income.</p>
           <div class="mp-tags"><span>50/30/20</span><span>Meal Plans</span><span>Budgeting</span></div>
         </div>
-        <div class="mp-card">
+        <div class="mp-card reveal-el">
           <div class="mp-top">
             <div class="mp-num green-num-bg">03</div>
             <span class="mp-phase">Module 3</span>
           </div>
           <h3>Saving</h3>
+          <div class="mp-hook">Can you really build an emergency fund on a student budget?</div>
           <p>Emergency funds on a student income, high-yield savings accounts, and building habits early.</p>
           <div class="mp-tags"><span>Emergency Fund</span><span>HYSA</span><span>Goals</span></div>
         </div>
-        <div class="mp-card">
+        <div class="mp-card reveal-el">
           <div class="mp-top">
             <div class="mp-num pink-num-bg">04</div>
             <span class="mp-phase">Module 4</span>
           </div>
           <h3>Investing</h3>
+          <div class="mp-hook">What if you could retire a millionaire by starting with $50 a month right now?</div>
           <p>Roth IRA basics, compound interest, and why starting at 18 is the most powerful financial move you can make.</p>
           <div class="mp-tags"><span>Roth IRA</span><span>Compound Interest</span><span>Index Funds</span></div>
         </div>
-        <div class="mp-card">
+        <div class="mp-card reveal-el">
           <div class="mp-top">
             <div class="mp-num green-num-bg">05</div>
             <span class="mp-phase">Module 5</span>
           </div>
           <h3>Managing Credit</h3>
+          <div class="mp-hook">Should you get that student credit card everyone's signing up for?</div>
           <p>First credit card, APR, credit utilization, FICO scores, student loans, and BNPL risks.</p>
           <div class="mp-tags"><span>Credit Score</span><span>APR</span><span>BNPL</span></div>
         </div>
-        <div class="mp-card">
+        <div class="mp-card reveal-el">
           <div class="mp-top">
             <div class="mp-num pink-num-bg">06</div>
             <span class="mp-phase">Module 6</span>
           </div>
           <h3>Managing Risk</h3>
+          <div class="mp-hook">What happens if your laptop gets stolen or you end up in the ER?</div>
           <p>Student health insurance, renter's insurance for off-campus housing, and identity theft basics.</p>
           <div class="mp-tags"><span>Insurance</span><span>Identity Theft</span><span>Risk</span></div>
         </div>
@@ -204,12 +233,12 @@
   </section>
 
   <!-- GAMIFICATION -->
-  <section class="l-section alt-section" id="gamification">
+  <section class="l-section reveal-section bg-green-grid scallop-bottom" id="gamification">
     <div class="l-container">
-      <div class="l-label">Engagement</div>
-      <h2 class="l-h2">Motivation that actually sticks</h2>
+      <div class="l-label reveal-el">Engagement</div>
+      <h2 class="l-h2 reveal-el">Motivation that actually sticks</h2>
       <div class="gam-layout">
-        <div class="gam-left">
+        <div class="gam-left reveal-el">
           <h3 class="gam-subh">Level up through financial tiers</h3>
           <p>Progress from Broke Freshman to Financially Literate Graduate as you complete modules and demonstrate real knowledge.</p>
           <div class="level-ladder">
@@ -219,15 +248,15 @@
             </div>
             <div class="ll-rung">
               <div class="ll-left"><div class="ll-dot"></div><div class="ll-line"></div></div>
-              <div class="ll-content"><span class="ll-lvl">Level 3–4</span><span class="ll-name">Budget Apprentice</span></div>
+              <div class="ll-content"><span class="ll-lvl">Level 3–4</span><span class="ll-name">Savvy Sophomore</span></div>
             </div>
             <div class="ll-rung">
               <div class="ll-left"><div class="ll-dot"></div><div class="ll-line"></div></div>
-              <div class="ll-content"><span class="ll-lvl">Level 5–6</span><span class="ll-name">Money-Aware Sophomore</span></div>
+              <div class="ll-content"><span class="ll-lvl">Level 5–6</span><span class="ll-name">Junior Investor</span></div>
             </div>
             <div class="ll-rung">
               <div class="ll-left"><div class="ll-dot"></div><div class="ll-line"></div></div>
-              <div class="ll-content"><span class="ll-lvl">Level 7–8</span><span class="ll-name">Money Manager</span></div>
+              <div class="ll-content"><span class="ll-lvl">Level 7–8</span><span class="ll-name">Senior Strategist</span></div>
             </div>
             <div class="ll-rung ll-last">
               <div class="ll-left"><div class="ll-dot gold-dot"></div></div>
@@ -237,25 +266,25 @@
         </div>
         <div class="gam-right">
           <div class="fc-stack">
-            <div class="fc-item">
+            <div class="fc-item reveal-el">
               <div class="fc-icon green-fc">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
               </div>
               <div><h4>XP System</h4><p>Earn points for every lesson, quiz, and challenge completed.</p></div>
             </div>
-            <div class="fc-item">
+            <div class="fc-item reveal-el">
               <div class="fc-icon pink-fc">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               </div>
               <div><h4>Daily Streaks</h4><p>Build momentum with login streaks and milestone rewards.</p></div>
             </div>
-            <div class="fc-item">
+            <div class="fc-item reveal-el">
               <div class="fc-icon green-fc">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
               </div>
               <div><h4>Achievement Badges</h4><p>Unlock milestones like "Budget Boss," "Perfect Score," and "Loan Ranger."</p></div>
             </div>
-            <div class="fc-item">
+            <div class="fc-item reveal-el">
               <div class="fc-icon pink-fc">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
               </div>
@@ -268,10 +297,11 @@
   </section>
 
   <!-- FOR UNIVERSITIES -->
-  <section class="l-section" id="universities">
+  <section class="l-section reveal-section bg-pink-dots scallop-bottom--green" id="universities">
     <div class="l-container">
-      <div class="l-label">For Universities</div>
-      <h2 class="l-h2">Financial wellness your school can measure</h2>
+      <div class="l-label reveal-el">For Universities</div>
+      <h2 class="l-h2 uni-headline reveal-el">Play a proactive role in your students' money management</h2>
+      <p class="l-p reveal-el">Financial wellness your school can actually measure. Real data, real outcomes, and zero friction to deploy.</p>
       <div class="uni-layout">
         <div class="uni-reasons">
           <div class="ur">
@@ -319,6 +349,74 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS (Method) -->
+  <section class="l-section reveal-section bg-green-grid scallop-bottom" id="how-it-works">
+    <div class="l-container">
+      <div class="l-label reveal-el">The Method</div>
+      <h2 class="l-h2 reveal-el">Every lesson follows the same loop</h2>
+      <div class="loop-row">
+        <div class="loop-card reveal-el">
+          <div class="loop-num">01</div>
+          <h3>Hook</h3>
+          <p>A relatable campus scenario pulls you in before a single concept is introduced.</p>
+          <div class="loop-example">"Your first paycheck is $47 less than you expected. Why?"</div>
+        </div>
+        <div class="loop-card reveal-el">
+          <div class="loop-num">02</div>
+          <h3>Learn</h3>
+          <p>In-depth, scannable content breaks down the concept with visuals, examples, and real numbers.</p>
+          <div class="loop-example">No textbook walls. Interactive, visual, direct.</div>
+        </div>
+        <div class="loop-card reveal-el">
+          <div class="loop-num">03</div>
+          <h3>Apply</h3>
+          <p>Make real financial decisions in a simulated scenario with meaningful consequences.</p>
+          <div class="loop-example">Multiple choice and decision trees grounded in real numbers.</div>
+        </div>
+        <div class="loop-card loop-card-accent reveal-el">
+          <div class="loop-num loop-num-accent">04</div>
+          <h3>Reward</h3>
+          <p>Earn XP, unlock badges, and extend your streak. Every lesson advances your standing.</p>
+          <div class="loop-example">Progress is visible, tangible, and motivating.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="l-section reveal-section bg-pink-dots" id="faq">
+    <div class="l-container">
+      <div class="l-label reveal-el">FAQ</div>
+      <h2 class="l-h2 reveal-el">Questions? We've got answers.</h2>
+      <div class="faq-list">
+        <details class="faq-item reveal-el">
+          <summary>How much does Stackd cost?</summary>
+          <p>Stackd is completely free during the current beta period for all enrolled UConn students. In the future, Stackd will be offered to universities through an annual per-seat license fee. Students will never pay out of pocket.</p>
+        </details>
+        <details class="faq-item reveal-el">
+          <summary>How long does each module take?</summary>
+          <p>Each module is designed to be thorough, not rushed. Modules include in-depth lessons, interactive scenarios, quizzes, and assessments to make sure you actually understand the material. You can work through them at your own pace and pick up where you left off.</p>
+        </details>
+        <details class="faq-item reveal-el">
+          <summary>Do I need any financial background to use Stackd?</summary>
+          <p>Not at all. Stackd was built for students who are starting from zero. Every concept is explained from the ground up with real campus examples. No jargon, no prerequisites.</p>
+        </details>
+        <details class="faq-item reveal-el">
+          <summary>Is my progress saved?</summary>
+          <p>Yes. Your XP, badges, streaks, and module progress are all saved to your account. Pick up right where you left off anytime.</p>
+        </details>
+        <details class="faq-item reveal-el">
+          <summary>Can my university see my individual results?</summary>
+          <p>University administrators see aggregate data only: completion rates, average scores, and overall engagement. Your individual answers and progress are private to you.</p>
+        </details>
+        <details class="faq-item reveal-el">
+          <summary>Will Stackd be available at other universities?</summary>
+          <p>Stackd is currently piloting at UConn. We're actively exploring partnerships with other universities. If your school is interested, reach out through our contact form.</p>
+        </details>
       </div>
     </div>
   </section>
