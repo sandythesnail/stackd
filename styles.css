@@ -1,24 +1,24 @@
 /* ── Shared base: variables, reset, common components ── */
 :root {
-  --green: #7EC9A4;
-  --green-light: #C6E8D6;
-  --green-pale: #EDF7F2;
-  --green-dark: #3B8A63;
-  --pink: #E8879E;
-  --pink-light: #F7D4DE;
-  --pink-pale: #FEF3F6;
-  --pink-dark: #C4596F;
-  --bg: #FDFAF5;
+  --green: #9BB88A;
+  --green-light: #CDDCBF;
+  --green-pale: #EEF3E8;
+  --green-dark: #5E8A50;
+  --pink: #D4899E;
+  --pink-light: #F2CDD7;
+  --pink-pale: #FBF0F3;
+  --pink-dark: #B5607A;
+  --bg: #FDF8F0;
   --white: #FFFFFF;
-  --text: #263830;
-  --text-mid: #557565;
-  --text-soft: #8EAC9C;
-  --border: #DBE8DF;
-  --shadow-sm: 0 2px 12px rgba(38,56,48,0.05);
-  --shadow-md: 0 8px 30px rgba(38,56,48,0.08);
+  --text: #2C3E2D;
+  --text-mid: #5E7A5E;
+  --text-soft: #94AD8E;
+  --border: #D6DFD0;
+  --shadow-sm: 0 2px 12px rgba(44,62,45,0.05);
+  --shadow-md: 0 8px 30px rgba(44,62,45,0.08);
   --radius: 14px;
   --radius-sm: 8px;
-  --font-display: 'Space Grotesk', -apple-system, sans-serif;
+  --font-display: 'Lora', Georgia, 'Times New Roman', serif;
   --font: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -31,41 +31,33 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 /* ── Shared components ── */
 .logo {
   font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: 1.7rem;
   font-weight: 700;
   letter-spacing: -0.5px;
-  background: linear-gradient(135deg, var(--green), var(--pink));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--green-dark);
   display: inline-block;
 }
-
-.grad {
-  font-family: var(--font-display);
-  font-weight: 700;
-  background: linear-gradient(120deg, var(--green), var(--pink));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.logo::after {
+  content: '.';
+  color: var(--pink);
 }
 
 .btn-primary-lg {
   display: inline-block;
   background: var(--green-dark);
   color: #fff;
-  font-weight: 600;
-  font-size: 0.95rem;
-  padding: 0.85rem 2rem;
-  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 1rem 2.4rem;
+  border-radius: 999px;
   transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
   cursor: pointer;
   font-family: inherit;
   border: none;
 }
 .btn-primary-lg:hover {
-  background: #327A58; transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(59,138,99,0.3);
+  background: #4E7A42; transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(94,138,80,0.35);
 }
 
 .btn-ghost-lg {
@@ -73,29 +65,34 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   color: var(--text-mid);
   font-weight: 600;
   font-size: 0.95rem;
-  padding: 0.85rem 1.5rem;
-  border-radius: var(--radius);
-  border: 1.5px solid var(--border);
-  transition: border-color 0.25s, color 0.25s, transform 0.25s, background 0.25s;
+  padding: 0.9rem 1.8rem;
+  border-radius: 999px;
+  border: none;
+  background: none;
+  transition: color 0.25s, transform 0.25s;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 4px;
 }
 .btn-ghost-lg:hover {
-  border-color: var(--green); color: var(--green-dark);
-  transform: translateY(-3px); background: var(--green-pale);
+  color: var(--green-dark);
+  text-decoration-color: var(--green);
+  transform: translateY(-1px);
 }
 
 .btn-sm {
   display: inline-block;
   background: var(--green-dark);
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.82rem;
-  padding: 0.5rem 1.1rem;
-  border-radius: var(--radius-sm);
+  padding: 0.5rem 1.2rem;
+  border-radius: 999px;
   transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
 }
 .btn-sm:hover {
-  background: #327A58; transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(59,138,99,0.25);
+  background: #4E7A42; transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(94,138,80,0.25);
 }
 
 .btn-outline-sm {
@@ -104,13 +101,14 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   font-weight: 600;
   font-size: 0.82rem;
   padding: 0.5rem 1.1rem;
-  border-radius: var(--radius-sm);
+  border-radius: 999px;
   border: 1.5px solid var(--border);
+  background: #fff;
   transition: border-color 0.25s, color 0.25s, transform 0.25s, background 0.25s;
 }
 .btn-outline-sm:hover {
   border-color: var(--green); color: var(--green-dark);
-  transform: translateY(-2px); background: var(--green-pale);
+  transform: translateY(-2px);
 }
 
 .btn-primary {
@@ -126,8 +124,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   font-family: inherit;
 }
 .btn-primary:hover {
-  background: #327A58; transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(59,138,99,0.3);
+  background: #4E7A42; transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(94,138,80,0.3);
 }
 
 .btn-secondary {
