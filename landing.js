@@ -22,6 +22,7 @@ const ro = new IntersectionObserver(es => {
 }, { threshold: 0.07, rootMargin: '0px 0px -36px 0px' });
 document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
 document.querySelectorAll('.reveal-el').forEach(el => ro.observe(el));
+document.querySelectorAll('.phone-reveal').forEach(el => ro.observe(el));
 
 // Mobile nav burger (simple toggle)
 const burger = document.getElementById('nav-burger');
