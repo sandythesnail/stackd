@@ -1,14 +1,14 @@
 /* ── Shared base: variables, reset, common components ── */
 :root {
-  --green: #9BB88A;
-  --green-light: #CDDCBF;
-  --green-pale: #EEF3E8;
-  --green-dark: #5E8A50;
+  --green: #6B8F65;
+  --green-light: #B2C9AE;
+  --green-pale: #E0EAE0;
+  --green-dark: #4A6844;
   --pink: #D4899E;
   --pink-light: #F2CDD7;
   --pink-pale: #FBF0F3;
   --pink-dark: #B5607A;
-  --bg: #FDF8F0;
+  --bg: #FAF6ED;
   --white: #FFFFFF;
   --text: #2C3E2D;
   --text-mid: #5E7A5E;
@@ -19,7 +19,7 @@
   --radius: 14px;
   --radius-sm: 8px;
   --font-display: 'Lora', Georgia, 'Times New Roman', serif;
-  --font: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -31,7 +31,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 /* ── Shared components ── */
 .logo {
   font-family: var(--font-display);
-  font-size: 1.7rem;
+  font-size: 2.4rem;
   font-weight: 700;
   letter-spacing: -0.5px;
   color: var(--green-dark);
@@ -48,15 +48,15 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   color: #fff;
   font-weight: 700;
   font-size: 1.05rem;
-  padding: 1rem 2.4rem;
-  border-radius: 999px;
+  padding: 0.85rem 2rem;
+  border-radius: 14px;
   transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
   cursor: pointer;
   font-family: inherit;
   border: none;
 }
 .btn-primary-lg:hover {
-  background: #4E7A42; transform: translateY(-3px);
+  background: #3D5938; transform: translateY(-3px);
   box-shadow: 0 8px 24px rgba(94,138,80,0.35);
 }
 
@@ -91,7 +91,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   transition: background 0.25s, transform 0.25s, box-shadow 0.25s;
 }
 .btn-sm:hover {
-  background: #4E7A42; transform: translateY(-2px);
+  background: #3D5938; transform: translateY(-2px);
   box-shadow: 0 4px 14px rgba(94,138,80,0.25);
 }
 
@@ -124,7 +124,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   font-family: inherit;
 }
 .btn-primary:hover {
-  background: #4E7A42; transform: translateY(-3px);
+  background: #3D5938; transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(94,138,80,0.3);
 }
 

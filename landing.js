@@ -1,3 +1,15 @@
+// Typewriter effect on hero subtitle
+const typewriterEl = document.getElementById('hero-typewriter');
+const typewriterText = 'Learn budgeting, saving, and investing through digestible and fun lessons, streaks, and rewards, built for the way students actually learn.';
+let twIndex = 0;
+function typeNextChar() {
+  if (!typewriterEl || twIndex > typewriterText.length) return;
+  typewriterEl.textContent = typewriterText.slice(0, twIndex);
+  twIndex++;
+  setTimeout(typeNextChar, 28);
+}
+window.addEventListener('load', () => setTimeout(typeNextChar, 600));
+
 // Nav scroll shadow
 const nav = document.getElementById('l-nav');
 window.addEventListener('scroll', () => {
