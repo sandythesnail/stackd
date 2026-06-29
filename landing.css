@@ -773,24 +773,35 @@ body { background-color: var(--bg); }
 }
 
 .founder-layout {
-  display: grid; grid-template-columns: 1fr 1.3fr;
-  gap: 4rem; align-items: center;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 2.5rem;
+}
+.founder-img {
+  width: 100%;
+  max-width: 700px;
+  border-radius: var(--radius);
+  border: 3px solid var(--text);
+  display: block;
+  box-shadow: 6px 6px 0 var(--text);
+}
+.founder-text {
+  max-width: 680px; text-align: center;
 }
 
-/* realistic phone mockup */
+/* realistic phone mockup — landscape orientation */
 .phone-outer {
   position: relative;
   width: 100%;
-  max-width: 310px;
+  max-width: 780px;
   margin: 0 auto;
   z-index: 1;
 }
 .phone-body-wrap {
   background: #1a1a1a;
-  border-radius: 54px;
-  padding: 16px;
+  border-radius: 48px;
+  padding: 14px 16px;
   box-shadow:
-    0 30px 70px rgba(0,0,0,.22),
+    0 30px 70px rgba(0,0,0,.28),
     0 0 0 1px rgba(255,255,255,.08),
     inset 0 0 0 1px rgba(255,255,255,.04);
   position: relative;
@@ -800,25 +811,28 @@ body { background-color: var(--bg); }
   background: #2a2a2a;
   border-radius: 3px;
 }
-.phone-vol-up   { width: 3px; height: 34px; left: -5px; top: 120px; }
-.phone-vol-down { width: 3px; height: 34px; left: -5px; top: 164px; }
-.phone-power    { width: 3px; height: 46px; right: -5px; top: 140px; }
+/* Volume buttons on top edge (landscape) */
+.phone-vol-up   { width: 34px; height: 3px; top: -5px; left: 28%; }
+.phone-vol-down { width: 34px; height: 3px; top: -5px; left: 40%; }
+/* Power button on bottom edge (landscape) */
+.phone-power    { width: 46px; height: 3px; bottom: -5px; right: 22%; }
 .phone-screen {
   background: none;
-  border-radius: 42px;
+  border-radius: 36px;
   overflow: hidden;
-  aspect-ratio: 9/18;
+  aspect-ratio: 19.5/9;
   position: relative;
 }
+/* Notch on left side for landscape */
 .phone-notch {
   position: absolute;
-  top: 8px; left: 50%;
-  transform: translateX(-50%);
-  width: 90px; height: 22px;
+  top: 50%; left: 8px;
+  transform: translateY(-50%);
+  width: 20px; height: 78px;
   background: #1a1a1a;
   border-radius: 12px;
   z-index: 10;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
 }
 .phone-notch-cam {
   width: 8px; height: 8px;
@@ -826,10 +840,10 @@ body { background-color: var(--bg); }
   border-radius: 50%;
   border: 1px solid #333;
 }
-.phone-notch-bar { width: 30px; height: 4px; background: #1a1a1a; border-radius: 2px; }
+.phone-notch-bar { width: 4px; height: 28px; background: #1a1a1a; border-radius: 2px; }
 .phone-status-bar {
   position: absolute; top: 0; left: 0; right: 0;
-  padding: 16px 28px 8px;
+  padding: 10px 24px 6px 44px;
   display: flex; align-items: center; justify-content: space-between;
   background: transparent;
   font-size: .7rem; font-weight: 700;
@@ -863,6 +877,7 @@ body { background-color: var(--bg); }
 
 /* founder text */
 .founder-text p {
+
   font-size: 1.05rem; color: var(--text-mid); line-height: 1.8; margin-bottom: 1rem;
 }
 .founder-text p:last-child { margin-bottom: 0; font-style: italic; color: var(--text); }
@@ -1236,7 +1251,7 @@ body { background-color: var(--bg); }
   .mp-grid { grid-template-columns: 1fr; }
   .about-layout { grid-template-columns: 1fr; }
   .founder-layout { grid-template-columns: 1fr; }
-  .phone-outer { max-width: 260px; }
+  .phone-outer { max-width: 480px; }
   .gam-layout, .uni-layout { grid-template-columns: 1fr; gap: 2.5rem; }
   .loop-row { grid-template-columns: 1fr 1fr; }
 }

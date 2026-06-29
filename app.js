@@ -53,6 +53,10 @@ const MODULES = [
         correct: 2,
         exp: '$15 × 40 hrs × 2 weeks = $1,200 gross. Your actual deposit will be less after taxes - usually 70–80% of gross.'
       }
+    ],
+    lessons: [
+      { title: 'Your First Paycheck', hook: 'You just started your on-campus job and received your first paycheck. The stub says $300 gross but only $241 hit your bank. Where did $59 go — and what does "withholding" actually mean?', qIndices: [0, 1] },
+      { title: 'Tax Forms & Benefits', hook: 'Your employer hands you a W-4 on day one and mentions the university offers a 403(b) retirement match up to 3%. You\'ve never seen either of these. What do you sign — and what should you sign up for?', qIndices: [2, 3, 4] }
     ]
   },
   {
@@ -90,6 +94,10 @@ const MODULES = [
         correct: 2,
         exp: 'A 3–6 month cushion protects you from unexpected costs like medical bills, car repairs, or sudden job loss. Start with $500–$1,000 if 3 months feels out of reach.'
       }
+    ],
+    lessons: [
+      { title: 'The 50/30/20 Rule', hook: 'It\'s week 6 of the semester. You had $800 for the month. You check your account and there\'s $23 left. You didn\'t buy anything big. How did this happen — and how do you stop it?', qIndices: [0, 1, 2] },
+      { title: 'Budget Deficits & Emergency Funds', hook: 'You spent $900 this month but only earned $750. That\'s a $150 deficit. Your first instinct is to put it on a credit card. Is that the right move — and how do you prevent this next month?', qIndices: [3, 4] }
     ]
   },
   {
@@ -127,6 +135,10 @@ const MODULES = [
         correct: 1,
         exp: '"Pay yourself first" - automate a transfer to savings the day you get paid. You won\'t miss money you never see in your checking account.'
       }
+    ],
+    lessons: [
+      { title: 'High-Yield Savings', hook: 'Your laptop just died during finals week. A replacement costs $400. You have $47 in your checking account. This is what a missing emergency fund looks like — and it\'s completely avoidable.', qIndices: [0, 1] },
+      { title: 'Building Habits', hook: 'You\'ve decided to start saving, but at the end of every month there\'s nothing left. You keep saying "I\'ll save whatever\'s left" — but there\'s never anything left. What changes?', qIndices: [2, 3, 4] }
     ]
   },
   {
@@ -164,6 +176,10 @@ const MODULES = [
         correct: 2,
         exp: 'You can contribute up to $7,000/year (2024). Even $50/month starting at 18 builds a remarkable foundation. The earlier you start, the less you need to contribute overall.'
       }
+    ],
+    lessons: [
+      { title: 'Compound Interest & Time', hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Jordan starts at 28. At 65, Alex has $21,000. Jordan has $10,700. Same amount invested. What made the difference?', qIndices: [0, 1, 2] },
+      { title: 'Roth IRA & Index Funds', hook: 'You have $50/month to invest and someone says "open a Roth IRA and put it in an index fund." You\'ve heard these words but don\'t fully understand them. What are they — and why does everyone keep recommending them?', qIndices: [3, 4] }
     ]
   },
   {
@@ -201,6 +217,10 @@ const MODULES = [
         correct: 2,
         exp: 'FICO scores range 300–850. 670+ is Good, 740+ is Very Good, 800+ is Exceptional. A good score unlocks lower interest rates - worth thousands over a lifetime.'
       }
+    ],
+    lessons: [
+      { title: 'APR & Utilization', hook: 'You got your first credit card with a $1,000 limit. Textbooks and dorm supplies ran you $800. You pay the minimum each month. Three years later, you\'ve paid $300 in interest and still owe $600. What went wrong?', qIndices: [0, 1] },
+      { title: 'Credit Scores', hook: 'Your roommate got an apartment at a better rate because their credit score was 720. Yours was 610. Same income. What is a credit score — and how do you build yours before graduation?', qIndices: [2, 3, 4] }
     ]
   },
   {
@@ -238,6 +258,10 @@ const MODULES = [
         correct: 2,
         exp: 'Dispute unauthorized charges immediately. Federal law limits your liability, but only if you report quickly. Your bank will investigate and usually reverse fraudulent charges.'
       }
+    ],
+    lessons: [
+      { title: 'Insurance Basics', hook: 'You\'re moving off-campus. A pipe bursts in your apartment and ruins your laptop, TV, and clothes. Your landlord\'s insurance covers the building — not your stuff. You owe $2,000 in replacements. What should you have had?', qIndices: [0, 1, 2] },
+      { title: 'Identity Theft', hook: 'You get an alert: someone opened a credit card in your name in another state. You\'re a student with no real assets — but this wrecks your credit and your identity. How do you protect yourself before this happens?', qIndices: [3, 4] }
     ]
   }
 ];
@@ -259,8 +283,9 @@ const ACHIEVEMENTS = [
 // ── State ──────────────────────────────────────
 let state = {
   level: 1, xp: 0, streak: 0, lastPlayedDate: null,
-  completedModules: {}, unlockedAchievements: [], hadPerfect: false,
-  activeModuleId: null, currentQ: 0, sessionAnswers: [], sessionScore: 0,
+  completedModules: {}, completedLessons: {}, unlockedAchievements: [], hadPerfect: false,
+  activeModuleId: null, activeLessonIdx: 0, sessionQuestions: [],
+  currentQ: 0, sessionAnswers: [], sessionScore: 0,
 };
 
 function loadState() {
@@ -271,8 +296,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, completedModules, unlockedAchievements, hadPerfect } = state;
-  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, unlockedAchievements, hadPerfect }));
+  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect } = state;
+  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect }));
 }
 
 // ── XP / Level ─────────────────────────────────
@@ -320,64 +345,274 @@ function showScreen(id) {
   window.scrollTo(0, 0);
 }
 
-// ── HOME ───────────────────────────────────────
-function renderHome() {
-  showScreen('screen-home');
-  const tier = getTier(state.level);
-  document.getElementById('h-tier').textContent = tier.name;
-  document.getElementById('h-level').textContent = state.level;
-  document.getElementById('h-xp').textContent = state.xp.toLocaleString();
-  document.getElementById('h-xp-fill').style.width = xpProgressPct() + '%';
-  document.getElementById('h-streak').textContent = state.streak;
-  const done = Object.keys(state.completedModules).length;
-  document.getElementById('h-done').textContent = done;
-  document.getElementById('modules-sub').textContent = done === 6 ? 'All complete - replay to master!' : `${done}/6 complete`;
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === id);
+  });
+  window.scrollTo(0, 0);
+}
 
-  const grid = document.getElementById('modules-grid');
+function updateSidebarStats() {
+  const tier = getTier(state.level);
+  document.getElementById('sf-tier').textContent = tier.name;
+  document.getElementById('sf-level').textContent = state.level;
+  document.getElementById('sf-xp').textContent = state.xp.toLocaleString();
+  document.getElementById('sf-bar-fill').style.width = xpProgressPct() + '%';
+}
+
+function renderModuleGrid(containerId) {
+  const grid = document.getElementById(containerId);
+  if (!grid) return;
   grid.innerHTML = '';
   MODULES.forEach(m => {
-    const completed = !!state.completedModules[m.id];
-    const prev = state.completedModules[m.id];
+    const lessonsDone = m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
+    const allDone = lessonsDone === m.lessons.length;
     const card = document.createElement('div');
-    card.className = 'module-card' + (completed ? ' completed' : '');
-    card.innerHTML = `<div class="card-inner">
+    card.className = 'module-card' + (allDone ? ' completed' : '');
+    const btnLabel = allDone ? 'Replay' : lessonsDone > 0 ? 'Continue' : 'Start';
+    card.innerHTML = `
       <div class="card-top">
         <div class="mod-icon ${m.iconColor}">${m.icon}</div>
-        ${completed
+        ${allDone
           ? `<span class="card-badge badge-done">✓ Complete</span>`
           : `<span class="card-badge badge-xp">+${m.xpReward} XP</span>`}
       </div>
       <div class="mod-title">${m.title}</div>
       <div class="mod-desc">${m.desc}</div>
       <div class="card-footer">
-        <span class="card-meta">${completed ? `Best: ${prev.score}/5 · ${prev.xpEarned} XP` : '5 questions · ~5 min'}</span>
-        <button class="start-btn ${completed ? 'replay' : ''}">${completed ? 'Replay' : 'Start'}</button>
-      </div>
-    </div>`;
-    card.addEventListener('click', () => startHook(m.id));
+        <span class="card-meta">${lessonsDone > 0 ? `${lessonsDone}/${m.lessons.length} lessons done` : '2 lessons'}</span>
+        <button class="start-btn ${allDone ? 'replay' : ''}">${btnLabel}</button>
+      </div>`;
+    card.addEventListener('click', () => showModuleDetail(m.id));
     grid.appendChild(card);
   });
+}
 
+function renderAchievementBadges(containerId, subId) {
   const unlocked = state.unlockedAchievements.length;
-  document.getElementById('achieve-sub').textContent = `${unlocked}/${ACHIEVEMENTS.length} unlocked`;
-  const achRow = document.getElementById('achievements-row');
-  achRow.innerHTML = '';
+  if (subId) document.getElementById(subId).textContent = `${unlocked}/${ACHIEVEMENTS.length} unlocked`;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
   ACHIEVEMENTS.forEach(a => {
     const isUnlocked = state.unlockedAchievements.includes(a.id);
     const el = document.createElement('div');
     el.className = 'ach-badge';
     el.title = a.desc;
     el.innerHTML = `<div class="ach-icon ${isUnlocked ? 'unlocked' : 'locked'}">${a.abbr}</div><span class="ach-label">${a.label}</span>`;
-    achRow.appendChild(el);
+    container.appendChild(el);
   });
 }
 
-// ── HOOK ───────────────────────────────────────
-function startHook(moduleId) {
+// ── HOME ───────────────────────────────────────
+function renderHome() {
+  showPage('home');
+  updateSidebarStats();
+  const tier = getTier(state.level);
+  document.getElementById('h-tier').textContent = tier.name;
+  const done = Object.keys(state.completedModules).length;
+  document.getElementById('h-streak').textContent = state.streak;
+  document.getElementById('h-done').textContent = done;
+  document.getElementById('modules-home-sub').textContent = done === 6 ? 'All complete — replay to master!' : `${done}/6 complete`;
+  renderModuleGrid('home-modules-grid');
+  renderAchievementBadges('home-achievements-row', 'home-achieve-sub');
+}
+
+// ── MODULES PAGE ───────────────────────────────
+function renderModulesPage() {
+  updateSidebarStats();
+  const done = Object.keys(state.completedModules).length;
+  document.getElementById('modules-sub').textContent = done === 6 ? 'All complete — replay to master!' : `${done}/6 complete`;
+  renderModuleGrid('modules-grid');
+}
+
+// ── BADGES PAGE ────────────────────────────────
+function renderBadgesPage() {
+  updateSidebarStats();
+  renderAchievementBadges('achievements-row', 'achieve-sub');
+}
+
+// ── PROGRESS PAGE ──────────────────────────────
+function renderProgressPage() {
+  updateSidebarStats();
+  const tier = getTier(state.level);
+  const done = Object.keys(state.completedModules).length;
+  const unlocked = state.unlockedAchievements.length;
+  const pct = xpProgressPct();
+  const nextXP = xpForLevel(state.level);
+
+  // Donut chart math (SVG circle r=32, circumference ≈ 201)
+  const r = 32;
+  const circ = +(2 * Math.PI * r).toFixed(2);
+  const offset = +(circ * (1 - done / 6)).toFixed(2);
+
+  // Column chart: XP per module, scaled to tallest
+  const xpVals = MODULES.map(m => state.completedModules[m.id]?.xpEarned || 0);
+  const maxXP = Math.max(...xpVals, 1);
+
+  // Alternating bar colors
+  const pinkMods = new Set(['spending', 'credit']);
+
+  document.getElementById('progress-body').innerHTML = `
+    <!-- Stat cards -->
+    <div class="pg-stats-row">
+      <div class="pg-stat-card">
+        <div class="pg-stat-label">Total XP</div>
+        <div class="pg-stat-num">${state.xp.toLocaleString()}</div>
+        <div class="pg-stat-sub">${tier.name}</div>
+      </div>
+      <div class="pg-stat-card">
+        <div class="pg-stat-label">Level</div>
+        <div class="pg-stat-num">${state.level}</div>
+        <div class="pg-stat-sub">${pct.toFixed(0)}% to Level ${state.level + 1}</div>
+      </div>
+      <div class="pg-stat-card">
+        <div class="pg-stat-label">Day Streak</div>
+        <div class="pg-stat-num">${state.streak}</div>
+        <div class="pg-stat-sub">days in a row</div>
+      </div>
+      <div class="pg-stat-card">
+        <div class="pg-stat-label">Badges</div>
+        <div class="pg-stat-num">${unlocked}</div>
+        <div class="pg-stat-sub">of ${ACHIEVEMENTS.length} unlocked</div>
+      </div>
+    </div>
+
+    <!-- Donut + Module score bars -->
+    <div class="pg-charts-row">
+      <div class="pg-chart-card">
+        <div class="pg-chart-title">Modules Done</div>
+        <div class="pg-donut-wrap">
+          <svg viewBox="0 0 80 80" class="pg-donut-svg">
+            <circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--border)" stroke-width="8"/>
+            <circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--green)" stroke-width="8"
+              stroke-dasharray="${circ}" stroke-dashoffset="${offset}"
+              stroke-linecap="round" transform="rotate(-90 40 40)" class="pg-donut-fill"/>
+          </svg>
+          <div class="pg-donut-center">
+            <span class="pg-donut-num">${done}</span>
+            <span class="pg-donut-den">/6</span>
+          </div>
+        </div>
+        <div class="pg-donut-legend">
+          <span class="pg-legend-item"><span class="pg-legend-dot pg-dot-green"></span>Completed (${done})</span>
+          <span class="pg-legend-item"><span class="pg-legend-dot pg-dot-gray"></span>Remaining (${6 - done})</span>
+        </div>
+      </div>
+
+      <div class="pg-chart-card">
+        <div class="pg-chart-title">Module Scores</div>
+        <div class="pg-bar-chart">
+          ${MODULES.map(m => {
+            const comp = state.completedModules[m.id];
+            const scorePct = comp ? (comp.score / (comp.total || 5)) * 100 : 0;
+            const isPink = pinkMods.has(m.id);
+            return `<div class="pg-bar-row">
+              <span class="pg-bar-label">${m.title}</span>
+              <div class="pg-bar-track">
+                <div class="pg-bar-fill${isPink ? ' pg-bar-pink' : ''}" style="width:${scorePct}%"></div>
+              </div>
+              <span class="pg-bar-val">${comp ? `${comp.score}/${comp.total || 5}` : '—'}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- XP by module column chart -->
+    <div class="pg-chart-card">
+      <div class="pg-chart-title">XP Earned by Module</div>
+      <div class="pg-column-chart">
+        ${MODULES.map((m, i) => {
+          const xp = xpVals[i];
+          const hPct = Math.round((xp / maxXP) * 100);
+          const isPink = pinkMods.has(m.id);
+          return `<div class="pg-col">
+            <span class="pg-col-val">${xp > 0 ? xp : ''}</span>
+            <div class="pg-col-bar-wrap">
+              <div class="pg-col-bar${isPink ? ' pg-col-pink' : ''}" style="height:${hPct}%"></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="pg-col-labels">
+        ${MODULES.map(m => `<span>${m.title.split(' ')[0]}</span>`).join('')}
+      </div>
+    </div>
+
+    <!-- Level progress -->
+    <div class="pg-chart-card">
+      <div class="pg-chart-title">Level Progress</div>
+      <div class="pg-level-row">
+        <div class="pg-level-big">Lv ${state.level}</div>
+        <div class="pg-level-info">
+          <div class="pg-xp-row-detail">
+            <span>${state.xp.toLocaleString()} XP earned</span>
+            <span>${nextXP.toLocaleString()} XP needed</span>
+          </div>
+          <div class="pg-level-bar-track">
+            <div class="pg-level-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="pg-xp-sub">${(nextXP - state.xp).toLocaleString()} XP to Level ${state.level + 1} · ${tier.name}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── SETTINGS PAGE ──────────────────────────────
+function renderSettingsPage() {
+  const resetBtn = document.getElementById('reset-btn');
+  if (resetBtn) {
+    resetBtn.onclick = () => {
+      if (confirm('Reset all progress? This cannot be undone.')) {
+        localStorage.removeItem('stackd_v2');
+        location.reload();
+      }
+    };
+  }
+}
+
+// ── MODULE DETAIL ──────────────────────────────
+function showModuleDetail(moduleId) {
   const mod = MODULES.find(m => m.id === moduleId);
   state.activeModuleId = moduleId;
-  document.getElementById('hook-chip').textContent = mod.title;
-  document.getElementById('hook-scenario').textContent = mod.hook;
+  document.getElementById('mod-detail-chip').textContent = mod.title;
+
+  const container = document.getElementById('mod-detail-lessons');
+  container.innerHTML = '';
+  mod.lessons.forEach((lesson, idx) => {
+    const key = `${moduleId}_${idx}`;
+    const lessonData = state.completedLessons[key];
+    const done = !!lessonData;
+    const card = document.createElement('div');
+    card.className = 'lesson-card' + (done ? ' done' : '');
+    card.innerHTML = `
+      <div class="lesson-num">Lesson ${idx + 1}</div>
+      <div class="lesson-title">${lesson.title}</div>
+      <div class="lesson-meta">${done
+        ? `Score: ${lessonData.score}/${lessonData.total} · ${lessonData.xpEarned} XP earned`
+        : `${lesson.qIndices.length} questions`}
+      </div>
+      <div class="lesson-action">${done ? '↻ Replay' : 'Start →'}</div>`;
+    card.addEventListener('click', () => startHook(moduleId, idx));
+    container.appendChild(card);
+  });
+
+  showScreen('screen-module');
+}
+
+// ── HOOK ───────────────────────────────────────
+function startHook(moduleId, lessonIdx) {
+  const mod = MODULES.find(m => m.id === moduleId);
+  const lesson = mod.lessons[lessonIdx];
+  state.activeModuleId = moduleId;
+  state.activeLessonIdx = lessonIdx;
+  state.sessionQuestions = lesson.qIndices.map(i => mod.questions[i]);
+  document.getElementById('hook-chip').textContent = `${mod.title} · ${lesson.title}`;
+  document.getElementById('hook-scenario').textContent = lesson.hook;
   showScreen('screen-hook');
 }
 
@@ -387,17 +622,18 @@ function startQuiz() {
   state.currentQ = 0;
   state.sessionAnswers = [];
   state.sessionScore = 0;
-  document.getElementById('quiz-chip').textContent = mod.title;
+  const lesson = mod.lessons[state.activeLessonIdx];
+  document.getElementById('quiz-chip').textContent = `${mod.title} · ${lesson.title}`;
   document.getElementById('feedback-panel').classList.remove('visible', 'correct-state', 'wrong-state');
   showScreen('screen-quiz');
   renderQuestion();
 }
 
 function renderQuestion() {
-  const mod = MODULES.find(m => m.id === state.activeModuleId);
-  const total = mod.questions.length;
+  const questions = state.sessionQuestions;
+  const total = questions.length;
   const idx = state.currentQ;
-  const q = mod.questions[idx];
+  const q = questions[idx];
 
   document.getElementById('quiz-prog-fill').style.width = (idx / total * 100) + '%';
   document.getElementById('quiz-counter').textContent = `${idx + 1} / ${total}`;
@@ -418,8 +654,7 @@ function renderQuestion() {
 }
 
 function selectAnswer(chosen) {
-  const mod = MODULES.find(m => m.id === state.activeModuleId);
-  const q = mod.questions[state.currentQ];
+  const q = state.sessionQuestions[state.currentQ];
   const isCorrect = chosen === q.correct;
   if (isCorrect) state.sessionScore++;
   state.sessionAnswers.push({ chosen, correct: q.correct, isCorrect });
@@ -436,34 +671,41 @@ function selectAnswer(chosen) {
   document.getElementById('feedback-label').textContent = isCorrect ? 'Correct' : 'Not quite';
   document.getElementById('feedback-exp').textContent = q.exp;
 
-  const isLast = state.currentQ === mod.questions.length - 1;
+  const isLast = state.currentQ === state.sessionQuestions.length - 1;
   document.getElementById('btn-next').textContent = isLast ? 'See Results →' : 'Next →';
 }
 
 // ── RESULTS ────────────────────────────────────
 function finishQuiz() {
   const mod = MODULES.find(m => m.id === state.activeModuleId);
+  const lessonIdx = state.activeLessonIdx;
+  const lessonKey = `${mod.id}_${lessonIdx}`;
   const score = state.sessionScore;
-  const total = mod.questions.length;
+  const total = state.sessionQuestions.length;
   const isPerfect = score === total;
   if (isPerfect) state.hadPerfect = true;
 
-  const wasCompleted = !!state.completedModules[mod.id];
+  const wasLessonDone = !!state.completedLessons[lessonKey];
   const base = Math.round(mod.xpReward * (score / total));
-  const xpEarned = wasCompleted ? Math.round(base * 0.5) : (isPerfect ? Math.round(mod.xpReward * 1.25) : base);
+  const xpEarned = wasLessonDone ? Math.round(base * 0.5) : (isPerfect ? Math.round(mod.xpReward * 1.25) : base);
+
+  const prevLesson = state.completedLessons[lessonKey];
+  if (!prevLesson || score > prevLesson.score) {
+    state.completedLessons[lessonKey] = { score, total, xpEarned };
+  }
+
+  // Mark module complete (for achievements) when any lesson finishes
+  const prev = state.completedModules[mod.id];
+  if (!prev || score > prev.score) {
+    state.completedModules[mod.id] = { score, total, xpEarned };
+  }
 
   updateStreak();
   const leveled = addXP(xpEarned);
-
-  const prev = state.completedModules[mod.id];
-  if (!prev || score > prev.score) {
-    state.completedModules[mod.id] = { score, xpEarned };
-  }
-
   const newAchs = checkAchievements();
   saveState();
   showScreen('screen-results');
-  renderResults(mod, score, total, xpEarned, wasCompleted, newAchs);
+  renderResults(mod, score, total, xpEarned, wasLessonDone, newAchs);
 
   if (leveled) {
     setTimeout(() => {
@@ -482,7 +724,7 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs) {
   else                 { grade = 'Keep Going'; title = 'Keep Practicing'; }
 
   const breakdown = state.sessionAnswers.map((a, i) => {
-    const q = mod.questions[i];
+    const q = state.sessionQuestions[i];
     const short = q.opts[q.correct].length > 42 ? q.opts[q.correct].substring(0, 42) + '…' : q.opts[q.correct];
     return `<div class="breakdown-item">
       <span class="result-q">Q${i+1}: ${short}</span>
@@ -510,19 +752,32 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs) {
     </div>`;
 
   document.getElementById('res-home').addEventListener('click', renderHome);
-  document.getElementById('res-replay').addEventListener('click', () => startHook(mod.id));
+  document.getElementById('res-replay').addEventListener('click', () => showModuleDetail(mod.id));
 }
 
 // ── Event listeners ────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('hook-exit').addEventListener('click', renderHome);
+  // Sidebar navigation
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const page = btn.dataset.page;
+      showPage(page);
+      if (page === 'home')     renderHome();
+      else if (page === 'progress') renderProgressPage();
+      else if (page === 'modules')  renderModulesPage();
+      else if (page === 'badges')   renderBadgesPage();
+      else if (page === 'settings') renderSettingsPage();
+    });
+  });
+
+  document.getElementById('mod-detail-exit').addEventListener('click', renderHome);
+  document.getElementById('hook-exit').addEventListener('click', () => showModuleDetail(state.activeModuleId));
   document.getElementById('hook-start').addEventListener('click', startQuiz);
   document.getElementById('quiz-exit').addEventListener('click', () => {
     if (confirm('Exit quiz? Your progress for this session will be lost.')) renderHome();
   });
   document.getElementById('btn-next').addEventListener('click', () => {
-    const mod = MODULES.find(m => m.id === state.activeModuleId);
-    if (state.currentQ < mod.questions.length - 1) {
+    if (state.currentQ < state.sessionQuestions.length - 1) {
       state.currentQ++;
       renderQuestion();
     } else {
