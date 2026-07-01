@@ -160,6 +160,10 @@ body { background: var(--bg); min-height: 100vh; }
 .mod-icon.lav   { background: #E8D6FF; color: #6B35B8; }
 .mod-icon.sky   { background: #D6EEFF; color: #1A5E8A; }
 .mod-icon.peach { background: #FFE5D0; color: #8A3E1A; }
+.mod-icon.amber { background: #FFEDB0; color: #8A6800; }
+.mod-icon.slate { background: #E3E7F0; color: #3C4A63; }
+.mod-icon.berry { background: #F5D9E8; color: #8F2D5E; }
+.mod-icon.indigo { background: #DCE0FA; color: #38408A; }
 
 .card-badge { font-size: 0.68rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: var(--radius-sm); }
 .badge-done { background: var(--green-light); color: var(--green-dark); }

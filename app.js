@@ -62,7 +62,7 @@ const MODULES = [
   {
     id: 'spending', title: 'Spending', icon: '02', iconColor: 'pink', xpReward: 100,
     hook: 'It\'s week 6 of the semester. You had $800 for the month. You check your account and there\'s $23 left. You didn\'t buy anything big. How did this happen - and how do you stop it?',
-    desc: 'Budgeting on a student income, meal plans, and where money actually goes.',
+    desc: 'Budgeting on a student income, meal plans, paying for college, and where money actually goes.',
     questions: [
       {
         q: 'The 50/30/20 rule splits your after-tax income. What does the "50" represent?',
@@ -93,11 +93,30 @@ const MODULES = [
         opts: ['1 week of expenses', '1 month of expenses', '3–6 months of expenses', '12 months of expenses'],
         correct: 2,
         exp: 'A 3–6 month cushion protects you from unexpected costs like medical bills, car repairs, or sudden job loss. Start with $500–$1,000 if 3 months feels out of reach.'
+      },
+      {
+        q: 'When can students first submit the FAFSA (Free Application for Federal Student Aid) for the upcoming academic year, and why does the timing matter?',
+        opts: ['Anytime over the summer — timing doesn\'t matter', 'FAFSA opens October 1st each year, and applying early matters because many grants and state aid programs are awarded first-come, first-served until funds run out', 'Only after you\'ve already enrolled and started classes', 'FAFSA is a one-time application you only submit once, in your first year'],
+        correct: 1,
+        exp: 'The FAFSA opens every October 1st for the following academic year — put it on your calendar. It determines your eligibility for federal grants, work-study, and loans, plus most school and state aid. The application trips a lot of students up — income verification, tax data transfer, dependency questions — but gathering your tax documents ahead of time makes it far less stressful. You must resubmit it every single year you\'re in school to keep your aid.'
+      },
+      {
+        q: 'After you submit the FAFSA, your school sends you a financial aid offer (sometimes called an award letter). What should you do with it?',
+        opts: ['Ignore it — aid is automatically applied to your bill', 'Review each item individually — grants, scholarships, work-study, loans — and actively accept or decline each one; you\'re never required to accept loans just because they\'re offered', 'Accept the entire package as one bundled decision with no choices', 'Only respond if you plan on taking loans'],
+        correct: 1,
+        exp: 'A financial aid offer isn\'t one lump decision. Gift aid — grants and scholarships — is money you should almost always accept since it\'s never repaid. Loans are a separate choice: you can accept the full amount, accept less, or decline entirely. Read the offer line by line, confirm whether it covers a full year or just one semester, and know exactly what\'s free versus what you\'ll owe with interest.'
+      },
+      {
+        q: 'You\'re still short on funds after grants and scholarships are applied to your bill. Besides borrowing more, what\'s another option worth exploring?',
+        opts: ['There is no other option besides loans', 'A tuition payment plan through your school\'s bursar office, which splits your balance into smaller monthly installments — often interest-free', 'Skip the payment and hope the school doesn\'t notice', 'Put the balance on a credit card'],
+        correct: 1,
+        exp: 'Most schools offer a tuition payment plan that breaks your bill into monthly installments, often for just a small flat enrollment fee instead of interest. It won\'t lower what you owe, but it eases cash-flow pressure without taking on debt. Pair that with actively searching for outside scholarships — local organizations, employers, and community foundations all offer free money that doesn\'t show up on your school\'s offer automatically.'
       }
     ],
     lessons: [
       { title: 'The 50/30/20 Rule', hook: 'It\'s week 6 of the semester. You had $800 for the month. You check your account and there\'s $23 left. You didn\'t buy anything big. How did this happen — and how do you stop it?', qIndices: [0, 1, 2] },
-      { title: 'Budget Deficits & Emergency Funds', hook: 'You spent $900 this month but only earned $750. That\'s a $150 deficit. Your first instinct is to put it on a credit card. Is that the right move — and how do you prevent this next month?', qIndices: [3, 4] }
+      { title: 'Budget Deficits & Emergency Funds', hook: 'You spent $900 this month but only earned $750. That\'s a $150 deficit. Your first instinct is to put it on a credit card. Is that the right move — and how do you prevent this next month?', qIndices: [3, 4] },
+      { title: 'Paying for College', hook: 'It\'s October 1st and your inbox reminds you: FAFSA is open. Last year you put it off, missed a scholarship deadline, and scrambled to understand a confusing financial aid offer in August. This year, what\'s the plan?', qIndices: [5, 6, 7] }
     ]
   },
   {
@@ -262,6 +281,194 @@ const MODULES = [
     lessons: [
       { title: 'Insurance Basics', hook: 'You\'re moving off-campus. A pipe bursts in your apartment and ruins your laptop, TV, and clothes. Your landlord\'s insurance covers the building — not your stuff. You owe $2,000 in replacements. What should you have had?', qIndices: [0, 1, 2] },
       { title: 'Identity Theft', hook: 'You get an alert: someone opened a credit card in your name in another state. You\'re a student with no real assets — but this wrecks your credit and your identity. How do you protect yourself before this happens?', qIndices: [3, 4] }
+    ]
+  },
+  {
+    id: 'loans', title: 'Loans', icon: '07', iconColor: 'amber', xpReward: 125,
+    hook: 'Your financial aid offer shows $5,500 in federal loans available for the year. You only need $3,200 to cover the gap after grants. It\'s tempting to take it all as extra cash. Should you?',
+    desc: 'Federal loan types, how eligibility works, and what to do before your first dollar arrives.',
+    questions: [
+      {
+        q: 'What is the key difference between a Direct Subsidized and a Direct Unsubsidized federal loan?',
+        opts: ['Subsidized loans are only for graduate students', 'The government pays the interest on Subsidized loans while you\'re in school; Unsubsidized loans accrue interest the entire time, including while you\'re enrolled', 'Unsubsidized loans have no fixed interest rate while Subsidized loans do', 'There is no real difference — both are treated identically'],
+        correct: 1,
+        exp: 'Direct Subsidized Loans are need-based, and the government covers the interest while you\'re enrolled at least half-time. Direct Unsubsidized Loans aren\'t based on need, and interest starts accruing from day one — even before you graduate — so it\'s worth paying that interest if you can while still in school.'
+      },
+      {
+        q: 'Who is a Direct PLUS Loan designed for?',
+        opts: ['Undergraduate students who have exhausted their Subsidized and Unsubsidized loan limits', 'Graduate/professional students, or parents of dependent undergrads, who need to cover costs beyond other financial aid', 'First-year students only', 'Students with excellent credit who want a lower interest rate than other federal loans'],
+        correct: 1,
+        exp: 'PLUS Loans — Grad PLUS or Parent PLUS — fill the gap after other aid is applied. Unlike Direct Subsidized/Unsubsidized loans, they require a credit check and typically carry a higher interest rate, so they should be a last resort, not a first option.'
+      },
+      {
+        q: 'How does the number of credits you\'re enrolled in affect your federal loan eligibility?',
+        opts: ['It has no effect — loan amounts are fixed no matter what', 'You generally need to be enrolled at least half-time to qualify for federal student loans, and your eligible amount can be reduced if you drop credits', 'Only full-time students can borrow any federal loans at all', 'Enrollment status only affects scholarships, never loans'],
+        correct: 1,
+        exp: 'Federal loan eligibility is tied to enrollment status — usually at least half-time (commonly 6+ credits per semester). Drop below that threshold mid-semester and your aid, including loans already disbursed, can be adjusted or even reversed. Always check with your financial aid office before dropping a class.'
+      },
+      {
+        q: 'Before a first-time borrower can receive any federal Direct Loan funds, what must they complete?',
+        opts: ['Nothing — funds are automatically disbursed once FAFSA is approved', 'A Master Promissory Note (MPN) and Loan Entrance Counseling, both completed at studentaid.gov', 'A credit check and a co-signer application', 'An in-person meeting with a loan officer at a bank'],
+        correct: 1,
+        exp: 'Every first-time federal borrower must complete both a Master Promissory Note — your legal promise to repay — and Loan Entrance Counseling, which walks through your rights and responsibilities, before a single dollar is disbursed. Both are done directly at studentaid.gov, and skipping either one delays your funds.'
+      },
+      {
+        q: 'Your school offers you $5,500 in federal loans, but after grants and savings you only need $3,200 to cover your costs. What\'s the smartest move?',
+        opts: ['Accept the full $5,500 — extra cash is always useful', 'Accept only the $3,200 you actually need, and decline or reduce the rest through your school\'s financial aid portal', 'Decline all loans, even the amount you need, to avoid any debt at all', 'Accept the full amount and invest the difference'],
+        correct: 1,
+        exp: 'You are never required to accept a loan offer in full. Every dollar borrowed accrues interest and has to be repaid after graduation — borrowing only what covers your actual gap keeps your future monthly payments manageable. "It\'s offered" doesn\'t mean "you need it."'
+      },
+      {
+        q: 'You completed your MPN and Entrance Counseling last year and borrowed federal loans. Do you need to do anything to keep borrowing this year?',
+        opts: ['No — once you\'re approved for federal loans, you\'re approved permanently', 'Yes — you must submit the FAFSA again every academic year to maintain your eligibility for federal loans and other aid', 'Only if your GPA drops', 'Only if you change your major'],
+        correct: 1,
+        exp: 'FAFSA isn\'t a one-time form — it must be resubmitted every academic year to keep your federal loan eligibility (and any grants or work-study) active. Missing the renewal is one of the most common ways students accidentally lose aid they were counting on.'
+      }
+    ],
+    lessons: [
+      { title: 'Federal Loan Types', hook: 'Your financial aid offer lists three different kinds of loans — Direct Subsidized, Direct Unsubsidized, and PLUS — plus a note about your enrollment status. You\'ve never seen any of these terms before. What do they actually mean for what you\'ll owe?', qIndices: [0, 1, 2] },
+      { title: 'Borrowing Responsibly', hook: 'You\'re about to accept federal loans for the first time. Before any money shows up, studentaid.gov is asking you to complete a Master Promissory Note and Entrance Counseling — and your offer includes more than you actually need. What do you do?', qIndices: [3, 4, 5] }
+    ]
+  },
+  {
+    id: 'taxes', title: 'Taxes', icon: '08', iconColor: 'slate', xpReward: 125,
+    hook: 'It\'s April. You have a W-2 from your on-campus job, a 1099 from a freelance gig, and you\'ve never filed a tax return in your life. Where do you even start?',
+    desc: 'Filing your first return, W-2s vs. 1099s, education credits, and the mistakes that cost students the most.',
+    questions: [
+      {
+        q: 'As a student filing your very first tax return, what\'s the most important first step?',
+        opts: ['Guess your income and file whatever feels right', 'Gather your income documents (W-2s, 1099s), confirm whether a parent claims you as a dependent, and file by the deadline — typically April 15th', 'Wait until you owe money before filing anything', 'Only file if you made over $50,000'],
+        correct: 1,
+        exp: 'Even students with part-time or internship income often need to file. Collect every income document you received, confirm your dependency status (it changes your standard deduction), and file — free options like IRS Free File cover most students. The federal deadline is typically April 15th.'
+      },
+      {
+        q: 'You open your W-2 and "Box 1: Wages" is lower than your actual gross pay for the year. Why?',
+        opts: ['The employer made an error', 'Box 1 shows taxable wages after pre-tax deductions — like retirement contributions or certain benefits — are subtracted', 'Box 1 always equals your final paycheck of the year', 'W-2s only report your most recent paycheck'],
+        correct: 1,
+        exp: 'Box 1 reflects taxable wages, not gross pay — pre-tax deductions such as 401(k)/403(b) contributions are already removed. Other boxes show federal income tax, Social Security, and Medicare withheld. You\'ll need this form on hand to file your return.'
+      },
+      {
+        q: 'You did freelance design work and earned $900 through a platform that sent you a 1099-NEC instead of a W-2. What\'s different about this income?',
+        opts: ['Nothing — it\'s taxed exactly like W-2 wages with taxes already withheld', 'No taxes were withheld, so you\'re responsible for reporting it yourself and may owe self-employment tax on top of income tax', '1099 income is tax-free under $1,000', 'You don\'t need to report it since it wasn\'t a full-time job'],
+        correct: 1,
+        exp: '1099 income — freelance work, gig apps, a side business — has no taxes withheld upfront; that responsibility falls on you. Beyond income tax, you may owe self-employment tax (roughly 15.3% for Social Security and Medicare) once net earnings pass $400. Setting aside 20–30% of 1099 income as you earn it avoids a painful surprise bill.'
+      },
+      {
+        q: 'You worked a paid summer internship and received a W-2 with taxes already withheld. Do you still need to file a return?',
+        opts: ['No — since taxes were already withheld, there\'s nothing left to do', 'Possibly yes — filing may get you a refund of over-withheld taxes, and you\'re required to file once your income passes the filing threshold', 'Only if the internship was unpaid', 'Internship income is exempt from taxes for students'],
+        correct: 1,
+        exp: 'Internship pay is taxed like any other W-2 job. Many students have more withheld than they actually owe relative to their total annual income — filing is how you get that money back as a refund. Skipping the return can mean leaving money on the table.'
+      },
+      {
+        q: 'What\'s the difference between the American Opportunity Tax Credit (AOTC) and the Lifetime Learning Credit (LLC)?',
+        opts: ['They\'re the same credit under two different names', 'The AOTC applies to the first four years of undergraduate study and offers a larger credit; the LLC has no year limit and covers more types of coursework, but offers a smaller credit', 'The LLC is only for graduate students and the AOTC only for high schoolers', 'Neither can be claimed if the student is someone else\'s dependent'],
+        correct: 1,
+        exp: 'The AOTC is worth up to $2,500/year for the first four years of a degree, and up to 40% of it is refundable even if you owe no tax. The LLC is worth up to $2,000/year with no limit on how many years you can claim it, and covers a broader range of courses. If you\'re a dependent, it\'s usually your parent who claims these — confirm who\'s eligible before anyone files.'
+      },
+      {
+        q: 'Which of these is a common mistake first-time student filers make?',
+        opts: ['Filing electronically instead of by mail', 'Forgetting to report 1099/gig income, filing as independent when a parent still claims them as a dependent, or missing education credits they qualify for', 'Using IRS Free File to submit their return', 'Keeping copies of their tax documents after filing'],
+        correct: 1,
+        exp: 'The most common first-time mistakes: forgetting to report cash or 1099 gig income, filing as independent when a parent actually claims you as a dependent (which affects both returns), and missing education credits or deductions entirely. When in doubt, your school\'s financial aid office or a free VITA tax clinic can help for free.'
+      }
+    ],
+    lessons: [
+      { title: 'Your First Return', hook: 'It\'s April. You have a W-2 from your on-campus job and a 1099 from a freelance gig you did on weekends. You\'ve never filed a tax return in your life. Where do you even start — and what do these forms actually mean?', qIndices: [0, 1, 2] },
+      { title: 'Credits & Common Mistakes', hook: 'Your friend says they got $600 back after filing, but you didn\'t even think you needed to file since you were "just an intern." What are you missing — and what do first-time filers usually get wrong?', qIndices: [3, 4, 5] }
+    ]
+  },
+  {
+    id: 'psychology', title: 'Consumer Psychology', icon: '09', iconColor: 'berry', xpReward: 100,
+    hook: 'You know you should be saving. You even said out loud last week, "I need to stop spending on DoorDash." Then a friend tags you in a group order twenty minutes later. Why isn\'t knowing enough?',
+    desc: 'Impulse spending, social pressure, lifestyle inflation, subscriptions, and BNPL — the behavioral side of money.',
+    questions: [
+      {
+        q: 'You know you should save, and you even have a budget — but by month\'s end there\'s nothing left. What\'s usually the real reason?',
+        opts: ['Budgets simply don\'t work for anyone', 'Financial decisions are driven as much by emotion, habit, and environment as by logic — knowledge alone doesn\'t change behavior without systems that make good choices automatic', 'You simply don\'t earn enough money, full stop', 'Saving only matters once you have a high income'],
+        correct: 1,
+        exp: 'This is sometimes called the "knowledge-action gap" — knowing the right move and consistently doing it are different skills. Willpower fades, especially under stress or around friends. The fix isn\'t more willpower; it\'s designing your environment — automatic transfers, separate accounts, fewer triggers — so the right choice takes less effort than the wrong one.'
+      },
+      {
+        q: 'What\'s the most effective way to reduce impulse spending?',
+        opts: ['Rely purely on willpower to resist urges in the moment', 'Identify your personal triggers — boredom, stress, social media ads, being with certain friends — and add friction, like a 24-hour rule before non-essential purchases', 'Avoid checking your bank balance so you don\'t feel guilty', 'Impulse spending can\'t be reduced, only accepted'],
+        correct: 1,
+        exp: 'Impulse purchases are triggered by emotion and environment — late-night scrolling, a stressful week, seeing a friend post a new purchase. A 24-hour waiting rule for non-essential buys over a set amount (say, $30) lets the emotional urge fade and gives your rational brain a chance to weigh in.'
+      },
+      {
+        q: 'Your friend group keeps upgrading — concert tickets, new clothes, trips — and your spending has crept up to match, even though your income hasn\'t changed. What is this called?',
+        opts: ['Compound interest', 'Lifestyle inflation — spending rises to match perceived social norms or income increases, often without a matching increase in savings', 'Diversification', 'A one-time budget deficit, unrelated to social factors'],
+        correct: 1,
+        exp: 'Lifestyle inflation happens gradually — each "yes" feels small on its own, but they add up fast. Social pressure accelerates it, since spending often tracks the people around you rather than your actual budget. Naming the pattern helps: set a spending cap for social activities and be upfront with friends about it. Real friends adjust.'
+      },
+      {
+        q: 'You review your bank statement and find six recurring subscriptions — some you forgot you even had. What\'s the best way to prevent this "subscription creep"?',
+        opts: ['Subscriptions are small, so they\'re not worth tracking', 'Do a recurring-charge audit every month or two, cancel what you don\'t use, and set one overall "subscriptions" budget cap instead of stacking them one by one', 'Sign up for as many free trials as possible', 'Only cancel subscriptions once you\'re already in debt'],
+        correct: 1,
+        exp: 'Subscriptions are designed to be easy to start and easy to forget — $8 here, $12 there adds up to real money over a year. Scan your statement monthly for recurring charges, cancel what you don\'t use, and set a total budget line for subscriptions instead of letting each one sneak in separately.'
+      },
+      {
+        q: 'A checkout page offers "Buy Now, Pay Later" — split a $200 purchase into 4 payments of $50 with no interest. What\'s the hidden risk?',
+        opts: ['There is no risk — it\'s always interest-free and completely safe', 'BNPL can encourage overspending beyond what you\'d normally buy, stacking multiple plans gets hard to track, and missed payments can trigger late fees or hit your credit', 'BNPL only works for people with excellent credit', 'BNPL automatically improves your credit score'],
+        correct: 1,
+        exp: 'BNPL feels painless because it splits the cost into smaller pieces — which is exactly why it can lead to overspending. Juggling several BNPL plans across different apps makes it easy to lose track of what\'s due and when, and missed payments can mean late fees or credit damage depending on the provider. Ask yourself: would I still buy this if I had to pay the full amount today?'
+      },
+      {
+        q: 'What\'s the most reliable way to build a financial habit that actually sticks?',
+        opts: ['Rely on motivation and remember to do it manually every time', 'Automate the behavior — like an automatic savings transfer on payday — so the good choice happens by default without requiring willpower each time', 'Set an unrealistic goal so you\'re forced to try harder', 'Only check your spending once a year'],
+        correct: 1,
+        exp: 'Habits that depend on remembering and willpower fade fast. Habits that run automatically — an auto-transfer to savings, a bill on autopay, a set weekly check-in — stick because they don\'t require a fresh decision every time. Start small and automatic; consistency beats intensity.'
+      }
+    ],
+    lessons: [
+      { title: 'Why Knowing Isn\'t Enough', hook: 'You know you should be saving — you even said it out loud last week. Then a friend tags you in a group order twenty minutes later. Why does knowing what to do never seem to be enough?', qIndices: [0, 1, 2] },
+      { title: 'Subscriptions, BNPL & Building Habits', hook: 'You check out online and see "Buy Now, Pay Later — 4 payments of $50, no interest." It feels harmless. Combined with the six subscriptions already on your card, is it?', qIndices: [3, 4, 5] }
+    ]
+  },
+  {
+    id: 'career', title: 'Career & Salary', icon: '10', iconColor: 'indigo', xpReward: 125,
+    hook: 'You get a job offer: $58,000. You\'re thrilled and about to accept on the spot. Your friend negotiated theirs from $55,000 to $60,000 with one email. Did you just leave money on the table?',
+    desc: 'Negotiating your first salary, reading a benefits package, and why early career decisions compound for decades.',
+    questions: [
+      {
+        q: 'You receive a job offer of $58,000. What\'s the biggest mistake new grads make in this moment?',
+        opts: ['Taking 24–48 hours to review the full offer before responding', 'Accepting immediately without ever asking if there\'s room to negotiate, assuming the first number is final', 'Asking a clarifying question about the start date', 'Reading the benefits summary before responding'],
+        correct: 1,
+        exp: 'Most starting offers have some flexibility built in — employers often expect a counter. Simply asking "Is there room to negotiate?" costs nothing and can mean thousands more per year, which compounds through every future raise calculated as a percentage of your base. Silence is the most expensive mistake.'
+      },
+      {
+        q: 'What\'s the most effective way to approach negotiating your first salary?',
+        opts: ['Demand a specific number without justification and threaten to walk away', 'Research market rate for the role and location, then ask for a specific number backed by that research and your value — professionally and in writing when possible', 'Avoid mentioning a number at all and hope they offer more', 'Only negotiate if you already have a competing offer in hand'],
+        correct: 1,
+        exp: 'Come with data: sites like Glassdoor, Levels.fyi, or your school\'s career center can show market rate for your role and location. Anchor your ask to that research, stay professional, and follow up in writing. You don\'t need a competing offer to negotiate — you just need a reasonable, researched ask.'
+      },
+      {
+        q: 'Two job offers both pay $60,000. Job A has a $2,000/year health insurance premium and no HSA. Job B has a $500/year premium and an HSA with employer contributions. What does this tell you?',
+        opts: ['Nothing — if the salary is the same, the offers are equal', 'The "real" value of a compensation package includes benefits like health insurance premiums, dental, vision, and FSA/HSA options — not just the salary number', 'HSAs are only useful for people who are already sick', 'Health insurance premiums are always identical across employers'],
+        correct: 1,
+        exp: 'Salary is only part of total compensation. A lower premium and an employer-funded HSA — money that\'s yours, tax-advantaged, and often rolls over year to year — can be worth thousands annually, sometimes more than a modest salary bump. Always ask for the full benefits summary, not just the offer letter number.'
+      },
+      {
+        q: 'Your new employer offers a 401(k) with a 4% match, but you\'re not contributing anything yet. What are you missing out on?',
+        opts: ['Nothing significant — 401(k)s don\'t matter until you\'re older', 'Free money — an employer match is effectively part of your compensation, and not contributing enough to capture the full match means leaving a guaranteed, immediate return on the table', 'The match only applies after 10 years at the company', 'You can only access a match if you\'re a full-time salaried employee'],
+        correct: 1,
+        exp: 'An employer match is money your employer will only pay if you contribute your own money first. Not capturing the full 4% match on a $50,000 salary means leaving $2,000/year — guaranteed, before any investment growth — sitting unclaimed. It\'s the closest thing to a risk-free 100% return you\'ll ever be offered.'
+      },
+      {
+        q: 'You\'re comparing two job offers: Job A pays $65,000 in a high-cost city; Job B pays $58,000 in a lower-cost city with better benefits and a clear promotion timeline. How should you evaluate them?',
+        opts: ['Always take the higher salary number, regardless of other factors', 'Compare total compensation (salary plus benefits value), adjust for cost of living, and weigh growth potential — not just the headline number', 'Always take the lower-cost-of-living option automatically', 'Salary is the only factor that matters in any job decision'],
+        correct: 1,
+        exp: 'The headline salary can be misleading. A $65,000 offer in an expensive city may have less real purchasing power than $58,000 somewhere cheaper. Factor in benefits value (retirement match, health coverage, PTO) and growth potential — will this role lead to a promotion or raise within a year or two? — before comparing offers side by side.'
+      },
+      {
+        q: 'Two grads take jobs with a $5,000 starting salary difference. Assuming similar raise structures over their careers, why does that early gap matter more than it seems?',
+        opts: ['It doesn\'t — a $5,000 difference is minor and evens out over time', 'Future raises, bonuses, and even new job offers are often calculated as a percentage of your current salary, so an early gap compounds and widens over a career, similar to compound interest', 'Only the first year\'s salary difference matters; every year after resets to equal footing', 'Salary differences only matter for retirement savings, not day-to-day life'],
+        correct: 1,
+        exp: 'Raises are usually a percentage of your current salary, so a higher starting point keeps multiplying that gap year after year — and future employers often ask about salary history, anchoring your next offer too. A $5,000 gap in your first job can turn into tens of thousands of dollars in lifetime earnings. Early-career decisions carry outsized weight precisely because they compound.'
+      }
+    ],
+    lessons: [
+      { title: 'Negotiating & Benefits', hook: 'You get a job offer: $58,000. You\'re about to accept on the spot. Your friend negotiated theirs from $55,000 to $60,000 with one email — and the benefits summary you haven\'t even opened yet might matter just as much as the number. What are you missing?', qIndices: [0, 1, 2] },
+      { title: 'Comparing Offers & Long-Term Impact', hook: 'You have two offers on the table — one with a slightly higher salary, the other with a stronger 401(k) match and a clearer promotion path. Your instinct says take the bigger number. Is that actually the smarter long-term move?', qIndices: [3, 4, 5] }
     ]
   }
 ];
@@ -622,7 +829,11 @@ const ACHIEVEMENTS = [
   { id: 'investor',       abbr: 'FM', label: 'Future Millionaire', desc: 'Complete Investing module',     check: s => s.completedModules.investing },
   { id: 'credit_champ',   abbr: 'CC', label: 'Credit Champ',       desc: 'Complete Managing Credit',     check: s => s.completedModules.credit },
   { id: 'risk_ready',     abbr: 'RR', label: 'Risk Ready',         desc: 'Complete Managing Risk',       check: s => s.completedModules.risk },
-  { id: 'stackd_star',    abbr: 'S*', label: 'Stackd Star',        desc: 'Complete all 6 modules',       check: s => Object.keys(s.completedModules).length >= 6 },
+  { id: 'loan_smart',     abbr: 'LN', label: 'Loan Smart',         desc: 'Complete Loans module',        check: s => s.completedModules.loans },
+  { id: 'tax_ready',      abbr: 'TX', label: 'Tax Ready',          desc: 'Complete Taxes module',        check: s => s.completedModules.taxes },
+  { id: 'mindful_money',  abbr: 'MM', label: 'Mindful Spender',    desc: 'Complete Consumer Psychology', check: s => s.completedModules.psychology },
+  { id: 'offer_ready',    abbr: 'CS', label: 'Offer Ready',        desc: 'Complete Career & Salary',     check: s => s.completedModules.career },
+  { id: 'stackd_star',    abbr: 'S*', label: 'Stackd Star',        desc: 'Complete all modules',         check: s => Object.keys(s.completedModules).length >= MODULES.length },
   { id: 'perfect_score',  abbr: '5/5',label: 'Perfect Score',      desc: 'Answer all 5 questions right', check: s => s.hadPerfect },
   { id: 'on_fire',        abbr: '3D', label: 'On a Roll',          desc: '3-day streak',                 check: s => s.streak >= 3 },
   { id: 'leveled_up',     abbr: 'L3', label: 'Leveled Up',         desc: 'Reach Level 3',                check: s => s.level >= 3 },
@@ -1069,7 +1280,7 @@ function renderHome() {
   const tier = getTier(state.level);
   document.getElementById('h-tier').textContent = tier.name;
   const done = Object.keys(state.completedModules).length;
-  document.getElementById('modules-home-sub').textContent = done === 6 ? 'All complete — replay to master!' : `${done}/6 complete`;
+  document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
 
   document.getElementById('home-mascot-card').innerHTML = `
     <div class="mascot-pig-wrap">${getPigMarkup(0.25)}</div>
@@ -1093,7 +1304,7 @@ function renderHome() {
       <div class="hs-label">Day Streak</div>
     </div>
     <div class="hs-card">
-      <div class="hs-num">${done}<span style="font-size:1rem;letter-spacing:0;color:var(--text-soft)">/6</span></div>
+      <div class="hs-num">${done}<span style="font-size:1rem;letter-spacing:0;color:var(--text-soft)">/${MODULES.length}</span></div>
       <div class="hs-label">Modules Done</div>
     </div>`;
 
@@ -1105,7 +1316,7 @@ function renderHome() {
 function renderModulesPage() {
   updateSidebarStats();
   const done = Object.keys(state.completedModules).length;
-  document.getElementById('modules-sub').textContent = done === 6 ? 'All complete — replay to master!' : `${done}/6 complete`;
+  document.getElementById('modules-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
   renderModuleList('modules-grid');
 }
 
@@ -1127,16 +1338,16 @@ function renderProgressPage() {
   // Donut chart math (SVG circle r=32, circumference ≈ 201)
   const r = 32;
   const circ = +(2 * Math.PI * r).toFixed(2);
-  const offset = +(circ * (1 - done / 6)).toFixed(2);
+  const offset = +(circ * (1 - done / MODULES.length)).toFixed(2);
 
   // Column chart: XP per module, scaled to tallest
   const xpVals = MODULES.map(m => state.completedModules[m.id]?.xpEarned || 0);
   const maxXP = Math.max(...xpVals, 1);
 
   // Alternating bar colors
-  const pinkMods = new Set(['spending', 'credit']);
+  const pinkMods = new Set(['spending', 'credit', 'taxes']);
 
-  const pigMsg = done === 6 ? "You did it! All modules complete!"
+  const pigMsg = done === MODULES.length ? "You did it! All modules complete!"
     : done > 0 ? "Keep going, you're doing great!"
     : "Let's get started!";
 
@@ -1184,12 +1395,12 @@ function renderProgressPage() {
           </svg>
           <div class="pg-donut-center">
             <span class="pg-donut-num">${done}</span>
-            <span class="pg-donut-den">/6</span>
+            <span class="pg-donut-den">/${MODULES.length}</span>
           </div>
         </div>
         <div class="pg-donut-legend">
           <span class="pg-legend-item"><span class="pg-legend-dot pg-dot-green"></span>Completed (${done})</span>
-          <span class="pg-legend-item"><span class="pg-legend-dot pg-dot-gray"></span>Remaining (${6 - done})</span>
+          <span class="pg-legend-item"><span class="pg-legend-dot pg-dot-gray"></span>Remaining (${MODULES.length - done})</span>
         </div>
       </div>
 
