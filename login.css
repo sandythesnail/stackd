@@ -5,42 +5,40 @@ body { background: var(--bg); min-height: 100vh; }
 
 /* Left panel */
 .login-left {
-  background: var(--green-dark);
-  padding: 2.5rem; display: flex; flex-direction: column; gap: 2rem;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 88% 8%, rgba(107,143,101,0.45) 0%, rgba(107,143,101,0.45) 16%, transparent 38%),
+    radial-gradient(circle at 6% 92%, rgba(212,137,158,0.4) 0%, rgba(212,137,158,0.4) 16%, transparent 38%),
+    radial-gradient(circle, rgba(107,143,101,0.16) 1.5px, transparent 1.5px);
+  background-size: auto, auto, 26px 26px;
+  padding: 2.5rem; display: flex; flex-direction: column; gap: 0.75rem;
   position: relative; overflow: hidden;
 }
-.login-left::before {
-  content: ''; position: absolute; top: -120px; right: -120px;
-  width: 420px; height: 420px; border-radius: 50%;
-  background: rgba(126,201,164,0.15); pointer-events: none;
-}
-.login-left::after {
-  content: ''; position: absolute; bottom: -80px; left: -80px;
-  width: 300px; height: 300px; border-radius: 50%;
-  background: rgba(232,135,158,0.1); pointer-events: none;
-}
 
+.login-logo-wrap { display: flex; align-items: center; gap: 0.35rem; margin-left: -1.2rem; position: relative; z-index: 1; }
 .login-logo-link { position: relative; z-index: 1; }
-.login-logo-link.logo {
-  background: none; -webkit-text-fill-color: white; color: white;
-}
 
-.login-left-body { display: flex; flex-direction: column; gap: 2rem; margin-top: auto; position: relative; z-index: 1; }
+.login-left-body { display: flex; flex-direction: column; gap: 1.25rem; position: relative; z-index: 1; align-items: center; text-align: center; }
+
+.hammy-showcase { display: flex; flex-direction: column; align-items: center; margin-top: -2rem; }
 
 .testimonial-card {
-  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
-  border-radius: var(--radius); padding: 1.5rem;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem; width: 100%; text-align: left;
 }
 .testimonial-card p {
   font-family: var(--font-display); font-style: italic;
-  color: rgba(255,255,255,0.9); font-size: 1.05rem; line-height: 1.65;
+  color: var(--text); font-size: 1.05rem; line-height: 1.65;
   margin-bottom: 0.75rem;
 }
-.t-author { font-size: 0.8rem; color: rgba(255,255,255,0.45); font-weight: 600; }
+.t-author { font-size: 0.8rem; color: var(--text-soft); font-weight: 600; }
 
-.login-features { display: flex; flex-direction: column; gap: 0.55rem; }
-.lf-item { font-size: 0.88rem; color: rgba(255,255,255,0.75); font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
-.lf-check { color: var(--green-light); font-size: 1rem; }
+.login-features { display: flex; flex-direction: column; gap: 1.1rem; align-items: center; max-width: 400px; }
+.lf-item {
+  font-family: var(--font); font-size: 1.2rem; color: var(--text-mid); font-weight: 500;
+  display: flex; align-items: flex-start; gap: 0.65rem; text-align: left; line-height: 1.5;
+}
+.lf-check { color: var(--green-dark); font-size: 1.25rem; line-height: 1.4; }
 
 /* Right panel */
 .login-right {

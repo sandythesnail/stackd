@@ -15,8 +15,11 @@ body { background-color: var(--bg); }
 }
 .bg-green-dots {
   background-color: var(--bg);
-  background-image: radial-gradient(circle, rgba(155,184,138,.15) 1px, transparent 1px);
-  background-size: 22px 22px;
+  background-image:
+    radial-gradient(circle at 88% 8%, rgba(107,143,101,0.45) 0%, rgba(107,143,101,0.45) 16%, transparent 38%),
+    radial-gradient(circle at 6% 92%, rgba(212,137,158,0.4) 0%, rgba(212,137,158,0.4) 16%, transparent 38%),
+    radial-gradient(circle, rgba(155,184,138,.15) 1px, transparent 1px);
+  background-size: auto, auto, 22px 22px;
 }
 .bg-pink-dots {
   background-color: var(--bg);

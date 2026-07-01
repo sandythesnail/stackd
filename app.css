@@ -54,7 +54,12 @@ body { background: var(--bg); min-height: 100vh; }
 }
 
 /* ─── MAIN + PAGES ─── */
-.app-main { margin-left: 220px; flex: 1; min-height: 100vh; }
+.app-main {
+  margin-left: 220px; flex: 1; min-height: 100vh;
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, rgba(107,143,101,0.16) 1.5px, transparent 1.5px);
+  background-size: 26px 26px;
+}
 
 .page { display: none; }
 .page.active { display: block; }
