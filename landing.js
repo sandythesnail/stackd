@@ -143,6 +143,42 @@ if (termOverlay) {
   });
 }
 
+// WAITLIST MODAL
+const waitlistOpenBtn = document.getElementById('waitlist-open-btn');
+const waitlistOverlay = document.getElementById('waitlist-modal-overlay');
+const waitlistClose = document.getElementById('waitlist-modal-close');
+const waitlistForm = document.getElementById('waitlist-form');
+const waitlistSuccess = document.getElementById('waitlist-success');
+
+function openWaitlistModal() {
+  if (!waitlistOverlay) return;
+  waitlistOverlay.hidden = false;
+  requestAnimationFrame(() => waitlistOverlay.classList.add('visible'));
+}
+function closeWaitlistModal() {
+  if (!waitlistOverlay) return;
+  waitlistOverlay.classList.remove('visible');
+  setTimeout(() => {
+    waitlistOverlay.hidden = true;
+    waitlistForm.hidden = false;
+    waitlistSuccess.hidden = true;
+    waitlistForm.reset();
+  }, 200);
+}
+if (waitlistOpenBtn && waitlistOverlay) {
+  waitlistOpenBtn.addEventListener('click', openWaitlistModal);
+  waitlistClose.addEventListener('click', closeWaitlistModal);
+  waitlistOverlay.addEventListener('click', e => { if (e.target === waitlistOverlay) closeWaitlistModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && waitlistOverlay.classList.contains('visible')) closeWaitlistModal();
+  });
+  waitlistForm.addEventListener('submit', e => {
+    e.preventDefault();
+    waitlistForm.hidden = true;
+    waitlistSuccess.hidden = false;
+  });
+}
+
 // Scroll reveal (same pattern as crochet site)
 const ro = new IntersectionObserver(es => {
   es.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
