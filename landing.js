@@ -10,6 +10,49 @@ function typeNextChar() {
 }
 window.addEventListener('load', () => setTimeout(typeNextChar, 600));
 
+// Topic ticker: clone the word list enough times to always fill the
+// viewport (so wide screens never run out of content mid-loop), flipping
+// colors on every other copy so pink/green keeps alternating across seams.
+const tickerTrack = document.getElementById('ticker-track');
+if (tickerTrack) {
+  const baseItems = Array.from(tickerTrack.children);
+  function buildVariant(flip) {
+    return baseItems.map(el => {
+      const clone = el.cloneNode(true);
+      if (flip && clone.classList.contains('ticker-item')) {
+        clone.classList.toggle('tick-pink');
+        clone.classList.toggle('tick-green');
+      }
+      clone.setAttribute('aria-hidden', 'true');
+      return clone.outerHTML;
+    }).join('');
+  }
+  const unitWidth = tickerTrack.scrollWidth;
+  const variantA = buildVariant(false);
+  const variantB = buildVariant(true);
+  // Copies must come in even A/B pairs: A followed by B keeps colors
+  // alternating across the seam, and a whole A+B pair is pixel-identical
+  // to the next A+B pair, so the scroll position can wrap every 2 units
+  // without any visual jump.
+  let pairsNeeded = Math.max(2, Math.ceil((window.innerWidth * 2) / (unitWidth * 2)) + 1);
+  let html = tickerTrack.innerHTML;
+  for (let i = 1; i < pairsNeeded * 2; i++) html += (i % 2 === 1 ? variantB : variantA);
+  tickerTrack.innerHTML = html;
+
+  const periodWidth = unitWidth * 2;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduceMotion) {
+    let pos = 0;
+    function tickerLoop() {
+      pos -= 0.5;
+      if (pos <= -periodWidth) pos += periodWidth;
+      tickerTrack.style.transform = `translateX(${pos}px)`;
+      requestAnimationFrame(tickerLoop);
+    }
+    requestAnimationFrame(tickerLoop);
+  }
+}
+
 // Nav scroll shadow
 const nav = document.getElementById('l-nav');
 window.addEventListener('scroll', () => {

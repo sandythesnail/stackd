@@ -124,8 +124,8 @@ body { background-color: var(--bg); }
 .topic-ticker .ticker-track {
   display: flex; align-items: center;
   white-space: nowrap;
-  animation: ticker-scroll 32s linear infinite;
   width: max-content;
+  will-change: transform;
 }
 .ticker-item {
   font-family: var(--font-display); font-size: 1.05rem; font-weight: 700;
@@ -134,10 +134,6 @@ body { background-color: var(--bg); }
 .ticker-item.tick-pink { color: var(--pink-dark); }
 .ticker-item.tick-green { color: var(--green-dark); }
 .ticker-sep { color: var(--border); font-size: 0.75rem; flex-shrink: 0; margin-right: 1.1rem; }
-@keyframes ticker-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
 
 /* HERO */
 .l-hero {
