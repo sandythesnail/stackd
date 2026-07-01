@@ -819,6 +819,135 @@ const SHOP_ITEMS = [
           <circle cx="70" cy="91" r="3" fill="#3A6FBC"/>
           <line x1="52" y1="105" x2="68" y2="105" stroke="#3A6FBC" stroke-width="1.5" opacity="0.6"/>`
   },
+  // ── ROOM DECOR ──
+  {
+    id: 'wallpaper_sage', name: 'Sage Dot Wallpaper', category: 'room', slot: 'wallpaper', price: 40,
+    desc: 'A calm little dotted backdrop.',
+    wallCss: 'background-color: var(--green-pale); background-image: radial-gradient(circle, rgba(107,143,101,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;'
+  },
+  {
+    id: 'wallpaper_blush', name: 'Blush Dot Wallpaper', category: 'room', slot: 'wallpaper', price: 40,
+    desc: 'Soft pink polka dots.',
+    wallCss: 'background-color: var(--pink-pale); background-image: radial-gradient(circle, rgba(212,137,158,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;'
+  },
+  {
+    id: 'wallpaper_stripes', name: 'Mint Stripe Wallpaper', category: 'room', slot: 'wallpaper', price: 55,
+    desc: 'Diagonal stripes, fully vibing.',
+    wallCss: 'background: repeating-linear-gradient(45deg, var(--green-light), var(--green-light) 10px, var(--green-pale) 10px, var(--green-pale) 20px);'
+  },
+  {
+    id: 'wallpaper_cream', name: 'Classic Cream Wallpaper', category: 'room', slot: 'wallpaper', price: 30,
+    desc: 'Simple, clean, and cozy.',
+    wallCss: 'background: var(--bg);'
+  },
+  {
+    id: 'wall_money_poster', name: 'Money Tree Poster', category: 'room', slot: 'wall', price: 70,
+    viewBox: '0 0 100 130',
+    desc: 'Grows dollars, not leaves.',
+    svg: `<rect x="4" y="4" width="92" height="122" rx="4" fill="var(--white)" stroke="var(--border)" stroke-width="4"/>
+          <rect x="14" y="14" width="72" height="102" fill="var(--green-pale)"/>
+          <rect x="46" y="80" width="8" height="30" fill="#8A6438"/>
+          <circle cx="50" cy="60" r="30" fill="var(--green-light)"/>
+          <circle cx="38" cy="70" r="6" fill="#FFD700"/>
+          <circle cx="62" cy="72" r="6" fill="#FFD700"/>
+          <circle cx="50" cy="52" r="6" fill="#FFD700"/>
+          <text x="50" y="57" font-size="9" text-anchor="middle" fill="var(--green-dark)" font-weight="700">$</text>`
+  },
+  {
+    id: 'wall_motivation_poster', name: 'You Got This Poster', category: 'room', slot: 'wall', price: 70,
+    viewBox: '0 0 100 130',
+    desc: 'A little pep talk on the wall.',
+    svg: `<rect x="4" y="4" width="92" height="122" rx="4" fill="var(--white)" stroke="var(--border)" stroke-width="4"/>
+          <rect x="14" y="14" width="72" height="102" fill="var(--pink-pale)"/>
+          <circle cx="50" cy="50" r="22" fill="var(--pink-light)"/>
+          <path d="M40,50 L47,58 L62,42" stroke="var(--pink-dark)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="50" y="95" font-size="10" text-anchor="middle" fill="var(--pink-dark)" font-weight="700">YOU GOT THIS</text>`
+  },
+  {
+    id: 'rug_green', name: 'Sage Rug', category: 'room', slot: 'rug', price: 60,
+    viewBox: '0 0 220 70',
+    desc: 'Ties the room together.',
+    svg: `<ellipse cx="110" cy="40" rx="105" ry="28" fill="var(--green-light)"/>
+          <ellipse cx="110" cy="40" rx="80" ry="20" fill="none" stroke="var(--green-dark)" stroke-width="3" opacity="0.35"/>
+          <ellipse cx="110" cy="40" rx="55" ry="13" fill="none" stroke="var(--green-dark)" stroke-width="2.5" opacity="0.3"/>`
+  },
+  {
+    id: 'rug_pink', name: 'Blush Rug', category: 'room', slot: 'rug', price: 60,
+    viewBox: '0 0 220 70',
+    desc: 'Soft under those little hooves.',
+    svg: `<ellipse cx="110" cy="40" rx="105" ry="28" fill="var(--pink-light)"/>
+          <ellipse cx="110" cy="40" rx="80" ry="20" fill="none" stroke="var(--pink-dark)" stroke-width="3" opacity="0.35"/>
+          <ellipse cx="110" cy="40" rx="55" ry="13" fill="none" stroke="var(--pink-dark)" stroke-width="2.5" opacity="0.3"/>`
+  },
+  {
+    id: 'plant_pothos', name: 'Potted Pothos', category: 'room', slot: 'plant', price: 55,
+    viewBox: '0 0 80 120',
+    desc: 'Low maintenance, unlike your budget last semester.',
+    svg: `<path d="M30,90 L26,116 L54,116 L50,90 Z" fill="#C87848"/>
+          <rect x="28" y="86" width="24" height="8" fill="#A56238"/>
+          <path d="M40,90 C34,70 20,64 12,50" stroke="#4A7840" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M40,90 C44,66 60,58 68,44" stroke="#4A7840" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M40,90 C40,64 40,50 40,30" stroke="#4A7840" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <ellipse cx="12" cy="48" rx="12" ry="8" fill="#7EC96A" transform="rotate(-30 12 48)"/>
+          <ellipse cx="68" cy="42" rx="12" ry="8" fill="#7EC96A" transform="rotate(30 68 42)"/>
+          <ellipse cx="40" cy="26" rx="10" ry="14" fill="#8FDD78"/>`
+  },
+  {
+    id: 'plant_cactus', name: 'Tiny Cactus', category: 'room', slot: 'plant', price: 45,
+    viewBox: '0 0 80 120',
+    desc: 'Thrives on neglect. Relatable.',
+    svg: `<path d="M28,90 L24,116 L56,116 L52,90 Z" fill="#D68A54"/>
+          <rect x="26" y="86" width="28" height="8" fill="#B06A38"/>
+          <rect x="34" y="40" width="12" height="50" rx="6" fill="#6FAE5C"/>
+          <rect x="18" y="55" width="10" height="26" rx="5" fill="#6FAE5C"/>
+          <rect x="52" y="48" width="10" height="30" rx="5" fill="#6FAE5C"/>
+          <circle cx="40" cy="34" r="4" fill="#FF96B8"/>`
+  },
+  {
+    id: 'bed_cozy', name: 'Cozy Bed', category: 'room', slot: 'bed', price: 140,
+    viewBox: '0 0 160 100',
+    desc: 'Every good saver needs good rest.',
+    svg: `<rect x="10" y="50" width="140" height="40" rx="10" fill="var(--pink)"/>
+          <rect x="10" y="50" width="140" height="14" rx="7" fill="var(--pink-light)"/>
+          <rect x="16" y="34" width="34" height="26" rx="8" fill="var(--white)" stroke="var(--border)" stroke-width="2"/>
+          <rect x="20" y="88" width="10" height="10" fill="#8A6438"/>
+          <rect x="130" y="88" width="10" height="10" fill="#8A6438"/>`
+  },
+  {
+    id: 'bed_bunk', name: 'Bunk Bed', category: 'room', slot: 'bed', price: 160,
+    viewBox: '0 0 160 130',
+    desc: 'For a piggy with big dreams.',
+    svg: `<rect x="14" y="14" width="132" height="28" rx="6" fill="var(--green-light)"/>
+          <rect x="14" y="14" width="132" height="10" rx="5" fill="var(--white)" opacity="0.6"/>
+          <rect x="14" y="70" width="132" height="34" rx="6" fill="var(--green)"/>
+          <rect x="14" y="70" width="132" height="12" rx="6" fill="var(--white)" opacity="0.4"/>
+          <rect x="8" y="14" width="8" height="96" fill="#8A6438"/>
+          <rect x="144" y="14" width="8" height="96" fill="#8A6438"/>`
+  },
+  {
+    id: 'lamp_moon', name: 'Moon Lamp', category: 'room', slot: 'lamp', price: 50,
+    viewBox: '0 0 70 110',
+    desc: 'Soft light for late-night budgeting.',
+    svg: `<rect x="30" y="90" width="10" height="16" fill="#8A6438"/>
+          <ellipse cx="35" cy="106" rx="20" ry="4" fill="var(--border)"/>
+          <line x1="35" y1="20" x2="35" y2="90" stroke="#B8935E" stroke-width="3"/>
+          <circle cx="35" cy="18" r="18" fill="#FFF6D8"/>
+          <circle cx="41" cy="12" r="4" fill="#F5E5A8"/>
+          <circle cx="30" cy="24" r="2.5" fill="#F5E5A8"/>`
+  },
+  {
+    id: 'lamp_fairy', name: 'Fairy Lights', category: 'room', slot: 'lamp', price: 65,
+    viewBox: '0 0 70 120',
+    desc: 'Twinkly and financially responsible.',
+    svg: `<path d="M10,10 Q35,40 10,60 Q35,90 10,110" stroke="#B8935E" stroke-width="2" fill="none"/>
+          <path d="M60,10 Q35,40 60,60 Q35,90 60,110" stroke="#B8935E" stroke-width="2" fill="none"/>
+          <circle cx="10" cy="10" r="5" fill="#FFE45A"/>
+          <circle cx="10" cy="60" r="5" fill="#FF96B8"/>
+          <circle cx="10" cy="110" r="5" fill="#8FDD78"/>
+          <circle cx="60" cy="10" r="5" fill="#8FDD78"/>
+          <circle cx="60" cy="60" r="5" fill="#FFE45A"/>
+          <circle cx="60" cy="110" r="5" fill="#FF96B8"/>`
+  },
 ];
 
 // ── Achievements ──────────────────────────────
@@ -846,6 +975,8 @@ let state = {
   activeModuleId: null, activeLessonIdx: 0, sessionQuestions: [],
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
   coins: 0, ownedItems: [], equippedItem: null,
+  ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null },
+  metHammy: false,
 };
 
 function loadState() {
@@ -856,8 +987,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem } = state;
-  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem }));
+  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy } = state;
+  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy }));
 }
 
 // ── XP / Level ─────────────────────────────────
@@ -1154,21 +1285,28 @@ function buildPigPreviewSvg(itemSvg, viewBox = '0 0 120 162') {
 function refreshShopModal(itemId) {
   const item = SHOP_ITEMS.find(i => i.id === itemId);
   if (!item) return;
-  const owned = (state.ownedItems || []).includes(itemId);
-  const equipped = state.equippedItem === itemId;
+  const isRoom = !!item.slot;
+  const isWallpaper = item.slot === 'wallpaper';
+  const owned = isRoom ? (state.ownedRoomItems || []).includes(itemId) : (state.ownedItems || []).includes(itemId);
+  const equipped = isRoom ? state.equippedRoom[item.slot] === itemId : state.equippedItem === itemId;
   const canAfford = (state.coins || 0) >= item.price;
   let btn;
   if (equipped) {
-    btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ Equipped · Remove</button>`;
+    btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'} · Remove</button>`;
   } else if (owned) {
-    btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">Equip</button>`;
+    btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">${isWallpaper ? 'Apply' : isRoom ? 'Place in room' : 'Equip'}</button>`;
   } else {
     btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>🪙 ${item.price}</button>`;
   }
-  document.getElementById('shop-modal-pig').innerHTML = getPigWithItemMarkup(0.42, item.svg);
-  const vb = CAT_VIEWBOX[item.category] || '0 0 120 120';
-  document.getElementById('shop-modal-accessory').innerHTML =
-    `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
+  const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
+  document.getElementById('shop-modal-pig').innerHTML = isWallpaper
+    ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
+    : isRoom
+      ? `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
+      : getPigWithItemMarkup(0.42, item.svg);
+  document.getElementById('shop-modal-accessory').innerHTML = isRoom
+    ? ''
+    : `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
   document.getElementById('shop-modal-name').textContent = item.name;
   document.getElementById('shop-modal-desc').textContent = item.desc;
   document.getElementById('shop-modal-btn-wrap').innerHTML = btn;
@@ -1188,6 +1326,7 @@ const SHOP_CATEGORIES = [
   { key: 'hat',     label: 'Hats',    icon: '🎩' },
   { key: 'glasses', label: 'Glasses', icon: '🕶️' },
   { key: 'clothes', label: 'Clothes', icon: '👔' },
+  { key: 'room',    label: 'Room Decor', icon: '🛋️' },
 ];
 
 const CAT_VIEWBOX = {
@@ -1209,13 +1348,21 @@ function renderShopPage() {
   const categoriesHtml = SHOP_CATEGORIES.map(cat => {
     const items = SHOP_ITEMS.filter(i => i.category === cat.key);
     const cardsHtml = items.map(item => {
-      const owned = (state.ownedItems || []).includes(item.id);
-      const equipped = state.equippedItem === item.id;
+      const isRoom = !!item.slot;
+      const owned = isRoom ? (state.ownedRoomItems || []).includes(item.id) : (state.ownedItems || []).includes(item.id);
+      const equipped = isRoom ? state.equippedRoom[item.slot] === item.id : state.equippedItem === item.id;
       const canAfford = (state.coins || 0) >= item.price;
-      const statusLabel = equipped ? '✓ Equipped' : owned ? 'Owned' : `🪙 ${item.price}`;
+      const statusLabel = equipped
+        ? (item.slot === 'wallpaper' ? '✓ Applied' : isRoom ? '✓ Placed' : '✓ Equipped')
+        : owned ? 'Owned' : `🪙 ${item.price}`;
+      const preview = item.slot === 'wallpaper'
+        ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
+        : isRoom
+          ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
+          : getPigWithItemMarkup(0.29, item.svg);
       return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}" data-item-id="${item.id}">
         <div class="shop-preview">
-          ${getPigWithItemMarkup(0.29, item.svg)}
+          ${preview}
         </div>
         <div class="shop-card-body">
           <div class="shop-item-name">${item.name}</div>
@@ -1256,6 +1403,26 @@ function renderShopPage() {
 function handleShopAction(itemId) {
   const item = SHOP_ITEMS.find(i => i.id === itemId);
   if (!item) return;
+
+  if (item.slot) {
+    if (!state.equippedRoom) state.equippedRoom = { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null };
+    const owned = (state.ownedRoomItems || []).includes(itemId);
+    const equipped = state.equippedRoom[item.slot] === itemId;
+    if (equipped) {
+      state.equippedRoom[item.slot] = null;
+    } else if (owned) {
+      state.equippedRoom[item.slot] = itemId;
+    } else {
+      if ((state.coins || 0) < item.price) return;
+      state.coins -= item.price;
+      state.ownedRoomItems = [...(state.ownedRoomItems || []), itemId];
+      state.equippedRoom[item.slot] = itemId;
+    }
+    saveState();
+    renderShopPage();
+    return;
+  }
+
   const owned = (state.ownedItems || []).includes(itemId);
   const equipped = state.equippedItem === itemId;
 
@@ -1273,6 +1440,53 @@ function handleShopAction(itemId) {
   renderShopPage();
 }
 
+// ── ROOM ───────────────────────────────────────
+function renderRoomPage() {
+  updateSidebarStats();
+  const scene = document.getElementById('room-scene');
+  if (!scene) return;
+
+  const room = state.equippedRoom || {};
+  const equippedOutfit = SHOP_ITEMS.find(i => i.id === state.equippedItem);
+
+  function slotBlock(slotKey, emptyLabel) {
+    const itemId = room[slotKey];
+    const item = itemId ? SHOP_ITEMS.find(i => i.id === itemId) : null;
+    if (item) {
+      return `<div class="room-slot room-slot-${slotKey}" data-slot="${slotKey}">
+        <svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>
+      </div>`;
+    }
+    return `<div class="room-slot room-slot-${slotKey} empty" data-slot="${slotKey}">
+      <span class="room-slot-plus">+</span>
+      <span class="room-slot-label">${emptyLabel}</span>
+    </div>`;
+  }
+
+  const wallpaperId = room.wallpaper;
+  const wallpaper = wallpaperId ? SHOP_ITEMS.find(i => i.id === wallpaperId) : null;
+
+  scene.innerHTML = `
+    <div class="room-backdrop">
+      <div class="room-wall-zone" id="room-wall-zone" style="${wallpaper ? wallpaper.wallCss : ''}"></div>
+      ${slotBlock('wall', 'Wall art')}
+      ${slotBlock('lamp', 'Lamp')}
+      ${slotBlock('plant', 'Plant')}
+      ${slotBlock('bed', 'Bed')}
+      <div class="room-floor">
+        ${slotBlock('rug', 'Rug')}
+        <div class="room-pig">${getPigWithItemMarkup(0.42, equippedOutfit ? equippedOutfit.svg : '')}</div>
+      </div>
+    </div>
+    <p class="room-hint">Buy furniture, wallpaper, and decor in the <button class="room-shop-link" id="room-shop-link" type="button">Shop</button> to fill in the empty spots.</p>`;
+
+  scene.querySelectorAll('.room-slot.empty').forEach(el => {
+    el.addEventListener('click', () => { showPage('shop'); renderShopPage(); });
+  });
+  const shopLink = document.getElementById('room-shop-link');
+  if (shopLink) shopLink.addEventListener('click', () => { showPage('shop'); renderShopPage(); });
+}
+
 // ── HOME ───────────────────────────────────────
 function renderHome() {
   showPage('home');
@@ -1285,7 +1499,6 @@ function renderHome() {
   document.getElementById('home-mascot-card').innerHTML = `
     <div class="mascot-pig-wrap">${getPigMarkup(0.25)}</div>
     <div class="mascot-info">
-      <div class="mascot-label">Your Mascot</div>
       <div class="mascot-tier-name">${tier.name}</div>
       <div class="mascot-unlock">${getPigAccessoryDesc(state.level)}</div>
     </div>`;
@@ -1675,6 +1888,7 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (page === 'progress') renderProgressPage();
       else if (page === 'modules')  renderModulesPage();
       else if (page === 'badges')   renderBadgesPage();
+      else if (page === 'room')     renderRoomPage();
       else if (page === 'shop')     renderShopPage();
       else if (page === 'settings') renderSettingsPage();
     });
@@ -1712,4 +1926,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadState();
   renderHome();
+
+  if (!state.metHammy) {
+    document.getElementById('birth-pig-wrap').innerHTML = getPigMarkup(0.22);
+    document.getElementById('birth-overlay').classList.add('visible');
+  }
+  document.getElementById('birth-ok').addEventListener('click', () => {
+    document.getElementById('birth-overlay').classList.remove('visible');
+    state.metHammy = true;
+    saveState();
+  });
+
+  // Sidebar expand/collapse
+  const SIDEBAR_KEY = 'stackd_sidebar_collapsed';
+  const sidebar = document.getElementById('sidebar');
+  const storedCollapsed = localStorage.getItem(SIDEBAR_KEY);
+  sidebar.classList.toggle('collapsed', storedCollapsed === null ? true : storedCollapsed === '1');
+  document.getElementById('sidebar-toggle').addEventListener('click', () => {
+    const collapsed = !sidebar.classList.contains('collapsed');
+    sidebar.classList.toggle('collapsed', collapsed);
+    localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
+  });
 });

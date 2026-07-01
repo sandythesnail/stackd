@@ -29,32 +29,41 @@
 <div id="app">
 
   <!-- SIDEBAR -->
-  <nav class="sidebar">
-    <div class="sidebar-brand">Stackd</div>
+  <nav class="sidebar collapsed" id="sidebar">
+    <div class="sidebar-brand-row">
+      <div class="sidebar-brand"><span class="brand-text">Stackd</span></div>
+      <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Toggle sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
     <div class="sidebar-nav">
       <button class="nav-item active" data-page="home">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Home
+        <span class="nav-label">Home</span>
       </button>
       <button class="nav-item" data-page="progress">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-        Progress
+        <span class="nav-label">Progress</span>
       </button>
       <button class="nav-item" data-page="modules">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-        Modules
+        <span class="nav-label">Modules</span>
       </button>
       <button class="nav-item" data-page="badges">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-        Badges
+        <span class="nav-label">Badges</span>
+      </button>
+      <button class="nav-item" data-page="room">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M3 12h18v6a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1H6v1a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M5 12V8a2 2 0 012-2h10a2 2 0 012 2v4"/></svg>
+        <span class="nav-label">Room</span>
       </button>
       <button class="nav-item" data-page="shop">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-        Shop
+        <span class="nav-label">Shop</span>
       </button>
       <button class="nav-item" data-page="settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        Settings
+        <span class="nav-label">Settings</span>
       </button>
     </div>
     <div class="sidebar-footer">
@@ -130,6 +139,19 @@
       </div>
       <div class="page-body">
         <div class="badges-grid" id="achievements-row"></div>
+      </div>
+    </div>
+
+    <!-- PAGE: ROOM -->
+    <div id="page-room" class="page">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Hammy's Room</h1>
+          <span class="section-sub">Decorate with items from the Shop</span>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="room-scene" id="room-scene"></div>
       </div>
     </div>
 
@@ -259,6 +281,16 @@
       <h2>Level Up</h2>
       <p>You're now <strong><span id="new-tier"></span></strong></p>
       <button class="btn-primary" id="levelup-ok">Continue</button>
+    </div>
+  </div>
+
+  <!-- HAMMY BIRTH OVERLAY -->
+  <div class="birth-overlay" id="birth-overlay">
+    <div class="birth-card">
+      <div class="birth-pig-wrap" id="birth-pig-wrap"></div>
+      <h2>A new piggy was born!</h2>
+      <p>Meet Hammy. He's just a baby right now — complete lessons to earn XP and coins, and watch him grow up alongside you as you master each module.</p>
+      <button class="btn-primary" id="birth-ok">Let's raise him!</button>
     </div>
   </div>
 
