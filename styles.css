@@ -174,8 +174,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 .pig-cheek.l{left:24px}.pig-cheek.r{right:24px}
 .pig-eye{top:100px;width:38px;height:38px;background:#3a2230;border-radius:50%;animation:pigBlink 5s ease-in-out infinite;transform-origin:center}
 .pig-eye.l{left:40px}.pig-eye.r{right:40px}
-.pig-eye .shine1{top:6px;left:6px;width:13px;height:13px;background:#fff;border-radius:50%}
-.pig-eye .shine2{bottom:7px;right:8px;width:7px;height:7px;background:rgba(255,255,255,.7);border-radius:50%}
+.pig-eye .shine1{top:6px;left:6px;width:13px;height:13px;background:#fff;border-radius:50%;transition:transform .15s ease-out}
+.pig-eye .shine2{bottom:7px;right:8px;width:7px;height:7px;background:rgba(255,255,255,.7);border-radius:50%;transition:transform .15s ease-out}
 .pig-snout{top:96px;left:50%;transform:translateX(-50%);width:118px;height:84px;background:linear-gradient(160deg,#ffb3cd,#ff96b8);border-radius:50%;box-shadow:inset 0 -8px 14px rgba(208,99,140,.3),inset 0 8px 12px rgba(255,255,255,.5),0 4px 8px rgba(208,99,140,.2)}
 .pig-nostril{top:50%;transform:translateY(-50%);width:20px;height:30px;background:#d9608c;border-radius:50%}
 .pig-nostril.l{left:30px}.pig-nostril.r{right:30px}

@@ -16,6 +16,95 @@ window.addEventListener('scroll', () => {
   nav.classList.toggle('scrolled', window.scrollY > 20);
 }, { passive: true });
 
+// Scrollspy: highlight the nav link for whichever section is in view
+const navAnchors = document.querySelectorAll('.l-nav-links a[href^="#"]');
+const spySections = Array.from(navAnchors)
+  .map(a => document.getElementById(a.getAttribute('href').slice(1)))
+  .filter(Boolean);
+if (spySections.length) {
+  const navSpyObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      navAnchors.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id));
+    });
+  }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+  spySections.forEach(s => navSpyObserver.observe(s));
+}
+
+// Back to top button
+const backToTop = document.getElementById('back-to-top');
+if (backToTop) {
+  window.addEventListener('scroll', () => {
+    backToTop.classList.toggle('visible', window.scrollY > 700);
+  }, { passive: true });
+  backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+
+// Mascot eyes gently track the cursor (moves the eye-shine highlights,
+// since .pig-eye's own transform is already used by the blink animation)
+const pigShines = document.querySelectorAll('.pig-eye .shine1, .pig-eye .shine2');
+if (pigShines.length) {
+  window.addEventListener('mousemove', e => {
+    const cx = e.clientX / window.innerWidth - 0.5;
+    const cy = e.clientY / window.innerHeight - 0.5;
+    pigShines.forEach(shine => {
+      shine.style.transform = `translate(${cx * 5}px, ${cy * 5}px)`;
+    });
+  }, { passive: true });
+}
+
+// Animated count-up for stat numbers once they scroll into view
+function animateCountUp(el) {
+  const raw = el.textContent.trim();
+  const match = raw.match(/[\d,.]+/);
+  if (!match) return;
+  const numStr = match[0].replace(/,/g, '');
+  const decimals = numStr.includes('.') ? numStr.split('.')[1].length : 0;
+  const target = parseFloat(numStr);
+  const prefix = raw.slice(0, match.index);
+  const suffix = raw.slice(match.index + match[0].length);
+  const duration = 1200;
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const current = (target * eased).toFixed(decimals);
+    el.textContent = prefix + Number(current).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix;
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = raw;
+  }
+  requestAnimationFrame(step);
+}
+const countEls = document.querySelectorAll('.stat-num, .am-num');
+if (countEls.length) {
+  const countObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCountUp(e.target);
+        countObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.4 });
+  countEls.forEach(el => countObserver.observe(el));
+}
+
+// Confetti burst
+function fireConfetti(container) {
+  if (!container) return;
+  const colors = ['#6B8F65', '#D4899E', '#F2CDD7', '#B2C9AE', '#4A6844'];
+  for (let i = 0; i < 26; i++) {
+    const piece = document.createElement('span');
+    piece.className = 'confetti-piece';
+    piece.style.background = colors[i % colors.length];
+    piece.style.left = (50 + (Math.random() * 60 - 30)) + '%';
+    piece.style.setProperty('--x', (Math.random() * 180 - 90) + 'px');
+    piece.style.setProperty('--r', (Math.random() * 360) + 'deg');
+    piece.style.animationDelay = (Math.random() * 0.15) + 's';
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), 1400);
+  }
+}
+
 // Animate admin bars when they scroll into view
 const bars = document.querySelectorAll('.ab-fill');
 const barObserver = new IntersectionObserver(entries => {
@@ -176,6 +265,7 @@ if (waitlistOpenBtn && waitlistOverlay) {
     e.preventDefault();
     waitlistForm.hidden = true;
     waitlistSuccess.hidden = false;
+    fireConfetti(waitlistSuccess);
   });
 }
 
