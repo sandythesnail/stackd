@@ -28,6 +28,50 @@ const barObserver = new IntersectionObserver(entries => {
 }, { threshold: 0.3 });
 bars.forEach(b => barObserver.observe(b));
 
+// Curriculum carousel: auto-scrolls right continuously, arrows nudge it,
+// hover/touch/manual use pauses it briefly so it doesn't fight the reader.
+const ccTrack = document.getElementById('cc-track');
+const ccPrev = document.getElementById('cc-prev');
+const ccNext = document.getElementById('cc-next');
+if (ccTrack) {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let ccPaused = false;
+  let ccResumeTimer = null;
+
+  function ccPauseThenResume() {
+    ccPaused = true;
+    clearTimeout(ccResumeTimer);
+    ccResumeTimer = setTimeout(() => { ccPaused = false; }, 2600);
+  }
+
+  if (!reduceMotion) {
+    function ccAutoScroll() {
+      if (!ccPaused) {
+        const halfWidth = ccTrack.scrollWidth / 2;
+        ccTrack.scrollLeft += 0.6;
+        if (ccTrack.scrollLeft >= halfWidth) ccTrack.scrollLeft -= halfWidth;
+      }
+      requestAnimationFrame(ccAutoScroll);
+    }
+    requestAnimationFrame(ccAutoScroll);
+  }
+
+  ccTrack.addEventListener('mouseenter', () => { ccPaused = true; });
+  ccTrack.addEventListener('mouseleave', () => { ccPaused = false; });
+  ccTrack.addEventListener('touchstart', () => { ccPaused = true; }, { passive: true });
+  ccTrack.addEventListener('touchend', ccPauseThenResume, { passive: true });
+
+  const ccStep = () => (ccTrack.querySelector('.cc-card')?.offsetWidth || 260) + 20;
+  if (ccPrev) ccPrev.addEventListener('click', () => {
+    ccTrack.scrollBy({ left: -ccStep(), behavior: 'smooth' });
+    ccPauseThenResume();
+  });
+  if (ccNext) ccNext.addEventListener('click', () => {
+    ccTrack.scrollBy({ left: ccStep(), behavior: 'smooth' });
+    ccPauseThenResume();
+  });
+}
+
 // Scroll reveal (same pattern as crochet site)
 const ro = new IntersectionObserver(es => {
   es.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
