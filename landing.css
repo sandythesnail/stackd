@@ -987,12 +987,12 @@ body { background-color: var(--bg); }
 
 .cc-viewport {
   position: relative; width: 100%;
-  margin-top: 2.5rem; padding: 0.4rem 0 1.5rem;
+  margin-top: 1.25rem; padding: 0 0 0.5rem;
 }
 .cc-track {
   display: flex; gap: 1.25rem; overflow-x: auto;
   scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch;
-  padding: 0 5.5rem;
+  padding: 1.25rem 5.5rem;
 }
 .cc-track::-webkit-scrollbar { display: none; }
 
@@ -1029,9 +1029,11 @@ body { background-color: var(--bg); }
   font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text);
 }
 .mp-hook {
-  font-size: 0.88rem; color: var(--green-dark); font-weight: 600; font-style: italic;
+  font-size: 0.88rem; font-weight: 600; font-style: italic;
   margin-bottom: 0.75rem; line-height: 1.5;
 }
+.cc-green .mp-hook { color: var(--green-dark); }
+.cc-pink .mp-hook { color: var(--pink-dark); }
 .mp-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .mp-tags span {
   font-size: 0.76rem; font-weight: 600; padding: 0.35rem 0.8rem;
@@ -1364,7 +1366,7 @@ body { background-color: var(--bg); }
 @media (max-width: 700px) {
   .cc-viewport { margin-top: 1.75rem; }
   .cc-card { flex-basis: 220px; }
-  .cc-track { padding: 0 3.25rem; }
+  .cc-track { padding: 1.25rem 3.25rem; }
   .cc-arrow { width: 38px; height: 38px; }
   .cc-prev { left: 0.5rem; }
   .cc-next { right: 0.5rem; }
