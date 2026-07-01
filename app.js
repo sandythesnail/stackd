@@ -21,7 +21,7 @@ const MODULES = [
   {
     id: 'earning', title: 'Earning', icon: '01', iconColor: 'green', xpReward: 100,
     hook: 'You just got your first campus job paycheck. You worked 20 hours at $15/hour - that\'s $300. But your direct deposit shows $241. Where did $59 go?',
-    desc: 'First campus paycheck, W-2s, work-study income, FICA, and tax withholding.',
+    desc: 'Paychecks, taxes, W-2s, and what gets taken before you see a dollar.',
     questions: [
       {
         q: 'What is the difference between gross pay and net pay?',
@@ -62,7 +62,7 @@ const MODULES = [
   {
     id: 'spending', title: 'Spending', icon: '02', iconColor: 'pink', xpReward: 100,
     hook: 'It\'s week 6 of the semester. You had $800 for the month. You check your account and there\'s $23 left. You didn\'t buy anything big. How did this happen - and how do you stop it?',
-    desc: 'Semester budgeting, meal plan math, subscriptions, and managing spending on a student income.',
+    desc: 'Budgeting on a student income, meal plans, and where money actually goes.',
     questions: [
       {
         q: 'The 50/30/20 rule splits your after-tax income. What does the "50" represent?',
@@ -103,7 +103,7 @@ const MODULES = [
   {
     id: 'saving', title: 'Saving', icon: '03', iconColor: 'mint', xpReward: 100,
     hook: 'Your laptop just died. It\'s finals week. A replacement costs $400. You have $47 in your checking account. This is what a missing emergency fund looks like - and it\'s completely avoidable.',
-    desc: 'Emergency funds on a student income, high-yield savings accounts, and building savings habits early.',
+    desc: 'Emergency funds, high-yield savings accounts, and building habits early.',
     questions: [
       {
         q: 'What is a high-yield savings account (HYSA)?',
@@ -144,7 +144,7 @@ const MODULES = [
   {
     id: 'investing', title: 'Investing', icon: '04', iconColor: 'lav', xpReward: 150,
     hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Jordan starts at 28. At 65, Alex has $21,000. Jordan has $10,700. They invested the exact same amount. What made the difference?',
-    desc: 'Roth IRA basics, compound interest, index funds, and why starting at 18 is your biggest financial advantage.',
+    desc: 'Compound interest, Roth IRAs, and why starting at 18 changes everything.',
     questions: [
       {
         q: 'What is a Roth IRA?',
@@ -185,7 +185,7 @@ const MODULES = [
   {
     id: 'credit', title: 'Managing Credit', icon: '05', iconColor: 'sky', xpReward: 125,
     hook: 'You just got your first credit card with a $1,000 limit. You spend $800 on textbooks and dorm supplies. You pay the minimum each month. In 3 years, you\'ve paid nearly $300 in interest - and still owe $600. What went wrong?',
-    desc: 'First credit card, APR, utilization, FICO scores, student loans, and BNPL risks.',
+    desc: 'APR, credit scores, utilization, and how to avoid common traps.',
     questions: [
       {
         q: 'What does APR stand for, and why does it matter for credit cards?',
@@ -226,7 +226,7 @@ const MODULES = [
   {
     id: 'risk', title: 'Managing Risk', icon: '06', iconColor: 'peach', xpReward: 100,
     hook: 'You\'re moving off-campus next fall. A pipe bursts in your apartment and ruins your laptop, TV, and clothes. Your landlord\'s insurance covers the building - not your stuff. You owe $2,000 in replacements. What should you have had?',
-    desc: 'Student health insurance, renter\'s insurance for your apartment, and identity theft basics.',
+    desc: 'Health coverage, renter\'s insurance, and identity theft protection.',
     questions: [
       {
         q: 'As a college student, when does your coverage under your parents\' health insurance plan typically end?',
@@ -266,6 +266,354 @@ const MODULES = [
   }
 ];
 
+// ── Shop items ────────────────────────────────
+const SHOP_ITEMS = [
+  // ── HATS ──
+  {
+    id: 'party_hat', name: 'Party Hat', category: 'hat', price: 50,
+    desc: 'Every lesson deserves a celebration.',
+    svg: `<defs><linearGradient id="ph-g" x1="25%" y1="0%" x2="75%" y2="100%"><stop offset="0%" stop-color="#FFCAE5"/><stop offset="100%" stop-color="#C84882"/></linearGradient></defs>
+          <path d="M 62 5 L 85 27 L 87 27 Z" fill="rgba(0,0,0,0.1)"/>
+          <path d="M 60 4 L 38 27 L 85 27 Z" fill="url(#ph-g)"/>
+          <path d="M 60 4 L 48 27 L 39 27 Z" fill="rgba(255,255,255,0.22)"/>
+          <path d="M 60 4 Q 54 15 51 27" stroke="rgba(255,255,255,0.48)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          <path d="M 60 4 Q 66 15 70 27" stroke="rgba(255,255,255,0.32)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <circle cx="53" cy="12.5" r="2.4" fill="white" opacity="0.82"/>
+          <circle cx="67" cy="9.5" r="2" fill="white" opacity="0.72"/>
+          <circle cx="65" cy="20" r="1.9" fill="white" opacity="0.65"/>
+          <circle cx="51" cy="21.5" r="1.7" fill="white" opacity="0.6"/>
+          <circle cx="72" cy="18.5" r="1.4" fill="white" opacity="0.5"/>
+          <circle cx="57" cy="7" r="1.5" fill="white" opacity="0.58"/>
+          <ellipse cx="60" cy="28.5" rx="26" ry="5.8" fill="#943060"/>
+          <ellipse cx="60" cy="27" rx="25" ry="5" fill="#E285BA"/>
+          <ellipse cx="57" cy="25.7" rx="14.5" ry="2.3" fill="rgba(255,255,255,0.3)"/>
+          <circle cx="60.5" cy="5.2" r="5.8" fill="rgba(0,0,0,0.18)"/>
+          <circle cx="56.5" cy="2.8" r="3.5" fill="#FFE468"/>
+          <circle cx="63.5" cy="2.8" r="3.5" fill="#FFD240"/>
+          <circle cx="60" cy="0.6" r="3.3" fill="#FFF088"/>
+          <circle cx="60" cy="5.5" r="4" fill="#FFCE30"/>
+          <circle cx="57.5" cy="1.6" r="2.1" fill="rgba(255,255,255,0.78)"/>
+          <path d="M 79 8.5 L 80.3 5.8 L 81.6 8.5 L 84.3 9.5 L 81.6 10.5 L 80.3 13.2 L 79 10.5 L 76.3 9.5 Z" fill="#FFE840"/>
+          <path d="M 42 15 L 43.1 12.7 L 44.2 15 L 46.5 16 L 44.2 17 L 43.1 19.3 L 42 17 L 39.7 16 Z" fill="#FFE840" opacity="0.8"/>`
+  },
+  {
+    id: 'flower_crown', name: 'Flower Crown', category: 'hat', price: 80,
+    desc: 'Bloom where you are planted.',
+    svg: `<path d="M 20 30 C 35 22 50 18 60 15 C 70 18 85 22 100 30" stroke="#4A7840" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <path d="M 20 30 C 35 22 50 18 60 15 C 70 18 85 22 100 30" stroke="#88B870" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <ellipse cx="36" cy="20" rx="2.3" ry="5" fill="#F8B0C8" transform="rotate(0 36 25)"/>
+          <ellipse cx="36" cy="20" rx="2.3" ry="5" fill="#F8B0C8" transform="rotate(60 36 25)"/>
+          <ellipse cx="36" cy="20" rx="2.3" ry="5" fill="#F8B0C8" transform="rotate(120 36 25)"/>
+          <ellipse cx="36" cy="20" rx="2.3" ry="5" fill="#F8B0C8" transform="rotate(180 36 25)"/>
+          <ellipse cx="36" cy="20" rx="2.3" ry="5" fill="#F8B0C8" transform="rotate(240 36 25)"/>
+          <ellipse cx="36" cy="20" rx="2.3" ry="5" fill="#F8B0C8" transform="rotate(300 36 25)"/>
+          <circle cx="36" cy="25" r="3.8" fill="#FFDD70"/>
+          <circle cx="36" cy="25" r="2.2" fill="#FFAA28"/>
+          <circle cx="35" cy="24" r="1" fill="rgba(255,255,255,0.65)"/>
+          <ellipse cx="60" cy="9.5" rx="3" ry="6.5" fill="#F090C0" transform="rotate(0 60 16)"/>
+          <ellipse cx="60" cy="9.5" rx="3" ry="6.5" fill="#F090C0" transform="rotate(60 60 16)"/>
+          <ellipse cx="60" cy="9.5" rx="3" ry="6.5" fill="#F090C0" transform="rotate(120 60 16)"/>
+          <ellipse cx="60" cy="9.5" rx="3" ry="6.5" fill="#F090C0" transform="rotate(180 60 16)"/>
+          <ellipse cx="60" cy="9.5" rx="3" ry="6.5" fill="#F090C0" transform="rotate(240 60 16)"/>
+          <ellipse cx="60" cy="9.5" rx="3" ry="6.5" fill="#F090C0" transform="rotate(300 60 16)"/>
+          <circle cx="60" cy="16" r="5" fill="#FFDD70"/>
+          <circle cx="60" cy="16" r="3" fill="#FFAA28"/>
+          <circle cx="58.5" cy="14.5" r="1.4" fill="rgba(255,255,255,0.7)"/>
+          <ellipse cx="84" cy="20" rx="2.3" ry="5" fill="#C8D4FF" transform="rotate(0 84 25)"/>
+          <ellipse cx="84" cy="20" rx="2.3" ry="5" fill="#C8D4FF" transform="rotate(60 84 25)"/>
+          <ellipse cx="84" cy="20" rx="2.3" ry="5" fill="#C8D4FF" transform="rotate(120 84 25)"/>
+          <ellipse cx="84" cy="20" rx="2.3" ry="5" fill="#C8D4FF" transform="rotate(180 84 25)"/>
+          <ellipse cx="84" cy="20" rx="2.3" ry="5" fill="#C8D4FF" transform="rotate(240 84 25)"/>
+          <ellipse cx="84" cy="20" rx="2.3" ry="5" fill="#C8D4FF" transform="rotate(300 84 25)"/>
+          <circle cx="84" cy="25" r="3.8" fill="#FFDD70"/>
+          <circle cx="84" cy="25" r="2.2" fill="#FFAA28"/>
+          <circle cx="83" cy="24" r="1" fill="rgba(255,255,255,0.65)"/>
+          <path d="M 50 27 Q 46 20 51 15 Q 55 21 50 27 Z" fill="#5A9050"/>
+          <path d="M 50 27 Q 51 19 56 16 Q 56 23 50 27 Z" fill="#7AB870"/>
+          <path d="M 70 27 Q 74 20 69 15 Q 65 21 70 27 Z" fill="#5A9050"/>
+          <path d="M 70 27 Q 69 19 64 16 Q 64 23 70 27 Z" fill="#7AB870"/>`
+  },
+  {
+    id: 'witch_hat', name: 'Witch Hat', category: 'hat', price: 90,
+    desc: 'Put a spell on your debt.',
+    svg: `<defs><linearGradient id="wh-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#3D2458"/><stop offset="100%" stop-color="#120828"/></linearGradient></defs>
+          <path d="M 62 3.5 L 84 29 L 87 29 Z" fill="rgba(0,0,0,0.25)"/>
+          <path d="M 60 3 L 37 29 L 84 29 Z" fill="url(#wh-g)"/>
+          <path d="M 60 3 L 49 29 L 40 29 Z" fill="rgba(255,255,255,0.07)"/>
+          <path d="M 49 22 Q 60 18 71 22 L 75 29 L 45 29 Z" fill="#581890"/>
+          <path d="M 49 22 Q 60 18 71 22 L 73 26 L 47 26 Z" fill="#6820A8"/>
+          <rect x="57" y="19" width="6" height="5.5" rx="1" fill="#28104A"/>
+          <rect x="58.2" y="20" width="3.6" height="3.5" rx="0.4" fill="none" stroke="#FFD700" stroke-width="1.2"/>
+          <line x1="60" y1="20" x2="60" y2="23.5" stroke="#FFD700" stroke-width="1.2"/>
+          <ellipse cx="61" cy="30.5" rx="28" ry="6.5" fill="#0A0418"/>
+          <ellipse cx="60" cy="29" rx="27" ry="5.5" fill="#28163A"/>
+          <ellipse cx="55" cy="27.5" rx="16" ry="2.5" fill="rgba(255,255,255,0.07)"/>
+          <path d="M 68 8 L 69.3 5.5 L 70.6 8 L 73 9 L 70.6 10 L 69.3 12.5 L 68 10 L 65.6 9 Z" fill="#FFD700" opacity="0.92"/>
+          <path d="M 75 17.5 L 75.9 15.8 L 76.8 17.5 L 78.5 18.2 L 76.8 18.9 L 75.9 20.6 L 75 18.9 L 73.3 18.2 Z" fill="#FFD700" opacity="0.78"/>
+          <path d="M 50 13 L 50.7 11.5 L 51.4 13 L 53 13.7 L 51.4 14.4 L 50.7 15.9 L 50 14.4 L 48.4 13.7 Z" fill="#CC88FF" opacity="0.82"/>
+          <circle cx="50" cy="11" r="5" fill="#FFD700" opacity="0.82"/>
+          <circle cx="52.5" cy="11" r="4.2" fill="#23103A"/>
+          <path d="M 72 22 L 68.5 19 M 72 22 L 68 22 M 72 22 L 68.5 25" stroke="rgba(255,255,255,0.22)" stroke-width="0.9" fill="none"/>
+          <path d="M 70.25 20.5 Q 68.5 22 70.25 23.5" stroke="rgba(255,255,255,0.18)" stroke-width="0.8" fill="none"/>
+          <circle cx="72" cy="22" r="1" fill="rgba(255,255,255,0.3)"/>`
+  },
+  {
+    id: 'santa_hat', name: 'Santa Hat', category: 'hat', price: 100,
+    desc: 'Ho ho ho, compound interest!',
+    svg: `<defs><linearGradient id="sh-g" x1="30%" y1="0%" x2="70%" y2="100%"><stop offset="0%" stop-color="#FF4848"/><stop offset="100%" stop-color="#B81818"/></linearGradient></defs>
+          <path d="M 63 5 C 73 10 81 20 84 29 L 86 29 Z" fill="rgba(0,0,0,0.15)"/>
+          <path d="M 60 4 C 65 8 73 18 76 29 L 36 29 C 40 18 50 10 60 4 Z" fill="url(#sh-g)"/>
+          <path d="M 60 4 C 55 8 47 17 43 29 L 49 29 C 51 20 55 12 60 4 Z" fill="rgba(255,255,255,0.16)"/>
+          <path d="M 60 4 C 63 8 67 14 70 19" stroke="rgba(0,0,0,0.15)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M 34 29 Q 38 23.5 42 27 Q 46 23.5 50 27 Q 54 23.5 58 27 Q 62 23.5 66 27 Q 70 23.5 74 27 Q 78 23.5 82 27 Q 86 29 86 29 L 34 29 Z" fill="white"/>
+          <path d="M 34 28 Q 38 23 42 26 Q 46 23 50 26 Q 54 23 58 26 Q 62 23 66 26 Q 70 23 74 26 Q 78 23 82 26 Q 86 28 86 28" stroke="#E8E8E8" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <circle cx="78" cy="13" r="7" fill="rgba(0,0,0,0.15)"/>
+          <circle cx="77" cy="12" r="7" fill="white"/>
+          <circle cx="74.5" cy="10" r="3.5" fill="#F4F4F4"/>
+          <circle cx="80" cy="10.5" r="3.5" fill="#EEEEEE"/>
+          <circle cx="77" cy="15.5" r="3.2" fill="#F0F0F0"/>
+          <circle cx="74.5" cy="9.5" r="2.2" fill="rgba(255,255,255,0.92)"/>`
+  },
+  {
+    id: 'top_hat', name: 'Top Hat', category: 'hat', price: 120,
+    desc: 'Old money energy.',
+    svg: `<defs>
+            <linearGradient id="th-cyl" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#1C1C1C"/><stop offset="35%" stop-color="#2E2E2E"/><stop offset="100%" stop-color="#0E0E0E"/></linearGradient>
+            <linearGradient id="th-brim" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#252525"/><stop offset="100%" stop-color="#080808"/></linearGradient>
+          </defs>
+          <rect x="77" y="7" width="7" height="21" rx="2" fill="rgba(0,0,0,0.3)"/>
+          <rect x="40" y="7" width="40" height="21" rx="3" fill="url(#th-cyl)"/>
+          <ellipse cx="60" cy="7" rx="20" ry="4.5" fill="#2A2A2A"/>
+          <ellipse cx="60" cy="6.8" rx="20" ry="3.8" fill="#343434"/>
+          <rect x="43" y="9" width="4.5" height="19" rx="2" fill="rgba(255,255,255,0.065)"/>
+          <rect x="40" y="23" width="40" height="5" fill="#0E0E0E"/>
+          <rect x="40" y="23" width="40" height="2.5" fill="#181818"/>
+          <line x1="46" y1="23" x2="46" y2="28" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+          <line x1="52" y1="23" x2="52" y2="28" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+          <line x1="58" y1="23" x2="58" y2="28" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+          <line x1="64" y1="23" x2="64" y2="28" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+          <line x1="70" y1="23" x2="70" y2="28" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+          <line x1="76" y1="23" x2="76" y2="28" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+          <ellipse cx="61" cy="30" rx="30" ry="6.5" fill="#040404"/>
+          <ellipse cx="60" cy="28.5" rx="29" ry="5.8" fill="url(#th-brim)"/>
+          <ellipse cx="60" cy="27" rx="24" ry="3.5" fill="#202020"/>
+          <path d="M 33 28.5 Q 60 23 87 28.5" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" fill="none"/>
+          <path d="M 55 25 C 52 23 49 24.5 51 26 C 53 27.5 56 26.5 60 25.5 C 64 26.5 67 27.5 69 26 C 71 24.5 68 23 65 25 C 63 25.8 61.5 26 60 25.5" fill="#1A1A1A" stroke="rgba(255,255,255,0.08)" stroke-width="0.8"/>
+          <ellipse cx="60" cy="25.5" rx="2.2" ry="1.8" fill="#202020"/>`
+  },
+  {
+    id: 'chef_hat', name: 'Chef Hat', category: 'hat', price: 125,
+    desc: 'Cooking up a budget.',
+    svg: `<defs><radialGradient id="ch-dome" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="80%" stop-color="#E4E4E4"/><stop offset="100%" stop-color="#D0D0D0"/></radialGradient></defs>
+          <rect x="36" y="22" width="48" height="9" rx="2.5" fill="#ECECEC" stroke="#CCCCCC" stroke-width="1.2"/>
+          <line x1="43" y1="22" x2="43" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
+          <line x1="50" y1="22" x2="50" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
+          <line x1="57" y1="22" x2="57" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
+          <line x1="64" y1="22" x2="64" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
+          <line x1="71" y1="22" x2="71" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
+          <line x1="78" y1="22" x2="78" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
+          <path d="M 36 26.5 Q 60 24 84 26.5" stroke="#C0C0C0" stroke-width="1" stroke-dasharray="2.5 2" fill="none"/>
+          <ellipse cx="60" cy="22" rx="24" ry="5" fill="#DEDEDE"/>
+          <ellipse cx="60" cy="21.5" rx="24" ry="4" fill="#EEEEEE"/>
+          <ellipse cx="61" cy="11" rx="27" ry="21" fill="#C8C8C8"/>
+          <ellipse cx="60" cy="10" rx="26" ry="20" fill="url(#ch-dome)"/>
+          <ellipse cx="56" cy="5.5" rx="14" ry="9.5" fill="rgba(255,255,255,0.6)"/>
+          <path d="M 60 3 Q 45 10 39 22" stroke="rgba(170,170,170,0.65)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <path d="M 60 3 Q 50 8 44 18" stroke="rgba(190,190,190,0.5)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+          <path d="M 60 3 Q 70 8 76 18" stroke="rgba(190,190,190,0.5)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+          <path d="M 60 3 Q 75 10 81 22" stroke="rgba(170,170,170,0.65)" stroke-width="1.8" fill="none" stroke-linecap="round"/>`
+  },
+  {
+    id: 'cowboy_hat', name: 'Cowboy Hat', category: 'hat', price: 150,
+    desc: 'Riding off into a debt-free sunset.',
+    svg: `<defs>
+            <linearGradient id="cw-crown" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A87040"/><stop offset="100%" stop-color="#5A3618"/></linearGradient>
+            <linearGradient id="cw-brim" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#8C5C28"/><stop offset="100%" stop-color="#482C10"/></linearGradient>
+          </defs>
+          <ellipse cx="61" cy="30" rx="38" ry="8.5" fill="#3A1C08"/>
+          <ellipse cx="60" cy="28.5" rx="37" ry="7.5" fill="url(#cw-brim)"/>
+          <path d="M 25 27.5 Q 60 21 95 27.5" stroke="#A06830" stroke-width="2.5" fill="none"/>
+          <path d="M 82 28.5 C 84 21 84 14 82 9 L 86 9 C 88 14 88 22 86 28.5 Z" fill="rgba(0,0,0,0.2)"/>
+          <path d="M 38 28.5 C 38 20 40 13 42 9 L 78 9 C 80 13 82 21 82 28.5 Z" fill="url(#cw-crown)"/>
+          <path d="M 38 28.5 C 38 20 40 13 42 9 L 47 9 C 45 15 44 21 44 28.5 Z" fill="rgba(255,255,255,0.12)"/>
+          <ellipse cx="60" cy="9" rx="19.5" ry="5.2" fill="#8C5C28"/>
+          <ellipse cx="60" cy="8.5" rx="19.5" ry="4.2" fill="#A07038"/>
+          <ellipse cx="60" cy="9" rx="14" ry="3.5" fill="#7A4C22"/>
+          <path d="M 41 24.5 Q 60 20.5 79 24.5 L 79 28.5 Q 60 24.5 41 28.5 Z" fill="#3C1E0C"/>
+          <path d="M 41 24.5 Q 60 20.5 79 24.5 L 79 26.5 Q 60 22.5 41 26.5 Z" fill="#5A3018"/>
+          <rect x="57" y="21.5" width="6" height="5" rx="1" fill="#281408"/>
+          <rect x="58.2" y="22.6" width="3.6" height="3" rx="0.5" fill="none" stroke="#C89050" stroke-width="1.2"/>
+          <line x1="60" y1="22.6" x2="60" y2="25.6" stroke="#C89050" stroke-width="1.2"/>
+          <path d="M 27 27.5 Q 60 22 93 27.5" stroke="rgba(200,160,100,0.45)" stroke-width="1" stroke-dasharray="2.5 2" fill="none"/>
+          <path d="M 31 28 Q 60 22.5 89 28" stroke="rgba(200,160,100,0.3)" stroke-width="0.8" stroke-dasharray="2.5 2" fill="none"/>`
+  },
+  {
+    id: 'pirate_hat', name: 'Pirate Hat', category: 'hat', price: 175,
+    desc: 'Yarr, no debt on this ship.',
+    svg: `<defs><linearGradient id="pi-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#282828"/><stop offset="100%" stop-color="#0C0C0C"/></linearGradient></defs>
+          <path d="M 35 29 L 37 8 L 85 8 L 87 29 Z" fill="#060606"/>
+          <path d="M 34 29 L 36 8 L 84 8 L 86 29 Z" fill="url(#pi-g)"/>
+          <path d="M 34 29 L 36 8 L 42 8 L 40 29 Z" fill="rgba(255,255,255,0.06)"/>
+          <path d="M 22 24 C 26 17 32 14 36 13 L 34 29 C 30 28 25 27 22 24 Z" fill="#1C1C1C"/>
+          <path d="M 22 24 C 26 17 32 14 36 13 L 35 19 C 30 20 26 22 22 24 Z" fill="rgba(255,255,255,0.06)"/>
+          <path d="M 98 24 C 94 17 88 14 84 13 L 86 29 C 90 28 95 27 98 24 Z" fill="#1C1C1C"/>
+          <path d="M 22 24 C 26 17 32 14 36 13" stroke="#C8A038" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M 98 24 C 94 17 88 14 84 13" stroke="#C8A038" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <line x1="34" y1="29" x2="86" y2="29" stroke="#C8A038" stroke-width="2"/>
+          <ellipse cx="60" cy="30" rx="28" ry="5.5" fill="#080808"/>
+          <ellipse cx="60" cy="29" rx="27" ry="4.5" fill="#161616"/>
+          <line x1="48" y1="9" x2="72" y2="27" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          <line x1="72" y1="9" x2="48" y2="27" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="48" cy="9" r="3.2" fill="white"/>
+          <circle cx="72" cy="9" r="3.2" fill="white"/>
+          <circle cx="48" cy="27" r="3.2" fill="white"/>
+          <circle cx="72" cy="27" r="3.2" fill="white"/>
+          <circle cx="60" cy="17.5" r="8.5" fill="white"/>
+          <circle cx="60" cy="17" r="8" fill="#F2F2F2"/>
+          <ellipse cx="56.2" cy="15.5" rx="2.8" ry="3.2" fill="#161616"/>
+          <ellipse cx="63.8" cy="15.5" rx="2.8" ry="3.2" fill="#161616"/>
+          <circle cx="55.2" cy="14.3" r="1" fill="rgba(255,255,255,0.4)"/>
+          <circle cx="62.8" cy="14.3" r="1" fill="rgba(255,255,255,0.4)"/>
+          <path d="M 58.5 19.5 L 60 18 L 61.5 19.5 L 61 21.5 L 59 21.5 Z" fill="#161616"/>
+          <rect x="56" y="21.5" width="2.3" height="2.5" rx="0.4" fill="#161616"/>
+          <rect x="58.9" y="21.5" width="2.3" height="2.5" rx="0.4" fill="#161616"/>
+          <rect x="61.7" y="21.5" width="2.3" height="2.5" rx="0.4" fill="#161616"/>`
+  },
+  {
+    id: 'crown', name: 'Crown', category: 'hat', price: 200,
+    desc: 'The financially literate royalty.',
+    svg: `<defs>
+            <linearGradient id="cr-body" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE440"/><stop offset="50%" stop-color="#C88010"/><stop offset="100%" stop-color="#FFD030"/></linearGradient>
+            <linearGradient id="cr-band" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#E8A820"/><stop offset="100%" stop-color="#A86010"/></linearGradient>
+          </defs>
+          <path d="M 34 31 L 39 16 L 52 25 L 61 9 L 71 25 L 85 16 L 90 31 Z" fill="#8A5A00" opacity="0.35"/>
+          <path d="M 33 30 L 38 15 L 51 24 L 60 8 L 69 24 L 82 15 L 87 30 Z" fill="url(#cr-body)"/>
+          <path d="M 33 30 L 38 15 L 43 22 Z" fill="rgba(0,0,0,0.18)"/>
+          <path d="M 51 24 L 60 8 L 65 23 Z" fill="rgba(0,0,0,0.14)"/>
+          <path d="M 87 30 L 82 15 L 78 22 Z" fill="rgba(0,0,0,0.18)"/>
+          <path d="M 38 15 L 51 24 L 47 24 L 37 17 Z" fill="rgba(255,255,255,0.22)"/>
+          <path d="M 60 8 L 51 24 L 55 24 Z" fill="rgba(255,255,255,0.28)"/>
+          <path d="M 69 24 L 72 24 L 82 15 L 80 17 Z" fill="rgba(255,255,255,0.18)"/>
+          <rect x="33" y="26" width="54" height="8" rx="3" fill="url(#cr-band)"/>
+          <rect x="33" y="26" width="54" height="4" rx="2" fill="#E8A828"/>
+          <rect x="35" y="26.5" width="50" height="2" rx="1" fill="rgba(255,255,255,0.28)"/>
+          <ellipse cx="44" cy="20" rx="4.2" ry="3.8" fill="#CC2020"/>
+          <ellipse cx="44" cy="19.5" rx="4.2" ry="3.3" fill="#E83030"/>
+          <ellipse cx="43" cy="18.5" rx="2" ry="1.5" fill="rgba(255,255,255,0.5)"/>
+          <ellipse cx="60" cy="10" rx="5" ry="4.5" fill="#1040CC"/>
+          <ellipse cx="60" cy="9.5" rx="5" ry="4" fill="#2060EE"/>
+          <ellipse cx="58.5" cy="8" rx="2.2" ry="1.6" fill="rgba(255,255,255,0.58)"/>
+          <ellipse cx="76" cy="20" rx="4.2" ry="3.8" fill="#108030"/>
+          <ellipse cx="76" cy="19.5" rx="4.2" ry="3.3" fill="#20A040"/>
+          <ellipse cx="75" cy="18.5" rx="2" ry="1.5" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="44" cy="29" r="2.8" fill="#E83030"/>
+          <circle cx="60" cy="29" r="2.8" fill="#2060EE"/>
+          <circle cx="76" cy="29" r="2.8" fill="#20A040"/>
+          <circle cx="37" cy="29" r="1.8" fill="#FFE060"/>
+          <circle cx="52" cy="29" r="1.8" fill="#FFE060"/>
+          <circle cx="68" cy="29" r="1.8" fill="#FFE060"/>
+          <circle cx="83" cy="29" r="1.8" fill="#FFE060"/>`
+  },
+  // ── GLASSES ──
+  {
+    id: 'round_glasses', name: 'Round Glasses', category: 'glasses', price: 60,
+    desc: 'For the bookish budgeter.',
+    svg: `<circle cx="46" cy="58" r="11" fill="rgba(180,220,255,0.15)" stroke="#6B4C3A" stroke-width="2.5"/>
+          <circle cx="74" cy="58" r="11" fill="rgba(180,220,255,0.15)" stroke="#6B4C3A" stroke-width="2.5"/>
+          <path d="M 42 52 A 9 9 0 0 1 50 52" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M 70 52 A 9 9 0 0 1 78 52" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <line x1="57" y1="58" x2="63" y2="58" stroke="#6B4C3A" stroke-width="2"/>
+          <line x1="20" y1="55" x2="35" y2="57" stroke="#6B4C3A" stroke-width="2"/>
+          <line x1="85" y1="57" x2="100" y2="55" stroke="#6B4C3A" stroke-width="2"/>`
+  },
+  {
+    id: 'sunglasses', name: 'Sunglasses', category: 'glasses', price: 75,
+    desc: 'Too cool for financial stress.',
+    svg: `<rect x="30" y="53" width="24" height="15" rx="7" fill="#1A1A1A"/>
+          <rect x="60" y="53" width="24" height="15" rx="7" fill="#1A1A1A"/>
+          <rect x="31" y="54" width="22" height="6" rx="5" fill="rgba(255,255,255,0.08)"/>
+          <rect x="61" y="54" width="22" height="6" rx="5" fill="rgba(255,255,255,0.08)"/>
+          <line x1="54" y1="60" x2="60" y2="60" stroke="#1A1A1A" stroke-width="3.5"/>
+          <line x1="14" y1="57" x2="30" y2="60" stroke="#1A1A1A" stroke-width="2.5"/>
+          <line x1="84" y1="60" x2="100" y2="57" stroke="#1A1A1A" stroke-width="2.5"/>
+          <path d="M 34 55 Q 38 52 44 55" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M 64 55 Q 68 52 74 55" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none" stroke-linecap="round"/>`
+  },
+  {
+    id: 'heart_glasses', name: 'Heart Glasses', category: 'glasses', price: 90,
+    desc: 'In love with compound interest.',
+    svg: `<path d="M35,54 C35,49 40,47 43,51 C46,47 51,49 51,54 C51,59 43,65 43,65 C43,65 35,59 35,54Z" fill="#FF6B8A"/>
+          <path d="M63,54 C63,49 68,47 71,51 C74,47 79,49 79,54 C79,59 71,65 71,65 C71,65 63,59 63,54Z" fill="#FF6B8A"/>
+          <path d="M 36 52 C 37 49 40 48 42 50" stroke="rgba(255,255,255,0.45)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <path d="M 64 52 C 65 49 68 48 70 50" stroke="rgba(255,255,255,0.45)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <line x1="51" y1="57" x2="63" y2="57" stroke="#CC2255" stroke-width="2.5"/>
+          <line x1="16" y1="52" x2="35" y2="55" stroke="#CC2255" stroke-width="2"/>
+          <line x1="79" y1="55" x2="104" y2="52" stroke="#CC2255" stroke-width="2"/>`
+  },
+  {
+    id: 'star_glasses', name: 'Star Glasses', category: 'glasses', price: 110,
+    desc: 'Your portfolio is looking stellar.',
+    svg: `<polygon points="43,47 44.8,53 51,53 45.6,56.8 47.5,63 43,59.2 38.5,63 40.4,56.8 35,53 41.2,53" fill="#FFD700"/>
+          <polygon points="71,47 72.8,53 79,53 73.6,56.8 75.5,63 71,59.2 66.5,63 68.4,56.8 63,53 69.2,53" fill="#FFD700"/>
+          <path d="M 40 49 L 42 53" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M 68 49 L 70 53" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="51" y1="55" x2="63" y2="55" stroke="#C0A010" stroke-width="2.5"/>
+          <line x1="18" y1="51" x2="36" y2="54" stroke="#C0A010" stroke-width="2"/>
+          <line x1="78" y1="54" x2="102" y2="51" stroke="#C0A010" stroke-width="2"/>`
+  },
+  // ── CLOTHES ──
+  {
+    id: 'bow_tie', name: 'Bow Tie', category: 'clothes', price: 65,
+    desc: 'Business casual, pig casual.',
+    svg: `<path d="M44,93 L57,98 L44,103 Z" fill="#D4899E"/>
+          <path d="M76,93 L63,98 L76,103 Z" fill="#D4899E"/>
+          <path d="M44,93 L57,98 L50,93 Z" fill="rgba(255,255,255,0.22)"/>
+          <path d="M76,103 L63,98 L70,103 Z" fill="rgba(0,0,0,0.1)"/>
+          <ellipse cx="60" cy="98" rx="5.5" ry="4.5" fill="#B5607A"/>
+          <ellipse cx="60" cy="97" rx="5.5" ry="2.5" fill="#C87090"/>
+          <circle cx="60" cy="98" r="2" fill="#D4899E"/>`
+  },
+  {
+    id: 'scarf', name: 'Cozy Scarf', category: 'clothes', price: 85,
+    desc: 'Warm enough for bear market winters.',
+    svg: `<path d="M27,87 Q60,81 93,87 Q93,95 60,95 Q27,95 27,87Z" fill="#6B8F65"/>
+          <path d="M27,87 Q60,81 93,87 Q93,89.5 60,89.5 Q27,89.5 27,87Z" fill="rgba(255,255,255,0.18)"/>
+          <rect x="53" y="95" width="9" height="22" rx="4.5" fill="#6B8F65"/>
+          <rect x="53" y="95" width="9" height="4" rx="2" fill="rgba(255,255,255,0.18)"/>
+          <line x1="55" y1="100" x2="61" y2="100" stroke="#8FB085" stroke-width="1.8" opacity="0.8"/>
+          <line x1="55" y1="104" x2="61" y2="104" stroke="#8FB085" stroke-width="1.8" opacity="0.8"/>
+          <line x1="55" y1="108" x2="61" y2="108" stroke="#8FB085" stroke-width="1.8" opacity="0.7"/>
+          <line x1="55" y1="112" x2="61" y2="112" stroke="#8FB085" stroke-width="1.5" opacity="0.5"/>`
+  },
+  {
+    id: 'cape', name: 'Cape', category: 'clothes', price: 130,
+    desc: 'The hero of your own budget.',
+    svg: `<path d="M24,90 C24,90 12,110 16,128 L104,128 C108,110 96,90 96,90 Q60,84 24,90Z" fill="#6B35B8" opacity="0.9"/>
+          <path d="M24,90 Q60,84 96,90 L96,96 Q60,90 24,96Z" fill="rgba(255,255,255,0.15)"/>
+          <path d="M24,90 Q60,97 96,90" stroke="#4A1A8A" stroke-width="2.5" fill="none"/>
+          <path d="M16,128 L24,90 C27,92 30,94 32,128Z" fill="rgba(255,255,255,0.07)"/>
+          <line x1="44" y1="91" x2="48" y2="108" stroke="#9B55E8" stroke-width="2.5" opacity="0.55"/>
+          <line x1="60" y1="89" x2="60" y2="108" stroke="#9B55E8" stroke-width="2.5" opacity="0.55"/>
+          <line x1="76" y1="91" x2="72" y2="108" stroke="#9B55E8" stroke-width="2.5" opacity="0.55"/>
+          <ellipse cx="60" cy="89" rx="6" ry="3" fill="#5A28A0"/>`
+  },
+  {
+    id: 'overalls', name: 'Overalls', category: 'clothes', price: 150,
+    desc: 'From farmhand to fund manager.',
+    svg: `<rect x="48" y="91" width="24" height="20" rx="3" fill="#4A7FCC"/>
+          <rect x="48" y="91" width="24" height="5" rx="2" fill="rgba(255,255,255,0.2)"/>
+          <path d="M50,91 C46,85 40,82 36,80" stroke="#4A7FCC" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+          <path d="M70,91 C74,85 80,82 84,80" stroke="#4A7FCC" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+          <path d="M50,91 C47,86 43,83 38,81" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M70,91 C73,86 77,83 82,81" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <rect x="55" y="97" width="10" height="8" rx="2" fill="#3A6FBC"/>
+          <rect x="56" y="98" width="8" height="3.5" rx="1" fill="rgba(255,255,255,0.2)"/>
+          <circle cx="50" cy="91" r="3" fill="#3A6FBC"/>
+          <circle cx="70" cy="91" r="3" fill="#3A6FBC"/>
+          <line x1="52" y1="105" x2="68" y2="105" stroke="#3A6FBC" stroke-width="1.5" opacity="0.6"/>`
+  },
+];
+
 // ── Achievements ──────────────────────────────
 const ACHIEVEMENTS = [
   { id: 'first_paycheck', abbr: 'E',  label: 'First Paycheck',    desc: 'Complete Earning module',       check: s => s.completedModules.earning },
@@ -286,6 +634,7 @@ let state = {
   completedModules: {}, completedLessons: {}, unlockedAchievements: [], hadPerfect: false,
   activeModuleId: null, activeLessonIdx: 0, sessionQuestions: [],
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
+  coins: 0, ownedItems: [], equippedItem: null,
 };
 
 function loadState() {
@@ -296,8 +645,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect } = state;
-  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect }));
+  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem } = state;
+  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem }));
 }
 
 // ── XP / Level ─────────────────────────────────
@@ -361,6 +710,8 @@ function updateSidebarStats() {
   document.getElementById('sf-level').textContent = state.level;
   document.getElementById('sf-xp').textContent = state.xp.toLocaleString();
   document.getElementById('sf-bar-fill').style.width = xpProgressPct() + '%';
+  const coinsEl = document.getElementById('sf-coins');
+  if (coinsEl) coinsEl.textContent = (state.coins || 0).toLocaleString();
 }
 
 function renderModuleGrid(containerId) {
@@ -391,6 +742,60 @@ function renderModuleGrid(containerId) {
   });
 }
 
+function renderModuleList(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  MODULES.forEach(m => {
+    const lessonsDone = m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
+    const allDone = lessonsDone === m.lessons.length;
+
+    const row = document.createElement('div');
+    row.className = 'module-row' + (allDone ? ' completed' : '');
+
+    const badge = allDone
+      ? `<span class="card-badge badge-done">✓ Complete</span>`
+      : `<span class="card-badge badge-xp">+${m.xpReward} XP</span>`;
+
+    const lessonsHtml = m.lessons.map((lesson, idx) => {
+      const key = `${m.id}_${idx}`;
+      const lessonData = state.completedLessons[key];
+      const done = !!lessonData;
+      const meta = done
+        ? `Score: ${lessonData.score}/${lessonData.total} · ${lessonData.xpEarned} XP`
+        : `${lesson.qIndices.length} questions`;
+      const cta = done ? '↻ Replay' : 'Start →';
+      return `<div class="lesson-tile${done ? ' done' : ''}" data-module="${m.id}" data-lesson="${idx}">
+        <div class="lt-body">
+          <div class="lt-num">Lesson ${idx + 1}</div>
+          <div class="lt-title">${lesson.title}</div>
+          <div class="lt-meta">${meta}</div>
+        </div>
+        <span class="lt-cta">${cta}</span>
+      </div>`;
+    }).join('');
+
+    row.innerHTML = `
+      <div class="module-row-header">
+        <div class="mrh-left">
+          <div class="mod-icon ${m.iconColor}">${m.icon}</div>
+          <div class="mrh-info">
+            <div class="mrh-title">${m.title}</div>
+            <div class="mrh-desc">${m.desc}</div>
+          </div>
+        </div>
+        <div class="mrh-right">${badge}</div>
+      </div>
+      <div class="module-row-lessons">${lessonsHtml}</div>`;
+
+    row.querySelectorAll('.lesson-tile').forEach(tile => {
+      tile.addEventListener('click', () => startHook(tile.dataset.module, parseInt(tile.dataset.lesson)));
+    });
+
+    container.appendChild(row);
+  });
+}
+
 function renderAchievementBadges(containerId, subId) {
   const unlocked = state.unlockedAchievements.length;
   if (subId) document.getElementById(subId).textContent = `${unlocked}/${ACHIEVEMENTS.length} unlocked`;
@@ -407,6 +812,256 @@ function renderAchievementBadges(containerId, subId) {
   });
 }
 
+// ── PIG MASCOT ────────────────────────────────
+function getPigAccessory(level) {
+  if (level >= 9) return `
+    <ellipse cx="60" cy="21" rx="30" ry="7" fill="#2C3E2D"/>
+    <rect x="38" y="13" width="44" height="8" rx="2" fill="#2C3E2D"/>
+    <line x1="78" y1="13" x2="87" y2="30" stroke="#D4899E" stroke-width="2.5"/>
+    <line x1="87" y1="30" x2="84" y2="39" stroke="#D4899E" stroke-width="2"/>
+    <line x1="87" y1="30" x2="87" y2="40" stroke="#D4899E" stroke-width="2"/>
+    <line x1="87" y1="30" x2="90" y2="39" stroke="#D4899E" stroke-width="2"/>
+    <circle cx="87" cy="41" r="2.5" fill="#D4899E"/>`;
+  if (level >= 7) return `
+    <ellipse cx="60" cy="21" rx="30" ry="7" fill="#2C3E2D"/>
+    <rect x="38" y="13" width="44" height="8" rx="2" fill="#2C3E2D"/>
+    <line x1="78" y1="13" x2="87" y2="28" stroke="#D4899E" stroke-width="2.5"/>
+    <circle cx="87" cy="30" r="3.5" fill="#D4899E"/>`;
+  if (level >= 5) return `
+    <circle cx="46" cy="58" r="11.5" fill="none" stroke="#2C3E2D" stroke-width="2.5" opacity="0.75"/>
+    <circle cx="74" cy="58" r="11.5" fill="none" stroke="#2C3E2D" stroke-width="2.5" opacity="0.75"/>
+    <line x1="57.5" y1="57" x2="62.5" y2="57" stroke="#2C3E2D" stroke-width="2" opacity="0.75"/>
+    <line x1="21" y1="54" x2="34.5" y2="57" stroke="#2C3E2D" stroke-width="2" opacity="0.75"/>
+    <line x1="85.5" y1="57" x2="99" y2="54" stroke="#2C3E2D" stroke-width="2" opacity="0.75"/>`;
+  if (level >= 3) return `
+    <ellipse cx="45" cy="20" rx="12" ry="7.5" fill="#D4899E" transform="rotate(-18 45 20)"/>
+    <ellipse cx="67" cy="20" rx="12" ry="7.5" fill="#D4899E" transform="rotate(18 67 20)"/>
+    <circle cx="56" cy="21" r="5.5" fill="#B5607A"/>`;
+  return '';
+}
+
+function getPigAccessoryDesc(level) {
+  if (level >= 9)  return 'Fully graduated — all accessories unlocked.';
+  if (level >= 7)  return 'Graduation cap unlocked · Reach Level 9 to fully graduate';
+  if (level >= 5)  return 'Glasses unlocked · Reach Level 7 to earn a graduation cap';
+  if (level >= 3)  return 'Bow unlocked · Reach Level 5 to unlock glasses';
+  return 'Complete modules to unlock accessories for your pig!';
+}
+
+function getPigMarkup(scale) {
+  return `<div class="pig-stage" style="--pig-scale:${scale}">
+  <div class="pig-inner">
+    <div class="pig-shadow"></div>
+    <div class="pig">
+      <div class="pig-foot l"></div><div class="pig-foot r"></div>
+      <div class="pig-tail"></div>
+      <div class="pig-body"></div><div class="pig-tummy"></div>
+      <div class="pig-arm l"></div><div class="pig-arm r"></div>
+      <div class="pig-ear l"><div class="pig-ear-inner"></div></div>
+      <div class="pig-ear r"><div class="pig-ear-inner"></div></div>
+      <div class="pig-head">
+        <div class="pig-cheek l"></div><div class="pig-cheek r"></div>
+        <div class="pig-eye l"><div class="shine1"></div><div class="shine2"></div></div>
+        <div class="pig-eye r"><div class="shine1"></div><div class="shine2"></div></div>
+        <div class="pig-snout"><div class="pig-nostril l"></div><div class="pig-nostril r"></div></div>
+      </div>
+    </div>
+  </div>
+</div>`;
+}
+
+function getPigWithItemMarkup(scale, itemSvg) {
+  const overlay = itemSvg
+    ? `<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:440px;height:460px;pointer-events:none;z-index:10;overflow:visible"><g transform="matrix(3.28,0,0,3.4,23,-15)">${itemSvg}</g></svg>`
+    : '';
+  return `<div class="pig-stage" style="--pig-scale:${scale}">
+  <div class="pig-inner">
+    <div class="pig-shadow"></div>
+    <div class="pig">
+      <div class="pig-foot l"></div><div class="pig-foot r"></div>
+      <div class="pig-tail"></div>
+      <div class="pig-body"></div><div class="pig-tummy"></div>
+      <div class="pig-arm l"></div><div class="pig-arm r"></div>
+      <div class="pig-ear l"><div class="pig-ear-inner"></div></div>
+      <div class="pig-ear r"><div class="pig-ear-inner"></div></div>
+      <div class="pig-head">
+        <div class="pig-cheek l"></div><div class="pig-cheek r"></div>
+        <div class="pig-eye l"><div class="shine1"></div><div class="shine2"></div></div>
+        <div class="pig-eye r"><div class="shine1"></div><div class="shine2"></div></div>
+        <div class="pig-snout"><div class="pig-nostril l"></div><div class="pig-nostril r"></div></div>
+      </div>
+      ${overlay}
+    </div>
+  </div>
+</div>`;
+}
+
+function buildPigPreviewSvg(itemSvg, viewBox = '0 0 120 162') {
+  return `<svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="pm-body" x1="35%" y1="20%" x2="95%" y2="100%">
+        <stop offset="0%" stop-color="#ffd4e4"/><stop offset="60%" stop-color="#ffc2d9"/><stop offset="100%" stop-color="#ffb4ce"/>
+      </linearGradient>
+      <linearGradient id="pm-head" x1="30%" y1="20%" x2="95%" y2="100%">
+        <stop offset="0%" stop-color="#ffd9e7"/><stop offset="58%" stop-color="#ffc6db"/><stop offset="100%" stop-color="#ffb8d0"/>
+      </linearGradient>
+      <linearGradient id="pm-ear" x1="30%" y1="20%" x2="95%" y2="100%">
+        <stop offset="0%" stop-color="#ffc6dc"/><stop offset="100%" stop-color="#ff9fc1"/>
+      </linearGradient>
+      <radialGradient id="pm-snout" cx="50%" cy="40%" r="65%">
+        <stop offset="0%" stop-color="#ffb3cd"/><stop offset="100%" stop-color="#ff96b8"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="60" cy="155" rx="30" ry="7" fill="rgba(214,120,160,0.2)"/>
+    <rect x="39" y="140" width="13" height="17" rx="6.5" fill="#f7a8c4"/>
+    <rect x="68" y="140" width="13" height="17" rx="6.5" fill="#f7a8c4"/>
+    <ellipse cx="20" cy="108" rx="11" ry="9" fill="url(#pm-body)" transform="rotate(-20 20 108)"/>
+    <ellipse cx="100" cy="108" rx="11" ry="9" fill="url(#pm-body)" transform="rotate(20 100 108)"/>
+    <ellipse cx="60" cy="116" rx="36" ry="33" fill="url(#pm-body)"/>
+    <ellipse cx="60" cy="113" rx="18" ry="16" fill="rgba(255,255,255,0.42)"/>
+    <path d="M 97,105 C 103,99 109,102 107,109 C 105,114 98,111 101,107" fill="none" stroke="#f7a8c4" stroke-width="3.5" stroke-linecap="round"/>
+    <ellipse cx="35" cy="40" rx="13" ry="17" fill="url(#pm-ear)"/>
+    <ellipse cx="85" cy="40" rx="13" ry="17" fill="url(#pm-ear)"/>
+    <ellipse cx="35" cy="40" rx="7.5" ry="11" fill="#f48bb0"/>
+    <ellipse cx="85" cy="40" rx="7.5" ry="11" fill="#f48bb0"/>
+    <ellipse cx="60" cy="65" rx="34" ry="36" fill="url(#pm-head)"/>
+    <ellipse cx="33" cy="72" rx="10" ry="6.5" fill="rgba(255,100,150,0.32)"/>
+    <ellipse cx="87" cy="72" rx="10" ry="6.5" fill="rgba(255,100,150,0.32)"/>
+    <circle cx="44" cy="55" r="7.5" fill="#3a2230"/>
+    <circle cx="76" cy="55" r="7.5" fill="#3a2230"/>
+    <circle cx="47" cy="52" r="3" fill="white"/>
+    <circle cx="79" cy="52" r="3" fill="white"/>
+    <circle cx="44" cy="59" r="1.5" fill="rgba(255,255,255,0.65)"/>
+    <circle cx="76" cy="59" r="1.5" fill="rgba(255,255,255,0.65)"/>
+    <ellipse cx="60" cy="76" rx="19" ry="13" fill="url(#pm-snout)"/>
+    <circle cx="53.5" cy="76.5" r="5" fill="#d9608c"/>
+    <circle cx="66.5" cy="76.5" r="5" fill="#d9608c"/>
+    ${itemSvg}
+  </svg>`;
+}
+
+function refreshShopModal(itemId) {
+  const item = SHOP_ITEMS.find(i => i.id === itemId);
+  if (!item) return;
+  const owned = (state.ownedItems || []).includes(itemId);
+  const equipped = state.equippedItem === itemId;
+  const canAfford = (state.coins || 0) >= item.price;
+  let btn;
+  if (equipped) {
+    btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ Equipped · Remove</button>`;
+  } else if (owned) {
+    btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">Equip</button>`;
+  } else {
+    btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>🪙 ${item.price}</button>`;
+  }
+  document.getElementById('shop-modal-pig').innerHTML = getPigWithItemMarkup(0.42, item.svg);
+  const vb = CAT_VIEWBOX[item.category] || '0 0 120 120';
+  document.getElementById('shop-modal-accessory').innerHTML =
+    `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
+  document.getElementById('shop-modal-name').textContent = item.name;
+  document.getElementById('shop-modal-desc').textContent = item.desc;
+  document.getElementById('shop-modal-btn-wrap').innerHTML = btn;
+}
+
+function openShopModal(itemId) {
+  refreshShopModal(itemId);
+  document.getElementById('shop-modal').removeAttribute('hidden');
+}
+
+function closeShopModal() {
+  document.getElementById('shop-modal').setAttribute('hidden', '');
+}
+
+// ── SHOP ───────────────────────────────────────
+const SHOP_CATEGORIES = [
+  { key: 'hat',     label: 'Hats',    icon: '🎩' },
+  { key: 'glasses', label: 'Glasses', icon: '🕶️' },
+  { key: 'clothes', label: 'Clothes', icon: '👔' },
+];
+
+const CAT_VIEWBOX = {
+  hat:     '14 -4 92 46',
+  glasses: '6 41 108 34',
+  clothes: '6 72 108 62',
+};
+
+function renderShopPage() {
+  updateSidebarStats();
+  const shopCoinCount = document.getElementById('shop-coin-count');
+  if (shopCoinCount) shopCoinCount.textContent = (state.coins || 0).toLocaleString();
+
+  const grid = document.getElementById('shop-grid');
+  if (!grid) return;
+
+  const equippedItem = SHOP_ITEMS.find(i => i.id === state.equippedItem);
+
+  const categoriesHtml = SHOP_CATEGORIES.map(cat => {
+    const items = SHOP_ITEMS.filter(i => i.category === cat.key);
+    const cardsHtml = items.map(item => {
+      const owned = (state.ownedItems || []).includes(item.id);
+      const equipped = state.equippedItem === item.id;
+      const canAfford = (state.coins || 0) >= item.price;
+      const statusLabel = equipped ? '✓ Equipped' : owned ? 'Owned' : `🪙 ${item.price}`;
+      return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}" data-item-id="${item.id}">
+        <div class="shop-preview">
+          ${getPigWithItemMarkup(0.29, item.svg)}
+        </div>
+        <div class="shop-card-body">
+          <div class="shop-item-name">${item.name}</div>
+          <div class="shop-item-price">${statusLabel}</div>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="shop-category">
+      <div class="shop-cat-header">
+        <span class="shop-cat-icon">${cat.icon}</span>
+        <h2 class="shop-cat-title">${cat.label}</h2>
+      </div>
+      <div class="shop-items-grid">${cardsHtml}</div>
+    </div>`;
+  }).join('');
+
+  grid.innerHTML = `
+    <div class="shop-storefront">
+      <div class="shop-storefront-awning">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="shop-storefront-inner">
+        <div class="shop-storefront-pig">${getPigMarkup(0.2)}</div>
+        <div class="shop-storefront-text">
+          <div class="shop-storefront-sign">Hammy's Boutique</div>
+          <div class="shop-storefront-sub">${equippedItem ? `Currently wearing: <strong>${equippedItem.name}</strong>` : 'Pick something cute for your pig!'}</div>
+          <div class="shop-earn-tip">Earn 🪙 coins by completing lessons · 8 coins per correct answer</div>
+        </div>
+      </div>
+    </div>
+    ${categoriesHtml}`;
+
+  grid.querySelectorAll('.shop-card[data-item-id]').forEach(card => {
+    card.addEventListener('click', () => openShopModal(card.dataset.itemId));
+  });
+}
+
+function handleShopAction(itemId) {
+  const item = SHOP_ITEMS.find(i => i.id === itemId);
+  if (!item) return;
+  const owned = (state.ownedItems || []).includes(itemId);
+  const equipped = state.equippedItem === itemId;
+
+  if (equipped) {
+    state.equippedItem = null;
+  } else if (owned) {
+    state.equippedItem = itemId;
+  } else {
+    if ((state.coins || 0) < item.price) return;
+    state.coins -= item.price;
+    state.ownedItems = [...(state.ownedItems || []), itemId];
+    state.equippedItem = itemId;
+  }
+  saveState();
+  renderShopPage();
+}
+
 // ── HOME ───────────────────────────────────────
 function renderHome() {
   showPage('home');
@@ -414,10 +1069,35 @@ function renderHome() {
   const tier = getTier(state.level);
   document.getElementById('h-tier').textContent = tier.name;
   const done = Object.keys(state.completedModules).length;
-  document.getElementById('h-streak').textContent = state.streak;
-  document.getElementById('h-done').textContent = done;
   document.getElementById('modules-home-sub').textContent = done === 6 ? 'All complete — replay to master!' : `${done}/6 complete`;
-  renderModuleGrid('home-modules-grid');
+
+  document.getElementById('home-mascot-card').innerHTML = `
+    <div class="mascot-pig-wrap">${getPigMarkup(0.25)}</div>
+    <div class="mascot-info">
+      <div class="mascot-label">Your Mascot</div>
+      <div class="mascot-tier-name">${tier.name}</div>
+      <div class="mascot-unlock">${getPigAccessoryDesc(state.level)}</div>
+    </div>`;
+
+  document.getElementById('home-stats-row').innerHTML = `
+    <div class="hs-card">
+      <div class="hs-num">${state.xp.toLocaleString()}</div>
+      <div class="hs-label">XP Earned</div>
+    </div>
+    <div class="hs-card">
+      <div class="hs-num">${state.level}</div>
+      <div class="hs-label">Level</div>
+    </div>
+    <div class="hs-card">
+      <div class="hs-num">${state.streak}</div>
+      <div class="hs-label">Day Streak</div>
+    </div>
+    <div class="hs-card">
+      <div class="hs-num">${done}<span style="font-size:1rem;letter-spacing:0;color:var(--text-soft)">/6</span></div>
+      <div class="hs-label">Modules Done</div>
+    </div>`;
+
+  renderModuleList('home-modules-grid');
   renderAchievementBadges('home-achievements-row', 'home-achieve-sub');
 }
 
@@ -426,7 +1106,7 @@ function renderModulesPage() {
   updateSidebarStats();
   const done = Object.keys(state.completedModules).length;
   document.getElementById('modules-sub').textContent = done === 6 ? 'All complete — replay to master!' : `${done}/6 complete`;
-  renderModuleGrid('modules-grid');
+  renderModuleList('modules-grid');
 }
 
 // ── BADGES PAGE ────────────────────────────────
@@ -456,7 +1136,17 @@ function renderProgressPage() {
   // Alternating bar colors
   const pinkMods = new Set(['spending', 'credit']);
 
+  const pigMsg = done === 6 ? "You did it! All modules complete!"
+    : done > 0 ? "Keep going, you're doing great!"
+    : "Let's get started!";
+
   document.getElementById('progress-body').innerHTML = `
+    <!-- Pig mascot -->
+    <div class="pg-mascot-wrap">
+      <div class="pg-mascot-pig">${getPigMarkup(0.25)}</div>
+      <div class="pg-mascot-bubble">${pigMsg}</div>
+    </div>
+
     <!-- Stat cards -->
     <div class="pg-stats-row">
       <div class="pg-stat-card">
@@ -688,6 +1378,8 @@ function finishQuiz() {
   const wasLessonDone = !!state.completedLessons[lessonKey];
   const base = Math.round(mod.xpReward * (score / total));
   const xpEarned = wasLessonDone ? Math.round(base * 0.5) : (isPerfect ? Math.round(mod.xpReward * 1.25) : base);
+  const coinsEarned = wasLessonDone ? Math.round(score * 3) : score * 8;
+  state.coins = (state.coins || 0) + coinsEarned;
 
   const prevLesson = state.completedLessons[lessonKey];
   if (!prevLesson || score > prevLesson.score) {
@@ -705,7 +1397,7 @@ function finishQuiz() {
   const newAchs = checkAchievements();
   saveState();
   showScreen('screen-results');
-  renderResults(mod, score, total, xpEarned, wasLessonDone, newAchs);
+  renderResults(mod, score, total, xpEarned, wasLessonDone, newAchs, coinsEarned);
 
   if (leveled) {
     setTimeout(() => {
@@ -715,7 +1407,7 @@ function finishQuiz() {
   }
 }
 
-function renderResults(mod, score, total, xpEarned, wasReplay, newAchs) {
+function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEarned) {
   const pct = score / total;
   let grade, title;
   if (pct === 1)       { grade = 'Perfect'; title = 'Perfect Score'; }
@@ -740,9 +1432,15 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs) {
     <div class="results-grade">${grade}</div>
     <h2 class="results-title">${title}</h2>
     <p class="results-score">You got <strong>${score} out of ${total}</strong> correct${wasReplay ? ' · replay (0.5× XP)' : ''}</p>
-    <div class="results-xp-card">
-      <div class="results-xp-num">+${xpEarned} XP</div>
-      <div class="results-xp-label">${getTier(state.level).name} · ${state.xp.toLocaleString()} total XP</div>
+    <div class="results-rewards-row">
+      <div class="results-xp-card">
+        <div class="results-xp-num">+${xpEarned} XP</div>
+        <div class="results-xp-label">${getTier(state.level).name} · ${state.xp.toLocaleString()} total</div>
+      </div>
+      <div class="results-coins-card">
+        <div class="results-coins-num">+${coinsEarned || 0} 🪙</div>
+        <div class="results-xp-label">${(state.coins || 0).toLocaleString()} total coins</div>
+      </div>
     </div>
     ${achHtml}
     <div class="results-breakdown">${breakdown}</div>
@@ -762,16 +1460,17 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => {
       const page = btn.dataset.page;
       showPage(page);
-      if (page === 'home')     renderHome();
+      if (page === 'home')          renderHome();
       else if (page === 'progress') renderProgressPage();
       else if (page === 'modules')  renderModulesPage();
       else if (page === 'badges')   renderBadgesPage();
+      else if (page === 'shop')     renderShopPage();
       else if (page === 'settings') renderSettingsPage();
     });
   });
 
   document.getElementById('mod-detail-exit').addEventListener('click', renderHome);
-  document.getElementById('hook-exit').addEventListener('click', () => showModuleDetail(state.activeModuleId));
+  document.getElementById('hook-exit').addEventListener('click', renderHome);
   document.getElementById('hook-start').addEventListener('click', startQuiz);
   document.getElementById('quiz-exit').addEventListener('click', () => {
     if (confirm('Exit quiz? Your progress for this session will be lost.')) renderHome();
@@ -787,6 +1486,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('levelup-ok').addEventListener('click', () => {
     document.getElementById('levelup-overlay').classList.remove('visible');
   });
+
+  const shopModal = document.getElementById('shop-modal');
+  shopModal.addEventListener('click', e => {
+    if (e.target === shopModal) { closeShopModal(); return; }
+    const btn = e.target.closest('.shop-btn[data-id]');
+    if (btn) {
+      handleShopAction(btn.dataset.id);
+      refreshShopModal(btn.dataset.id);
+      renderShopPage();
+    }
+  });
+  document.getElementById('shop-modal-close').addEventListener('click', closeShopModal);
 
   loadState();
   renderHome();

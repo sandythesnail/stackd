@@ -68,6 +68,8 @@ body { background-color: var(--bg); }
   display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
 }
 .l-nav-inner .logo { margin-left: -1.2rem; }
+.nav-logo-wrap { display: flex; align-items: center; gap: 0.35rem; margin-left: -1.2rem; }
+.nav-logo-wrap .logo { margin-left: 0; }
 .l-nav-links { display: flex; align-items: center; gap: 0.6rem; }
 .l-nav-links a:not(.btn-sm):not(.btn-outline-sm) {
   font-size: 1rem; font-weight: 600; color: var(--text-mid);
@@ -205,6 +207,7 @@ body { background-color: var(--bg); }
   flex-direction: column;
   align-items: center;
 }
+
 .lp-scene.reveal.in {
   opacity: 1;
   transform: none;
