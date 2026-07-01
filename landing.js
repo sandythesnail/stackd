@@ -148,17 +148,27 @@ function fireConfetti(container) {
   }
 }
 
-// Animate admin bars when they scroll into view
-const bars = document.querySelectorAll('.ab-fill');
-const barObserver = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.style.width = e.target.style.width;
-      barObserver.unobserve(e.target);
-    }
-  });
-}, { threshold: 0.3 });
-bars.forEach(b => barObserver.observe(b));
+// Animate admin dashboard bars one by one when they scroll into view
+const adminBars = document.querySelector('.admin-bars');
+if (adminBars) {
+  const fills = adminBars.querySelectorAll('.ab-fill');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const barObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      fills.forEach((fill, i) => {
+        const target = fill.dataset.width + '%';
+        if (reduceMotion) {
+          fill.style.width = target;
+        } else {
+          setTimeout(() => { fill.style.width = target; }, i * 200);
+        }
+      });
+      barObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.4 });
+  barObserver.observe(adminBars);
+}
 
 // Curriculum carousel: auto-scrolls right continuously, arrows nudge it,
 // hover/touch/manual use pauses it briefly so it doesn't fight the reader.
