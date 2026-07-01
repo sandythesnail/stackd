@@ -8,6 +8,9 @@
   --pink-light: #F2CDD7;
   --pink-pale: #FBF0F3;
   --pink-dark: #B5607A;
+  --pig-pink: #FF96B8;
+  --red-light: #E0A99C;
+  --red-pale: #F5D6CE;
   --bg: #FAF6ED;
   --white: #FFFFFF;
   --text: #2C3E2D;
@@ -39,7 +42,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 }
 .logo::after {
   content: '.';
-  color: var(--pink);
+  color: var(--pig-pink);
 }
 
 .btn-primary-lg {
