@@ -1,5 +1,6 @@
 /* ── App layout ── */
-html { font-size: 17px; }
+html { font-size: 17px; scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar { display: none; width: 0; height: 0; }
 body { background: var(--bg); min-height: 100vh; }
 
 #app { display: flex; min-height: 100vh; }
@@ -377,7 +378,9 @@ body { background: var(--bg); min-height: 100vh; }
 .screen {
   display: none; position: fixed; inset: 0;
   background: var(--bg); z-index: 100; overflow-y: auto;
+  scrollbar-width: none; -ms-overflow-style: none; /* scrolling still works, the bar itself is just hidden */
 }
+.screen::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .screen.active { display: block; }
 
 /* HOOK */
@@ -434,8 +437,8 @@ body { background: var(--bg); min-height: 100vh; }
 .option-btn {
   display: flex; align-items: center; gap: 0.85rem; width: 100%;
   padding: 0.9rem 1.1rem; background: #fff; border: 1px solid var(--border);
-  border-radius: var(--radius); font-size: 0.95rem; font-weight: 500; color: var(--text);
-  text-align: left; transition: border-color 0.15s, background 0.15s; line-height: 1.5; font-family: inherit;
+  border-radius: var(--radius); font-size: 1.05rem; font-weight: 500; color: var(--text);
+  text-align: left; transition: border-color 0.15s, background 0.15s; line-height: 1.45; font-family: inherit;
 }
 .option-btn:hover:not(:disabled) { border-color: var(--green); background: var(--green-pale); }
 .opt-letter {
@@ -474,9 +477,484 @@ body { background: var(--bg); min-height: 100vh; }
 }
 .btn-next:hover { background: var(--green-dark); }
 
+/* ─── QUEST ENGINE (narrative modules) ─── */
+.quest-topbar {
+  position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid var(--border);
+  padding: 0.55rem 1rem 0.4rem;
+}
+.quest-topbar-row { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.2rem; }
+.quest-prog-track { flex: 1; height: 8px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.quest-prog-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width 0.4s ease; width: 0%; }
+.quest-pct { font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; color: var(--green-dark); white-space: nowrap; min-width: 40px; text-align: right; }
+.quest-counter { display: block; font-size: 0.7rem; font-weight: 600; color: var(--text-soft); padding-left: 42px; }
+
+/* All the "chrome" below the topbar (dashboard, glossary tray, hints, continue) is bundled
+   into one sticky group so it stays pinned together right under the topbar, and the continue
+   button lives here too, so it's always reachable at the top without scrolling. Dashboard and
+   the hint/continue controls share a single row (no separate bar + divider line underneath). */
+.quest-sticky-header { position: sticky; top: 58px; z-index: 9; background: #fff; }
+
+.quest-toolrow {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 0.6rem; padding: 0.4rem 1rem;
+}
+.quest-dashboard {
+  display: flex; gap: 0.6rem; overflow-x: auto;
+}
+.quest-stat-chip {
+  display: flex; flex-direction: column; align-items: center; min-width: 92px;
+  padding: 0.4rem 0.7rem; border-radius: var(--radius); background: var(--bg); border: 1.5px solid var(--border);
+  transition: background 0.3s;
+}
+.quest-stat-chip .qs-label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-soft); }
+.quest-stat-chip .qs-val { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--text); }
+.quest-stat-chip.qs-up { background: var(--green-pale); border-color: var(--green-light); }
+.quest-stat-chip.qs-up .qs-val { color: var(--green-dark); }
+.quest-stat-chip.qs-down { background: var(--pink-pale); border-color: var(--pink-light); }
+.quest-stat-chip.qs-down .qs-val { color: var(--pink-dark); }
+
+/* Glossary recap tray — terms already taught, tap one to reread its definition */
+.glossary-tray {
+  display: none; flex-wrap: wrap; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 1rem; background: var(--bg); border-bottom: 1px solid var(--border);
+}
+.glossary-tray.show { display: flex; }
+.glossary-label { font-size: 0.72rem; font-weight: 700; color: var(--text-soft); }
+.glossary-chip {
+  padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid var(--border); background: #fff;
+  font-size: 0.75rem; font-weight: 600; color: var(--text-mid); cursor: pointer; transition: border-color 0.15s;
+}
+.glossary-chip:hover { border-color: var(--green); color: var(--green-dark); }
+
+.glossary-popup-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(44,62,45,0.45); z-index: 300;
+  align-items: center; justify-content: center; padding: 1.5rem;
+}
+.glossary-popup-overlay.show { display: flex; }
+.glossary-popup-card {
+  background: #fff; border-radius: var(--radius); padding: 1.5rem; max-width: 380px; width: 100%;
+  box-shadow: var(--shadow-md); animation: fadeUp 0.3s ease;
+}
+.glossary-popup-term { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: 0.65rem; }
+.glossary-popup-def { font-size: 0.92rem; line-height: 1.6; color: var(--text-mid); margin-bottom: 1.1rem; }
+
+/* Action bar — hint budget and the chapter's Continue button, sharing the dashboard's row. */
+.quest-action-bar { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
+.hint-budget:empty { display: none; }
+.hint-ask-btn {
+  font-size: 0.76rem; font-weight: 600; color: var(--pink-dark); background: var(--pink-pale);
+  border: 1px solid var(--pink-light); border-radius: var(--radius-sm); padding: 0.45rem 0.8rem;
+  font-family: inherit; cursor: pointer; transition: opacity 0.2s;
+}
+.hint-ask-btn:disabled { opacity: 0.45; cursor: default; }
+.quest-continue-slot { margin-left: auto; }
+.quest-continue-fab {
+  font-family: inherit; font-size: 0.88rem; font-weight: 700; color: var(--text-soft);
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: 999px;
+  padding: 0.5rem 1.2rem; cursor: not-allowed; transition: background 0.25s, color 0.25s, border-color 0.25s, box-shadow 0.25s;
+}
+.quest-continue-fab.ready {
+  color: #fff; background: var(--green); border-color: var(--green); cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(107,143,101,0.22);
+}
+.quest-continue-fab.ready:hover { background: var(--green-dark); }
+.quest-continue-fab:disabled { pointer-events: none; }
+
+.quest-body { max-width: 1080px; margin: 0 auto; padding: 0.6rem 1rem 1.5rem; }
+
+/* Two-column layout — Hammy pinned in a wide column on the left, all activity content
+   (questions, choices, definitions) in the column on the right. The side column stretches
+   to match the content column's height so Hammy sits centered across its full height. */
+.quest-layout { display: flex; align-items: stretch; gap: 1rem; }
+.quest-side {
+  flex-shrink: 0; width: 300px; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; gap: 0.7rem;
+}
+.hammy-side-avatar { position: relative; }
+/* A white speech bubble floats above Hammy's head whenever he reacts, instead of plain
+   text sitting below him. */
+.hammy-side-msg {
+  position: relative; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem;
+  color: var(--text); line-height: 1.3; background: #fff; border: 1.5px solid var(--border);
+  border-radius: var(--radius); padding: 0.7rem 1rem; box-shadow: var(--shadow-sm);
+  opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.hammy-side-msg:empty { display: none; }
+.hammy-side-msg::before, .hammy-side-msg::after {
+  content: ''; position: absolute; left: 50%; transform: translateX(-50%); width: 0; height: 0;
+  border-left: 10px solid transparent; border-right: 10px solid transparent;
+}
+.hammy-side-msg::before { bottom: -11px; border-top: 11px solid var(--border); }
+.hammy-side-msg::after { bottom: -9px; border-top: 10px solid #fff; }
+.hammy-side-msg.show { opacity: 1; transform: translateY(0); }
+.hammy-side-msg.happy { color: var(--green-dark); }
+.hammy-side-msg.gentle { color: var(--pink-dark); }
+.hammy-side-msg.streak { color: var(--pink-dark); }
+.hammy-side-avatar.happy .pig { animation: hammyBounce 0.7s ease-in-out !important; }
+.hammy-side-avatar.gentle .pig { animation: hammyWobble 0.6s ease-in-out !important; }
+.hammy-side-avatar.streak .pig { animation: hammyCelebrate 1s ease-in-out !important; }
+.hammy-side-avatar.happy::before, .hammy-side-avatar.streak::before,
+.hammy-side-avatar.happy::after, .hammy-side-avatar.streak::after {
+  content: '\2728'; position: absolute; font-size: 1.1rem; opacity: 0; pointer-events: none;
+}
+.hammy-side-avatar.happy::before, .hammy-side-avatar.streak::before { top: 0; left: -8px; animation: sparklePop 0.8s ease forwards; }
+.hammy-side-avatar.happy::after, .hammy-side-avatar.streak::after { top: 8px; right: -6px; animation: sparklePop 0.8s ease 0.15s forwards; }
+
+/* Centers vertically within whatever height the row ends up (quest-layout's min-height is set
+   in JS from the real available space), so short content isn't squished against the top with
+   Hammy floating awkwardly beside empty space below. */
+.quest-main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+
+/* Shared chapter title — sits above the two-column layout, bled past quest-body's own padding
+   so it hugs the true left edge of the screen, further left than everything else on the page. */
+.quest-title-row {
+  font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--pink-dark); line-height: 1.1; margin: 0.6rem 0 0.6rem;
+  margin-left: calc(-1 * 1rem);
+}
+.quest-title-row:empty { display: none; margin-bottom: 0; }
+/* Centered for the intro-only "establishing shot" story chapters, to match the centered
+   character + caption below it instead of sitting at the left edge. */
+.quest-title-row.centered { text-align: center; margin-left: 0; }
+.quest-prompt { font-size: 1.12rem; font-weight: 500; line-height: 1.5; color: var(--text); margin-bottom: 0.85rem; }
+.quest-outcome-text { font-size: 0.95rem; color: var(--text-mid); line-height: 1.55; margin-bottom: 0.75rem; }
+.quest-continue-btn { margin-top: 1rem; }
+.quest-kc-counter { font-size: 0.78rem; font-weight: 600; color: var(--text-soft); margin-bottom: 0.5rem; }
+
+/* Story beats */
+.story-beat { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; animation: fadeUp 0.4s ease; align-items: flex-start; }
+.story-avatar {
+  width: 46px; height: 46px; border-radius: 50%; background: var(--green-pale);
+  display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--green-dark);
+  flex-shrink: 0; font-family: var(--font-display); overflow: hidden;
+}
+.story-beat.is-narrator .story-avatar { background: var(--bg); color: var(--text-soft); }
+/* Hammy narrates from the right; Maya's lines stay on the left. */
+.story-beat.is-narrator { flex-direction: row-reverse; }
+.story-avatar.has-character { background: var(--bg); }
+.story-bubble {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 0.9rem 1.1rem; font-size: 1.18rem; line-height: 1.55; color: var(--text);
+}
+.story-bubble.narrator { background: var(--bg); font-style: italic; color: var(--text-mid); }
+
+/* Establishing shot — big centered character + caption, filling the available screen height
+   to open a story chapter (Hammy's side column is hidden for story chapters, so this has
+   the full width and height of quest-main to work with). */
+.intro-scene {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; min-height: 300px; margin-bottom: 0; animation: fadeUp 0.4s ease;
+}
+.intro-avatar { display: flex; justify-content: center; margin-bottom: 1.25rem; }
+.intro-caption {
+  font-family: var(--font-display); font-size: 1.45rem; font-weight: 500; line-height: 1.5;
+  color: var(--text); max-width: 760px; margin: 0 auto;
+}
+
+/* Teach / hint chapters — Hammy's whole body on the left, a speech bubble on the right */
+.teach-tag, .hint-tag {
+  display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--green-dark); background: var(--green-pale); border: 1px solid var(--green-light);
+  border-radius: var(--radius-sm); padding: 0.25rem 0.65rem; margin-bottom: 0.6rem;
+}
+.hint-tag { color: var(--pink-dark); background: var(--pink-pale); border-color: var(--pink-light); }
+.teach-scene { display: flex; align-items: flex-end; gap: 0.5rem; margin-bottom: 0.75rem; animation: fadeUp 0.4s ease; }
+.hammy-body-avatar { flex-shrink: 0; }
+.speech-bubble {
+  position: relative; flex: none; background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 0.8rem 1rem; margin-bottom: 0.5rem;
+}
+.speech-bubble::before, .speech-bubble::after {
+  content: ''; position: absolute; left: -10px; bottom: 20px; width: 0; height: 0;
+  border: 9px solid transparent; border-right-color: var(--border);
+}
+.speech-bubble::after { left: -8px; border-right-color: #fff; border-width: 8px; }
+.teach-term { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--text); margin-bottom: 0.45rem; }
+.teach-plain { font-size: 1rem; line-height: 1.45; color: var(--text-mid); margin-bottom: 0.6rem; }
+.hint-bubble .teach-plain { margin-bottom: 0; color: var(--text); font-size: 1.05rem; }
+.teach-analogy {
+  background: var(--bg); border-left: 3px solid var(--green); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 0.6rem 0.8rem; font-size: 0.9rem; line-height: 1.45; color: var(--text-mid);
+}
+.teach-analogy-tag {
+  font-weight: 700; color: var(--green-dark); display: block; margin-bottom: 0.3rem;
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.4px;
+}
+.hammy-tappable { cursor: pointer; transition: transform 0.15s ease; }
+.hammy-tappable:hover { transform: scale(1.04); }
+.hint-placeholder { color: var(--text-soft); font-style: italic; }
+
+/* Quick true/false recall check shown after each new word */
+.word-check { margin-top: 0.7rem; padding-top: 0.65rem; border-top: 1px dashed var(--border); }
+.word-check-label { font-size: 0.82rem; font-weight: 700; color: var(--text-soft); margin-bottom: 0.35rem; }
+.word-check-statement { font-size: 1rem; font-weight: 500; color: var(--text); line-height: 1.4; margin-bottom: 0.6rem; }
+.word-check-btns { display: flex; gap: 0.75rem; }
+.word-check-btn { flex: 1; text-align: center; justify-content: center; padding: 0.75rem 0.5rem; }
+
+/* Keyframes shared by the persistent side Hammy's mood states (.hammy-side-avatar.happy/gentle/streak above) */
+@keyframes hammyBounce {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  30% { transform: translateY(-22px) rotate(6deg); }
+  55% { transform: translateY(0) rotate(-4deg); }
+  75% { transform: translateY(-10px) rotate(3deg); }
+}
+@keyframes hammyWobble {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-6deg); }
+  75% { transform: rotate(6deg); }
+}
+@keyframes hammyCelebrate {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  15% { transform: translateY(-30px) rotate(-8deg); }
+  30% { transform: translateY(0) rotate(6deg); }
+  45% { transform: translateY(-30px) rotate(-8deg); }
+  60% { transform: translateY(0) rotate(6deg); }
+  75% { transform: translateY(-16px) rotate(-4deg); }
+}
+@keyframes sparklePop {
+  0% { opacity: 0; transform: scale(0.4) translateY(4px); }
+  40% { opacity: 1; transform: scale(1.15) translateY(-8px); }
+  100% { opacity: 0; transform: scale(0.85) translateY(-20px); }
+}
+
+/* Sticky dashboard attention pulse — used while a "teach" chapter is explaining what a chip means */
+.quest-dashboard.highlight .quest-stat-chip { animation: dashPulse 1.4s ease-in-out infinite; }
+@keyframes dashPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(107,143,101,0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(107,143,101,0); }
+}
+
+/* Matching game — repeated-exposure term-to-definition drill */
+.match-terms { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.match-chip {
+  padding: 0.55rem 0.9rem; border-radius: 999px; border: 1.5px solid var(--border); background: #fff;
+  font-size: 0.95rem; font-weight: 600; color: var(--text); cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+.match-chip:hover:not(.matched) { border-color: var(--green); }
+.match-chip.selected { border-color: var(--green); background: var(--green-pale); color: var(--green-dark); }
+.match-chip.matched { border-color: var(--green-light); background: var(--green-pale); color: var(--green-dark); opacity: 0.6; cursor: default; }
+.match-defs { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.5rem; }
+.match-def-card {
+  padding: 0.85rem 1rem; border-radius: var(--radius); border: 1.5px solid var(--border); background: #fff;
+  font-size: 0.98rem; line-height: 1.45; color: var(--text-mid); cursor: pointer; transition: border-color 0.15s, background 0.15s;
+}
+.match-def-card:hover:not(.matched) { border-color: var(--green); }
+.match-def-card.matched { border-color: var(--green-light); background: var(--green-pale); color: var(--green-dark); opacity: 0.6; cursor: default; }
+.match-chip.shake, .match-def-card.shake { animation: matchShake 0.4s ease; border-color: var(--pink); background: var(--pink-pale); }
+@keyframes matchShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+.match-progress { text-align: center; font-size: 0.75rem; font-weight: 600; color: var(--text-soft); margin-bottom: 0.75rem; }
+
+/* Explainback — typed self-check with lenient keyword grading and always-shown definition */
+.explainback-input {
+  width: 100%; min-height: 90px; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 0.85rem 1rem; font-family: inherit; font-size: 1rem; color: var(--text); resize: vertical;
+  margin-bottom: 1rem; background: #fff;
+}
+.explainback-input:focus { outline: none; border-color: var(--green); }
+.explainback-input:disabled { background: var(--bg); color: var(--text-mid); }
+.explainback-result { margin-top: 1rem; animation: fadeUp 0.4s ease; }
+.explainback-feedback { font-weight: 600; color: var(--text); margin-bottom: 0.75rem; font-size: 1rem; }
+.explainback-definition {
+  background: var(--green-pale); border: 1px solid var(--green-light); border-radius: var(--radius);
+  padding: 0.85rem 1rem; font-size: 0.96rem; line-height: 1.55; color: var(--text); margin-bottom: 0.5rem;
+}
+
+/* Decision outcome comparison reuses .pg-column-chart/.pg-col/.pg-col-bar from Progress page */
+.decision-choice-btn { margin-bottom: 0; }
+.decision-outcome { margin-top: 1rem; animation: fadeUp 0.4s ease; }
+
+/* Knowledge-check split — options on the left, the correct/incorrect explanation in its own
+   column on the right, instead of a bottom bar that covers the remaining answer choices. */
+.kc-split { display: flex; align-items: flex-start; gap: 1.25rem; margin-top: 0.5rem; }
+.kc-split-left { flex: 1.3; min-width: 0; }
+.kc-split-right { flex: 1; min-width: 0; }
+.feedback-panel.kc-panel {
+  position: static; display: none; max-width: none; width: 100%; margin: 0;
+  flex-direction: column; align-items: flex-start; gap: 0.9rem;
+  padding: 1.6rem 1.7rem; border-radius: var(--radius); border: 1.5px solid var(--border);
+  background: #fff; animation: fadeUp 0.35s ease;
+}
+.feedback-panel.kc-panel.visible { display: flex; }
+.feedback-panel.kc-panel.correct-state { background: var(--green-pale); border-color: var(--green-light); }
+.feedback-panel.kc-panel.wrong-state { background: var(--pink-pale); border-color: var(--pink-light); }
+.feedback-panel.kc-panel .feedback-indicator { width: 12px; height: 12px; }
+.feedback-panel.kc-panel .feedback-label { font-size: 1.4rem; margin-bottom: 0.4rem; }
+.feedback-panel.kc-panel .feedback-exp { font-size: 1.12rem; line-height: 1.5; color: var(--green-dark); font-weight: 500; }
+.feedback-panel.kc-panel .btn-next { font-size: 0.95rem; padding: 0.7rem 1.5rem; }
+.feedback-panel.kc-panel .btn-next { align-self: flex-end; }
+@media (max-width: 640px) { .kc-split { flex-direction: column; } }
+
+/* Micro-sim */
+.microsim-costs { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 0.7rem; }
+.microsim-cost-row {
+  display: flex; justify-content: space-between; padding: 0.4rem 0.9rem; font-size: 0.92rem;
+  background: #fff; border-bottom: 1px solid var(--border); color: var(--text-mid);
+}
+.microsim-cost-row:last-child { border-bottom: none; }
+.microsim-income-row { background: var(--green-pale); color: var(--green-dark); font-weight: 600; }
+.microsim-sliders { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.7rem; }
+.microsim-slider-label { display: flex; justify-content: space-between; font-size: 0.92rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.microsim-range { width: 100%; accent-color: var(--green); height: 6px; }
+.microsim-leftover-row {
+  display: flex; justify-content: space-between; align-items: center; font-size: 0.98rem; font-weight: 600;
+  padding: 0.55rem 0.9rem; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.5rem;
+}
+.microsim-leftover { font-family: var(--font-display); font-size: 1.1rem; color: var(--green-dark); }
+.microsim-leftover.negative { color: var(--pink-dark); }
+.microsim-result { padding: 1rem; border-radius: var(--radius); margin-top: 0.5rem; font-size: 0.9rem; line-height: 1.6; animation: fadeUp 0.4s ease; }
+.microsim-result.ok { background: var(--green-pale); color: var(--text); }
+.microsim-result.bad { background: var(--pink-pale); color: var(--text); }
+
+/* Myth-card swipe stack */
+/* Explicit width (not just max-width) because its only children are position:absolute —
+   as a flex item (quest-main is now a centering flex column) an element with no in-flow
+   content has no intrinsic size to stretch from and collapses to zero width otherwise. */
+.myth-card-stack { position: relative; width: 340px; height: 320px; max-width: 100%; margin: 0 auto 0.4rem; touch-action: pan-y; flex-shrink: 0; }
+.myth-card {
+  position: absolute; inset: 0; cursor: grab; perspective: 1000px;
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); will-change: transform;
+}
+.myth-card:nth-child(1) { z-index: 3; }
+.myth-card:nth-child(2) { transform: scale(0.96) translateY(10px); z-index: 2; }
+.myth-card:nth-child(3) { transform: scale(0.92) translateY(20px); z-index: 1; }
+.myth-card.dragging { transition: none; cursor: grabbing; }
+.myth-card-inner {
+  position: relative; width: 100%; height: 100%; transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.myth-card.flipped .myth-card-inner { transform: rotateY(180deg); }
+.myth-card-front, .myth-card-back {
+  position: absolute; inset: 0; backface-visibility: hidden; overflow-y: auto;
+  scrollbar-width: none; -ms-overflow-style: none;
+  border-radius: var(--radius); border: 1px solid var(--border); background: #fff; box-shadow: var(--shadow-md);
+  padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; gap: 0.75rem;
+}
+.myth-card-front::-webkit-scrollbar, .myth-card-back::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.myth-card-front p, .myth-card-back p { font-size: 1.1rem; font-weight: 500; line-height: 1.45; color: var(--text); text-align: center; }
+.myth-card-tag {
+  align-self: center; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-soft);
+}
+.myth-swipe-hint { align-self: center; font-size: 0.72rem; font-weight: 600; color: var(--text-soft); margin-top: 0.25rem; }
+.myth-card-back { transform: rotateY(180deg); }
+.myth-card-back.is-true .myth-card-tag { color: var(--green-dark); }
+.myth-card-back.is-true { border-color: var(--green-light); background: var(--green-pale); }
+.myth-card-back.is-false .myth-card-tag { color: var(--pink-dark); }
+.myth-card-back.is-false { border-color: var(--pink-light); background: var(--pink-pale); }
+.myth-card-back .myth-guess-line { font-size: 0.85rem !important; font-weight: 700 !important; margin-bottom: 0.25rem; }
+.myth-card-back .myth-guess-line.right { color: var(--green-dark); }
+.myth-card-back .myth-guess-line.wrong { color: var(--pink-dark); }
+.myth-card-back .myth-explanation { font-size: 0.88rem !important; font-weight: 500 !important; line-height: 1.55; }
+@keyframes flyOffRight { to { transform: translateX(140%) rotate(18deg); opacity: 0; } }
+@keyframes flyOffLeft  { to { transform: translateX(-140%) rotate(-18deg); opacity: 0; } }
+.myth-card.fly-right { animation: flyOffRight 0.4s ease forwards; }
+.myth-card.fly-left  { animation: flyOffLeft 0.4s ease forwards; }
+.myth-next-wrap { display: flex; justify-content: center; margin-bottom: 0.35rem; min-height: 38px; }
+.myth-progress { text-align: center; font-size: 0.75rem; font-weight: 600; color: var(--text-soft); }
+.myth-done { animation: fadeUp 0.4s ease; }
+
+/* Interactive simulators */
+.sim-meter-wrap { margin: 1.25rem 0; }
+.sim-meter-score { font-family: var(--font-display); font-size: 2rem; font-weight: 700; text-align: center; color: var(--text); margin-bottom: 0.5rem; }
+.sim-meter-track {
+  position: relative; height: 14px; border-radius: 999px; margin-bottom: 0.4rem;
+  background: linear-gradient(90deg, var(--pink) 0%, #F2C879 50%, var(--green) 100%);
+}
+.sim-meter-marker {
+  position: absolute; top: -6px; width: 3px; height: 26px; background: var(--text);
+  border-radius: 2px; transition: left 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.sim-meter-scale { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-soft); font-weight: 600; }
+.sim-decisions { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.25rem; }
+
+/* Price is right */
+.price-guess-display { font-family: var(--font-display); font-size: 2.25rem; font-weight: 700; text-align: center; color: var(--text); margin: 1rem 0 0.5rem; }
+.price-reveal-btn { margin-top: 1.5rem; }
+.price-reveal-block { margin-top: 1.25rem; animation: fadeUp 0.4s ease; }
+.price-actual-label { font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+.price-diff { font-weight: 500; color: var(--text-soft); }
+
+/* Boss battle */
+.boss-banner {
+  background: linear-gradient(135deg, var(--pink-pale), #fff);
+  border: 1.5px solid var(--pink-light); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.25rem;
+}
+.boss-banner .quest-chapter-title { margin-bottom: 0.6rem; }
+/* Choices on the left, the consequence of the pick in its own column on the right,
+   instead of a paragraph stacked below the whole choice list. */
+.boss-split { display: flex; align-items: flex-start; gap: 1.25rem; }
+.boss-choices { flex: 1.1; min-width: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+.boss-outcome-col { flex: 1; min-width: 0; }
+.boss-choice-card {
+  border: 1.5px solid var(--border); border-radius: var(--radius); padding: 1rem;
+  cursor: pointer; transition: border-color 0.2s, background 0.2s; font-size: 1.03rem; font-weight: 500; color: var(--text);
+}
+.boss-choice-card:hover { border-color: var(--pink); background: var(--pink-pale); }
+.boss-choice-card.disabled { pointer-events: none; opacity: 0.5; }
+.boss-outcome {
+  animation: fadeUp 0.4s ease; padding: 1rem 1.1rem; border-radius: var(--radius);
+  border: 1px solid var(--green-light); background: var(--green-pale);
+}
+.boss-outcome p { color: var(--green-dark); font-weight: 500; line-height: 1.6; margin: 0; }
+@media (max-width: 640px) { .boss-split { flex-direction: column; } }
+
+/* Quest module card/list tag */
+.quest-tag {
+  display: inline-block; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--pink-dark); background: var(--pink-pale); border: 1px solid var(--pink-light);
+  border-radius: var(--radius-sm); padding: 0.1rem 0.4rem; vertical-align: middle; margin-left: 0.4rem;
+}
+.quest-tile { background: var(--pink-pale) !important; }
+
+/* Final quest dashboard summary on results screen */
+.quest-final-dashboard { flex-direction: row !important; flex-wrap: wrap; gap: 0.6rem; border: none !important; }
+.quest-final-dashboard .results-xp-card { flex: 1; min-width: 110px; background: var(--bg); border-color: var(--border); }
+.quest-final-dashboard .results-xp-num { font-size: 1.3rem; color: var(--text); }
+
+/* Comprehensive end-of-quest report */
+.quest-report {
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem;
+  background: #fff; display: flex; flex-direction: column; gap: 1.25rem;
+}
+.report-mastery { display: flex; align-items: center; gap: 1.1rem; padding-bottom: 0.25rem; }
+.report-mastery-ring {
+  --mastery-pct: 100; flex-shrink: 0; width: 84px; height: 84px; border-radius: 50%;
+  background: conic-gradient(var(--green) calc(var(--mastery-pct) * 1%), var(--border) 0);
+  display: flex; align-items: center; justify-content: center;
+}
+.report-mastery-ring span {
+  width: 64px; height: 64px; border-radius: 50%; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--text);
+}
+.report-mastery-label { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--text); }
+.report-mastery-sub { display: block; font-family: var(--font); font-size: 0.78rem; font-weight: 500; color: var(--text-soft); margin-top: 0.3rem; }
+.report-section-title { font-family: var(--font-display); font-weight: 700; font-size: 1.02rem; color: var(--text); }
+.report-terms { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.report-term-chip {
+  padding: 0.35rem 0.8rem; border-radius: 999px; background: var(--green-pale); border: 1px solid var(--green-light);
+  font-size: 0.82rem; font-weight: 600; color: var(--green-dark);
+}
+.report-stat-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.report-stat { flex: 1; min-width: 80px; text-align: center; background: var(--bg); border-radius: var(--radius-sm); padding: 0.8rem 0.5rem; }
+.report-stat-num { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--text); }
+.report-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.2rem; }
+.report-section { font-size: 0.9rem; line-height: 1.6; color: var(--text-mid); }
+.report-perfect { background: var(--green-pale); border-radius: var(--radius-sm); padding: 0.85rem 1rem; color: var(--green-dark); font-weight: 600; }
+.report-weak-list, .report-strong-list, .report-decision-list { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+.report-weak-list li, .report-strong-list li, .report-decision-list li { margin-bottom: 0.4rem; }
+.report-explainback-note { margin: 0.4rem 0 0; }
+.report-advice { display: flex; align-items: center; gap: 1rem; background: var(--bg); border-radius: var(--radius-sm); padding: 1.1rem 1.2rem; }
+.hammy-report-avatar { flex-shrink: 0; }
+.report-advice p { font-size: 0.9rem; line-height: 1.6; color: var(--text-mid); margin: 0; }
+
 /* RESULTS */
 .results-wrap {
-  max-width: 540px; margin: 0 auto; padding: 3.5rem 1.5rem;
+  max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem;
   display: flex; flex-direction: column; gap: 1.25rem;
 }
 .results-grade {
@@ -645,6 +1123,34 @@ body { background: var(--bg); min-height: 100vh; }
   .pg-stats-row { grid-template-columns: 1fr 1fr; }
   .pg-charts-row { grid-template-columns: 1fr; }
   .pg-level-row { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .quest-body { padding-left: 0.6rem; padding-right: 0.6rem; }
+  .quest-side { width: 195px; }
+  .hammy-side-msg { font-size: 1rem; padding: 0.55rem 0.8rem; }
+  .quest-title-row { font-size: 1.4rem; margin: 0.5rem 0 0.5rem; margin-left: calc(-1 * 0.6rem); }
+  .quest-title-row.centered { margin-left: 0; }
+  .kc-split, .sim-split, .boss-split { flex-direction: column; }
+  /* Narrow screens have much less width to spread text across, so the desktop font-size
+     bumps would wrap into extra lines and reintroduce scrolling — scale back down here. */
+  .quest-prompt { font-size: 1rem; }
+  .teach-term { font-size: 1.5rem; }
+  .teach-plain { font-size: 1.02rem; }
+  .hint-bubble .teach-plain { font-size: 1.05rem; }
+  .teach-analogy { font-size: 0.9rem; }
+  .story-bubble { font-size: 1.02rem; }
+  .option-btn { font-size: 0.95rem; }
+  .word-check-statement { font-size: 0.95rem; }
+  .match-chip { font-size: 0.85rem; }
+  .match-def-card { font-size: 0.88rem; }
+  .myth-card-front p, .myth-card-back p { font-size: 1rem; }
+  .boss-choice-card { font-size: 0.92rem; }
+  .explainback-input { font-size: 0.9rem; }
+  .intro-caption { font-size: 1.15rem; max-width: 90%; }
+  .options { gap: 0.4rem; }
+  .option-btn { padding: 0.6rem 0.85rem; }
+  .quest-kc-counter { margin-bottom: 0.25rem; }
+  .question-text { margin-bottom: 0.7rem; }
+  .kc-split { margin-top: 0.3rem; gap: 0.6rem; }
+  .feedback-panel.kc-panel { padding: 0.8rem 0.9rem; gap: 0.4rem; }
 }
 @media (max-width: 480px) {
   .modules-grid { grid-template-columns: 1fr; }

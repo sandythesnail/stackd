@@ -274,6 +274,39 @@
     <div class="results-wrap" id="results-wrap"></div>
   </div>
 
+  <div id="screen-quest" class="screen">
+    <div class="quest-topbar">
+      <div class="quest-topbar-row">
+        <button class="exit-btn" id="quest-exit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="quest-prog-track"><div class="quest-prog-fill" id="quest-prog-fill"></div></div>
+        <span class="quest-pct" id="quest-pct">0%</span>
+      </div>
+      <span class="quest-counter" id="quest-counter">Step 1 of 8</span>
+    </div>
+    <div class="quest-sticky-header" id="quest-sticky-header">
+      <div class="quest-toolrow">
+        <div class="quest-dashboard" id="quest-dashboard"></div>
+        <div class="quest-action-bar" id="quest-action-bar">
+          <div class="hint-budget" id="hint-budget"></div>
+          <div class="quest-continue-slot" id="quest-continue-slot"></div>
+        </div>
+      </div>
+      <div class="glossary-tray" id="glossary-tray"></div>
+    </div>
+    <div class="quest-body" id="quest-body">
+      <div class="quest-title-row" id="quest-title-row"></div>
+      <div class="quest-layout" id="quest-layout">
+        <div class="quest-side" id="quest-side">
+          <div class="hammy-side-msg" id="hammy-side-msg"></div>
+          <div class="hammy-side-avatar" id="hammy-side-avatar"></div>
+        </div>
+        <div class="quest-main" id="quest-main"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- LEVEL-UP OVERLAY -->
   <div class="levelup-overlay" id="levelup-overlay">
     <div class="levelup-card">
@@ -289,7 +322,7 @@
     <div class="birth-card">
       <div class="birth-pig-wrap" id="birth-pig-wrap"></div>
       <h2>A new piggy was born!</h2>
-      <p>Meet Hammy. He's just a baby right now — complete lessons to earn XP and coins, and watch him grow up alongside you as you master each module.</p>
+      <p>Meet Hammy. He's just a baby right now. Complete lessons to earn XP and coins, and watch him grow up alongside you as you master each module.</p>
       <button class="btn-primary" id="birth-ok">Let's raise him!</button>
     </div>
   </div>

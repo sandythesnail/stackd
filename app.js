@@ -19,9 +19,9 @@ function getTier(level) {
 // ── Modules ──────────────────────────────────
 const MODULES = [
   {
-    id: 'earning', title: 'Earning', icon: '01', iconColor: 'green', xpReward: 100,
+    id: 'earning', title: 'Earning', icon: '01', iconColor: 'green', xpReward: 35,
     hook: 'You just got your first campus job paycheck. You worked 20 hours at $15/hour - that\'s $300. But your direct deposit shows $241. Where did $59 go?',
-    desc: 'Paychecks, taxes, W-2s, and what gets taken before you see a dollar.',
+    desc: 'Paychecks, work-study, gig income, and what gets taken before you see a dollar.',
     questions: [
       {
         q: 'What is the difference between gross pay and net pay?',
@@ -42,27 +42,73 @@ const MODULES = [
         exp: 'You fill out a W-4 when starting a new job. Getting it right prevents a surprise tax bill - or over-withholding all year.'
       },
       {
-        q: 'Your employer offers a 401(k) with a 3% match. What\'s the smartest move?',
-        opts: ['Ignore it until you\'re older and earning more', 'Contribute at least 3% to capture the full employer match', 'Only contribute if you earn over $50,000', 'Avoid employer retirement plans entirely'],
+        q: 'You filled out your W-4 claiming you\'re exempt from withholding to get a bigger paycheck now. What\'s the risk?',
+        opts: ['There is no risk at all', 'If you actually owe income tax, you\'ll face the full bill - possibly with a penalty - at filing time since nothing was withheld', 'Employers aren\'t allowed to honor this request', 'It guarantees you a refund every year'],
         correct: 1,
-        exp: 'Employer match is free money. Contributing enough to capture the full match is the single highest-return financial move available to you right now.'
+        exp: 'Claiming exempt stops federal withholding completely. If your actual income means you owe tax, you\'ll face the entire bill in April instead of spreading it out - sometimes with an underpayment penalty on top.'
+      },
+      {
+        q: 'What is Federal Work-Study, and how is it different from a regular part-time job?',
+        opts: ['It\'s a loan you must repay after graduation', 'A need-based federal program that subsidizes part-time campus jobs and is awarded as part of your financial aid package - not a loan', 'Only available to graduate students', 'A guaranteed high-paying job off campus'],
+        correct: 1,
+        exp: 'Work-Study is awarded through your FAFSA-based aid package, not applied for like a normal job. The federal government subsidizes part of your wages, which is why these campus jobs are often easier to land. It\'s earned income - you never pay it back.'
+      },
+      {
+        q: 'You\'re awarded $3,000 in Federal Work-Study for the year. Why does it matter how many hours you work each week?',
+        opts: ['It doesn\'t - work as many hours as you want', 'Once you earn your full award amount, work-study pay stops - so pacing your hours across the semester matters', 'Work-study jobs cap you at 5 total hours per semester', 'More hours automatically increases your award amount'],
+        correct: 1,
+        exp: 'Your work-study award is a fixed dollar amount for the year, not an hourly guarantee. Work too many hours early on and you could hit the cap before the semester ends. Spread hours out and check with financial aid before picking up extra shifts.'
+      },
+      {
+        q: 'You start walking dogs for cash through an app and get paid via Venmo - no W-4, no taxes withheld. What\'s different about this income compared to your campus job?',
+        opts: ['Nothing - it\'s taxed exactly the same way', 'No one withholds taxes for you, so you\'re responsible for setting money aside and reporting it yourself', 'This income is completely tax-free', 'You only owe taxes on gig income over $10,000'],
+        correct: 1,
+        exp: 'W-2 jobs withhold taxes automatically. Gig and cash income doesn\'t - the responsibility shifts to you to track it and set money aside. The Taxes module covers exactly how to file this correctly.'
+      },
+      {
+        q: 'What\'s a smart habit for money you earn from gig work or freelancing, where no taxes are withheld?',
+        opts: ['Spend all of it since it\'s extra cash', 'Set aside roughly 20–30% in a separate savings account for taxes as soon as you\'re paid', 'Wait until April to figure out what you owe', 'Only worry about it once you earn over $50,000'],
+        correct: 1,
+        exp: 'Because nothing is withheld upfront, the tax bill can catch new gig workers off guard. Moving 20–30% of each payment into a separate "taxes" account the moment you\'re paid means it\'s already set aside when it\'s time to file.'
+      },
+      {
+        q: 'Your pay stub shows gross pay, several deduction lines, and net pay - but the hours listed look wrong. What should you do?',
+        opts: ['Ignore it - small errors aren\'t worth mentioning', 'Compare the stub against your own hours log and contact HR or payroll right away if there\'s a mismatch', 'Wait until the end of the semester to raise it', 'Assume payroll is always correct'],
+        correct: 1,
+        exp: 'Payroll errors happen - a missed shift, wrong rate, a duplicate deduction. Keep your own record of hours worked and check it against every stub. Catching an error within the same pay period makes it far easier to fix.'
       },
       {
         q: 'You earn $15/hour and work 40 hours/week. What is your gross bi-weekly paycheck?',
         opts: ['$600', '$900', '$1,200', '$1,500'],
         correct: 2,
         exp: '$15 × 40 hrs × 2 weeks = $1,200 gross. Your actual deposit will be less after taxes - usually 70–80% of gross.'
+      },
+      {
+        q: 'Your employer offers a 401(k) with a 3% match. What\'s the smartest move?',
+        opts: ['Ignore it until you\'re older and earning more', 'Contribute at least 3% to capture the full employer match', 'Only contribute if you earn over $50,000', 'Avoid employer retirement plans entirely'],
+        correct: 1,
+        exp: 'Employer match is free money. Contributing enough to capture the full match is the single highest-return financial move available to you right now.'
+      },
+      {
+        q: 'You get a raise from $16/hour to $17.50/hour. What\'s the smartest way to handle the extra income?',
+        opts: ['Automatically increase spending to match the new take-home pay', 'Decide in advance how much of the raise goes to savings or debt versus lifestyle spending, before it hits your account', 'Keep spending exactly the same and forget about it', 'Only think about it once you notice more money in checking'],
+        correct: 1,
+        exp: 'This is where lifestyle inflation quietly begins - extra income can just as easily disappear into slightly nicer everyday spending. Deciding upfront to route even half of a raise toward savings or debt keeps it actually building your financial position.'
       }
     ],
     lessons: [
       { title: 'Your First Paycheck', hook: 'You just started your on-campus job and received your first paycheck. The stub says $300 gross but only $241 hit your bank. Where did $59 go — and what does "withholding" actually mean?', qIndices: [0, 1] },
-      { title: 'Tax Forms & Benefits', hook: 'Your employer hands you a W-4 on day one and mentions the university offers a 403(b) retirement match up to 3%. You\'ve never seen either of these. What do you sign — and what should you sign up for?', qIndices: [2, 3, 4] }
+      { title: 'Tax Forms & Withholding', hook: 'Your employer hands you a W-4 on day one. Fill it out wrong and you could owe a surprise tax bill in April — or hand the government an interest-free loan all year. What should you actually put down?', qIndices: [2, 3] },
+      { title: 'Work-Study & Campus Jobs', hook: 'Your financial aid offer includes $3,000 in Federal Work-Study — a term you\'ve never seen before. Is it a loan? A regular job? And does it matter how many hours you work?', qIndices: [4, 5] },
+      { title: 'Gig Work & Side Income', hook: 'You start picking up dog-walking and tutoring gigs for extra cash, paid straight to Venmo. No W-4, no withholding — just money landing in your account. Is that too good to be true?', qIndices: [6, 7] },
+      { title: 'Reading Your Pay Stub', hook: 'Your paycheck seems short this week. Before assuming payroll made a mistake — or missing one that actually happened — do you even know how to read everything on your pay stub?', qIndices: [8, 9] },
+      { title: 'Raises & Growing Your Income', hook: 'Your manager offers you a raise from $16/hour to $17.50/hour, and mentions the university\'s 403(b) retirement match up to 3%. Between the raise and the match, what should you actually do with the extra money?', qIndices: [10, 11] }
     ]
   },
   {
-    id: 'spending', title: 'Spending', icon: '02', iconColor: 'pink', xpReward: 100,
+    id: 'spending', title: 'Spending', icon: '02', iconColor: 'pink', xpReward: 50,
     hook: 'It\'s week 6 of the semester. You had $800 for the month. You check your account and there\'s $23 left. You didn\'t buy anything big. How did this happen - and how do you stop it?',
-    desc: 'Budgeting on a student income, meal plans, paying for college, and where money actually goes.',
+    desc: 'Budgeting on a student income, meal plans, and paying for college — FAFSA, scholarships, grants, and payment plans.',
     questions: [
       {
         q: 'The 50/30/20 rule splits your after-tax income. What does the "50" represent?',
@@ -111,18 +157,45 @@ const MODULES = [
         opts: ['There is no other option besides loans', 'A tuition payment plan through your school\'s bursar office, which splits your balance into smaller monthly installments — often interest-free', 'Skip the payment and hope the school doesn\'t notice', 'Put the balance on a credit card'],
         correct: 1,
         exp: 'Most schools offer a tuition payment plan that breaks your bill into monthly installments, often for just a small flat enrollment fee instead of interest. It won\'t lower what you owe, but it eases cash-flow pressure without taking on debt. Pair that with actively searching for outside scholarships — local organizations, employers, and community foundations all offer free money that doesn\'t show up on your school\'s offer automatically.'
+      },
+      {
+        q: 'You have $1,200 in dining dollars for a 16-week semester. What\'s the smartest way to make sure it lasts?',
+        opts: ['Spend it however you want since it resets each semester', 'Divide it into a weekly budget (about $75/week) and track your balance so you\'re not caught out before finals', 'Spend it all in the first month since it doesn\'t roll over anyway', 'Ignore your balance — the school will notify you when it\'s empty'],
+        correct: 1,
+        exp: 'Dining dollars work like any other budget — divide the total by the weeks remaining to get a spending target, and check your balance regularly. Students who don\'t track it often run out with weeks of the semester still left.'
+      },
+      {
+        q: 'Which of these should you have on hand before starting your FAFSA?',
+        opts: ['Nothing — the form asks for everything as you go', 'Your (and your parents\', if you\'re a dependent) prior-prior year tax information, Social Security numbers, and a list of schools you\'re applying to', 'Your college acceptance letter, and only that', 'Your final high school transcript'],
+        correct: 1,
+        exp: 'The FAFSA uses prior-prior year tax data pulled directly from the IRS in many cases. Gathering SSNs, tax info, and your school list ahead of time turns a stressful form into a 30-minute task.'
+      },
+      {
+        q: 'Grants and scholarships versus work-study and loans — what\'s the key difference between these two categories of financial aid?',
+        opts: ['There\'s no real difference — they\'re all just "aid"', 'Grants and scholarships are gift aid you never repay; work-study requires you to work for the money and loans must be repaid with interest', 'Loans are always a better deal because you get the money faster', 'Scholarships must be repaid once you graduate and start earning'],
+        correct: 1,
+        exp: 'Gift aid — grants and scholarships — is money you never pay back, so it should almost always be accepted first. Self-help aid — work-study (which you earn by working) and loans (which you repay with interest) — comes with a cost attached. Know which category each line on your aid offer falls into before deciding what to accept.'
+      },
+      {
+        q: 'You\'re still short on funds after your school\'s aid offer. Besides taking on more loans, what\'s worth exploring?',
+        opts: ['There\'s nothing else to try besides borrowing more', 'Outside/private scholarships from local organizations and community foundations, and employer tuition assistance if you work part-time', 'Asking your school to simply waive the remaining balance', 'Putting the remaining balance on a high-interest credit card'],
+        correct: 1,
+        exp: 'Outside scholarships — from local businesses, community foundations, cultural organizations, and even your parents\' employers — don\'t show up on your school\'s aid offer automatically, so you have to search separately. Some part-time employers also offer tuition assistance for enrolled students — always worth asking.'
       }
     ],
     lessons: [
-      { title: 'The 50/30/20 Rule', hook: 'It\'s week 6 of the semester. You had $800 for the month. You check your account and there\'s $23 left. You didn\'t buy anything big. How did this happen — and how do you stop it?', qIndices: [0, 1, 2] },
-      { title: 'Budget Deficits & Emergency Funds', hook: 'You spent $900 this month but only earned $750. That\'s a $150 deficit. Your first instinct is to put it on a credit card. Is that the right move — and how do you prevent this next month?', qIndices: [3, 4] },
-      { title: 'Paying for College', hook: 'It\'s October 1st and your inbox reminds you: FAFSA is open. Last year you put it off, missed a scholarship deadline, and scrambled to understand a confusing financial aid offer in August. This year, what\'s the plan?', qIndices: [5, 6, 7] }
+      { title: 'The 50/30/20 Rule', hook: 'It\'s week 6 of the semester. You had $800 for the month. You check your account and there\'s $23 left. You didn\'t buy anything big. How did this happen — and how do you stop it?', qIndices: [0, 1] },
+      { title: 'Needs vs. Wants & Staying in the Black', hook: 'You\'ve labeled your rent as a "need" and brunch as a "want" — but by the end of the month you\'ve spent more than you earned anyway. What happened, and how do you catch it before you\'re in the red?', qIndices: [2, 3] },
+      { title: 'Day-to-Day Money on Campus', hook: 'You\'ve got $1,200 in dining dollars and $47 in your emergency fund, both meant to last the semester. One is about pacing spending, the other about surviving a surprise cost — how do you handle both?', qIndices: [4, 8] },
+      { title: 'FAFSA & the Financial Aid Timeline', hook: 'It\'s October 1st and your inbox reminds you: FAFSA is open. Last year you put it off, missed a scholarship deadline, and scrambled to gather documents in August. This year, what\'s the plan?', qIndices: [5, 9] },
+      { title: 'Grants, Scholarships & Your Aid Offer', hook: 'Your financial aid offer lists grants, a scholarship, work-study, and loans all on one page, and it feels like a single number to accept or reject. Is it — or does each line deserve its own decision?', qIndices: [6, 10] },
+      { title: 'Payment Plans & Closing the Gap', hook: 'After grants and scholarships, you\'re still $1,800 short for the semester. Loans aren\'t your only option, and neither is panicking. What else can actually close that gap?', qIndices: [7, 11] }
     ]
   },
   {
-    id: 'saving', title: 'Saving', icon: '03', iconColor: 'mint', xpReward: 100,
+    id: 'saving', title: 'Saving', icon: '03', iconColor: 'mint', xpReward: 35,
     hook: 'Your laptop just died. It\'s finals week. A replacement costs $400. You have $47 in your checking account. This is what a missing emergency fund looks like - and it\'s completely avoidable.',
-    desc: 'Emergency funds, high-yield savings accounts, and building habits early.',
+    desc: 'Emergency funds, high-yield savings accounts, sinking funds, and building habits early.',
     questions: [
       {
         q: 'What is a high-yield savings account (HYSA)?',
@@ -153,17 +226,63 @@ const MODULES = [
         opts: ['Check your balance daily and save whatever is left', 'Set up an automatic transfer to savings on payday before you can spend it', 'Only save when you feel you have extra money', 'Wait until you graduate to start saving'],
         correct: 1,
         exp: '"Pay yourself first" - automate a transfer to savings the day you get paid. You won\'t miss money you never see in your checking account.'
+      },
+      {
+        q: 'A traditional big-bank savings account pays 0.01% APY. An online high-yield savings account pays 4.5% APY. On a $1,000 balance, what\'s the real difference after a year?',
+        opts: ['Basically nothing, about $0.10 either way', 'About $0.10 in the traditional account versus about $45 in the HYSA — a huge gap for holding the exact same money', 'HYSAs are riskier, so the extra interest isn\'t worth it', 'Big banks always automatically match online rates'],
+        correct: 1,
+        exp: '$1,000 × 0.01% ≈ $0.10. $1,000 × 4.5% ≈ $45. Same FDIC-insured safety, wildly different return — moving idle savings into a HYSA is one of the easiest wins available to a student.'
+      },
+      {
+        q: 'You keep your entire checking balance right at $0 and don\'t link a savings account as backup. What\'s the risk?',
+        opts: ['There is no risk if you\'re careful', 'A single unexpected charge — a subscription renewal, a bounced Venmo request — can trigger an overdraft fee, often $30+ per incident', 'Banks won\'t charge fees to student accounts', 'Linking a backup account always costs extra'],
+        correct: 1,
+        exp: 'Overdraft fees stack quickly if your checking account runs at exactly $0. Many banks let you link a savings account as free automatic backup for small shortfalls — worth setting up even if you rarely need it.'
+      },
+      {
+        q: 'Every December you scramble to afford a flight home, and every January you\'re caught off guard by $400 in textbooks. What kind of saving strategy prevents this?',
+        opts: ['There\'s nothing you can do about predictable costs', 'A sinking fund — setting aside a little each month specifically for a known, recurring expense so the full amount is ready when it\'s due', 'Just put it on a credit card each time and pay it off eventually', 'Wait for a scholarship to cover it'],
+        correct: 1,
+        exp: 'A sinking fund is different from an emergency fund — it\'s for expenses you know are coming (textbooks, holiday flights, spring break), not surprises. Saving $50/month specifically earmarked for "textbooks" means the January bill is no longer an emergency.'
+      },
+      {
+        q: 'You want to save more but keep forgetting to move money over manually. What\'s an easy way to build the habit passively?',
+        opts: ['Rely on remembering to transfer money every week', 'Use a round-up feature or automatic savings app that rounds purchases to the next dollar and saves the difference', 'Only save large lump sums once a year', 'Avoid checking your balance so you\'re not tempted to spend it'],
+        correct: 1,
+        exp: 'Round-up tools save small, near-invisible amounts — rounding a $4.60 coffee to $5.00 — with zero ongoing effort. It won\'t replace a real savings plan, but it builds momentum quietly in the background.'
+      },
+      {
+        q: 'You\'re saving for three things at once — an emergency fund, a laptop, and a spring break trip. What\'s the smartest way to organize this?',
+        opts: ['Keep it all in one account and try to remember which portion is for what', 'Use named sub-accounts or savings "buckets" for each goal so you always know how close you are to each one', 'Only save for one goal at a time and ignore the others completely', 'Avoid setting specific goals since it makes saving stressful'],
+        correct: 1,
+        exp: 'Most online banks let you create multiple named savings buckets under one account. Separating goals keeps you from accidentally raiding one goal\'s progress for another, and makes progress toward each feel more real.'
+      },
+      {
+        q: 'You only have $60 left this month to put toward savings, and you\'re torn between your emergency fund and a concert ticket fund. What\'s the smarter priority?',
+        opts: ['Always split it evenly between every goal no matter what', 'Prioritize the emergency fund until it has at least a starter cushion (like $500–$1,000), since it protects you from going into debt', 'Always prioritize whichever goal is more fun', 'Skip saving entirely this month since it\'s not enough to matter'],
+        correct: 1,
+        exp: 'Not all savings goals carry the same risk if left unfunded. An emergency fund protects you from debt when something breaks or goes wrong — that safety net comes before discretionary goals, even if it feels less exciting to fund.'
+      },
+      {
+        q: 'You commit to saving $50/month through an automatic transfer. After 12 months, how much have you saved, not counting interest?',
+        opts: ['$50', '$300', '$600', '$1,200'],
+        correct: 2,
+        exp: '$50 × 12 = $600 saved with zero extra effort once the transfer is automated. Add even a modest HYSA interest rate on top and the number climbs a bit higher — proof that consistency, not the size of each deposit, is what builds the balance.'
       }
     ],
     lessons: [
-      { title: 'High-Yield Savings', hook: 'Your laptop just died during finals week. A replacement costs $400. You have $47 in your checking account. This is what a missing emergency fund looks like — and it\'s completely avoidable.', qIndices: [0, 1] },
-      { title: 'Building Habits', hook: 'You\'ve decided to start saving, but at the end of every month there\'s nothing left. You keep saying "I\'ll save whatever\'s left" — but there\'s never anything left. What changes?', qIndices: [2, 3, 4] }
+      { title: 'High-Yield Savings', hook: 'You check your big bank\'s savings account: 0.01% APY. A friend mentions their online account pays 4.5%. Same FDIC insurance, same $1,000 balance — what\'s actually different?', qIndices: [0, 5] },
+      { title: 'Checking vs. Savings & Avoiding Fees', hook: 'You keep your checking account hovering right around $0 between paychecks. One surprise subscription renewal later, you\'re hit with a $34 overdraft fee. What should you have set up?', qIndices: [2, 6] },
+      { title: 'How Interest & Consistency Add Up', hook: 'You set up an automatic $50/month transfer to savings and mostly forget about it. A year later, you check the balance and don\'t recognize the number. How did doing basically nothing add up to this much?', qIndices: [3, 11] },
+      { title: 'Sinking Funds for Predictable Costs', hook: 'Your laptop just died during finals week. A replacement costs $400. You have $47 in your checking account. This is what a missing emergency fund looks like — and it\'s completely avoidable.', qIndices: [7, 1] },
+      { title: 'Automating Your Savings', hook: 'You\'ve decided to start saving, but at the end of every month there\'s nothing left. You keep saying "I\'ll save whatever\'s left" — but there\'s never anything left. What changes?', qIndices: [4, 8] },
+      { title: 'Setting & Prioritizing Savings Goals', hook: 'You\'re saving for an emergency fund, a new laptop, and a spring break trip all at once, with only $60 free this month. Do you split it evenly, or does one of these actually matter more right now?', qIndices: [9, 10] }
     ]
   },
   {
-    id: 'investing', title: 'Investing', icon: '04', iconColor: 'lav', xpReward: 150,
+    id: 'investing', title: 'Investing', icon: '04', iconColor: 'lav', xpReward: 50,
     hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Jordan starts at 28. At 65, Alex has $21,000. Jordan has $10,700. They invested the exact same amount. What made the difference?',
-    desc: 'Compound interest, Roth IRAs, and why starting at 18 changes everything.',
+    desc: 'Compound interest, Roth IRAs, diversification, and why starting at 18 changes everything.',
     questions: [
       {
         q: 'What is a Roth IRA?',
@@ -194,17 +313,63 @@ const MODULES = [
         opts: ['$3,000', '$5,500', '$7,000', '$15,000'],
         correct: 2,
         exp: 'You can contribute up to $7,000/year (2024). Even $50/month starting at 18 builds a remarkable foundation. The earlier you start, the less you need to contribute overall.'
+      },
+      {
+        q: 'You have $500 and a friend suggests putting it all into one company\'s stock because "it\'s going to blow up." What\'s the risk with this approach?',
+        opts: ['There\'s no risk if you pick the right company', 'Putting all your money in one stock means your entire investment depends on that single company\'s performance — diversification spreads that risk across many companies', 'Diversification only matters for investors with over $100,000', 'Single stocks always outperform diversified funds'],
+        correct: 1,
+        exp: 'Even great companies can crash unexpectedly. Diversification — spreading money across many companies through something like an index fund — means one company\'s bad quarter doesn\'t wipe out your investment.'
+      },
+      {
+        q: 'You\'re 19 and only have $2,000 in babysitting cash with no formal paperwork. Can you contribute to a Roth IRA?',
+        opts: ['No, Roth IRAs are only for people over 25', 'No, you need a college degree first', 'Yes — as long as it\'s earned income, even informal work counts, and you can contribute up to that amount or the annual limit, whichever is lower', 'Yes, but only if a parent opens the account for you'],
+        correct: 2,
+        exp: 'Roth IRA eligibility is based on having earned income, not age or job type — babysitting, tutoring, and part-time jobs all count. You can contribute up to the amount you earned or the annual IRS limit, whichever is smaller.'
+      },
+      {
+        q: 'You\'re 19 and investing for retirement decades away. A friend who\'s 60 and retiring soon has a very different portfolio. What should be different about yours?',
+        opts: ['Nothing, everyone should invest identically regardless of age', 'With decades until retirement, you can typically afford to hold more stocks — higher short-term volatility, higher long-term growth — while someone near retirement shifts toward more stable investments like bonds', 'You should invest more conservatively than someone who is retiring soon', 'You should avoid the stock market entirely until you\'re older'],
+        correct: 1,
+        exp: 'Time horizon drives risk tolerance. Decades of runway mean you can ride out short-term stock market dips in exchange for higher long-term growth. Someone nearing retirement has less time to recover from a downturn, so they typically shift toward more stable investments.'
+      },
+      {
+        q: 'You only have $25/month to invest and think it\'s not worth starting until you have more money saved up. What\'s the flaw in that thinking?',
+        opts: ['It\'s correct — investing small amounts isn\'t worth it', 'Investing consistently, even in small amounts (dollar-cost averaging), gets your money into the market sooner and builds the habit — waiting for a "big enough" amount often means never starting', 'You need at least $1,000 to open any investment account', 'Small investments are illegal'],
+        correct: 1,
+        exp: 'Dollar-cost averaging — investing a fixed amount on a regular schedule — means you buy at different prices over time and don\'t have to correctly "time" the market. Waiting to invest until you have more money almost always costs you more in lost time than it saves.'
+      },
+      {
+        q: 'Your job offers a 403(b) with a 3% match, and you\'re also eligible to open a Roth IRA. If you can\'t max out both, what\'s the typical smart order?',
+        opts: ['Always max the Roth IRA first and ignore any employer match', 'Contribute enough to the 403(b) to get the full employer match first (free money), then direct extra savings to a Roth IRA', 'Only ever use one account — pick whichever has a better name', 'Employer plans and Roth IRAs cannot both be used by the same person'],
+        correct: 1,
+        exp: 'The order that maximizes free money: capture the full employer match first since it\'s an immediate guaranteed return, then build up a Roth IRA for its tax-free growth and broader investment choices. Both can be used together.'
+      },
+      {
+        q: 'An index fund had a great year last year, so a friend suggests putting all your investing money into "whatever performed best last year." What\'s wrong with this strategy?',
+        opts: ['Nothing, past winners always keep winning', 'Past performance doesn\'t guarantee future results — chasing last year\'s top performer is a common beginner mistake instead of sticking to a diversified, long-term strategy', 'You should always buy whatever underperformed last year instead', 'Fund performance never changes year to year'],
+        correct: 1,
+        exp: 'Markets are cyclical, and last year\'s top performer is not a reliable predictor of next year\'s results. A consistent, diversified, long-term strategy tends to beat chasing performance.'
+      },
+      {
+        q: 'The stock market drops 15% right after you start investing. What\'s typically the smartest response for a young investor with a long time horizon?',
+        opts: ['Sell everything immediately to avoid further losses', 'Stay invested (or keep contributing) since market dips are normal and selling locks in the loss — time in the market matters more than timing it', 'Stop investing completely for several years', 'Panic and move all your money to cash permanently'],
+        correct: 1,
+        exp: 'Market downturns are a normal, expected part of investing — not a signal to sell. Selling during a dip turns a temporary paper loss into a permanent one. With decades until retirement, staying invested lets you buy in at lower prices and recover as markets historically have.'
       }
     ],
     lessons: [
-      { title: 'Compound Interest & Time', hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Jordan starts at 28. At 65, Alex has $21,000. Jordan has $10,700. Same amount invested. What made the difference?', qIndices: [0, 1, 2] },
-      { title: 'Roth IRA & Index Funds', hook: 'You have $50/month to invest and someone says "open a Roth IRA and put it in an index fund." You\'ve heard these words but don\'t fully understand them. What are they — and why does everyone keep recommending them?', qIndices: [3, 4] }
+      { title: 'Compound Interest & Time', hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Jordan starts at 28. At 65, Alex has $21,000. Jordan has $10,700. Same amount invested. What made the difference?', qIndices: [1, 2] },
+      { title: 'Roth IRA Basics', hook: 'You have $50/month to invest and someone says "open a Roth IRA." You\'ve heard the words but don\'t know if you even qualify — do you need a big salary, a certain age, or a special account first?', qIndices: [0, 6] },
+      { title: 'Contribution Limits & Where to Save First', hook: 'Your job offers a 403(b) with a match, and you\'re also eligible for a Roth IRA with a $7,000 annual limit. You can\'t max out both right now — which comes first?', qIndices: [4, 9] },
+      { title: 'Index Funds & Diversification', hook: 'A friend tells you to put your $500 savings into one stock they\'re sure will "blow up." Another friend says index funds are the smarter move. What\'s actually different about spreading your money across hundreds of companies?', qIndices: [3, 5] },
+      { title: 'Risk, Time Horizon & Staying the Course', hook: 'The market drops 15% the same month you started investing, right as your 60-year-old parent\'s retirement account also takes a hit. Should you both be reacting the same way?', qIndices: [7, 11] },
+      { title: 'Getting Started Small', hook: 'You only have $25/month to invest and figure it\'s not worth starting until you\'ve saved up more. Meanwhile a friend jumps into whatever fund had the best return last year. Is either of you making the smart move?', qIndices: [8, 10] }
     ]
   },
   {
-    id: 'credit', title: 'Managing Credit', icon: '05', iconColor: 'sky', xpReward: 125,
+    id: 'credit', title: 'Managing Credit', icon: '05', iconColor: 'sky', xpReward: 40,
     hook: 'You just got your first credit card with a $1,000 limit. You spend $800 on textbooks and dorm supplies. You pay the minimum each month. In 3 years, you\'ve paid nearly $300 in interest - and still owe $600. What went wrong?',
-    desc: 'APR, credit scores, utilization, and how to avoid common traps.',
+    desc: 'APR, credit scores, utilization, building credit from scratch, and how to avoid common traps.',
     questions: [
       {
         q: 'What does APR stand for, and why does it matter for credit cards?',
@@ -235,17 +400,455 @@ const MODULES = [
         opts: ['0–100; Good is 80+', '100–900; Good is 700+', '300–850; Good is 670+', '300–850; Good is 800+'],
         correct: 2,
         exp: 'FICO scores range 300–850. 670+ is Good, 740+ is Very Good, 800+ is Exceptional. A good score unlocks lower interest rates - worth thousands over a lifetime.'
+      },
+      {
+        q: 'You have no credit history at all. What\'s a common way for a student to start building credit safely?',
+        opts: ['You can\'t build credit until you have a full-time job', 'Become an authorized user on a parent\'s card, get a secured or student credit card, and make small purchases you pay off in full each month', 'Take out the largest loan you can qualify for', 'Avoid all forms of credit until age 25'],
+        correct: 1,
+        exp: 'Options built for beginners — student credit cards, secured cards backed by a refundable deposit, or becoming an authorized user on a parent\'s well-managed card — let you start building payment history safely, often with a low limit while you learn the ropes.'
+      },
+      {
+        q: 'Which of these is a common credit mistake students make?',
+        opts: ['Paying the full statement balance every month', 'Co-signing a loan for a friend, closing their oldest credit card, or applying for several new cards in a short window', 'Keeping a card open even after they stop using it regularly', 'Checking their credit score for free once a year'],
+        correct: 1,
+        exp: 'Co-signing makes you equally responsible for someone else\'s debt if they miss a payment. Closing your oldest card can shorten your average credit history and hurt your score. Applying for multiple cards at once triggers several hard inquiries close together, which can also ding your score.'
+      },
+      {
+        q: 'A store offers you 20% off today if you open their retail credit card. What\'s the hidden risk?',
+        opts: ['There is no risk, store cards are identical to regular cards', 'Store cards often carry very high APRs (sometimes 25–30%+), so carrying a balance can cost far more than the discount was worth', 'Store cards never affect your credit score', 'You can only use store cards at that one retailer forever'],
+        correct: 1,
+        exp: 'Retail/store cards frequently carry some of the highest APRs available. A one-time 20% discount can be wiped out fast if you carry a balance at 28% APR for even a couple months. If you open one, treat it like any card — pay it off in full.'
+      },
+      {
+        q: 'Beyond your three-digit credit score, what else lives on your credit report?',
+        opts: ['Nothing else, the score is the entire report', 'A full history of your credit accounts, balances, payment history, and hard inquiries — all checkable for free once a year at annualcreditreport.com', 'Your bank account balance and daily spending habits', 'Your college GPA and academic record'],
+        correct: 1,
+        exp: 'Your credit report is the detailed record; your score is a single number summarizing it. Checking your full report yearly — free, from all three bureaus, via annualcreditreport.com — helps you catch errors or fraud that the score alone won\'t show.'
+      },
+      {
+        q: 'You check your free credit report and spot a credit card account you never opened. What should you do?',
+        opts: ['Ignore it, it will probably fall off eventually', 'File a dispute directly with the credit bureau reporting it, and consider a fraud alert if it looks like identity theft', 'Close all of your other accounts immediately', 'Wait until your score drops further before taking action'],
+        correct: 1,
+        exp: 'Errors and fraudulent accounts don\'t fix themselves. Dispute the item directly with the credit bureau (Equifax, Experian, or TransUnion) as soon as you spot it — the longer it sits, the more it can drag down your score.'
+      },
+      {
+        q: 'Two students have the same on-time payment record, but one has had a credit card for 4 years and the other for 4 months. How does this affect their scores?',
+        opts: ['Length of credit history has no impact on your score', 'A longer credit history generally helps your score, which is why closing your oldest card can quietly hurt you even if you stop using it', 'Only the newest account matters for scoring', 'Length of history only matters after you turn 30'],
+        correct: 1,
+        exp: 'Length of credit history is one of the standard FICO scoring factors. It\'s also why financial advice often says to keep your oldest card open — even with a small occasional charge — rather than closing it once you stop using it regularly.'
+      },
+      {
+        q: 'You\'re rate-shopping for a car loan and a lender checks your credit as part of a pre-qualification quote. Is this the same as applying for a new credit card?',
+        opts: ['Yes, both always hurt your score the same amount', 'Not necessarily — a "soft" inquiry like pre-qualification typically doesn\'t affect your score, while a "hard" inquiry like a full application can cause a small, temporary dip', 'Soft inquiries are illegal for lenders to run', 'Hard inquiries permanently and severely damage your score forever'],
+        correct: 1,
+        exp: 'Soft inquiries — pre-qualification checks, checking your own score — don\'t affect your score. Hard inquiries — a full application for a card or loan — cause a small, temporary dip and stay on your report for about two years.'
       }
     ],
     lessons: [
-      { title: 'APR & Utilization', hook: 'You got your first credit card with a $1,000 limit. Textbooks and dorm supplies ran you $800. You pay the minimum each month. Three years later, you\'ve paid $300 in interest and still owe $600. What went wrong?', qIndices: [0, 1] },
-      { title: 'Credit Scores', hook: 'Your roommate got an apartment at a better rate because their credit score was 720. Yours was 610. Same income. What is a credit score — and how do you build yours before graduation?', qIndices: [2, 3, 4] }
+      { title: 'APR & Minimum Payments', hook: 'You got your first credit card with a $1,000 limit. Textbooks and dorm supplies ran you $800. You pay the minimum each month. Three years later, you\'ve paid $300 in interest and still owe $600. What went wrong?', qIndices: [0, 2] },
+      { title: 'Utilization & Store Cards', hook: 'Your roommate got 20% off by opening a store credit card at checkout. Meanwhile you\'re both told to keep your credit utilization under 30%. Are these two things related?', qIndices: [1, 7] },
+      { title: 'Building Credit From Scratch', hook: 'You\'ve never had a credit card, loan, or any credit history at all. Meanwhile you keep hearing that checking your own score doesn\'t hurt it, but applying for five cards at once might. What\'s actually true?', qIndices: [5, 11] },
+      { title: 'Common Mistakes That Hurt Your Score', hook: 'Your friend co-signed a car loan for their sibling and closed their oldest credit card the same month "to simplify things." Their score dropped 60 points. What happened?', qIndices: [3, 6] },
+      { title: 'The FICO Scale', hook: 'Your roommate got an apartment at a better rate because their credit score was 720. Yours was 610 — despite having a card for the same amount of time. What actually goes into that number?', qIndices: [4, 10] },
+      { title: 'Credit Reports & Disputing Errors', hook: 'You get an alert that an account you don\'t recognize just showed up on your credit report. Before panicking, do you even know what\'s normally on there — or how to get it fixed?', qIndices: [8, 9] }
+    ],
+    quests: [
+      {
+      id: 'maya',
+      topic: 'Your First Credit Card',
+      character: { name: 'Maya', tagline: 'Sophomore who just got her first credit card' },
+      initialState: { creditScore: 640, checking: 200, savings: 0 },
+      bossAchievementId: 'crisis_averted',
+      chapters: [
+        {
+          id: 'c0', type: 'story', title: 'Meet Maya',
+          beats: [
+            { speaker: 'intro', text: "This is Maya. She just started her first year of college, and like a lot of first-years, she's never had to manage her own money before. Today, you're going to help her handle something brand new: her very first credit card." }
+          ]
+        },
+        {
+          id: 'c0b', type: 'story', title: 'Meet Maya',
+          beats: [
+            { speaker: 'Maya', text: '"Wait, I get to make my OWN money decisions now? No pressure or anything..."' },
+            { speaker: 'narrator', text: "Hi, I'm Hammy! I'll be right here the whole time, explaining anything confusing, one small piece at a time. Nothing is assumed here. We'll go step by step, together." }
+          ]
+        },
+        {
+          id: 'c1', type: 'story', title: 'The Offer',
+          beats: [
+            { speaker: 'narrator', text: 'A table in the student union is handing out free t-shirts... for signing up for a credit card.' },
+            { speaker: 'Maya', text: '"A free tee AND a $1,000 limit? Sign me up."' },
+            { speaker: 'narrator', text: 'Two weeks later the card arrives. Before Maya uses it, let\'s slow down and make sure you know exactly what she\'s holding in her hands, no assumptions, no jargon.' }
+          ]
+        },
+        {
+          id: 't0', type: 'teach', title: 'Your Mission Control', highlightDashboard: true,
+          concepts: [
+            {
+              term: 'Checking Account',
+              plain: 'This is like Maya\'s everyday spending money, the account she uses to pay for things like food, gas, and bills. You\'ll see it labeled "CHECKING" at the top of your screen for the rest of this quest.',
+              analogy: 'Think of it like her wallet, money goes in, money goes out, all the time.',
+              check: { statement: 'Checking is the money Maya sets aside and tries not to touch.', isTrue: false }
+            },
+            {
+              term: 'Savings Account',
+              plain: 'This is money Maya sets aside and tries not to touch, for emergencies or big goals later. You\'ll see it labeled "SAVINGS" at the top of your screen.',
+              analogy: 'Think of it like a piggy bank she\'s not allowed to raid just because she wants a snack.',
+              check: { statement: 'Savings is the account Maya uses for everyday spending, like food and gas.', isTrue: false }
+            },
+            {
+              term: 'Credit Score (coming up next!)',
+              plain: 'The third box at the top says "CREDIT SCORE", that one\'s a little more involved, so we\'re going to slow way down and cover it all on its own, right after this.',
+              analogy: 'Think of this as a sneak peek, the full explanation is just one step away.'
+            }
+          ],
+          xpOnComplete: 2
+        },
+        {
+          id: 't1', type: 'teach', title: 'Credit Card Basics',
+          concepts: [
+            {
+              term: 'Credit Card',
+              plain: 'A credit card isn\'t free money. It\'s a loan. When you swipe it, the bank pays the store for you, and you promise to pay the bank back later.',
+              analogy: 'It\'s like borrowing $20 from a friend for lunch. You still owe them $20, a credit card just makes the borrowing invisible, since no cash changes hands.',
+              check: { statement: 'A credit card is free money that Maya never has to pay back.', isTrue: false }
+            },
+            {
+              term: 'Credit Limit',
+              plain: 'Your "limit" is the most the bank will let you borrow at once. Maya\'s card has a $1,000 limit. That\'s a ceiling, not a goal to reach.',
+              analogy: 'Think of it like a bucket that holds $1,000. Every purchase pours a little in; paying your bill empties it back out.',
+              check: { statement: "Maya's credit limit is a goal she should try to spend up to every month.", isTrue: false }
+            }
+          ],
+          xpOnComplete: 2
+        },
+        {
+          id: 't2', type: 'teach', title: 'Your Credit Score', highlightDashboard: true,
+          concepts: [
+            {
+              term: 'Credit Score',
+              plain: 'A credit score is a 3-digit number, from 300 to 850, that tells lenders how reliable you\'ve been about paying back money you\'ve borrowed. Higher = more trustworthy. You\'ll see Maya\'s score at the top of the screen for the rest of this quest.',
+              analogy: 'Think of it like a trust rating. The same way a driver with a clean record gets cheaper car insurance, someone with a high credit score gets approved for apartments and loans at better rates.',
+              check: { statement: 'A higher credit score means lenders trust you less.', isTrue: false }
+            }
+          ],
+          xpOnComplete: 2
+        },
+        {
+          id: 'm1', type: 'matching', title: 'Match It! Round 1',
+          pairs: [
+            { term: 'Credit Card', definition: 'A loan you use to buy something now and pay the bank back later.' },
+            { term: 'Credit Limit', definition: 'The most money the bank will let you borrow at once.' },
+            { term: 'Credit Score', definition: 'A 3-digit number that shows lenders how trustworthy you are with borrowed money.' }
+          ],
+          xpOnComplete: 4
+        },
+        {
+          id: 'e1', type: 'explainback', title: 'In Your Own Words',
+          prompt: 'In your own words, what is a credit score, and why does it matter? Type a sentence or two. There\'s no wrong way to start.',
+          keywords: ['number', 'trust', 'borrow', 'pay back', 'lend', '300', '850', 'reliable', 'score'],
+          fullDefinition: 'A credit score is a 3-digit number (300–850) that tells lenders how reliable you\'ve been about paying back borrowed money. The higher it is, the more lenders trust you, which gets you approved for things like apartments and loans at better rates.',
+          xpOnComplete: 3
+        },
+        {
+          id: 'h1', type: 'hint', tag: "🎉 Hammy's Tip",
+          text: 'Fun fact: checking your OWN credit score is always free and 100% safe. It never lowers your score. Only applying for new credit cards or loans can cause a small dip, so check it often and stay in the know.',
+          xpOnComplete: 1
+        },
+        {
+          id: 't3', type: 'teach', title: 'The Cost of Borrowing',
+          concepts: [
+            {
+              term: 'Interest (APR)',
+              plain: 'If you don\'t pay your full bill, the bank charges you extra for the privilege of waiting, that\'s called interest. The letters "APR" stand for Annual Percentage Rate, a fancy way of saying the yearly rate the bank charges you. You\'ll see "APR" a lot from here on, just remember it means "the yearly interest rate."',
+              analogy: 'It\'s like a late fee that keeps growing the longer you wait to pay, except instead of a flat fee, it\'s a percentage of what you still owe.',
+              check: { statement: "If Maya pays her full balance every month, she avoids paying interest.", isTrue: true }
+            }
+          ],
+          xpOnComplete: 2
+        },
+        {
+          id: 't4', type: 'teach', title: 'The Minimum Payment',
+          concepts: [
+            {
+              term: 'Minimum Payment',
+              plain: 'Every statement lists a "minimum payment", the smallest amount you\'re allowed to pay to avoid a late fee. But paying only that leaves most of your bill, plus interest, unpaid and growing.',
+              analogy: 'It\'s like bailing a little water out of a leaking boat. You\'re not sinking today, but you haven\'t fixed the leak either.',
+              check: { statement: 'Paying only the minimum payment pays off your whole balance quickly.', isTrue: false }
+            }
+          ],
+          xpOnComplete: 2
+        },
+        {
+          id: 'm2', type: 'matching', title: 'Match It! Round 2',
+          pairs: [
+            { term: 'Interest (APR)', definition: 'The extra money a bank charges you for not paying your full bill right away.' },
+            { term: 'Minimum Payment', definition: 'The smallest amount you\'re allowed to pay to avoid a late fee, but it leaves most of your bill unpaid.' },
+            { term: 'Credit Score', definition: 'A 3-digit number that shows lenders how trustworthy you are with borrowed money.' }
+          ],
+          hintText: "Both new words were just taught above, 'APR' is about the COST of not paying in full, and 'Minimum Payment' is about the SMALLEST amount allowed.",
+          xpOnComplete: 4
+        },
+        {
+          id: 'c2', type: 'decision',
+          title: 'Move-In Shopping',
+          prompt: 'Maya needs $800 in textbooks and dorm supplies. She has $200 in checking. What should she put on the new card?',
+          hintText: "Think back to Interest (APR): does the bank charge extra for balances you DON'T pay off right away, or is carrying a balance free?",
+          choices: [
+            {
+              id: 'a', label: 'Put it all on the card, pay only the minimum',
+              outcome: {
+                text: 'Maya carries a $600 balance at 24% APR, projected around $300 in interest over the next 3 years, on top of the $600 she already owes.',
+                delta: { creditScore: -10 },
+                compare: [{ label: 'Her choice, interest paid', value: 300 }, { label: 'Pay-in-full path, interest paid', value: 0 }]
+              }
+            },
+            {
+              id: 'b', label: 'Charge $200, pay it off immediately; cover the rest with savings and a work-study shift',
+              outcome: {
+                text: 'Maya pays her statement in full, so no interest ever gets charged, and she\'s using less of her limit, which helps her score too.',
+                delta: { creditScore: 8 },
+                compare: [{ label: 'Her choice, interest paid', value: 0 }, { label: 'Minimum-payment path, interest paid', value: 300 }]
+              }
+            }
+          ],
+          xpOnComplete: 5
+        },
+        {
+          id: 'c3', type: 'microsim',
+          title: 'The Monthly Squeeze',
+          prompt: 'Maya\'s paycheck is $600/month. Fixed costs already eat $430 of it. Help her fit in a card payment and some savings without going negative.',
+          hintText: 'Add up the fixed costs first ($45 + $150 + $35 + $100 + $100 = $430). That leaves $170 of her $600 to split between the two sliders before she goes negative.',
+          income: 600,
+          fixedCosts: [
+            { label: 'Phone', amount: 45 },
+            { label: 'Meal plan top-up', amount: 150 },
+            { label: 'Subscriptions', amount: 35 },
+            { label: 'Gas & transit', amount: 100 },
+            { label: 'Rent share', amount: 100 }
+          ],
+          sliders: [
+            { id: 'cardPayment', label: 'Credit card payment', min: 25, max: 200, step: 25, default: 25 },
+            { id: 'savings', label: 'Savings deposit', min: 0, max: 150, step: 25, default: 0 }
+          ],
+          feedbackTiers: [
+            { maxLeftover: -1, text: 'That budget goes negative. Maya can\'t sustain this. Try a smaller card payment or savings deposit.', ok: false },
+            { maxLeftover: 24, text: 'Workable, but there\'s almost no cushion left for a surprise expense.', ok: true },
+            { maxLeftover: Infinity, text: 'Solid. She\'s covering her bill and still building a cushion.', ok: true }
+          ],
+          xpOnComplete: 6
+        },
+        {
+          id: 't5', type: 'teach', title: 'Credit Utilization',
+          concepts: [
+            {
+              term: 'Credit Utilization',
+              plain: 'This is how much of your credit limit you\'re currently using. If Maya has a $1,000 limit and owes $300, she\'s using 30% of it. Lenders like to see this number stay low, under 30% is a good rule of thumb.',
+              analogy: 'Picture your limit as a gas tank. Riding around on three-quarters of a tank looks fine to lenders. Riding around on empty, maxed out, looks risky, even if you always pay on time.',
+              check: { statement: 'Using less of your available credit limit is better for your score than using almost all of it.', isTrue: true }
+            }
+          ],
+          xpOnComplete: 2
+        },
+        {
+          id: 'm3', type: 'matching', title: 'Match It! Round 3',
+          pairs: [
+            { term: 'Credit Utilization', definition: 'How much of your credit limit you\'re currently using, shown as a percentage.' },
+            { term: 'Interest (APR)', definition: 'The extra money a bank charges you for not paying your full bill right away.' },
+            { term: 'Minimum Payment', definition: 'The smallest amount you\'re allowed to pay to avoid a late fee, but it leaves most of your bill unpaid.' }
+          ],
+          hintText: "Utilization is about your LIMIT (how much you're using of what you're allowed to borrow), not about interest or payments.",
+          xpOnComplete: 4
+        },
+        {
+          id: 'c4', type: 'mythcards', title: 'Credit Myths',
+          cards: [
+            { myth: 'Carrying a small balance helps your credit score.', isTrue: false, explanation: 'Paying your bill in full every month is what actually helps. Carrying a balance just costs you extra in interest, it never boosts your score.' },
+            { myth: 'Checking your own credit score hurts it.', isTrue: false, explanation: 'Checking your own score is always safe and free, and it never lowers it. Only applying for new credit causes a small, temporary dip.' },
+            { myth: 'Closing an old, unused card can hurt your score.', isTrue: true, explanation: 'It can! Closing your oldest card shortens your credit history and raises your utilization, both of those can lower your score.' },
+            { myth: 'Paying on time, every time, is the single biggest factor in your credit score.', isTrue: true, explanation: 'True, payment history matters more than anything else. It\'s worth more to your score than your utilization, your history length, or anything else combined.' }
+          ],
+          xpPerCorrect: 2
+        },
+        {
+          id: 'c5', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 2],
+          hintTexts: [
+            "APR has the word \"Percentage\" in it, think about what yearly percentage of your balance the bank charges you for carrying it.",
+            "Remember the leaking-boat analogy, does bailing out a LITTLE water each time actually fix the leak, or just keep you afloat?"
+          ]
+        },
+        {
+          id: 'c6', type: 'simulator', simulatorId: 'credit-climb', title: 'Credit Climb',
+          intro: 'Watch Maya\'s score move in real time over her first year of card use. Tap each decision below to see the impact.',
+          hintText: 'Payment history and utilization are the two biggest score factors, decisions that touch those move the needle the most, for better or worse.',
+          decisions: [
+            { id: 'd1', label: 'Pay every statement in full, on time, for 6 months', scoreDelta: 35, note: 'Paying on time, every time, is the single biggest thing that helps your score.' },
+            { id: 'd2', label: 'Keep utilization under 30% instead of maxing the card', scoreDelta: 15, note: 'Using less of your available credit is the second-biggest factor.' },
+            { id: 'd3', label: 'Apply for two more store cards this month', scoreDelta: -12, note: 'Applying for several cards at once makes lenders nervous and dings your score a little.' },
+            { id: 'd4', label: 'Keep her oldest card open, barely used', scoreDelta: 8, note: 'The longer you\'ve had credit, the more it helps, so old accounts are worth keeping open.' }
+          ],
+          xpOnComplete: 6
+        },
+        {
+          id: 'c7', type: 'priceisright',
+          title: 'The Price Is Right: Minimum Payments',
+          prompt: 'Maya carries a $1,000 balance at 24% APR for a year, paying only the $25 minimum each month. Guess the total interest she pays that year.',
+          hintText: "24% APR means roughly a quarter of what she owes gets added back as interest over a full year if she barely pays it down. Start your guess near there.",
+          actualValue: 230, guessRange: { min: 0, max: 500, step: 10 },
+          explanation: 'Minimum payments barely dent what you actually owe, most of each payment goes toward interest first, and only a little toward the original balance.',
+          xpOnComplete: 5
+        },
+        {
+          id: 'c8', type: 'bossbattle', title: 'The Car Repair',
+          scenario: 'Finals week. Maya\'s car needs an $800 repair or she can\'t make it to her internship. She has $150 in savings and $700 of available credit (room left on her limit).',
+          hintText: 'Compare the interest rates: a regular credit card is around 24% APR. A payday loan can be 300%+ APR. One of those is dramatically more expensive.',
+          choices: [
+            { id: 'a', label: 'Cover it with savings, put the rest on the card, pay it off in 2 months', consequence: { text: 'A smart trade-off, a little short-term interest, but she avoids an expensive loan and her credit stays healthy.', delta: { creditScore: 5, savings: -150 }, xpMultiplier: 1.25 } },
+            { id: 'b', label: 'Put the whole $800 on the card, pay minimums', consequence: { text: 'She\'s now using almost all of her limit, with roughly $140 in projected interest ahead, both hurt her score.', delta: { creditScore: -15 }, xpMultiplier: 0.6 } },
+            { id: 'c', label: 'Take a same-day payday loan (a very short-term loan, repaid fast, with steep fees)', consequence: { text: 'Fast cash, but payday loans often carry 300%+ APR, usually the most expensive option available, by far.', delta: { creditScore: -5 }, xpMultiplier: 0.5 } },
+            { id: 'd', label: 'Ask a parent to cover it and pay them back over time', consequence: { text: 'No interest, but this only works as a safety net if that arrangement is actually reliable for both sides.', delta: { creditScore: 0 }, xpMultiplier: 0.9 } }
+          ]
+        }
+      ]
+      },
+      {
+        id: 'jordan',
+        topic: 'The Store Card Trap',
+        character: { name: 'Jordan', tagline: 'Junior tempted by a store card discount at checkout' },
+        initialState: { creditScore: 700, checking: 150, savings: 50 },
+        bossAchievementId: 'store_card_smart',
+        chapters: [
+          {
+            id: 'j1', type: 'story', title: 'Meet Jordan',
+            beats: [
+              { speaker: 'intro', text: "This is Jordan. He's a junior who's had a regular credit card for two years and always pays it off in full. Today, a checkout screen is about to test everything he knows." },
+              { speaker: 'Jordan', text: '"Wait, sign up for a store card and save 20% right now? That\'s basically free money... right?"' },
+              { speaker: 'narrator', text: "Let's slow down before Jordan taps \"Sign Up.\" A discount today can turn into an expensive mistake later, let's break down why." }
+            ]
+          },
+          {
+            id: 'jt1', type: 'teach', title: 'Store Credit Cards',
+            concepts: [
+              {
+                term: 'Store Credit Card',
+                plain: "A store card works just like a regular credit card, it's a loan you pay back later, but it usually only works at one retailer, and it often comes with a much higher interest rate than a regular card.",
+                analogy: "It's like a regular credit card, but with a much steeper penalty if you don't pay it off in full.",
+                check: { statement: 'A store card usually works at any store, just like a regular credit card.', isTrue: false }
+              },
+              {
+                term: 'Store Card APR',
+                plain: 'APR stands for Annual Percentage Rate, it just means the yearly interest rate a card charges you for carrying a balance. Store cards often charge a 25-30%+ APR, noticeably higher than most regular credit cards. A one-time discount can get wiped out fast if you carry a balance.',
+                analogy: "It's like a discount coupon that expires the moment you don't pay in full, after that, it starts costing you more than you saved.",
+                check: { statement: 'Store cards often have a HIGHER interest rate than regular credit cards.', isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'j2', type: 'decision', title: 'Sign Up at Checkout?',
+            prompt: "The cashier offers Jordan 20% off his $150 purchase, $30 saved, if he opens the store's credit card right now. What should he do?",
+            hintText: "Weigh the one-time $30 discount against what you just learned about store card APR. Does saying yes cost him anything besides a small score dip if he pays in full?",
+            choices: [
+              {
+                id: 'a', label: 'Open the card for the discount, and pay the full statement immediately',
+                outcome: {
+                  text: 'Jordan saves $30 up front and pays his statement in full, so no interest hits, but the new account and credit check ding his score slightly.',
+                  delta: { creditScore: -5 },
+                  compare: [{ label: 'Total spent (with discount)', value: 120 }, { label: 'Total spent (no discount)', value: 150 }]
+                }
+              },
+              {
+                id: 'b', label: 'Skip the store card and pay full price with his regular card',
+                outcome: {
+                  text: 'Jordan skips the discount but keeps his credit file simple: no new inquiry, no new account to manage.',
+                  delta: { creditScore: 0 },
+                  compare: [{ label: 'Total spent (no discount)', value: 150 }, { label: 'Total spent (with discount)', value: 120 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'j3', type: 'microsim', title: "Jordan's Monthly Numbers",
+            prompt: 'Jordan takes home $900/month. Fixed costs already use $650. Help him fit a credit card payment and some savings in without going negative.',
+            hintText: 'Add up the fixed costs ($400 + $120 + $50 + $80 = $650). That leaves $250 of his $900 to split between the two sliders before he goes negative.',
+            income: 900,
+            fixedCosts: [
+              { label: 'Rent share', amount: 400 },
+              { label: 'Groceries', amount: 120 },
+              { label: 'Phone', amount: 50 },
+              { label: 'Car insurance', amount: 80 }
+            ],
+            sliders: [
+              { id: 'cardPayment', label: 'Credit card payment', min: 25, max: 150, step: 25, default: 25 },
+              { id: 'savings', label: 'Savings deposit', min: 0, max: 100, step: 25, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Jordan can't sustain this. Try a smaller card payment or savings deposit.", ok: false },
+              { maxLeftover: 24, text: "Workable, but there's almost no cushion left for a surprise expense.", ok: true },
+              { maxLeftover: Infinity, text: "Solid. He's covering his bill and still building a cushion.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'jm1', type: 'matching', title: 'Match It!',
+            pairs: [
+              { term: 'Store Credit Card', definition: 'A card that works like a loan but usually only at one retailer.' },
+              { term: 'Store Card APR', definition: 'The often much-higher yearly interest rate many store cards charge.' },
+              { term: 'Credit Utilization', definition: "How much of your credit limit you're currently using, shown as a percentage." }
+            ],
+            hintText: "The two Store Card terms were just taught above, 'Card' is the WHERE it works, 'APR' is the interest RATE.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'jh1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: opening several store cards in a short time adds up fast, each one is a small ding to your score, and it's easy to lose track of multiple bills. One well-managed card often beats five barely-used ones.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'j4', type: 'mythcards', title: 'Store Card Myths',
+            cards: [
+              { myth: 'Store cards always have the same interest rate as regular credit cards.', isTrue: false, explanation: 'Store cards often charge noticeably higher APR than average credit cards, sometimes 29% or more.' },
+              { myth: 'A discount from opening a store card is guaranteed to save you money overall.', isTrue: false, explanation: 'It only saves you money if you pay the balance in full. Carry it even one month at a high APR and the interest can erase the discount.' },
+              { myth: 'Opening a new store card can cause a small, temporary dip in your credit score.', isTrue: true, explanation: 'New accounts trigger a credit check and lower your average account age, both can cause a small, temporary dip.' }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'j5', type: 'knowledgecheck', title: 'Quick Check', qIndices: [7, 6],
+            hintTexts: [
+              "Think about the APR difference you just learned: store cards usually charge MORE than regular cards, not the same or less.",
+              "Think about the three score-hurting habits covered so far: co-signing for someone else, closing your oldest card, or applying for several cards at once."
+            ]
+          },
+          {
+            id: 'j6', type: 'priceisright',
+            title: 'The Price Is Right: Store Card Interest',
+            prompt: 'Jordan carries a $500 balance on a store card with 29% APR for a year, paying only the minimum each month. Guess the total interest he pays that year.',
+            hintText: 'At 29% APR, interest costs roughly a bit more than a quarter of the balance over a full year if it\'s barely paid down. Start your guess near there.',
+            actualValue: 145, guessRange: { min: 0, max: 300, step: 10 },
+            explanation: 'At 29% APR, interest piles up fast, minimum payments barely touch the principal, so almost the whole payment goes toward interest first.',
+            xpOnComplete: 5
+          },
+          {
+            id: 'j7', type: 'bossbattle', title: 'The Second Store Card',
+            scenario: "Another store offers Jordan 25% off a $300 purchase for opening yet another store card, his third one this year. What does he do?",
+            hintText: "Remember Hammy's tip about opening several store cards in a short time, each one is a small ding, and it's easy to lose track of multiple bills.",
+            choices: [
+              { id: 'a', label: 'Decline: one store card is already enough to manage', consequence: { text: 'Keeping his credit file simple pays off: no new inquiry, no new bill to track.', delta: { creditScore: 5 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: 'Open it anyway for the discount', consequence: { text: 'Three store cards in one year is a lot to manage, and each one dinged his score a little.', delta: { creditScore: -10 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Ask if they'll honor the discount without opening a card", consequence: { text: 'Some stores will, worth asking before assuming a new card is the only way to save.', delta: { creditScore: 3 }, xpMultiplier: 1.1 } },
+              { id: 'd', label: 'Put the purchase on his existing regular card instead, and skip the discount', consequence: { text: 'He loses the discount, but keeps everything on one card he already manages well.', delta: { creditScore: 2 }, xpMultiplier: 0.9 } }
+            ]
+          }
+        ]
+      }
     ]
   },
   {
-    id: 'risk', title: 'Managing Risk', icon: '06', iconColor: 'peach', xpReward: 100,
+    id: 'risk', title: 'Managing Risk', icon: '06', iconColor: 'peach', xpReward: 35,
     hook: 'You\'re moving off-campus next fall. A pipe bursts in your apartment and ruins your laptop, TV, and clothes. Your landlord\'s insurance covers the building - not your stuff. You owe $2,000 in replacements. What should you have had?',
-    desc: 'Health coverage, renter\'s insurance, and identity theft protection.',
+    desc: 'Health coverage, renter\'s insurance, scams, and identity theft protection.',
     questions: [
       {
         q: 'As a college student, when does your coverage under your parents\' health insurance plan typically end?',
@@ -276,17 +879,63 @@ const MODULES = [
         opts: ['Ignore it - it\'s probably just a forgotten subscription', 'Wait 30 days to see if another charge appears', 'Contact your bank immediately to dispute the charge and request a card replacement', 'Close your account and open a new one at a different bank'],
         correct: 2,
         exp: 'Dispute unauthorized charges immediately. Federal law limits your liability, but only if you report quickly. Your bank will investigate and usually reverse fraudulent charges.'
+      },
+      {
+        q: 'Your health plan has a $500 deductible, a $30 copay, and a monthly premium. What does the deductible mean?',
+        opts: ['The monthly amount you pay just to have coverage', 'The amount you pay out of pocket before your insurance starts covering costs', 'A one-time enrollment fee', 'The maximum amount insurance will ever pay you'],
+        correct: 1,
+        exp: 'Premium = what you pay monthly for coverage. Deductible = what you pay out of pocket before insurance kicks in. Copay = a flat fee per visit after that. Knowing these three terms helps you actually use your plan.'
+      },
+      {
+        q: 'Your school automatically bills you for its student health insurance plan, but you\'re already covered under a parent\'s plan until 26. What should you do?',
+        opts: ['Pay for both plans just to be safe', 'Submit a waiver by the school\'s deadline showing proof of existing coverage, so the school removes the charge from your bill', 'Ignore the charge, it will go away on its own', 'Cancel your parent\'s plan instead'],
+        correct: 1,
+        exp: 'Many schools auto-enroll and bill students for a health plan unless you actively waive it with proof of comparable coverage — and waivers have a hard deadline, often within the first few weeks of the semester.'
+      },
+      {
+        q: 'You\'re bringing a car to campus for the first time. What should you check on your auto insurance before move-in?',
+        opts: ['Nothing changes just because you\'re a student', 'Whether your policy still qualifies for a good-student or resident-student discount, and whether your coverage limits are adequate for a new location', 'Auto insurance is optional if you only drive occasionally', 'Your parents\' policy automatically covers you no matter what'],
+        correct: 1,
+        exp: 'Adding a car — or a student driver — to a policy changes the math. Insurers often offer good-student discounts, and coverage needs can shift based on where the car is garaged. A quick call before move-in can save money and avoid gaps.'
+      },
+      {
+        q: 'You get an email that looks like it\'s from your school\'s financial aid office asking you to "verify your account" by clicking a link and entering your login. What should you do?',
+        opts: ['Click the link immediately since it mentions financial aid', 'Check the sender\'s actual email address and go directly to the official site instead of clicking — schools and banks don\'t ask for login credentials by email', 'Forward it to your friends so they can verify it too', 'Reply with your student ID number to confirm you got it'],
+        correct: 1,
+        exp: 'Phishing emails impersonating financial aid offices, banks, and even professors are extremely common on college campuses. Legitimate institutions don\'t ask you to confirm login credentials through an emailed link.'
+      },
+      {
+        q: 'A renter\'s insurance policy costs about $15/month and has a $500 deductible. Your $1,500 laptop is stolen. How does the payout typically work?',
+        opts: ['You get nothing back since you have a deductible', 'After the $500 deductible, your policy would typically cover the remaining value up to your policy limit', 'You get the full $1,500 with no deductible applied', 'You must cancel the policy to file a claim'],
+        correct: 1,
+        exp: 'A deductible is the amount you pay first before insurance covers the rest, not money you lose entirely. On a $1,500 stolen laptop with a $500 deductible, you\'d typically be reimbursed for roughly $1,000 — often making the $15/month cost well worth it.'
+      },
+      {
+        q: 'You need to check your bank balance while at a coffee shop using the shop\'s public WiFi. What\'s the safer way to do it?',
+        opts: ['Log in directly over the public WiFi, it\'s fine for quick checks', 'Use your phone\'s cellular data or a trusted personal hotspot instead of public WiFi for anything involving financial accounts', 'Public WiFi is always encrypted and totally safe for banking', 'Only check your balance using the shop\'s shared computer'],
+        correct: 1,
+        exp: 'Public WiFi networks can expose your data to anyone else connected to the same network. Using cellular data or a personal hotspot for banking logins avoids that risk — combine it with two-factor authentication for extra protection.'
+      },
+      {
+        q: 'Your wallet is stolen, including your debit card and student ID. What should be your first move?',
+        opts: ['Wait a day to see if it turns up before doing anything', 'Immediately call your bank to freeze or cancel the card, then update any autopay subscriptions linked to it and report the loss to campus security', 'Cancel your bank account entirely and never open a new one', 'Post about it on social media and wait for someone to return it'],
+        correct: 1,
+        exp: 'Acting fast limits the damage — freezing or canceling the card stops unauthorized use immediately. Update any subscriptions or autopay linked to that card once you get a new one, and report the loss to campus security if your student ID was also taken.'
       }
     ],
     lessons: [
-      { title: 'Insurance Basics', hook: 'You\'re moving off-campus. A pipe bursts in your apartment and ruins your laptop, TV, and clothes. Your landlord\'s insurance covers the building — not your stuff. You owe $2,000 in replacements. What should you have had?', qIndices: [0, 1, 2] },
-      { title: 'Identity Theft', hook: 'You get an alert: someone opened a credit card in your name in another state. You\'re a student with no real assets — but this wrecks your credit and your identity. How do you protect yourself before this happens?', qIndices: [3, 4] }
+      { title: 'Health Insurance Basics', hook: 'You just turned 20 and get a letter asking if you want to enroll in your school\'s health plan for $2,000/year. You\'re already covered under a parent\'s plan. Do you need this — and what do all these insurance terms even mean?', qIndices: [0, 5] },
+      { title: 'Health Waivers & Car Insurance', hook: 'It\'s move-in day. You\'ve got a car in the parking lot for the first time and a health insurance waiver deadline you almost forgot about. Both are the kind of things that quietly cost you money if you ignore them.', qIndices: [6, 7] },
+      { title: 'Renter\'s & Landlord Insurance', hook: 'You\'re moving off-campus next fall. A pipe bursts in your apartment and ruins your laptop, TV, and clothes. Your landlord\'s insurance covers the building — not your stuff. You owe $2,000 in replacements. What should you have had?', qIndices: [1, 2] },
+      { title: 'What Insurance Actually Pays Out', hook: 'In the same week, you notice a $47 charge you don\'t recognize on your debit card, and you\'re filing your first-ever renter\'s insurance claim after a burst pipe. Do you know what to expect from either process?', qIndices: [9, 4] },
+      { title: 'Identity Theft & Staying Safe Online', hook: 'You get a text claiming to be your bank, asking you to confirm your login while you\'re on public coffee-shop WiFi. Something about it feels off, but you\'re not totally sure why.', qIndices: [3, 10] },
+      { title: 'If Something Is Stolen or Compromised', hook: 'Your wallet gets stolen the same week you get a suspicious "verify your financial aid account" email. Reacting fast to both keeps a bad day from turning into months of cleanup.', qIndices: [11, 8] }
     ]
   },
   {
-    id: 'loans', title: 'Loans', icon: '07', iconColor: 'amber', xpReward: 125,
+    id: 'loans', title: 'Loans', icon: '07', iconColor: 'amber', xpReward: 40,
     hook: 'Your financial aid offer shows $5,500 in federal loans available for the year. You only need $3,200 to cover the gap after grants. It\'s tempting to take it all as extra cash. Should you?',
-    desc: 'Federal loan types, how eligibility works, and what to do before your first dollar arrives.',
+    desc: 'Federal vs. private loans, subsidized vs. unsubsidized, Parent PLUS, repayment plans, and how borrowing today follows you after graduation.',
     questions: [
       {
         q: 'What is the key difference between a Direct Subsidized and a Direct Unsubsidized federal loan?',
@@ -323,17 +972,57 @@ const MODULES = [
         opts: ['No — once you\'re approved for federal loans, you\'re approved permanently', 'Yes — you must submit the FAFSA again every academic year to maintain your eligibility for federal loans and other aid', 'Only if your GPA drops', 'Only if you change your major'],
         correct: 1,
         exp: 'FAFSA isn\'t a one-time form — it must be resubmitted every academic year to keep your federal loan eligibility (and any grants or work-study) active. Missing the renewal is one of the most common ways students accidentally lose aid they were counting on.'
+      },
+      {
+        q: 'What\'s a key difference between federal and private student loans?',
+        opts: ['They are identical in every way', 'Federal loans offer protections like income-driven repayment and deferment regardless of credit; private loans come from banks or credit unions, often require a credit check or cosigner, and offer fewer built-in protections', 'Private loans are always cheaper than federal loans', 'Federal loans require a credit check but private loans do not'],
+        correct: 1,
+        exp: 'Federal loans come with borrower protections baked in by law — income-driven repayment, deferment, forgiveness programs — regardless of your credit. Private loans are issued by banks or credit unions, often require good credit or a cosigner, and rarely offer the same flexibility if you hit financial trouble. Exhaust federal loan options before considering private ones.'
+      },
+      {
+        q: 'You graduate in May. When do your federal student loan payments typically begin?',
+        opts: ['Immediately upon graduation', 'Usually after a 6-month grace period, giving you time to find a job before your first payment is due', 'Payments are never required until you turn 30', 'Only once you\'ve paid off all interest that accrued'],
+        correct: 1,
+        exp: 'Most federal loans include a 6-month grace period after you graduate, leave school, or drop below half-time enrollment. Use that window to pick a repayment plan — but if you have unsubsidized loans, interest is still accruing during this period even though no payment is due yet.'
+      },
+      {
+        q: 'You graduate with $28,000 in federal loans and a modest starting salary. Are you stuck with one fixed monthly payment?',
+        opts: ['Yes, there is only one repayment option for everyone', 'No — beyond the Standard 10-year plan, income-driven repayment plans set your monthly payment as a percentage of your income, which can lower payments if you\'re earning less', 'You must pay off the entire balance within 2 years of graduating', 'Repayment plans can only be changed once, ever'],
+        correct: 1,
+        exp: 'Federal loans offer multiple repayment plans. The Standard Plan pays off the loan in 10 years with a fixed payment. Income-driven repayment (IDR) plans instead calculate your payment based on your income and family size — useful if your starting salary is tight, though you\'ll generally pay more interest over a longer term.'
+      },
+      {
+        q: 'You put your unsubsidized loan into deferment for a year while unpaid interest builds up. When you leave deferment, what happens to that unpaid interest?',
+        opts: ['It disappears automatically', 'It typically capitalizes — gets added to your principal balance — meaning you now pay interest on a larger amount going forward', 'It\'s automatically forgiven after any deferment period', 'It has no effect on your future payments'],
+        correct: 1,
+        exp: 'Interest capitalization means unpaid interest gets rolled into your principal balance, so you start paying interest on interest. This commonly happens at the end of a deferment or forbearance period. Paying at least the interest while it accrues — even a small amount — can prevent your balance from growing larger than what you actually borrowed.'
+      },
+      {
+        q: 'A parent takes out a Parent PLUS loan to help cover your tuition. Who is legally responsible for repaying it?',
+        opts: ['The student, once they graduate and start working', 'The parent who took out the loan — it cannot simply be transferred to the student\'s name after the fact', 'Whoever has the higher income', 'It splits automatically 50/50 between parent and student'],
+        correct: 1,
+        exp: 'A Parent PLUS loan is the parent\'s legal debt, not the student\'s — even though it paid for the student\'s education. Some families refinance it into the student\'s name later through a private lender, but the federal loan itself stays the parent\'s responsibility unless that happens.'
+      },
+      {
+        q: 'Before accepting your final year of loans, what\'s a smart way to think about how borrowing today affects you after graduation?',
+        opts: ['Borrowing decisions don\'t matter until the first payment is due', 'Estimate your total debt at graduation and compare the expected monthly payment against a realistic starting salary for your field — a rough rule of thumb is keeping total debt near or below your expected first-year salary', 'Always borrow the maximum offered since you can figure out repayment later', 'Only students in expensive majors need to think about this'],
+        correct: 1,
+        exp: 'A common guideline: try to keep total student loan debt at or below your expected first-year salary in your field. Running the numbers before you graduate — total balance, estimated interest, and a realistic starting salary — turns an abstract future payment into something you can actually plan around now.'
       }
     ],
     lessons: [
-      { title: 'Federal Loan Types', hook: 'Your financial aid offer lists three different kinds of loans — Direct Subsidized, Direct Unsubsidized, and PLUS — plus a note about your enrollment status. You\'ve never seen any of these terms before. What do they actually mean for what you\'ll owe?', qIndices: [0, 1, 2] },
-      { title: 'Borrowing Responsibly', hook: 'You\'re about to accept federal loans for the first time. Before any money shows up, studentaid.gov is asking you to complete a Master Promissory Note and Entrance Counseling — and your offer includes more than you actually need. What do you do?', qIndices: [3, 4, 5] }
+      { title: 'Federal Loan Types', hook: 'Your financial aid offer lists Direct Subsidized and Direct Unsubsidized loans, plus a mention of private loan options from your bank. You\'ve never had to compare loan types before — does it actually matter which one you take?', qIndices: [0, 6] },
+      { title: 'PLUS Loans & Who\'s Responsible', hook: 'Your parent takes out a Parent PLUS loan to cover the gap in your bill. You figure you\'ll just pay it off yourself after graduation — but is that actually how it works?', qIndices: [1, 10] },
+      { title: 'Eligibility & Paperwork', hook: 'Before a single dollar of your loan shows up, studentaid.gov wants you to complete a Master Promissory Note and Entrance Counseling — and you\'re not sure if dropping one class this semester puts your aid at risk.', qIndices: [2, 3] },
+      { title: 'Borrowing Only What You Need', hook: 'Your financial aid offer shows $5,500 in federal loans available for the year. You only need $3,200 to cover the gap after grants. It\'s tempting to take it all as extra cash. Should you?', qIndices: [4, 5] },
+      { title: 'Repayment Plans & Interest Capitalization', hook: 'You defer your loan for a semester while between jobs, and later hear terms like "income-driven repayment" and "capitalized interest" for the first time. Do you actually know what either means for your balance?', qIndices: [8, 9] },
+      { title: 'Grace Periods & Planning Ahead', hook: 'You graduate in May with $28,000 in federal loans and a job offer that starts in July. When does your first payment actually hit — and how do you know if you can afford it?', qIndices: [7, 11] }
     ]
   },
   {
-    id: 'taxes', title: 'Taxes', icon: '08', iconColor: 'slate', xpReward: 125,
+    id: 'taxes', title: 'Taxes', icon: '08', iconColor: 'slate', xpReward: 40,
     hook: 'It\'s April. You have a W-2 from your on-campus job, a 1099 from a freelance gig, and you\'ve never filed a tax return in your life. Where do you even start?',
-    desc: 'Filing your first return, W-2s vs. 1099s, education credits, and the mistakes that cost students the most.',
+    desc: 'Filing your first return, W-2s vs. 1099s, education credits, dependency status, and the mistakes that cost students the most.',
     questions: [
       {
         q: 'As a student filing your very first tax return, what\'s the most important first step?',
@@ -370,17 +1059,57 @@ const MODULES = [
         opts: ['Filing electronically instead of by mail', 'Forgetting to report 1099/gig income, filing as independent when a parent still claims them as a dependent, or missing education credits they qualify for', 'Using IRS Free File to submit their return', 'Keeping copies of their tax documents after filing'],
         correct: 1,
         exp: 'The most common first-time mistakes: forgetting to report cash or 1099 gig income, filing as independent when a parent actually claims you as a dependent (which affects both returns), and missing education credits or deductions entirely. When in doubt, your school\'s financial aid office or a free VITA tax clinic can help for free.'
+      },
+      {
+        q: 'Your parents claim you as a dependent on their tax return. How does this affect your own return?',
+        opts: ['It means you\'re not allowed to file your own tax return at all', 'Your standard deduction may be lower than an independent filer\'s, and you generally can\'t claim certain credits your parents may claim instead', 'Being claimed as a dependent means you owe zero taxes automatically', 'It has no effect on either return'],
+        correct: 1,
+        exp: 'Being claimed as a dependent affects your standard deduction and which credits you can claim yourself versus which your parents claim, like education credits. You can still file your own return to report your income — dependency status just changes some of the numbers and who gets which benefit.'
+      },
+      {
+        q: 'You get a Form 1098-T from your school in January. What is it for?',
+        opts: ['It reports your part-time job wages', 'It reports tuition payments and scholarships/grants received during the year, used to calculate education tax credits', 'It\'s your official transcript for job applications', 'It only matters if you\'re in your final year of school'],
+        correct: 1,
+        exp: 'The 1098-T shows how much qualified tuition you paid and how much scholarship/grant aid you received. Whoever claims you — or you, if independent — uses these numbers to calculate education credits like the AOTC or LLC. Keep it with your other tax documents.'
+      },
+      {
+        q: 'You earn $8,000 in freelance income this year with no taxes withheld. What might you need to do differently than a typical W-2 employee?',
+        opts: ['Nothing, you can pay it all at once in April with no issues', 'If you expect to owe $1,000+ in tax, you may need to make estimated quarterly tax payments throughout the year to avoid an underpayment penalty', 'Freelance income under $10,000 is automatically tax-exempt', 'You must hire an accountant by law'],
+        correct: 1,
+        exp: 'The IRS expects tax to be paid as you earn, not just once a year. If you expect to owe $1,000 or more and have no withholding, quarterly estimated payments help you avoid an underpayment penalty — setting aside 20–30% of each payment as you go makes this easier.'
+      },
+      {
+        q: 'You go to school in a different state than your permanent home, and you worked a part-time job there this year. Do you need to think about state taxes differently?',
+        opts: ['No, state taxes only depend on where your parents live', 'Possibly — you may need to file a state return in the state where you worked or earned income, in addition to or instead of your home state, depending on each state\'s rules', 'State taxes are always waived for students', 'You only owe state taxes after graduating'],
+        correct: 1,
+        exp: 'Earning income in the state where you attend school can create a filing obligation there, separate from your home state\'s residency rules. Every state\'s rules differ, and some have no income tax at all — check both states involved if you worked while at school.'
+      },
+      {
+        q: 'You got a much bigger tax bill than expected last year because too little was withheld from your paychecks. What can you do about it going forward?',
+        opts: ['Nothing, withholding is fixed once you start a job', 'Submit an updated W-4 to your employer to adjust how much federal tax is withheld from each paycheck', 'Ask your employer to stop reporting your income', 'Simply skip filing next year'],
+        correct: 1,
+        exp: 'A W-4 isn\'t a one-time form — you can update it anytime, especially after a surprise tax bill or a big income change like adding a second job. Adjusting your withholding spreads the tax cost across the year instead of hitting you with one large bill in April.'
+      },
+      {
+        q: 'As a student with a simple return, what\'s a smart way to file without paying a tax prep company?',
+        opts: ['You must always pay a company to file correctly', 'IRS Free File (for eligible incomes) and free VITA (Volunteer Income Tax Assistance) clinics on many campuses can prepare and file simple returns at no cost', 'Free filing options are only available to people over 65', 'Filing for free means you can\'t claim any credits'],
+        correct: 1,
+        exp: 'Most students qualify for IRS Free File based on income, and many campuses host free VITA clinics staffed by IRS-certified volunteers during tax season. Both can handle W-2s, 1099s, and education credits — there\'s rarely a reason to pay for a simple first return.'
       }
     ],
     lessons: [
-      { title: 'Your First Return', hook: 'It\'s April. You have a W-2 from your on-campus job and a 1099 from a freelance gig you did on weekends. You\'ve never filed a tax return in your life. Where do you even start — and what do these forms actually mean?', qIndices: [0, 1, 2] },
-      { title: 'Credits & Common Mistakes', hook: 'Your friend says they got $600 back after filing, but you didn\'t even think you needed to file since you were "just an intern." What are you missing — and what do first-time filers usually get wrong?', qIndices: [3, 4, 5] }
+      { title: 'Your First Return', hook: 'It\'s April, and you\'ve never filed a tax return in your life. You have a W-2 from your on-campus job. Where do you even start — and what does everything on that form actually mean?', qIndices: [0, 1] },
+      { title: '1099s & Internship Income', hook: 'Your friend says they got a 1099-NEC after doing freelance design work over the summer, while you had a paid internship with a normal W-2. Are you taxed the same way?', qIndices: [2, 3] },
+      { title: 'Education Credits & Your 1098-T', hook: 'Your school sends you a Form 1098-T in January and your parents mention "education credits" at dinner. You have no idea what either of those means for anyone\'s tax bill.', qIndices: [4, 7] },
+      { title: 'Dependency Status & Common Mistakes', hook: 'Your parents still claim you as a dependent, and your friend who got $600 back after filing says you should definitely file too, even though you were "just an intern." What are you both getting wrong or right?', qIndices: [6, 5] },
+      { title: 'Freelance Income: Estimated Taxes & State Filing', hook: 'You earned $8,000 freelancing this year with nothing withheld, and half of it came from clients in the state where you go to school — not your home state. Is April the only deadline you need to worry about?', qIndices: [8, 9] },
+      { title: 'Getting Your Withholding Right & Filing for Free', hook: 'Last year\'s tax bill caught you off guard, and this year a friend says campus has a free clinic that\'ll actually file your return for you. Do either of those things sound too good to be true?', qIndices: [10, 11] }
     ]
   },
   {
-    id: 'psychology', title: 'Consumer Psychology', icon: '09', iconColor: 'berry', xpReward: 100,
+    id: 'psychology', title: 'Consumer Psychology', icon: '09', iconColor: 'berry', xpReward: 35,
     hook: 'You know you should be saving. You even said out loud last week, "I need to stop spending on DoorDash." Then a friend tags you in a group order twenty minutes later. Why isn\'t knowing enough?',
-    desc: 'Impulse spending, social pressure, lifestyle inflation, subscriptions, and BNPL — the behavioral side of money.',
+    desc: 'Impulse spending, social pressure, lifestyle inflation, subscriptions, BNPL, and the behavioral side of money.',
     questions: [
       {
         q: 'You know you should save, and you even have a budget — but by month\'s end there\'s nothing left. What\'s usually the real reason?',
@@ -417,17 +1146,57 @@ const MODULES = [
         opts: ['Rely on motivation and remember to do it manually every time', 'Automate the behavior — like an automatic savings transfer on payday — so the good choice happens by default without requiring willpower each time', 'Set an unrealistic goal so you\'re forced to try harder', 'Only check your spending once a year'],
         correct: 1,
         exp: 'Habits that depend on remembering and willpower fade fast. Habits that run automatically — an auto-transfer to savings, a bill on autopay, a set weekly check-in — stick because they don\'t require a fresh decision every time. Start small and automatic; consistency beats intensity.'
+      },
+      {
+        q: 'Your friend group is planning a spring break trip you can\'t really afford, but everyone\'s going and it\'s all anyone talks about. What\'s the healthiest way to handle it?',
+        opts: ['Go anyway and figure out the money later, even if it means a credit card balance you can\'t pay off', 'Decide your budget first, then either find a cheaper way to join or opt out and communicate it honestly — real friends adjust', 'Never hang out with this friend group again', 'Take out a personal loan to cover the trip without telling anyone'],
+        correct: 1,
+        exp: 'Social pressure is one of the strongest drivers of overspending precisely because saying no feels awkward in the moment. Deciding your number in advance — and being upfront about it — takes the emotional pressure out of the decision.'
+      },
+      {
+        q: 'You get a $400 tax refund and immediately spend it on something you\'d never buy with a regular paycheck. What\'s happening here?',
+        opts: ['Nothing unusual, all money is treated the same by everyone', 'This is "mental accounting" — treating money differently based on where it came from, even though a dollar from a refund spends exactly the same as a dollar from a paycheck', 'Tax refunds are not real money', 'Refunds should always be spent immediately by law'],
+        correct: 1,
+        exp: 'Mental accounting is a well-documented behavioral bias — people mentally label money as "bonus" or "free" and spend it more loosely than earned income, even though it\'s equally real money. Treating a refund like any other dollar helps you avoid this trap.'
+      },
+      {
+        q: 'You open Instagram and within a minute see three targeted ads related to something you searched yesterday. You buy one on impulse. What\'s a practical defense against this?',
+        opts: ['There\'s no defense, targeted ads always win', 'Add a personal rule like a 24-hour wait or a "sleep on it" cart before buying anything from a social media ad', 'Delete all social media accounts permanently', 'Only shop using incognito mode'],
+        correct: 1,
+        exp: 'Targeted ads are designed to catch you at your most impulsive moment. A simple waiting-period rule for anything discovered through an ad — even 24 hours — breaks the impulse loop and gives you a chance to decide with a clear head.'
+      },
+      {
+        q: 'You\'ve been paying for a gym membership for 8 months but only went twice. You keep paying because "I already spent so much on it." What\'s this thinking called, and what should you actually do?',
+        opts: ['It\'s smart to keep paying since you might use it eventually', 'This is the sunk cost fallacy — money already spent is gone either way, so the only real decision is whether it\'s worth paying for going forward', 'You should double your membership to get your money\'s worth', 'Gym memberships cannot be canceled once started'],
+        correct: 1,
+        exp: 'The sunk cost fallacy is continuing to invest in something because of what you\'ve already spent, not because it still makes sense. Money already spent is gone either way — the only real decision is whether the subscription is worth paying for going forward.'
+      },
+      {
+        q: 'You keep seeing influencers post "get ready with me" hauls and feel like your wardrobe is suddenly inadequate, even though nothing in your life actually changed. What\'s driving this?',
+        opts: ['Your wardrobe genuinely became outdated overnight', 'Social comparison — constantly seeing curated, filtered spending from influencers and peers resets your sense of what\'s "normal," even when it doesn\'t reflect your actual needs or budget', 'Influencers are legally required to be honest about affordability', 'This feeling means you should upgrade your whole wardrobe immediately'],
+        correct: 1,
+        exp: 'Social media constantly resets your baseline for what feels "normal" to own or spend, since you\'re comparing your everyday life to someone else\'s curated highlight reel. Recognizing the feeling as social comparison — not an actual need — is often enough to pause before buying.'
+      },
+      {
+        q: 'You had a stressful exam week and found yourself online shopping late at night for things you don\'t really need. What\'s a more effective coping strategy than shopping?',
+        opts: ['Nothing else works as well as a stress purchase', 'Identify the actual trigger — stress, boredom, loneliness — and build a non-spending response reserved specifically for those moments, like a walk or calling a friend', 'Just accept that stress spending is unavoidable', 'Cancel your bank card permanently'],
+        correct: 1,
+        exp: 'Stress spending works because shopping provides a quick dopamine hit, not because you actually need the item. Building an alternative response to the same trigger breaks the automatic link between feeling stressed and buying something.'
       }
     ],
     lessons: [
-      { title: 'Why Knowing Isn\'t Enough', hook: 'You know you should be saving — you even said it out loud last week. Then a friend tags you in a group order twenty minutes later. Why does knowing what to do never seem to be enough?', qIndices: [0, 1, 2] },
-      { title: 'Subscriptions, BNPL & Building Habits', hook: 'You check out online and see "Buy Now, Pay Later — 4 payments of $50, no interest." It feels harmless. Combined with the six subscriptions already on your card, is it?', qIndices: [3, 4, 5] }
+      { title: 'Why Knowing Isn\'t Enough', hook: 'You know you should be saving — you even said it out loud last week. Then a friend tags you in a group order twenty minutes later. Why does knowing what to do never seem to be enough?', qIndices: [0, 1] },
+      { title: 'Lifestyle Inflation & Social Pressure', hook: 'Your friend group keeps upgrading — concert tickets, new clothes, a spring break trip everyone\'s going on — and you feel like you have to keep up even though your income hasn\'t changed. Where\'s the line between fitting in and financial trouble?', qIndices: [2, 6] },
+      { title: 'Subscriptions & BNPL', hook: 'You check out online and see "Buy Now, Pay Later — 4 payments of $50, no interest." It feels harmless. Combined with the six subscriptions already on your card, is it?', qIndices: [3, 4] },
+      { title: 'Mental Accounting & Targeted Ads', hook: 'You get a $400 tax refund and immediately blow it on something you\'d never normally buy, then open Instagram and buy a targeted ad\'s product on impulse ten minutes later. Is your brain treating this money differently than a regular paycheck?', qIndices: [7, 8] },
+      { title: 'Sunk Cost & Comparison Spending', hook: 'You\'re still paying for a gym membership you\'ve used twice in 8 months, and you just spent an hour comparing your closet to an influencer\'s "haul" video. Neither decision is really about the gym or the clothes.', qIndices: [9, 10] },
+      { title: 'Automating Habits & Coping With Triggers', hook: 'You automated your savings transfer months ago and it\'s worked well — but during a stressful exam week you still found yourself online shopping at 1am for things you don\'t need. What\'s the next habit to build?', qIndices: [5, 11] }
     ]
   },
   {
-    id: 'career', title: 'Career & Salary', icon: '10', iconColor: 'indigo', xpReward: 125,
+    id: 'career', title: 'Career & Salary', icon: '10', iconColor: 'indigo', xpReward: 40,
     hook: 'You get a job offer: $58,000. You\'re thrilled and about to accept on the spot. Your friend negotiated theirs from $55,000 to $60,000 with one email. Did you just leave money on the table?',
-    desc: 'Negotiating your first salary, reading a benefits package, and why early career decisions compound for decades.',
+    desc: 'Negotiating your first salary, reading an offer letter, benefits and equity, networking, and why early career decisions compound for decades.',
     questions: [
       {
         q: 'You receive a job offer of $58,000. What\'s the biggest mistake new grads make in this moment?',
@@ -464,11 +1233,51 @@ const MODULES = [
         opts: ['It doesn\'t — a $5,000 difference is minor and evens out over time', 'Future raises, bonuses, and even new job offers are often calculated as a percentage of your current salary, so an early gap compounds and widens over a career, similar to compound interest', 'Only the first year\'s salary difference matters; every year after resets to equal footing', 'Salary differences only matter for retirement savings, not day-to-day life'],
         correct: 1,
         exp: 'Raises are usually a percentage of your current salary, so a higher starting point keeps multiplying that gap year after year — and future employers often ask about salary history, anchoring your next offer too. A $5,000 gap in your first job can turn into tens of thousands of dollars in lifetime earnings. Early-career decisions carry outsized weight precisely because they compound.'
+      },
+      {
+        q: 'Your offer letter includes a $5,000 signing bonus with a clause saying you must repay it if you leave within 12 months. What should you understand before accepting?',
+        opts: ['Signing bonuses are always free money with no strings attached', 'Read the clawback clause carefully — many signing bonuses must be repaid on a prorated basis if you leave before a set period', 'Signing bonuses replace your salary entirely', 'You can never negotiate the size of a signing bonus'],
+        correct: 1,
+        exp: 'Signing bonus "clawback" clauses are common — leave before the vesting period (often 1-2 years) and you may owe some or all of it back. Read your offer letter closely for this detail before counting the bonus as guaranteed money.'
+      },
+      {
+        q: 'Two offers pay the same salary, but Job A offers 10 days of PTO and Job B offers 20 days plus paid holidays. Does this matter?',
+        opts: ['No, PTO has no real financial value', 'Yes — unused time off is essentially unpaid time if you need it, so more PTO is a meaningful part of total compensation even though it doesn\'t show up in the salary number', 'PTO only matters for employees over 40', 'You should always choose the job with fewer vacation days to show more commitment'],
+        correct: 1,
+        exp: 'Time off has real value — sick days, family emergencies, and rest all cost you unpaid time (or worse) without adequate PTO. When comparing offers with similar pay, benefits like vacation days and paid holidays are part of total compensation, not an afterthought.'
+      },
+      {
+        q: 'A startup offers you a lower salary but includes stock options as part of the package. What should you know before valuing that offer?',
+        opts: ['Stock options are always worth exactly what the company tells you', 'Stock options are a bet on the company\'s future value — they can be worth a lot or nothing at all, so weigh them as a bonus, not guaranteed income', 'Stock options can be cashed in immediately like a paycheck', 'Only executives receive stock options'],
+        correct: 1,
+        exp: 'Startup equity is inherently speculative — it could be worth significant money someday, or nothing if the company doesn\'t succeed or you leave before it vests. Don\'t accept a salary you can\'t actually live on today based on the hope that equity will make up the difference.'
+      },
+      {
+        q: 'You\'re a sophomore with no full-time job yet. What\'s a low-cost way to start building professional relationships that pay off later in your job search?',
+        opts: ['Wait until senior year to think about this at all', 'Reach out for informational interviews, attend campus career fairs, and keep an updated LinkedIn profile connecting with alumni in your field', 'Only network with people who already have a job offer to give you', 'Networking doesn\'t actually help with job searching'],
+        correct: 1,
+        exp: 'Many jobs are found through referrals and connections, not cold applications alone. Informational interviews, career fairs, and staying active on LinkedIn — even before you\'re job hunting — build a network that can turn into real opportunities when you actually need them.'
+      },
+      {
+        q: 'Your typical annual raise at your current job is 3%, but a competing offer from another company would pay you 15% more for a similar role. What does this suggest about growing your income early in your career?',
+        opts: ['You should never leave a job for more money elsewhere', 'Internal raises are often smaller than what you can gain by changing employers, so evaluating outside offers periodically is a normal part of growing income early in your career', 'Changing jobs always resets your salary to zero', 'Loyalty to one employer always pays more over a lifetime'],
+        correct: 1,
+        exp: 'Internal raises are frequently capped around a few percent, while switching employers can bring a much larger jump since a new employer isn\'t anchored to your current pay. This doesn\'t mean job-hop constantly, but periodically knowing your market value keeps you from leaving money on the table.'
+      },
+      {
+        q: 'An offer letter lists $70,000 "total target compensation," made up of a $60,000 base salary and a $10,000 target bonus. What\'s important to understand about this number?',
+        opts: ['The full $70,000 is guaranteed no matter what', 'Only the base salary ($60,000) is guaranteed; the bonus portion is often tied to performance or company results and may not be fully paid out every year', 'Bonuses are always paid before the base salary', 'The total number is meaningless and should be ignored'],
+        correct: 1,
+        exp: 'Base salary is the guaranteed, predictable part of your pay. Bonuses — performance-based, sign-on, or discretionary — can vary or even be $0 in a bad year. When comparing offers, weigh the guaranteed base most heavily and treat bonus targets as a possible upside, not a promise.'
       }
     ],
     lessons: [
-      { title: 'Negotiating & Benefits', hook: 'You get a job offer: $58,000. You\'re about to accept on the spot. Your friend negotiated theirs from $55,000 to $60,000 with one email — and the benefits summary you haven\'t even opened yet might matter just as much as the number. What are you missing?', qIndices: [0, 1, 2] },
-      { title: 'Comparing Offers & Long-Term Impact', hook: 'You have two offers on the table — one with a slightly higher salary, the other with a stronger 401(k) match and a clearer promotion path. Your instinct says take the bigger number. Is that actually the smarter long-term move?', qIndices: [3, 4, 5] }
+      { title: 'Negotiating Your First Offer', hook: 'You get a job offer: $58,000. You\'re thrilled and about to accept on the spot. Your friend negotiated theirs from $55,000 to $60,000 with one email. Did you just leave money on the table?', qIndices: [0, 1] },
+      { title: 'Reading Your Offer Letter', hook: 'Your offer letter lists "$70,000 total target compensation" plus a $5,000 signing bonus with a repayment clause you almost skipped past. Do you actually know what you\'re agreeing to?', qIndices: [11, 6] },
+      { title: 'Benefits & Total Compensation', hook: 'Two offers pay the exact same salary — one gives you 10 PTO days, the other gives you 20 plus paid holidays. Does that difference actually matter, or is pay all that counts?', qIndices: [2, 7] },
+      { title: 'Retirement Match & Equity', hook: 'Your new job offers a 401(k) match, while a startup offer instead dangles stock options rather than a higher salary. Which of these is actually real money, and which is a bet on the future?', qIndices: [3, 8] },
+      { title: 'Comparing Offers & Job-Hopping', hook: 'You have two offers on the table — one with a slightly higher salary, the other with a stronger 401(k) match and a clearer promotion path — and a friend just left their job for a 15% raise elsewhere. How should all of this factor into your decision?', qIndices: [4, 10] },
+      { title: 'Building Your Network & Long-Term Impact', hook: 'You\'re only a sophomore with no job offers yet, but the $5,000 gap between two hypothetical starting salaries keeps nagging at you. Does anything you do now actually affect that gap years from now?', qIndices: [9, 5] }
     ]
   }
 ];
@@ -966,17 +1775,19 @@ const ACHIEVEMENTS = [
   { id: 'perfect_score',  abbr: '5/5',label: 'Perfect Score',      desc: 'Answer all 5 questions right', check: s => s.hadPerfect },
   { id: 'on_fire',        abbr: '3D', label: 'On a Roll',          desc: '3-day streak',                 check: s => s.streak >= 3 },
   { id: 'leveled_up',     abbr: 'L3', label: 'Leveled Up',         desc: 'Reach Level 3',                check: s => s.level >= 3 },
+  { id: 'crisis_averted', abbr: 'CR', label: 'Crisis Averted',     desc: 'Beat the Credit boss battle',  check: s => (s.questBossesWon || []).includes('credit') },
 ];
 
 // ── State ──────────────────────────────────────
 let state = {
   level: 1, xp: 0, streak: 0, lastPlayedDate: null,
   completedModules: {}, completedLessons: {}, unlockedAchievements: [], hadPerfect: false,
-  activeModuleId: null, activeLessonIdx: 0, sessionQuestions: [],
+  activeModuleId: null, activeLessonIdx: 0, activeQuestId: null, sessionQuestions: [],
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
   coins: 0, ownedItems: [], equippedItem: null,
   ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null },
   metHammy: false,
+  questProgress: {}, questBossesWon: [],
 };
 
 function loadState() {
@@ -987,8 +1798,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy } = state;
-  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy }));
+  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon } = state;
+  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon }));
 }
 
 // ── XP / Level ─────────────────────────────────
@@ -1056,41 +1867,16 @@ function updateSidebarStats() {
   if (coinsEl) coinsEl.textContent = (state.coins || 0).toLocaleString();
 }
 
-function renderModuleGrid(containerId) {
-  const grid = document.getElementById(containerId);
-  if (!grid) return;
-  grid.innerHTML = '';
-  MODULES.forEach(m => {
-    const lessonsDone = m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
-    const allDone = lessonsDone === m.lessons.length;
-    const card = document.createElement('div');
-    card.className = 'module-card' + (allDone ? ' completed' : '');
-    const btnLabel = allDone ? 'Replay' : lessonsDone > 0 ? 'Continue' : 'Start';
-    card.innerHTML = `
-      <div class="card-top">
-        <div class="mod-icon ${m.iconColor}">${m.icon}</div>
-        ${allDone
-          ? `<span class="card-badge badge-done">✓ Complete</span>`
-          : `<span class="card-badge badge-xp">+${m.xpReward} XP</span>`}
-      </div>
-      <div class="mod-title">${m.title}</div>
-      <div class="mod-desc">${m.desc}</div>
-      <div class="card-footer">
-        <span class="card-meta">${lessonsDone > 0 ? `${lessonsDone}/${m.lessons.length} lessons done` : '2 lessons'}</span>
-        <button class="start-btn ${allDone ? 'replay' : ''}">${btnLabel}</button>
-      </div>`;
-    card.addEventListener('click', () => showModuleDetail(m.id));
-    grid.appendChild(card);
-  });
-}
-
 function renderModuleList(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = '';
   MODULES.forEach(m => {
-    const lessonsDone = m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
-    const allDone = lessonsDone === m.lessons.length;
+    const quest = hasQuest(m);
+    const lessonsDone = quest ? 0 : m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
+    const allDone = quest
+      ? m.quests.every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
+      : lessonsDone === m.lessons.length;
 
     const row = document.createElement('div');
     row.className = 'module-row' + (allDone ? ' completed' : '');
@@ -1099,40 +1885,63 @@ function renderModuleList(containerId) {
       ? `<span class="card-badge badge-done">✓ Complete</span>`
       : `<span class="card-badge badge-xp">+${m.xpReward} XP</span>`;
 
-    const lessonsHtml = m.lessons.map((lesson, idx) => {
-      const key = `${m.id}_${idx}`;
-      const lessonData = state.completedLessons[key];
-      const done = !!lessonData;
-      const meta = done
-        ? `Score: ${lessonData.score}/${lessonData.total} · ${lessonData.xpEarned} XP`
-        : `${lesson.qIndices.length} questions`;
-      const cta = done ? '↻ Replay' : 'Start →';
-      return `<div class="lesson-tile${done ? ' done' : ''}" data-module="${m.id}" data-lesson="${idx}">
-        <div class="lt-body">
-          <div class="lt-num">Lesson ${idx + 1}</div>
-          <div class="lt-title">${lesson.title}</div>
-          <div class="lt-meta">${meta}</div>
-        </div>
-        <span class="lt-cta">${cta}</span>
-      </div>`;
-    }).join('');
+    let bodyHtml;
+    if (quest) {
+      bodyHtml = `<div class="module-row-lessons">${m.quests.map((q, idx) => {
+        const qp = state.questProgress[questKey(m.id, q.id)];
+        const done = !!(qp && qp.done);
+        const cta = done ? '↻ Replay Quest' : (qp && qp.chapterIdx > 0 ? `Resume — ${questLabel(m, q)} →` : 'Begin Quest →');
+        return `<div class="lesson-tile quest-tile${done ? ' done' : ''}" data-module="${m.id}" data-quest="${q.id}">
+          <div class="lt-body">
+            <div class="lt-num">Lesson ${idx + 1}</div>
+            <div class="lt-title">${q.topic || q.character.name}</div>
+            <div class="lt-meta">${q.character.tagline} · ${q.chapters.length} chapters</div>
+          </div>
+          <span class="lt-cta">${cta}</span>
+        </div>`;
+      }).join('')}</div>`;
+    } else {
+      bodyHtml = `<div class="module-row-lessons">${m.lessons.map((lesson, idx) => {
+        const key = `${m.id}_${idx}`;
+        const lessonData = state.completedLessons[key];
+        const done = !!lessonData;
+        const meta = done
+          ? `Score: ${lessonData.score}/${lessonData.total} · ${lessonData.xpEarned} XP`
+          : `${lesson.qIndices.length} questions`;
+        const cta = done ? '↻ Replay' : 'Start →';
+        return `<div class="lesson-tile${done ? ' done' : ''}" data-module="${m.id}" data-lesson="${idx}">
+          <div class="lt-body">
+            <div class="lt-num">Lesson ${idx + 1}</div>
+            <div class="lt-title">${lesson.title}</div>
+            <div class="lt-meta">${meta}</div>
+          </div>
+          <span class="lt-cta">${cta}</span>
+        </div>`;
+      }).join('')}</div>`;
+    }
 
     row.innerHTML = `
       <div class="module-row-header">
         <div class="mrh-left">
           <div class="mod-icon ${m.iconColor}">${m.icon}</div>
           <div class="mrh-info">
-            <div class="mrh-title">${m.title}</div>
+            <div class="mrh-title">${m.title}${quest ? ' <span class="quest-tag">Quest</span>' : ''}</div>
             <div class="mrh-desc">${m.desc}</div>
           </div>
         </div>
         <div class="mrh-right">${badge}</div>
       </div>
-      <div class="module-row-lessons">${lessonsHtml}</div>`;
+      ${bodyHtml}`;
 
-    row.querySelectorAll('.lesson-tile').forEach(tile => {
-      tile.addEventListener('click', () => startHook(tile.dataset.module, parseInt(tile.dataset.lesson)));
-    });
+    if (quest) {
+      row.querySelectorAll('.quest-tile').forEach(tile => {
+        tile.addEventListener('click', () => startQuest(tile.dataset.module, tile.dataset.quest));
+      });
+    } else {
+      row.querySelectorAll('.lesson-tile').forEach(tile => {
+        tile.addEventListener('click', () => startHook(tile.dataset.module, parseInt(tile.dataset.lesson)));
+      });
+    }
 
     container.appendChild(row);
   });
@@ -1743,6 +2552,37 @@ function startQuiz() {
   renderQuestion();
 }
 
+// Shared by the legacy quiz screen and the quest engine's knowledge-check chapters —
+// renders one question's options into any host elements and reports the outcome back to the caller.
+function buildQuestionBlock(q, els, onAnswered) {
+  const { questionEl, optionsEl, feedbackPanelEl, feedbackLabelEl, feedbackExpEl } = els;
+  if (questionEl) questionEl.textContent = q.q;
+
+  const letters = ['A', 'B', 'C', 'D'];
+  optionsEl.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => {
+      const isCorrect = i === q.correct;
+      optionsEl.querySelectorAll('.option-btn').forEach((b, j) => {
+        b.disabled = true;
+        if (j === q.correct) b.classList.add('correct');
+        else if (j === i && !isCorrect) b.classList.add('wrong');
+      });
+      feedbackPanelEl.classList.add('visible', isCorrect ? 'correct-state' : 'wrong-state');
+      feedbackPanelEl.classList.remove(isCorrect ? 'wrong-state' : 'correct-state');
+      feedbackLabelEl.textContent = isCorrect ? 'Correct' : 'Not quite';
+      feedbackExpEl.textContent = q.exp;
+      onAnswered(isCorrect, i);
+    });
+    optionsEl.appendChild(btn);
+  });
+
+  feedbackPanelEl.classList.remove('visible', 'correct-state', 'wrong-state');
+}
+
 function renderQuestion() {
   const questions = state.sessionQuestions;
   const total = questions.length;
@@ -1751,42 +2591,19 @@ function renderQuestion() {
 
   document.getElementById('quiz-prog-fill').style.width = (idx / total * 100) + '%';
   document.getElementById('quiz-counter').textContent = `${idx + 1} / ${total}`;
-  document.getElementById('question-text').textContent = q.q;
 
-  const letters = ['A', 'B', 'C', 'D'];
-  const container = document.getElementById('options');
-  container.innerHTML = '';
-  q.opts.forEach((opt, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'option-btn';
-    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
-    btn.addEventListener('click', () => selectAnswer(i));
-    container.appendChild(btn);
+  buildQuestionBlock(q, {
+    questionEl: document.getElementById('question-text'),
+    optionsEl: document.getElementById('options'),
+    feedbackPanelEl: document.getElementById('feedback-panel'),
+    feedbackLabelEl: document.getElementById('feedback-label'),
+    feedbackExpEl: document.getElementById('feedback-exp'),
+  }, (isCorrect, chosen) => {
+    if (isCorrect) state.sessionScore++;
+    state.sessionAnswers.push({ chosen, correct: q.correct, isCorrect });
+    const isLast = state.currentQ === state.sessionQuestions.length - 1;
+    document.getElementById('btn-next').textContent = isLast ? 'See Results →' : 'Next →';
   });
-
-  document.getElementById('feedback-panel').classList.remove('visible', 'correct-state', 'wrong-state');
-}
-
-function selectAnswer(chosen) {
-  const q = state.sessionQuestions[state.currentQ];
-  const isCorrect = chosen === q.correct;
-  if (isCorrect) state.sessionScore++;
-  state.sessionAnswers.push({ chosen, correct: q.correct, isCorrect });
-
-  document.querySelectorAll('.option-btn').forEach((btn, i) => {
-    btn.disabled = true;
-    if (i === q.correct) btn.classList.add('correct');
-    else if (i === chosen && !isCorrect) btn.classList.add('wrong');
-  });
-
-  const panel = document.getElementById('feedback-panel');
-  panel.classList.add('visible', isCorrect ? 'correct-state' : 'wrong-state');
-  panel.classList.remove(isCorrect ? 'wrong-state' : 'correct-state');
-  document.getElementById('feedback-label').textContent = isCorrect ? 'Correct' : 'Not quite';
-  document.getElementById('feedback-exp').textContent = q.exp;
-
-  const isLast = state.currentQ === state.sessionQuestions.length - 1;
-  document.getElementById('btn-next').textContent = isLast ? 'See Results →' : 'Next →';
 }
 
 // ── RESULTS ────────────────────────────────────
@@ -1877,6 +2694,1201 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
   document.getElementById('res-replay').addEventListener('click', () => showModuleDetail(mod.id));
 }
 
+// ══════════════════════════════════════════════
+// QUEST ENGINE — narrative-driven modules (Phase 1 pilot: Credit)
+// ══════════════════════════════════════════════
+
+function hasQuest(mod) { return Array.isArray(mod.quests) && mod.quests.length > 0; }
+function questKey(moduleId, questId) { return `${moduleId}::${questId}`; }
+function getActiveQuest(mod) { return mod.quests.find(q => q.id === state.activeQuestId); }
+function getQP(mod) { return state.questProgress[questKey(mod.id, state.activeQuestId)]; }
+
+// Formats a plain number as "$N" or a negative one as "-$N" (never "$-N").
+function formatMoney(val) {
+  const rounded = Math.round(val);
+  return rounded < 0 ? `-$${Math.abs(rounded)}` : `$${rounded}`;
+}
+
+function tweenNumber(el, from, to, { duration = 600, prefix = '', decimals = 0, money = false } = {}) {
+  const start = performance.now();
+  (function frame(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const val = from + (to - from) * eased;
+    el.textContent = money ? formatMoney(val) : prefix + val.toFixed(decimals);
+    if (t < 1) requestAnimationFrame(frame);
+  })(start);
+}
+
+function startQuest(moduleId, questId) {
+  const mod = MODULES.find(m => m.id === moduleId);
+  const quest = mod.quests.find(q => q.id === questId);
+  state.activeModuleId = moduleId;
+  state.activeQuestId = questId;
+  const key = questKey(moduleId, questId);
+  const existing = state.questProgress[key];
+  if (!existing || existing.done) {
+    state.questProgress[key] = {
+      chapterIdx: 0,
+      dashboard: { ...quest.initialState },
+      chapterScore: 0,
+      chapterTotal: 0,
+      streak: 0,
+      done: false,
+      learnedTerms: [],
+      hintsUsed: 0,
+      analytics: { knowledgeCheck: [], mythCards: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null },
+    };
+  } else {
+    // Defensive backfill in case this progress was saved before these fields existed.
+    existing.learnedTerms = existing.learnedTerms || [];
+    existing.hintsUsed = existing.hintsUsed || 0;
+    existing.analytics = existing.analytics || { knowledgeCheck: [], mythCards: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null };
+  }
+  saveState();
+  showScreen('screen-quest');
+  renderChapter(mod, state.questProgress[key].chapterIdx);
+}
+
+// Status label for a specific quest tile in the module list (not necessarily the active quest).
+function questLabel(mod, quest) {
+  const qp = state.questProgress[questKey(mod.id, quest.id)];
+  const total = quest.chapters.length;
+  if (!qp) return `${total} chapters`;
+  if (qp.done) return 'Quest complete';
+  if (qp.chapterIdx > 0) return `Chapter ${qp.chapterIdx + 1}/${total}`;
+  return `${total} chapters`;
+}
+
+// Chapter types that are pure narrative/reading — no live Hammy reaction avatar needed
+// (his small inline dialogue portrait already appears within the story beats themselves).
+const HAMMY_SIDE_HIDDEN_TYPES = ['story'];
+
+// Every chapter type's big pink title now lives in one shared banner above the two-column
+// layout (flush with the true left edge of the screen) instead of each renderer drawing its
+// own copy indented inside the content column. Chapter types not listed keep their own
+// in-content tag treatment (teach/hint use a small pill instead) and show no shared title.
+const CHAPTER_TITLE_FALLBACK = {
+  matching: 'Match It!',
+  explainback: 'In Your Own Words',
+  decision: 'Decision Point',
+  microsim: 'Micro-Sim',
+  mythcards: 'Myth or Fact?',
+  simulator: 'Simulator',
+  knowledgecheck: 'Quick Check',
+};
+function getChapterTitle(chapter) {
+  if (chapter.type === 'bossbattle') return chapter.title ? `⚠ Boss Battle: ${chapter.title}` : '⚠ Boss Battle';
+  if (chapter.type === 'priceisright') return 'Price Is Right';
+  if (chapter.type === 'teach' || chapter.type === 'hint') return '';
+  return chapter.title || CHAPTER_TITLE_FALLBACK[chapter.type] || '';
+}
+
+// Real pixel measurement of whatever room is left under the sticky header (instead of a vh
+// guess), used to make the Hammy/content row fill the screen so both can be vertically
+// centered together rather than sitting squished at the top when content is short.
+function computeAvailableQuestHeight() {
+  const screenEl = document.getElementById('screen-quest');
+  const topbarH = document.querySelector('.quest-topbar').offsetHeight;
+  const stickyH = document.getElementById('quest-sticky-header').offsetHeight;
+  const bodyStyles = getComputedStyle(document.getElementById('quest-body'));
+  const bodyPadV = parseFloat(bodyStyles.paddingTop) + parseFloat(bodyStyles.paddingBottom);
+  const titleH = document.getElementById('quest-title-row').offsetHeight;
+  return screenEl.clientHeight - topbarH - stickyH - bodyPadV - titleH;
+}
+
+function renderChapter(mod, idx) {
+  const chapters = getActiveQuest(mod).chapters;
+  const chapter = chapters[idx];
+  const total = chapters.length;
+
+  const pct = Math.round((idx / total) * 100);
+  document.getElementById('quest-prog-fill').style.width = pct + '%';
+  document.getElementById('quest-pct').textContent = pct + '%';
+  document.getElementById('quest-counter').textContent = `Step ${idx + 1} of ${total}`;
+  renderQuestDashboard(mod);
+  document.getElementById('quest-dashboard').classList.toggle('highlight', !!chapter.highlightDashboard);
+  renderGlossaryTray(mod);
+  renderHintBudget(mod, chapter.type, chapter.hintText);
+  clearQuestContinue();
+  const titleRow = document.getElementById('quest-title-row');
+  titleRow.textContent = getChapterTitle(chapter);
+  titleRow.classList.remove('centered');
+  document.getElementById('quest-layout').style.minHeight = Math.max(240, computeAvailableQuestHeight()) + 'px';
+
+  // Reset the persistent Hammy to a neutral idle pose for the new chapter.
+  const questSide = document.getElementById('quest-side');
+  const hammySide = document.getElementById('hammy-side-avatar');
+  const hammyMsg = document.getElementById('hammy-side-msg');
+  questSide.style.display = HAMMY_SIDE_HIDDEN_TYPES.includes(chapter.type) ? 'none' : 'flex';
+  hammySide.className = 'hammy-side-avatar';
+  hammySide.innerHTML = getPigMarkup(window.innerWidth <= 768 ? 0.42 : 0.64);
+  hammyMsg.className = 'hammy-side-msg';
+  hammyMsg.textContent = '';
+
+  document.getElementById('quest-main').innerHTML = '';
+
+  const onDone = () => advanceChapter(mod);
+
+  switch (chapter.type) {
+    case 'story': renderStoryChapter(chapter, mod, onDone); break;
+    case 'teach': renderTeachChapter(chapter, mod, onDone); break;
+    case 'hint': renderHintChapter(chapter, mod, onDone); break;
+    case 'matching': renderMatchingChapter(chapter, mod, onDone); break;
+    case 'explainback': renderExplainbackChapter(chapter, mod, onDone); break;
+    case 'decision': renderDecisionChapter(chapter, mod, onDone); break;
+    case 'microsim': renderMicrosimChapter(chapter, mod, onDone); break;
+    case 'mythcards': renderMythCardsChapter(chapter, mod, onDone); break;
+    case 'knowledgecheck': renderKnowledgeCheckChapter(chapter, mod, onDone); break;
+    case 'simulator': renderSimulatorChapter(chapter, mod, onDone); break;
+    case 'priceisright': renderPriceIsRightChapter(chapter, mod, onDone); break;
+    case 'bossbattle': renderBossBattleChapter(chapter, mod); break;
+  }
+}
+
+// Shared top-right Continue control — every chapter renderer calls this instead of
+// building its own button, so Continue is always in the same reachable spot (never at
+// the bottom of long content) and visually "lights up" green only once it's actually usable.
+function setQuestContinue(label, onClick, enabled = true) {
+  const el = document.getElementById('quest-continue-slot');
+  el.innerHTML = `<button class="quest-continue-fab ${enabled ? 'ready' : ''}" id="quest-continue-btn" ${enabled ? '' : 'disabled'}>${label}</button>`;
+  if (enabled && onClick) document.getElementById('quest-continue-btn').addEventListener('click', onClick);
+}
+function clearQuestContinue() {
+  document.getElementById('quest-continue-slot').innerHTML = '';
+}
+
+function advanceChapter(mod) {
+  const qp = getQP(mod);
+  qp.chapterIdx++;
+  saveState();
+  if (qp.chapterIdx < getActiveQuest(mod).chapters.length) {
+    renderChapter(mod, qp.chapterIdx);
+  }
+}
+
+function renderQuestDashboard(mod) {
+  const dash = getQP(mod).dashboard;
+  const labels = { creditScore: 'Credit Score', checking: 'Checking', savings: 'Savings' };
+  const el = document.getElementById('quest-dashboard');
+  el.innerHTML = Object.keys(dash).map(key => {
+    const isMoney = key !== 'creditScore';
+    return `<div class="quest-stat-chip" data-key="${key}">
+      <span class="qs-label">${labels[key] || key}</span>
+      <span class="qs-val">${isMoney ? formatMoney(dash[key]) : Math.round(dash[key])}</span>
+    </div>`;
+  }).join('');
+}
+
+// Applies a {key: delta} object to a module's live quest dashboard, animates the affected
+// chips in the sticky bar, and persists — used by decision/boss-battle chapters.
+function applyQuestStateDelta(mod, delta) {
+  const qp = getQP(mod);
+  const changes = [];
+  Object.keys(delta).forEach(key => {
+    const from = qp.dashboard[key] ?? 0;
+    let to = from + delta[key];
+    if (key === 'creditScore') to = Math.max(300, Math.min(850, to));
+    qp.dashboard[key] = to;
+    changes.push({ key, from, to });
+  });
+  saveState();
+  changes.forEach(({ key, from, to }) => {
+    const chipWrap = document.querySelector(`.quest-stat-chip[data-key="${key}"]`);
+    if (!chipWrap) return;
+    const chipVal = chipWrap.querySelector('.qs-val');
+    const isMoney = key !== 'creditScore';
+    chipWrap.classList.remove('qs-up', 'qs-down');
+    if (to !== from) chipWrap.classList.add(to > from ? 'qs-up' : 'qs-down');
+    tweenNumber(chipVal, from, to, { money: isMoney });
+    setTimeout(() => chipWrap.classList.remove('qs-up', 'qs-down'), 1400);
+  });
+  return changes;
+}
+
+// Compact Hammy face (reuses the existing pig markup, cropped to just the head via .pig-head-stage).
+function getHammyFaceMarkup(scale) {
+  return getPigMarkup(scale).replace('class="pig-stage"', 'class="pig-stage pig-head-stage"');
+}
+
+// Glossary tray — every term taught moves here once the student clicks past it, so they can
+// always tap back and reread a definition instead of it disappearing for good.
+function pushLearnedTerm(mod, term, plain) {
+  const qp = getQP(mod);
+  if (!qp.learnedTerms) qp.learnedTerms = [];
+  if (!qp.learnedTerms.some(t => t.term === term)) qp.learnedTerms.push({ term, plain });
+  saveState();
+  renderGlossaryTray(mod);
+}
+
+function renderGlossaryTray(mod) {
+  const tray = document.getElementById('glossary-tray');
+  if (!tray) return;
+  const terms = (getQP(mod).learnedTerms) || [];
+  if (!terms.length) { tray.innerHTML = ''; tray.classList.remove('show'); return; }
+  tray.classList.add('show');
+  tray.innerHTML = `<span class="glossary-label">📖 Look back:</span>` + terms.map((t, i) =>
+    `<button class="glossary-chip" data-idx="${i}">${t.term.replace(/\s*\(.*?\)/, '')}</button>`
+  ).join('');
+  tray.querySelectorAll('.glossary-chip').forEach(btn => {
+    btn.addEventListener('click', () => showGlossaryPopup(terms[Number(btn.dataset.idx)]));
+  });
+}
+
+function showGlossaryPopup(term) {
+  let modal = document.getElementById('glossary-popup');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'glossary-popup';
+    modal.className = 'glossary-popup-overlay';
+    document.getElementById('screen-quest').appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+  }
+  modal.innerHTML = `<div class="glossary-popup-card">
+    <div class="glossary-popup-term">${term.term}</div>
+    <p class="glossary-popup-def">${term.plain}</p>
+    <button class="btn-primary" id="glossary-popup-close">Got it</button>
+  </div>`;
+  modal.classList.add('show');
+  document.getElementById('glossary-popup-close').addEventListener('click', () => modal.classList.remove('show'));
+}
+
+// Limited "Ask Hammy for a hint" budget — available during interactive chapters only,
+// so getting stuck on a decision/question doesn't leave the student with nowhere to turn.
+const HINT_BUDGET = 3;
+const HINT_FREE_CHAPTER_TYPES = ['story', 'teach', 'hint'];
+
+function renderHintBudget(mod, chapterType, hintText) {
+  const el = document.getElementById('hint-budget');
+  if (!el) return;
+  if (HINT_FREE_CHAPTER_TYPES.includes(chapterType)) {
+    el.innerHTML = '';
+    return;
+  }
+  const qp = getQP(mod);
+  const remaining = Math.max(0, HINT_BUDGET - (qp.hintsUsed || 0));
+  el.innerHTML = `<button class="hint-ask-btn" id="hint-ask-btn" ${remaining <= 0 ? 'disabled' : ''}>💡 Hint (${remaining} left)</button>`;
+  const btn = document.getElementById('hint-ask-btn');
+  if (btn && remaining > 0) {
+    btn.addEventListener('click', () => {
+      qp.hintsUsed = (qp.hintsUsed || 0) + 1;
+      saveState();
+      renderHintBudget(mod, chapterType, hintText);
+      showGlossaryPopup({
+        term: "🐷 Hammy's Hint",
+        plain: hintText || "Reread the question closely. One phrase in the options usually gives it away."
+      });
+    });
+  }
+}
+
+// Maya — same Hammy mascot, wearing a purple bow, so the story has a consistent
+// character design instead of a separately-drawn human avatar. Custom bow (not the shared
+// pink progression accessory), sitting on the side of her left ear at a jaunty tilt,
+// Hello Kitty style, instead of centered low on the head.
+const MAYA_BOW_SVG = `
+  <g transform="translate(30,34) rotate(-20)">
+    <path d="M0 0 C -6 -5, -13 -4, -12 2 C -11 7, -5 6, 0 0 Z" fill="#8A4FD6"/>
+    <path d="M0 0 C 6 -5, 13 -4, 12 2 C 11 7, 5 6, 0 0 Z" fill="#8A4FD6"/>
+    <path d="M-2 3 L -4.5 9 L -0.5 6 Z" fill="#6B35B8"/>
+    <path d="M2 3 L 4.5 9 L 0.5 6 Z" fill="#6B35B8"/>
+    <circle cx="0" cy="1" r="2.6" fill="#6B35B8"/>
+  </g>
+`;
+
+function getMayaMarkup(scale) {
+  return getPigWithItemMarkup(scale, MAYA_BOW_SVG);
+}
+
+// Maya's face only (no body) — used in dialogue avatars where a full-body illustration
+// would be too large and unnecessary.
+function getMayaFaceMarkup(scale) {
+  return getPigWithItemMarkup(scale, MAYA_BOW_SVG).replace('class="pig-stage"', 'class="pig-stage pig-head-stage"');
+}
+
+const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it!', 'Great job!'];
+// "Here's why / here's what's true" only makes sense when an explanation is actually shown
+// nearby (quick checks, myth cards, price guesses, decisions). Matching has no explanation to
+// point to — it's just a retry — so it gets its own, context-appropriate phrasing.
+const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn from it:", "Close! Here's what's true:"];
+const HAMMY_TRYAGAIN_MSGS = ["Not quite, try again!", "Close, give it another shot!", "Not quite, look at the definitions above if you're stuck."];
+const HAMMY_OUTCOME_GENTLE_MSGS = ["Hmm, that one stings a bit.", "That'll cost her some points.", "Not the best move there."];
+
+// Shared emotional-feedback moment, used after EVERY activity across the whole quest (knowledge
+// checks, myth cards, matching, decisions, the simulator, price guesses, the boss battle): the
+// persistent Hammy pinned top-left reacts happy/gentle in place, and tracks a running
+// correct-streak for 3-in-a-row — no new avatar is created, he's always already there. The
+// bubble auto-clears itself a couple seconds later so it never sits stale through a later,
+// unrelated activity in the same chapter (e.g. a second question, or a chapter with no
+// true/false check at all).
+function showHammyReaction(mod, isCorrect, context = 'answer') {
+  const avatar = document.getElementById('hammy-side-avatar');
+  const msgEl = document.getElementById('hammy-side-msg');
+  if (!avatar || !msgEl) return;
+  const qp = getQP(mod);
+  qp.streak = isCorrect ? (qp.streak || 0) + 1 : 0;
+  saveState();
+
+  const gentleSet = context === 'match' ? HAMMY_TRYAGAIN_MSGS : context === 'outcome' ? HAMMY_OUTCOME_GENTLE_MSGS : HAMMY_GENTLE_MSGS;
+  let msg = isCorrect
+    ? HAMMY_CORRECT_MSGS[Math.floor(Math.random() * HAMMY_CORRECT_MSGS.length)]
+    : gentleSet[Math.floor(Math.random() * gentleSet.length)];
+  const isStreak = isCorrect && qp.streak > 0 && qp.streak % 3 === 0;
+  if (isStreak) msg = `🎉 ${qp.streak} in a row! You're on fire!`;
+
+  clearTimeout(msgEl._hideTimer);
+  msgEl.textContent = msg;
+  avatar.className = 'hammy-side-avatar';
+  msgEl.className = 'hammy-side-msg';
+  void avatar.offsetWidth; // restart CSS animations
+  avatar.classList.add(isCorrect ? 'happy' : 'gentle');
+  msgEl.classList.add('show', isCorrect ? 'happy' : 'gentle');
+  if (isStreak) { avatar.classList.add('streak'); msgEl.classList.add('streak'); }
+  setTimeout(() => avatar.classList.remove('happy', 'gentle', 'streak'), 1300);
+  msgEl._hideTimer = setTimeout(() => {
+    msgEl.classList.remove('show');
+    setTimeout(() => { if (!msgEl.classList.contains('show')) msgEl.textContent = ''; }, 320);
+  }, 2400);
+}
+
+// Puts specific, given text (rather than a random pick) in Hammy's speech bubble — used where
+// the "reaction" IS the explanation itself (e.g. Credit Climb narrating what each decision
+// actually does), so it needs longer on screen than a quick "Nice!".
+function showHammyMessage(text, isGood) {
+  const avatar = document.getElementById('hammy-side-avatar');
+  const msgEl = document.getElementById('hammy-side-msg');
+  if (!avatar || !msgEl) return;
+  clearTimeout(msgEl._hideTimer);
+  msgEl.textContent = text;
+  avatar.className = 'hammy-side-avatar';
+  msgEl.className = 'hammy-side-msg';
+  void avatar.offsetWidth;
+  avatar.classList.add(isGood ? 'happy' : 'gentle');
+  msgEl.classList.add('show', isGood ? 'happy' : 'gentle');
+  setTimeout(() => avatar.classList.remove('happy', 'gentle'), 1300);
+  msgEl._hideTimer = setTimeout(() => {
+    msgEl.classList.remove('show');
+    setTimeout(() => { if (!msgEl.classList.contains('show')) msgEl.textContent = ''; }, 320);
+  }, 4500);
+}
+
+// ── Chapter type: teach (plain-English concept explainer) ──
+function renderTeachChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  const concepts = chapter.concepts;
+  let idx = 0;
+
+  function renderConcept() {
+    const c = concepts[idx];
+    const isLast = idx === concepts.length - 1;
+    clearQuestContinue();
+    main.innerHTML = `
+      <div class="teach-tag">💡 New Word${concepts.length > 1 ? ` · ${idx + 1}/${concepts.length}` : ''}</div>
+      <div class="speech-bubble teach-bubble">
+        <div class="teach-term">${c.term}</div>
+        <p class="teach-plain">${c.plain}</p>
+        <div class="teach-analogy"><span class="teach-analogy-tag">Think of it like this</span>${c.analogy}</div>
+      </div>
+      <div class="word-check" id="word-check"></div>`;
+
+    // A quick true/false recall check right after the word — so the student engages with
+    // it once before moving on, instead of just clicking through a string of definitions.
+    if (c.check) {
+      const checkEl = document.getElementById('word-check');
+      checkEl.innerHTML = `
+        <div class="word-check-label">Quick check: true or false?</div>
+        <p class="word-check-statement">${c.check.statement}</p>
+        <div class="word-check-btns">
+          <button class="option-btn word-check-btn" data-answer="true">True</button>
+          <button class="option-btn word-check-btn" data-answer="false">False</button>
+        </div>`;
+      checkEl.querySelectorAll('.word-check-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const answer = btn.dataset.answer === 'true';
+          const isCorrect = answer === c.check.isTrue;
+          checkEl.querySelectorAll('.word-check-btn').forEach(b => {
+            b.disabled = true;
+            if ((b.dataset.answer === 'true') === c.check.isTrue) b.classList.add('correct');
+            else if (b === btn) b.classList.add('wrong');
+          });
+          showHammyReaction(mod, isCorrect);
+          readyToAdvance();
+        });
+      });
+    } else {
+      readyToAdvance();
+    }
+
+    function readyToAdvance() {
+      pushLearnedTerm(mod, c.term, c.plain);
+      setQuestContinue(isLast ? 'Got it →' : 'Next Word →', () => {
+        if (isLast) {
+          if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+          onDone();
+        } else {
+          idx++;
+          renderConcept();
+        }
+      }, true);
+    }
+  }
+  renderConcept();
+}
+
+// ── Chapter type: hint (Hammy's quick tips & fun facts) — tap Hammy to hear it ──
+function renderHintChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  main.innerHTML = `
+    <div class="hint-tag">${chapter.tag || "🎉 Hammy's Tip"}</div>
+    <div class="speech-bubble teach-bubble hint-bubble" id="hint-bubble">
+      <p class="teach-plain hint-placeholder">Tap Hammy to hear what he has to say.</p>
+    </div>`;
+
+  const hammySide = document.getElementById('hammy-side-avatar');
+  hammySide.classList.add('hammy-tappable');
+  hammySide.addEventListener('click', function revealTip() {
+    document.getElementById('hint-bubble').innerHTML = `<p class="teach-plain">${chapter.text}</p>`;
+    hammySide.classList.add('happy');
+    hammySide.classList.remove('hammy-tappable');
+    hammySide.removeEventListener('click', revealTip);
+    setQuestContinue('Cool, got it →', () => {
+      if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+      onDone();
+    }, true);
+  });
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ── Chapter type: matching (repeated-exposure term-to-definition game) ──
+function renderMatchingChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  const pairs = chapter.pairs;
+  const terms = shuffleArray(pairs.map((p, i) => ({ text: p.term, pairIdx: i })));
+  const defs = shuffleArray(pairs.map((p, i) => ({ text: p.definition, pairIdx: i })));
+
+  main.innerHTML = `
+    <p class="quest-prompt">Tap a word, then tap the definition that matches it. Take your time, you can try again if you miss.</p>
+    <div class="match-terms" id="match-terms"></div>
+    <div class="match-defs" id="match-defs"></div>
+    <div class="match-progress" id="match-progress">0 of ${pairs.length} matched</div>`;
+
+  const termsEl = document.getElementById('match-terms');
+  const defsEl = document.getElementById('match-defs');
+  let selectedTermEl = null;
+  let selectedPairIdx = null;
+  let matchedCount = 0;
+
+  terms.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'match-chip';
+    btn.textContent = t.text;
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('matched')) return;
+      termsEl.querySelectorAll('.match-chip').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedTermEl = btn;
+      selectedPairIdx = t.pairIdx;
+    });
+    termsEl.appendChild(btn);
+  });
+
+  defs.forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'match-def-card';
+    card.textContent = d.text;
+    card.addEventListener('click', () => {
+      if (card.classList.contains('matched') || selectedPairIdx === null) return;
+      const isCorrect = d.pairIdx === selectedPairIdx;
+      showHammyReaction(mod, isCorrect, 'match');
+      if (isCorrect) {
+        selectedTermEl.classList.remove('selected');
+        selectedTermEl.classList.add('matched');
+        card.classList.add('matched');
+        matchedCount++;
+        selectedTermEl = null;
+        selectedPairIdx = null;
+        document.getElementById('match-progress').textContent = `${matchedCount} of ${pairs.length} matched`;
+        if (matchedCount === pairs.length) {
+          if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+          setQuestContinue('Continue →', onDone, true);
+        }
+      } else {
+        const qp = getQP(mod);
+        qp.analytics.matchingMistakes++;
+        saveState();
+        const missedTermEl = selectedTermEl;
+        card.classList.add('shake');
+        missedTermEl.classList.add('shake');
+        selectedTermEl = null;
+        selectedPairIdx = null;
+        setTimeout(() => {
+          card.classList.remove('shake');
+          missedTermEl.classList.remove('shake', 'selected');
+        }, 420);
+      }
+    });
+    defsEl.appendChild(card);
+  });
+}
+
+// ── Chapter type: explainback (typed self-check, always reinforces the real definition) ──
+function renderExplainbackChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  main.innerHTML = `
+    <p class="quest-prompt">${chapter.prompt}</p>
+    <textarea class="explainback-input" id="eb-input" rows="3" placeholder="Type your answer here. There's no wrong way to start."></textarea>
+    <button class="btn-primary" id="eb-check">Check My Answer</button>`;
+
+  document.getElementById('eb-check').addEventListener('click', () => {
+    const val = document.getElementById('eb-input').value.toLowerCase();
+    const matched = chapter.keywords.filter(k => val.includes(k.toLowerCase())).length;
+    let feedbackText, tier;
+    if (matched >= 2) { feedbackText = "You got the key idea. Here's the full definition, locked in:"; tier = 'great'; }
+    else if (matched === 1) { feedbackText = "Good start, you're onto something. Here's the fuller picture:"; tier = 'ok'; }
+    else { feedbackText = "No worries, this one's tricky. Let's go over it one more time:"; tier = 'retry'; }
+
+    const qp = getQP(mod);
+    qp.analytics.explainback = { term: chapter.title || 'In Your Own Words', tier };
+    saveState();
+    document.getElementById('eb-check').remove();
+    document.getElementById('eb-input').disabled = true;
+    showHammyReaction(mod, matched >= 1);
+
+    const resultBlock = document.createElement('div');
+    resultBlock.className = 'explainback-result';
+    resultBlock.innerHTML = `
+      <p class="explainback-feedback">${feedbackText}</p>
+      <p class="explainback-definition">${chapter.fullDefinition}</p>`;
+    main.appendChild(resultBlock);
+    setQuestContinue('Continue →', () => {
+      if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+      onDone();
+    }, true);
+  });
+}
+
+// ── Chapter type: story ─────────────────────────
+// Story beats accumulate on screen as a running conversation log — nothing disappears when
+// the student clicks Next, so they can never lose track of what's already been said.
+function renderStoryChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  const charName = getActiveQuest(mod).character.name;
+  main.innerHTML = `<div class="story-log" id="story-log"></div>`;
+  const log = document.getElementById('story-log');
+  let beatIdx = 0;
+  showBeat();
+
+  function showBeat() {
+    const beat = chapter.beats[beatIdx];
+    const isLast = beatIdx === chapter.beats.length - 1;
+    const entry = document.createElement('div');
+    // Title centers to match the centered establishing shot, then moves back to the left
+    // edge once the beats shift into back-and-forth dialogue.
+    document.getElementById('quest-title-row').classList.toggle('centered', beat.speaker === 'intro');
+
+    // "intro" beats are a big establishing shot — the character front-and-center with a
+    // caption, used to set the scene before the story shifts into back-and-forth dialogue.
+    if (beat.speaker === 'intro') {
+      entry.className = 'intro-scene';
+      // Measure the room actually left under the sticky header in real pixels (instead of
+      // guessing with a vh-minus-constant), then size Maya to fit inside it — so this is
+      // always centered with zero scrolling regardless of viewport height.
+      const available = computeAvailableQuestHeight();
+      const captionBudget = 210; // rough space reserved for the caption + gap below the avatar
+      const maxScale = window.innerWidth <= 640 ? 0.62 : 0.85;
+      const introScale = Math.max(0.4, Math.min(maxScale, (available - captionBudget) / 460));
+      entry.innerHTML = `<div class="intro-avatar">${getMayaMarkup(introScale)}</div><p class="intro-caption">${beat.text}</p>`;
+      log.appendChild(entry);
+      entry.style.minHeight = Math.max(240, available) + 'px';
+    } else {
+      const isNarrator = beat.speaker === 'narrator';
+      const isMaya = beat.speaker === charName;
+      const avatarHtml = isNarrator ? getHammyFaceMarkup(0.13) : isMaya ? getMayaFaceMarkup(0.13) : beat.speaker.charAt(0);
+      entry.className = `story-beat ${isNarrator ? 'is-narrator' : ''}`;
+      entry.innerHTML = `
+        <div class="story-avatar ${isNarrator || isMaya ? 'has-character' : ''}">${avatarHtml}</div>
+        <div class="story-bubble ${isNarrator ? 'narrator' : ''}">${beat.text}</div>`;
+      log.appendChild(entry);
+      entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    setQuestContinue(`${isLast ? 'Continue' : 'Next'} →`, () => {
+      if (isLast) onDone(); else { beatIdx++; showBeat(); }
+    }, true);
+  }
+}
+
+// ── Chapter type: decision ──────────────────────
+function renderDecisionChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  main.innerHTML = `
+    <p class="quest-prompt">${chapter.prompt}</p>
+    <div class="decision-choices" id="decision-choices"></div>`;
+  const choicesEl = document.getElementById('decision-choices');
+  chapter.choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn decision-choice-btn';
+    btn.textContent = choice.label;
+    btn.addEventListener('click', () => {
+      choicesEl.querySelectorAll('button').forEach(b => b.disabled = true);
+      applyQuestStateDelta(mod, choice.outcome.delta || {});
+      const qp = getQP(mod);
+      qp.analytics.decisions.push({ title: chapter.title, choice: choice.label });
+      saveState();
+      const wasGoodChoice = (choice.outcome.delta && choice.outcome.delta.creditScore || 0) >= 0;
+      renderDecisionOutcome(chapter, choice.outcome, mod, wasGoodChoice, onDone);
+    });
+    choicesEl.appendChild(btn);
+  });
+}
+
+function renderDecisionOutcome(chapter, outcome, mod, wasGoodChoice, onDone) {
+  const main = document.getElementById('quest-main');
+  const maxVal = Math.max(...outcome.compare.map(c => c.value), 1);
+  const barsHtml = outcome.compare.map(c => `
+    <div class="pg-col">
+      <div class="pg-col-val">$${c.value}</div>
+      <div class="pg-col-bar-wrap"><div class="pg-col-bar" style="height:${Math.max(4, c.value / maxVal * 100)}%"></div></div>
+      <div class="pg-col-name">${c.label}</div>
+    </div>`).join('');
+  const outcomeBlock = document.createElement('div');
+  outcomeBlock.className = 'decision-outcome';
+  outcomeBlock.innerHTML = `
+    <p class="quest-outcome-text">${outcome.text}</p>
+    <div class="pg-column-chart">${barsHtml}</div>`;
+  main.appendChild(outcomeBlock);
+  showHammyReaction(mod, wasGoodChoice);
+  setQuestContinue('Continue →', () => {
+    if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+    onDone();
+  }, true);
+}
+
+// ── Chapter type: microsim ──────────────────────
+function renderMicrosimChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  const fixedTotal = chapter.fixedCosts.reduce((s, c) => s + c.amount, 0);
+  const sliderValues = {};
+  chapter.sliders.forEach(s => sliderValues[s.id] = s.default);
+
+  const computeLeftover = () => chapter.income - fixedTotal - Object.values(sliderValues).reduce((a, b) => a + b, 0);
+
+  const costsHtml = chapter.fixedCosts.map(c => `<div class="microsim-cost-row"><span>${c.label}</span><span>$${c.amount}</span></div>`).join('');
+  const slidersHtml = chapter.sliders.map(s => `
+    <div class="microsim-slider-row">
+      <div class="microsim-slider-label"><span>${s.label}</span><span class="microsim-slider-val" id="ms-val-${s.id}">$${s.default}</span></div>
+      <input type="range" class="microsim-range" id="ms-${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.default}">
+    </div>`).join('');
+
+  main.innerHTML = `
+    <p class="quest-prompt">${chapter.prompt}</p>
+    <div class="microsim-costs">
+      <div class="microsim-cost-row microsim-income-row"><span>Monthly income</span><span>$${chapter.income}</span></div>
+      ${costsHtml}
+    </div>
+    <div class="microsim-sliders">${slidersHtml}</div>
+    <div class="microsim-leftover-row"><span>Left over</span><span class="microsim-leftover" id="microsim-leftover">$${computeLeftover()}</span></div>`;
+
+  chapter.sliders.forEach(s => {
+    document.getElementById(`ms-${s.id}`).addEventListener('input', (e) => {
+      sliderValues[s.id] = parseInt(e.target.value, 10);
+      document.getElementById(`ms-val-${s.id}`).textContent = `$${sliderValues[s.id]}`;
+      const leftover = computeLeftover();
+      const leftoverEl = document.getElementById('microsim-leftover');
+      leftoverEl.textContent = `$${leftover}`;
+      leftoverEl.classList.toggle('negative', leftover < 0);
+    });
+  });
+
+  // Lock In Budget lives in the shared top-right Continue slot, same as every other chapter.
+  function lockBudget() {
+    const leftover = computeLeftover();
+    const tier = chapter.feedbackTiers.find(t => leftover <= t.maxLeftover);
+    clearQuestContinue();
+    const resultBlock = document.createElement('div');
+    resultBlock.className = `microsim-result ${tier.ok ? 'ok' : 'bad'}`;
+    showHammyReaction(mod, tier.ok);
+    if (tier.ok) {
+      resultBlock.innerHTML = `<p>${tier.text}</p>`;
+      main.appendChild(resultBlock);
+      setQuestContinue('Continue →', () => {
+        if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+        onDone();
+      }, true);
+    } else {
+      resultBlock.innerHTML = `<p>${tier.text}</p><button class="btn-secondary" id="microsim-retry-btn">Try Again</button>`;
+      main.appendChild(resultBlock);
+      document.getElementById('microsim-retry-btn').addEventListener('click', () => {
+        renderMicrosimChapter(chapter, mod, onDone);
+      });
+    }
+  }
+  setQuestContinue('Lock In Budget →', lockBudget, true);
+}
+
+// ── Chapter type: mythcards (swipeable stack) ───
+function renderMythCardsChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  main.innerHTML = `
+    <p class="quest-prompt">Read the card, then swipe right if you think it's <strong>true</strong>, left if you think it's <strong>false</strong>. Take your time. The answer stays on screen until you're ready to move on.</p>
+    <div class="myth-card-stack" id="myth-card-stack"></div>
+    <div class="myth-next-wrap" id="myth-next-wrap"></div>
+    <div class="myth-progress" id="myth-progress">Card 1 of ${chapter.cards.length}</div>`;
+
+  let correctCount = 0;
+  const qp = getQP(mod);
+  initMythCardStack(document.getElementById('myth-card-stack'), chapter.cards, (result) => {
+    correctCount += result.guessedRight ? 1 : 0;
+    const card = chapter.cards[result.cardIndex];
+    qp.analytics.mythCards.push({ myth: card.myth, isTrue: card.isTrue, guessedRight: result.guessedRight });
+    saveState();
+    showHammyReaction(mod, result.guessedRight);
+    const progressEl = document.getElementById('myth-progress');
+    if (progressEl) progressEl.textContent = `Card ${Math.min(result.cardIndex + 2, chapter.cards.length)} of ${chapter.cards.length}`;
+  }, () => {
+    // Last card resolved — finish immediately, no extra recap screen or second Continue tap.
+    if (chapter.xpPerCorrect) { addXP(correctCount * chapter.xpPerCorrect); saveState(); }
+    onDone();
+  });
+}
+
+// Swipeable myth/fact stack. Swiping commits a guess and flips the card to reveal the answer
+// immediately, but the card does NOT auto-advance — the user reads at their own pace and taps
+// "Next Card" when ready, so the reveal is never cut off.
+function initMythCardStack(container, cards, onCardResolved, onAllDone) {
+  let cardIdx = 0;
+  const nextWrap = () => document.getElementById('myth-next-wrap');
+
+  function renderCards() {
+    container.innerHTML = '';
+    if (nextWrap()) nextWrap().innerHTML = '';
+    const visible = cards.slice(cardIdx, cardIdx + 3);
+    visible.forEach((card, i) => {
+      const el = document.createElement('div');
+      el.className = 'myth-card';
+      el.innerHTML = `
+        <div class="myth-card-inner">
+          <div class="myth-card-front">
+            <span class="myth-card-tag">MYTH OR FACT?</span>
+            <p>${card.myth}</p>
+            <span class="myth-swipe-hint">← False &nbsp;·&nbsp; True →</span>
+          </div>
+          <div class="myth-card-back ${card.isTrue ? 'is-true' : 'is-false'}">
+            <span class="myth-card-tag">${card.isTrue ? 'THIS IS A FACT' : 'THIS IS A MYTH'}</span>
+            <p class="myth-guess-line"></p>
+            <p class="myth-explanation">${card.explanation}</p>
+          </div>
+        </div>`;
+      container.appendChild(el);
+      if (i === 0) wireDrag(el, card);
+    });
+  }
+
+  function wireDrag(el, card) {
+    let startX = 0, dx = 0, dragging = false;
+    el.addEventListener('pointerdown', (e) => {
+      dragging = true; startX = e.clientX; el.classList.add('dragging');
+      el.setPointerCapture(e.pointerId);
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      dx = e.clientX - startX;
+      el.style.transform = `translateX(${dx}px) rotate(${dx / 20}deg)`;
+      el.style.borderColor = dx > 30 ? 'var(--green)' : dx < -30 ? 'var(--pink)' : '';
+    });
+    function release() {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      if (Math.abs(dx) > 90) {
+        const guessedTrue = dx > 0;
+        const guessedRight = guessedTrue === card.isTrue;
+        el.style.transform = `translateX(${dx > 0 ? 40 : -40}px) rotate(${dx / 30}deg)`;
+        el.classList.add('flipped');
+
+        const guessLine = el.querySelector('.myth-guess-line');
+        guessLine.textContent = `You said ${guessedTrue ? 'True' : 'False'}, ${guessedRight ? 'and that is right.' : 'not quite.'}`;
+        guessLine.classList.add(guessedRight ? 'right' : 'wrong');
+
+        const resolvedIdx = cardIdx;
+        onCardResolved({ cardIndex: resolvedIdx, guessedRight });
+
+        const isLastCard = resolvedIdx === cards.length - 1;
+        const btn = document.createElement('button');
+        btn.className = 'btn-primary quest-continue-btn';
+        btn.textContent = isLastCard ? 'Continue →' : 'Next Card →';
+        btn.addEventListener('click', () => {
+          el.classList.add(dx > 0 ? 'fly-right' : 'fly-left');
+          btn.remove();
+          setTimeout(() => {
+            cardIdx++;
+            if (cardIdx >= cards.length) onAllDone(); else renderCards();
+          }, 400);
+        });
+        if (nextWrap()) nextWrap().appendChild(btn);
+      } else {
+        el.style.transform = '';
+        el.style.borderColor = '';
+      }
+      dx = 0;
+    }
+    el.addEventListener('pointerup', release);
+    el.addEventListener('pointercancel', release);
+  }
+
+  renderCards();
+}
+
+// ── Chapter type: simulator (registry) ──────────
+const SIMULATORS = {
+  'credit-climb': {
+    render(container, chapter, mod, onDone) {
+      const qp = getQP(mod);
+      let score = qp.dashboard.creditScore;
+      const usedIds = new Set();
+      const pctFor = s => Math.max(0, Math.min(100, (s - 300) / (850 - 300) * 100));
+
+      function render() {
+        container.innerHTML = `
+          <p class="quest-prompt">${chapter.intro}</p>
+          <div class="sim-meter-wrap">
+            <div class="sim-meter-score" id="sim-score">${Math.round(score)}</div>
+            <div class="sim-meter-track"><div class="sim-meter-marker" id="sim-marker" style="left:${pctFor(score)}%"></div></div>
+            <div class="sim-meter-scale"><span>300</span><span>850</span></div>
+          </div>
+          <div class="sim-decisions" id="sim-decisions">
+            ${chapter.decisions.map(d => `<button class="option-btn sim-decision-btn" data-id="${d.id}" ${usedIds.has(d.id) ? 'disabled' : ''}>${d.label}</button>`).join('')}
+          </div>`;
+
+        container.querySelectorAll('.sim-decision-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const d = chapter.decisions.find(x => x.id === btn.dataset.id);
+            usedIds.add(d.id);
+            const from = score;
+            score = Math.max(300, Math.min(850, score + d.scoreDelta));
+            qp.dashboard.creditScore = score;
+            saveState();
+            renderQuestDashboard(mod);
+            document.getElementById('sim-marker').style.left = pctFor(score) + '%';
+            tweenNumber(document.getElementById('sim-score'), from, score, {});
+            // Hammy narrates the actual explanation for this decision, in his speech bubble,
+            // instead of a generic "Nice!"/"Not quite" reaction.
+            showHammyMessage(d.note, d.scoreDelta >= 0);
+            btn.disabled = true;
+            if (usedIds.size === chapter.decisions.length) {
+              setQuestContinue('Continue →', () => {
+                if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+                onDone();
+              }, true);
+            }
+          });
+        });
+      }
+      render();
+    }
+  }
+};
+
+function renderSimulatorChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  main.innerHTML = '';
+  const container = document.createElement('div');
+  main.appendChild(container);
+  const sim = SIMULATORS[chapter.simulatorId];
+  if (sim) sim.render(container, chapter, mod, onDone);
+}
+
+// ── Chapter type: priceisright ──────────────────
+function renderPriceIsRightChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  const range = chapter.guessRange;
+  let guess = Math.round((range.min + range.max) / 2 / range.step) * range.step;
+  main.innerHTML = `
+    <p class="quest-prompt">${chapter.prompt}</p>
+    <div class="price-guess-display" id="price-guess-display">$${guess}</div>
+    <input type="range" class="microsim-range" id="price-slider" min="${range.min}" max="${range.max}" step="${range.step}" value="${guess}">
+    <button class="btn-primary price-reveal-btn" id="price-reveal">Lock In Guess</button>`;
+
+  document.getElementById('price-slider').addEventListener('input', (e) => {
+    guess = parseInt(e.target.value, 10);
+    document.getElementById('price-guess-display').textContent = `$${guess}`;
+  });
+  document.getElementById('price-reveal').addEventListener('click', () => {
+    document.getElementById('price-reveal').remove();
+    document.getElementById('price-slider').disabled = true;
+    const diff = Math.abs(guess - chapter.actualValue);
+    const wasClose = diff <= (range.max - range.min) * 0.15;
+    tweenNumber(document.getElementById('price-guess-display'), guess, chapter.actualValue, { prefix: '$' });
+    const revealBlock = document.createElement('div');
+    revealBlock.className = 'price-reveal-block';
+    revealBlock.innerHTML = `
+      <p class="price-actual-label">Actual answer: $${chapter.actualValue} <span class="price-diff">(you were $${diff} off)</span></p>
+      <p>${chapter.explanation}</p>`;
+    main.appendChild(revealBlock);
+    showHammyReaction(mod, wasClose);
+    setQuestContinue('Continue →', () => {
+      if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+      onDone();
+    }, true);
+  });
+}
+
+// ── Chapter type: knowledgecheck (reuses buildQuestionBlock) ──
+function renderKnowledgeCheckChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  const qp = getQP(mod);
+  const questions = chapter.qIndices.map(i => mod.questions[i]);
+  let qIdx = 0;
+
+  function renderQ() {
+    clearQuestContinue();
+    // Per-question hints (chapter.hintTexts is aligned with chapter.qIndices order).
+    renderHintBudget(mod, 'knowledgecheck', chapter.hintTexts ? chapter.hintTexts[qIdx] : chapter.hintText);
+
+    const q = questions[qIdx];
+    main.innerHTML = `
+      <div class="quest-kc-counter">Question ${qIdx + 1} of ${questions.length}</div>
+      <div class="kc-split">
+        <div class="kc-split-left">
+          <p class="question-text" id="kc-question"></p>
+          <div class="options" id="kc-options"></div>
+        </div>
+        <div class="kc-split-right">
+          <div class="feedback-panel kc-panel" id="kc-feedback-panel">
+            <div class="feedback-indicator"></div>
+            <div class="feedback-text">
+              <p class="feedback-label" id="kc-feedback-label"></p>
+              <p class="feedback-exp" id="kc-feedback-exp"></p>
+            </div>
+            <button class="btn-next" id="kc-next">Next</button>
+          </div>
+        </div>
+      </div>`;
+
+    buildQuestionBlock(q, {
+      questionEl: document.getElementById('kc-question'),
+      optionsEl: document.getElementById('kc-options'),
+      feedbackPanelEl: document.getElementById('kc-feedback-panel'),
+      feedbackLabelEl: document.getElementById('kc-feedback-label'),
+      feedbackExpEl: document.getElementById('kc-feedback-exp'),
+    }, (isCorrect) => {
+      qp.chapterTotal++;
+      if (isCorrect) qp.chapterScore++;
+      qp.analytics.knowledgeCheck.push({ question: q.q, isCorrect });
+      saveState();
+      showHammyReaction(mod, isCorrect);
+      const isLast = qIdx === questions.length - 1;
+      document.getElementById('kc-next').textContent = isLast ? 'Continue' : 'Next';
+    });
+
+    document.getElementById('kc-next').addEventListener('click', () => {
+      if (qIdx < questions.length - 1) { qIdx++; renderQ(); } else { onDone(); }
+    });
+  }
+  renderQ();
+}
+
+// ── Chapter type: bossbattle (terminal) ─────────
+function renderBossBattleChapter(chapter, mod) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  main.innerHTML = `
+    <div class="boss-banner">
+      <p class="quest-prompt">${chapter.scenario}</p>
+    </div>
+    <div class="boss-split">
+      <div class="boss-choices" id="boss-choices"></div>
+      <div class="boss-outcome-col" id="boss-outcome-col"></div>
+    </div>`;
+
+  const choicesEl = document.getElementById('boss-choices');
+  chapter.choices.forEach(choice => {
+    const card = document.createElement('div');
+    card.className = 'boss-choice-card';
+    card.textContent = choice.label;
+    card.addEventListener('click', () => {
+      choicesEl.querySelectorAll('.boss-choice-card').forEach(c => c.classList.add('disabled'));
+      applyQuestStateDelta(mod, choice.consequence.delta || {});
+      const qp = getQP(mod);
+      qp.analytics.bossChoice = choice.label;
+      saveState();
+      const outcomeBlock = document.createElement('div');
+      outcomeBlock.className = 'boss-outcome';
+      outcomeBlock.innerHTML = `<p>${choice.consequence.text}</p>`;
+      document.getElementById('boss-outcome-col').appendChild(outcomeBlock);
+      showHammyReaction(mod, (choice.consequence.xpMultiplier ?? 1) >= 1);
+      setQuestContinue('See Results →', () => finishQuest(mod, choice.consequence), true);
+    });
+    choicesEl.appendChild(card);
+  });
+}
+
+// ── Quest finish / results ──────────────────────
+function finishQuest(mod, chosenConsequence) {
+  const qp = getQP(mod);
+  qp.done = true;
+  const score = qp.chapterScore;
+  const total = qp.chapterTotal || 1;
+  if (qp.chapterTotal > 0 && qp.chapterScore === qp.chapterTotal) state.hadPerfect = true;
+
+  const bossXP = Math.round(mod.xpReward * (chosenConsequence.xpMultiplier ?? 1));
+  const coinsEarned = qp.chapterTotal > 0 ? qp.chapterScore * 8 : 8;
+  state.coins = (state.coins || 0) + coinsEarned;
+
+  const prev = state.completedModules[mod.id];
+  if (!prev || bossXP > (prev.xpEarned || 0)) {
+    state.completedModules[mod.id] = { score, total, xpEarned: bossXP };
+  }
+  if (!state.questBossesWon.includes(mod.id)) state.questBossesWon.push(mod.id);
+
+  updateStreak();
+  const leveled = addXP(bossXP);
+  const newAchs = checkAchievements();
+  saveState();
+
+  showScreen('screen-results');
+  renderQuestResults(mod, bossXP, coinsEarned, newAchs, chosenConsequence.text, qp);
+
+  if (leveled) {
+    setTimeout(() => {
+      document.getElementById('new-tier').textContent = getTier(state.level).name;
+      document.getElementById('levelup-overlay').classList.add('visible');
+    }, 700);
+  }
+}
+
+// Comprehensive end-of-quest report: every term taught, a score breakdown per activity type,
+// specific weak spots to revisit, and a short rule-based note from Hammy on what to work on.
+function buildQuestReport(mod, qp) {
+  const a = qp.analytics;
+  const kcRight = a.knowledgeCheck.filter(x => x.isCorrect);
+  const kcWrong = a.knowledgeCheck.filter(x => !x.isCorrect);
+  const mythRight = a.mythCards.filter(x => x.guessedRight);
+  const mythWrong = a.mythCards.filter(x => !x.guessedRight);
+  const totalAnswered = a.knowledgeCheck.length + a.mythCards.length;
+  const totalRight = kcRight.length + mythRight.length;
+  const masteryPct = totalAnswered ? Math.round((totalRight / totalAnswered) * 100) : 100;
+
+  const termsHtml = (qp.learnedTerms || []).map(t => `<span class="report-term-chip">${t.term}</span>`).join('')
+    || '<span class="report-term-chip">None recorded</span>';
+
+  const strengths = [...kcRight.map(x => x.question), ...mythRight.map(x => x.myth)];
+  const weakSpots = [...kcWrong.map(x => x.question), ...mythWrong.map(x => x.myth)];
+
+  const strengthsHtml = strengths.length
+    ? `<div class="report-section"><div class="report-section-title">What you got right</div><ul class="report-strong-list">${strengths.map(w => `<li>${w}</li>`).join('')}</ul></div>`
+    : '';
+  const weakHtml = weakSpots.length
+    ? `<div class="report-section"><div class="report-section-title">Worth another look</div><ul class="report-weak-list">${weakSpots.map(w => `<li>${w}</li>`).join('')}</ul></div>`
+    : `<div class="report-section report-perfect">You got every question and myth card right this time.</div>`;
+
+  const decisionsHtml = a.decisions.length
+    ? `<div class="report-section"><div class="report-section-title">Choices you made</div><ul class="report-decision-list">${a.decisions.map(d => `<li><strong>${d.title}:</strong> ${d.choice}</li>`).join('')}${a.bossChoice ? `<li><strong>Boss battle:</strong> ${a.bossChoice}</li>` : ''}</ul></div>`
+    : '';
+
+  const explainbackHtml = a.explainback
+    ? `<div class="report-section"><div class="report-section-title">Your written answer</div><p class="report-explainback-note">"${a.explainback.term}": ${
+        a.explainback.tier === 'great' ? 'you got the key idea on your own.' :
+        a.explainback.tier === 'ok' ? 'you were on the right track.' :
+        "this one didn't click yet, and it's worth rereading."
+      }</p></div>`
+    : '';
+
+  // Tailored advice, built from whichever specific area was weakest — capped at two short
+  // sentences instead of stacking a line for every flag that happened to trigger.
+  const adviceParts = [];
+  if (weakSpots.length === 0) {
+    adviceParts.push(`Solid handle on ${mod.title.toLowerCase()}.`);
+  } else if (kcWrong.length > 0) {
+    adviceParts.push(`Reread the explanation for "${kcWrong[0].question}."`);
+  } else if (mythWrong.length > 0) {
+    adviceParts.push(`The myth about "${mythWrong[0].myth}" is worth a second look.`);
+  }
+  if (a.explainback && a.explainback.tier === 'retry') {
+    adviceParts.push(`Also reread the definition for "${a.explainback.term}."`);
+  } else if (a.matchingMistakes > 4) {
+    adviceParts.push('More repetition on the matching rounds would help.');
+  }
+  const advice = adviceParts.slice(0, 2).join(' ');
+
+  return `
+    <div class="quest-report">
+      <div class="report-mastery">
+        <div class="report-mastery-ring" style="--mastery-pct:${masteryPct}"><span>${masteryPct}%</span></div>
+        <div class="report-mastery-label">Overall mastery this quest<br><span class="report-mastery-sub">${totalRight} of ${totalAnswered} correct across quick checks and myth cards</span></div>
+      </div>
+      <div class="report-section-title">Words you learned (${(qp.learnedTerms || []).length})</div>
+      <div class="report-terms">${termsHtml}</div>
+      <div class="report-stat-row">
+        <div class="report-stat"><div class="report-stat-num">${kcRight.length}/${a.knowledgeCheck.length}</div><div class="report-stat-label">Quick Check</div></div>
+        <div class="report-stat"><div class="report-stat-num">${mythRight.length}/${a.mythCards.length}</div><div class="report-stat-label">Myth Cards</div></div>
+        <div class="report-stat"><div class="report-stat-num">${a.matchingMistakes}</div><div class="report-stat-label">Matching Misses</div></div>
+        <div class="report-stat"><div class="report-stat-num">${qp.hintsUsed || 0}</div><div class="report-stat-label">Hints Used</div></div>
+      </div>
+      ${decisionsHtml}
+      ${explainbackHtml}
+      ${strengthsHtml}
+      ${weakHtml}
+      <div class="report-advice">
+        <div class="hammy-report-avatar">${getPigMarkup(0.4)}</div>
+        <p><strong>Hammy's advice:</strong> ${advice}</p>
+      </div>
+    </div>`;
+}
+
+function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText, qp) {
+  const achHtml = newAchs.map(a =>
+    `<div class="new-ach-banner"><span class="ach-abbr">${a.abbr}</span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
+  ).join('');
+
+  const dashHtml = Object.entries(qp.dashboard).map(([key, val]) => {
+    const isMoney = key !== 'creditScore';
+    const label = key === 'creditScore' ? 'Credit Score' : key.charAt(0).toUpperCase() + key.slice(1);
+    return `<div class="results-xp-card"><div class="results-xp-num">${isMoney ? formatMoney(val) : Math.round(val)}</div><div class="results-xp-label">${label}</div></div>`;
+  }).join('');
+
+  const quest = getActiveQuest(mod);
+  document.getElementById('results-wrap').innerHTML = `
+    <div class="results-grade">Quest Complete</div>
+    <h2 class="results-title">${quest.topic || quest.character.name}</h2>
+    <p class="results-score">${consequenceText}</p>
+    <div class="results-rewards-row">
+      <div class="results-xp-card">
+        <div class="results-xp-num">+${xpEarned} XP</div>
+        <div class="results-xp-label">${getTier(state.level).name} · ${state.xp.toLocaleString()} total</div>
+      </div>
+      <div class="results-coins-card">
+        <div class="results-coins-num">+${coinsEarned || 0} 🪙</div>
+        <div class="results-xp-label">${(state.coins || 0).toLocaleString()} total coins</div>
+      </div>
+    </div>
+    ${achHtml}
+    <div class="results-breakdown quest-final-dashboard">${dashHtml}</div>
+    ${buildQuestReport(mod, qp)}
+    <div class="results-actions">
+      <button class="btn-primary" id="res-home">Back to Dashboard</button>
+      <button class="btn-secondary" id="res-replay">Replay Quest</button>
+    </div>`;
+
+  document.getElementById('res-home').addEventListener('click', renderHome);
+  document.getElementById('res-replay').addEventListener('click', () => startQuest(mod.id, state.activeQuestId));
+}
+
 // ── Event listeners ────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // Sidebar navigation
@@ -1899,6 +3911,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('hook-start').addEventListener('click', startQuiz);
   document.getElementById('quiz-exit').addEventListener('click', () => {
     if (confirm('Exit quiz? Your progress for this session will be lost.')) renderHome();
+  });
+  document.getElementById('quest-exit').addEventListener('click', () => {
+    if (confirm('Exit the quest? Your progress is saved up to your last completed chapter.')) renderHome();
   });
   document.getElementById('btn-next').addEventListener('click', () => {
     if (state.currentQ < state.sessionQuestions.length - 1) {
