@@ -1,0 +1,15 @@
+{
+  "allowlist": [],
+  "excludeDirs": ["node_modules", ".git", "dist", "build", "reports", ".next", "coverage", ".vercel"],
+  "scanExtensions": [".js", ".ts", ".jsx", ".tsx", ".py", ".json", ".yml", ".yaml", ".env"],
+  "rateLimitThresholds": {
+    "login": { "max": 5, "windowMinutes": 1 },
+    "register": { "max": 3, "windowMinutes": 10 },
+    "forgotPassword": { "max": 3, "windowMinutes": 60 },
+    "verifyOtp": { "max": 5, "windowMinutes": 15 }
+  },
+  "headerCheck": {
+    "port": 4173,
+    "rootFile": "index.html"
+  }
+}

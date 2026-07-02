@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Environment files (never commit real secrets)
+.env
+.env.local
+.env.production
+.env.*.local
+!.env.example
+
+# Security agent generated reports (regenerated every run/CI job)
+SecurityAgent/report/reports/*.json
+
+# OS / editor
+.DS_Store
+Thumbs.db

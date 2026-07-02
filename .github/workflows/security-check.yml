@@ -1,0 +1,124 @@
+name: Security Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR / push ref
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies (no-op if none declared)
+        run: npm install --no-audit --no-fund --ignore-scripts || true
+
+      - name: Run security scan (current ref)
+        id: scan_head
+        run: |
+          set +e
+          npm run security-check
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          set -e
+          latest=$(ls -t SecurityAgent/report/reports/security_*.json | head -n1)
+          echo "report_path=$latest" >> "$GITHUB_OUTPUT"
+
+      - name: Upload JSON report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: ${{ steps.scan_head.outputs.report_path }}
+
+      - name: Run security scan (base ref, PRs only)
+        id: scan_base
+        if: github.event_name == 'pull_request'
+        run: |
+          set +e
+          git worktree add /tmp/base-ref origin/${{ github.event.pull_request.base.ref }} 2>/dev/null || \
+            git worktree add /tmp/base-ref ${{ github.event.pull_request.base.sha }}
+          (cd /tmp/base-ref && npm install --no-audit --no-fund --ignore-scripts || true)
+          (cd /tmp/base-ref && npm run security-check)
+          base_latest=$(ls -t /tmp/base-ref/SecurityAgent/report/reports/security_*.json 2>/dev/null | head -n1)
+          echo "report_path=$base_latest" >> "$GITHUB_OUTPUT"
+          set -e
+
+      - name: Post PR comment with new findings
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const headPath = '${{ steps.scan_head.outputs.report_path }}';
+            const basePath = '${{ steps.scan_base.outputs.report_path }}';
+
+            const headReport = JSON.parse(fs.readFileSync(headPath, 'utf8'));
+            let baseFindings = [];
+            if (basePath && fs.existsSync(basePath)) {
+              baseFindings = JSON.parse(fs.readFileSync(basePath, 'utf8')).findings || [];
+            }
+            const key = (f) => `${f.module}|${f.title}|${f.location}`;
+            const baseKeys = new Set(baseFindings.map(key));
+            const newFindings = (headReport.findings || []).filter(f => !baseKeys.has(key(f)));
+
+            const order = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, INFO: 4 };
+            newFindings.sort((a, b) => order[a.severity] - order[b.severity]);
+
+            const s = headReport.summary.by_severity;
+            let body = `### 🔒 Security Check\n\n`;
+            body += `CRITICAL: **${s.CRITICAL}** · HIGH: **${s.HIGH}** · MEDIUM: **${s.MEDIUM}** · LOW: **${s.LOW}** · INFO: **${s.INFO}**\n\n`;
+
+            if (newFindings.length === 0) {
+              body += `No new findings introduced by this PR.\n`;
+            } else {
+              body += `**${newFindings.length} new finding(s) introduced by this PR:**\n\n`;
+              for (const f of newFindings.slice(0, 30)) {
+                body += `- **[${f.severity}]** \`${f.id}\` ${f.title} — \`${f.location}\`\n`;
+              }
+              if (newFindings.length > 30) body += `\n_...and ${newFindings.length - 30} more, see the full JSON artifact._\n`;
+            }
+
+            const hasBypassLabel = (context.payload.pull_request.labels || []).some(l => l.name === 'security-bypass');
+            if (headReport.summary.build_should_fail) {
+              body += hasBypassLabel
+                ? `\n⚠️ **CRITICAL findings present**, but the \`security-bypass\` label allows this PR to merge anyway. Please resolve these before the next release.\n`
+                : `\n🛑 **This PR is blocked** — CRITICAL findings must be fixed, or add the \`security-bypass\` label to override (still posts as a warning).\n`;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+      - name: Fail build on CRITICAL findings (unless security-bypass label present)
+        if: always()
+        run: |
+          EXIT_CODE="${{ steps.scan_head.outputs.exit_code }}"
+          HAS_BYPASS="false"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            HAS_BYPASS=$(node -e "console.log((${{ toJson(github.event.pull_request.labels) }} || []).some(l => l.name === 'security-bypass'))")
+          fi
+          if [ "$EXIT_CODE" != "0" ]; then
+            if [ "$HAS_BYPASS" = "true" ]; then
+              echo "CRITICAL findings present but security-bypass label is set — not failing the build."
+            else
+              echo "CRITICAL findings present — failing the build. Add the security-bypass label to override."
+              exit 1
+            fi
+          fi

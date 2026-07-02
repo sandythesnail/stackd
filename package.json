@@ -1,0 +1,9 @@
+{
+  "name": "stackd",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Stackd — financial literacy web app (static HTML/CSS/JS) with a self-contained local security scanner.",
+  "scripts": {
+    "security-check": "node SecurityAgent/runner.js"
+  }
+}
