@@ -1757,6 +1757,53 @@ const SHOP_ITEMS = [
           <circle cx="60" cy="60" r="5" fill="#FFE45A"/>
           <circle cx="60" cy="110" r="5" fill="#FF96B8"/>`
   },
+
+  // ── DIAMOND EXCLUSIVES (earned via 3-day streak bonuses, not coins) ──
+  {
+    id: 'diamond_crown', name: 'Diamond Crown', category: 'exclusive', currency: 'diamond', price: 15,
+    viewBox: '14 -4 92 46',
+    desc: 'Only streak-keepers get to wear this one.',
+    svg: `<defs><linearGradient id="dc-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#FFF3B0"/><stop offset="55%" stop-color="#FFD23F"/><stop offset="100%" stop-color="#D4980A"/></linearGradient>
+          <linearGradient id="dc-gem" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E8FBFF"/><stop offset="45%" stop-color="#8FE3F5"/><stop offset="100%" stop-color="#2AA8C4"/></linearGradient></defs>
+          <path d="M 33 30 L 33 20 L 42 24 L 50 12 L 60 22 L 70 12 L 78 24 L 87 20 L 87 30 Z" fill="url(#dc-g)" stroke="#B8790A" stroke-width="1"/>
+          <path d="M 35 28 L 35 22 L 42 25 L 50 15 L 60 24 L 70 15 L 78 25 L 85 22 L 85 28 Z" fill="rgba(255,255,255,0.25)"/>
+          <circle cx="42" cy="24" r="3" fill="#FFE87A"/>
+          <circle cx="60" cy="12" r="3.6" fill="#FFE87A"/>
+          <circle cx="78" cy="24" r="3" fill="#FFE87A"/>
+          <path d="M 60 17 L 65 22 L 60 30 L 55 22 Z" fill="url(#dc-gem)" stroke="#1C8CA8" stroke-width="0.8"/>
+          <path d="M 60 17 L 65 22 L 60 24 L 55 22 Z" fill="rgba(255,255,255,0.55)"/>
+          <circle cx="42" cy="24" r="1.6" fill="#FF6FA8"/>
+          <circle cx="78" cy="24" r="1.6" fill="#FF6FA8"/>
+          <path d="M 30 8 L 31 5 L 32 8 L 35 9 L 32 10 L 31 13 L 30 10 L 27 9 Z" fill="#FFF7C4"/>
+          <path d="M 88 10 L 88.8 7.6 L 89.6 10 L 92 10.8 L 89.6 11.6 L 88.8 14 L 88 11.6 L 85.6 10.8 Z" fill="#FFF7C4" opacity="0.85"/>`
+  },
+  {
+    id: 'diamond_shades', name: 'Diamond Shades', category: 'exclusive', currency: 'diamond', price: 20,
+    viewBox: '6 41 108 34',
+    desc: 'Too cool to be affordable in coins.',
+    svg: `<defs><linearGradient id="ds-lens" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#FFD6F0"/><stop offset="50%" stop-color="#C7A6FF"/><stop offset="100%" stop-color="#7FD9FF"/></linearGradient></defs>
+          <path d="M 30 60 Q 30 50 42 50 L 54 50 Q 60 50 60 56 Q 60 50 66 50 L 78 50 Q 90 50 90 60 Q 90 70 78 70 L 66 70 Q 60 70 60 64 Q 60 70 54 70 L 42 70 Q 30 70 30 60 Z" fill="#2B2B2B"/>
+          <circle cx="45" cy="60" r="9" fill="url(#ds-lens)"/>
+          <circle cx="75" cy="60" r="9" fill="url(#ds-lens)"/>
+          <circle cx="41" cy="56" r="2.4" fill="rgba(255,255,255,0.7)"/>
+          <circle cx="71" cy="56" r="2.4" fill="rgba(255,255,255,0.7)"/>
+          <path d="M 30 58 L 20 55" stroke="#2B2B2B" stroke-width="3" stroke-linecap="round"/>
+          <path d="M 90 58 L 100 55" stroke="#2B2B2B" stroke-width="3" stroke-linecap="round"/>
+          <path d="M 45 52 L 46 49 L 47 52 L 50 53 L 47 54 L 46 57 L 45 54 L 42 53 Z" fill="#FFF" opacity="0.9"/>
+          <path d="M 75 52 L 76 49 L 77 52 L 80 53 L 77 54 L 76 57 L 75 54 L 72 53 Z" fill="#FFF" opacity="0.9"/>`
+  },
+  {
+    id: 'golden_cape', name: 'Golden Cape', category: 'exclusive', currency: 'diamond', price: 25,
+    viewBox: '6 72 108 62',
+    desc: 'The rarest flex in Hammy\'s closet.',
+    svg: `<defs><linearGradient id="gc-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#FFE9A6"/><stop offset="55%" stop-color="#FFC93F"/><stop offset="100%" stop-color="#C68A0A"/></linearGradient></defs>
+          <path d="M 30 82 Q 60 74 90 82 L 100 130 Q 60 122 20 130 Z" fill="url(#gc-g)" stroke="#A66E08" stroke-width="1"/>
+          <path d="M 30 82 Q 60 74 90 82 L 88 92 Q 60 84 32 92 Z" fill="rgba(255,255,255,0.25)"/>
+          <circle cx="60" cy="82" r="5" fill="#8FE3F5"/>
+          <circle cx="60" cy="82" r="2.6" fill="#E8FBFF"/>
+          <path d="M 25 92 Q 22 108 26 126" stroke="#A66E08" stroke-width="1" fill="none" opacity="0.5"/>
+          <path d="M 95 92 Q 98 108 94 126" stroke="#A66E08" stroke-width="1" fill="none" opacity="0.5"/>`
+  },
 ];
 
 // ── Achievements ──────────────────────────────
@@ -1784,10 +1831,11 @@ let state = {
   completedModules: {}, completedLessons: {}, unlockedAchievements: [], hadPerfect: false,
   activeModuleId: null, activeLessonIdx: 0, activeQuestId: null, sessionQuestions: [],
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
-  coins: 0, ownedItems: [], equippedItem: null,
+  coins: 0, diamonds: 0, ownedItems: [], equippedItem: null,
   ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null },
   metHammy: false,
   questProgress: {}, questBossesWon: [],
+  onboardingSurvey: { completed: false, moduleFamiliarity: {}, focusGoals: [], completedAt: null },
 };
 
 function loadState() {
@@ -1798,8 +1846,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon } = state;
-  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon }));
+  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey } = state;
+  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey }));
 }
 
 // ── XP / Level ─────────────────────────────────
@@ -1822,12 +1870,30 @@ function addXP(amount) {
   return leveled;
 }
 
+// Every 3rd consecutive day played (3, 6, 9, ...) earns a diamond bonus — a slower, rarer
+// currency than coins, meant for the small run of "super exclusive" shop items.
+const STREAK_DIAMOND_INTERVAL = 3;
+const STREAK_DIAMOND_REWARD = 5;
+
+// Returns the number of diamonds earned this call (0 most days) so callers can show a banner.
 function updateStreak() {
   const today = new Date().toDateString();
-  if (state.lastPlayedDate === today) return;
+  if (state.lastPlayedDate === today) return 0;
   const yesterday = new Date(Date.now() - 86400000).toDateString();
   state.streak = state.lastPlayedDate === yesterday ? state.streak + 1 : 1;
   state.lastPlayedDate = today;
+  if (state.streak % STREAK_DIAMOND_INTERVAL === 0) {
+    state.diamonds = (state.diamonds || 0) + STREAK_DIAMOND_REWARD;
+    return STREAK_DIAMOND_REWARD;
+  }
+  return 0;
+}
+
+function buildStreakDiamondBanner(diamondsEarned) {
+  return `<div class="streak-diamond-banner">
+    <span class="diamond-icon">💎</span>
+    <div><strong>${state.streak}-Day Streak!</strong><span>+${diamondsEarned} diamonds earned, spend them on the exclusive shop items.</span></div>
+  </div>`;
 }
 
 function checkAchievements() {
@@ -1865,13 +1931,30 @@ function updateSidebarStats() {
   document.getElementById('sf-bar-fill').style.width = xpProgressPct() + '%';
   const coinsEl = document.getElementById('sf-coins');
   if (coinsEl) coinsEl.textContent = (state.coins || 0).toLocaleString();
+  const diamondsEl = document.getElementById('sf-diamonds');
+  if (diamondsEl) diamondsEl.textContent = (state.diamonds || 0).toLocaleString();
 }
 
 function renderModuleList(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = '';
-  MODULES.forEach(m => {
+
+  // Personalize order once the onboarding survey is done: modules the student is least
+  // familiar with, or that match a stated goal, float up top. Ties keep the original module
+  // order. Already-finished modules are never pulled up or badged, this only steers where to
+  // go next, it doesn't hide or gate anything.
+  const survey = state.onboardingSurvey;
+  const orderedModules = survey && survey.completed
+    ? MODULES.map((m, i) => ({ m, i, score: computeModulePriority(m, survey) }))
+        .sort((a, b) => b.score - a.score || a.i - b.i)
+        .map(x => x.m)
+    : MODULES;
+  const topRecommendedId = survey && survey.completed
+    ? (orderedModules.find(m => computeModulePriority(m, survey) > 0) || {}).id
+    : null;
+
+  orderedModules.forEach(m => {
     const quest = hasQuest(m);
     const lessonsDone = quest ? 0 : m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
     const allDone = quest
@@ -1883,7 +1966,9 @@ function renderModuleList(containerId) {
 
     const badge = allDone
       ? `<span class="card-badge badge-done">✓ Complete</span>`
-      : `<span class="card-badge badge-xp">+${m.xpReward} XP</span>`;
+      : m.id === topRecommendedId
+        ? `<span class="card-badge badge-recommend">★ Recommended</span>`
+        : `<span class="card-badge badge-xp">+${m.xpReward} XP</span>`;
 
     let bodyHtml;
     if (quest) {
@@ -1945,6 +2030,181 @@ function renderModuleList(containerId) {
 
     container.appendChild(row);
   });
+}
+
+// ── ONBOARDING SURVEY ────────────────────────────
+// Shown once, before the student ever really lands on the dashboard: a quick "what do you
+// already know, what do you want out of this" check-in that personalizes module ordering
+// without gating anything. Answers persist in state.onboardingSurvey until reset from Settings.
+// One module per screen, each a slider between two relatable "low" and "high" phrases instead
+// of a bank of generic multiple-choice buttons.
+const SURVEY_MODULE_IDS = MODULES.map(m => m.id);
+const SURVEY_FAMILIARITY_LABELS = {
+  earning: ["I've never seen an actual paycheck", 'I know exactly what gets taken out before it hits my account'],
+  spending: ['I never spend a cent', 'After every paycheck, shopping time!'],
+  saving: ['Savings account? Never heard of her', "I've got three different savings goals going right now"],
+  investing: ['Stocks are just numbers that go up and down, right?', "I'm already investing every month"],
+  credit: ["Credit card, debit card, what's the difference?", 'I know my credit score off the top of my head'],
+  risk: ["Insurance is a whole adult thing I've never touched", 'I could explain a deductible in my sleep'],
+  loans: ['Loans are basically free money, right?', 'I know exactly how my loans get repaid'],
+  taxes: ['Taxes are just scary and confusing', "I've already filed my own return"],
+  psychology: ["If it's on sale, it's going in my cart", 'I can spot a marketing trick from a mile away'],
+  career: ["I'll just take whatever salary they offer me", "I'm ready to negotiate my way into a better offer"],
+};
+const SURVEY_GOALS = [
+  { id: 'avoid_debt', label: 'Avoid debt mistakes', moduleIds: ['loans', 'credit'] },
+  { id: 'paycheck_taxes', label: 'Understand my paycheck & taxes', moduleIds: ['taxes', 'earning'] },
+  { id: 'build_credit', label: 'Build credit', moduleIds: ['credit'] },
+  { id: 'negotiate_salary', label: 'Negotiate salary', moduleIds: ['career'] },
+  { id: 'curious', label: 'Just curious, exploring', moduleIds: [] },
+];
+const SURVEY_TOTAL_STEPS = SURVEY_MODULE_IDS.length + 1; // familiarity sliders + one goals step
+
+let surveyStep = 1;
+let surveyDraft = { moduleFamiliarity: {}, focusGoals: [] };
+
+function isModuleFullyDone(m) {
+  return hasQuest(m)
+    ? m.quests.every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
+    : m.lessons.every((_, i) => !!state.completedLessons[`${m.id}_${i}`]);
+}
+
+// Lower familiarity (0-100, 0 = "never heard of it") and goal-matched modules score higher;
+// finished modules always score 0 so they're never pulled to the top or badged "Recommended"
+// once they're already done.
+function computeModulePriority(m, survey) {
+  if (!survey || isModuleFullyDone(m)) return 0;
+  let score = 0;
+  if (survey.moduleFamiliarity && Object.prototype.hasOwnProperty.call(survey.moduleFamiliarity, m.id)) {
+    score += (100 - survey.moduleFamiliarity[m.id]) / 100 * 30;
+  }
+  (survey.focusGoals || []).forEach(goalId => {
+    const goal = SURVEY_GOALS.find(g => g.id === goalId);
+    if (goal && goal.moduleIds.includes(m.id)) score += 25;
+  });
+  return score;
+}
+
+function getRecommendedModule(survey) {
+  let best = null, bestScore = 0;
+  MODULES.forEach(m => {
+    const score = computeModulePriority(m, survey);
+    if (score > bestScore) { bestScore = score; best = m; }
+  });
+  if (!best) return null;
+  const fam = survey.moduleFamiliarity[best.id];
+  const goalHit = SURVEY_GOALS.find(g => survey.focusGoals.includes(g.id) && g.moduleIds.includes(best.id));
+  let reason;
+  if (goalHit && fam !== undefined && fam <= 33) {
+    reason = `It lines up with "${goalHit.label}," and you're just getting started there.`;
+  } else if (goalHit) {
+    reason = `It lines up with "${goalHit.label}."`;
+  } else {
+    reason = "You said you're not very familiar with it yet, so it's a solid place to start.";
+  }
+  return Object.assign({}, best, { reason });
+}
+
+function showOnboardingSurvey() {
+  surveyStep = 1;
+  surveyDraft = { moduleFamiliarity: {}, focusGoals: [] };
+  document.getElementById('onboarding-mascot').innerHTML = getHammyFaceMarkup(0.32);
+  renderSurveyStep();
+  document.getElementById('onboarding-overlay').classList.add('visible');
+}
+
+function finishOnboardingSurvey(skipped) {
+  state.onboardingSurvey = {
+    completed: true,
+    moduleFamiliarity: skipped ? state.onboardingSurvey.moduleFamiliarity || {} : surveyDraft.moduleFamiliarity,
+    focusGoals: skipped ? state.onboardingSurvey.focusGoals || [] : surveyDraft.focusGoals,
+    completedAt: Date.now(),
+  };
+  saveState();
+  document.getElementById('onboarding-overlay').classList.remove('visible');
+  renderHome();
+}
+
+function renderSurveyStep() {
+  const heading = document.getElementById('onboarding-heading');
+  const sub = document.getElementById('onboarding-subheading');
+  const stepLabel = document.getElementById('onboarding-step-label');
+  const body = document.getElementById('onboarding-body');
+  const nextBtn = document.getElementById('onboarding-next');
+  const skipBtn = document.getElementById('onboarding-skip');
+  const backBtn = document.getElementById('onboarding-back');
+
+  backBtn.style.display = surveyStep > 1 ? '' : 'none';
+  backBtn.onclick = () => { surveyStep--; renderSurveyStep(); };
+
+  if (surveyStep <= SURVEY_MODULE_IDS.length) {
+    const modId = SURVEY_MODULE_IDS[surveyStep - 1];
+    const mod = MODULES.find(m => m.id === modId);
+    const [lowLabel, highLabel] = SURVEY_FAMILIARITY_LABELS[modId] || ['Never heard of it', 'Could teach it'];
+    const current = surveyDraft.moduleFamiliarity[modId] ?? 50;
+
+    stepLabel.textContent = `Step ${surveyStep} of ${SURVEY_TOTAL_STEPS}`;
+    heading.textContent = mod.title;
+    sub.textContent = "Slide to where you're really at, no wrong answer, it just helps us know where to start you off.";
+    body.innerHTML = `
+      <div class="survey-slider-wrap">
+        <input type="range" class="survey-slider" id="survey-slider" min="0" max="100" step="1" value="${current}">
+        <div class="survey-slider-labels">
+          <span class="survey-slider-left">${lowLabel}</span>
+          <span class="survey-slider-right">${highLabel}</span>
+        </div>
+      </div>`;
+    const slider = document.getElementById('survey-slider');
+    slider.addEventListener('input', () => {
+      surveyDraft.moduleFamiliarity[modId] = Number(slider.value);
+    });
+    surveyDraft.moduleFamiliarity[modId] = current;
+
+    skipBtn.style.display = '';
+    nextBtn.textContent = surveyStep === SURVEY_MODULE_IDS.length ? 'Last one →' : 'Next →';
+    nextBtn.onclick = () => { surveyStep++; renderSurveyStep(); };
+  } else if (surveyStep === SURVEY_MODULE_IDS.length + 1) {
+    stepLabel.textContent = `Step ${surveyStep} of ${SURVEY_TOTAL_STEPS}`;
+    heading.textContent = 'What do you want to get out of Stackd right now?';
+    sub.textContent = 'Pick as many as you like.';
+    body.innerHTML = `<div class="survey-goals-grid">${SURVEY_GOALS.map(g =>
+      `<button type="button" class="survey-goal-chip${surveyDraft.focusGoals.includes(g.id) ? ' selected' : ''}" data-goal="${g.id}">${g.label}</button>`
+    ).join('')}</div>`;
+    body.querySelectorAll('.survey-goal-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const goalId = btn.dataset.goal;
+        const idx = surveyDraft.focusGoals.indexOf(goalId);
+        if (idx === -1) surveyDraft.focusGoals.push(goalId); else surveyDraft.focusGoals.splice(idx, 1);
+        btn.classList.toggle('selected');
+      });
+    });
+    skipBtn.style.display = '';
+    nextBtn.textContent = 'See my starting path →';
+    nextBtn.onclick = () => { surveyStep++; renderSurveyStep(); };
+  } else {
+    stepLabel.textContent = "You're all set";
+    heading.textContent = 'Your starting path';
+    sub.textContent = '';
+    const rec = getRecommendedModule(surveyDraft);
+    body.innerHTML = rec
+      ? `<div class="survey-recommend-card">
+          <div class="survey-recommend-icon"><div class="mod-icon ${rec.iconColor}">${rec.icon}</div></div>
+          <div>
+            <div class="survey-recommend-title">Start with ${rec.title}</div>
+            <div class="survey-recommend-text">${rec.reason}</div>
+          </div>
+        </div>`
+      : `<div class="survey-recommend-card">
+          <div>
+            <div class="survey-recommend-title">Explore at your own pace</div>
+            <div class="survey-recommend-text">Jump into whatever module looks interesting on your dashboard, there's no set order.</div>
+          </div>
+        </div>`;
+    backBtn.style.display = 'none';
+    skipBtn.style.display = 'none';
+    nextBtn.textContent = 'Take me to my dashboard →';
+    nextBtn.onclick = () => finishOnboardingSurvey(false);
+  }
 }
 
 function renderAchievementBadges(containerId, subId) {
@@ -2098,14 +2358,14 @@ function refreshShopModal(itemId) {
   const isWallpaper = item.slot === 'wallpaper';
   const owned = isRoom ? (state.ownedRoomItems || []).includes(itemId) : (state.ownedItems || []).includes(itemId);
   const equipped = isRoom ? state.equippedRoom[item.slot] === itemId : state.equippedItem === itemId;
-  const canAfford = (state.coins || 0) >= item.price;
+  const canAfford = shopBalanceFor(item) >= item.price;
   let btn;
   if (equipped) {
     btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'} · Remove</button>`;
   } else if (owned) {
     btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">${isWallpaper ? 'Apply' : isRoom ? 'Place in room' : 'Equip'}</button>`;
   } else {
-    btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>🪙 ${item.price}</button>`;
+    btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>${shopPriceLabel(item)}</button>`;
   }
   const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
   document.getElementById('shop-modal-pig').innerHTML = isWallpaper
@@ -2132,6 +2392,7 @@ function closeShopModal() {
 
 // ── SHOP ───────────────────────────────────────
 const SHOP_CATEGORIES = [
+  { key: 'exclusive', label: 'Diamond Exclusives', icon: '💎' },
   { key: 'hat',     label: 'Hats',    icon: '🎩' },
   { key: 'glasses', label: 'Glasses', icon: '🕶️' },
   { key: 'clothes', label: 'Clothes', icon: '👔' },
@@ -2144,10 +2405,15 @@ const CAT_VIEWBOX = {
   clothes: '6 72 108 62',
 };
 
+function shopBalanceFor(item) { return item.currency === 'diamond' ? (state.diamonds || 0) : (state.coins || 0); }
+function shopPriceLabel(item) { return item.currency === 'diamond' ? `💎 ${item.price}` : `🪙 ${item.price}`; }
+
 function renderShopPage() {
   updateSidebarStats();
   const shopCoinCount = document.getElementById('shop-coin-count');
   if (shopCoinCount) shopCoinCount.textContent = (state.coins || 0).toLocaleString();
+  const shopDiamondCount = document.getElementById('shop-diamond-count');
+  if (shopDiamondCount) shopDiamondCount.textContent = (state.diamonds || 0).toLocaleString();
 
   const grid = document.getElementById('shop-grid');
   if (!grid) return;
@@ -2156,33 +2422,37 @@ function renderShopPage() {
 
   const categoriesHtml = SHOP_CATEGORIES.map(cat => {
     const items = SHOP_ITEMS.filter(i => i.category === cat.key);
+    const isExclusiveCat = cat.key === 'exclusive';
     const cardsHtml = items.map(item => {
       const isRoom = !!item.slot;
+      const isDiamond = item.currency === 'diamond';
       const owned = isRoom ? (state.ownedRoomItems || []).includes(item.id) : (state.ownedItems || []).includes(item.id);
       const equipped = isRoom ? state.equippedRoom[item.slot] === item.id : state.equippedItem === item.id;
-      const canAfford = (state.coins || 0) >= item.price;
+      const canAfford = shopBalanceFor(item) >= item.price;
       const statusLabel = equipped
         ? (item.slot === 'wallpaper' ? '✓ Applied' : isRoom ? '✓ Placed' : '✓ Equipped')
-        : owned ? 'Owned' : `🪙 ${item.price}`;
+        : owned ? 'Owned' : shopPriceLabel(item);
       const preview = item.slot === 'wallpaper'
         ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
         : isRoom
           ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
           : getPigWithItemMarkup(0.29, item.svg);
-      return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}" data-item-id="${item.id}">
+      return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}" data-item-id="${item.id}">
+        ${isDiamond ? '<span class="shop-exclusive-ribbon">Exclusive</span>' : ''}
         <div class="shop-preview">
           ${preview}
         </div>
         <div class="shop-card-body">
           <div class="shop-item-name">${item.name}</div>
-          <div class="shop-item-price">${statusLabel}</div>
+          <div class="shop-item-price${isDiamond ? ' shop-price-diamond' : ''}">${statusLabel}</div>
         </div>
       </div>`;
     }).join('');
-    return `<div class="shop-category">
+    return `<div class="shop-category${isExclusiveCat ? ' shop-category-exclusive' : ''}">
       <div class="shop-cat-header">
         <span class="shop-cat-icon">${cat.icon}</span>
         <h2 class="shop-cat-title">${cat.label}</h2>
+        ${isExclusiveCat ? '<span class="shop-cat-tag">Earned via streaks, not coins</span>' : ''}
       </div>
       <div class="shop-items-grid">${cardsHtml}</div>
     </div>`;
@@ -2198,7 +2468,7 @@ function renderShopPage() {
         <div class="shop-storefront-text">
           <div class="shop-storefront-sign">Hammy's Boutique</div>
           <div class="shop-storefront-sub">${equippedItem ? `Currently wearing: <strong>${equippedItem.name}</strong>` : 'Pick something cute for your pig!'}</div>
-          <div class="shop-earn-tip">Earn 🪙 coins by completing lessons · 8 coins per correct answer</div>
+          <div class="shop-earn-tip">Earn 🪙 coins by completing lessons · 💎 diamonds every 3-day streak</div>
         </div>
       </div>
     </div>
@@ -2213,6 +2483,8 @@ function handleShopAction(itemId) {
   const item = SHOP_ITEMS.find(i => i.id === itemId);
   if (!item) return;
 
+  const isDiamond = item.currency === 'diamond';
+
   if (item.slot) {
     if (!state.equippedRoom) state.equippedRoom = { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null };
     const owned = (state.ownedRoomItems || []).includes(itemId);
@@ -2222,8 +2494,8 @@ function handleShopAction(itemId) {
     } else if (owned) {
       state.equippedRoom[item.slot] = itemId;
     } else {
-      if ((state.coins || 0) < item.price) return;
-      state.coins -= item.price;
+      if (shopBalanceFor(item) < item.price) return;
+      if (isDiamond) state.diamonds -= item.price; else state.coins -= item.price;
       state.ownedRoomItems = [...(state.ownedRoomItems || []), itemId];
       state.equippedRoom[item.slot] = itemId;
     }
@@ -2240,8 +2512,8 @@ function handleShopAction(itemId) {
   } else if (owned) {
     state.equippedItem = itemId;
   } else {
-    if ((state.coins || 0) < item.price) return;
-    state.coins -= item.price;
+    if (shopBalanceFor(item) < item.price) return;
+    if (isDiamond) state.diamonds -= item.price; else state.coins -= item.price;
     state.ownedItems = [...(state.ownedItems || []), itemId];
     state.equippedItem = itemId;
   }
@@ -2496,6 +2768,14 @@ function renderSettingsPage() {
       }
     };
   }
+  const retakeBtn = document.getElementById('retake-survey-btn');
+  if (retakeBtn) {
+    retakeBtn.onclick = () => {
+      state.onboardingSurvey = { completed: false, moduleFamiliarity: {}, focusGoals: [], completedAt: null };
+      saveState();
+      showOnboardingSurvey();
+    };
+  }
 }
 
 // ── MODULE DETAIL ──────────────────────────────
@@ -2633,12 +2913,12 @@ function finishQuiz() {
     state.completedModules[mod.id] = { score, total, xpEarned };
   }
 
-  updateStreak();
+  const diamondsEarned = updateStreak();
   const leveled = addXP(xpEarned);
   const newAchs = checkAchievements();
   saveState();
   showScreen('screen-results');
-  renderResults(mod, score, total, xpEarned, wasLessonDone, newAchs, coinsEarned);
+  renderResults(mod, score, total, xpEarned, wasLessonDone, newAchs, coinsEarned, diamondsEarned);
 
   if (leveled) {
     setTimeout(() => {
@@ -2648,7 +2928,7 @@ function finishQuiz() {
   }
 }
 
-function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEarned) {
+function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEarned, diamondsEarned) {
   const pct = score / total;
   let grade, title;
   if (pct === 1)       { grade = 'Perfect'; title = 'Perfect Score'; }
@@ -2668,6 +2948,7 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
   const achHtml = newAchs.map(a =>
     `<div class="new-ach-banner"><span class="ach-abbr">${a.abbr}</span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
   ).join('');
+  const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
 
   document.getElementById('results-wrap').innerHTML = `
     <div class="results-grade">${grade}</div>
@@ -2683,6 +2964,7 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
         <div class="results-xp-label">${(state.coins || 0).toLocaleString()} total coins</div>
       </div>
     </div>
+    ${diamondHtml}
     ${achHtml}
     <div class="results-breakdown">${breakdown}</div>
     <div class="results-actions">
@@ -3756,13 +4038,13 @@ function finishQuest(mod, chosenConsequence) {
   }
   if (!state.questBossesWon.includes(mod.id)) state.questBossesWon.push(mod.id);
 
-  updateStreak();
+  const diamondsEarned = updateStreak();
   const leveled = addXP(bossXP);
   const newAchs = checkAchievements();
   saveState();
 
   showScreen('screen-results');
-  renderQuestResults(mod, bossXP, coinsEarned, newAchs, chosenConsequence.text, qp);
+  renderQuestResults(mod, bossXP, coinsEarned, newAchs, chosenConsequence.text, qp, diamondsEarned);
 
   if (leveled) {
     setTimeout(() => {
@@ -3851,10 +4133,11 @@ function buildQuestReport(mod, qp) {
     </div>`;
 }
 
-function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText, qp) {
+function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText, qp, diamondsEarned) {
   const achHtml = newAchs.map(a =>
     `<div class="new-ach-banner"><span class="ach-abbr">${a.abbr}</span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
   ).join('');
+  const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
 
   const dashHtml = Object.entries(qp.dashboard).map(([key, val]) => {
     const isMoney = key !== 'creditScore';
@@ -3877,6 +4160,7 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
         <div class="results-xp-label">${(state.coins || 0).toLocaleString()} total coins</div>
       </div>
     </div>
+    ${diamondHtml}
     ${achHtml}
     <div class="results-breakdown quest-final-dashboard">${dashHtml}</div>
     ${buildQuestReport(mod, qp)}
@@ -3942,15 +4226,23 @@ document.addEventListener('DOMContentLoaded', () => {
   loadState();
   renderHome();
 
+  const maybeShowOnboardingSurvey = () => {
+    if (!state.onboardingSurvey.completed) showOnboardingSurvey();
+  };
+
   if (!state.metHammy) {
     document.getElementById('birth-pig-wrap').innerHTML = getPigMarkup(0.22);
     document.getElementById('birth-overlay').classList.add('visible');
+  } else {
+    maybeShowOnboardingSurvey();
   }
   document.getElementById('birth-ok').addEventListener('click', () => {
     document.getElementById('birth-overlay').classList.remove('visible');
     state.metHammy = true;
     saveState();
+    maybeShowOnboardingSurvey();
   });
+  document.getElementById('onboarding-skip').addEventListener('click', () => finishOnboardingSurvey(true));
 
   // Sidebar expand/collapse
   const SIDEBAR_KEY = 'stackd_sidebar_collapsed';

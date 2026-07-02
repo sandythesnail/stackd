@@ -74,6 +74,7 @@
       <div class="sf-xp-label"><span id="sf-xp">0</span> XP</div>
       <div class="sf-bar-track"><div class="sf-bar-fill" id="sf-bar-fill"></div></div>
       <div class="sf-coins">🪙 <span id="sf-coins">0</span> coins</div>
+      <div class="sf-diamonds">💎 <span id="sf-diamonds">0</span> diamonds</div>
     </div>
   </nav>
 
@@ -162,7 +163,10 @@
           <h1 class="page-title">Shop</h1>
           <span class="section-sub">Spend coins to dress up your pig</span>
         </div>
-        <div class="shop-coins-badge" id="shop-coins-badge">🪙 <span id="shop-coin-count">0</span> coins</div>
+        <div class="shop-badges">
+          <div class="shop-coins-badge" id="shop-coins-badge">🪙 <span id="shop-coin-count">0</span> coins</div>
+          <div class="shop-diamonds-badge" id="shop-diamonds-badge">💎 <span id="shop-diamond-count">0</span> diamonds</div>
+        </div>
       </div>
       <div class="page-body">
         <div class="shop-grid" id="shop-grid"></div>
@@ -181,6 +185,13 @@
               <div class="settings-label">Signed in as</div>
               <div class="settings-val">UConn NetID (Microsoft SSO)</div>
             </div>
+          </div>
+          <div class="settings-item">
+            <div>
+              <div class="settings-label">Onboarding survey</div>
+              <div class="settings-val">Retake the "what's already in your toolkit" survey</div>
+            </div>
+            <button class="btn-secondary" id="retake-survey-btn">Retake</button>
           </div>
           <div class="settings-item">
             <div>
@@ -324,6 +335,28 @@
       <h2>A new piggy was born!</h2>
       <p>Meet Hammy. He's just a baby right now. Complete lessons to earn XP and coins, and watch him grow up alongside you as you master each module.</p>
       <button class="btn-primary" id="birth-ok">Let's raise him!</button>
+    </div>
+  </div>
+
+  <!-- ONBOARDING SURVEY OVERLAY -->
+  <div class="onboarding-overlay" id="onboarding-overlay">
+    <div class="onboarding-card">
+      <div class="onboarding-header">
+        <div class="onboarding-mascot" id="onboarding-mascot"></div>
+        <div>
+          <div class="onboarding-step-label" id="onboarding-step-label">Step 1 of 2</div>
+          <h2 id="onboarding-heading"></h2>
+          <p id="onboarding-subheading"></p>
+        </div>
+      </div>
+      <div class="onboarding-body" id="onboarding-body"></div>
+      <div class="onboarding-footer">
+        <div class="onboarding-footer-left">
+          <button class="onboarding-back" id="onboarding-back">← Back</button>
+          <button class="onboarding-skip" id="onboarding-skip">Skip for now</button>
+        </div>
+        <button class="btn-primary" id="onboarding-next">Continue →</button>
+      </div>
     </div>
   </div>
 
