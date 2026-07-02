@@ -858,6 +858,29 @@ body { background: var(--bg); min-height: 100vh; }
 .myth-progress { text-align: center; font-size: 0.75rem; font-weight: 600; color: var(--text-soft); }
 .myth-done { animation: fadeUp 0.4s ease; }
 
+/* Poll chapter — reuses the same myth-card-tag label + the pg-column-chart bar component,
+   so it reads as a warm-up to the myth cards that immediately follow it, not a new UI language. */
+.poll-card {
+  border: 1px solid var(--border); border-radius: var(--radius); background: #fff;
+  box-shadow: var(--shadow-md); padding: 1.5rem; display: flex; flex-direction: column;
+  align-items: center; gap: 0.75rem; text-align: center;
+}
+.poll-statement { font-size: 1.1rem; font-weight: 500; line-height: 1.45; color: var(--text); margin: 0; }
+.poll-choices { display: flex; gap: 0.75rem; width: 100%; margin-top: 0.25rem; }
+.poll-choice-btn { flex: 1; justify-content: center; text-align: center; font-weight: 700; }
+.poll-reveal { display: none; margin-top: 1rem; animation: fadeUp 0.4s ease; }
+.poll-reveal.show { display: block; }
+.poll-crowd-label { font-size: 0.8rem; font-weight: 600; color: var(--text-soft); text-align: center; margin-bottom: 0.5rem; }
+.poll-truth {
+  border-radius: var(--radius); border: 1px solid var(--border); padding: 1rem 1.25rem;
+  display: flex; flex-direction: column; align-items: center; gap: 0.4rem; text-align: center;
+}
+.poll-truth.is-true { border-color: var(--green-light); background: var(--green-pale); }
+.poll-truth.is-true .myth-card-tag { color: var(--green-dark); }
+.poll-truth.is-false { border-color: var(--pink-light); background: var(--pink-pale); }
+.poll-truth.is-false .myth-card-tag { color: var(--pink-dark); }
+.poll-explanation { font-size: 0.88rem; font-weight: 500; line-height: 1.55; color: var(--text); margin: 0; }
+
 /* Interactive simulators */
 .sim-meter-wrap { margin: 1.25rem 0; }
 .sim-meter-score { font-family: var(--font-display); font-size: 2rem; font-weight: 700; text-align: center; color: var(--text); margin-bottom: 0.5rem; }
@@ -1015,6 +1038,19 @@ body { background: var(--bg); min-height: 100vh; }
 }
 .streak-diamond-banner strong { font-size: 0.82rem; display: block; color: #1C8CA8; }
 .streak-diamond-banner span { font-size: 0.75rem; color: var(--text-mid); }
+
+.graduation-banner {
+  background: linear-gradient(135deg, #FFF8E1, #FDF0D5); border: 1.5px solid #E8C468;
+  border-radius: var(--radius); padding: 1rem 1.2rem;
+  display: flex; align-items: center; gap: 0.85rem;
+  box-shadow: 0 4px 16px rgba(201,162,39,0.18);
+}
+.graduation-banner .graduation-icon {
+  width: 42px; height: 42px; border-radius: var(--radius-sm); background: #F5E3AE;
+  font-size: 1.4rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.graduation-banner strong { font-size: 0.95rem; display: block; color: #8A6800; font-family: var(--font-display); }
+.graduation-banner span { font-size: 0.78rem; color: var(--text-mid); }
 
 /* ─── LEVEL-UP OVERLAY ─── */
 .levelup-overlay {
@@ -1499,6 +1535,21 @@ body { background: var(--bg); min-height: 100vh; }
   box-shadow: 0 2px 6px rgba(43,168,196,0.35);
 }
 .shop-price-diamond { color: #1C8CA8 !important; }
+
+/* Graduation cap — locked/dimmed until earned, gold ribbon instead of a price. */
+.shop-card.shop-reward-card {
+  position: relative; border-color: #E8C468; opacity: 0.85;
+  background: linear-gradient(155deg, #fff 60%, #FFFAEE 100%);
+}
+.shop-card.shop-reward-card .shop-preview { filter: grayscale(0.6); opacity: 0.75; }
+.shop-reward-ribbon {
+  position: absolute; top: 0.6rem; right: -1.9rem; z-index: 1;
+  background: linear-gradient(90deg, #B8860B, #E8C468); color: #fff;
+  font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  padding: 0.25rem 2.2rem; transform: rotate(38deg);
+  box-shadow: 0 2px 6px rgba(184,134,11,0.35);
+}
+.shop-price-reward { color: #8A6800 !important; }
 
 .shop-preview {
   background: #fff;

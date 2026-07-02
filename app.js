@@ -2,7 +2,9 @@
    STACKD app.js - PRD v1.0
 ══════════════════════════════════════════════ */
 
-const LEVEL_THRESHOLDS = [0, 200, 450, 750, 1100, 1500, 2000, 2600, 3300, 4100, 5000];
+// Tuned so a first-time, all-correct pass through every module lands right around level 9-10 —
+// leveling up should track finishing the whole curriculum, not just a couple of modules.
+const LEVEL_THRESHOLDS = [0, 90, 200, 330, 480, 660, 880, 1150, 1450, 1800, 2200];
 
 const TIERS = [
   { min: 1,  max: 2,  name: 'Broke Freshman' },
@@ -19,7 +21,7 @@ function getTier(level) {
 // ── Modules ──────────────────────────────────
 const MODULES = [
   {
-    id: 'earning', title: 'Earning', icon: '01', iconColor: 'green', xpReward: 35,
+    id: 'earning', title: 'Earning', icon: '01', iconColor: 'green', xpReward: 25,
     hook: 'You just got your first campus job paycheck. You worked 20 hours at $15/hour - that\'s $300. But your direct deposit shows $241. Where did $59 go?',
     desc: 'Paychecks, work-study, gig income, and what gets taken before you see a dollar.',
     questions: [
@@ -106,7 +108,7 @@ const MODULES = [
     ]
   },
   {
-    id: 'spending', title: 'Spending', icon: '02', iconColor: 'pink', xpReward: 50,
+    id: 'spending', title: 'Spending', icon: '02', iconColor: 'pink', xpReward: 35,
     hook: 'It\'s week 6 of the semester. You had $800 for the month. You check your account and there\'s $23 left. You didn\'t buy anything big. How did this happen - and how do you stop it?',
     desc: 'Budgeting on a student income, meal plans, and paying for college — FAFSA, scholarships, grants, and payment plans.',
     questions: [
@@ -193,7 +195,7 @@ const MODULES = [
     ]
   },
   {
-    id: 'saving', title: 'Saving', icon: '03', iconColor: 'mint', xpReward: 35,
+    id: 'saving', title: 'Saving', icon: '03', iconColor: 'mint', xpReward: 25,
     hook: 'Your laptop just died. It\'s finals week. A replacement costs $400. You have $47 in your checking account. This is what a missing emergency fund looks like - and it\'s completely avoidable.',
     desc: 'Emergency funds, high-yield savings accounts, sinking funds, and building habits early.',
     questions: [
@@ -280,7 +282,7 @@ const MODULES = [
     ]
   },
   {
-    id: 'investing', title: 'Investing', icon: '04', iconColor: 'lav', xpReward: 50,
+    id: 'investing', title: 'Investing', icon: '04', iconColor: 'lav', xpReward: 35,
     hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Jordan starts at 28. At 65, Alex has $21,000. Jordan has $10,700. They invested the exact same amount. What made the difference?',
     desc: 'Compound interest, Roth IRAs, diversification, and why starting at 18 changes everything.',
     questions: [
@@ -367,7 +369,7 @@ const MODULES = [
     ]
   },
   {
-    id: 'credit', title: 'Managing Credit', icon: '05', iconColor: 'sky', xpReward: 40,
+    id: 'credit', title: 'Managing Credit', icon: '05', iconColor: 'sky', xpReward: 30,
     hook: 'You just got your first credit card with a $1,000 limit. You spend $800 on textbooks and dorm supplies. You pay the minimum each month. In 3 years, you\'ve paid nearly $300 in interest - and still owe $600. What went wrong?',
     desc: 'APR, credit scores, utilization, building credit from scratch, and how to avoid common traps.',
     questions: [
@@ -661,6 +663,19 @@ const MODULES = [
           xpOnComplete: 4
         },
         {
+          id: 'poll1', type: 'poll', title: 'What Do Most People Think?',
+          intro: "Before we bust some myths, guess what most people believe. Tap True or False, then see how the crowd voted.",
+          statement: 'You need to already have good credit to get approved for your first credit card.',
+          isTrue: false,
+          sampleSize: '1,000 college students',
+          pollResults: [
+            { label: 'True', pct: 58 },
+            { label: 'False', pct: 42 }
+          ],
+          explanation: "It's a myth. You don't need existing credit to start. Options built for beginners, like student cards or secured cards backed by a refundable deposit, let you build a credit history from zero.",
+          xpOnComplete: 2
+        },
+        {
           id: 'c4', type: 'mythcards', title: 'Credit Myths',
           cards: [
             { myth: 'Carrying a small balance helps your credit score.', isTrue: false, explanation: 'Paying your bill in full every month is what actually helps. Carrying a balance just costs you extra in interest, it never boosts your score.' },
@@ -806,6 +821,19 @@ const MODULES = [
             xpOnComplete: 1
           },
           {
+            id: 'jpoll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, guess what most people believe. Tap True or False, then see how the crowd voted.",
+            statement: 'Signing up for a store card just to get the one-time discount is basically free money with no downside.',
+            isTrue: false,
+            sampleSize: '1,000 college students',
+            pollResults: [
+              { label: 'True', pct: 63 },
+              { label: 'False', pct: 37 }
+            ],
+            explanation: "It's a myth. That new account triggers a credit check and lowers your average account age, both can ding your score. And if you carry a balance even one month at a high store-card APR, the interest can wipe out the discount entirely.",
+            xpOnComplete: 2
+          },
+          {
             id: 'j4', type: 'mythcards', title: 'Store Card Myths',
             cards: [
               { myth: 'Store cards always have the same interest rate as regular credit cards.', isTrue: false, explanation: 'Store cards often charge noticeably higher APR than average credit cards, sometimes 29% or more.' },
@@ -846,7 +874,7 @@ const MODULES = [
     ]
   },
   {
-    id: 'risk', title: 'Managing Risk', icon: '06', iconColor: 'peach', xpReward: 35,
+    id: 'risk', title: 'Managing Risk', icon: '06', iconColor: 'peach', xpReward: 25,
     hook: 'You\'re moving off-campus next fall. A pipe bursts in your apartment and ruins your laptop, TV, and clothes. Your landlord\'s insurance covers the building - not your stuff. You owe $2,000 in replacements. What should you have had?',
     desc: 'Health coverage, renter\'s insurance, scams, and identity theft protection.',
     questions: [
@@ -933,7 +961,7 @@ const MODULES = [
     ]
   },
   {
-    id: 'loans', title: 'Loans', icon: '07', iconColor: 'amber', xpReward: 40,
+    id: 'loans', title: 'Loans', icon: '07', iconColor: 'amber', xpReward: 30,
     hook: 'Your financial aid offer shows $5,500 in federal loans available for the year. You only need $3,200 to cover the gap after grants. It\'s tempting to take it all as extra cash. Should you?',
     desc: 'Federal vs. private loans, subsidized vs. unsubsidized, Parent PLUS, repayment plans, and how borrowing today follows you after graduation.',
     questions: [
@@ -1020,7 +1048,7 @@ const MODULES = [
     ]
   },
   {
-    id: 'taxes', title: 'Taxes', icon: '08', iconColor: 'slate', xpReward: 40,
+    id: 'taxes', title: 'Taxes', icon: '08', iconColor: 'slate', xpReward: 30,
     hook: 'It\'s April. You have a W-2 from your on-campus job, a 1099 from a freelance gig, and you\'ve never filed a tax return in your life. Where do you even start?',
     desc: 'Filing your first return, W-2s vs. 1099s, education credits, dependency status, and the mistakes that cost students the most.',
     questions: [
@@ -1107,7 +1135,7 @@ const MODULES = [
     ]
   },
   {
-    id: 'psychology', title: 'Consumer Psychology', icon: '09', iconColor: 'berry', xpReward: 35,
+    id: 'psychology', title: 'Consumer Psychology', icon: '09', iconColor: 'berry', xpReward: 25,
     hook: 'You know you should be saving. You even said out loud last week, "I need to stop spending on DoorDash." Then a friend tags you in a group order twenty minutes later. Why isn\'t knowing enough?',
     desc: 'Impulse spending, social pressure, lifestyle inflation, subscriptions, BNPL, and the behavioral side of money.',
     questions: [
@@ -1194,7 +1222,7 @@ const MODULES = [
     ]
   },
   {
-    id: 'career', title: 'Career & Salary', icon: '10', iconColor: 'indigo', xpReward: 40,
+    id: 'career', title: 'Career & Salary', icon: '10', iconColor: 'indigo', xpReward: 30,
     hook: 'You get a job offer: $58,000. You\'re thrilled and about to accept on the spot. Your friend negotiated theirs from $55,000 to $60,000 with one email. Did you just leave money on the table?',
     desc: 'Negotiating your first salary, reading an offer letter, benefits and equity, networking, and why early career decisions compound for decades.',
     questions: [
@@ -1804,6 +1832,22 @@ const SHOP_ITEMS = [
           <path d="M 25 92 Q 22 108 26 126" stroke="#A66E08" stroke-width="1" fill="none" opacity="0.5"/>
           <path d="M 95 92 Q 98 108 94 126" stroke="#A66E08" stroke-width="1" fill="none" opacity="0.5"/>`
   },
+
+  // ── GRADUATION CAP (not for sale — auto-awarded for finishing every module) ──
+  {
+    id: 'graduation_cap', name: 'Graduation Cap', category: 'hat', reward: true,
+    viewBox: '14 -4 92 46',
+    desc: 'Awarded for completing all 10 modules. Can\'t be bought, only earned.',
+    svg: `<defs><linearGradient id="gcp-top" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#3D3D3D"/><stop offset="100%" stop-color="#141414"/></linearGradient></defs>
+          <ellipse cx="60" cy="27" rx="19" ry="7" fill="#1C1C1C"/>
+          <ellipse cx="60" cy="25" rx="19" ry="6.4" fill="#2B2B2B"/>
+          <path d="M 60 4 L 96 18 L 60 32 L 24 18 Z" fill="url(#gcp-top)" stroke="#000" stroke-width="0.6"/>
+          <path d="M 60 4 L 96 18 L 60 20 L 24 18 Z" fill="rgba(255,255,255,0.08)"/>
+          <circle cx="60" cy="18" r="3" fill="#C9A227"/>
+          <path d="M 60 18 Q 66 24 66 30" stroke="#C9A227" stroke-width="1.4" fill="none"/>
+          <path d="M 63 30 L 69 30 L 68 38 L 66 36 L 64 38 Z" fill="#D9B33E"/>
+          <circle cx="66" cy="30" r="2" fill="#C9A227"/>`
+  },
 ];
 
 // ── Achievements ──────────────────────────────
@@ -1896,6 +1940,13 @@ function buildStreakDiamondBanner(diamondsEarned) {
   </div>`;
 }
 
+function buildGraduationBanner() {
+  return `<div class="graduation-banner">
+    <span class="graduation-icon">🎓</span>
+    <div><strong>You Graduated!</strong><span>Every module complete. Your Graduation Cap is equipped, check out your pig.</span></div>
+  </div>`;
+}
+
 function checkAchievements() {
   const newOnes = [];
   ACHIEVEMENTS.forEach(a => {
@@ -1904,6 +1955,12 @@ function checkAchievements() {
       newOnes.push(a);
     }
   });
+  // Finishing every module auto-awards the Graduation Cap — it can't be bought, only earned —
+  // and equips it immediately so the payoff is visible the moment they land back on the pig.
+  if (newOnes.some(a => a.id === 'stackd_star') && !(state.ownedItems || []).includes('graduation_cap')) {
+    state.ownedItems = [...(state.ownedItems || []), 'graduation_cap'];
+    state.equippedItem = 'graduation_cap';
+  }
   return newOnes;
 }
 
@@ -2358,12 +2415,14 @@ function refreshShopModal(itemId) {
   const isWallpaper = item.slot === 'wallpaper';
   const owned = isRoom ? (state.ownedRoomItems || []).includes(itemId) : (state.ownedItems || []).includes(itemId);
   const equipped = isRoom ? state.equippedRoom[item.slot] === itemId : state.equippedItem === itemId;
-  const canAfford = shopBalanceFor(item) >= item.price;
+  const canAfford = item.reward ? false : shopBalanceFor(item) >= item.price;
   let btn;
   if (equipped) {
     btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'} · Remove</button>`;
   } else if (owned) {
     btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">${isWallpaper ? 'Apply' : isRoom ? 'Place in room' : 'Equip'}</button>`;
+  } else if (item.reward) {
+    btn = `<button class="shop-btn shop-btn-broke" disabled>🎓 Complete all 10 modules to earn this</button>`;
   } else {
     btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>${shopPriceLabel(item)}</button>`;
   }
@@ -2426,25 +2485,29 @@ function renderShopPage() {
     const cardsHtml = items.map(item => {
       const isRoom = !!item.slot;
       const isDiamond = item.currency === 'diamond';
+      const isReward = !!item.reward;
       const owned = isRoom ? (state.ownedRoomItems || []).includes(item.id) : (state.ownedItems || []).includes(item.id);
       const equipped = isRoom ? state.equippedRoom[item.slot] === item.id : state.equippedItem === item.id;
-      const canAfford = shopBalanceFor(item) >= item.price;
+      const canAfford = isReward ? false : shopBalanceFor(item) >= item.price;
       const statusLabel = equipped
         ? (item.slot === 'wallpaper' ? '✓ Applied' : isRoom ? '✓ Placed' : '✓ Equipped')
-        : owned ? 'Owned' : shopPriceLabel(item);
+        : owned ? 'Owned'
+        : isReward ? '🎓 Locked'
+        : shopPriceLabel(item);
       const preview = item.slot === 'wallpaper'
         ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
         : isRoom
           ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
           : getPigWithItemMarkup(0.29, item.svg);
-      return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}" data-item-id="${item.id}">
+      return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${isReward && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
         ${isDiamond ? '<span class="shop-exclusive-ribbon">Exclusive</span>' : ''}
+        ${isReward && !owned ? '<span class="shop-reward-ribbon">Reward</span>' : ''}
         <div class="shop-preview">
           ${preview}
         </div>
         <div class="shop-card-body">
           <div class="shop-item-name">${item.name}</div>
-          <div class="shop-item-price${isDiamond ? ' shop-price-diamond' : ''}">${statusLabel}</div>
+          <div class="shop-item-price${isDiamond ? ' shop-price-diamond' : ''}${isReward ? ' shop-price-reward' : ''}">${statusLabel}</div>
         </div>
       </div>`;
     }).join('');
@@ -2949,6 +3012,7 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
     `<div class="new-ach-banner"><span class="ach-abbr">${a.abbr}</span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
   ).join('');
   const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
+  const gradHtml = newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '';
 
   document.getElementById('results-wrap').innerHTML = `
     <div class="results-grade">${grade}</div>
@@ -2964,6 +3028,7 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
         <div class="results-xp-label">${(state.coins || 0).toLocaleString()} total coins</div>
       </div>
     </div>
+    ${gradHtml}
     ${diamondHtml}
     ${achHtml}
     <div class="results-breakdown">${breakdown}</div>
@@ -3019,13 +3084,14 @@ function startQuest(moduleId, questId) {
       done: false,
       learnedTerms: [],
       hintsUsed: 0,
-      analytics: { knowledgeCheck: [], mythCards: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null },
+      analytics: { knowledgeCheck: [], mythCards: [], polls: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null },
     };
   } else {
     // Defensive backfill in case this progress was saved before these fields existed.
     existing.learnedTerms = existing.learnedTerms || [];
     existing.hintsUsed = existing.hintsUsed || 0;
-    existing.analytics = existing.analytics || { knowledgeCheck: [], mythCards: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null };
+    existing.analytics = existing.analytics || { knowledgeCheck: [], mythCards: [], polls: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null };
+    existing.analytics.polls = existing.analytics.polls || [];
   }
   saveState();
   showScreen('screen-quest');
@@ -3058,6 +3124,7 @@ const CHAPTER_TITLE_FALLBACK = {
   mythcards: 'Myth or Fact?',
   simulator: 'Simulator',
   knowledgecheck: 'Quick Check',
+  poll: 'Quick Poll',
 };
 function getChapterTitle(chapter) {
   if (chapter.type === 'bossbattle') return chapter.title ? `⚠ Boss Battle: ${chapter.title}` : '⚠ Boss Battle';
@@ -3120,6 +3187,7 @@ function renderChapter(mod, idx) {
     case 'explainback': renderExplainbackChapter(chapter, mod, onDone); break;
     case 'decision': renderDecisionChapter(chapter, mod, onDone); break;
     case 'microsim': renderMicrosimChapter(chapter, mod, onDone); break;
+    case 'poll': renderPollChapter(chapter, mod, onDone); break;
     case 'mythcards': renderMythCardsChapter(chapter, mod, onDone); break;
     case 'knowledgecheck': renderKnowledgeCheckChapter(chapter, mod, onDone); break;
     case 'simulator': renderSimulatorChapter(chapter, mod, onDone); break;
@@ -3721,6 +3789,67 @@ function renderMicrosimChapter(chapter, mod, onDone) {
 }
 
 // ── Chapter type: mythcards (swipeable stack) ───
+// ── Chapter type: poll (crowd-guess before myth-busting) ───────────
+// Mirrors the myth-cards tag/reveal styling that immediately follows it, so the two chapter
+// types read as one continuous "test your assumptions" beat rather than two different UIs.
+function renderPollChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  main.innerHTML = `
+    <p class="quest-prompt">${chapter.intro || "Before we bust some myths, guess what most people believe."}</p>
+    <div class="poll-card">
+      <span class="myth-card-tag">TRUE OR FALSE?</span>
+      <p class="poll-statement">${chapter.statement}</p>
+      <div class="poll-choices" id="poll-choices">
+        <button class="option-btn poll-choice-btn" data-choice="true">True</button>
+        <button class="option-btn poll-choice-btn" data-choice="false">False</button>
+      </div>
+    </div>
+    <div class="poll-reveal" id="poll-reveal"></div>`;
+
+  document.getElementById('poll-choices').querySelectorAll('.poll-choice-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const guessedTrue = btn.dataset.choice === 'true';
+      const guessedRight = guessedTrue === chapter.isTrue;
+      document.getElementById('poll-choices').querySelectorAll('button').forEach(b => {
+        b.disabled = true;
+        const bIsTrue = b.dataset.choice === 'true';
+        if (bIsTrue === chapter.isTrue) b.classList.add('correct');
+        else if (b === btn) b.classList.add('wrong');
+      });
+
+      const qp = getQP(mod);
+      qp.analytics.polls = qp.analytics.polls || [];
+      qp.analytics.polls.push({ statement: chapter.statement, isTrue: chapter.isTrue, guessedRight });
+      saveState();
+      showHammyReaction(mod, guessedRight);
+
+      const maxPct = Math.max(...chapter.pollResults.map(r => r.pct), 1);
+      const barsHtml = chapter.pollResults.map(r => `
+        <div class="pg-col">
+          <div class="pg-col-val">${r.pct}%</div>
+          <div class="pg-col-bar-wrap"><div class="pg-col-bar ${r.label === 'False' ? 'pg-col-pink' : ''}" style="height:${Math.max(4, r.pct / maxPct * 100)}%"></div></div>
+          <div class="pg-col-name">${r.label}</div>
+        </div>`).join('');
+
+      const revealEl = document.getElementById('poll-reveal');
+      revealEl.innerHTML = `
+        <p class="poll-crowd-label">${chapter.sampleSize ? `Here's how ${chapter.sampleSize} voted:` : "Here's how the crowd voted:"}</p>
+        <div class="pg-column-chart">${barsHtml}</div>
+        <div class="poll-truth ${chapter.isTrue ? 'is-true' : 'is-false'}">
+          <span class="myth-card-tag">${chapter.isTrue ? 'THIS IS A FACT' : 'THIS IS A MYTH'}</span>
+          <p class="poll-explanation">${chapter.explanation}</p>
+        </div>`;
+      revealEl.classList.add('show');
+
+      setQuestContinue('Continue →', () => {
+        if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+        onDone();
+      }, true);
+    });
+  });
+}
+
 function renderMythCardsChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
   clearQuestContinue();
@@ -4138,6 +4267,7 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
     `<div class="new-ach-banner"><span class="ach-abbr">${a.abbr}</span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
   ).join('');
   const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
+  const gradHtml = newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '';
 
   const dashHtml = Object.entries(qp.dashboard).map(([key, val]) => {
     const isMoney = key !== 'creditScore';
@@ -4160,6 +4290,7 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
         <div class="results-xp-label">${(state.coins || 0).toLocaleString()} total coins</div>
       </div>
     </div>
+    ${gradHtml}
     ${diamondHtml}
     ${achHtml}
     <div class="results-breakdown quest-final-dashboard">${dashHtml}</div>
