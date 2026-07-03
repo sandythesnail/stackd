@@ -2849,6 +2849,17 @@ function getPigWithItemMarkup(scale, itemSvg) {
 </div>`;
 }
 
+// The player's own equipped cosmetic (bought and worn from the Shop) — used everywhere
+// "their" Hammy appears (Home, Progress, quest/activity companion, results) so a purchase
+// visibly shows up across the whole app, not just on the Room page. Distinct from the quest
+// engine's per-character narrative accessory (Maya's bow, Devon's bowtie), which stays tied
+// to that character's own story portraits, not the player's mascot.
+function getEquippedItemSvg() {
+  if (!state.equippedItem) return '';
+  const item = SHOP_ITEMS.find(i => i.id === state.equippedItem);
+  return item ? item.svg : '';
+}
+
 function buildPigPreviewSvg(itemSvg, viewBox = '0 0 120 162') {
   return `<svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -3012,7 +3023,7 @@ function renderShopPage() {
         <span></span><span></span><span></span><span></span><span></span>
       </div>
       <div class="shop-storefront-inner">
-        <div class="shop-storefront-pig">${getPigMarkup(0.2)}</div>
+        <div class="shop-storefront-pig">${getPigWithItemMarkup(0.2, getEquippedItemSvg())}</div>
         <div class="shop-storefront-text">
           <div class="shop-storefront-sign">Hammy's Boutique</div>
           <div class="shop-storefront-sub">${equippedItem ? `Currently wearing: <strong>${equippedItem.name}</strong>` : 'Pick something cute for your pig!'}</div>
@@ -3126,7 +3137,7 @@ function renderHome() {
   document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
 
   document.getElementById('home-mascot-card').innerHTML = `
-    <div class="mascot-pig-wrap">${getPigMarkup(0.25)}</div>
+    <div class="mascot-pig-wrap">${getPigWithItemMarkup(0.25, getEquippedItemSvg())}</div>
     <div class="mascot-info">
       <div class="mascot-tier-name">${tier.name}</div>
       <div class="mascot-unlock">${getPigAccessoryDesc(state.level)}</div>
@@ -3196,7 +3207,7 @@ function renderProgressPage() {
   document.getElementById('progress-body').innerHTML = `
     <!-- Pig mascot -->
     <div class="pg-mascot-wrap">
-      <div class="pg-mascot-pig">${getPigMarkup(0.25)}</div>
+      <div class="pg-mascot-pig">${getPigWithItemMarkup(0.25, getEquippedItemSvg())}</div>
       <div class="pg-mascot-bubble">${pigMsg}</div>
     </div>
 
@@ -3861,7 +3872,7 @@ function startBonusActivity(moduleId, lessonIdx) {
   document.getElementById('glossary-tray').classList.remove('show');
   document.getElementById('hint-budget').innerHTML = '';
   document.getElementById('quest-side').style.display = 'flex';
-  document.getElementById('hammy-side-avatar').innerHTML = getPigMarkup(window.innerWidth <= 768 ? 0.28 : 0.64);
+  document.getElementById('hammy-side-avatar').innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItemSvg());
   document.getElementById('hammy-side-avatar').className = 'hammy-side-avatar';
   document.getElementById('hammy-side-msg').textContent = '';
   document.getElementById('hammy-side-msg').className = 'hammy-side-msg';
@@ -4418,7 +4429,7 @@ function renderChapter(mod, idx) {
   const hammyMsg = document.getElementById('hammy-side-msg');
   questSide.style.display = HAMMY_SIDE_HIDDEN_TYPES.includes(chapter.type) ? 'none' : 'flex';
   hammySide.className = 'hammy-side-avatar';
-  hammySide.innerHTML = getPigMarkup(window.innerWidth <= 768 ? 0.28 : 0.64);
+  hammySide.innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItemSvg());
   hammyMsg.className = 'hammy-side-msg';
   hammyMsg.textContent = '';
 
@@ -4506,8 +4517,9 @@ function applyQuestStateDelta(mod, delta) {
 }
 
 // Compact Hammy face (reuses the existing pig markup, cropped to just the head via .pig-head-stage).
+// Shows the player's own equipped item so a purchase shows up here too, not just full-body views.
 function getHammyFaceMarkup(scale) {
-  return getPigMarkup(scale).replace('class="pig-stage"', 'class="pig-stage pig-head-stage"');
+  return getPigWithItemMarkup(scale, getEquippedItemSvg()).replace('class="pig-stage"', 'class="pig-stage pig-head-stage"');
 }
 
 // Glossary tray — every term taught moves here once the student clicks past it, so they can
@@ -5716,7 +5728,7 @@ function buildQuestReport(mod, qp) {
       ${strengthsHtml}
       ${weakHtml}
       <div class="report-advice">
-        <div class="hammy-report-avatar">${getPigMarkup(0.4)}</div>
+        <div class="hammy-report-avatar">${getPigWithItemMarkup(0.4, getEquippedItemSvg())}</div>
         <p><strong>Hammy's advice:</strong> ${advice}</p>
       </div>
     </div>`;
