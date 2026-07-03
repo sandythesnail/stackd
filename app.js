@@ -191,7 +191,69 @@ const MODULES = [
       { title: 'Day-to-Day Money on Campus', hook: 'You\'ve got $1,200 in dining dollars and $47 in your emergency fund, both meant to last the semester. One is about pacing spending, the other about surviving a surprise cost — how do you handle both?', qIndices: [4, 8] },
       { title: 'FAFSA & the Financial Aid Timeline', hook: 'It\'s October 1st and your inbox reminds you: FAFSA is open. Last year you put it off, missed a scholarship deadline, and scrambled to gather documents in August. This year, what\'s the plan?', qIndices: [5, 9] },
       { title: 'Grants, Scholarships & Your Aid Offer', hook: 'Your financial aid offer lists grants, a scholarship, work-study, and loans all on one page, and it feels like a single number to accept or reject. Is it — or does each line deserve its own decision?', qIndices: [6, 10] },
-      { title: 'Payment Plans & Closing the Gap', hook: 'After grants and scholarships, you\'re still $1,800 short for the semester. Loans aren\'t your only option, and neither is panicking. What else can actually close that gap?', qIndices: [7, 11] }
+      { title: 'Payment Plans & Closing the Gap', hook: 'After grants and scholarships, you\'re still $1,800 short for the semester. Loans aren\'t your only option, and neither is panicking. What else can actually close that gap?', qIndices: [7, 11] },
+      {
+        title: 'Opportunity Cost: The Real Price of Every Decision',
+        type: 'decision-chain',
+        hook: 'You just spent $80 on a concert ticket without a second thought. But that $80 didn\'t just disappear — it was a choice. What did you actually give up to make it?',
+        activity: {
+          intro: "Every dollar you spend is a dollar that could have gone somewhere else. That's opportunity cost — the value of the next-best thing you gave up. Over one week, you'll make three spending decisions. At the end, you'll see exactly what each one cost you beyond the price tag.",
+          decisions: [
+            {
+              day: 'Monday',
+              prompt: "Your friends invite you to a concert. Tickets are $80. You have $150 in checking and $65 saved toward a new laptop.",
+              choices: [
+                { id: 'a', label: 'Buy the ticket', cost: 80, gaveUp: 'about 3 weeks of groceries, or $80 closer to your laptop fund', good: false },
+                { id: 'b', label: 'Skip it, keep the $80', cost: 0, gaveUp: 'a night out with friends', good: true }
+              ]
+            },
+            {
+              day: 'Wednesday',
+              prompt: "Next semester's textbook is $110 new, or $70 used online with 3–5 day shipping. You need it by Friday for an assignment preview.",
+              choices: [
+                { id: 'a', label: 'Buy new today, guaranteed on time', cost: 110, gaveUp: '$40 that could have covered a week of gas', good: false },
+                { id: 'b', label: 'Order used and borrow a friend\'s copy until it arrives', cost: 70, gaveUp: 'a little extra effort coordinating with a friend', good: true }
+              ]
+            },
+            {
+              day: 'Saturday',
+              prompt: "A promo email offers 40% off a $60 hoodie — $36 for the next 2 hours. You weren't planning to buy anything.",
+              choices: [
+                { id: 'a', label: 'Buy it, the deal is too good to pass up', cost: 36, gaveUp: 'almost a whole week of your food delivery budget', good: false },
+                { id: 'b', label: 'Close the email and think it over for 24 hours', cost: 0, gaveUp: 'the urgency-driven "deal" — if you still want it tomorrow, it\'ll likely still be there', good: true }
+              ]
+            }
+          ],
+          xpOnComplete: 8
+        }
+      },
+      {
+        title: 'Wants vs. Needs (And the Gray Zone)',
+        type: 'sorter',
+        hook: 'Marketing is designed to make wants feel like needs. Before your next purchase, can you actually tell the difference — and does it matter?',
+        activity: {
+          intro: "Sort each expense into Need, Want, or It Depends. There's no judgment here — the goal is just noticing the difference before you spend, not guilt after. Tap an item, then tap the bucket it belongs in.",
+          items: [
+            { id: 'i1', label: 'Rent', category: 'need' },
+            { id: 'i2', label: 'Groceries', category: 'need' },
+            { id: 'i3', label: 'Phone bill (basic plan)', category: 'need' },
+            { id: 'i4', label: 'Textbooks required for class', category: 'need' },
+            { id: 'i5', label: 'Bus pass or gas money for commuting to class', category: 'need' },
+            { id: 'i6', label: 'Renter\'s or health insurance', category: 'need' },
+            { id: 'i7', label: 'Emergency car repair', category: 'need' },
+            { id: 'i8', label: 'DoorDash instead of cooking, twice a week', category: 'want' },
+            { id: 'i9', label: 'Concert tickets', category: 'want' },
+            { id: 'i10', label: 'A $6 coffee, every day', category: 'want' },
+            { id: 'i11', label: 'The newest phone when yours still works fine', category: 'want' },
+            { id: 'i12', label: 'All your streaming subscriptions, combined', category: 'depends', note: 'One is often a want you actually use — five you forgot you had is subscription creep.' },
+            { id: 'i13', label: 'A gym membership you use 3x/week', category: 'depends', note: 'A want that supports your health — reasonable if it fits your budget and you actually use it.' },
+            { id: 'i14', label: 'A new outfit for a one-time event', category: 'depends', note: 'Could be a want, or a need if you truly have nothing appropriate to wear.' },
+            { id: 'i15', label: 'A haircut', category: 'depends', note: 'A basic trim is upkeep; a $150 salon visit before a big event leans want.' }
+          ],
+          subscriptionCreepNote: "Subscription creep: you sign up for one thing, forget about it, and a year later you're paying for seven. Once a month, scroll through your bank statement and cancel anything you can't remember using in the last 30 days.",
+          xpOnComplete: 8
+        }
+      }
     ]
   },
   {
@@ -664,14 +726,9 @@ const MODULES = [
         },
         {
           id: 'poll1', type: 'poll', title: 'What Do Most People Think?',
-          intro: "Before we bust some myths, guess what most people believe. Tap True or False, then see how the crowd voted.",
+          intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
           statement: 'You need to already have good credit to get approved for your first credit card.',
           isTrue: false,
-          sampleSize: '1,000 college students',
-          pollResults: [
-            { label: 'True', pct: 58 },
-            { label: 'False', pct: 42 }
-          ],
           explanation: "It's a myth. You don't need existing credit to start. Options built for beginners, like student cards or secured cards backed by a refundable deposit, let you build a credit history from zero.",
           xpOnComplete: 2
         },
@@ -712,6 +769,66 @@ const MODULES = [
           actualValue: 230, guessRange: { min: 0, max: 500, step: 10 },
           explanation: 'Minimum payments barely dent what you actually owe, most of each payment goes toward interest first, and only a little toward the original balance.',
           xpOnComplete: 5
+        },
+        {
+          id: 't6', type: 'teach', title: 'Building Credit From Zero',
+          concepts: [
+            {
+              term: 'The Five Factors of Your Score',
+              plain: "Your credit score isn't one mystery number, it's built from five weighted factors: payment history (35%), amounts owed (30%), length of credit history (15%), new credit (10%), and credit mix (10%). Payment history alone is worth more than the other four combined.",
+              analogy: "Think of it like a report card where one class — showing up on time, every time — counts for over a third of your grade.",
+              check: { statement: 'New credit inquiries and credit mix matter more to your score than payment history.', isTrue: false }
+            },
+            {
+              term: 'Starting With Nothing',
+              plain: "No credit history isn't a bad score, it's no score at all, and everyone starts there. The two most common ways students build from zero: a secured credit card, where you put down a refundable deposit (usually $200–500) that becomes your limit, then use it like a debit card and pay it off monthly. Or become an authorized user on a parent or family member's well-managed card, which can add their positive history to your own report.",
+              analogy: "A secured card is training wheels — same bike, same rules, just a deposit backing you up until you've built trust.",
+              check: { statement: 'You need to carry a balance from month to month to build credit — paying in full every month won\'t help as much.', isTrue: false }
+            },
+            {
+              term: "Credit Doesn't Cross Borders",
+              plain: "If you're an international student, this matters a lot: credit history does not transfer between countries. Excellent credit in Germany, Brazil, or South Korea means starting at zero in the US — the same as anyone with no history at all. The good news: the exact same roadmap applies to you, a secured card or authorized user status works identically.",
+              analogy: "It's less like a translation and more like starting a brand new file — the old one doesn't follow you across the border."
+            }
+          ],
+          xpOnComplete: 3
+        },
+        {
+          id: 'poll2', type: 'poll', title: 'What Do Most People Think?',
+          intro: "One more before Maya sets up her payments. Tap True or False, then see the answer.",
+          statement: 'If you had excellent credit in another country, that history transfers when you move to the US.',
+          isTrue: false,
+          explanation: "It's a myth. Credit history is tied to the country's own reporting system and doesn't transfer — international students start at zero here no matter their credit history back home.",
+          xpOnComplete: 2
+        },
+        {
+          id: 't7', type: 'teach', title: 'Setting Up Your Card Payments',
+          concepts: [
+            {
+              term: "Step 1: Log Into Your Card's App",
+              plain: "Every major card issuer — Chase, Discover, Capital One, Bank of America — has an app or web portal. After your card arrives, activate it (usually a quick phone call or a tap in the app), then create your login. This is command central for everything that follows.",
+              analogy: "Think of it like setting up any new account — one login, and everything else lives inside it."
+            },
+            {
+              term: 'Step 2: Connect Your Bank Account',
+              plain: "To pay your bill, link a checking account using two numbers: your routing number (identifies your BANK) and your account number (identifies YOUR specific account there). Both are printed at the bottom of a paper check, or found in your bank's app under account details.",
+              analogy: "The routing number is like a zip code — it gets your payment to the right bank. The account number is the exact street address once it's there.",
+              check: { statement: 'The routing number identifies your bank, and the account number identifies your specific account.', isTrue: true }
+            },
+            {
+              term: 'Step 3: Autopay — Minimum vs. Full Balance',
+              plain: "Most apps let you set autopay to one of three options: minimum due, a set amount, or full statement balance. Full balance is almost always the right choice — it guarantees you never pay interest and never miss a payment. Autopaying only the minimum still avoids late fees, but leaves the rest of your balance to accrue interest every single day.",
+              analogy: "Full-balance autopay is like paying off a group tab in full. Minimum autopay is chipping in $5 and letting the rest sit there, growing.",
+              check: { statement: 'Setting autopay to the minimum due guarantees you\'ll never pay any interest.', isTrue: false }
+            },
+            {
+              term: 'Step 4: If a Payment Is Missed',
+              plain: "Miss a payment entirely — autopay fails, linked account is empty — and you're looking at a late fee, and if you're 30+ days late, it gets reported to the credit bureaus, a real hit to your score that can take months to recover from. Carry a balance instead of missing a payment, and interest compounds daily — small balances can grow surprisingly fast.",
+              analogy: "A late payment is a single bruise. A carried balance is a slow leak — less dramatic in the moment, but it adds up.",
+              linkOut: { label: 'See exactly how a carried balance grows', action: 'compound-interest' }
+            }
+          ],
+          xpOnComplete: 3
         },
         {
           id: 'c8', type: 'bossbattle', title: 'The Car Repair',
@@ -822,14 +939,9 @@ const MODULES = [
           },
           {
             id: 'jpoll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, guess what most people believe. Tap True or False, then see how the crowd voted.",
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
             statement: 'Signing up for a store card just to get the one-time discount is basically free money with no downside.',
             isTrue: false,
-            sampleSize: '1,000 college students',
-            pollResults: [
-              { label: 'True', pct: 63 },
-              { label: 'False', pct: 37 }
-            ],
             explanation: "It's a myth. That new account triggers a credit check and lowers your average account age, both can ding your score. And if you carry a balance even one month at a high store-card APR, the interest can wipe out the discount entirely.",
             xpOnComplete: 2
           },
@@ -1218,7 +1330,30 @@ const MODULES = [
       { title: 'Subscriptions & BNPL', hook: 'You check out online and see "Buy Now, Pay Later — 4 payments of $50, no interest." It feels harmless. Combined with the six subscriptions already on your card, is it?', qIndices: [3, 4] },
       { title: 'Mental Accounting & Targeted Ads', hook: 'You get a $400 tax refund and immediately blow it on something you\'d never normally buy, then open Instagram and buy a targeted ad\'s product on impulse ten minutes later. Is your brain treating this money differently than a regular paycheck?', qIndices: [7, 8] },
       { title: 'Sunk Cost & Comparison Spending', hook: 'You\'re still paying for a gym membership you\'ve used twice in 8 months, and you just spent an hour comparing your closet to an influencer\'s "haul" video. Neither decision is really about the gym or the clothes.', qIndices: [9, 10] },
-      { title: 'Automating Habits & Coping With Triggers', hook: 'You automated your savings transfer months ago and it\'s worked well — but during a stressful exam week you still found yourself online shopping at 1am for things you don\'t need. What\'s the next habit to build?', qIndices: [5, 11] }
+      { title: 'Automating Habits & Coping With Triggers', hook: 'You automated your savings transfer months ago and it\'s worked well — but during a stressful exam week you still found yourself online shopping at 1am for things you don\'t need. What\'s the next habit to build?', qIndices: [5, 11] },
+      {
+        title: 'Evaluating Tradeoffs Under Pressure',
+        type: 'decision-chain',
+        hook: "It's 9pm, your friends just texted about a $60 concert this weekend, and you're tight on cash. Everyone's waiting on your answer. Does the pressure to decide fast change the decision itself?",
+        activity: {
+          intro: "Being tight on time or money changes how you decide — that's the scarcity mindset: when resources feel scarce, your brain narrows in on the immediate problem and gets worse at weighing tradeoffs. Before any purchase over $50, run it through three questions: What's the actual cost? What's the consequence if I say yes? Can I undo this if I'm wrong — is it reversible? And when the pressure is social, not financial: an honest \"not this week, but let's do something free after\" almost always lands better with real friends than a vague excuse or an overspend you'll regret.",
+          startLabel: 'See What Happens →',
+          decisions: [
+            {
+              prompt: "Your friends are going to a $60 concert this weekend, but you're tight on money this week — rent is due Monday. The group chat is waiting on your answer. What do you do?",
+              choices: [
+                { id: 'a', label: "Say yes and put it on a credit card — you don't want to miss out", cost: 60, gaveUp: "you're now $60 closer to not covering rent, and it's on a card that charges interest if you can't pay it off in full", good: false },
+                { id: 'b', label: "Make a vague excuse and skip it without explaining why", cost: 0, gaveUp: "Your money stays fine, but your friends are left guessing — and unexplained no's, repeated enough times, quietly create distance.", good: false },
+                { id: 'c', label: "Be honest: \"I'm tight this week, but I'm in for something free after\"", cost: 0, gaveUp: "Nothing — rent stays covered, and most real friends respect honesty a lot more than a vague no or a $60 flex they never see repaid.", good: true }
+              ]
+            }
+          ],
+          finalChoiceLabel: 'See the Takeaway →',
+          summaryIntro: "Here's what that choice set in motion.",
+          takeaway: "Option C cost nothing and cascaded nothing forward — no debt, no awkwardness, no guessing games. The scarcity mindset makes \"yes\" feel like the only way to protect a friendship. It usually isn't — the cost/consequence/reversibility check and a little honesty almost always find a cheaper path.",
+          xpOnComplete: 8
+        }
+      }
     ]
   },
   {
@@ -1305,7 +1440,340 @@ const MODULES = [
       { title: 'Benefits & Total Compensation', hook: 'Two offers pay the exact same salary — one gives you 10 PTO days, the other gives you 20 plus paid holidays. Does that difference actually matter, or is pay all that counts?', qIndices: [2, 7] },
       { title: 'Retirement Match & Equity', hook: 'Your new job offers a 401(k) match, while a startup offer instead dangles stock options rather than a higher salary. Which of these is actually real money, and which is a bet on the future?', qIndices: [3, 8] },
       { title: 'Comparing Offers & Job-Hopping', hook: 'You have two offers on the table — one with a slightly higher salary, the other with a stronger 401(k) match and a clearer promotion path — and a friend just left their job for a 15% raise elsewhere. How should all of this factor into your decision?', qIndices: [4, 10] },
-      { title: 'Building Your Network & Long-Term Impact', hook: 'You\'re only a sophomore with no job offers yet, but the $5,000 gap between two hypothetical starting salaries keeps nagging at you. Does anything you do now actually affect that gap years from now?', qIndices: [9, 5] }
+      { title: 'Building Your Network & Long-Term Impact', hook: 'You\'re only a sophomore with no job offers yet, but the $5,000 gap between two hypothetical starting salaries keeps nagging at you. Does anything you do now actually affect that gap years from now?', qIndices: [9, 5] },
+      {
+        title: 'Why Negotiating Compounds',
+        type: 'callout',
+        hook: 'Negotiating $5,000 more per year sounds like it\'s worth exactly $5,000 more per year. It isn\'t — and the real number is a lot bigger.',
+        activity: {
+          body: "Every negotiation skill in this module doesn't just affect this year's paycheck — it changes how much you can invest every single month, and money invested young has the most time to grow. Say negotiating adds $5,000/year starting at 22, and you invest all of it monthly at a 7% average return until 65. Here's what that one negotiation is actually worth by retirement:",
+          example: { startingAmount: 0, monthlyContribution: 5000 / 12, annualRatePct: 7, years: 43, label: 'from one negotiated $5,000/year raise, starting at 22, invested at 7% until 65' },
+          linkOut: { label: 'Run your own numbers in the Compound Interest Simulator', action: 'compound-interest' },
+          xpOnComplete: 5
+        }
+      }
+    ]
+  },
+  {
+    id: 'scams', title: 'Scams & Fraud Prevention', icon: '11', iconColor: 'rust', xpReward: 30,
+    hook: 'You get a text: "Your financial aid is on hold. Click here to verify your bank info within 24 hours or funds will be released to another account." Your stomach drops for a second. Is this real?',
+    desc: 'The scams that specifically target college students — fake jobs, housing fraud, financial aid phishing, identity theft, and P2P payment traps — and exactly how to spot them before they cost you anything.',
+    questions: [
+      {
+        q: 'You\'re offered a remote job paying $35/hour with almost no interview. The recruiter only messages you on WhatsApp and asks for your bank routing number to "set up payroll" before you\'ve signed anything. What\'s the biggest red flag?',
+        opts: ['The pay is too high for a remote job', 'Legitimate employers collect banking details through official onboarding after you\'ve accepted a signed offer, never before, and never over an unofficial channel like a personal chat app', 'WhatsApp is against most employers\' policy', 'Nothing — this is normal for remote jobs'],
+        correct: 1,
+        exp: 'Real employers set up direct deposit through HR onboarding after you\'re hired, not through a personal messaging app before you\'ve even had a real interview. Pay-first, verify-later is backwards for a reason.'
+      },
+      {
+        q: 'A "company" sends you a check for $2,400 to cover home office equipment, and asks you to deposit it, keep $400, and wire the rest back to a vendor. What is this?',
+        opts: ['A generous employer-provided equipment stipend', 'A classic overpayment check scam — the check will bounce days later, and you\'re on the hook for every dollar you already wired out', 'A normal part of remote onboarding', 'A sign the company is very well funded'],
+        correct: 1,
+        exp: 'Banks must let you access "available" funds within a few days, but a fraudulent check can take weeks to actually bounce. By the time it does, your wired money is gone and you owe the bank the full amount.'
+      },
+      {
+        q: 'A listing for a $650/month apartment near campus (market rate is $1,100+) asks for a $500 deposit via Venmo before a showing, and the "landlord" says they\'re overseas and can\'t meet in person. What should you do?',
+        opts: ['Send the deposit quickly before someone else takes it', 'Never pay any money before touring the actual unit in person and confirming the lister is the real owner or a licensed agent', 'Ask for a video call as a fair compromise', 'It\'s fine as long as the listing looks professional'],
+        correct: 1,
+        exp: 'A price dramatically below market, pressure to act fast, and an inability to meet or show the unit are the three classic housing-scam signals together. Never pay before you\'ve physically seen the place and verified who you\'re paying.'
+      },
+      {
+        q: 'You found the listing on Zillow, a platform you trust. Does that guarantee it\'s a real listing from the actual owner?',
+        opts: ['Yes — Zillow verifies every listing before it goes live', 'No — scammers regularly copy real listings and repost them on legitimate platforms, so the platform\'s reputation doesn\'t vouch for any one listing', 'Yes, but only for listings marked "verified"', 'No major platform has ever had a fake listing'],
+        correct: 1,
+        exp: 'Being on a reputable platform like Zillow or Apartments.com doesn\'t mean a listing was screened for fraud — it just means someone posted it. Scammers exploit that borrowed trust deliberately.'
+      },
+      {
+        q: 'You get an email claiming to be from FAFSA asking you to "verify your account" by clicking a link and entering your Social Security number. The real site is studentaid.gov. What should you check first?',
+        opts: ['Whether the email has an official-looking logo', 'The actual URL the link points to — phishing links often use lookalike domains that are NOT the real .gov domain, no matter how official the email looks', 'Whether the email is well-written', 'Whether it was sent during business hours'],
+        correct: 1,
+        exp: 'Real federal financial aid sites end in .gov. A lookalike domain is not the same domain, no matter how convincing the email around it is. Always check the actual URL before entering anything.'
+      },
+      {
+        q: 'A scholarship offer requires a $75 "processing fee" before they\'ll release your award. What\'s the rule of thumb here?',
+        opts: ['This is standard for competitive scholarships', 'Legitimate scholarships never require you to pay money to receive money — any fee required upfront is almost certainly a scam', '$75 is a small enough amount that it\'s worth the risk', 'Only fake scholarships are ever advertised by email'],
+        correct: 1,
+        exp: 'This is one of the most reliable rules in financial aid: real scholarships pay you, they never ask you to pay them first. A processing fee required before payout is a scam, full stop.'
+      },
+      {
+        q: 'You get a text saying your bank account has been "locked for suspicious activity" with a link to "verify" your login, plus a countdown timer. What\'s the safest move?',
+        opts: ['Click the link quickly since there\'s a time limit', 'Don\'t click the link — open your bank\'s app or site directly, typed in yourself, or call the number on the back of your card', 'Reply to the text asking if it\'s real', 'Forward it to a friend to ask what they think'],
+        correct: 1,
+        exp: 'Urgency and countdown timers are a manipulation tactic, not a real security feature. Legitimate banks don\'t threaten to lock your account in a text with a clickable link. Always navigate to your bank directly instead.'
+      },
+      {
+        q: 'If someone\'s email and password get exposed in a data breach, and they only change their password on that one breached site, are they now safe?',
+        opts: ['Yes, changing that one password fixes the problem', 'No — if they reused that password anywhere else, attackers run "credential stuffing" attacks trying the same combo across many other sites automatically', 'Yes, as long as they wait 30 days', 'Only if the breach was a bank'],
+        correct: 1,
+        exp: 'Credential stuffing is exactly why reusing passwords is risky: one breach can compromise every account that shares that password. The fix is changing it everywhere it was reused, plus a password manager and 2FA.'
+      },
+      {
+        q: 'You sell a jacket online. The buyer "accidentally" sends you $50 more than agreed and asks you to refund the difference via Venmo right away. What\'s happening?',
+        opts: ['They just made an honest mistake, refund them immediately', 'This is a common scam — the original payment is often reversed or fraudulent after you send the "refund," leaving you out the money you sent back', 'This is illegal on the buyer\'s part but harmless to you', 'It\'s fine as long as you get a screenshot first'],
+        correct: 1,
+        exp: 'The overpayment-then-refund-request pattern is well known: the first payment gets reversed after you\'ve already sent real money back. If a payment is "wrong," cancel the original transaction instead of sending new money.'
+      },
+      {
+        q: 'Why is it riskier to pay a stranger through Venmo, Cash App, or Zelle than with a credit card?',
+        opts: ['There\'s no real difference between them', 'P2P apps are built for paying people you already trust — once money is sent, there is generally no fraud protection or dispute process, unlike a credit card', 'P2P apps always charge higher fees', 'Credit cards are slower, which is the only real difference'],
+        correct: 1,
+        exp: 'Credit cards come with built-in fraud protection and a formal dispute process. Venmo, Cash App, and Zelle are designed for people you already know — once that money moves, it\'s very hard to get back, which is exactly why scammers prefer them.'
+      }
+    ],
+    lessons: [
+      { title: 'Fake Job Offers', hook: 'A remote job posting offers $35/hour, almost no interview, and asks to talk over WhatsApp instead of email. It sounds like a huge win. What is it actually testing you on?', qIndices: [0, 1] },
+      { title: 'Housing Scams', hook: 'A $650/month apartment shows up near campus — half the going rate — and the "landlord" just needs a deposit before showing it in person. Great deal, or something else?', qIndices: [2, 3] },
+      { title: 'Financial Aid & Scholarship Fraud', hook: 'An email says your FAFSA needs "verification" and links to a login page that looks exactly like studentaid.gov. Does it matter that it looks right?', qIndices: [4, 5] },
+      { title: 'Phishing & Identity Theft', hook: 'A text claims your bank account is locked, with a countdown clock and a link to fix it right now. Is the urgency the point, or a warning sign?', qIndices: [6, 7] },
+      { title: 'Peer-to-Peer Payment Scams', hook: 'A buyer on a marketplace app "accidentally" overpays you and asks for the difference back over Venmo, right now. What actually happens to that first payment?', qIndices: [8, 9] }
+    ],
+    quests: [
+      {
+        id: 'devon',
+        topic: 'A Month of Almost-Scams',
+        character: { name: 'Devon', tagline: 'Junior juggling job hunting, apartment hunting, and FAFSA renewal at the same time' },
+        initialState: { savings: 450 },
+        bossAchievementId: 'scam_spotter',
+        chapters: [
+          {
+            id: 'd0', type: 'story', title: 'Meet Devon',
+            beats: [
+              { speaker: 'narrator', text: 'Devon is a junior juggling three things at once this month: applying for summer jobs, apartment hunting for next year with two roommates, and renewing FAFSA before the deadline.' },
+              { speaker: 'Devon', text: "Between job sites, group chats, and financial aid emails, my inbox is chaos right now. I don't have time to double-check everything." },
+              { speaker: 'narrator', text: "Scammers count on exactly that — busy, distracted, a little rushed. Let's slow down together and go through what Devon runs into this month." }
+            ]
+          },
+          {
+            id: 'd1', type: 'teach', title: 'Job Post Red Flags',
+            concepts: [
+              {
+                term: 'Pay-Upfront / Overpayment Scam',
+                plain: "This is when a \"job\" asks you to pay for training, equipment, or a background check before you start — or sends you a check that's bigger than it should be and asks you to wire part of it back. Either way, money is supposed to flow FROM the employer TO you, never the other way around before you're paid.",
+                analogy: 'Think of it like a stranger handing you a $100 bill and asking for $80 back in cash right now, "just to make change." The first bill almost always turns out to be fake.',
+                check: { statement: 'A legitimate employer might occasionally ask you to pay a small fee before your first paycheck.', isTrue: false }
+              },
+              {
+                term: 'Vague, Too-Good, Personal-Channel Job Posts',
+                plain: "Real job posts are specific about what you'll actually do day to day. Scam posts are often vague on duties but very specific on an unusually high hourly rate, and they push you off the platform fast — into WhatsApp or a personal email — where there's no paper trail and no one moderating.",
+                analogy: "It's the same instinct as a stranger at a party who's suspiciously eager to move the conversation somewhere private before you've even exchanged last names.",
+                check: { statement: 'Communicating only through a personal messaging app like WhatsApp is a normal part of most hiring processes.', isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'd2', type: 'spotcheck', title: 'Spot the Red Flags',
+            intro: "Below is a real-looking job posting. Tap every phrase you think is a red flag, then hit Continue to see what you caught.",
+            postingTitle: 'Remote Data Entry Assistant — $38/hr, Start This Week!',
+            segments: [
+              { id: 's1', text: 'Fully remote, flexible hours, no experience required.', isRedFlag: false, explanation: "Plenty of real remote jobs advertise this honestly — on its own this isn't suspicious." },
+              { id: 's2', text: '$38/hour for basic data entry, immediate start.', isRedFlag: true, explanation: "Pay far above market rate for the skill level described, combined with urgency to start immediately, is a classic lure." },
+              { id: 's3', text: 'To begin, message our HR coordinator directly on WhatsApp.', isRedFlag: true, explanation: 'Legitimate companies onboard through official email and HR systems, not personal messaging apps.' },
+              { id: 's4', text: 'We will mail you a check for $2,300 to purchase your home office equipment.', isRedFlag: true, explanation: "This is the classic overpayment check setup — you'll be asked to deposit it and wire part back before it bounces." },
+              { id: 's5', text: 'Please reply with your full name and preferred start date.', isRedFlag: false, explanation: 'A normal, low-risk request on its own.' },
+              { id: 's6', text: 'Before your first check can be issued, send your bank routing and account number to payroll@quik-hire-solutions.net.', isRedFlag: true, explanation: "Real employers collect direct deposit info through secure official onboarding after you're hired, not via a personal email address before any contract exists." }
+            ],
+            xpOnComplete: 4
+          },
+          { id: 'd3', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
+            hintTexts: [
+              "Think about WHEN a real employer needs your banking details — before or after you've signed something official?",
+              "Think about the direction money is supposed to flow when you're the one being hired."
+            ]
+          },
+          {
+            id: 'd4', type: 'teach', title: 'Apartment Hunting Red Flags',
+            concepts: [
+              {
+                term: 'Deposit-Before-Viewing',
+                plain: "A real landlord or leasing office lets you see the actual unit — in person or on a live video call — before asking for any money. If someone wants a deposit before you've verified the place is real and they're the actual owner or an authorized agent, that's the scam working exactly as designed.",
+                analogy: "It's like being asked to pay for a car before test-driving it, sight unseen, from a seller who won't meet you.",
+                check: { statement: "It's reasonable to send a deposit to hold an apartment before touring it, as long as the price seems fair.", isTrue: false }
+              },
+              {
+                term: '"Overseas Landlord" + Urgency',
+                plain: 'Scammers love a landlord who is conveniently "traveling," "out of the country," or has some other story that explains why they can\'t meet in person or show the unit. Pair that with pressure — "two other people are asking!" — and you\'ve got the two most common ingredients in a rental scam.',
+                analogy: "It's the classic sales trick of manufactured scarcity, dressed up as a sympathetic personal story so you feel rude for questioning it.",
+                check: { statement: "A landlord who says they are traveling and can't meet in person is, by itself, always a scam.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'd5', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before Devon deals with this listing, take a guess. Tap True or False, then see the answer.",
+            statement: 'If an apartment listing is posted on Zillow or Apartments.com, it must be legitimate.',
+            isTrue: false,
+            explanation: "It's a myth. Scammers regularly post on trusted, legitimate platforms — the platform hosting a listing doesn't mean anyone verified who posted it or that the deal is real.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'd6', type: 'decision', title: 'The Move-In Deadline',
+            prompt: "A listing near campus looks perfect: $650/month when everything else nearby runs $1,100+, photos look real, and the \"landlord\" says they're traveling for work but will mail the keys once you Venmo a $500 deposit. Move-in is in 3 days, and they mention two other people are asking about it too. What does Devon do?",
+            hintText: "Think about all three signals together: price, urgency, and whether the place can actually be verified.",
+            choices: [
+              {
+                id: 'a', label: "Send the $500 deposit today so the apartment doesn't slip away",
+                outcome: { text: "Devon sends the deposit. The \"landlord\" stops responding within a day. There is no apartment, no keys, and no way to get the money back through Venmo.", delta: { savings: -500 }, compare: [{ label: 'Sent', value: 500 }, { label: 'Recovered', value: 0 }] }
+              },
+              {
+                id: 'b', label: "Ask to tour the unit in person or on a live video call before sending anything",
+                outcome: { text: "The \"landlord\" makes excuses and goes quiet once Devon pushes for a real tour. That's $500 that never left the account for an apartment that never existed.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Deposit avoided', value: 500 }] }
+              },
+              {
+                id: 'c', label: "Report the listing and start looking somewhere else",
+                outcome: { text: "Devon flags the listing to the platform and moves on. A few weeks later, a friend mentions the exact same photos showed up under a different \"landlord\" name — Devon wasn't the only target.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Deposit avoided', value: 500 }] }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          { id: 'd7', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "You don't need to treat every listing or DM like a threat — most job posts and apartments are exactly what they say they are. The goal isn't paranoia, it's knowing the handful of patterns that actually matter, so you can move fast and confident on the real ones.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'd8', type: 'teach', title: 'Reading a URL Like It Matters',
+            concepts: [
+              {
+                term: 'Anatomy of a URL',
+                plain: "A web address breaks into parts: the protocol (https://), then the actual domain — the part that matters most for trust — then anything after a slash (/), which is just a page on that site. Scammers exploit the fact that most people glance at a URL instead of reading it carefully.",
+                analogy: 'Think of the domain like a street address. Scammers can put "123 Main Street" in big letters on a building that\'s actually located somewhere completely different — the big letters are for show.',
+                check: { statement: "If a URL contains the words \"student aid\" or \"gov\" anywhere in the address, it's safe to trust.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'd9', type: 'urlinspect', title: 'Real URL or Fake?',
+            intro: "Here's a link claiming to be from the FAFSA / Federal Student Aid office. Tap the part of the URL you think is suspicious, then hit Continue to see the full breakdown.",
+            url: 'https://studentaid-gov.verify-account.net/login',
+            parts: [
+              { id: 'p1', segment: 'https://', isSuspicious: false, note: "HTTPS just means the connection is encrypted — scam sites can have this too. It doesn't prove legitimacy on its own." },
+              { id: 'p2', segment: 'studentaid-gov.', isSuspicious: true, note: 'This LOOKS like "studentaid.gov" but it isn\'t — it\'s a made-up subdomain designed to trick a quick glance. It has nothing to do with the real government site.' },
+              { id: 'p3', segment: 'verify-account.net', isSuspicious: true, note: 'This is the actual domain the link goes to — not a government site at all. Everything before it ("studentaid-gov") is just a decoy label the scammer chose.' },
+              { id: 'p4', segment: '/login', isSuspicious: false, note: "A login path is completely normal on real sites too — the problem here isn't the path, it's the domain the whole URL actually points to." }
+            ],
+            correctAnswerNote: 'The real Federal Student Aid site is exactly studentaid.gov — no extra words before or after the domain. Anything else, no matter how official-looking, is not the government.',
+            xpOnComplete: 4
+          },
+          {
+            id: 'd10', type: 'mythcards', title: 'Financial Aid Myths',
+            cards: [
+              { myth: 'A scholarship that requires a small "processing fee" is fine as long as the payout is much bigger.', isTrue: false, explanation: 'Real scholarships never require you to pay to receive money. Any upfront fee — no matter how small compared to the promised award — is a hallmark of a scam.' },
+              { myth: 'The real FAFSA / Federal Student Aid site is studentaid.gov, and legitimate government sites use the .gov domain.', isTrue: true, explanation: 'Correct — .gov is a restricted domain that scammers cannot simply purchase the way they can a lookalike .net or .com.' },
+              { myth: 'If a financial aid email addresses you by name and mentions your actual school, it must be legitimate.', isTrue: false, explanation: 'Scammers can find your name and school easily — social media, public directories, even a previous data breach — and use them to make phishing feel personalized.' }
+            ],
+            xpPerCorrect: 2
+          },
+          { id: 'd11', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 5],
+            hintTexts: [
+              "Look at the actual domain, not just how official the surrounding email looks.",
+              "Remember the one-sentence rule: real scholarships pay you, not the other way around."
+            ]
+          },
+          {
+            id: 'd12', type: 'teach', title: 'Spotting Phishing',
+            concepts: [
+              {
+                term: 'Spoofed Senders & Urgency Language',
+                plain: "Scammers can make an email or text LOOK like it's from your bank, your school, or the government — the display name and even the sender address can be faked or made to look extremely close to the real one. Pair that with words like \"immediately\" or a countdown timer, and it's designed to make you act before you think.",
+                analogy: "It's a fire alarm pulled by someone who wants you running toward the exit they chose, not thinking clearly about whether there's actually a fire.",
+                check: { statement: "If a message looks like it's from your bank and creates a sense of urgency, that combination alone is a reason to slow down, not speed up.", isTrue: true }
+              },
+              {
+                term: 'Fake Login Pages',
+                plain: "A phishing link often leads to a page that looks nearly identical to a real login screen — same logo, same colors, sometimes the same layout. The only reliable way to tell is the URL in your browser's address bar, not how the page looks.",
+                analogy: "It's a stage set built to look exactly like a real store from the front, but there's nothing behind the wall.",
+                check: { statement: "If a login page looks exactly like your bank's real site, that's enough proof it's safe to enter your password.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'd13', type: 'poll', title: 'What Do Most People Think?',
+            intro: "One more before we move on. Tap True or False, then see the answer.",
+            statement: 'If someone\'s email and password are exposed in a data breach, changing the password on that one site is enough to stay safe.',
+            isTrue: false,
+            explanation: "It's a myth. Credential stuffing means attackers try that same email/password combo across many other sites automatically — reused passwords are the real risk, not just the one breached site.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'd14', type: 'teach', title: 'If Your Identity Is Stolen',
+            concepts: [
+              {
+                term: 'Reporting & Freezing',
+                plain: "If you think your identity has been stolen — someone opened an account, filed taxes, or applied for aid in your name — report it at IdentityTheft.gov (run by the FTC) for a personalized recovery plan, and place a free credit freeze with all three credit bureaus (Equifax, Experian, TransUnion) so no new accounts can be opened in your name.",
+                analogy: "A credit freeze is like changing the locks — it doesn't undo what already happened, but it stops anyone from walking back in through that same door.",
+                check: { statement: 'A credit freeze costs money and can only be placed a limited number of times per year.', isTrue: false }
+              },
+              {
+                term: 'Tell Your School',
+                plain: "If the theft touches your financial aid — a fake FAFSA submission, a compromised student portal login — notify your school's financial aid office directly. They can flag your account and make sure a fraudulent submission doesn't mess with your real aid.",
+                analogy: "Your financial aid office is the one place that can actually undo damage done inside the financial aid system itself — the credit bureaus can't touch that part.",
+                check: { statement: "Once you've frozen your credit, there's no need to also tell your school's financial aid office about aid-related identity theft.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'd15', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Last one for this section. Tap True or False, then see the answer.",
+            statement: 'Financial aid offices will sometimes email students asking them to confirm their bank account details.',
+            isTrue: false,
+            explanation: "It's a myth — and an important one. Real financial aid offices will never ask you to confirm bank account details over email. Any message that does is impersonating them.",
+            xpOnComplete: 2
+          },
+          { id: 'd16', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 7],
+            hintTexts: [
+              "Focus on what's designed to make you feel rushed, not on how official the message looks.",
+              "Think about what actually protects you: your own habits, not how much time has passed."
+            ]
+          },
+          {
+            id: 'd17', type: 'teach', title: 'Peer-to-Peer Payment Scams',
+            concepts: [
+              {
+                term: 'No Fraud Protection, No Undo Button',
+                plain: "Venmo, Cash App, and Zelle are built to move money between people who already trust each other — splitting rent, paying a friend back. Once you hit send, that money is very hard or impossible to get back, and unlike a credit card, there's generally no formal dispute process on the other end.",
+                analogy: "It's the difference between handing someone cash and swiping a credit card — cash doesn't come with a receipt you can dispute later.",
+                check: { statement: "Remember from Managing Credit: credit cards can dispute fraudulent charges, while P2P apps like Venmo generally cannot reverse a payment once it's sent.", isTrue: true }
+              },
+              {
+                term: 'The Overpayment-Then-Refund Trap',
+                plain: "A buyer \"accidentally\" sends too much and asks for the difference back. The catch: their original payment often gets reversed or turns out fraudulent AFTER the refund is sent — leaving the seller out both the refund and whatever was never actually paid.",
+                analogy: "It's a shell game where the first payment is the shell that disappears right after you look away.",
+                check: { statement: 'If someone overpays and asks for a refund of the difference, the safest move is to cancel the original payment rather than send a new one.', isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          { id: 'd19', type: 'knowledgecheck', title: 'Quick Check', qIndices: [8, 9],
+            hintTexts: [
+              "Think about what happens to the FIRST payment after the refund is sent.",
+              "Compare what a credit card can do that Venmo, Cash App, and Zelle can't."
+            ]
+          },
+          {
+            id: 'd20', type: 'bossbattle', title: 'GlobalHire Solutions',
+            scenario: "Devon applied to 12 jobs last week. An email arrives from \"GlobalHire Solutions\" offering $35/hour for a remote position — no interview required. The email says to start immediately and asks for direct deposit info to \"set up payroll\" before anything else is signed.",
+            hintText: "Think back to the very first lesson: what's supposed to happen BEFORE an employer ever needs your banking details?",
+            choices: [
+              {
+                id: 'a', label: "Send the direct deposit info right away so payroll is ready before the start date",
+                consequence: { text: "Devon sends the routing and account number. Within days, unauthorized charges show up on the linked account, and \"GlobalHire Solutions\" stops responding entirely. There was never a real job.", delta: { savings: -300 }, xpMultiplier: 0.75 }
+              },
+              {
+                id: 'b', label: "Ignore the email and delete it without responding",
+                consequence: { text: "Devon deletes the email. Safe — but the listing stays up and keeps targeting other students searching the same job boards.", delta: { savings: 0 }, xpMultiplier: 1 }
+              },
+              {
+                id: 'c', label: "Report the email to the job board and the school's career center, and don't send anything",
+                consequence: { text: "Devon reports it. The career center confirms three other students got the identical message this week and gets the listing taken down before it reaches anyone else.", delta: { savings: 0 }, xpMultiplier: 1.25 }
+              }
+            ]
+          }
+        ]
+      }
     ]
   }
 ];
@@ -1862,6 +2330,7 @@ const ACHIEVEMENTS = [
   { id: 'tax_ready',      abbr: 'TX', label: 'Tax Ready',          desc: 'Complete Taxes module',        check: s => s.completedModules.taxes },
   { id: 'mindful_money',  abbr: 'MM', label: 'Mindful Spender',    desc: 'Complete Consumer Psychology', check: s => s.completedModules.psychology },
   { id: 'offer_ready',    abbr: 'CS', label: 'Offer Ready',        desc: 'Complete Career & Salary',     check: s => s.completedModules.career },
+  { id: 'scam_spotter',   abbr: 'SS', label: 'Scam Spotter',       desc: 'Complete Scams & Fraud Prevention', check: s => s.completedModules.scams },
   { id: 'stackd_star',    abbr: 'S*', label: 'Stackd Star',        desc: 'Complete all modules',         check: s => Object.keys(s.completedModules).length >= MODULES.length },
   { id: 'perfect_score',  abbr: '5/5',label: 'Perfect Score',      desc: 'Answer all 5 questions right', check: s => s.hadPerfect },
   { id: 'on_fire',        abbr: '3D', label: 'On a Roll',          desc: '3-day streak',                 check: s => s.streak >= 3 },
@@ -1880,6 +2349,15 @@ let state = {
   metHammy: false,
   questProgress: {}, questBossesWon: [],
   onboardingSurvey: { completed: false, moduleFamiliarity: {}, focusGoals: [], completedAt: null },
+  budgetPlan: {
+    incomeSources: [],
+    fixedExpenses: [],
+    variableExpenses: {
+      groceries: 0, diningOut: 0, foodDelivery: 0, coffee: 0, clothing: 0,
+      beauty: 0, transportation: 0, entertainment: 0, textbooks: 0, gym: 0,
+    },
+    savingsGoal: 0,
+  },
 };
 
 function loadState() {
@@ -1890,8 +2368,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey } = state;
-  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey }));
+  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan } = state;
+  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan }));
 }
 
 // ── XP / Level ─────────────────────────────────
@@ -2047,14 +2525,15 @@ function renderModuleList(containerId) {
         const key = `${m.id}_${idx}`;
         const lessonData = state.completedLessons[key];
         const done = !!lessonData;
+        const isActivity = !!lesson.type;
         const meta = done
           ? `Score: ${lessonData.score}/${lessonData.total} · ${lessonData.xpEarned} XP`
-          : `${lesson.qIndices.length} questions`;
+          : isActivity ? 'Interactive' : `${lesson.qIndices.length} questions`;
         const cta = done ? '↻ Replay' : 'Start →';
-        return `<div class="lesson-tile${done ? ' done' : ''}" data-module="${m.id}" data-lesson="${idx}">
+        return `<div class="lesson-tile${done ? ' done' : ''}${isActivity ? ' activity-tile' : ''}" data-module="${m.id}" data-lesson="${idx}">
           <div class="lt-body">
             <div class="lt-num">Lesson ${idx + 1}</div>
-            <div class="lt-title">${lesson.title}</div>
+            <div class="lt-title">${lesson.title}${isActivity ? ' <span class="quest-tag">Interactive</span>' : ''}</div>
             <div class="lt-meta">${meta}</div>
           </div>
           <span class="lt-cta">${cta}</span>
@@ -2081,7 +2560,12 @@ function renderModuleList(containerId) {
       });
     } else {
       row.querySelectorAll('.lesson-tile').forEach(tile => {
-        tile.addEventListener('click', () => startHook(tile.dataset.module, parseInt(tile.dataset.lesson)));
+        const lessonIdx = parseInt(tile.dataset.lesson);
+        const lesson = m.lessons[lessonIdx];
+        tile.addEventListener('click', () => {
+          if (lesson.type) startBonusActivity(tile.dataset.module, lessonIdx);
+          else startHook(tile.dataset.module, lessonIdx);
+        });
       });
     }
 
@@ -2107,6 +2591,7 @@ const SURVEY_FAMILIARITY_LABELS = {
   taxes: ['Taxes are just scary and confusing', "I've already filed my own return"],
   psychology: ["If it's on sale, it's going in my cart", 'I can spot a marketing trick from a mile away'],
   career: ["I'll just take whatever salary they offer me", "I'm ready to negotiate my way into a better offer"],
+  scams: ["I'd probably click first and ask questions later", 'I can spot a scam from the subject line alone'],
 };
 const SURVEY_GOALS = [
   { id: 'avoid_debt', label: 'Avoid debt mistakes', moduleIds: ['loans', 'credit'] },
@@ -2841,6 +3326,485 @@ function renderSettingsPage() {
   }
 }
 
+// ── TOOLS PAGE (Budget Calculator + Compound Interest Simulator) ──────────────
+// A persistent utility, not a lesson — reachable any time from the sidebar, independent of
+// module progress. Both panels reuse existing chart/input conventions (.pg-bar-chart for
+// category breakdowns, the same range-slider look as the quest engine's microsim sliders)
+// rather than introducing new visual language.
+const BUDGET_CATEGORY_LABELS = {
+  groceries: 'Groceries', diningOut: 'Dining Out', foodDelivery: 'Food Delivery (DoorDash, Uber Eats, etc.)',
+  coffee: 'Coffee', clothing: 'Clothing / Thrift', beauty: 'Beauty / Personal Care',
+  transportation: 'Transportation', entertainment: 'Entertainment', textbooks: 'Textbooks', gym: 'Gym',
+};
+const BUDGET_CATEGORY_ORDER = ['groceries', 'diningOut', 'foodDelivery', 'coffee', 'clothing', 'beauty', 'transportation', 'entertainment', 'textbooks', 'gym'];
+
+function computeBudgetTotals(plan) {
+  const totalIncome = plan.incomeSources.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+  const totalFixed = plan.fixedExpenses.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+  const totalVariable = BUDGET_CATEGORY_ORDER.reduce((s, k) => s + (Number(plan.variableExpenses[k]) || 0), 0);
+  const totalExpenses = totalFixed + totalVariable;
+  const remaining = totalIncome - totalExpenses;
+  const deliveryBeautyTotal = (Number(plan.variableExpenses.foodDelivery) || 0) + (Number(plan.variableExpenses.beauty) || 0);
+  return { totalIncome, totalFixed, totalVariable, totalExpenses, remaining, deliveryBeautyTotal };
+}
+
+function renderToolsPage() {
+  document.querySelectorAll('.tools-tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll('.tools-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      if (tab.dataset.tab === 'budget') renderBudgetCalculatorPanel();
+      else renderCompoundInterestPanel();
+    };
+  });
+  const activeTab = document.querySelector('.tools-tab.active');
+  if (activeTab && activeTab.dataset.tab === 'compound') renderCompoundInterestPanel();
+  else renderBudgetCalculatorPanel();
+}
+
+// Deep-link into the Tools page's Compound Interest tab from anywhere in the app (the
+// Credit quest's payment-mechanics walkthrough and the Career & Salary callout both point
+// here) — one simulator, referenced from multiple places, per spec. Remembers where the
+// student came from so the panel can offer a way back to exactly that lesson/quest.
+let compoundInterestReturnTo = null;
+function openCompoundInterestSimulator() {
+  // state.activeQuestId is never cleared after leaving a quest (it's not a "current screen"
+  // flag, just "last quest touched"), so it stays truthy long after the user has moved on to
+  // something else entirely. Check inBonusActivity first, and only trust activeQuestId if the
+  // quest screen is actually the one on screen right now with a real, resolvable quest.
+  const onQuestScreen = document.getElementById('screen-quest').classList.contains('active');
+  const activeMod = MODULES.find(m => m.id === state.activeModuleId);
+  const activeQuest = onQuestScreen && activeMod && activeMod.quests && activeMod.quests.find(q => q.id === state.activeQuestId);
+
+  if (state.inBonusActivity) {
+    compoundInterestReturnTo = { type: 'activity', moduleId: state.activeModuleId, lessonIdx: state.activeLessonIdx };
+  } else if (activeQuest) {
+    compoundInterestReturnTo = { type: 'quest', moduleId: state.activeModuleId, questId: state.activeQuestId };
+  } else {
+    compoundInterestReturnTo = null;
+  }
+  showPage('tools');
+  document.querySelectorAll('.tools-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tools-tab[data-tab="compound"]').classList.add('active');
+  renderToolsPage();
+}
+
+function returnFromCompoundInterestSimulator() {
+  const ret = compoundInterestReturnTo;
+  if (!ret) { renderHome(); return; }
+  compoundInterestReturnTo = null;
+  if (ret.type === 'quest') startQuest(ret.moduleId, ret.questId);
+  else startBonusActivity(ret.moduleId, ret.lessonIdx);
+}
+
+function renderBudgetCalculatorPanel() {
+  const panel = document.getElementById('tools-panel');
+  const plan = state.budgetPlan;
+  if (plan.incomeSources.length === 0) plan.incomeSources.push({ id: 'inc0', label: 'Part-time job', amount: '' });
+  if (plan.fixedExpenses.length === 0) plan.fixedExpenses.push({ id: 'fix0', label: 'Rent', amount: '' });
+
+  panel.innerHTML = `
+    <div class="budget-grid">
+      <div class="budget-col">
+        <div class="budget-card">
+          <div class="budget-card-title">Monthly Income</div>
+          <div class="budget-row-list" id="income-rows"></div>
+          <button class="budget-add-btn" id="add-income" type="button">+ Add income source</button>
+        </div>
+        <div class="budget-card">
+          <div class="budget-card-title">Fixed Expenses</div>
+          <div class="budget-row-list" id="fixed-rows"></div>
+          <button class="budget-add-btn" id="add-fixed" type="button">+ Add fixed expense</button>
+        </div>
+        <div class="budget-card">
+          <div class="budget-card-title">Variable Expenses</div>
+          <div class="budget-note">Food delivery and beauty services add up faster than most students expect — see your monthly total below.</div>
+          <div class="budget-row-list" id="variable-rows"></div>
+        </div>
+        <div class="budget-card">
+          <div class="budget-card-title">Savings Goal</div>
+          <div class="budget-row">
+            <span class="budget-row-label">I want to save</span>
+            <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" id="savings-goal-input" class="budget-input" min="0" step="5" value="${plan.savingsGoal || ''}" placeholder="0"></div>
+            <span class="budget-row-label">per month</span>
+          </div>
+        </div>
+      </div>
+      <div class="budget-col">
+        <div class="budget-card budget-summary-card" id="budget-summary"></div>
+        <div class="budget-card">
+          <div class="budget-card-title">Spending by Category</div>
+          <div class="pg-bar-chart" id="budget-bar-chart"></div>
+        </div>
+        <div class="budget-card">
+          <div class="budget-card-title">What If?</div>
+          <div class="budget-whatif" id="budget-whatif"></div>
+        </div>
+      </div>
+    </div>`;
+
+  function rowHtml(item, kind) {
+    return `<div class="budget-row" data-id="${item.id}" data-kind="${kind}">
+      <input type="text" class="budget-input budget-input-label" value="${item.label}" placeholder="Label" data-field="label">
+      <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" class="budget-input" min="0" step="5" value="${item.amount}" placeholder="0" data-field="amount"></div>
+      <button class="budget-row-remove" data-remove="${item.id}" type="button" aria-label="Remove">×</button>
+    </div>`;
+  }
+
+  function renderRows() {
+    document.getElementById('income-rows').innerHTML = plan.incomeSources.map(x => rowHtml(x, 'income')).join('');
+    document.getElementById('fixed-rows').innerHTML = plan.fixedExpenses.map(x => rowHtml(x, 'fixed')).join('');
+    document.getElementById('variable-rows').innerHTML = BUDGET_CATEGORY_ORDER.map(key => {
+      const isCallout = key === 'foodDelivery' || key === 'beauty';
+      return `<div class="budget-row${isCallout ? ' budget-row-callout' : ''}" data-key="${key}">
+        <span class="budget-row-label">${BUDGET_CATEGORY_LABELS[key]}</span>
+        <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" class="budget-input" min="0" step="5" value="${plan.variableExpenses[key] || ''}" placeholder="0" data-varkey="${key}"></div>
+      </div>`;
+    }).join('');
+
+    document.querySelectorAll('#income-rows .budget-input, #fixed-rows .budget-input').forEach(wireRowInput);
+    document.querySelectorAll('#income-rows .budget-row-remove, #fixed-rows .budget-row-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const row = btn.closest('.budget-row');
+        const kind = row.dataset.kind;
+        const list = kind === 'income' ? plan.incomeSources : plan.fixedExpenses;
+        const idx = list.findIndex(x => x.id === row.dataset.id);
+        if (idx >= 0) list.splice(idx, 1);
+        saveState();
+        renderRows();
+        renderSummaryAndChart();
+      });
+    });
+    document.querySelectorAll('#variable-rows .budget-input').forEach(input => {
+      input.addEventListener('input', () => {
+        plan.variableExpenses[input.dataset.varkey] = input.value === '' ? 0 : Number(input.value);
+        saveState();
+        renderSummaryAndChart();
+        highlightCallout();
+      });
+    });
+    highlightCallout();
+  }
+
+  function highlightCallout() {
+    const totals = computeBudgetTotals(plan);
+    document.querySelectorAll('.budget-row-callout').forEach(row => {
+      row.classList.toggle('over-threshold', totals.deliveryBeautyTotal > 100);
+    });
+  }
+
+  function wireRowInput(input) {
+    input.addEventListener('input', () => {
+      const row = input.closest('.budget-row');
+      const kind = row.dataset.kind;
+      const list = kind === 'income' ? plan.incomeSources : plan.fixedExpenses;
+      const item = list.find(x => x.id === row.dataset.id);
+      if (!item) return;
+      item[input.dataset.field] = input.dataset.field === 'amount' ? (input.value === '' ? '' : Number(input.value)) : input.value;
+      saveState();
+      renderSummaryAndChart();
+    });
+  }
+
+  function renderSummaryAndChart() {
+    const totals = computeBudgetTotals(plan);
+    const summary = document.getElementById('budget-summary');
+    const goalGap = plan.savingsGoal > 0 ? totals.remaining - plan.savingsGoal : null;
+    let goalMsg = '';
+    if (plan.savingsGoal > 0) {
+      goalMsg = goalGap >= 0
+        ? `<p class="budget-goal-msg ok">On track — this leaves $${goalGap.toFixed(0)}/month beyond your $${plan.savingsGoal} goal.</p>`
+        : `<p class="budget-goal-msg bad">You'd need to cut about $${Math.abs(goalGap).toFixed(0)}/month to hit your $${plan.savingsGoal} savings goal.</p>`;
+    }
+    summary.innerHTML = `
+      <div class="budget-card-title">Summary</div>
+      <div class="budget-summary-row"><span>Total income</span><strong>$${totals.totalIncome.toFixed(0)}</strong></div>
+      <div class="budget-summary-row"><span>Fixed expenses</span><strong>$${totals.totalFixed.toFixed(0)}</strong></div>
+      <div class="budget-summary-row"><span>Variable expenses</span><strong>$${totals.totalVariable.toFixed(0)}</strong></div>
+      <div class="budget-summary-divider"></div>
+      <div class="budget-summary-row budget-remaining ${totals.remaining < 0 ? 'negative' : ''}"><span>Remaining balance</span><strong>$${totals.remaining.toFixed(0)}</strong></div>
+      ${goalMsg}`;
+
+    const maxVal = Math.max(totals.totalFixed, ...BUDGET_CATEGORY_ORDER.map(k => Number(plan.variableExpenses[k]) || 0), 1);
+    const chart = document.getElementById('budget-bar-chart');
+    chart.innerHTML = `
+      <div class="pg-bar-row"><span class="pg-bar-label">Fixed Expenses</span><div class="pg-bar-track"><div class="pg-bar-fill pg-bar-pink" style="width:${Math.min(100, totals.totalFixed / maxVal * 100)}%"></div></div><span class="pg-bar-val">$${totals.totalFixed.toFixed(0)}</span></div>
+      ${BUDGET_CATEGORY_ORDER.map(key => {
+        const val = Number(plan.variableExpenses[key]) || 0;
+        return `<div class="pg-bar-row"><span class="pg-bar-label">${BUDGET_CATEGORY_LABELS[key].replace(/\s*\(.*?\)/, '')}</span><div class="pg-bar-track"><div class="pg-bar-fill" style="width:${Math.min(100, val / maxVal * 100)}%"></div></div><span class="pg-bar-val">$${val.toFixed(0)}</span></div>`;
+      }).join('')}`;
+
+    renderWhatIf(totals);
+  }
+
+  function renderWhatIf(totals) {
+    const whatif = document.getElementById('budget-whatif');
+    const savedCategory = whatif.dataset.category || 'foodDelivery';
+    const savedCut = Number(whatif.dataset.cut || 0);
+    const currentVal = Number(plan.variableExpenses[savedCategory]) || 0;
+    const maxCut = Math.min(100, currentVal);
+    const cut = Math.min(savedCut, maxCut);
+    const newRemaining = totals.remaining + cut;
+
+    whatif.innerHTML = `
+      <div class="budget-whatif-row">
+        <select class="budget-input" id="whatif-category">
+          ${BUDGET_CATEGORY_ORDER.map(key => `<option value="${key}" ${key === savedCategory ? 'selected' : ''}>${BUDGET_CATEGORY_LABELS[key].replace(/\s*\(.*?\)/, '')}</option>`).join('')}
+        </select>
+      </div>
+      <input type="range" class="microsim-range" id="whatif-slider" min="0" max="${Math.max(1, maxCut)}" step="5" value="${cut}">
+      <p class="budget-whatif-result">Cut this by <strong>$${cut.toFixed(0)}</strong> → remaining balance becomes <strong>$${newRemaining.toFixed(0)}</strong>${plan.savingsGoal > 0 ? (newRemaining >= plan.savingsGoal ? ' — enough to hit your savings goal.' : `, still $${Math.max(0, plan.savingsGoal - newRemaining).toFixed(0)} short of your goal.`) : '.'}</p>`;
+
+    document.getElementById('whatif-category').addEventListener('change', (e) => {
+      whatif.dataset.category = e.target.value;
+      whatif.dataset.cut = 0;
+      renderWhatIf(computeBudgetTotals(plan));
+    });
+    document.getElementById('whatif-slider').addEventListener('input', (e) => {
+      whatif.dataset.category = savedCategory;
+      whatif.dataset.cut = e.target.value;
+      renderWhatIf(computeBudgetTotals(plan));
+    });
+  }
+
+  document.getElementById('add-income').addEventListener('click', () => {
+    plan.incomeSources.push({ id: 'inc' + Date.now(), label: 'New source', amount: '' });
+    saveState();
+    renderRows();
+    renderSummaryAndChart();
+  });
+  document.getElementById('add-fixed').addEventListener('click', () => {
+    plan.fixedExpenses.push({ id: 'fix' + Date.now(), label: 'New expense', amount: '' });
+    saveState();
+    renderRows();
+    renderSummaryAndChart();
+  });
+  document.getElementById('savings-goal-input').addEventListener('input', (e) => {
+    plan.savingsGoal = e.target.value === '' ? 0 : Number(e.target.value);
+    saveState();
+    renderSummaryAndChart();
+  });
+
+  renderRows();
+  renderSummaryAndChart();
+}
+
+// Monthly-compounding projection with a monthly contribution. Used for both the savings/
+// growth simulator and (with contribution 0 and a payment tracked separately) as the basis
+// for the credit-card minimum-payment illustration below.
+function computeCompoundGrowth({ startingAmount, monthlyContribution, annualRatePct, years }) {
+  const monthlyRate = annualRatePct / 100 / 12;
+  const months = Math.round(years * 12);
+  const points = [{ month: 0, balance: startingAmount, contributed: startingAmount }];
+  let balance = startingAmount;
+  let contributed = startingAmount;
+  for (let m = 1; m <= months; m++) {
+    balance = balance * (1 + monthlyRate) + monthlyContribution;
+    contributed += monthlyContribution;
+    points.push({ month: m, balance, contributed });
+  }
+  return points;
+}
+
+// Minimum-payment credit card amortization — a common real formula (2% of balance or a $25
+// floor, whichever is greater) so this illustrates the actual, not exaggerated, trap.
+function computeMinPaymentDebt({ startingBalance, annualRatePct, months = 120 }) {
+  const monthlyRate = annualRatePct / 100 / 12;
+  let balance = startingBalance;
+  let totalInterest = 0;
+  const points = [{ month: 0, balance, totalInterest: 0 }];
+  for (let m = 1; m <= months && balance > 0.5; m++) {
+    const interest = balance * monthlyRate;
+    const payment = Math.max(balance * 0.02, Math.min(25, balance));
+    balance = Math.max(0, balance + interest - payment);
+    totalInterest += interest;
+    points.push({ month: m, balance, totalInterest });
+  }
+  return points;
+}
+
+// Generic stacked-area chart builder — the one genuinely new chart type in this app (the
+// existing donut/bar/column components have no time-series/line chart equivalent). Two
+// series stack: a base value (e.g. contributed) and a delta on top (e.g. interest earned),
+// so the gap between the two lines reads as its own visual quantity.
+function buildStackedAreaChart(points, baseKey, totalKey, { width = 480, height = 220, padding = 8 } = {}) {
+  const maxY = Math.max(...points.map(p => p[totalKey]), 1);
+  const n = points.length;
+  const xAt = i => padding + (i / (n - 1)) * (width - padding * 2);
+  const yAt = val => height - padding - (val / maxY) * (height - padding * 2);
+  const baseline = height - padding;
+
+  const basePts = points.map((p, i) => `${xAt(i).toFixed(1)},${yAt(p[baseKey]).toFixed(1)}`);
+  const totalPts = points.map((p, i) => `${xAt(i).toFixed(1)},${yAt(p[totalKey]).toFixed(1)}`);
+
+  const baseArea = `M${padding},${baseline} L${basePts.join(' L')} L${(width - padding).toFixed(1)},${baseline} Z`;
+  const deltaArea = `M${basePts[0]} L${basePts.join(' L')} L${totalPts.slice().reverse().join(' L')} Z`;
+  const totalLine = `M${totalPts.join(' L')}`;
+
+  return { baseArea, deltaArea, totalLine, width, height };
+}
+
+function renderCompoundInterestPanel() {
+  const panel = document.getElementById('tools-panel');
+  const sim = { startingAmount: 500, monthlyContribution: 100, annualRatePct: 8, years: 10, rateMode: 'index' };
+
+  const returnBtnHtml = compoundInterestReturnTo
+    ? `<button class="ci-return-btn" id="ci-return-btn" type="button">← Back to ${MODULES.find(m => m.id === compoundInterestReturnTo.moduleId).title}</button>`
+    : '';
+
+  panel.innerHTML = `
+    ${returnBtnHtml}
+    <div class="budget-grid">
+      <div class="budget-col">
+        <div class="budget-card">
+          <div class="budget-card-title">Your Numbers</div>
+          <div class="microsim-slider-row">
+            <div class="microsim-slider-label"><span>Starting amount</span><span class="microsim-slider-val" id="ci-start-val">$${sim.startingAmount}</span></div>
+            <input type="range" class="microsim-range" id="ci-start" min="0" max="5000" step="50" value="${sim.startingAmount}">
+          </div>
+          <div class="microsim-slider-row">
+            <div class="microsim-slider-label"><span>Monthly contribution</span><span class="microsim-slider-val" id="ci-contrib-val">$${sim.monthlyContribution}</span></div>
+            <input type="range" class="microsim-range" id="ci-contrib" min="0" max="1000" step="10" value="${sim.monthlyContribution}">
+          </div>
+          <div class="microsim-slider-row">
+            <div class="microsim-slider-label"><span>Years</span><span class="microsim-slider-val" id="ci-years-val">${sim.years}</span></div>
+            <input type="range" class="microsim-range" id="ci-years" min="1" max="47" step="1" value="${sim.years}">
+          </div>
+          <div class="ci-rate-presets" id="ci-rate-presets">
+            <button class="ci-preset-btn" data-mode="hysa" type="button">HYSA<span>4–5%</span></button>
+            <button class="ci-preset-btn active" data-mode="index" type="button">Index Fund<span>7–10%</span></button>
+            <button class="ci-preset-btn" data-mode="custom" type="button">Custom</button>
+          </div>
+          <div class="microsim-slider-row">
+            <div class="microsim-slider-label"><span>Annual interest rate</span><span class="microsim-slider-val" id="ci-rate-val">${sim.annualRatePct}%</span></div>
+            <input type="range" class="microsim-range" id="ci-rate" min="1" max="12" step="0.5" value="${sim.annualRatePct}">
+          </div>
+          <button class="budget-add-btn" id="ci-compare-toggle" type="button">Compare: start at 18 vs. start at 28 →</button>
+        </div>
+        <div class="budget-card ci-warning-card">
+          <div class="budget-card-title">⚠ Credit Card Warning</div>
+          <p class="budget-note" style="margin-top:-0.2rem;">A $1,000 balance at 24% APR, paying only the minimum (2% of balance or $25, whichever is more) every month:</p>
+          <div class="ci-chart-wrap" id="ci-debt-chart"></div>
+          <p class="ci-debt-summary" id="ci-debt-summary"></p>
+        </div>
+      </div>
+      <div class="budget-col">
+        <div class="budget-card ci-result-card">
+          <div class="budget-card-title">Where You'll Land</div>
+          <div class="ci-headline" id="ci-headline"></div>
+          <div class="ci-chart-wrap" id="ci-chart"></div>
+          <div class="ci-legend">
+            <span class="ci-legend-item"><span class="ci-swatch ci-swatch-contrib"></span>What you put in</span>
+            <span class="ci-legend-item"><span class="ci-swatch ci-swatch-interest"></span>What interest earned</span>
+          </div>
+        </div>
+        <div class="budget-card" id="ci-compare-card" style="display:none;"></div>
+      </div>
+    </div>`;
+
+  function renderMainChart() {
+    const points = computeCompoundGrowth(sim);
+    const final = points[points.length - 1];
+    document.getElementById('ci-headline').innerHTML =
+      `<span class="ci-headline-num">$${Math.round(final.balance).toLocaleString()}</span>
+       <span class="ci-headline-sub">after ${sim.years} year${sim.years === 1 ? '' : 's'} — you'll have put in $${Math.round(final.contributed).toLocaleString()}, interest earned the rest: $${Math.round(final.balance - final.contributed).toLocaleString()}</span>`;
+    const chart = buildStackedAreaChart(points, 'contributed', 'balance');
+    const chartEl = document.getElementById('ci-chart');
+    chartEl.innerHTML = `
+      <svg viewBox="0 0 ${chart.width} ${chart.height}" class="ci-svg">
+        <path d="${chart.baseArea}" class="ci-area-contrib"></path>
+        <path d="${chart.deltaArea}" class="ci-area-interest"></path>
+        <path d="${chart.totalLine}" class="ci-line-total" pathLength="1000"></path>
+      </svg>`;
+    requestAnimationFrame(() => chartEl.querySelector('.ci-line-total').classList.add('drawn'));
+  }
+
+  function renderDebtChart() {
+    const points = computeMinPaymentDebt({ startingBalance: 1000, annualRatePct: 24 });
+    const final = points[points.length - 1];
+    const chart = buildStackedAreaChart(points.map(p => ({ ...p, zero: 0 })), 'zero', 'balance');
+    const chartEl = document.getElementById('ci-debt-chart');
+    chartEl.innerHTML = `
+      <svg viewBox="0 0 ${chart.width} ${chart.height}" class="ci-svg">
+        <path d="${chart.deltaArea}" class="ci-area-debt"></path>
+        <path d="${chart.totalLine}" class="ci-line-debt" pathLength="1000"></path>
+      </svg>`;
+    requestAnimationFrame(() => chartEl.querySelector('.ci-line-debt').classList.add('drawn'));
+    const years = (points.length - 1) / 12;
+    document.getElementById('ci-debt-summary').innerHTML = final.balance <= 0.5
+      ? `Paid off after about ${years.toFixed(1)} years — total interest paid: <strong>$${Math.round(final.totalInterest).toLocaleString()}</strong>, more than the original balance.`
+      : `Still not paid off after 10 years — total interest paid so far: <strong>$${Math.round(final.totalInterest).toLocaleString()}</strong>, and $${Math.round(final.balance).toLocaleString()} of the balance remains.`;
+  }
+
+  function renderComparison() {
+    const card = document.getElementById('ci-compare-card');
+    const gap = 65 - 18;
+    const early = computeCompoundGrowth({ startingAmount: 0, monthlyContribution: sim.monthlyContribution, annualRatePct: sim.annualRatePct, years: gap });
+    const late = computeCompoundGrowth({ startingAmount: 0, monthlyContribution: sim.monthlyContribution, annualRatePct: sim.annualRatePct, years: gap - 10 });
+    const earlyFinal = early[early.length - 1].balance;
+    const lateFinal = late[late.length - 1].balance;
+    card.innerHTML = `
+      <div class="budget-card-title">Start at 18 vs. Start at 28</div>
+      <p class="budget-note" style="margin-top:-0.2rem;">Same $${sim.monthlyContribution}/month, same ${sim.annualRatePct}% rate, both stop contributing at 65. A 10-year head start:</p>
+      <div class="ci-compare-row"><span>Start at 18</span><strong>$${Math.round(earlyFinal).toLocaleString()}</strong></div>
+      <div class="ci-compare-row"><span>Start at 28</span><strong>$${Math.round(lateFinal).toLocaleString()}</strong></div>
+      <div class="ci-compare-gap">The 10-year head start is worth <strong>$${Math.round(earlyFinal - lateFinal).toLocaleString()}</strong> more by 65 — from the same monthly amount.</div>`;
+  }
+
+  document.querySelectorAll('.ci-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ci-preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      sim.rateMode = btn.dataset.mode;
+      if (btn.dataset.mode === 'hysa') sim.annualRatePct = 4.5;
+      else if (btn.dataset.mode === 'index') sim.annualRatePct = 8.5;
+      document.getElementById('ci-rate').value = sim.annualRatePct;
+      document.getElementById('ci-rate-val').textContent = sim.annualRatePct + '%';
+      renderMainChart();
+      if (document.getElementById('ci-compare-card').style.display !== 'none') renderComparison();
+    });
+  });
+  document.getElementById('ci-start').addEventListener('input', (e) => {
+    sim.startingAmount = Number(e.target.value);
+    document.getElementById('ci-start-val').textContent = '$' + sim.startingAmount;
+    renderMainChart();
+  });
+  document.getElementById('ci-contrib').addEventListener('input', (e) => {
+    sim.monthlyContribution = Number(e.target.value);
+    document.getElementById('ci-contrib-val').textContent = '$' + sim.monthlyContribution;
+    renderMainChart();
+    if (document.getElementById('ci-compare-card').style.display !== 'none') renderComparison();
+  });
+  document.getElementById('ci-years').addEventListener('input', (e) => {
+    sim.years = Number(e.target.value);
+    document.getElementById('ci-years-val').textContent = sim.years;
+    renderMainChart();
+  });
+  document.getElementById('ci-rate').addEventListener('input', (e) => {
+    sim.annualRatePct = Number(e.target.value);
+    sim.rateMode = 'custom';
+    document.querySelectorAll('.ci-preset-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.ci-preset-btn[data-mode="custom"]').classList.add('active');
+    document.getElementById('ci-rate-val').textContent = sim.annualRatePct + '%';
+    renderMainChart();
+    if (document.getElementById('ci-compare-card').style.display !== 'none') renderComparison();
+  });
+  document.getElementById('ci-compare-toggle').addEventListener('click', () => {
+    const card = document.getElementById('ci-compare-card');
+    const showing = card.style.display !== 'none';
+    card.style.display = showing ? 'none' : 'block';
+    document.getElementById('ci-compare-toggle').textContent = showing ? 'Compare: start at 18 vs. start at 28 →' : 'Hide comparison ▴';
+    if (!showing) renderComparison();
+  });
+
+  if (compoundInterestReturnTo) {
+    document.getElementById('ci-return-btn').addEventListener('click', returnFromCompoundInterestSimulator);
+  }
+
+  renderMainChart();
+  renderDebtChart();
+}
+
 // ── MODULE DETAIL ──────────────────────────────
 function showModuleDetail(moduleId) {
   const mod = MODULES.find(m => m.id === moduleId);
@@ -2853,21 +3817,298 @@ function showModuleDetail(moduleId) {
     const key = `${moduleId}_${idx}`;
     const lessonData = state.completedLessons[key];
     const done = !!lessonData;
+    const isActivity = !!lesson.type;
     const card = document.createElement('div');
     card.className = 'lesson-card' + (done ? ' done' : '');
     card.innerHTML = `
       <div class="lesson-num">Lesson ${idx + 1}</div>
-      <div class="lesson-title">${lesson.title}</div>
+      <div class="lesson-title">${lesson.title}${isActivity ? ' <span class="quest-tag">Interactive</span>' : ''}</div>
       <div class="lesson-meta">${done
         ? `Score: ${lessonData.score}/${lessonData.total} · ${lessonData.xpEarned} XP earned`
-        : `${lesson.qIndices.length} questions`}
+        : isActivity ? 'Interactive' : `${lesson.qIndices.length} questions`}
       </div>
       <div class="lesson-action">${done ? '↻ Replay' : 'Start →'}</div>`;
-    card.addEventListener('click', () => startHook(moduleId, idx));
+    card.addEventListener('click', () => {
+      if (isActivity) startBonusActivity(moduleId, idx);
+      else startHook(moduleId, idx);
+    });
     container.appendChild(card);
   });
 
   showScreen('screen-module');
+}
+
+// ── BONUS ACTIVITY LESSONS (decision-chain / sorter) ───────────────────────────
+// A handful of lessons need richer interaction than a multiple-choice quiz, but their
+// module (Spending) is a plain lessons[]/questions[] module with no quest engine — giving
+// it a `quests` array would hijack renderModuleList's hasQuest() gate and hide every other
+// lesson. Instead these lessons carry `lesson.type` + `lesson.activity` and reuse the quest
+// screen's chrome (title row, continue button, Hammy avatar, .option-btn/.pg-column-chart
+// visual language) directly, without touching questProgress/getQP or the quest system at
+// all — this is a standalone, self-contained flow parallel to startHook/startQuiz.
+function startBonusActivity(moduleId, lessonIdx) {
+  const mod = MODULES.find(m => m.id === moduleId);
+  const lesson = mod.lessons[lessonIdx];
+  state.activeModuleId = moduleId;
+  state.activeLessonIdx = lessonIdx;
+  state.inBonusActivity = true;
+  state.activeQuestId = null;
+
+  showScreen('screen-quest');
+  document.getElementById('quest-dashboard').innerHTML = '';
+  document.getElementById('quest-dashboard').classList.remove('highlight');
+  document.getElementById('glossary-tray').innerHTML = '';
+  document.getElementById('glossary-tray').classList.remove('show');
+  document.getElementById('hint-budget').innerHTML = '';
+  document.getElementById('quest-side').style.display = 'flex';
+  document.getElementById('hammy-side-avatar').innerHTML = getPigMarkup(window.innerWidth <= 768 ? 0.28 : 0.64);
+  document.getElementById('hammy-side-avatar').className = 'hammy-side-avatar';
+  document.getElementById('hammy-side-msg').textContent = '';
+  document.getElementById('hammy-side-msg').className = 'hammy-side-msg';
+  document.getElementById('quest-counter').textContent = lesson.title;
+  document.getElementById('quest-prog-fill').style.width = '0%';
+  document.getElementById('quest-pct').textContent = '';
+  const titleRow = document.getElementById('quest-title-row');
+  titleRow.textContent = lesson.title;
+  titleRow.classList.remove('centered');
+  clearQuestContinue();
+
+  if (lesson.type === 'decision-chain') renderDecisionChainActivity(mod, lesson);
+  else if (lesson.type === 'sorter') renderSorterActivity(mod, lesson);
+  else if (lesson.type === 'callout') renderCalloutActivity(mod, lesson);
+}
+
+function finishBonusActivity(mod, lesson, lessonIdx) {
+  state.inBonusActivity = false;
+  const activity = lesson.activity;
+  const wasDone = !!state.completedLessons[`${mod.id}_${lessonIdx}`];
+  const xpEarned = wasDone ? Math.round(activity.xpOnComplete * 0.5) : activity.xpOnComplete;
+  const coinsEarned = wasDone ? 6 : 16;
+  state.coins = (state.coins || 0) + coinsEarned;
+  state.completedLessons[`${mod.id}_${lessonIdx}`] = { score: 1, total: 1, xpEarned };
+  const prev = state.completedModules[mod.id];
+  if (!prev) state.completedModules[mod.id] = { score: 1, total: 1, xpEarned };
+
+  const diamondsEarned = updateStreak();
+  const leveled = addXP(xpEarned);
+  const newAchs = checkAchievements();
+  saveState();
+  showScreen('screen-results');
+  renderResults(mod, 1, 1, xpEarned, wasDone, newAchs, coinsEarned, diamondsEarned);
+  if (leveled) {
+    setTimeout(() => {
+      document.getElementById('new-tier').textContent = getTier(state.level).name;
+      document.getElementById('levelup-overlay').classList.add('visible');
+    }, 700);
+  }
+}
+
+// ── Activity type: decision-chain (opportunity cost) ───────────────────────────
+function renderDecisionChainActivity(mod, lesson) {
+  const activity = lesson.activity;
+  const main = document.getElementById('quest-main');
+  const results = [];
+  let idx = 0;
+  const totalSteps = activity.decisions.length + 1; // + the summary screen
+
+  function updateActivityProgress(step) {
+    const pct = Math.round((step / totalSteps) * 100);
+    document.getElementById('quest-prog-fill').style.width = pct + '%';
+    document.getElementById('quest-pct').textContent = pct + '%';
+  }
+
+  function renderIntro() {
+    updateActivityProgress(0);
+    clearQuestContinue();
+    main.innerHTML = `<p class="quest-prompt">${activity.intro}</p>`;
+    setQuestContinue(activity.startLabel || 'Start →', () => { idx = 0; renderDecision(); }, true);
+  }
+
+  function renderDecision() {
+    updateActivityProgress(idx);
+    clearQuestContinue();
+    const d = activity.decisions[idx];
+    main.innerHTML = `
+      ${d.day ? `<div class="opcost-day-tag">${d.day}</div>` : ''}
+      <p class="quest-prompt">${d.prompt}</p>
+      <div class="decision-choices" id="opcost-choices"></div>`;
+    const choicesEl = document.getElementById('opcost-choices');
+    d.choices.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn decision-choice-btn';
+      btn.textContent = choice.label;
+      btn.addEventListener('click', () => {
+        choicesEl.querySelectorAll('button').forEach(b => b.disabled = true);
+        results.push({ day: d.day, choiceLabel: choice.label, cost: choice.cost, gaveUp: choice.gaveUp, good: choice.good });
+        showHammyMessage(choice.good ? "Nice — that adds up over time!" : "Worth noticing what that traded off.", choice.good);
+        const outcome = document.createElement('div');
+        outcome.className = 'decision-outcome';
+        outcome.innerHTML = `<p class="quest-outcome-text">${choice.cost > 0 ? `That's $${choice.cost} spent. What you gave up instead: ${choice.gaveUp}.` : (choice.gaveUp ? choice.gaveUp : `You kept the $${d.choices.find(c => c.cost > 0) ? d.choices.find(c => c.cost > 0).cost : ''} in your pocket.`)}</p>`;
+        main.appendChild(outcome);
+        const isLast = idx === activity.decisions.length - 1;
+        setQuestContinue(isLast ? (activity.finalChoiceLabel || 'See the Results →') : (activity.nextLabel || 'Next →'), () => {
+          if (isLast) renderSummary(); else { idx++; renderDecision(); }
+        }, true);
+      });
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function renderSummary() {
+    updateActivityProgress(totalSteps);
+    clearQuestContinue();
+    const takeawayHtml = activity.takeaway
+      ? `<div class="opcost-takeaway"><span class="myth-card-tag">KEY TAKEAWAY</span><p>${activity.takeaway}</p></div>` : '';
+
+    if (results.length === 1) {
+      // A single decision doesn't need a week-long bar chart — just the outcome plus the
+      // broader lesson it's illustrating.
+      const r = results[0];
+      main.innerHTML = `
+        <p class="quest-prompt">${activity.summaryIntro || "Here's what that choice set in motion."}</p>
+        <div class="opcost-summary" id="opcost-summary">
+          <div class="opcost-summary-item"><strong>You chose:</strong> ${r.choiceLabel}</div>
+        </div>
+        ${takeawayHtml}`;
+    } else {
+      const totalSpent = results.reduce((s, r) => s + r.cost, 0);
+      const maxVal = Math.max(...results.map(r => r.cost), 1);
+      const barsHtml = results.map(r => `
+        <div class="pg-col">
+          <div class="pg-col-val">$${r.cost}</div>
+          <div class="pg-col-bar-wrap"><div class="pg-col-bar${r.cost === 0 ? ' pg-col-pink' : ''}" style="height:${Math.max(4, r.cost / maxVal * 100)}%"></div></div>
+          <div class="pg-col-name">${r.day}</div>
+        </div>`).join('');
+      main.innerHTML = `
+        <p class="quest-prompt">${activity.summaryIntro || "Here's your week — the path you took, and what each choice actually cost beyond the price tag."}</p>
+        <div class="pg-column-chart">${barsHtml}</div>
+        <div class="opcost-summary" id="opcost-summary">
+          ${results.map(r => `<div class="opcost-summary-item"><strong>${r.day}:</strong> ${r.choiceLabel}${r.cost > 0 ? ` — <span class="opcost-gave-up">gave up: ${r.gaveUp}</span>` : ''}</div>`).join('')}
+          <p class="opcost-total">Total spent this week: <strong>$${totalSpent}</strong></p>
+        </div>
+        ${takeawayHtml}`;
+    }
+    setQuestContinue('Finish →', () => finishBonusActivity(mod, lesson, state.activeLessonIdx), true);
+  }
+
+  renderIntro();
+}
+
+// ── Activity type: sorter (wants vs needs vs it depends) ───────────────────────
+function renderSorterActivity(mod, lesson) {
+  const activity = lesson.activity;
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  const placements = {}; // itemId -> bucket key
+  let selectedId = null;
+
+  main.innerHTML = `
+    <p class="quest-prompt">${activity.intro}</p>
+    <div class="sorter-pool" id="sorter-pool"></div>
+    <div class="sorter-buckets">
+      <div class="sorter-bucket" data-bucket="need"><div class="sorter-bucket-title">Need</div><div class="sorter-bucket-items" id="bucket-need"></div></div>
+      <div class="sorter-bucket" data-bucket="want"><div class="sorter-bucket-title">Want</div><div class="sorter-bucket-items" id="bucket-want"></div></div>
+      <div class="sorter-bucket" data-bucket="depends"><div class="sorter-bucket-title">It Depends</div><div class="sorter-bucket-items" id="bucket-depends"></div></div>
+    </div>
+    <div class="sorter-progress" id="sorter-progress"></div>`;
+
+  function renderPool() {
+    const pool = document.getElementById('sorter-pool');
+    const remaining = activity.items.filter(it => !placements[it.id]);
+    const placedCount = activity.items.length - remaining.length;
+    pool.innerHTML = remaining.map(it => `<button class="sorter-chip${it.id === selectedId ? ' selected' : ''}" data-id="${it.id}">${it.label}</button>`).join('');
+    pool.querySelectorAll('.sorter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        selectedId = chip.dataset.id === selectedId ? null : chip.dataset.id;
+        renderPool();
+      });
+    });
+    document.getElementById('sorter-progress').textContent = `${placedCount} of ${activity.items.length} sorted`;
+    const pct = Math.round((placedCount / activity.items.length) * 100);
+    document.getElementById('quest-prog-fill').style.width = pct + '%';
+    document.getElementById('quest-pct').textContent = pct + '%';
+  }
+
+  function renderBuckets() {
+    ['need', 'want', 'depends'].forEach(bucket => {
+      const el = document.getElementById(`bucket-${bucket}`);
+      const items = activity.items.filter(it => placements[it.id] === bucket);
+      el.innerHTML = items.map(it => `<span class="sorter-chip placed" data-id="${it.id}">${it.label}</span>`).join('');
+    });
+  }
+
+  document.querySelectorAll('.sorter-bucket').forEach(bucketEl => {
+    bucketEl.addEventListener('click', (e) => {
+      if (e.target.closest('.sorter-chip.placed')) return;
+      if (!selectedId) return;
+      placements[selectedId] = bucketEl.dataset.bucket;
+      selectedId = null;
+      renderPool();
+      renderBuckets();
+      if (Object.keys(placements).length === activity.items.length) {
+        setQuestContinue('Check My Sorting →', revealResults, true);
+      }
+    });
+  });
+
+  function revealResults() {
+    clearQuestContinue();
+    document.querySelectorAll('.sorter-chip.placed').forEach(chipEl => {
+      const item = activity.items.find(it => it.id === chipEl.dataset.id);
+      const placedBucket = placements[item.id];
+      const correct = item.category === 'depends' || placedBucket === item.category;
+      chipEl.classList.add(correct ? 'correct' : 'wrong');
+      if (item.note) {
+        const note = document.createElement('div');
+        note.className = 'sorter-note';
+        note.textContent = item.note;
+        chipEl.after(note);
+      }
+    });
+    const correctCount = activity.items.filter(it => it.category === 'depends' || placements[it.id] === it.category).length;
+    showHammyMessage(correctCount === activity.items.length ? "You caught every one!" : "A few gray areas — that's normal, that's the point.", correctCount === activity.items.length);
+    const note = document.createElement('p');
+    note.className = 'sorter-final-note';
+    note.textContent = activity.subscriptionCreepNote || '';
+    document.getElementById('sorter-progress').after(note);
+    setQuestContinue('Finish →', () => finishBonusActivity(mod, lesson, state.activeLessonIdx), true);
+  }
+
+  renderPool();
+  renderBuckets();
+}
+
+// ── Activity type: callout (single-screen informational note with a live example) ──
+function renderCalloutActivity(mod, lesson) {
+  const activity = lesson.activity;
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  document.getElementById('quest-prog-fill').style.width = '100%';
+  document.getElementById('quest-pct').textContent = '100%';
+
+  let exampleHtml = '';
+  if (activity.example) {
+    const points = computeCompoundGrowth(activity.example);
+    const final = points[points.length - 1];
+    exampleHtml = `
+      <div class="callout-example">
+        <div class="callout-example-num">$${Math.round(final.balance).toLocaleString()}</div>
+        <p class="callout-example-sub">${activity.example.label}</p>
+      </div>`;
+  }
+
+  main.innerHTML = `
+    <p class="quest-prompt">${activity.body}</p>
+    ${exampleHtml}
+    ${activity.linkOut ? `<button class="teach-linkout-btn" id="callout-linkout-btn" type="button">${activity.linkOut.label} →</button>` : ''}`;
+
+  if (activity.linkOut) {
+    document.getElementById('callout-linkout-btn').addEventListener('click', () => {
+      if (activity.linkOut.action === 'compound-interest') openCompoundInterestSimulator();
+    });
+  }
+
+  setQuestContinue('Got it →', () => finishBonusActivity(mod, lesson, state.activeLessonIdx), true);
 }
 
 // ── HOOK ───────────────────────────────────────
@@ -3072,6 +4313,7 @@ function startQuest(moduleId, questId) {
   const quest = mod.quests.find(q => q.id === questId);
   state.activeModuleId = moduleId;
   state.activeQuestId = questId;
+  state.inBonusActivity = false;
   const key = questKey(moduleId, questId);
   const existing = state.questProgress[key];
   if (!existing || existing.done) {
@@ -3125,6 +4367,8 @@ const CHAPTER_TITLE_FALLBACK = {
   simulator: 'Simulator',
   knowledgecheck: 'Quick Check',
   poll: 'Quick Poll',
+  spotcheck: 'Spot the Red Flags',
+  urlinspect: 'Real URL or Fake?',
 };
 function getChapterTitle(chapter) {
   if (chapter.type === 'bossbattle') return chapter.title ? `⚠ Boss Battle: ${chapter.title}` : '⚠ Boss Battle';
@@ -3165,13 +4409,16 @@ function renderChapter(mod, idx) {
   titleRow.classList.remove('centered');
   document.getElementById('quest-layout').style.minHeight = Math.max(240, computeAvailableQuestHeight()) + 'px';
 
-  // Reset the persistent Hammy to a neutral idle pose for the new chapter.
+  // Reset the persistent Hammy to a neutral idle pose for the new chapter. This side avatar
+  // is always plain Hammy, the consistent narrator/companion — the quest character's own
+  // accessory (Maya's bow, Devon's bowtie) only appears in their own story-beat dialogue
+  // portraits, not here, so the two stay visually distinct.
   const questSide = document.getElementById('quest-side');
   const hammySide = document.getElementById('hammy-side-avatar');
   const hammyMsg = document.getElementById('hammy-side-msg');
   questSide.style.display = HAMMY_SIDE_HIDDEN_TYPES.includes(chapter.type) ? 'none' : 'flex';
   hammySide.className = 'hammy-side-avatar';
-  hammySide.innerHTML = getPigMarkup(window.innerWidth <= 768 ? 0.42 : 0.64);
+  hammySide.innerHTML = getPigMarkup(window.innerWidth <= 768 ? 0.28 : 0.64);
   hammyMsg.className = 'hammy-side-msg';
   hammyMsg.textContent = '';
 
@@ -3188,6 +4435,8 @@ function renderChapter(mod, idx) {
     case 'decision': renderDecisionChapter(chapter, mod, onDone); break;
     case 'microsim': renderMicrosimChapter(chapter, mod, onDone); break;
     case 'poll': renderPollChapter(chapter, mod, onDone); break;
+    case 'spotcheck': renderSpotcheckChapter(chapter, mod, onDone); break;
+    case 'urlinspect': renderUrlInspectChapter(chapter, mod, onDone); break;
     case 'mythcards': renderMythCardsChapter(chapter, mod, onDone); break;
     case 'knowledgecheck': renderKnowledgeCheckChapter(chapter, mod, onDone); break;
     case 'simulator': renderSimulatorChapter(chapter, mod, onDone); break;
@@ -3262,11 +4511,13 @@ function getHammyFaceMarkup(scale) {
 }
 
 // Glossary tray — every term taught moves here once the student clicks past it, so they can
-// always tap back and reread a definition instead of it disappearing for good.
-function pushLearnedTerm(mod, term, plain) {
+// always tap back and reread a definition instead of it disappearing for good. Terms are
+// grouped by the chapter section they came from (e.g. "Credit Card Basics") so a long quest
+// doesn't turn into one giant wall of chips — tap a section, then tap a word within it.
+function pushLearnedTerm(mod, term, plain, section) {
   const qp = getQP(mod);
   if (!qp.learnedTerms) qp.learnedTerms = [];
-  if (!qp.learnedTerms.some(t => t.term === term)) qp.learnedTerms.push({ term, plain });
+  if (!qp.learnedTerms.some(t => t.term === term)) qp.learnedTerms.push({ term, plain, section: section || 'Other Terms' });
   saveState();
   renderGlossaryTray(mod);
 }
@@ -3277,15 +4528,25 @@ function renderGlossaryTray(mod) {
   const terms = (getQP(mod).learnedTerms) || [];
   if (!terms.length) { tray.innerHTML = ''; tray.classList.remove('show'); return; }
   tray.classList.add('show');
-  tray.innerHTML = `<span class="glossary-label">📖 Look back:</span>` + terms.map((t, i) =>
-    `<button class="glossary-chip" data-idx="${i}">${t.term.replace(/\s*\(.*?\)/, '')}</button>`
+
+  // Group into sections, preserving the order each section was first encountered.
+  const sections = [];
+  terms.forEach(t => {
+    const name = t.section || 'Other Terms';
+    let section = sections.find(s => s.name === name);
+    if (!section) { section = { name, terms: [] }; sections.push(section); }
+    section.terms.push(t);
+  });
+
+  tray.innerHTML = `<span class="glossary-label">📖 Look back:</span>` + sections.map((s, i) =>
+    `<button class="glossary-chip glossary-section-chip" data-idx="${i}">${s.name} <span class="glossary-count">${s.terms.length}</span></button>`
   ).join('');
-  tray.querySelectorAll('.glossary-chip').forEach(btn => {
-    btn.addEventListener('click', () => showGlossaryPopup(terms[Number(btn.dataset.idx)]));
+  tray.querySelectorAll('.glossary-section-chip').forEach(btn => {
+    btn.addEventListener('click', () => showGlossarySectionPopup(sections[Number(btn.dataset.idx)]));
   });
 }
 
-function showGlossaryPopup(term) {
+function getGlossaryModal() {
   let modal = document.getElementById('glossary-popup');
   if (!modal) {
     modal = document.createElement('div');
@@ -3294,13 +4555,45 @@ function showGlossaryPopup(term) {
     document.getElementById('screen-quest').appendChild(modal);
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
   }
+  return modal;
+}
+
+// Step 1 of the look-back flow: tapping a section shows just the words taught in it.
+function showGlossarySectionPopup(section) {
+  const modal = getGlossaryModal();
   modal.innerHTML = `<div class="glossary-popup-card">
+    <div class="glossary-popup-section-title">${section.name}</div>
+    <div class="glossary-popup-word-grid" id="glossary-popup-word-grid"></div>
+    <button class="btn-secondary" id="glossary-popup-close">Close</button>
+  </div>`;
+  const grid = document.getElementById('glossary-popup-word-grid');
+  section.terms.forEach((t, i) => {
+    const chip = document.createElement('button');
+    chip.className = 'glossary-popup-word-chip';
+    chip.textContent = t.term.replace(/\s*\(.*?\)/, '');
+    chip.addEventListener('click', () => showGlossaryPopup(t, section));
+    grid.appendChild(chip);
+  });
+  modal.classList.add('show');
+  document.getElementById('glossary-popup-close').addEventListener('click', () => modal.classList.remove('show'));
+}
+
+// Step 2: tapping a word within a section shows its definition, with a way back to the
+// section's word list so re-checking a few words in a row doesn't mean re-opening the tray
+// each time.
+function showGlossaryPopup(term, backToSection) {
+  const modal = getGlossaryModal();
+  modal.innerHTML = `<div class="glossary-popup-card">
+    ${backToSection ? `<button class="glossary-popup-back" id="glossary-popup-back">← Back to ${backToSection.name}</button>` : ''}
     <div class="glossary-popup-term">${term.term}</div>
     <p class="glossary-popup-def">${term.plain}</p>
     <button class="btn-primary" id="glossary-popup-close">Got it</button>
   </div>`;
   modal.classList.add('show');
   document.getElementById('glossary-popup-close').addEventListener('click', () => modal.classList.remove('show'));
+  if (backToSection) {
+    document.getElementById('glossary-popup-back').addEventListener('click', () => showGlossarySectionPopup(backToSection));
+  }
 }
 
 // Limited "Ask Hammy for a hint" budget — available during interactive chapters only,
@@ -3332,10 +4625,10 @@ function renderHintBudget(mod, chapterType, hintText) {
   }
 }
 
-// Maya — same Hammy mascot, wearing a purple bow, so the story has a consistent
-// character design instead of a separately-drawn human avatar. Custom bow (not the shared
-// pink progression accessory), sitting on the side of her left ear at a jaunty tilt,
-// Hello Kitty style, instead of centered low on the head.
+// Same Hammy mascot, wearing a small quest-specific accessory, so each quest's protagonist
+// reads as visually distinct instead of interchangeable copies of the same mascot.
+// Maya — a purple bow sitting on the side of her left ear at a jaunty tilt, Hello Kitty
+// style, instead of centered low on the head.
 const MAYA_BOW_SVG = `
   <g transform="translate(30,34) rotate(-20)">
     <path d="M0 0 C -6 -5, -13 -4, -12 2 C -11 7, -5 6, 0 0 Z" fill="#8A4FD6"/>
@@ -3345,15 +4638,31 @@ const MAYA_BOW_SVG = `
     <circle cx="0" cy="1" r="2.6" fill="#6B35B8"/>
   </g>
 `;
+// Devon — a small red bowtie centered just below the chin, so it reads distinctly from
+// Maya's ear bow at a glance even at the tiny sizes the side avatar renders at.
+const DEVON_BOWTIE_SVG = `
+  <g transform="translate(60,69)">
+    <path d="M0 0 C -7 -5, -14 -4, -13 3 C -12 8, -5 6, 0 0 Z" fill="#C23B3B"/>
+    <path d="M0 0 C 7 -5, 14 -4, 13 3 C 12 8, 5 6, 0 0 Z" fill="#C23B3B"/>
+    <circle cx="0" cy="1" r="3" fill="#8F2A2A"/>
+  </g>
+`;
+// Keyed by quest id (not module id — Credit has two quests, Maya and Jordan, and only Maya
+// has a defined accessory so far). Falls back to the plain, unaccessorized mascot.
+const QUEST_CHARACTER_ACCESSORY = {
+  maya: MAYA_BOW_SVG,
+  devon: DEVON_BOWTIE_SVG,
+};
 
-function getMayaMarkup(scale) {
-  return getPigWithItemMarkup(scale, MAYA_BOW_SVG);
+function getCharacterMarkup(scale, questId) {
+  const accessory = QUEST_CHARACTER_ACCESSORY[questId];
+  return accessory ? getPigWithItemMarkup(scale, accessory) : getPigMarkup(scale);
 }
 
-// Maya's face only (no body) — used in dialogue avatars where a full-body illustration
-// would be too large and unnecessary.
-function getMayaFaceMarkup(scale) {
-  return getPigWithItemMarkup(scale, MAYA_BOW_SVG).replace('class="pig-stage"', 'class="pig-stage pig-head-stage"');
+// Face only (no body) — used in dialogue avatars where a full-body illustration would be
+// too large and unnecessary.
+function getCharacterFaceMarkup(scale, questId) {
+  return getCharacterMarkup(scale, questId).replace('class="pig-stage"', 'class="pig-stage pig-head-stage"');
 }
 
 const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it!', 'Great job!'];
@@ -3438,8 +4747,23 @@ function renderTeachChapter(chapter, mod, onDone) {
         <div class="teach-term">${c.term}</div>
         <p class="teach-plain">${c.plain}</p>
         <div class="teach-analogy"><span class="teach-analogy-tag">Think of it like this</span>${c.analogy}</div>
+        ${c.linkOut ? `<button class="teach-linkout-btn" id="teach-linkout-btn" type="button">${c.linkOut.label} →</button>` : ''}
       </div>
       <div class="word-check" id="word-check"></div>`;
+
+    if (c.linkOut) {
+      document.getElementById('teach-linkout-btn').addEventListener('click', () => {
+        // Clicking through to an external tool from the final step of a walkthrough finishes
+        // that step — resuming later should continue forward into the next chapter (the boss
+        // battle), not restart this whole walkthrough back at step 1. Reuses the exact same
+        // "Got it →" completion path (award XP, advance) rather than duplicating it.
+        if (isLast) {
+          const continueBtn = document.getElementById('quest-continue-btn');
+          if (continueBtn) continueBtn.click();
+        }
+        if (c.linkOut.action === 'compound-interest') openCompoundInterestSimulator();
+      });
+    }
 
     // A quick true/false recall check right after the word — so the student engages with
     // it once before moving on, instead of just clicking through a string of definitions.
@@ -3470,7 +4794,7 @@ function renderTeachChapter(chapter, mod, onDone) {
     }
 
     function readyToAdvance() {
-      pushLearnedTerm(mod, c.term, c.plain);
+      pushLearnedTerm(mod, c.term, c.plain, chapter.title);
       setQuestContinue(isLast ? 'Got it →' : 'Next Word →', () => {
         if (isLast) {
           if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
@@ -3651,22 +4975,22 @@ function renderStoryChapter(chapter, mod, onDone) {
     if (beat.speaker === 'intro') {
       entry.className = 'intro-scene';
       // Measure the room actually left under the sticky header in real pixels (instead of
-      // guessing with a vh-minus-constant), then size Maya to fit inside it — so this is
-      // always centered with zero scrolling regardless of viewport height.
+      // guessing with a vh-minus-constant), then size the protagonist to fit inside it — so
+      // this is always centered with zero scrolling regardless of viewport height.
       const available = computeAvailableQuestHeight();
       const captionBudget = 210; // rough space reserved for the caption + gap below the avatar
       const maxScale = window.innerWidth <= 640 ? 0.62 : 0.85;
       const introScale = Math.max(0.4, Math.min(maxScale, (available - captionBudget) / 460));
-      entry.innerHTML = `<div class="intro-avatar">${getMayaMarkup(introScale)}</div><p class="intro-caption">${beat.text}</p>`;
+      entry.innerHTML = `<div class="intro-avatar">${getCharacterMarkup(introScale, state.activeQuestId)}</div><p class="intro-caption">${beat.text}</p>`;
       log.appendChild(entry);
       entry.style.minHeight = Math.max(240, available) + 'px';
     } else {
       const isNarrator = beat.speaker === 'narrator';
-      const isMaya = beat.speaker === charName;
-      const avatarHtml = isNarrator ? getHammyFaceMarkup(0.13) : isMaya ? getMayaFaceMarkup(0.13) : beat.speaker.charAt(0);
+      const isProtagonist = beat.speaker === charName;
+      const avatarHtml = isNarrator ? getHammyFaceMarkup(0.13) : isProtagonist ? getCharacterFaceMarkup(0.13, state.activeQuestId) : beat.speaker.charAt(0);
       entry.className = `story-beat ${isNarrator ? 'is-narrator' : ''}`;
       entry.innerHTML = `
-        <div class="story-avatar ${isNarrator || isMaya ? 'has-character' : ''}">${avatarHtml}</div>
+        <div class="story-avatar ${isNarrator || isProtagonist ? 'has-character' : ''}">${avatarHtml}</div>
         <div class="story-bubble ${isNarrator ? 'narrator' : ''}">${beat.text}</div>`;
       log.appendChild(entry);
       entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -3824,18 +5148,11 @@ function renderPollChapter(chapter, mod, onDone) {
       saveState();
       showHammyReaction(mod, guessedRight);
 
-      const maxPct = Math.max(...chapter.pollResults.map(r => r.pct), 1);
-      const barsHtml = chapter.pollResults.map(r => `
-        <div class="pg-col">
-          <div class="pg-col-val">${r.pct}%</div>
-          <div class="pg-col-bar-wrap"><div class="pg-col-bar ${r.label === 'False' ? 'pg-col-pink' : ''}" style="height:${Math.max(4, r.pct / maxPct * 100)}%"></div></div>
-          <div class="pg-col-name">${r.label}</div>
-        </div>`).join('');
-
+      // No claimed crowd statistics here — we don't have real survey data backing any
+      // specific percentage, so the reveal sticks to the actual true/false answer and why,
+      // the same way a myth card does, instead of implying a poll that never happened.
       const revealEl = document.getElementById('poll-reveal');
       revealEl.innerHTML = `
-        <p class="poll-crowd-label">${chapter.sampleSize ? `Here's how ${chapter.sampleSize} voted:` : "Here's how the crowd voted:"}</p>
-        <div class="pg-column-chart">${barsHtml}</div>
         <div class="poll-truth ${chapter.isTrue ? 'is-true' : 'is-false'}">
           <span class="myth-card-tag">${chapter.isTrue ? 'THIS IS A FACT' : 'THIS IS A MYTH'}</span>
           <p class="poll-explanation">${chapter.explanation}</p>
@@ -3848,6 +5165,149 @@ function renderPollChapter(chapter, mod, onDone) {
       }, true);
     });
   });
+}
+
+// ── Chapter type: spotcheck (tap-to-flag red flags in a block of content) ──────
+// Mirrors the myth-card-tag/is-true/is-false reveal convention so tapping through a fake
+// job posting reads as the same "test your instincts, then see the answer" language as
+// polls and myth cards elsewhere in the quest engine.
+function renderSpotcheckChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  const flaggedIds = new Set();
+
+  function segmentHtml(seg, revealed) {
+    if (!revealed) {
+      return `<span class="spotcheck-segment" data-id="${seg.id}">${seg.text}</span> `;
+    }
+    const wasFlagged = flaggedIds.has(seg.id);
+    let cls = 'correct-safe';
+    if (seg.isRedFlag && wasFlagged) cls = 'correct-flag';
+    else if (seg.isRedFlag && !wasFlagged) cls = 'missed-flag';
+    else if (!seg.isRedFlag && wasFlagged) cls = 'false-positive';
+    return `<span class="spotcheck-segment revealed ${cls}" data-id="${seg.id}">${seg.text}</span> `;
+  }
+
+  function render(revealed) {
+    if (!revealed) {
+      main.innerHTML = `
+        <p class="quest-prompt">${chapter.intro}</p>
+        <div class="spotcheck-posting">
+          <div class="spotcheck-title">${chapter.postingTitle}</div>
+          <p class="spotcheck-body">${chapter.segments.map(s => segmentHtml(s, false)).join('')}</p>
+        </div>`;
+      main.querySelectorAll('.spotcheck-segment').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.dataset.id;
+          if (flaggedIds.has(id)) { flaggedIds.delete(id); el.classList.remove('flagged'); }
+          else { flaggedIds.add(id); el.classList.add('flagged'); }
+        });
+      });
+      setQuestContinue('Check My Answers →', () => render(true), true);
+    } else {
+      // The posting collapses behind a toggle once revealed — every flagged phrase already
+      // gets quoted in its own summary card below, so keeping the full posting expanded too
+      // just doubles the same text on screen and forces a scroll on shorter viewports.
+      const flags = chapter.segments.filter(s => s.isRedFlag);
+      const caughtCount = flags.filter(s => flaggedIds.has(s.id)).length;
+      main.innerHTML = `
+        <p class="quest-prompt">${chapter.intro}</p>
+        <button class="spotcheck-toggle" id="spotcheck-toggle" type="button">Show the original posting ▾</button>
+        <div class="spotcheck-posting collapsed" id="spotcheck-posting">
+          <div class="spotcheck-title">${chapter.postingTitle}</div>
+          <p class="spotcheck-body">${chapter.segments.map(s => segmentHtml(s, true)).join('')}</p>
+        </div>
+        <div class="spotcheck-summary" id="spotcheck-summary">
+          <p class="spotcheck-score">You caught ${caughtCount} of ${flags.length} red flags.</p>
+          ${flags.map(s => `
+            <div class="spotcheck-summary-item ${flaggedIds.has(s.id) ? 'caught' : 'missed'}">
+              <span class="myth-card-tag">${flaggedIds.has(s.id) ? '✓ YOU CAUGHT THIS' : 'YOU MISSED THIS'}</span>
+              <p class="spotcheck-summary-text">"${s.text}"</p>
+              <p class="spotcheck-summary-exp">${s.explanation}</p>
+            </div>`).join('')}
+        </div>`;
+      const toggleBtn = document.getElementById('spotcheck-toggle');
+      const postingEl = document.getElementById('spotcheck-posting');
+      toggleBtn.addEventListener('click', () => {
+        const isCollapsed = postingEl.classList.toggle('collapsed');
+        toggleBtn.textContent = isCollapsed ? 'Show the original posting ▾' : 'Hide the original posting ▴';
+      });
+      showHammyReaction(mod, caughtCount === flags.length);
+      setQuestContinue('Continue →', () => {
+        if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+        onDone();
+      }, true);
+    }
+  }
+
+  render(false);
+}
+
+// ── Chapter type: urlinspect (tap parts of a URL to identify what's suspicious) ─
+function renderUrlInspectChapter(chapter, mod, onDone) {
+  const main = document.getElementById('quest-main');
+  clearQuestContinue();
+  const flaggedIds = new Set();
+
+  function partHtml(part, revealed) {
+    if (!revealed) {
+      return `<span class="urlinspect-part" data-id="${part.id}">${part.segment}</span>`;
+    }
+    const wasFlagged = flaggedIds.has(part.id);
+    let cls = 'correct-safe';
+    if (part.isSuspicious && wasFlagged) cls = 'correct-flag';
+    else if (part.isSuspicious && !wasFlagged) cls = 'missed-flag';
+    else if (!part.isSuspicious && wasFlagged) cls = 'false-positive';
+    return `<span class="urlinspect-part revealed ${cls}" data-id="${part.id}">${part.segment}</span>`;
+  }
+
+  function render(revealed) {
+    if (!revealed) {
+      main.innerHTML = `
+        <p class="quest-prompt">${chapter.intro}</p>
+        <div class="urlinspect-bar">${chapter.parts.map(p => partHtml(p, false)).join('')}</div>`;
+      main.querySelectorAll('.urlinspect-part').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.dataset.id;
+          if (flaggedIds.has(id)) { flaggedIds.delete(id); el.classList.remove('flagged'); }
+          else { flaggedIds.add(id); el.classList.add('flagged'); }
+        });
+      });
+      setQuestContinue('Check My Answer →', () => render(true), true);
+    } else {
+      // Collapse the URL bar behind a toggle once revealed — same reasoning as spotcheck:
+      // every part is already quoted in its own summary card below.
+      const suspicious = chapter.parts.filter(p => p.isSuspicious);
+      const caughtCount = suspicious.filter(p => flaggedIds.has(p.id)).length;
+      main.innerHTML = `
+        <p class="quest-prompt">${chapter.intro}</p>
+        <button class="spotcheck-toggle" id="urlinspect-toggle" type="button">Show the full URL ▾</button>
+        <div class="urlinspect-bar collapsed" id="urlinspect-bar-wrap">${chapter.parts.map(p => partHtml(p, true)).join('')}</div>
+        <div class="spotcheck-summary" id="urlinspect-summary">
+          <p class="spotcheck-score">You caught ${caughtCount} of ${suspicious.length} suspicious part${suspicious.length === 1 ? '' : 's'}.</p>
+          ${chapter.parts.map(p => `
+            <div class="spotcheck-summary-item ${!p.isSuspicious ? 'caught' : flaggedIds.has(p.id) ? 'caught' : 'missed'}">
+              <span class="myth-card-tag">${p.isSuspicious ? (flaggedIds.has(p.id) ? '✓ YOU CAUGHT THIS' : 'YOU MISSED THIS') : 'THIS PART IS FINE'}</span>
+              <p class="spotcheck-summary-text">"${p.segment}"</p>
+              <p class="spotcheck-summary-exp">${p.note}</p>
+            </div>`).join('')}
+          <p class="urlinspect-final-note">${chapter.correctAnswerNote}</p>
+        </div>`;
+      const toggleBtn = document.getElementById('urlinspect-toggle');
+      const barEl = document.getElementById('urlinspect-bar-wrap');
+      toggleBtn.addEventListener('click', () => {
+        const isCollapsed = barEl.classList.toggle('collapsed');
+        toggleBtn.textContent = isCollapsed ? 'Show the full URL ▾' : 'Hide the full URL ▴';
+      });
+      showHammyReaction(mod, caughtCount === suspicious.length);
+      setQuestContinue('Continue →', () => {
+        if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+        onDone();
+      }, true);
+    }
+  }
+
+  render(false);
 }
 
 function renderMythCardsChapter(chapter, mod, onDone) {
@@ -4314,6 +5774,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (page === 'home')          renderHome();
       else if (page === 'progress') renderProgressPage();
       else if (page === 'modules')  renderModulesPage();
+      else if (page === 'tools')    { compoundInterestReturnTo = null; renderToolsPage(); }
       else if (page === 'badges')   renderBadgesPage();
       else if (page === 'room')     renderRoomPage();
       else if (page === 'shop')     renderShopPage();
@@ -4328,6 +5789,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirm('Exit quiz? Your progress for this session will be lost.')) renderHome();
   });
   document.getElementById('quest-exit').addEventListener('click', () => {
+    if (state.inBonusActivity) {
+      state.inBonusActivity = false;
+      renderHome();
+      return;
+    }
     if (confirm('Exit the quest? Your progress is saved up to your last completed chapter.')) renderHome();
   });
   document.getElementById('btn-next').addEventListener('click', () => {

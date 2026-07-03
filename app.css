@@ -375,6 +375,165 @@ body { background: var(--bg); min-height: 100vh; }
 }
 .btn-danger:hover { background: var(--pink-pale); }
 
+/* ─── TOOLS PAGE (Budget Calculator + Compound Interest Simulator) ─── */
+.tools-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+.tools-tab {
+  background: none; border: none; font-family: inherit; font-size: 0.88rem; font-weight: 600;
+  color: var(--text-soft); padding: 0.6rem 0.9rem; cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; transition: color 0.15s, border-color 0.15s;
+}
+.tools-tab:hover { color: var(--text); }
+.tools-tab.active { color: var(--green-dark); border-color: var(--green); }
+.ci-return-btn {
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%;
+  margin-bottom: 1.5rem; background: var(--green-dark); border: none; border-radius: var(--radius);
+  padding: 1rem 1.25rem; font-family: inherit; font-size: 1rem; font-weight: 700;
+  color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(94,138,80,0.35);
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.ci-return-btn:hover { background: #3D5938; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(94,138,80,0.45); }
+
+.budget-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: start; }
+.budget-col { display: flex; flex-direction: column; gap: 1.25rem; }
+.budget-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 1.25rem 1.4rem; }
+.budget-card-title { font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 0.8rem; }
+.budget-note { font-size: 0.78rem; color: var(--text-soft); line-height: 1.5; margin-bottom: 0.8rem; margin-top: -0.4rem; }
+
+.budget-row-list { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.8rem; }
+.budget-row { display: flex; align-items: center; gap: 0.6rem; }
+.budget-row-label { flex: 1; font-size: 0.85rem; font-weight: 500; color: var(--text-mid); }
+.budget-row-callout { border-radius: 8px; padding: 0.3rem 0.5rem; margin: -0.3rem -0.5rem; transition: background 0.2s; }
+.budget-row-callout.over-threshold { background: var(--pink-pale); }
+.budget-row-callout.over-threshold .budget-row-label { color: var(--pink-dark); font-weight: 700; }
+
+.budget-input-label { flex: 1; min-width: 0; }
+.budget-input {
+  font-family: inherit; font-size: 0.85rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 0.45rem 0.6rem; background: var(--bg); color: var(--text); width: 100%;
+}
+.budget-input:focus { outline: none; border-color: var(--green); background: #fff; }
+select.budget-input { cursor: pointer; }
+.budget-input-wrap { display: flex; align-items: center; width: 92px; flex-shrink: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); padding-left: 0.5rem; }
+.budget-input-wrap .budget-input { border: none; background: none; padding-left: 0.15rem; }
+.budget-input-wrap:focus-within { border-color: var(--green); background: #fff; }
+.budget-input-prefix { font-size: 0.82rem; font-weight: 600; color: var(--text-soft); }
+.budget-row-remove {
+  background: none; border: none; color: var(--text-soft); font-size: 1.2rem; line-height: 1; cursor: pointer;
+  padding: 0.2rem 0.3rem; flex-shrink: 0;
+}
+.budget-row-remove:hover { color: var(--pink-dark); }
+.budget-add-btn {
+  background: none; border: 1.5px dashed var(--border); border-radius: var(--radius-sm); width: 100%;
+  padding: 0.5rem; font-family: inherit; font-size: 0.82rem; font-weight: 600; color: var(--text-soft); cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.budget-add-btn:hover { border-color: var(--green); color: var(--green-dark); }
+
+.budget-summary-card { position: sticky; top: 1rem; }
+.budget-summary-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-mid); padding: 0.3rem 0; }
+.budget-summary-divider { height: 1px; background: var(--border); margin: 0.5rem 0; }
+.budget-remaining { font-size: 1rem; font-weight: 700; color: var(--green-dark); }
+.budget-remaining strong { font-family: var(--font-display); font-size: 1.3rem; }
+.budget-remaining.negative { color: var(--pink-dark); }
+.budget-goal-msg { font-size: 0.8rem; font-weight: 600; margin-top: 0.7rem; padding: 0.6rem 0.8rem; border-radius: var(--radius-sm); line-height: 1.45; }
+.budget-goal-msg.ok { background: var(--green-pale); color: var(--green-dark); }
+.budget-goal-msg.bad { background: var(--pink-pale); color: var(--pink-dark); }
+
+.budget-whatif-row { margin-bottom: 0.6rem; }
+.budget-whatif-result { font-size: 0.83rem; color: var(--text-mid); line-height: 1.5; margin-top: 0.6rem; }
+.budget-whatif-result strong { color: var(--text); }
+
+@media (max-width: 700px) {
+  .budget-grid { grid-template-columns: 1fr; }
+  .budget-summary-card { position: static; }
+}
+
+/* Compound interest simulator — reuses microsim-slider-row/microsim-range from the quest
+   engine's budget microsim for input consistency, plus the new stacked-area chart. */
+.ci-rate-presets { display: flex; gap: 0.5rem; margin: 0.9rem 0 0.3rem; }
+.ci-preset-btn {
+  flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 0.5rem 0.4rem; font-family: inherit; font-size: 0.78rem; font-weight: 700; color: var(--text-mid);
+  cursor: pointer; text-align: center; transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.ci-preset-btn span { display: block; font-size: 0.68rem; font-weight: 600; color: var(--text-soft); margin-top: 0.1rem; }
+.ci-preset-btn:hover { border-color: var(--green); }
+.ci-preset-btn.active { background: var(--green-pale); border-color: var(--green); color: var(--green-dark); }
+.ci-preset-btn.active span { color: var(--green-dark); }
+
+.ci-result-card { }
+.ci-headline { margin-bottom: 1rem; }
+.ci-headline-num { display: block; font-family: var(--font-display); font-size: 2.2rem; font-weight: 700; color: var(--green-dark); line-height: 1.1; }
+.ci-headline-sub { display: block; font-size: 0.8rem; color: var(--text-mid); margin-top: 0.4rem; line-height: 1.5; }
+.ci-chart-wrap { width: 100%; }
+.ci-svg { width: 100%; height: auto; display: block; }
+.ci-area-contrib { fill: var(--green-light); opacity: 0.55; }
+.ci-area-interest { fill: var(--pink-light); opacity: 0.6; }
+.ci-line-total { fill: none; stroke: var(--green-dark); stroke-width: 2.5; stroke-dasharray: 1000; stroke-dashoffset: 1000; transition: stroke-dashoffset 1s ease; }
+.ci-line-total.drawn { stroke-dashoffset: 0; }
+.ci-legend { display: flex; gap: 1.2rem; margin-top: 0.6rem; }
+.ci-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 600; color: var(--text-mid); }
+.ci-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.ci-swatch-contrib { background: var(--green-light); }
+.ci-swatch-interest { background: var(--pink-light); }
+
+.ci-compare-row { display: flex; justify-content: space-between; font-size: 0.88rem; color: var(--text-mid); padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
+.ci-compare-row strong { font-family: var(--font-display); font-size: 1.1rem; color: var(--text); }
+.ci-compare-gap { font-size: 0.85rem; font-weight: 600; color: var(--green-dark); background: var(--green-pale); border-radius: var(--radius-sm); padding: 0.7rem 0.9rem; margin-top: 0.8rem; line-height: 1.5; }
+.ci-compare-gap strong { font-family: var(--font-display); font-size: 1.05rem; }
+
+.ci-warning-card { border-color: var(--pink-light); }
+.ci-warning-card .budget-card-title { color: var(--pink-dark); }
+.ci-area-debt { fill: var(--pink-light); opacity: 0.55; }
+.ci-line-debt { fill: none; stroke: var(--pink-dark); stroke-width: 2.5; stroke-dasharray: 1000; stroke-dashoffset: 1000; transition: stroke-dashoffset 1s ease; }
+.ci-line-debt.drawn { stroke-dashoffset: 0; }
+.ci-debt-summary { font-size: 0.82rem; color: var(--text-mid); line-height: 1.5; margin-top: 0.6rem; }
+.ci-debt-summary strong { color: var(--pink-dark); }
+
+/* Opportunity-cost decision-chain activity (Spending module bonus lesson) */
+.opcost-day-tag {
+  display: inline-block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-soft); margin-bottom: 0.4rem;
+}
+.opcost-summary { margin-top: 1rem; animation: fadeUp 0.4s ease; }
+.opcost-summary-item { font-size: 0.88rem; color: var(--text-mid); line-height: 1.6; margin-bottom: 0.4rem; }
+.opcost-summary-item strong { color: var(--text); }
+.opcost-gave-up { color: var(--pink-dark); font-weight: 500; }
+.opcost-total { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-top: 0.8rem; padding-top: 0.7rem; border-top: 1px solid var(--border); }
+.opcost-takeaway {
+  margin-top: 1rem; border-radius: var(--radius); border: 1px solid var(--green-light); background: var(--green-pale);
+  padding: 1rem 1.25rem; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; text-align: center;
+}
+.opcost-takeaway .myth-card-tag { color: var(--green-dark); }
+.opcost-takeaway p { font-size: 0.88rem; font-weight: 500; line-height: 1.55; color: var(--text); margin: 0; }
+
+/* Wants-vs-needs sorter activity (Spending module bonus lesson) — tap-based, matching this
+   app's existing tap-to-select convention (the matching chapter) rather than native HTML5
+   drag events, which are unreliable on touch devices. */
+.sorter-pool { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; min-height: 2.5rem; }
+.sorter-chip {
+  font-family: inherit; font-size: 0.82rem; font-weight: 600; color: var(--text);
+  background: #fff; border: 1.5px solid var(--border); border-radius: 999px; padding: 0.45rem 0.9rem;
+  cursor: pointer; transition: border-color 0.15s, background 0.15s;
+}
+.sorter-chip:hover { border-color: var(--green); }
+.sorter-chip.selected { border-color: var(--green); background: var(--green-pale); box-shadow: 0 0 0 2px rgba(107,143,101,0.18); }
+.sorter-chip.placed { cursor: default; }
+.sorter-chip.correct { border-color: var(--green); background: var(--green-pale); color: var(--green-dark); }
+.sorter-chip.wrong { border-color: var(--pink); background: var(--pink-pale); color: var(--pink-dark); }
+.sorter-buckets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem; }
+.sorter-bucket {
+  border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 0.8rem 0.6rem;
+  min-height: 90px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+}
+.sorter-bucket:hover { border-color: var(--green); background: var(--green-pale); }
+.sorter-bucket-title { font-family: var(--font-display); font-weight: 700; font-size: 0.82rem; color: var(--text); text-align: center; margin-bottom: 0.5rem; }
+.sorter-bucket-items { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; }
+.sorter-note { font-size: 0.72rem; color: var(--text-soft); line-height: 1.4; width: 100%; text-align: center; margin: -0.15rem 0 0.35rem; padding: 0 0.3rem; }
+.sorter-progress { font-size: 0.75rem; font-weight: 600; color: var(--text-soft); text-align: center; margin-top: 0.8rem; }
+.sorter-final-note { font-size: 0.82rem; color: var(--text-mid); line-height: 1.55; text-align: center; margin-top: 0.6rem; padding: 0.7rem 0.9rem; background: var(--bg); border-radius: var(--radius-sm); }
+@media (max-width: 640px) { .sorter-buckets { grid-template-columns: 1fr; } }
+
 /* ─── SCREEN OVERLAYS (hook / quiz / results) ─── */
 .screen {
   display: none; position: fixed; inset: 0;
@@ -526,6 +685,11 @@ body { background: var(--bg); min-height: 100vh; }
   font-size: 0.75rem; font-weight: 600; color: var(--text-mid); cursor: pointer; transition: border-color 0.15s;
 }
 .glossary-chip:hover { border-color: var(--green); color: var(--green-dark); }
+.glossary-section-chip { display: flex; align-items: center; gap: 0.35rem; }
+.glossary-count {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px;
+  border-radius: 999px; background: var(--green-pale); color: var(--green-dark); font-size: 0.62rem; font-weight: 700; padding: 0 0.3rem;
+}
 
 .glossary-popup-overlay {
   display: none; position: fixed; inset: 0; background: rgba(44,62,45,0.45); z-index: 300;
@@ -538,6 +702,18 @@ body { background: var(--bg); min-height: 100vh; }
 }
 .glossary-popup-term { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: 0.65rem; }
 .glossary-popup-def { font-size: 0.92rem; line-height: 1.6; color: var(--text-mid); margin-bottom: 1.1rem; }
+.glossary-popup-section-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 0.9rem; }
+.glossary-popup-word-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+.glossary-popup-word-chip {
+  padding: 0.4rem 0.8rem; border-radius: 999px; border: 1px solid var(--border); background: var(--bg);
+  font-size: 0.82rem; font-weight: 600; color: var(--text); cursor: pointer; transition: border-color 0.15s, background 0.15s;
+}
+.glossary-popup-word-chip:hover { border-color: var(--green); background: var(--green-pale); color: var(--green-dark); }
+.glossary-popup-back {
+  display: block; background: none; border: none; padding: 0; margin-bottom: 0.7rem; cursor: pointer;
+  font-family: inherit; font-size: 0.8rem; font-weight: 600; color: var(--text-soft); transition: color 0.15s;
+}
+.glossary-popup-back:hover { color: var(--green-dark); }
 
 /* Action bar — hint budget and the chapter's Continue button, sharing the dashboard's row. */
 .quest-action-bar { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
@@ -681,6 +857,19 @@ body { background: var(--bg); min-height: 100vh; }
   font-weight: 700; color: var(--green-dark); display: block; margin-bottom: 0.3rem;
   font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.4px;
 }
+.teach-linkout-btn {
+  display: block; width: 100%; margin-top: 0.8rem; background: var(--green-pale); border: 1.5px solid var(--green-light);
+  border-radius: var(--radius-sm); padding: 0.6rem 0.9rem; font-family: inherit; font-size: 0.85rem; font-weight: 700;
+  color: var(--green-dark); cursor: pointer; transition: background 0.15s, border-color 0.15s;
+}
+.teach-linkout-btn:hover { background: var(--green-light); border-color: var(--green); }
+
+.callout-example {
+  margin: 1.2rem 0; text-align: center; border-radius: var(--radius); border: 1px solid var(--green-light);
+  background: var(--green-pale); padding: 1.5rem 1.25rem;
+}
+.callout-example-num { font-family: var(--font-display); font-size: 2.4rem; font-weight: 700; color: var(--green-dark); line-height: 1.1; }
+.callout-example-sub { font-size: 0.85rem; color: var(--text-mid); margin-top: 0.5rem; line-height: 1.5; }
 .hammy-tappable { cursor: pointer; transition: transform 0.15s ease; }
 .hammy-tappable:hover { transform: scale(1.04); }
 .hint-placeholder { color: var(--text-soft); font-style: italic; }
@@ -870,7 +1059,6 @@ body { background: var(--bg); min-height: 100vh; }
 .poll-choice-btn { flex: 1; justify-content: center; text-align: center; font-weight: 700; }
 .poll-reveal { display: none; margin-top: 1rem; animation: fadeUp 0.4s ease; }
 .poll-reveal.show { display: block; }
-.poll-crowd-label { font-size: 0.8rem; font-weight: 600; color: var(--text-soft); text-align: center; margin-bottom: 0.5rem; }
 .poll-truth {
   border-radius: var(--radius); border: 1px solid var(--border); padding: 1rem 1.25rem;
   display: flex; flex-direction: column; align-items: center; gap: 0.4rem; text-align: center;
@@ -880,6 +1068,66 @@ body { background: var(--bg); min-height: 100vh; }
 .poll-truth.is-false { border-color: var(--pink-light); background: var(--pink-pale); }
 .poll-truth.is-false .myth-card-tag { color: var(--pink-dark); }
 .poll-explanation { font-size: 0.88rem; font-weight: 500; line-height: 1.55; color: var(--text); margin: 0; }
+
+/* Spotcheck chapter — tap-to-flag red flags in a block of content (e.g. a fake job
+   posting). Pre-reveal taps use a plain highlight; post-reveal reuses the myth-card-tag +
+   green/pink correct/incorrect convention so it reads as the same language as polls and
+   myth cards, not a new interaction pattern. Reused verbatim by the urlinspect chapter. */
+.spotcheck-posting {
+  border: 1px solid var(--border); border-radius: var(--radius); background: #fff;
+  box-shadow: var(--shadow-md); padding: 1.25rem 1.5rem;
+}
+.spotcheck-title { font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 0.6rem; }
+.spotcheck-body { font-size: 0.95rem; line-height: 1.8; color: var(--text-mid); }
+.spotcheck-segment {
+  cursor: pointer; border-radius: 4px; padding: 0.05rem 0.15rem; transition: background 0.15s, box-shadow 0.15s;
+  box-shadow: inset 0 -2px 0 var(--border);
+}
+.spotcheck-segment:hover { background: var(--bg); }
+.spotcheck-segment.flagged { background: var(--pink-pale); box-shadow: inset 0 -2px 0 var(--pink); font-weight: 600; }
+.spotcheck-segment.revealed { cursor: default; font-weight: 600; }
+.spotcheck-segment.revealed.correct-flag { background: var(--green-pale); box-shadow: inset 0 -2px 0 var(--green); }
+.spotcheck-segment.revealed.missed-flag { background: var(--pink-pale); box-shadow: inset 0 -2px 0 var(--pink); text-decoration: underline wavy var(--pink); }
+.spotcheck-segment.revealed.false-positive { background: var(--pink-pale); box-shadow: inset 0 -2px 0 var(--pink); opacity: 0.75; }
+.spotcheck-segment.revealed.correct-safe { box-shadow: inset 0 -2px 0 var(--border); font-weight: 500; }
+
+/* Collapsible original-content toggle, shared by spotcheck and urlinspect post-reveal —
+   every flagged phrase/part is already quoted in the summary cards below, so the full
+   posting/URL defaults to collapsed instead of doubling the same text on screen. */
+.spotcheck-toggle {
+  display: block; margin: 0.6rem auto 0; background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: 0.8rem; font-weight: 600; color: var(--text-soft); text-decoration: underline;
+}
+.spotcheck-posting.collapsed, .urlinspect-bar.collapsed { display: none; }
+
+.spotcheck-summary { margin-top: 1rem; animation: fadeUp 0.4s ease; }
+.spotcheck-score { font-size: 0.9rem; font-weight: 700; color: var(--text); text-align: center; margin-bottom: 0.75rem; }
+.spotcheck-summary-item {
+  border-radius: var(--radius); border: 1px solid var(--border); padding: 0.85rem 1.1rem;
+  margin-bottom: 0.6rem; display: flex; flex-direction: column; gap: 0.3rem;
+}
+.spotcheck-summary-item.caught { border-color: var(--green-light); background: var(--green-pale); }
+.spotcheck-summary-item.caught .myth-card-tag { color: var(--green-dark); }
+.spotcheck-summary-item.missed { border-color: var(--pink-light); background: var(--pink-pale); }
+.spotcheck-summary-item.missed .myth-card-tag { color: var(--pink-dark); }
+.spotcheck-summary-text { font-size: 0.88rem; font-weight: 600; font-style: italic; color: var(--text); margin: 0; }
+.spotcheck-summary-exp { font-size: 0.85rem; font-weight: 500; line-height: 1.5; color: var(--text-mid); margin: 0; }
+
+/* Urlinspect chapter — same reveal convention as spotcheck, laid out as a monospace URL bar. */
+.urlinspect-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.15rem;
+  border: 1px solid var(--border); border-radius: var(--radius); background: #fff;
+  box-shadow: var(--shadow-md); padding: 1.1rem 1.25rem; font-family: monospace; font-size: 1rem;
+}
+.urlinspect-part { cursor: pointer; border-radius: 4px; padding: 0.15rem 0.1rem; box-shadow: inset 0 -2px 0 var(--border); transition: background 0.15s; }
+.urlinspect-part:hover { background: var(--bg); }
+.urlinspect-part.flagged { background: var(--pink-pale); box-shadow: inset 0 -2px 0 var(--pink); font-weight: 700; }
+.urlinspect-part.revealed { cursor: default; font-weight: 700; }
+.urlinspect-part.revealed.correct-flag { background: var(--green-pale); box-shadow: inset 0 -2px 0 var(--green); }
+.urlinspect-part.revealed.missed-flag { background: var(--pink-pale); box-shadow: inset 0 -2px 0 var(--pink); text-decoration: underline wavy var(--pink); }
+.urlinspect-part.revealed.false-positive { background: var(--pink-pale); box-shadow: inset 0 -2px 0 var(--pink); opacity: 0.75; }
+.urlinspect-part.revealed.correct-safe { box-shadow: none; font-weight: 500; }
+.urlinspect-final-note { font-size: 0.88rem; font-weight: 600; color: var(--text); text-align: center; margin-top: 0.75rem; line-height: 1.5; }
 
 /* Interactive simulators */
 .sim-meter-wrap { margin: 1.25rem 0; }
@@ -1254,8 +1502,12 @@ body { background: var(--bg); min-height: 100vh; }
   .pg-charts-row { grid-template-columns: 1fr; }
   .pg-level-row { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .quest-body { padding-left: 0.6rem; padding-right: 0.6rem; }
-  .quest-side { width: 195px; }
-  .hammy-side-msg { font-size: 1rem; padding: 0.55rem 0.8rem; }
+  /* Narrower than before — the Hammy column was eating enough horizontal room that longer
+     chapter content (job postings, URL bars, teach paragraphs) wrapped into many extra
+     lines and pushed the whole screen into a scroll. Giving quest-main more width directly
+     cuts wrapped-line count, which is the main lever on total content height. */
+  .quest-side { width: 120px; gap: 0.4rem; }
+  .hammy-side-msg { font-size: 0.85rem; padding: 0.45rem 0.65rem; }
   .quest-title-row { font-size: 1.4rem; margin: 0.5rem 0 0.5rem; margin-left: calc(-1 * 0.6rem); }
   .quest-title-row.centered { margin-left: 0; }
   .kc-split, .sim-split, .boss-split { flex-direction: column; }
@@ -1281,6 +1533,20 @@ body { background: var(--bg); min-height: 100vh; }
   .question-text { margin-bottom: 0.7rem; }
   .kc-split { margin-top: 0.3rem; gap: 0.6rem; }
   .feedback-panel.kc-panel { padding: 0.8rem 0.9rem; gap: 0.4rem; }
+  /* Spotcheck/urlinspect reveal panels stack several explanation cards — compact them here
+     so a full reveal has a real shot at fitting without a scroll on a normal-height window. */
+  .spotcheck-posting { padding: 1rem 1.1rem; }
+  .spotcheck-body { font-size: 0.88rem; line-height: 1.6; }
+  .spotcheck-title { font-size: 0.92rem; margin-bottom: 0.4rem; }
+  .spotcheck-summary { margin-top: 0.5rem; }
+  .spotcheck-summary-item { padding: 0.5rem 0.7rem; margin-bottom: 0.3rem; gap: 0.1rem; border-radius: 10px; }
+  .spotcheck-summary-item .myth-card-tag { font-size: 0.58rem; letter-spacing: 0.5px; }
+  .spotcheck-summary-text { font-size: 0.8rem; }
+  .spotcheck-summary-exp { font-size: 0.75rem; line-height: 1.35; }
+  .spotcheck-score { font-size: 0.8rem; margin-bottom: 0.4rem; }
+  .spotcheck-toggle { margin: 0.4rem auto 0; font-size: 0.75rem; }
+  .urlinspect-bar { padding: 0.7rem 0.8rem; font-size: 0.78rem; }
+  .urlinspect-final-note { font-size: 0.78rem; margin-top: 0.4rem; }
 }
 @media (max-width: 480px) {
   .modules-grid { grid-template-columns: 1fr; }
