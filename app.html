@@ -31,7 +31,28 @@
   <!-- SIDEBAR -->
   <nav class="sidebar collapsed" id="sidebar">
     <div class="sidebar-brand-row">
-      <div class="sidebar-brand"><span class="brand-text">Stackd</span></div>
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon pig-stage pig-head-stage" style="--pig-scale:0.14">
+          <div class="pig-inner">
+            <div class="pig-shadow"></div>
+            <div class="pig">
+              <div class="pig-foot l"></div><div class="pig-foot r"></div>
+              <div class="pig-tail"></div>
+              <div class="pig-body"></div><div class="pig-tummy"></div>
+              <div class="pig-arm l"></div><div class="pig-arm r"></div>
+              <div class="pig-ear l"><div class="pig-ear-inner"></div></div>
+              <div class="pig-ear r"><div class="pig-ear-inner"></div></div>
+              <div class="pig-head">
+                <div class="pig-cheek l"></div><div class="pig-cheek r"></div>
+                <div class="pig-eye l"><div class="shine1"></div><div class="shine2"></div></div>
+                <div class="pig-eye r"><div class="shine1"></div><div class="shine2"></div></div>
+                <div class="pig-snout"><div class="pig-nostril l"></div><div class="pig-nostril r"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="brand-text">Stackd<span class="brand-dot">.</span></span>
+      </div>
       <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Toggle sidebar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
@@ -72,9 +93,9 @@
     </div>
     <div class="sidebar-footer">
       <div class="sf-meta">
-        <span class="sf-tier" id="sf-tier">Broke Freshman</span>
         <span class="sf-level-chip">Lv <span id="sf-level">1</span></span>
       </div>
+      <div class="sf-tier" id="sf-tier">Broke Freshman</div>
       <div class="sf-xp-label"><span id="sf-xp">0</span> XP</div>
       <div class="sf-bar-track"><div class="sf-bar-fill" id="sf-bar-fill"></div></div>
       <div class="sf-coins">🪙 <span id="sf-coins">0</span> coins</div>
@@ -96,6 +117,8 @@
       <div class="page-body">
         <div class="home-stats-row" id="home-stats-row"></div>
         <div class="mascot-card" id="home-mascot-card"></div>
+        <div class="fin-dashboard-card" id="home-findash"></div>
+        <div class="noimpulse-card" id="home-noimpulse"></div>
         <section class="home-section">
           <div class="section-head">
             <h2>Modules</h2>
@@ -105,7 +128,7 @@
         </section>
         <section class="home-section">
           <div class="section-head">
-            <h2>Achievements</h2>
+            <h2>Achievements Gained So Far</h2>
             <span class="section-sub" id="home-achieve-sub">0 unlocked</span>
           </div>
           <div class="achievements-row" id="home-achievements-row"></div>
@@ -354,8 +377,8 @@
     <div class="birth-card">
       <div class="birth-pig-wrap" id="birth-pig-wrap"></div>
       <h2>A new piggy was born!</h2>
-      <p>Meet Hammy. He's just a baby right now. Complete lessons to earn XP and coins, and watch him grow up alongside you as you master each module.</p>
-      <button class="btn-primary" id="birth-ok">Let's raise him!</button>
+      <p>Meet Hammy. They're just a baby right now. Complete lessons to earn XP and coins, and watch them grow up alongside you as you master each module.</p>
+      <button class="btn-primary" id="birth-ok">Let's raise them!</button>
     </div>
   </div>
 
@@ -378,6 +401,23 @@
         </div>
         <button class="btn-primary" id="onboarding-next">Continue →</button>
       </div>
+    </div>
+  </div>
+
+  <!-- LIFE EVENT OVERLAY -->
+  <div class="lifeevent-overlay" id="lifeevent-overlay">
+    <div class="lifeevent-card">
+      <div class="lifeevent-header">
+        <div class="lifeevent-mascot" id="lifeevent-mascot"></div>
+        <div>
+          <div class="lifeevent-tag" id="lifeevent-tag">Life happens...</div>
+          <h2 id="lifeevent-title"></h2>
+        </div>
+      </div>
+      <p class="lifeevent-scenario" id="lifeevent-scenario"></p>
+      <div class="lifeevent-choices" id="lifeevent-choices"></div>
+      <div class="lifeevent-result" id="lifeevent-result"></div>
+      <button class="btn-primary lifeevent-continue" id="lifeevent-continue" style="display:none;">Continue →</button>
     </div>
   </div>
 

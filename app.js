@@ -6,16 +6,20 @@
 // leveling up should track finishing the whole curriculum, not just a couple of modules.
 const LEVEL_THRESHOLDS = [0, 90, 200, 330, 480, 660, 880, 1150, 1450, 1800, 2200];
 
+// Tier/rank is driven by how many modules are actually completed, not by level/XP — level
+// tracks activity (quizzes, activities, replays) and can climb well past module count, so
+// basing the "Graduate" label on level alone let players see it without finishing everything.
+// Bands are tuned against MODULES.length (11): the top tier requires every module done.
 const TIERS = [
-  { min: 1,  max: 2,  name: 'Broke Freshman' },
-  { min: 3,  max: 4,  name: 'Budget Apprentice' },
-  { min: 5,  max: 6,  name: 'Money-Aware Sophomore' },
-  { min: 7,  max: 8,  name: 'Money Manager' },
-  { min: 9,  max: 10, name: 'Financially Literate Graduate' },
+  { min: 0, max: 2,  name: 'Broke Freshman' },
+  { min: 3, max: 4,  name: 'Budget Apprentice' },
+  { min: 5, max: 7,  name: 'Money-Aware Sophomore' },
+  { min: 8, max: 10, name: 'Money Manager' },
+  { min: 11, max: 11, name: 'Financially Literate Graduate' },
 ];
 
-function getTier(level) {
-  return TIERS.find(t => level >= t.min && level <= t.max) || TIERS[TIERS.length - 1];
+function getTier(modulesCompleted) {
+  return TIERS.find(t => modulesCompleted >= t.min && modulesCompleted <= t.max) || TIERS[TIERS.length - 1];
 }
 
 // ── Modules ──────────────────────────────────
@@ -252,6 +256,57 @@ const MODULES = [
           ],
           subscriptionCreepNote: "Subscription creep: you sign up for one thing, forget about it, and a year later you're paying for seven. Once a month, scroll through your bank statement and cancel anything you can't remember using in the last 30 days.",
           xpOnComplete: 8
+        }
+      },
+      {
+        title: 'Boss Challenge: Survive the Last Week Before Your Refund Hits',
+        type: 'boss-challenge',
+        hook: 'You\'ve got $150 in checking and a full week of decisions before your financial aid refund posts. Every choice either protects that cushion or eats into it.',
+        activity: {
+          intro: "You're heading into the last week before your refund hits, with $150 in checking. Four decisions are coming at you this week. Each one either protects your balance or chips away at it — there's no pausing the week to think it over.",
+          startLabel: 'Start the Week →',
+          dashboardLabel: 'Checking',
+          startingValue: 150,
+          stages: [
+            {
+              tag: 'Monday',
+              prompt: 'Your meal plan is unlimited, but you\'ve been skipping the dining hall to DoorDash instead, about $18 an order, four times this week so far.',
+              choices: [
+                { id: 'a', label: 'Keep DoorDashing, it\'s already how the week started', delta: -54, isOptimal: false, result: 'Another $54 gone on delivery fees for food you already had free access to.' },
+                { id: 'b', label: 'Actually use your meal swipes for the rest of the week', delta: 0, isOptimal: true, result: 'Zero extra spent, the meal plan was already covering this.' }
+              ]
+            },
+            {
+              tag: 'Wednesday',
+              prompt: 'Your favorite band just announced a surprise $45 show this weekend. Tickets are going fast.',
+              choices: [
+                { id: 'a', label: 'Buy the ticket now, before it sells out', delta: -45, isOptimal: false, result: 'Rent\'s still due in 2 days, and now there\'s less cushion than you\'d like heading into it.' },
+                { id: 'b', label: 'Skip this one, catch the next show once your refund posts', delta: 0, isOptimal: true, result: 'A real skip, but nothing this week\'s budget couldn\'t afford to lose.' }
+              ]
+            },
+            {
+              tag: 'Friday',
+              prompt: 'Rent auto-pays tomorrow: $110, already accounted for in your checking balance.',
+              choices: [
+                { id: 'a', label: 'Let it auto-pay as planned', delta: -110, isOptimal: true, result: 'Handled, exactly what that $110 was already budgeted for.' },
+                { id: 'b', label: 'Panic and put $50 of it on a credit card "to save cash"', delta: -60, isOptimal: false, result: 'Now there\'s a card balance accruing interest on top of everything else, the "cash saved" cost more than it kept.' }
+              ]
+            },
+            {
+              tag: 'Saturday',
+              prompt: 'A group of friends invites you to brunch, about $22, with two days left until the refund posts.',
+              choices: [
+                { id: 'a', label: 'Go to brunch', delta: -22, isOptimal: false, result: 'A nice morning, but that\'s $22 that could\'ve been the cushion between you and $0.' },
+                { id: 'b', label: 'Suggest a free hangout instead, coffee and a study session at home', delta: 0, isOptimal: true, result: 'Same friends, same time together, $22 still in your pocket.' }
+              ]
+            }
+          ],
+          passThreshold: 0,
+          endNoteAtOrAbove: 'You made it to refund day without going negative, exactly what that starting $150 was supposed to cover.',
+          endNoteBelow: 'You hit $0 before the refund posted. That\'s not a moral failing, it\'s exactly the gap an emergency fund or a tighter week-one budget is meant to close.',
+          takeaway: 'Every "small" decision this week either protected your cushion or ate into it, that\'s opportunity cost playing out in real time, not just a lesson.',
+          xpOnComplete: 12,
+          bonusXpForOptimalPath: 8
         }
       }
     ]
@@ -1353,6 +1408,57 @@ const MODULES = [
           takeaway: "Option C cost nothing and cascaded nothing forward — no debt, no awkwardness, no guessing games. The scarcity mindset makes \"yes\" feel like the only way to protect a friendship. It usually isn't — the cost/consequence/reversibility check and a little honesty almost always find a cheaper path.",
           xpOnComplete: 8
         }
+      },
+      {
+        title: 'Boss Challenge: Resist the Pressure',
+        type: 'boss-challenge',
+        hook: 'A full day of classic spending triggers is coming at you back to back — a countdown timer, a group chat, a bad mood, a discount code. Every one is designed to make "yes" feel automatic.',
+        activity: {
+          intro: "Today's a gauntlet of the exact psychological triggers marketers and social pressure use to short-circuit good decisions: manufactured urgency, FOMO, mood spending, and fake exclusivity. Each time you resist one, that's real money that stays yours — this run tracks how much.",
+          startLabel: 'Start the Day →',
+          dashboardLabel: 'Resisted So Far',
+          startingValue: 0,
+          stages: [
+            {
+              tag: 'Morning',
+              prompt: 'A checkout page shows "⏰ 2 left, offer ends in 9:58" for a $70 jacket you weren\'t planning to buy.',
+              choices: [
+                { id: 'a', label: 'Buy now, before the timer runs out', delta: 0, isOptimal: false, result: 'That timer resets for the next visitor too — the urgency was never really about the jacket running out.' },
+                { id: 'b', label: 'Close the tab and give it 24 hours', delta: 70, isOptimal: true, result: 'Real scarcity is rare online. If it\'s still there tomorrow (it usually is), it was never actually about to disappear.' }
+              ]
+            },
+            {
+              tag: 'Afternoon',
+              prompt: 'Your group chat is planning a spontaneous $85 day trip this weekend that you can\'t really afford right now.',
+              choices: [
+                { id: 'a', label: 'Say yes anyway — you don\'t want to be "the broke one"', delta: 0, isOptimal: false, result: 'Totally normal to want in, but saying yes here means catching up on a bill later this month.' },
+                { id: 'b', label: 'Be honest with the group about your budget this month', delta: 85, isOptimal: true, result: 'The friends worth keeping don\'t need a fake excuse, and next time you can say yes without the guilt.' }
+              ]
+            },
+            {
+              tag: 'Evening',
+              prompt: 'A rough exam grade lands right as an ad for a "$40 treat yourself" skincare set pops up.',
+              choices: [
+                { id: 'a', label: 'Buy it, you deserve it after today', delta: 0, isOptimal: false, result: 'The relief from an impulse purchase fades faster than the bill does.' },
+                { id: 'b', label: 'Text a friend instead, revisit the idea tomorrow if you still want it', delta: 40, isOptimal: true, result: 'Still an option tomorrow, just without deciding while stressed.' }
+              ]
+            },
+            {
+              tag: 'Late Night',
+              prompt: 'An influencer posts a "24-hours-only" 30%-off code for a $120 haircare bundle you don\'t currently need.',
+              choices: [
+                { id: 'a', label: 'Use the code, it\'s basically free money saved', delta: 0, isOptimal: false, result: 'A 30% discount on something you didn\'t need still costs the other 70% of $120 you didn\'t have to spend.' },
+                { id: 'b', label: 'Skip it — a sale isn\'t a reason to buy something you weren\'t already buying', delta: 120, isOptimal: true, result: 'That\'s the actual rule: a discount only saves money on something you were already going to buy.' }
+              ]
+            }
+          ],
+          passThreshold: 0,
+          endNoteAtOrAbove: 'Every dollar here is money that stayed in your account instead of funding someone else\'s urgency tactic.',
+          endNoteBelow: 'Even $0 resisted today is data, not a verdict — notice which trigger got you, that\'s the one to watch for next time.',
+          takeaway: 'None of today\'s triggers were really about the product. A countdown timer, a group chat, a bad mood, and a discount code are all designed to make you decide fast instead of well — the fix is always the same: slow down, and the "deal" almost always survives a day of thinking about it.',
+          xpOnComplete: 12,
+          bonusXpForOptimalPath: 8
+        }
       }
     ]
   },
@@ -1782,35 +1888,43 @@ const MODULES = [
 const SHOP_ITEMS = [
   // ── HATS ──
   {
+    id: 'hat_mystery_box', name: 'Hat Mystery Box', category: 'hat', price: 150,
+    isMysteryBox: true, mysteryPool: 'hat',
+    viewBox: '20 20 80 75',
+    desc: 'A random hat, ribbon and all. You never know what you\'ll get!',
+    svg: `<defs><linearGradient id="hb-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FF8FB8"/><stop offset="100%" stop-color="#E0507F"/></linearGradient></defs>
+          <rect x="35" y="45" width="50" height="40" rx="3" fill="url(#hb-g)"/>
+          <rect x="35" y="45" width="50" height="10" fill="rgba(255,255,255,0.2)"/>
+          <rect x="55" y="45" width="10" height="40" fill="#FFD700"/>
+          <rect x="35" y="60" width="50" height="10" fill="#FFD700"/>
+          <path d="M60,45 Q48,32 40,38 Q38,45 48,46 Q54,46 60,45Z" fill="#FFD700"/>
+          <path d="M60,45 Q72,32 80,38 Q82,45 72,46 Q66,46 60,45Z" fill="#FFD700"/>
+          <circle cx="60" cy="45" r="4" fill="#FFE87A"/>`
+  },
+  {
     id: 'party_hat', name: 'Party Hat', category: 'hat', price: 50,
+    mysteryOnly: true, mysteryPool: 'hat',
     desc: 'Every lesson deserves a celebration.',
-    svg: `<defs><linearGradient id="ph-g" x1="25%" y1="0%" x2="75%" y2="100%"><stop offset="0%" stop-color="#FFCAE5"/><stop offset="100%" stop-color="#C84882"/></linearGradient></defs>
-          <path d="M 62 5 L 85 27 L 87 27 Z" fill="rgba(0,0,0,0.1)"/>
-          <path d="M 60 4 L 38 27 L 85 27 Z" fill="url(#ph-g)"/>
-          <path d="M 60 4 L 48 27 L 39 27 Z" fill="rgba(255,255,255,0.22)"/>
-          <path d="M 60 4 Q 54 15 51 27" stroke="rgba(255,255,255,0.48)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-          <path d="M 60 4 Q 66 15 70 27" stroke="rgba(255,255,255,0.32)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-          <circle cx="53" cy="12.5" r="2.4" fill="white" opacity="0.82"/>
-          <circle cx="67" cy="9.5" r="2" fill="white" opacity="0.72"/>
-          <circle cx="65" cy="20" r="1.9" fill="white" opacity="0.65"/>
-          <circle cx="51" cy="21.5" r="1.7" fill="white" opacity="0.6"/>
-          <circle cx="72" cy="18.5" r="1.4" fill="white" opacity="0.5"/>
-          <circle cx="57" cy="7" r="1.5" fill="white" opacity="0.58"/>
+    svg: `<defs>
+            <linearGradient id="ph-g" x1="25%" y1="0%" x2="75%" y2="100%"><stop offset="0%" stop-color="#FFCAE5"/><stop offset="100%" stop-color="#C84882"/></linearGradient>
+            <radialGradient id="ph-hl" cx="38%" cy="12%" r="60%"><stop offset="0%" stop-color="rgba(255,255,255,0.7)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient>
+            <clipPath id="ph-clip"><path d="M 60 4 L 37 27 L 83 27 Z"/></clipPath>
+          </defs>
+          <path d="M 60 4 L 37 27 L 83 27 Z" fill="url(#ph-g)"/>
+          <rect x="37" y="4" width="46" height="23" fill="url(#ph-hl)" clip-path="url(#ph-clip)"/>
+          <circle cx="50" cy="15" r="2" fill="white" opacity="0.65"/>
+          <circle cx="70" cy="15" r="2" fill="white" opacity="0.65"/>
           <ellipse cx="60" cy="28.5" rx="26" ry="5.8" fill="#943060"/>
           <ellipse cx="60" cy="27" rx="25" ry="5" fill="#E285BA"/>
-          <ellipse cx="57" cy="25.7" rx="14.5" ry="2.3" fill="rgba(255,255,255,0.3)"/>
-          <circle cx="60.5" cy="5.2" r="5.8" fill="rgba(0,0,0,0.18)"/>
-          <circle cx="56.5" cy="2.8" r="3.5" fill="#FFE468"/>
-          <circle cx="63.5" cy="2.8" r="3.5" fill="#FFD240"/>
-          <circle cx="60" cy="0.6" r="3.3" fill="#FFF088"/>
-          <circle cx="60" cy="5.5" r="4" fill="#FFCE30"/>
-          <circle cx="57.5" cy="1.6" r="2.1" fill="rgba(255,255,255,0.78)"/>
-          <path d="M 79 8.5 L 80.3 5.8 L 81.6 8.5 L 84.3 9.5 L 81.6 10.5 L 80.3 13.2 L 79 10.5 L 76.3 9.5 Z" fill="#FFE840"/>
-          <path d="M 42 15 L 43.1 12.7 L 44.2 15 L 46.5 16 L 44.2 17 L 43.1 19.3 L 42 17 L 39.7 16 Z" fill="#FFE840" opacity="0.8"/>`
+          <ellipse cx="60" cy="25.7" rx="14.5" ry="2.3" fill="rgba(255,255,255,0.25)"/>
+          <circle cx="60" cy="1" r="4.5" fill="#FFD240"/>
+          <circle cx="59" cy="-1" r="2.6" fill="#FFE68A"/>`
   },
   {
     id: 'flower_crown', name: 'Flower Crown', category: 'hat', price: 80,
+    mysteryOnly: true, mysteryPool: 'hat', rarity: 'ultra_rare',
     desc: 'Bloom where you are planted.',
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 45 },
     svg: `<path d="M 20 30 C 35 22 50 18 60 15 C 70 18 85 22 100 30" stroke="#4A7840" stroke-width="5" fill="none" stroke-linecap="round"/>
           <path d="M 20 30 C 35 22 50 18 60 15 C 70 18 85 22 100 30" stroke="#88B870" stroke-width="1.8" fill="none" stroke-linecap="round"/>
           <ellipse cx="36" cy="20" rx="2.3" ry="5" fill="#F8B0C8" transform="rotate(0 36 25)"/>
@@ -1847,53 +1961,54 @@ const SHOP_ITEMS = [
   },
   {
     id: 'witch_hat', name: 'Witch Hat', category: 'hat', price: 90,
+    mysteryOnly: true, mysteryPool: 'hat',
     desc: 'Put a spell on your debt.',
-    svg: `<defs><linearGradient id="wh-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#3D2458"/><stop offset="100%" stop-color="#120828"/></linearGradient></defs>
-          <path d="M 62 3.5 L 84 29 L 87 29 Z" fill="rgba(0,0,0,0.25)"/>
+    svg: `<defs>
+            <linearGradient id="wh-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#3D2458"/><stop offset="100%" stop-color="#120828"/></linearGradient>
+            <radialGradient id="wh-brim-g" cx="45%" cy="30%" r="70%"><stop offset="0%" stop-color="#4A2C68"/><stop offset="100%" stop-color="#160A2C"/></radialGradient>
+            <radialGradient id="wh-hl" cx="42%" cy="8%" r="55%"><stop offset="0%" stop-color="rgba(255,255,255,0.22)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient>
+            <clipPath id="wh-clip"><path d="M 60 3 L 37 29 L 84 29 Z"/></clipPath>
+          </defs>
+          <ellipse cx="60" cy="29.5" rx="27" ry="5" fill="url(#wh-brim-g)"/>
+          <ellipse cx="60" cy="30.5" rx="27" ry="4.2" fill="#120828"/>
+          <ellipse cx="55" cy="27.7" rx="15" ry="1.6" fill="rgba(255,255,255,0.09)"/>
           <path d="M 60 3 L 37 29 L 84 29 Z" fill="url(#wh-g)"/>
-          <path d="M 60 3 L 49 29 L 40 29 Z" fill="rgba(255,255,255,0.07)"/>
-          <path d="M 49 22 Q 60 18 71 22 L 75 29 L 45 29 Z" fill="#581890"/>
-          <path d="M 49 22 Q 60 18 71 22 L 73 26 L 47 26 Z" fill="#6820A8"/>
-          <rect x="57" y="19" width="6" height="5.5" rx="1" fill="#28104A"/>
-          <rect x="58.2" y="20" width="3.6" height="3.5" rx="0.4" fill="none" stroke="#FFD700" stroke-width="1.2"/>
-          <line x1="60" y1="20" x2="60" y2="23.5" stroke="#FFD700" stroke-width="1.2"/>
-          <ellipse cx="61" cy="30.5" rx="28" ry="6.5" fill="#0A0418"/>
-          <ellipse cx="60" cy="29" rx="27" ry="5.5" fill="#28163A"/>
-          <ellipse cx="55" cy="27.5" rx="16" ry="2.5" fill="rgba(255,255,255,0.07)"/>
-          <path d="M 68 8 L 69.3 5.5 L 70.6 8 L 73 9 L 70.6 10 L 69.3 12.5 L 68 10 L 65.6 9 Z" fill="#FFD700" opacity="0.92"/>
-          <path d="M 75 17.5 L 75.9 15.8 L 76.8 17.5 L 78.5 18.2 L 76.8 18.9 L 75.9 20.6 L 75 18.9 L 73.3 18.2 Z" fill="#FFD700" opacity="0.78"/>
-          <path d="M 50 13 L 50.7 11.5 L 51.4 13 L 53 13.7 L 51.4 14.4 L 50.7 15.9 L 50 14.4 L 48.4 13.7 Z" fill="#CC88FF" opacity="0.82"/>
-          <circle cx="50" cy="11" r="5" fill="#FFD700" opacity="0.82"/>
-          <circle cx="52.5" cy="11" r="4.2" fill="#23103A"/>
-          <path d="M 72 22 L 68.5 19 M 72 22 L 68 22 M 72 22 L 68.5 25" stroke="rgba(255,255,255,0.22)" stroke-width="0.9" fill="none"/>
-          <path d="M 70.25 20.5 Q 68.5 22 70.25 23.5" stroke="rgba(255,255,255,0.18)" stroke-width="0.8" fill="none"/>
-          <circle cx="72" cy="22" r="1" fill="rgba(255,255,255,0.3)"/>`
+          <rect x="37" y="3" width="47" height="26" fill="url(#wh-hl)" clip-path="url(#wh-clip)"/>
+          <rect x="44" y="17" width="32" height="8" fill="#7B3FB0"/>
+          <rect x="44" y="17" width="32" height="3.2" fill="#8F4FC8"/>
+          <rect x="53" y="18.5" width="14" height="5" rx="1.2" fill="#1C0E30"/>
+          <rect x="55.2" y="19.5" width="9.6" height="3" rx="0.6" fill="none" stroke="#FFD700" stroke-width="1.3"/>
+          <line x1="60" y1="19.5" x2="60" y2="23" stroke="#FFD700" stroke-width="1.3"/>`
   },
   {
     id: 'santa_hat', name: 'Santa Hat', category: 'hat', price: 100,
+    mysteryOnly: true, mysteryPool: 'hat',
     desc: 'Ho ho ho, compound interest!',
-    svg: `<defs><linearGradient id="sh-g" x1="30%" y1="0%" x2="70%" y2="100%"><stop offset="0%" stop-color="#FF4848"/><stop offset="100%" stop-color="#B81818"/></linearGradient></defs>
-          <path d="M 63 5 C 73 10 81 20 84 29 L 86 29 Z" fill="rgba(0,0,0,0.15)"/>
+    svg: `<defs>
+            <linearGradient id="sh-g" x1="30%" y1="0%" x2="70%" y2="100%"><stop offset="0%" stop-color="#FF4848"/><stop offset="100%" stop-color="#B81818"/></linearGradient>
+            <radialGradient id="sh-hl" cx="38%" cy="15%" r="60%"><stop offset="0%" stop-color="rgba(255,150,150,0.55)"/><stop offset="100%" stop-color="rgba(255,150,150,0)"/></radialGradient>
+            <clipPath id="sh-clip"><path d="M 60 4 C 65 8 73 18 76 29 L 36 29 C 40 18 50 10 60 4 Z"/></clipPath>
+          </defs>
           <path d="M 60 4 C 65 8 73 18 76 29 L 36 29 C 40 18 50 10 60 4 Z" fill="url(#sh-g)"/>
-          <path d="M 60 4 C 55 8 47 17 43 29 L 49 29 C 51 20 55 12 60 4 Z" fill="rgba(255,255,255,0.16)"/>
-          <path d="M 60 4 C 63 8 67 14 70 19" stroke="rgba(0,0,0,0.15)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <rect x="36" y="4" width="40" height="25" fill="url(#sh-hl)" clip-path="url(#sh-clip)"/>
+          <path d="M 60 4 Q 70 1 77 8 Q 82 14 76 19 Q 70 22 63 17 Q 57 11 60 4 Z" fill="url(#sh-g)"/>
+          <path d="M 60 4 Q 66 1 72 5" stroke="rgba(255,255,255,0.3)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
           <path d="M 34 29 Q 38 23.5 42 27 Q 46 23.5 50 27 Q 54 23.5 58 27 Q 62 23.5 66 27 Q 70 23.5 74 27 Q 78 23.5 82 27 Q 86 29 86 29 L 34 29 Z" fill="white"/>
           <path d="M 34 28 Q 38 23 42 26 Q 46 23 50 26 Q 54 23 58 26 Q 62 23 66 26 Q 70 23 74 26 Q 78 23 82 26 Q 86 28 86 28" stroke="#E8E8E8" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <circle cx="78" cy="13" r="7" fill="rgba(0,0,0,0.15)"/>
-          <circle cx="77" cy="12" r="7" fill="white"/>
-          <circle cx="74.5" cy="10" r="3.5" fill="#F4F4F4"/>
-          <circle cx="80" cy="10.5" r="3.5" fill="#EEEEEE"/>
-          <circle cx="77" cy="15.5" r="3.2" fill="#F0F0F0"/>
-          <circle cx="74.5" cy="9.5" r="2.2" fill="rgba(255,255,255,0.92)"/>`
+          <circle cx="76" cy="18" r="8" fill="white"/>
+          <circle cx="73.5" cy="15.5" r="4" fill="#F4F4F4"/>
+          <circle cx="79" cy="16.5" r="3.8" fill="#EEEEEE"/>
+          <circle cx="76" cy="21.5" r="3.6" fill="#F0F0F0"/>
+          <circle cx="73" cy="14.5" r="2.4" fill="rgba(255,255,255,0.92)"/>`
   },
   {
     id: 'top_hat', name: 'Top Hat', category: 'hat', price: 120,
+    mysteryOnly: true, mysteryPool: 'hat',
     desc: 'Old money energy.',
     svg: `<defs>
             <linearGradient id="th-cyl" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#1C1C1C"/><stop offset="35%" stop-color="#2E2E2E"/><stop offset="100%" stop-color="#0E0E0E"/></linearGradient>
             <linearGradient id="th-brim" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#252525"/><stop offset="100%" stop-color="#080808"/></linearGradient>
           </defs>
-          <rect x="77" y="7" width="7" height="21" rx="2" fill="rgba(0,0,0,0.3)"/>
           <rect x="40" y="7" width="40" height="21" rx="3" fill="url(#th-cyl)"/>
           <ellipse cx="60" cy="7" rx="20" ry="4.5" fill="#2A2A2A"/>
           <ellipse cx="60" cy="6.8" rx="20" ry="3.8" fill="#343434"/>
@@ -1915,28 +2030,29 @@ const SHOP_ITEMS = [
   },
   {
     id: 'chef_hat', name: 'Chef Hat', category: 'hat', price: 125,
+    mysteryOnly: true, mysteryPool: 'hat',
     desc: 'Cooking up a budget.',
-    svg: `<defs><radialGradient id="ch-dome" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="80%" stop-color="#E4E4E4"/><stop offset="100%" stop-color="#D0D0D0"/></radialGradient></defs>
-          <rect x="36" y="22" width="48" height="9" rx="2.5" fill="#ECECEC" stroke="#CCCCCC" stroke-width="1.2"/>
-          <line x1="43" y1="22" x2="43" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
-          <line x1="50" y1="22" x2="50" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
-          <line x1="57" y1="22" x2="57" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
-          <line x1="64" y1="22" x2="64" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
-          <line x1="71" y1="22" x2="71" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
-          <line x1="78" y1="22" x2="78" y2="31" stroke="#C4C4C4" stroke-width="1.3"/>
-          <path d="M 36 26.5 Q 60 24 84 26.5" stroke="#C0C0C0" stroke-width="1" stroke-dasharray="2.5 2" fill="none"/>
-          <ellipse cx="60" cy="22" rx="24" ry="5" fill="#DEDEDE"/>
-          <ellipse cx="60" cy="21.5" rx="24" ry="4" fill="#EEEEEE"/>
-          <ellipse cx="61" cy="11" rx="27" ry="21" fill="#C8C8C8"/>
-          <ellipse cx="60" cy="10" rx="26" ry="20" fill="url(#ch-dome)"/>
-          <ellipse cx="56" cy="5.5" rx="14" ry="9.5" fill="rgba(255,255,255,0.6)"/>
-          <path d="M 60 3 Q 45 10 39 22" stroke="rgba(170,170,170,0.65)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-          <path d="M 60 3 Q 50 8 44 18" stroke="rgba(190,190,190,0.5)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-          <path d="M 60 3 Q 70 8 76 18" stroke="rgba(190,190,190,0.5)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-          <path d="M 60 3 Q 75 10 81 22" stroke="rgba(170,170,170,0.65)" stroke-width="1.8" fill="none" stroke-linecap="round"/>`
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 6 },
+    svg: `<defs><linearGradient id="ch-dome" x1="30%" y1="0%" x2="70%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#DCDCDC"/></linearGradient></defs>
+          <ellipse cx="60" cy="31" rx="24" ry="5" fill="#C4C4C4"/>
+          <rect x="39" y="21" width="42" height="11" rx="3" fill="#F0F0F0" stroke="#CCCCCC" stroke-width="1"/>
+          <line x1="46" y1="21" x2="46" y2="32" stroke="#D0D0D0" stroke-width="1.1"/>
+          <line x1="53" y1="21" x2="53" y2="32" stroke="#D0D0D0" stroke-width="1.1"/>
+          <line x1="60" y1="21" x2="60" y2="32" stroke="#D0D0D0" stroke-width="1.1"/>
+          <line x1="67" y1="21" x2="67" y2="32" stroke="#D0D0D0" stroke-width="1.1"/>
+          <line x1="74" y1="21" x2="74" y2="32" stroke="#D0D0D0" stroke-width="1.1"/>
+          <path d="M 39 21 L 36 -5 Q 36 -9 40 -9 L 80 -9 Q 84 -9 84 -5 L 81 21 Z" fill="url(#ch-dome)" stroke="#D8D8D8" stroke-width="0.6"/>
+          <line x1="45" y1="-7.5" x2="46" y2="21" stroke="#D0D0D0" stroke-width="1.1"/>
+          <line x1="52.5" y1="-8.7" x2="53" y2="21" stroke="#D0D0D0" stroke-width="1.1"/>
+          <line x1="60" y1="-9" x2="60" y2="21" stroke="#D0D0D0" stroke-width="1.1"/>
+          <line x1="67.5" y1="-8.7" x2="67" y2="21" stroke="#D0D0D0" stroke-width="1.1"/>
+          <line x1="75" y1="-7.5" x2="74" y2="21" stroke="#D0D0D0" stroke-width="1.1"/>
+          <ellipse cx="60" cy="-9" rx="22" ry="3" fill="#E8E8E8"/>
+          <ellipse cx="52" cy="-6" rx="8" ry="4" fill="rgba(255,255,255,0.5)"/>`
   },
   {
     id: 'cowboy_hat', name: 'Cowboy Hat', category: 'hat', price: 150,
+    mysteryOnly: true, mysteryPool: 'hat',
     desc: 'Riding off into a debt-free sunset.',
     svg: `<defs>
             <linearGradient id="cw-crown" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A87040"/><stop offset="100%" stop-color="#5A3618"/></linearGradient>
@@ -1945,7 +2061,6 @@ const SHOP_ITEMS = [
           <ellipse cx="61" cy="30" rx="38" ry="8.5" fill="#3A1C08"/>
           <ellipse cx="60" cy="28.5" rx="37" ry="7.5" fill="url(#cw-brim)"/>
           <path d="M 25 27.5 Q 60 21 95 27.5" stroke="#A06830" stroke-width="2.5" fill="none"/>
-          <path d="M 82 28.5 C 84 21 84 14 82 9 L 86 9 C 88 14 88 22 86 28.5 Z" fill="rgba(0,0,0,0.2)"/>
           <path d="M 38 28.5 C 38 20 40 13 42 9 L 78 9 C 80 13 82 21 82 28.5 Z" fill="url(#cw-crown)"/>
           <path d="M 38 28.5 C 38 20 40 13 42 9 L 47 9 C 45 15 44 21 44 28.5 Z" fill="rgba(255,255,255,0.12)"/>
           <ellipse cx="60" cy="9" rx="19.5" ry="5.2" fill="#8C5C28"/>
@@ -1961,19 +2076,21 @@ const SHOP_ITEMS = [
   },
   {
     id: 'pirate_hat', name: 'Pirate Hat', category: 'hat', price: 175,
+    mysteryOnly: true, mysteryPool: 'hat',
     desc: 'Yarr, no debt on this ship.',
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 18 },
     svg: `<defs><linearGradient id="pi-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#282828"/><stop offset="100%" stop-color="#0C0C0C"/></linearGradient></defs>
-          <path d="M 35 29 L 37 8 L 85 8 L 87 29 Z" fill="#060606"/>
-          <path d="M 34 29 L 36 8 L 84 8 L 86 29 Z" fill="url(#pi-g)"/>
-          <path d="M 34 29 L 36 8 L 42 8 L 40 29 Z" fill="rgba(255,255,255,0.06)"/>
-          <path d="M 22 24 C 26 17 32 14 36 13 L 34 29 C 30 28 25 27 22 24 Z" fill="#1C1C1C"/>
-          <path d="M 22 24 C 26 17 32 14 36 13 L 35 19 C 30 20 26 22 22 24 Z" fill="rgba(255,255,255,0.06)"/>
-          <path d="M 98 24 C 94 17 88 14 84 13 L 86 29 C 90 28 95 27 98 24 Z" fill="#1C1C1C"/>
-          <path d="M 22 24 C 26 17 32 14 36 13" stroke="#C8A038" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <path d="M 98 24 C 94 17 88 14 84 13" stroke="#C8A038" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <line x1="34" y1="29" x2="86" y2="29" stroke="#C8A038" stroke-width="2"/>
-          <ellipse cx="60" cy="30" rx="28" ry="5.5" fill="#080808"/>
-          <ellipse cx="60" cy="29" rx="27" ry="4.5" fill="#161616"/>
+          <path d="M 32 29 Q 25 10 40 2 Q 48 8 60 4 Q 72 8 80 2 Q 95 10 88 29 Z" fill="#060606"/>
+          <path d="M 32 29 Q 25 9 40 1 Q 48 7 60 3 Q 72 7 80 1 Q 95 9 88 29 Z" fill="url(#pi-g)"/>
+          <path d="M 32 29 Q 25 9 40 1 Q 44 4 41 14 L 38 29 Z" fill="rgba(255,255,255,0.07)"/>
+          <path d="M 22 24 C 25 15 32 7 38 4 L 32 29 C 28 28 24 26 22 24 Z" fill="#1C1C1C"/>
+          <path d="M 22 24 C 25 15 32 7 38 4 L 36 12 C 30 15 25 19 22 24 Z" fill="rgba(255,255,255,0.06)"/>
+          <path d="M 98 24 C 95 15 88 7 82 4 L 88 29 C 92 28 96 26 98 24 Z" fill="#1C1C1C"/>
+          <path d="M 22 24 C 25 15 32 7 38 4" stroke="#C8A038" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M 98 24 C 95 15 88 7 82 4" stroke="#C8A038" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <line x1="32" y1="29" x2="88" y2="29" stroke="#C8A038" stroke-width="2"/>
+          <ellipse cx="60" cy="30" rx="29" ry="5.5" fill="#080808"/>
+          <ellipse cx="60" cy="29" rx="28" ry="4.5" fill="#161616"/>
           <line x1="48" y1="9" x2="72" y2="27" stroke="white" stroke-width="3" stroke-linecap="round"/>
           <line x1="72" y1="9" x2="48" y2="27" stroke="white" stroke-width="3" stroke-linecap="round"/>
           <circle cx="48" cy="9" r="3.2" fill="white"/>
@@ -1993,31 +2110,30 @@ const SHOP_ITEMS = [
   },
   {
     id: 'crown', name: 'Crown', category: 'hat', price: 200,
+    mysteryOnly: true, mysteryPool: 'hat', rarity: 'rare',
     desc: 'The financially literate royalty.',
     svg: `<defs>
             <linearGradient id="cr-body" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE440"/><stop offset="50%" stop-color="#C88010"/><stop offset="100%" stop-color="#FFD030"/></linearGradient>
             <linearGradient id="cr-band" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#E8A820"/><stop offset="100%" stop-color="#A86010"/></linearGradient>
           </defs>
-          <path d="M 34 31 L 39 16 L 52 25 L 61 9 L 71 25 L 85 16 L 90 31 Z" fill="#8A5A00" opacity="0.35"/>
           <path d="M 33 30 L 38 15 L 51 24 L 60 8 L 69 24 L 82 15 L 87 30 Z" fill="url(#cr-body)"/>
           <path d="M 33 30 L 38 15 L 43 22 Z" fill="rgba(0,0,0,0.18)"/>
           <path d="M 51 24 L 60 8 L 65 23 Z" fill="rgba(0,0,0,0.14)"/>
-          <path d="M 87 30 L 82 15 L 78 22 Z" fill="rgba(0,0,0,0.18)"/>
           <path d="M 38 15 L 51 24 L 47 24 L 37 17 Z" fill="rgba(255,255,255,0.22)"/>
           <path d="M 60 8 L 51 24 L 55 24 Z" fill="rgba(255,255,255,0.28)"/>
           <path d="M 69 24 L 72 24 L 82 15 L 80 17 Z" fill="rgba(255,255,255,0.18)"/>
           <rect x="33" y="26" width="54" height="8" rx="3" fill="url(#cr-band)"/>
           <rect x="33" y="26" width="54" height="4" rx="2" fill="#E8A828"/>
           <rect x="35" y="26.5" width="50" height="2" rx="1" fill="rgba(255,255,255,0.28)"/>
-          <ellipse cx="44" cy="20" rx="4.2" ry="3.8" fill="#CC2020"/>
-          <ellipse cx="44" cy="19.5" rx="4.2" ry="3.3" fill="#E83030"/>
-          <ellipse cx="43" cy="18.5" rx="2" ry="1.5" fill="rgba(255,255,255,0.5)"/>
+          <ellipse cx="38" cy="17" rx="4.2" ry="3.8" fill="#CC2020"/>
+          <ellipse cx="38" cy="16.5" rx="4.2" ry="3.3" fill="#E83030"/>
+          <ellipse cx="37" cy="15.5" rx="2" ry="1.5" fill="rgba(255,255,255,0.5)"/>
           <ellipse cx="60" cy="10" rx="5" ry="4.5" fill="#1040CC"/>
           <ellipse cx="60" cy="9.5" rx="5" ry="4" fill="#2060EE"/>
           <ellipse cx="58.5" cy="8" rx="2.2" ry="1.6" fill="rgba(255,255,255,0.58)"/>
-          <ellipse cx="76" cy="20" rx="4.2" ry="3.8" fill="#108030"/>
-          <ellipse cx="76" cy="19.5" rx="4.2" ry="3.3" fill="#20A040"/>
-          <ellipse cx="75" cy="18.5" rx="2" ry="1.5" fill="rgba(255,255,255,0.5)"/>
+          <ellipse cx="82" cy="17" rx="4.2" ry="3.8" fill="#108030"/>
+          <ellipse cx="82" cy="16.5" rx="4.2" ry="3.3" fill="#20A040"/>
+          <ellipse cx="81" cy="15.5" rx="2" ry="1.5" fill="rgba(255,255,255,0.5)"/>
           <circle cx="44" cy="29" r="2.8" fill="#E83030"/>
           <circle cx="60" cy="29" r="2.8" fill="#2060EE"/>
           <circle cx="76" cy="29" r="2.8" fill="#20A040"/>
@@ -2028,101 +2144,137 @@ const SHOP_ITEMS = [
   },
   // ── GLASSES ──
   {
+    id: 'glasses_mystery_box', name: 'Glasses Mystery Box', category: 'glasses', price: 90,
+    isMysteryBox: true, mysteryPool: 'glasses',
+    viewBox: '20 20 80 75',
+    desc: 'A random pair of specs, no peeking!',
+    svg: `<defs><linearGradient id="gb-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8FC6FF"/><stop offset="100%" stop-color="#4A7FE0"/></linearGradient></defs>
+          <rect x="35" y="45" width="50" height="40" rx="3" fill="url(#gb-g)"/>
+          <rect x="35" y="45" width="50" height="10" fill="rgba(255,255,255,0.2)"/>
+          <rect x="55" y="45" width="10" height="40" fill="#FFD700"/>
+          <rect x="35" y="60" width="50" height="10" fill="#FFD700"/>
+          <path d="M60,45 Q48,32 40,38 Q38,45 48,46 Q54,46 60,45Z" fill="#FFD700"/>
+          <path d="M60,45 Q72,32 80,38 Q82,45 72,46 Q66,46 60,45Z" fill="#FFD700"/>
+          <circle cx="60" cy="45" r="4" fill="#FFE87A"/>`
+  },
+  {
     id: 'round_glasses', name: 'Round Glasses', category: 'glasses', price: 60,
+    mysteryOnly: true, mysteryPool: 'glasses',
     desc: 'For the bookish budgeter.',
-    svg: `<circle cx="46" cy="58" r="11" fill="rgba(180,220,255,0.15)" stroke="#6B4C3A" stroke-width="2.5"/>
-          <circle cx="74" cy="58" r="11" fill="rgba(180,220,255,0.15)" stroke="#6B4C3A" stroke-width="2.5"/>
-          <path d="M 42 52 A 9 9 0 0 1 50 52" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none" stroke-linecap="round"/>
-          <path d="M 70 52 A 9 9 0 0 1 78 52" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none" stroke-linecap="round"/>
-          <line x1="57" y1="58" x2="63" y2="58" stroke="#6B4C3A" stroke-width="2"/>
-          <line x1="20" y1="55" x2="35" y2="57" stroke="#6B4C3A" stroke-width="2"/>
-          <line x1="85" y1="57" x2="100" y2="55" stroke="#6B4C3A" stroke-width="2"/>`
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 },
+    svg: `<circle cx="36" cy="61" r="10" fill="rgba(180,220,255,0.15)" stroke="#6B4C3A" stroke-width="2.2"/>
+          <circle cx="85" cy="61" r="10" fill="rgba(180,220,255,0.15)" stroke="#6B4C3A" stroke-width="2.2"/>
+          <path d="M 30 54 A 8 8 0 0 1 42 54" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <path d="M 79 54 A 8 8 0 0 1 91 54" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <line x1="46" y1="61" x2="75" y2="61" stroke="#6B4C3A" stroke-width="2.2"/>
+          <line x1="17" y1="59" x2="26" y2="60" stroke="#6B4C3A" stroke-width="2.2"/>
+          <line x1="95" y1="60" x2="104" y2="59" stroke="#6B4C3A" stroke-width="2.2"/>`
   },
   {
     id: 'sunglasses', name: 'Sunglasses', category: 'glasses', price: 75,
+    mysteryOnly: true, mysteryPool: 'glasses',
     desc: 'Too cool for financial stress.',
-    svg: `<rect x="30" y="53" width="24" height="15" rx="7" fill="#1A1A1A"/>
-          <rect x="60" y="53" width="24" height="15" rx="7" fill="#1A1A1A"/>
-          <rect x="31" y="54" width="22" height="6" rx="5" fill="rgba(255,255,255,0.08)"/>
-          <rect x="61" y="54" width="22" height="6" rx="5" fill="rgba(255,255,255,0.08)"/>
-          <line x1="54" y1="60" x2="60" y2="60" stroke="#1A1A1A" stroke-width="3.5"/>
-          <line x1="14" y1="57" x2="30" y2="60" stroke="#1A1A1A" stroke-width="2.5"/>
-          <line x1="84" y1="60" x2="100" y2="57" stroke="#1A1A1A" stroke-width="2.5"/>
-          <path d="M 34 55 Q 38 52 44 55" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none" stroke-linecap="round"/>
-          <path d="M 64 55 Q 68 52 74 55" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none" stroke-linecap="round"/>`
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 },
+    svg: `<rect x="24" y="52" width="24" height="18" rx="8" fill="#1A1A1A"/>
+          <rect x="73" y="52" width="24" height="18" rx="8" fill="#1A1A1A"/>
+          <rect x="25" y="53" width="22" height="7" rx="5" fill="rgba(255,255,255,0.08)"/>
+          <rect x="74" y="53" width="22" height="7" rx="5" fill="rgba(255,255,255,0.08)"/>
+          <line x1="48" y1="60" x2="73" y2="60" stroke="#1A1A1A" stroke-width="3.5"/>
+          <line x1="15" y1="58" x2="24" y2="60" stroke="#1A1A1A" stroke-width="2.5"/>
+          <line x1="97" y1="60" x2="106" y2="58" stroke="#1A1A1A" stroke-width="2.5"/>
+          <path d="M 27 54 Q 32 51 39 54" stroke="rgba(255,255,255,0.4)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <path d="M 76 54 Q 81 51 88 54" stroke="rgba(255,255,255,0.4)" stroke-width="1.8" fill="none" stroke-linecap="round"/>`
   },
   {
     id: 'heart_glasses', name: 'Heart Glasses', category: 'glasses', price: 90,
+    mysteryOnly: true, mysteryPool: 'glasses',
     desc: 'In love with compound interest.',
-    svg: `<path d="M35,54 C35,49 40,47 43,51 C46,47 51,49 51,54 C51,59 43,65 43,65 C43,65 35,59 35,54Z" fill="#FF6B8A"/>
-          <path d="M63,54 C63,49 68,47 71,51 C74,47 79,49 79,54 C79,59 71,65 71,65 C71,65 63,59 63,54Z" fill="#FF6B8A"/>
-          <path d="M 36 52 C 37 49 40 48 42 50" stroke="rgba(255,255,255,0.45)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-          <path d="M 64 52 C 65 49 68 48 70 50" stroke="rgba(255,255,255,0.45)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-          <line x1="51" y1="57" x2="63" y2="57" stroke="#CC2255" stroke-width="2.5"/>
-          <line x1="16" y1="52" x2="35" y2="55" stroke="#CC2255" stroke-width="2"/>
-          <line x1="79" y1="55" x2="104" y2="52" stroke="#CC2255" stroke-width="2"/>`
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 },
+    svg: `<path d="M 36 56 C 33 50 24 50 24 58 C 24 64 30 68 36 76 C 42 68 48 64 48 58 C 48 50 39 50 36 56 Z" fill="#FF6B8A"/>
+          <path d="M 85 56 C 82 50 73 50 73 58 C 73 64 79 68 85 76 C 91 68 97 64 97 58 C 97 50 88 50 85 56 Z" fill="#FF6B8A"/>
+          <path d="M 27 55 C 28 51 31 50 34 51" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <path d="M 76 55 C 77 51 80 50 83 51" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <line x1="48" y1="58" x2="73" y2="58" stroke="#CC2255" stroke-width="2.5"/>
+          <line x1="15" y1="56" x2="24" y2="58" stroke="#CC2255" stroke-width="2.2"/>
+          <line x1="97" y1="58" x2="106" y2="56" stroke="#CC2255" stroke-width="2.2"/>`
   },
   {
     id: 'star_glasses', name: 'Star Glasses', category: 'glasses', price: 110,
+    mysteryOnly: true, mysteryPool: 'glasses', rarity: 'rare',
     desc: 'Your portfolio is looking stellar.',
-    svg: `<polygon points="43,47 44.8,53 51,53 45.6,56.8 47.5,63 43,59.2 38.5,63 40.4,56.8 35,53 41.2,53" fill="#FFD700"/>
-          <polygon points="71,47 72.8,53 79,53 73.6,56.8 75.5,63 71,59.2 66.5,63 68.4,56.8 63,53 69.2,53" fill="#FFD700"/>
-          <path d="M 40 49 L 42 53" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" stroke-linecap="round"/>
-          <path d="M 68 49 L 70 53" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" stroke-linecap="round"/>
-          <line x1="51" y1="55" x2="63" y2="55" stroke="#C0A010" stroke-width="2.5"/>
-          <line x1="18" y1="51" x2="36" y2="54" stroke="#C0A010" stroke-width="2"/>
-          <line x1="78" y1="54" x2="102" y2="51" stroke="#C0A010" stroke-width="2"/>`
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 },
+    svg: `<polygon points="36,48 41.9,52.9 48.4,57.0 45.5,64.1 43.6,71.5 36,71 28.4,71.5 26.5,64.1 23.6,57.0 30.1,52.9" fill="#FFD700"/>
+          <polygon points="85,48 90.9,52.9 97.4,57.0 94.5,64.1 92.6,71.5 85,71 77.4,71.5 75.5,64.1 72.6,57.0 79.1,52.9" fill="#FFD700"/>
+          <path d="M 31.5 54 L 34.5 59" stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round"/>
+          <path d="M 80.5 54 L 83.5 59" stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="48.4" y1="57" x2="72.6" y2="57" stroke="#C0A010" stroke-width="2.5"/>
+          <line x1="14.6" y1="55" x2="23.6" y2="57" stroke="#C0A010" stroke-width="2.2"/>
+          <line x1="97.4" y1="57" x2="106.4" y2="55" stroke="#C0A010" stroke-width="2.2"/>`
   },
-  // ── CLOTHES ──
+  // ── ACCESSORIES ──
   {
-    id: 'bow_tie', name: 'Bow Tie', category: 'clothes', price: 65,
+    id: 'accessory_mystery_box', name: 'Accessory Mystery Box', category: 'accessory', price: 110,
+    isMysteryBox: true, mysteryPool: 'accessory',
+    viewBox: '20 20 80 75',
+    desc: 'A random accessory to complete the look.',
+    svg: `<defs><linearGradient id="ab-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#C9A0FF"/><stop offset="100%" stop-color="#8A3FE0"/></linearGradient></defs>
+          <rect x="35" y="45" width="50" height="40" rx="3" fill="url(#ab-g)"/>
+          <rect x="35" y="45" width="50" height="10" fill="rgba(255,255,255,0.2)"/>
+          <rect x="55" y="45" width="10" height="40" fill="#FFD700"/>
+          <rect x="35" y="60" width="50" height="10" fill="#FFD700"/>
+          <path d="M60,45 Q48,32 40,38 Q38,45 48,46 Q54,46 60,45Z" fill="#FFD700"/>
+          <path d="M60,45 Q72,32 80,38 Q82,45 72,46 Q66,46 60,45Z" fill="#FFD700"/>
+          <circle cx="60" cy="45" r="4" fill="#FFE87A"/>`
+  },
+  {
+    id: 'bow_tie', name: 'Bow Tie', category: 'accessory', price: 65,
+    mysteryOnly: true, mysteryPool: 'accessory',
     desc: 'Business casual, pig casual.',
-    svg: `<path d="M44,93 L57,98 L44,103 Z" fill="#D4899E"/>
-          <path d="M76,93 L63,98 L76,103 Z" fill="#D4899E"/>
+    svg: `<path d="M44,93 L57,98 L44,103 Z" fill="#6B8F65"/>
+          <path d="M76,93 L63,98 L76,103 Z" fill="#6B8F65"/>
           <path d="M44,93 L57,98 L50,93 Z" fill="rgba(255,255,255,0.22)"/>
-          <path d="M76,103 L63,98 L70,103 Z" fill="rgba(0,0,0,0.1)"/>
-          <ellipse cx="60" cy="98" rx="5.5" ry="4.5" fill="#B5607A"/>
-          <ellipse cx="60" cy="97" rx="5.5" ry="2.5" fill="#C87090"/>
-          <circle cx="60" cy="98" r="2" fill="#D4899E"/>`
+          <ellipse cx="60" cy="98" rx="5.5" ry="4.5" fill="#4A6844"/>
+          <ellipse cx="60" cy="97" rx="5.5" ry="2.5" fill="#7BA173"/>
+          <circle cx="60" cy="98" r="2" fill="#6B8F65"/>`
   },
   {
-    id: 'scarf', name: 'Cozy Scarf', category: 'clothes', price: 85,
-    desc: 'Warm enough for bear market winters.',
-    svg: `<path d="M27,87 Q60,81 93,87 Q93,95 60,95 Q27,95 27,87Z" fill="#6B8F65"/>
-          <path d="M27,87 Q60,81 93,87 Q93,89.5 60,89.5 Q27,89.5 27,87Z" fill="rgba(255,255,255,0.18)"/>
-          <rect x="53" y="95" width="9" height="22" rx="4.5" fill="#6B8F65"/>
-          <rect x="53" y="95" width="9" height="4" rx="2" fill="rgba(255,255,255,0.18)"/>
-          <line x1="55" y1="100" x2="61" y2="100" stroke="#8FB085" stroke-width="1.8" opacity="0.8"/>
-          <line x1="55" y1="104" x2="61" y2="104" stroke="#8FB085" stroke-width="1.8" opacity="0.8"/>
-          <line x1="55" y1="108" x2="61" y2="108" stroke="#8FB085" stroke-width="1.8" opacity="0.7"/>
-          <line x1="55" y1="112" x2="61" y2="112" stroke="#8FB085" stroke-width="1.5" opacity="0.5"/>`
+    id: 'necktie', name: 'Necktie', category: 'accessory', price: 70,
+    mysteryOnly: true, mysteryPool: 'accessory',
+    desc: 'Dressed for a shareholder meeting.',
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 55 },
+    svg: `<path d="M53,78 L67,78 L63,86 L57,86 Z" fill="#8B2635"/>
+          <path d="M53,78 L67,78 L63,86 L57,86 Z" fill="rgba(255,255,255,0.15)"/>
+          <path d="M57,86 L63,86 L67,104 L60,110 L53,104 Z" fill="#A6304A"/>
+          <path d="M57,86 L63,86 L65,98 L60,101 L55,98 Z" fill="rgba(0,0,0,0.12)"/>
+          <line x1="55" y1="92" x2="65" y2="93" stroke="#7A1F2C" stroke-width="1" opacity="0.5"/>
+          <line x1="54" y1="100" x2="66" y2="101" stroke="#7A1F2C" stroke-width="1" opacity="0.5"/>`
   },
   {
-    id: 'cape', name: 'Cape', category: 'clothes', price: 130,
+    id: 'cape', name: 'Cape', category: 'accessory', price: 130,
+    mysteryOnly: true, mysteryPool: 'accessory', rarity: 'rare',
+    viewBox: '-10 68 144 72',
     desc: 'The hero of your own budget.',
-    svg: `<path d="M24,90 C24,90 12,110 16,128 L104,128 C108,110 96,90 96,90 Q60,84 24,90Z" fill="#6B35B8" opacity="0.9"/>
-          <path d="M24,90 Q60,84 96,90 L96,96 Q60,90 24,96Z" fill="rgba(255,255,255,0.15)"/>
-          <path d="M24,90 Q60,97 96,90" stroke="#4A1A8A" stroke-width="2.5" fill="none"/>
-          <path d="M16,128 L24,90 C27,92 30,94 32,128Z" fill="rgba(255,255,255,0.07)"/>
-          <line x1="44" y1="91" x2="48" y2="108" stroke="#9B55E8" stroke-width="2.5" opacity="0.55"/>
-          <line x1="60" y1="89" x2="60" y2="108" stroke="#9B55E8" stroke-width="2.5" opacity="0.55"/>
-          <line x1="76" y1="91" x2="72" y2="108" stroke="#9B55E8" stroke-width="2.5" opacity="0.55"/>
-          <ellipse cx="60" cy="89" rx="6" ry="3" fill="#5A28A0"/>`
+    layer: 'back',
+    fit: { a: 3.28, b: 0, c: 0, d: 4.33, e: 23, f: -132 },
+    svg: `<defs><linearGradient id="cp-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#C9A0FF"/><stop offset="55%" stop-color="#8A3FE0"/><stop offset="100%" stop-color="#4A1A8A"/></linearGradient></defs>
+          <path d="M 8 82 Q 60 72 112 82 L 124 132 Q 60 122 -4 132 Z" fill="url(#cp-g)" stroke="#3D1470" stroke-width="1"/>
+          <path d="M 8 82 Q 60 72 112 82 L 109 94 Q 60 84 11 94 Z" fill="rgba(255,255,255,0.22)"/>
+          <path d="M 8 82 Q 60 96 112 82" stroke="#3D1470" stroke-width="1" fill="none" opacity="0.4"/>
+          <path d="M 30 88 L 34 128" stroke="#EEDCFF" stroke-width="1.2" opacity="0.4"/>
+          <path d="M 60 84 L 60 130" stroke="#EEDCFF" stroke-width="1.2" opacity="0.4"/>
+          <path d="M 90 88 L 86 128" stroke="#EEDCFF" stroke-width="1.2" opacity="0.4"/>
+          <path d="M -4 132 Q 8 128 20 132 Q 32 128 44 132 Q 56 128 68 132 Q 80 128 92 132 Q 104 128 116 132 Q 120 130 124 132" stroke="#3D1470" stroke-width="1" fill="none" opacity="0.5"/>`
   },
   {
-    id: 'overalls', name: 'Overalls', category: 'clothes', price: 150,
-    desc: 'From farmhand to fund manager.',
-    svg: `<rect x="48" y="91" width="24" height="20" rx="3" fill="#4A7FCC"/>
-          <rect x="48" y="91" width="24" height="5" rx="2" fill="rgba(255,255,255,0.2)"/>
-          <path d="M50,91 C46,85 40,82 36,80" stroke="#4A7FCC" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-          <path d="M70,91 C74,85 80,82 84,80" stroke="#4A7FCC" stroke-width="5.5" fill="none" stroke-linecap="round"/>
-          <path d="M50,91 C47,86 43,83 38,81" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <path d="M70,91 C73,86 77,83 82,81" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-          <rect x="55" y="97" width="10" height="8" rx="2" fill="#3A6FBC"/>
-          <rect x="56" y="98" width="8" height="3.5" rx="1" fill="rgba(255,255,255,0.2)"/>
-          <circle cx="50" cy="91" r="3" fill="#3A6FBC"/>
-          <circle cx="70" cy="91" r="3" fill="#3A6FBC"/>
-          <line x1="52" y1="105" x2="68" y2="105" stroke="#3A6FBC" stroke-width="1.5" opacity="0.6"/>`
+    id: 'necklace', name: 'Charm Necklace', category: 'accessory', price: 95,
+    mysteryOnly: true, mysteryPool: 'accessory',
+    desc: 'A little sparkle for your budget glow-up.',
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 75 },
+    svg: `<path d="M32,72 Q60,90 88,72" stroke="#C0C0C8" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M32,72 Q60,90 88,72" stroke="#EFEFF4" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.7"/>
+          <circle cx="60" cy="90" r="6" fill="#F4C2D8"/>
+          <circle cx="60" cy="90" r="6" fill="none" stroke="#C0C0C8" stroke-width="1.5"/>
+          <circle cx="58" cy="88" r="2" fill="rgba(255,255,255,0.6)"/>`
   },
   // ── ROOM DECOR ──
   {
@@ -2256,7 +2408,22 @@ const SHOP_ITEMS = [
 
   // ── DIAMOND EXCLUSIVES (earned via 3-day streak bonuses, not coins) ──
   {
+    id: 'diamond_mystery_box', name: 'Diamond Mystery Box', category: 'exclusive', currency: 'diamond', price: 20,
+    isMysteryBox: true, mysteryPool: 'exclusive',
+    viewBox: '20 20 80 75',
+    desc: 'Crack open a dazzling diamond-tier surprise.',
+    svg: `<defs><linearGradient id="db-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8FE3F5"/><stop offset="100%" stop-color="#2AA8C4"/></linearGradient></defs>
+          <rect x="35" y="45" width="50" height="40" rx="3" fill="#1C1C2E"/>
+          <rect x="35" y="45" width="50" height="40" rx="3" fill="none" stroke="url(#db-g)" stroke-width="2"/>
+          <rect x="55" y="45" width="10" height="40" fill="url(#db-g)"/>
+          <rect x="35" y="60" width="50" height="10" fill="url(#db-g)"/>
+          <path d="M60,38 L67,45 L60,54 L53,45 Z" fill="url(#db-g)" stroke="#E8FBFF" stroke-width="0.8"/>
+          <path d="M28,40 L29,37 L30,40 L33,41 L30,42 L29,45 L28,42 L25,41 Z" fill="#FFF7C4" opacity="0.85"/>
+          <path d="M92,50 L92.8,47.6 L93.6,50 L96,50.8 L93.6,51.6 L92.8,54 L92,51.6 L89.6,50.8 Z" fill="#FFF7C4" opacity="0.7"/>`
+  },
+  {
     id: 'diamond_crown', name: 'Diamond Crown', category: 'exclusive', currency: 'diamond', price: 15,
+    mysteryOnly: true, mysteryPool: 'exclusive',
     viewBox: '14 -4 92 46',
     desc: 'Only streak-keepers get to wear this one.',
     svg: `<defs><linearGradient id="dc-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#FFF3B0"/><stop offset="55%" stop-color="#FFD23F"/><stop offset="100%" stop-color="#D4980A"/></linearGradient>
@@ -2275,35 +2442,67 @@ const SHOP_ITEMS = [
   },
   {
     id: 'diamond_shades', name: 'Diamond Shades', category: 'exclusive', currency: 'diamond', price: 20,
+    mysteryOnly: true, mysteryPool: 'exclusive',
     viewBox: '6 41 108 34',
     desc: 'Too cool to be affordable in coins.',
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 },
     svg: `<defs><linearGradient id="ds-lens" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#FFD6F0"/><stop offset="50%" stop-color="#C7A6FF"/><stop offset="100%" stop-color="#7FD9FF"/></linearGradient></defs>
-          <path d="M 30 60 Q 30 50 42 50 L 54 50 Q 60 50 60 56 Q 60 50 66 50 L 78 50 Q 90 50 90 60 Q 90 70 78 70 L 66 70 Q 60 70 60 64 Q 60 70 54 70 L 42 70 Q 30 70 30 60 Z" fill="#2B2B2B"/>
-          <circle cx="45" cy="60" r="9" fill="url(#ds-lens)"/>
-          <circle cx="75" cy="60" r="9" fill="url(#ds-lens)"/>
-          <circle cx="41" cy="56" r="2.4" fill="rgba(255,255,255,0.7)"/>
-          <circle cx="71" cy="56" r="2.4" fill="rgba(255,255,255,0.7)"/>
-          <path d="M 30 58 L 20 55" stroke="#2B2B2B" stroke-width="3" stroke-linecap="round"/>
-          <path d="M 90 58 L 100 55" stroke="#2B2B2B" stroke-width="3" stroke-linecap="round"/>
-          <path d="M 45 52 L 46 49 L 47 52 L 50 53 L 47 54 L 46 57 L 45 54 L 42 53 Z" fill="#FFF" opacity="0.9"/>
-          <path d="M 75 52 L 76 49 L 77 52 L 80 53 L 77 54 L 76 57 L 75 54 L 72 53 Z" fill="#FFF" opacity="0.9"/>`
+          <path d="M 20 61 Q 20 49 34 49 L 46 49 Q 54 49 55 58 L 65 58 Q 66 49 74 49 L 87 49 Q 101 49 101 61 Q 101 73 87 73 L 74 73 Q 66 73 65 64 L 55 64 Q 54 73 46 73 L 34 73 Q 20 73 20 61 Z" fill="#2B2B2B"/>
+          <circle cx="36" cy="61" r="9.5" fill="url(#ds-lens)"/>
+          <circle cx="85" cy="61" r="9.5" fill="url(#ds-lens)"/>
+          <circle cx="32" cy="57" r="2.4" fill="rgba(255,255,255,0.7)"/>
+          <circle cx="81" cy="57" r="2.4" fill="rgba(255,255,255,0.7)"/>
+          <path d="M 20 59 L 12 57" stroke="#2B2B2B" stroke-width="3" stroke-linecap="round"/>
+          <path d="M 101 59 L 109 57" stroke="#2B2B2B" stroke-width="3" stroke-linecap="round"/>
+          <path d="M 36 53 L 37 50 L 38 53 L 41 54 L 38 55 L 37 58 L 36 55 L 33 54 Z" fill="#FFF" opacity="0.9"/>
+          <path d="M 85 53 L 86 50 L 87 53 L 90 54 L 87 55 L 86 58 L 85 55 L 82 54 Z" fill="#FFF" opacity="0.9"/>`
   },
   {
     id: 'golden_cape', name: 'Golden Cape', category: 'exclusive', currency: 'diamond', price: 25,
-    viewBox: '6 72 108 62',
+    mysteryOnly: true, mysteryPool: 'exclusive', rarity: 'rare',
+    viewBox: '-10 68 144 72',
     desc: 'The rarest flex in Hammy\'s closet.',
+    layer: 'back',
+    fit: { a: 3.28, b: 0, c: 0, d: 4.33, e: 23, f: -132 },
     svg: `<defs><linearGradient id="gc-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#FFE9A6"/><stop offset="55%" stop-color="#FFC93F"/><stop offset="100%" stop-color="#C68A0A"/></linearGradient></defs>
-          <path d="M 30 82 Q 60 74 90 82 L 100 130 Q 60 122 20 130 Z" fill="url(#gc-g)" stroke="#A66E08" stroke-width="1"/>
-          <path d="M 30 82 Q 60 74 90 82 L 88 92 Q 60 84 32 92 Z" fill="rgba(255,255,255,0.25)"/>
-          <circle cx="60" cy="82" r="5" fill="#8FE3F5"/>
-          <circle cx="60" cy="82" r="2.6" fill="#E8FBFF"/>
-          <path d="M 25 92 Q 22 108 26 126" stroke="#A66E08" stroke-width="1" fill="none" opacity="0.5"/>
-          <path d="M 95 92 Q 98 108 94 126" stroke="#A66E08" stroke-width="1" fill="none" opacity="0.5"/>`
+          <path d="M 8 82 Q 60 72 112 82 L 124 132 Q 60 122 -4 132 Z" fill="url(#gc-g)" stroke="#A66E08" stroke-width="1"/>
+          <path d="M 8 82 Q 60 72 112 82 L 109 94 Q 60 84 11 94 Z" fill="rgba(255,255,255,0.25)"/>
+          <path d="M 8 82 Q 60 96 112 82" stroke="#A66E08" stroke-width="1" fill="none" opacity="0.4"/>
+          <path d="M 30 88 L 34 128" stroke="#FFF3CC" stroke-width="1.2" opacity="0.4"/>
+          <path d="M 60 84 L 60 130" stroke="#FFF3CC" stroke-width="1.2" opacity="0.4"/>
+          <path d="M 90 88 L 86 128" stroke="#FFF3CC" stroke-width="1.2" opacity="0.4"/>
+          <path d="M -4 132 Q 8 128 20 132 Q 32 128 44 132 Q 56 128 68 132 Q 80 128 92 132 Q 104 128 116 132 Q 120 130 124 132" stroke="#A66E08" stroke-width="1" fill="none" opacity="0.5"/>
+          <circle cx="10" cy="92" r="4.5" fill="#8FE3F5"/>
+          <circle cx="10" cy="92" r="2.3" fill="#E8FBFF"/>
+          <circle cx="110" cy="92" r="4.5" fill="#8FE3F5"/>
+          <circle cx="110" cy="92" r="2.3" fill="#E8FBFF"/>`
+  },
+  {
+    id: 'gold_chain', name: 'Gold Chain', category: 'exclusive', currency: 'diamond', price: 35,
+    mysteryOnly: true, mysteryPool: 'exclusive', rarity: 'ultra_rare',
+    viewBox: '18 60 84 46',
+    desc: 'The ultimate flex for a maxed-out savings account.',
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 32 },
+    svg: `<defs><linearGradient id="gch-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#FFF3B0"/><stop offset="50%" stop-color="#FFD23F"/><stop offset="100%" stop-color="#C68A0A"/></linearGradient></defs>
+          <path d="M30,72 Q60,90 90,72" stroke="url(#gch-g)" stroke-width="7" fill="none" stroke-linecap="round"/>
+          <path d="M30,72 Q60,90 90,72" stroke="#FFF3B0" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+          <circle cx="34" cy="74" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
+          <circle cx="42" cy="80" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
+          <circle cx="51" cy="84.5" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
+          <circle cx="69" cy="84.5" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
+          <circle cx="78" cy="80" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
+          <circle cx="86" cy="74" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
+          <path d="M52,88 L60,102 L68,88 Z" fill="url(#gch-g)" stroke="#A66E08" stroke-width="1"/>
+          <circle cx="60" cy="93" r="4.5" fill="#8FE3F5"/>
+          <circle cx="60" cy="93" r="2.3" fill="#E8FBFF"/>
+          <path d="M53,89 L59,90.5" stroke="rgba(255,255,255,0.5)" stroke-width="1.2"/>
+          <path d="M32,72 L30,68 L28,72 L24,73 L28,74 L30,78 L32,74 L36,73 Z" fill="#FFF7C4" opacity="0.85"/>
+          <path d="M92,72 L90.5,69 L89,72 L86,72.8 L89,73.6 L90.5,76.6 L92,73.6 L95,72.8 Z" fill="#FFF7C4" opacity="0.7"/>`
   },
 
-  // ── GRADUATION CAP (not for sale — auto-awarded for finishing every module) ──
+  // ── REWARDS (not for sale — auto-awarded for major milestones) ──
   {
-    id: 'graduation_cap', name: 'Graduation Cap', category: 'hat', reward: true,
+    id: 'graduation_cap', name: 'Graduation Cap', category: 'reward', reward: true,
     viewBox: '14 -4 92 46',
     desc: 'Awarded for completing all 10 modules. Can\'t be bought, only earned.',
     svg: `<defs><linearGradient id="gcp-top" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#3D3D3D"/><stop offset="100%" stop-color="#141414"/></linearGradient></defs>
@@ -2316,27 +2515,295 @@ const SHOP_ITEMS = [
           <path d="M 63 30 L 69 30 L 68 38 L 66 36 L 64 38 Z" fill="#D9B33E"/>
           <circle cx="66" cy="30" r="2" fill="#C9A227"/>`
   },
+  {
+    id: 'grandmaster_halo', name: 'Grandmaster Halo', category: 'reward', reward: true,
+    rewardHint: 'Unlock every other achievement to earn this',
+    viewBox: '14 -8 92 40',
+    desc: 'Awarded for unlocking every single achievement. Can\'t be bought, only earned.',
+    svg: `<defs><linearGradient id="gh-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFF3B0"/><stop offset="50%" stop-color="#FFD23F"/><stop offset="100%" stop-color="#C68A0A"/></linearGradient></defs>
+          <ellipse cx="60" cy="10" rx="26" ry="7" fill="none" stroke="url(#gh-g)" stroke-width="4"/>
+          <ellipse cx="60" cy="9" rx="26" ry="7" fill="none" stroke="#FFF3B0" stroke-width="1.5" opacity="0.6"/>
+          <path d="M32 6 L33 3 L34 6 L37 7 L34 8 L33 11 L32 8 L29 7 Z" fill="#FFF7C4"/>
+          <path d="M88 6 L89 3 L90 6 L93 7 L90 8 L89 11 L88 8 L85 7 Z" fill="#FFF7C4" opacity="0.85"/>
+          <circle cx="60" cy="3" r="2.4" fill="#FFE87A"/>`
+  },
+  {
+    id: 'marathon_medal', name: 'Marathon Medal', category: 'reward', reward: true,
+    rewardHint: 'Reach a 30-day streak to earn this',
+    viewBox: '40 60 40 50',
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 32 },
+    desc: 'Awarded for a 30-day streak without missing a day. Can\'t be bought, only earned.',
+    svg: `<defs><linearGradient id="mm-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#FFE9A6"/><stop offset="55%" stop-color="#FFC93F"/><stop offset="100%" stop-color="#C68A0A"/></linearGradient></defs>
+          <path d="M48,68 L60,84 L72,68" stroke="#3B5FA0" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M48,68 L60,84 L72,68" stroke="#7B9FE0" stroke-width="2" fill="none" opacity="0.5" stroke-linecap="round"/>
+          <circle cx="60" cy="93" r="11" fill="url(#mm-g)" stroke="#A66E08" stroke-width="1.5"/>
+          <circle cx="60" cy="93" r="7" fill="none" stroke="#FFF3B0" stroke-width="1.2"/>
+          <path d="M60,87 L62,91 L66,91.5 L63,94.5 L64,99 L60,96.5 L56,99 L57,94.5 L54,91.5 L58,91 Z" fill="#FFF3B0"/>`
+  },
 ];
 
 // ── Achievements ──────────────────────────────
+// Every achievement below requires real mastery, not just showing up — "mastered" for a
+// quiz-based module means every lesson in it has been answered perfectly at least once
+// (replays count, so it's always earnable, just not on the first pass through); for the two
+// narrative-quest modules (Credit, Scams) it means every quest in that module finished with
+// a flawless run (every knowledge check, myth card, and poll guessed right, zero matching
+// mistakes) — checked directly against the quest's own analytics rather than a separate flag.
+function hasMasteredModule(s, modId) {
+  const mod = MODULES.find(m => m.id === modId);
+  if (!mod) return false;
+  if (hasQuest(mod)) return moduleQuestsFlawless(s, modId);
+  return mod.lessons.every((lesson, idx) => {
+    const rec = s.completedLessons[`${modId}_${idx}`];
+    return !!rec && rec.score === rec.total;
+  });
+}
+
+function questWasFlawless(qp) {
+  if (!qp || !qp.done) return false;
+  const a = qp.analytics;
+  return a.knowledgeCheck.every(x => x.isCorrect)
+    && a.mythCards.every(x => x.guessedRight)
+    && a.polls.every(x => x.guessedRight)
+    && (a.matchingMistakes || 0) === 0;
+}
+
+function moduleQuestsFlawless(s, modId) {
+  const mod = MODULES.find(m => m.id === modId);
+  if (!mod || !hasQuest(mod)) return false;
+  return mod.quests.every(q => questWasFlawless(s.questProgress[questKey(modId, q.id)]));
+}
+
+// Sums every vocab term learned across every quest ever played (both Credit quests + Scams).
+function totalTermsLearned(s) {
+  return Object.values(s.questProgress || {}).reduce((sum, qp) => sum + (qp.learnedTerms || []).length, 0);
+}
+
+// True only if that module's boss-challenge activity was finished on the optimal path at
+// least once — bonus XP only gets added when every choice in the run was the strongest one.
+function bossChallengeOptimal(s, modId) {
+  const mod = MODULES.find(m => m.id === modId);
+  const idx = mod ? mod.lessons.findIndex(l => l.type === 'boss-challenge') : -1;
+  if (idx === -1) return false;
+  const rec = s.completedLessons[`${modId}_${idx}`];
+  if (!rec) return false;
+  return rec.xpEarned > mod.lessons[idx].activity.xpOnComplete;
+}
+
+// Tiers are purely a difficulty/rarity label used for badge color + the modal's tier chip —
+// they don't affect check() logic at all. Bronze = single-module mastery. Silver = finishing
+// a hard optional challenge. Gold = a sustained or precise behavioral bar. Diamond = the
+// small handful of genuinely ultra-hard, multi-week or "beat everything" achievements.
 const ACHIEVEMENTS = [
-  { id: 'first_paycheck', abbr: 'E',  label: 'First Paycheck',    desc: 'Complete Earning module',       check: s => s.completedModules.earning },
-  { id: 'budget_boss',    abbr: 'BB', label: 'Budget Boss',        desc: 'Complete Spending module',      check: s => s.completedModules.spending },
-  { id: 'safety_net',     abbr: 'SN', label: 'Safety Net',         desc: 'Complete Saving module',        check: s => s.completedModules.saving },
-  { id: 'investor',       abbr: 'FM', label: 'Future Millionaire', desc: 'Complete Investing module',     check: s => s.completedModules.investing },
-  { id: 'credit_champ',   abbr: 'CC', label: 'Credit Champ',       desc: 'Complete Managing Credit',     check: s => s.completedModules.credit },
-  { id: 'risk_ready',     abbr: 'RR', label: 'Risk Ready',         desc: 'Complete Managing Risk',       check: s => s.completedModules.risk },
-  { id: 'loan_smart',     abbr: 'LN', label: 'Loan Smart',         desc: 'Complete Loans module',        check: s => s.completedModules.loans },
-  { id: 'tax_ready',      abbr: 'TX', label: 'Tax Ready',          desc: 'Complete Taxes module',        check: s => s.completedModules.taxes },
-  { id: 'mindful_money',  abbr: 'MM', label: 'Mindful Spender',    desc: 'Complete Consumer Psychology', check: s => s.completedModules.psychology },
-  { id: 'offer_ready',    abbr: 'CS', label: 'Offer Ready',        desc: 'Complete Career & Salary',     check: s => s.completedModules.career },
-  { id: 'scam_spotter',   abbr: 'SS', label: 'Scam Spotter',       desc: 'Complete Scams & Fraud Prevention', check: s => s.completedModules.scams },
-  { id: 'stackd_star',    abbr: 'S*', label: 'Stackd Star',        desc: 'Complete all modules',         check: s => Object.keys(s.completedModules).length >= MODULES.length },
-  { id: 'perfect_score',  abbr: '5/5',label: 'Perfect Score',      desc: 'Answer all 5 questions right', check: s => s.hadPerfect },
-  { id: 'on_fire',        abbr: '3D', label: 'On a Roll',          desc: '3-day streak',                 check: s => s.streak >= 3 },
-  { id: 'leveled_up',     abbr: 'L3', label: 'Leveled Up',         desc: 'Reach Level 3',                check: s => s.level >= 3 },
-  { id: 'crisis_averted', abbr: 'CR', label: 'Crisis Averted',     desc: 'Beat the Credit boss battle',  check: s => (s.questBossesWon || []).includes('credit') },
+  { id: 'first_paycheck', tier: 'bronze', color: '#3FA65C', label: 'First Paycheck',    desc: 'Ace every lesson in the Earning module — every quiz question right on at least one attempt each.', check: s => hasMasteredModule(s, 'earning'),
+    icon: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>' },
+  { id: 'budget_boss', tier: 'bronze', color: '#E08A2E', label: 'Budget Boss', desc: 'Master the Spending module — perfect quiz scores across every lesson, plus both interactive activities completed.', check: s => hasMasteredModule(s, 'spending'),
+    icon: '<path d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 7V4.5A1.5 1.5 0 0 0 14.5 3h-6A1.5 1.5 0 0 0 7 4.5V7"/><circle cx="16" cy="13" r="1.4"/>' },
+  { id: 'safety_net', tier: 'bronze', color: '#1C9C93', label: 'Safety Net', desc: 'Master the Saving module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'saving'),
+    icon: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/>' },
+  { id: 'investor', tier: 'bronze', color: '#3B7FC4', label: 'Future Millionaire', desc: 'Master the Investing module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'investing'),
+    icon: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>' },
+  { id: 'credit_champ', tier: 'bronze', color: '#2E9BD6', label: 'Credit Champ', desc: 'Flawlessly complete every credit quest — Maya\'s and Jordan\'s — with every knowledge check, myth card, and poll guessed right.', check: s => hasMasteredModule(s, 'credit'),
+    icon: '<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>' },
+  { id: 'risk_ready', tier: 'bronze', color: '#5B6B8C', label: 'Risk Ready', desc: 'Master the Managing Risk module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'risk'),
+    icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' },
+  { id: 'loan_smart', tier: 'bronze', color: '#A9713C', label: 'Loan Smart', desc: 'Master the Loans module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'loans'),
+    icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>' },
+  { id: 'tax_ready', tier: 'bronze', color: '#8B5FBF', label: 'Tax Ready', desc: 'Master the Taxes module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'taxes'),
+    icon: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>' },
+  { id: 'mindful_money', tier: 'bronze', color: '#D6538A', label: 'Mindful Spender', desc: 'Master Consumer Psychology — perfect quiz scores on every lesson, plus both interactive activities completed.', check: s => hasMasteredModule(s, 'psychology'),
+    icon: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>' },
+  { id: 'offer_ready', tier: 'bronze', color: '#5C6BC0', label: 'Offer Ready', desc: 'Master Career & Salary — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'career'),
+    icon: '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>' },
+  { id: 'scam_spotter', tier: 'bronze', color: '#C0453A', label: 'Scam Spotter', desc: 'Flawlessly complete Devon\'s scam quest — every knowledge check, myth card, and poll guessed right.', check: s => hasMasteredModule(s, 'scams'),
+    icon: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
+  { id: 'crisis_averted', tier: 'silver', color: '#E0A72E', label: 'Crisis Averted', desc: 'Beat the Credit boss battle — finish either of the credit quests through to its final scenario.', check: s => (s.questBossesWon || []).includes('credit'),
+    icon: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>' },
+  { id: 'fraud_fighter', tier: 'silver', color: '#B33A3A', label: 'Fraud Fighter', desc: 'Beat the Scams boss battle — finish Devon\'s quest through to its final scenario.', check: s => (s.questBossesWon || []).includes('scams'),
+    icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>' },
+  { id: 'no_hints', tier: 'silver', color: '#7952B3', label: 'No Hints Needed', desc: 'Finish Maya\'s credit quest from start to finish without using a single hint.', check: s => { const qp = s.questProgress['credit::maya']; return !!(qp && qp.done && (qp.hintsUsed || 0) === 0); },
+    icon: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>' },
+  { id: 'word_nerd', tier: 'silver', color: '#3F8757', label: 'Word Nerd', desc: 'Learn 15 or more vocabulary terms across every quest played.', check: s => totalTermsLearned(s) >= 15,
+    icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
+  { id: 'homebody', tier: 'silver', color: '#C08552', label: 'Homebody', desc: 'Fully decorate Hammy\'s Room — every slot (wall art, lamp, plant, bed, rug) filled with a purchased item.', check: s => s.equippedRoom && Object.keys(s.equippedRoom).length > 0 && Object.values(s.equippedRoom).every(v => !!v),
+    icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
+  { id: 'on_fire', tier: 'gold', color: '#E8622C', label: 'On a Roll', desc: 'Play Stackd 7 days in a row without missing a day.', check: s => s.streak >= 7,
+    icon: '<path d="M12 2c1 4-3 5-3 9a3 3 0 0 0 6 0c0-2-1-3-1-3s2 1 2 4a5 5 0 0 1-10 0c0-5 4-6 4-10z"/>' },
+  { id: 'discipline', tier: 'gold', color: '#2AA8C4', label: 'Discipline', desc: 'Self-report 7 days in a row of skipping an impulse buy on the Home dashboard.', check: s => !!(s.noImpulseStreak && s.noImpulseStreak.count >= 7),
+    icon: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' },
+  { id: 'iron_will', tier: 'gold', color: '#4A4A57', label: 'Iron Will', desc: 'Land the optimal path on both Boss Challenges — Budgeting\'s and Consumer Psychology\'s — resisting or avoiding every costly choice.', check: s => bossChallengeOptimal(s, 'spending') && bossChallengeOptimal(s, 'psychology'),
+    icon: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>' },
+  { id: 'excellent_credit', tier: 'gold', color: '#1F9D6B', label: 'Excellent Credit', desc: 'Push your simulated credit score to 800 or above — years of consistently good life-event decisions.', check: s => !!(s.financialState && s.financialState.creditScore >= 800),
+    icon: '<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/><path d="M9 3l3 6-3 12"/><path d="M15 3l-3 6 3 12"/>' },
+  { id: 'marathoner', tier: 'diamond', color: '#2856A8', label: 'Marathoner', desc: 'Play Stackd 30 days in a row without missing a single day. Ultra rare — most students never make it this far.', check: s => s.streak >= 30,
+    icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' },
+  { id: 'untouchable', tier: 'diamond', color: '#6A3FA0', label: 'Untouchable', desc: 'Self-report 30 days in a row of skipping an impulse buy. A full month of discipline, ultra rare.', check: s => !!(s.noImpulseStreak && s.noImpulseStreak.count >= 30),
+    icon: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>' },
+  { id: 'stackd_star', tier: 'diamond', color: '#D4A017', label: 'Stackd Star', desc: 'Master every single module in Stackd — the full curriculum, flawlessly. Ultra rare.', check: s => MODULES.every(m => hasMasteredModule(s, m.id)),
+    icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
+  { id: 'grandmaster', tier: 'diamond', color: '#9B1B30', label: 'Grandmaster', desc: 'Unlock every other badge in Stackd. The single hardest badge in the app — there is nothing beyond this one.', check: s => ACHIEVEMENTS.filter(x => x.id !== 'grandmaster').every(x => (s.unlockedAchievements || []).includes(x.id)),
+    icon: '<path d="M2 18h20L19 8l-5 4-2-6-2 6-5-4z"/>' },
 ];
+
+// ── Life Events ────────────────────────────────
+// A small, ambient "random life happens" layer on top of the module/quest system. It fires
+// mid-lesson — right after the player advances past a concept, quiz question, or decision,
+// never on the final step of a lesson/chapter — so it reads as "you just learned this, now
+// apply it" rather than a post-lesson bonus round. Each scenario nudges
+// state.financialState (checking/savings/creditScore). Purely additive — never blocks or
+// replaces the XP/streak/diamond flow it hooks into.
+const LIFE_EVENTS = [
+  {
+    id: 'car_repair',
+    tag: 'Uh oh!',
+    title: 'The Car Won’t Start',
+    scenario: 'It’s 7:45am and you have an 8am final. Your car won’t start. The mechanic says it’s the alternator — $380, and they can have it done by tomorrow if you say yes right now.',
+    choices: [
+      { id: 'a', label: 'Pay it from savings', effect: { savings: -380 }, result: 'You cover it in full. Your savings takes a hit, but you walk away with zero debt and a working car.' },
+      { id: 'b', label: 'Put it on a credit card you’re still paying off', effect: { creditScore: -8 }, result: 'The card absorbs it today. If you only pay the minimum, this $380 repair could quietly cost you $500+ by the time it’s paid off.' },
+      { id: 'c', label: 'Ask a parent to cover it, pay them back over time', effect: { checking: -130 }, result: 'No interest, no credit hit — but you now owe someone who trusts you. Worth protecting that.' }
+    ]
+  },
+  {
+    id: 'roommate_ghosted',
+    tag: 'Life happens...',
+    title: 'Your Roommate Stopped Paying Rent',
+    scenario: 'Your name is on the lease with a roommate. This month, they said they’d "get you back" and never paid their $450 half. Rent is due in 2 days.',
+    choices: [
+      { id: 'a', label: 'Cover their half from your emergency savings', effect: { savings: -450 }, result: 'You avoid a late fee and a landlord conversation — but now you’re the one owed money, and collecting from a friend is its own project.' },
+      { id: 'b', label: 'Pay only your half and let the landlord chase them', effect: { creditScore: -15 }, result: 'Depending on your lease, a missed partial payment can still show up as a late payment on the whole unit — including your name.' },
+      { id: 'c', label: 'Pay your half, ask for a written payment plan on theirs', effect: { checking: -225 }, result: 'You keep the lease current and start a paper trail. Get any repayment agreement in writing, even a text.' }
+    ]
+  },
+  {
+    id: 'medical_bill',
+    tag: 'Something unexpected happened!',
+    title: 'A Bill You Didn’t See Coming',
+    scenario: 'You went to urgent care for what turned out to be nothing serious. Three weeks later, a bill for $210 shows up — your insurance covered less than you expected.',
+    choices: [
+      { id: 'a', label: 'Pay it in full right away', effect: { checking: -210 }, result: 'Handled. One less thing hanging over you, and no risk of it going to collections.' },
+      { id: 'b', label: 'Ignore it — you’ll deal with it later', effect: { creditScore: -25 }, result: 'Unpaid medical bills can go to collections faster than people expect, and a collections account can knock a credit score down hard for years.' },
+      { id: 'c', label: 'Call the billing office and ask for a payment plan', effect: { checking: -35 }, result: 'Most providers have an interest-free payment plan, but almost nobody asks. A 5-minute call turns $210 into $35/month.' }
+    ]
+  }
+];
+
+// One-time scenarios tied to finishing a specific module, keyed by module id. Fires the first
+// time that module is completed, bypassing the normal cooldown since it's a direct payoff of
+// the content the player just went through, not part of the ambient random pool.
+const LIFE_EVENT_UNLOCKS = {
+  scams: {
+    id: 'phishing_text_test',
+    tag: 'Uh oh!',
+    title: 'A Text From "Financial Aid"',
+    scenario: 'You get a text: "Your financial aid disbursement is on hold. Verify your bank account within 24 hours: studentaid-verify.net/login" You just finished the Scams module. This one’s on you.',
+    choices: [
+      { id: 'a', label: 'Click the link and check it out', effect: { creditScore: -40, checking: -150 }, result: 'That wasn’t studentaid.gov — it was a lookalike domain. Entering your bank login handed it straight to a scammer. This is exactly the pattern you just learned to spot.' },
+      { id: 'b', label: 'Ignore it and check your real aid portal directly', effect: {}, coinDelta: 15, result: 'Exactly right. You went straight to the source instead of trusting the link. Real disbursement holds show up in your official portal — never a text with a countdown.' },
+      { id: 'c', label: 'Report it as phishing and delete', effect: {}, coinDelta: 20, result: 'Even better — reporting it helps your school’s IT/security team warn other students before they fall for the same message.' }
+    ]
+  }
+};
+
+const LIFE_EVENT_COOLDOWN_SESSIONS = 2;
+const LIFE_EVENT_CHANCE = 0.5;
+
+// Checked at the moment a module is first completed — a guaranteed, one-time payoff testing
+// what the player just learned. Bypasses the ambient cooldown entirely.
+function checkModuleUnlockLifeEvent(mod) {
+  const le = state.lifeEvents;
+  const unlock = LIFE_EVENT_UNLOCKS[mod.id];
+  if (unlock && !le.history.includes(unlock.id)) return unlock;
+  return null;
+}
+
+// Checked at mid-lesson checkpoints (advancing past a concept, quiz question, or decision).
+// Returns null most of the time — this is meant to feel occasional, not clockwork. The
+// session-based cooldown means it naturally won't fire more than once every couple of
+// visits even though it's rolled at several points within a single lesson.
+function maybeTriggerAmbientLifeEvent() {
+  const le = state.lifeEvents;
+  const sessionsSince = le.sessionCount - le.lastTriggeredSession;
+  if (sessionsSince < LIFE_EVENT_COOLDOWN_SESSIONS) return null;
+  if (Math.random() > LIFE_EVENT_CHANCE) return null;
+
+  const unseen = LIFE_EVENTS.filter(e => !le.history.includes(e.id));
+  const pool = unseen.length ? unseen : LIFE_EVENTS;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function applyLifeEventChoice(event, choice) {
+  const fs = state.financialState;
+  const eff = choice.effect || {};
+  if (eff.checking)    fs.checking    = Math.max(0, fs.checking + eff.checking);
+  if (eff.savings)     fs.savings     = Math.max(0, fs.savings + eff.savings);
+  if (eff.creditScore) fs.creditScore = Math.min(850, Math.max(300, fs.creditScore + eff.creditScore));
+  if (choice.coinDelta) state.coins = Math.max(0, (state.coins || 0) + choice.coinDelta);
+  if (!state.lifeEvents.history.includes(event.id)) state.lifeEvents.history.push(event.id);
+  state.lifeEvents.lastTriggeredSession = state.lifeEvents.sessionCount;
+  saveState();
+}
+
+function buildLifeEventEffectChips(choice) {
+  const eff = choice.effect || {};
+  const chips = [];
+  if (eff.checking)    chips.push(`<span class="lifeevent-chip ${eff.checking < 0 ? 'neg' : 'pos'}">Checking ${eff.checking < 0 ? '−' : '+'}$${Math.abs(eff.checking)}</span>`);
+  if (eff.savings)     chips.push(`<span class="lifeevent-chip ${eff.savings < 0 ? 'neg' : 'pos'}">Savings ${eff.savings < 0 ? '−' : '+'}$${Math.abs(eff.savings)}</span>`);
+  if (eff.creditScore) chips.push(`<span class="lifeevent-chip ${eff.creditScore < 0 ? 'neg' : 'pos'}">Credit Score ${eff.creditScore < 0 ? '−' : '+'}${Math.abs(eff.creditScore)}</span>`);
+  if (choice.coinDelta) chips.push(`<span class="lifeevent-chip pos">+${choice.coinDelta} coins</span>`);
+  if (!chips.length) chips.push(`<span class="lifeevent-chip neutral">No financial impact</span>`);
+  return chips.join('');
+}
+
+// onContinue fires when the player dismisses the result — defaults to going home (used by
+// the post-module-completion unlock event), but mid-lesson callers pass a callback that
+// resumes exactly where the lesson left off instead of bouncing the player out of it.
+function showLifeEvent(event, onContinue) {
+  document.getElementById('lifeevent-mascot').innerHTML = getHammyFaceMarkup(0.3);
+  document.getElementById('lifeevent-tag').textContent = event.tag || 'Life happens...';
+  document.getElementById('lifeevent-title').textContent = event.title;
+  document.getElementById('lifeevent-scenario').textContent = event.scenario;
+  const choicesEl = document.getElementById('lifeevent-choices');
+  const resultEl = document.getElementById('lifeevent-result');
+  const continueBtn = document.getElementById('lifeevent-continue');
+
+  resultEl.classList.remove('show');
+  resultEl.innerHTML = '';
+  continueBtn.style.display = 'none';
+  choicesEl.style.display = '';
+  choicesEl.innerHTML = event.choices.map(c => `<button type="button" class="lifeevent-choice-btn" data-id="${c.id}">${c.label}</button>`).join('');
+  choicesEl.querySelectorAll('.lifeevent-choice-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const choice = event.choices.find(c => c.id === btn.dataset.id);
+      applyLifeEventChoice(event, choice);
+      choicesEl.style.display = 'none';
+      resultEl.innerHTML = `<div class="lifeevent-effect-row">${buildLifeEventEffectChips(choice)}</div><p class="lifeevent-result-text">${choice.result}</p>`;
+      resultEl.classList.add('show');
+      continueBtn.style.display = '';
+    });
+  });
+  continueBtn.onclick = () => {
+    document.getElementById('lifeevent-overlay').classList.remove('visible');
+    (onContinue || renderHome)();
+  };
+  document.getElementById('lifeevent-overlay').classList.add('visible');
+}
+
+// Shared by finishQuiz/finishQuest/finishBonusActivity: checks for a guaranteed
+// module-completion life event and, if the player also leveled up this completion, defers
+// it until after the level-up overlay is dismissed so the two never visually collide.
+function maybeShowPostCompletionOverlays(mod, leveled) {
+  const lifeEvent = checkModuleUnlockLifeEvent(mod);
+  if (leveled) {
+    pendingLifeEvent = lifeEvent;
+    setTimeout(() => {
+      document.getElementById('new-tier').textContent = getTier(Object.keys(state.completedModules).length).name;
+      document.getElementById('levelup-overlay').classList.add('visible');
+    }, 700);
+  } else if (lifeEvent) {
+    setTimeout(() => showLifeEvent(lifeEvent), 700);
+  }
+}
 
 // ── State ──────────────────────────────────────
 let state = {
@@ -2358,6 +2825,13 @@ let state = {
     },
     savingsGoal: 0,
   },
+  // A simulated, ambient financial snapshot that Life Events nudge up or down over time —
+  // separate from any single quest's own dashboard, and never touched by lessons/quizzes directly.
+  financialState: { checking: 600, savings: 200, creditScore: 650 },
+  lifeEvents: { history: [], sessionCount: 0, lastTriggeredSession: -99 },
+  // Separate from the main daily streak — an honor-system self-report for "I skipped an
+  // impulse buy today," checked in at most once per calendar day.
+  noImpulseStreak: { count: 0, lastCheckinDate: null },
 };
 
 function loadState() {
@@ -2368,8 +2842,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan } = state;
-  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan }));
+  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, noImpulseStreak } = state;
+  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, noImpulseStreak }));
 }
 
 // ── XP / Level ─────────────────────────────────
@@ -2411,6 +2885,47 @@ function updateStreak() {
   return 0;
 }
 
+// ── No-Impulse-Buy Streak (honor system) ────────
+// A second, independent streak from the main daily one: the player self-reports "I skipped
+// an impulse buy today," at most once per calendar day, same date-comparison convention as
+// updateStreak(). Never punitive — missing a day just resets the count, no other penalty.
+const NO_IMPULSE_AVOIDED_PER_DAY = 12;
+const NO_IMPULSE_MILESTONES = [3, 7, 14, 30];
+let noImpulseMilestoneJustHit = null;
+
+function checkInNoImpulseBuy() {
+  const ns = state.noImpulseStreak;
+  const today = new Date().toDateString();
+  if (ns.lastCheckinDate === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  ns.count = ns.lastCheckinDate === yesterday ? ns.count + 1 : 1;
+  ns.lastCheckinDate = today;
+  saveState();
+  noImpulseMilestoneJustHit = NO_IMPULSE_MILESTONES.includes(ns.count) ? ns.count : null;
+  renderHome();
+}
+
+function renderNoImpulseBuyWidget() {
+  const ns = state.noImpulseStreak;
+  const today = new Date().toDateString();
+  const checkedInToday = ns.lastCheckinDate === today;
+  const savedEstimate = ns.count * NO_IMPULSE_AVOIDED_PER_DAY;
+  const milestoneHtml = noImpulseMilestoneJustHit
+    ? `<p class="noimpulse-milestone">🎉 ${noImpulseMilestoneJustHit}-day streak! That's roughly $${(noImpulseMilestoneJustHit * NO_IMPULSE_AVOIDED_PER_DAY).toLocaleString()} in avoided impulse spending, keep it up.</p>`
+    : '';
+  noImpulseMilestoneJustHit = null;
+  return `
+    <div class="noimpulse-head">
+      <h3>No-Impulse-Buy Streak</h3>
+      <span class="noimpulse-count">${ns.count} day${ns.count === 1 ? '' : 's'}</span>
+    </div>
+    <p class="noimpulse-sub">Self-reported, honor system — about $${savedEstimate.toLocaleString()} estimated avoided spending at $${NO_IMPULSE_AVOIDED_PER_DAY}/day.</p>
+    ${milestoneHtml}
+    <button type="button" class="noimpulse-btn" id="noimpulse-checkin-btn" ${checkedInToday ? 'disabled' : ''}>
+      ${checkedInToday ? '✓ Checked in today' : 'I skipped an impulse buy today'}
+    </button>`;
+}
+
 function buildStreakDiamondBanner(diamondsEarned) {
   return `<div class="streak-diamond-banner">
     <span class="diamond-icon">💎</span>
@@ -2418,11 +2933,25 @@ function buildStreakDiamondBanner(diamondsEarned) {
   </div>`;
 }
 
-function buildGraduationBanner() {
+function buildRewardBanner(icon, title, message) {
   return `<div class="graduation-banner">
-    <span class="graduation-icon">🎓</span>
-    <div><strong>You Graduated!</strong><span>Every module complete. Your Graduation Cap is equipped, check out your pig.</span></div>
+    <span class="graduation-icon">${icon}</span>
+    <div><strong>${title}</strong><span>${message}</span></div>
   </div>`;
+}
+
+function buildGraduationBanner() {
+  return buildRewardBanner('🎓', 'You Graduated!', 'Every module complete. Your Graduation Cap is equipped, check out your pig.');
+}
+
+function buildMilestoneRewardBanner(newAchs) {
+  if (newAchs.some(a => a.id === 'grandmaster')) {
+    return buildRewardBanner('🏆', 'Grandmaster!', 'Every achievement unlocked. Your Grandmaster Halo is equipped, check out your pig.');
+  }
+  if (newAchs.some(a => a.id === 'marathoner')) {
+    return buildRewardBanner('🏅', '30-Day Streak!', 'A full month with no missed days. Your Marathon Medal is equipped, check out your pig.');
+  }
+  return '';
 }
 
 function checkAchievements() {
@@ -2438,6 +2967,16 @@ function checkAchievements() {
   if (newOnes.some(a => a.id === 'stackd_star') && !(state.ownedItems || []).includes('graduation_cap')) {
     state.ownedItems = [...(state.ownedItems || []), 'graduation_cap'];
     state.equippedItem = 'graduation_cap';
+  }
+  // Unlocking every other achievement auto-awards the Grandmaster Halo — the hardest badge in the app.
+  if (newOnes.some(a => a.id === 'grandmaster') && !(state.ownedItems || []).includes('grandmaster_halo')) {
+    state.ownedItems = [...(state.ownedItems || []), 'grandmaster_halo'];
+    state.equippedItem = 'grandmaster_halo';
+  }
+  // A 30-day streak auto-awards the Marathon Medal.
+  if (newOnes.some(a => a.id === 'marathoner') && !(state.ownedItems || []).includes('marathon_medal')) {
+    state.ownedItems = [...(state.ownedItems || []), 'marathon_medal'];
+    state.equippedItem = 'marathon_medal';
   }
   return newOnes;
 }
@@ -2459,7 +2998,7 @@ function showPage(id) {
 }
 
 function updateSidebarStats() {
-  const tier = getTier(state.level);
+  const tier = getTier(Object.keys(state.completedModules).length);
   document.getElementById('sf-tier').textContent = tier.name;
   document.getElementById('sf-level').textContent = state.level;
   document.getElementById('sf-xp').textContent = state.xp.toLocaleString();
@@ -2749,20 +3288,66 @@ function renderSurveyStep() {
   }
 }
 
-function renderAchievementBadges(containerId, subId) {
+// onlyUnlocked: Home's version — a trophy case of what's actually been earned, not the
+// full locked/unlocked roster (that's what the dedicated Badges page is for).
+function renderAchievementBadges(containerId, subId, onlyUnlocked = false) {
   const unlocked = state.unlockedAchievements.length;
-  if (subId) document.getElementById(subId).textContent = `${unlocked}/${ACHIEVEMENTS.length} unlocked`;
+  if (subId) document.getElementById(subId).textContent = onlyUnlocked ? `${unlocked} earned` : `${unlocked}/${ACHIEVEMENTS.length} unlocked`;
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = '';
-  ACHIEVEMENTS.forEach(a => {
+  const list = onlyUnlocked ? ACHIEVEMENTS.filter(a => state.unlockedAchievements.includes(a.id)) : ACHIEVEMENTS;
+  if (onlyUnlocked && list.length === 0) {
+    container.innerHTML = `<p class="ach-empty">No badges yet — complete a lesson to start earning them.</p>`;
+    return;
+  }
+  list.forEach(a => {
     const isUnlocked = state.unlockedAchievements.includes(a.id);
-    const el = document.createElement('div');
-    el.className = 'ach-badge';
-    el.title = a.desc;
-    el.innerHTML = `<div class="ach-icon ${isUnlocked ? 'unlocked' : 'locked'}">${a.abbr}</div><span class="ach-label">${a.label}</span>`;
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = `ach-badge${a.tier === 'diamond' ? ' tier-diamond' : ''}`;
+    el.style.setProperty('--ach-color', a.color);
+    el.innerHTML = `
+      <div class="ach-icon ${a.tier === 'diamond' ? 'tier-diamond ' : ''}${isUnlocked ? 'unlocked' : 'locked'}">
+        ${isUnlocked && a.tier === 'diamond' ? '<span class="ach-shine"></span>' : ''}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">${a.icon}</svg>
+      </div>
+      <span class="ach-label">${a.label}</span>`;
+    el.addEventListener('click', () => showAchievementDetail(a, isUnlocked));
     container.appendChild(el);
   });
+}
+
+const TIER_LABELS = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold', diamond: 'Diamond' };
+
+function getAchievementModal() {
+  let modal = document.getElementById('achievement-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'achievement-modal';
+    modal.className = 'achievement-modal-overlay';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+  }
+  return modal;
+}
+
+function showAchievementDetail(a, isUnlocked) {
+  const modal = getAchievementModal();
+  modal.innerHTML = `
+    <div class="achievement-modal-card${a.tier === 'diamond' ? ' tier-diamond' : ''}" style="--ach-color: ${a.color}">
+      <div class="achievement-modal-tier-chip tier-${a.tier}">${TIER_LABELS[a.tier]} Tier</div>
+      <div class="achievement-modal-icon ${a.tier === 'diamond' ? 'tier-diamond ' : ''}${isUnlocked ? 'unlocked' : 'locked'}">
+        ${isUnlocked && a.tier === 'diamond' ? '<span class="ach-shine"></span>' : ''}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="40" height="40">${a.icon}</svg>
+      </div>
+      <div class="achievement-modal-status ${isUnlocked ? 'unlocked' : 'locked'}">${isUnlocked ? '✓ Unlocked' : '🔒 Locked'}</div>
+      <h2 class="achievement-modal-title">${a.label}</h2>
+      <p class="achievement-modal-desc">${a.desc}</p>
+      <button class="btn-primary" id="achievement-modal-close">Close</button>
+    </div>`;
+  modal.classList.add('show');
+  document.getElementById('achievement-modal-close').addEventListener('click', () => modal.classList.remove('show'));
 }
 
 // ── PIG MASCOT ────────────────────────────────
@@ -2794,9 +3379,9 @@ function getPigAccessory(level) {
 }
 
 function getPigAccessoryDesc(level) {
-  if (level >= 9)  return 'Fully graduated — all accessories unlocked.';
-  if (level >= 7)  return 'Graduation cap unlocked · Reach Level 9 to fully graduate';
-  if (level >= 5)  return 'Glasses unlocked · Reach Level 7 to earn a graduation cap';
+  if (level >= 9)  return 'Every pig accessory unlocked — bow, glasses, and cap.';
+  if (level >= 7)  return 'Graduation cap unlocked · Reach Level 9 to unlock every accessory';
+  if (level >= 5)  return 'Glasses unlocked · Reach Level 7 to unlock the graduation cap';
   if (level >= 3)  return 'Bow unlocked · Reach Level 5 to unlock glasses';
   return 'Complete modules to unlock accessories for your pig!';
 }
@@ -2823,14 +3408,33 @@ function getPigMarkup(scale) {
 </div>`;
 }
 
-function getPigWithItemMarkup(scale, itemSvg) {
-  const overlay = itemSvg
-    ? `<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:440px;height:460px;pointer-events:none;z-index:10;overflow:visible"><g transform="matrix(3.28,0,0,3.4,23,-15)">${itemSvg}</g></svg>`
-    : '';
+// Default transform for items without their own custom `fit` — matches the shared hat
+// coordinate convention (local x-center 60 lands on the pig's head-center, local y around
+// 0-31 sits on top of the head). Most items need their OWN tuned fit, though, since hats,
+// glasses, and neckwear each live in a very different part of the pig's own 440×460 frame.
+const DEFAULT_ITEM_FIT = { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 };
+
+function getPigWithItemMarkup(scale, item) {
+  let svg = '', fit = DEFAULT_ITEM_FIT, layer = 'front';
+  if (typeof item === 'string') {
+    svg = item;
+  } else if (item && item.svg) {
+    svg = item.svg;
+    fit = item.fit || DEFAULT_ITEM_FIT;
+    layer = item.layer || 'front';
+  }
+  const matrixStr = `matrix(${fit.a},${fit.b},${fit.c},${fit.d},${fit.e},${fit.f})`;
+  const overlaySvg = svg ? `<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:440px;height:460px;pointer-events:none;overflow:visible"><g transform="${matrixStr}">${svg}</g></svg>` : '';
+  // Front-layer items (hats, glasses, neckwear) paint above the head/body; back-layer items
+  // (capes) are inserted as the FIRST child of .pig so they paint behind body/arms/head —
+  // draped over the shoulders instead of floating in front covering the whole pig.
+  const overlayBack = svg && layer === 'back' ? overlaySvg : '';
+  const overlayFront = svg && layer !== 'back' ? overlaySvg.replace('pointer-events:none;', 'pointer-events:none;z-index:10;') : '';
   return `<div class="pig-stage" style="--pig-scale:${scale}">
   <div class="pig-inner">
     <div class="pig-shadow"></div>
     <div class="pig">
+      ${overlayBack}
       <div class="pig-foot l"></div><div class="pig-foot r"></div>
       <div class="pig-tail"></div>
       <div class="pig-body"></div><div class="pig-tummy"></div>
@@ -2843,7 +3447,7 @@ function getPigWithItemMarkup(scale, itemSvg) {
         <div class="pig-eye r"><div class="shine1"></div><div class="shine2"></div></div>
         <div class="pig-snout"><div class="pig-nostril l"></div><div class="pig-nostril r"></div></div>
       </div>
-      ${overlay}
+      ${overlayFront}
     </div>
   </div>
 </div>`;
@@ -2854,10 +3458,9 @@ function getPigWithItemMarkup(scale, itemSvg) {
 // visibly shows up across the whole app, not just on the Room page. Distinct from the quest
 // engine's per-character narrative accessory (Maya's bow, Devon's bowtie), which stays tied
 // to that character's own story portraits, not the player's mascot.
-function getEquippedItemSvg() {
-  if (!state.equippedItem) return '';
-  const item = SHOP_ITEMS.find(i => i.id === state.equippedItem);
-  return item ? item.svg : '';
+function getEquippedItem() {
+  if (!state.equippedItem) return null;
+  return SHOP_ITEMS.find(i => i.id === state.equippedItem) || null;
 }
 
 function buildPigPreviewSvg(itemSvg, viewBox = '0 0 120 162') {
@@ -2904,6 +3507,36 @@ function buildPigPreviewSvg(itemSvg, viewBox = '0 0 120 162') {
   </svg>`;
 }
 
+const RARITY_WEIGHT = { common: 6, rare: 2, ultra_rare: 1 };
+const RARITY_LABEL = { common: 'Common', rare: 'Rare', ultra_rare: 'Ultra Rare' };
+function itemRarity(item) { return item.rarity === 'rare' ? 'rare' : item.rarity === 'ultra_rare' ? 'ultra_rare' : 'common'; }
+
+function mysteryPoolAll(poolKey) {
+  return SHOP_ITEMS.filter(i => i.mysteryPool === poolKey && !i.isMysteryBox);
+}
+
+function mysteryPoolUnowned(poolKey) {
+  return mysteryPoolAll(poolKey).filter(i => !(state.ownedItems || []).includes(i.id));
+}
+
+function mysteryBoxNameFor(poolKey) {
+  const box = SHOP_ITEMS.find(i => i.isMysteryBox && i.mysteryPool === poolKey);
+  return box ? box.name : 'a Mystery Box';
+}
+
+function mysteryDropChance(item) {
+  const pool = mysteryPoolAll(item.mysteryPool);
+  const total = pool.reduce((sum, i) => sum + RARITY_WEIGHT[itemRarity(i)], 0);
+  if (!total) return 0;
+  return (RARITY_WEIGHT[itemRarity(item)] / total) * 100;
+}
+
+function mysteryOddsLabel(item) {
+  const pct = mysteryDropChance(item);
+  const pctStr = pct >= 10 ? Math.round(pct) : Math.round(pct * 10) / 10;
+  return `${RARITY_LABEL[itemRarity(item)]} · ${pctStr}%`;
+}
+
 function refreshShopModal(itemId) {
   const item = SHOP_ITEMS.find(i => i.id === itemId);
   if (!item) return;
@@ -2913,27 +3546,47 @@ function refreshShopModal(itemId) {
   const equipped = isRoom ? state.equippedRoom[item.slot] === itemId : state.equippedItem === itemId;
   const canAfford = item.reward ? false : shopBalanceFor(item) >= item.price;
   let btn;
-  if (equipped) {
+  if (item.isMysteryBox) {
+    const remaining = mysteryPoolUnowned(item.mysteryPool).length;
+    if (!remaining) {
+      btn = `<button class="shop-btn shop-btn-broke" disabled>✓ All items collected!</button>`;
+    } else {
+      btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>🎁 Open Box · ${shopPriceLabel(item)}</button>`;
+    }
+  } else if (equipped) {
     btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'} · Remove</button>`;
   } else if (owned) {
     btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">${isWallpaper ? 'Apply' : isRoom ? 'Place in room' : 'Equip'}</button>`;
+  } else if (item.mysteryOnly) {
+    btn = `<button class="shop-btn shop-btn-broke" disabled>🎁 Only from the ${mysteryBoxNameFor(item.mysteryPool)}</button>`;
   } else if (item.reward) {
-    btn = `<button class="shop-btn shop-btn-broke" disabled>🎓 Complete all 10 modules to earn this</button>`;
+    btn = `<button class="shop-btn shop-btn-broke" disabled>🎓 ${item.rewardHint || 'Complete all 10 modules to earn this'}</button>`;
   } else {
     btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>${shopPriceLabel(item)}</button>`;
   }
   const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
-  document.getElementById('shop-modal-pig').innerHTML = isWallpaper
+  document.getElementById('shop-modal-pig').innerHTML = (isWallpaper)
     ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
-    : isRoom
+    : (isRoom || item.isMysteryBox)
       ? `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
-      : getPigWithItemMarkup(0.42, item.svg);
-  document.getElementById('shop-modal-accessory').innerHTML = isRoom
+      : getPigWithItemMarkup(0.42, item);
+  document.getElementById('shop-modal-accessory').innerHTML = (isRoom || item.isMysteryBox)
     ? ''
     : `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
   document.getElementById('shop-modal-name').textContent = item.name;
-  document.getElementById('shop-modal-desc').textContent = item.desc;
+  document.getElementById('shop-modal-desc').innerHTML = item.desc + (item.mysteryPool && !item.isMysteryBox
+    ? `<br><span class="shop-modal-odds">${mysteryOddsLabel(item)} from the ${mysteryBoxNameFor(item.mysteryPool)}</span>`
+    : '');
   document.getElementById('shop-modal-btn-wrap').innerHTML = btn;
+}
+
+function showMysteryReveal(item) {
+  const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
+  document.getElementById('shop-modal-pig').innerHTML = getPigWithItemMarkup(0.42, item);
+  document.getElementById('shop-modal-accessory').innerHTML = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
+  document.getElementById('shop-modal-name').textContent = `🎉 You got: ${item.name}!`;
+  document.getElementById('shop-modal-desc').textContent = item.desc;
+  document.getElementById('shop-modal-btn-wrap').innerHTML = `<button class="shop-btn shop-btn-equip" data-id="${item.id}">Nice!</button>`;
 }
 
 function openShopModal(itemId) {
@@ -2948,16 +3601,17 @@ function closeShopModal() {
 // ── SHOP ───────────────────────────────────────
 const SHOP_CATEGORIES = [
   { key: 'exclusive', label: 'Diamond Exclusives', icon: '💎' },
+  { key: 'reward',  label: 'Rewards', icon: '🏆' },
   { key: 'hat',     label: 'Hats',    icon: '🎩' },
   { key: 'glasses', label: 'Glasses', icon: '🕶️' },
-  { key: 'clothes', label: 'Clothes', icon: '👔' },
+  { key: 'accessory', label: 'Accessories', icon: '💍' },
   { key: 'room',    label: 'Room Decor', icon: '🛋️' },
 ];
 
 const CAT_VIEWBOX = {
   hat:     '14 -4 92 46',
   glasses: '6 41 108 34',
-  clothes: '6 72 108 62',
+  accessory: '6 72 108 62',
 };
 
 function shopBalanceFor(item) { return item.currency === 'diamond' ? (state.diamonds || 0) : (state.coins || 0); }
@@ -2978,32 +3632,44 @@ function renderShopPage() {
   const categoriesHtml = SHOP_CATEGORIES.map(cat => {
     const items = SHOP_ITEMS.filter(i => i.category === cat.key);
     const isExclusiveCat = cat.key === 'exclusive';
+    const isRewardCat = cat.key === 'reward';
     const cardsHtml = items.map(item => {
       const isRoom = !!item.slot;
       const isDiamond = item.currency === 'diamond';
       const isReward = !!item.reward;
+      const isBox = !!item.isMysteryBox;
+      const isPoolItem = !!item.mysteryPool && !isBox;
       const owned = isRoom ? (state.ownedRoomItems || []).includes(item.id) : (state.ownedItems || []).includes(item.id);
       const equipped = isRoom ? state.equippedRoom[item.slot] === item.id : state.equippedItem === item.id;
-      const canAfford = isReward ? false : shopBalanceFor(item) >= item.price;
-      const statusLabel = equipped
+      const isLocked = !!item.mysteryOnly && !owned;
+      const boxRemaining = isBox ? mysteryPoolUnowned(item.mysteryPool).length : 0;
+      const canAfford = isReward ? false : isLocked ? false : (isBox && !boxRemaining) ? false : shopBalanceFor(item) >= item.price;
+      const statusLabel = isBox
+        ? (boxRemaining ? `🎁 ${shopPriceLabel(item)}` : '✓ All collected!')
+        : equipped
         ? (item.slot === 'wallpaper' ? '✓ Applied' : isRoom ? '✓ Placed' : '✓ Equipped')
         : owned ? 'Owned'
+        : isLocked ? `🎁 ${mysteryBoxNameFor(item.mysteryPool)}`
         : isReward ? '🎓 Locked'
         : shopPriceLabel(item);
+      const oddsLabel = isPoolItem ? `<div class="shop-item-odds">${mysteryOddsLabel(item)}</div>` : '';
       const preview = item.slot === 'wallpaper'
         ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
-        : isRoom
+        : (isRoom || isBox)
           ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
-          : getPigWithItemMarkup(0.29, item.svg);
-      return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${isReward && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
-        ${isDiamond ? '<span class="shop-exclusive-ribbon">Exclusive</span>' : ''}
+          : getPigWithItemMarkup(0.29, item);
+      return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${(isReward || isLocked) && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
+        ${isDiamond && !isBox ? '<span class="shop-exclusive-ribbon">Exclusive</span>' : ''}
+        ${isBox ? '<span class="shop-exclusive-ribbon">Mystery</span>' : ''}
+        ${isLocked ? '<span class="shop-reward-ribbon">Mystery</span>' : ''}
         ${isReward && !owned ? '<span class="shop-reward-ribbon">Reward</span>' : ''}
         <div class="shop-preview">
           ${preview}
         </div>
         <div class="shop-card-body">
           <div class="shop-item-name">${item.name}</div>
-          <div class="shop-item-price${isDiamond ? ' shop-price-diamond' : ''}${isReward ? ' shop-price-reward' : ''}">${statusLabel}</div>
+          <div class="shop-item-price${isDiamond ? ' shop-price-diamond' : ''}${isReward || isLocked ? ' shop-price-reward' : ''}">${statusLabel}</div>
+          ${oddsLabel}
         </div>
       </div>`;
     }).join('');
@@ -3012,6 +3678,7 @@ function renderShopPage() {
         <span class="shop-cat-icon">${cat.icon}</span>
         <h2 class="shop-cat-title">${cat.label}</h2>
         ${isExclusiveCat ? '<span class="shop-cat-tag">Earned via streaks, not coins</span>' : ''}
+        ${isRewardCat ? '<span class="shop-cat-tag">Earned through major milestones, not bought</span>' : ''}
       </div>
       <div class="shop-items-grid">${cardsHtml}</div>
     </div>`;
@@ -3023,7 +3690,7 @@ function renderShopPage() {
         <span></span><span></span><span></span><span></span><span></span>
       </div>
       <div class="shop-storefront-inner">
-        <div class="shop-storefront-pig">${getPigWithItemMarkup(0.2, getEquippedItemSvg())}</div>
+        <div class="shop-storefront-pig">${getPigWithItemMarkup(0.2, getEquippedItem())}</div>
         <div class="shop-storefront-text">
           <div class="shop-storefront-sign">Hammy's Boutique</div>
           <div class="shop-storefront-sub">${equippedItem ? `Currently wearing: <strong>${equippedItem.name}</strong>` : 'Pick something cute for your pig!'}</div>
@@ -3036,6 +3703,31 @@ function renderShopPage() {
   grid.querySelectorAll('.shop-card[data-item-id]').forEach(card => {
     card.addEventListener('click', () => openShopModal(card.dataset.itemId));
   });
+}
+
+function pickMysteryItem(poolKey) {
+  const pool = mysteryPoolAll(poolKey);
+  const unowned = pool.filter(i => !(state.ownedItems || []).includes(i.id));
+  const candidates = unowned.length ? unowned : pool;
+  const weighted = [];
+  candidates.forEach(item => {
+    const weight = RARITY_WEIGHT[itemRarity(item)];
+    for (let k = 0; k < weight; k++) weighted.push(item);
+  });
+  return weighted[Math.floor(Math.random() * weighted.length)];
+}
+
+function openMysteryBox(itemId) {
+  const item = SHOP_ITEMS.find(i => i.id === itemId);
+  if (!item || !item.isMysteryBox) return null;
+  if (shopBalanceFor(item) < item.price) return null;
+  if (!mysteryPoolUnowned(item.mysteryPool).length) return null;
+  const won = pickMysteryItem(item.mysteryPool);
+  if (!won) return null;
+  if (item.currency === 'diamond') state.diamonds -= item.price; else state.coins -= item.price;
+  state.ownedItems = [...(state.ownedItems || []), won.id];
+  saveState();
+  return won;
 }
 
 function handleShopAction(itemId) {
@@ -3115,7 +3807,7 @@ function renderRoomPage() {
       ${slotBlock('bed', 'Bed')}
       <div class="room-floor">
         ${slotBlock('rug', 'Rug')}
-        <div class="room-pig">${getPigWithItemMarkup(0.42, equippedOutfit ? equippedOutfit.svg : '')}</div>
+        <div class="room-pig">${getPigWithItemMarkup(0.42, equippedOutfit || '')}</div>
       </div>
     </div>
     <p class="room-hint">Buy furniture, wallpaper, and decor in the <button class="room-shop-link" id="room-shop-link" type="button">Shop</button> to fill in the empty spots.</p>`;
@@ -3128,20 +3820,54 @@ function renderRoomPage() {
 }
 
 // ── HOME ───────────────────────────────────────
+function renderFinancialDashboardWidget() {
+  const fs = state.financialState;
+  const netWorth = fs.checking + fs.savings;
+  return `
+    <div class="findash-head">
+      <h3>Your Simulated Finances</h3>
+      <span class="findash-sub">Shifts as life events happen — practice, not real money</span>
+    </div>
+    <div class="findash-row">
+      <div class="findash-stat">
+        <div class="findash-label">Checking</div>
+        <div class="findash-num">$${fs.checking.toLocaleString()}</div>
+      </div>
+      <div class="findash-stat">
+        <div class="findash-label">Savings</div>
+        <div class="findash-num">$${fs.savings.toLocaleString()}</div>
+      </div>
+      <div class="findash-stat">
+        <div class="findash-label">Credit Score</div>
+        <div class="findash-num">${fs.creditScore}</div>
+      </div>
+      <div class="findash-stat">
+        <div class="findash-label">Net Worth</div>
+        <div class="findash-num">$${netWorth.toLocaleString()}</div>
+      </div>
+    </div>`;
+}
+
 function renderHome() {
   showPage('home');
   updateSidebarStats();
-  const tier = getTier(state.level);
-  document.getElementById('h-tier').textContent = tier.name;
   const done = Object.keys(state.completedModules).length;
+  const tier = getTier(done);
+  document.getElementById('h-tier').textContent = tier.name;
   document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
 
   document.getElementById('home-mascot-card').innerHTML = `
-    <div class="mascot-pig-wrap">${getPigWithItemMarkup(0.25, getEquippedItemSvg())}</div>
+    <div class="mascot-pig-wrap">${getPigWithItemMarkup(0.25, getEquippedItem())}</div>
     <div class="mascot-info">
       <div class="mascot-tier-name">${tier.name}</div>
       <div class="mascot-unlock">${getPigAccessoryDesc(state.level)}</div>
     </div>`;
+
+  document.getElementById('home-findash').innerHTML = renderFinancialDashboardWidget();
+
+  document.getElementById('home-noimpulse').innerHTML = renderNoImpulseBuyWidget();
+  const checkinBtn = document.getElementById('noimpulse-checkin-btn');
+  if (checkinBtn) checkinBtn.addEventListener('click', checkInNoImpulseBuy);
 
   document.getElementById('home-stats-row').innerHTML = `
     <div class="hs-card">
@@ -3162,7 +3888,7 @@ function renderHome() {
     </div>`;
 
   renderModuleList('home-modules-grid');
-  renderAchievementBadges('home-achievements-row', 'home-achieve-sub');
+  renderAchievementBadges('home-achievements-row', 'home-achieve-sub', true);
 }
 
 // ── MODULES PAGE ───────────────────────────────
@@ -3182,8 +3908,8 @@ function renderBadgesPage() {
 // ── PROGRESS PAGE ──────────────────────────────
 function renderProgressPage() {
   updateSidebarStats();
-  const tier = getTier(state.level);
   const done = Object.keys(state.completedModules).length;
+  const tier = getTier(done);
   const unlocked = state.unlockedAchievements.length;
   const pct = xpProgressPct();
   const nextXP = xpForLevel(state.level);
@@ -3207,7 +3933,7 @@ function renderProgressPage() {
   document.getElementById('progress-body').innerHTML = `
     <!-- Pig mascot -->
     <div class="pg-mascot-wrap">
-      <div class="pg-mascot-pig">${getPigWithItemMarkup(0.25, getEquippedItemSvg())}</div>
+      <div class="pg-mascot-pig">${getPigWithItemMarkup(0.25, getEquippedItem())}</div>
       <div class="pg-mascot-bubble">${pigMsg}</div>
     </div>
 
@@ -3378,6 +4104,7 @@ function renderToolsPage() {
 // here) — one simulator, referenced from multiple places, per spec. Remembers where the
 // student came from so the panel can offer a way back to exactly that lesson/quest.
 let compoundInterestReturnTo = null;
+let pendingLifeEvent = null;
 function openCompoundInterestSimulator() {
   // state.activeQuestId is never cleared after leaving a quest (it's not a "current screen"
   // flag, just "last quest touched"), so it stays truthy long after the user has moved on to
@@ -3872,7 +4599,7 @@ function startBonusActivity(moduleId, lessonIdx) {
   document.getElementById('glossary-tray').classList.remove('show');
   document.getElementById('hint-budget').innerHTML = '';
   document.getElementById('quest-side').style.display = 'flex';
-  document.getElementById('hammy-side-avatar').innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItemSvg());
+  document.getElementById('hammy-side-avatar').innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItem());
   document.getElementById('hammy-side-avatar').className = 'hammy-side-avatar';
   document.getElementById('hammy-side-msg').textContent = '';
   document.getElementById('hammy-side-msg').className = 'hammy-side-msg';
@@ -3887,13 +4614,16 @@ function startBonusActivity(moduleId, lessonIdx) {
   if (lesson.type === 'decision-chain') renderDecisionChainActivity(mod, lesson);
   else if (lesson.type === 'sorter') renderSorterActivity(mod, lesson);
   else if (lesson.type === 'callout') renderCalloutActivity(mod, lesson);
+  else if (lesson.type === 'boss-challenge') renderBossChallengeActivity(mod, lesson);
 }
 
-function finishBonusActivity(mod, lesson, lessonIdx) {
+// bonusXp: extra, purely additive XP on top of the normal reward — used by the
+// boss-challenge activity type's optimal-path reward, never punitive if omitted/0.
+function finishBonusActivity(mod, lesson, lessonIdx, bonusXp = 0) {
   state.inBonusActivity = false;
   const activity = lesson.activity;
   const wasDone = !!state.completedLessons[`${mod.id}_${lessonIdx}`];
-  const xpEarned = wasDone ? Math.round(activity.xpOnComplete * 0.5) : activity.xpOnComplete;
+  const xpEarned = (wasDone ? Math.round(activity.xpOnComplete * 0.5) : activity.xpOnComplete) + bonusXp;
   const coinsEarned = wasDone ? 6 : 16;
   state.coins = (state.coins || 0) + coinsEarned;
   state.completedLessons[`${mod.id}_${lessonIdx}`] = { score: 1, total: 1, xpEarned };
@@ -3906,12 +4636,7 @@ function finishBonusActivity(mod, lesson, lessonIdx) {
   saveState();
   showScreen('screen-results');
   renderResults(mod, 1, 1, xpEarned, wasDone, newAchs, coinsEarned, diamondsEarned);
-  if (leveled) {
-    setTimeout(() => {
-      document.getElementById('new-tier').textContent = getTier(state.level).name;
-      document.getElementById('levelup-overlay').classList.add('visible');
-    }, 700);
-  }
+  maybeShowPostCompletionOverlays(mod, leveled);
 }
 
 // ── Activity type: decision-chain (opportunity cost) ───────────────────────────
@@ -3958,7 +4683,13 @@ function renderDecisionChainActivity(mod, lesson) {
         main.appendChild(outcome);
         const isLast = idx === activity.decisions.length - 1;
         setQuestContinue(isLast ? (activity.finalChoiceLabel || 'See the Results →') : (activity.nextLabel || 'Next →'), () => {
-          if (isLast) renderSummary(); else { idx++; renderDecision(); }
+          if (isLast) {
+            renderSummary();
+          } else {
+            const advance = () => { idx++; renderDecision(); };
+            const lifeEvent = maybeTriggerAmbientLifeEvent();
+            if (lifeEvent) showLifeEvent(lifeEvent, advance); else advance();
+          }
         }, true);
       });
       choicesEl.appendChild(btn);
@@ -4000,6 +4731,115 @@ function renderDecisionChainActivity(mod, lesson) {
         ${takeawayHtml}`;
     }
     setQuestContinue('Finish →', () => finishBonusActivity(mod, lesson, state.activeLessonIdx), true);
+  }
+
+  renderIntro();
+}
+
+// ── Activity type: boss-challenge (multi-stage decision gauntlet with a running dashboard
+// stat and a bonus-XP-only "optimal path" reward) ──────────────────────────────
+// Reuses the real quest engine's .quest-stat-chip dashboard chip and tween/animate approach
+// (see renderQuestDashboard/applyQuestStateDelta) against a local value instead of
+// qp.dashboard, since this lesson has no quest/questProgress behind it.
+function renderBossChallengeActivity(mod, lesson) {
+  const activity = lesson.activity;
+  const main = document.getElementById('quest-main');
+  const totalSteps = activity.stages.length + 1;
+  let idx = 0;
+  let value = activity.startingValue;
+  let allOptimal = true;
+
+  function renderDashboard() {
+    document.getElementById('quest-dashboard').innerHTML = `
+      <div class="quest-stat-chip" data-key="bossVal">
+        <span class="qs-label">${activity.dashboardLabel}</span>
+        <span class="qs-val">${formatMoney(value)}</span>
+      </div>`;
+  }
+
+  function animateDashboard(from, to) {
+    const chipWrap = document.querySelector('.quest-stat-chip[data-key="bossVal"]');
+    if (!chipWrap) return;
+    const chipVal = chipWrap.querySelector('.qs-val');
+    chipWrap.classList.remove('qs-up', 'qs-down');
+    if (to !== from) chipWrap.classList.add(to > from ? 'qs-up' : 'qs-down');
+    tweenNumber(chipVal, from, to, { money: true });
+    setTimeout(() => chipWrap.classList.remove('qs-up', 'qs-down'), 1400);
+  }
+
+  function updateProgress(step) {
+    const pct = Math.round((step / totalSteps) * 100);
+    document.getElementById('quest-prog-fill').style.width = pct + '%';
+    document.getElementById('quest-pct').textContent = pct + '%';
+  }
+
+  function renderIntro() {
+    renderDashboard();
+    updateProgress(0);
+    clearQuestContinue();
+    main.innerHTML = `<p class="quest-prompt">${activity.intro}</p>`;
+    setQuestContinue(activity.startLabel || 'Start the Challenge →', () => { idx = 0; renderStage(); }, true);
+  }
+
+  function renderStage() {
+    updateProgress(idx);
+    clearQuestContinue();
+    const s = activity.stages[idx];
+    main.innerHTML = `
+      ${s.tag ? `<div class="opcost-day-tag">${s.tag}</div>` : ''}
+      <p class="quest-prompt">${s.prompt}</p>
+      <div class="decision-choices" id="bossc-choices"></div>`;
+    const choicesEl = document.getElementById('bossc-choices');
+    s.choices.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn decision-choice-btn';
+      btn.textContent = choice.label;
+      btn.addEventListener('click', () => {
+        choicesEl.querySelectorAll('button').forEach(b => b.disabled = true);
+        const from = value;
+        value += choice.delta;
+        animateDashboard(from, value);
+        if (!choice.isOptimal) allOptimal = false;
+        showHammyMessage(choice.isOptimal ? "Nice — that's the smarter play." : "Worth noticing what that cost you.", choice.isOptimal);
+        const outcome = document.createElement('div');
+        outcome.className = 'decision-outcome';
+        outcome.innerHTML = `<p class="quest-outcome-text">${choice.result}</p>`;
+        main.appendChild(outcome);
+        const isLast = idx === activity.stages.length - 1;
+        setQuestContinue(isLast ? (activity.finalChoiceLabel || 'See the Results →') : (activity.nextLabel || 'Next →'), () => {
+          if (isLast) {
+            renderSummary();
+          } else {
+            const advance = () => { idx++; renderStage(); };
+            const lifeEvent = maybeTriggerAmbientLifeEvent();
+            if (lifeEvent) showLifeEvent(lifeEvent, advance); else advance();
+          }
+        }, true);
+      });
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function renderSummary() {
+    updateProgress(totalSteps);
+    clearQuestContinue();
+    const threshold = activity.passThreshold ?? 0;
+    const endNote = value >= threshold ? (activity.endNoteAtOrAbove || '') : (activity.endNoteBelow || '');
+    const takeawayHtml = activity.takeaway
+      ? `<div class="opcost-takeaway"><span class="myth-card-tag">KEY TAKEAWAY</span><p>${activity.takeaway}</p></div>` : '';
+    const bonusXp = allOptimal ? (activity.bonusXpForOptimalPath || 0) : 0;
+    const bonusHtml = bonusXp > 0
+      ? `<div class="bossc-bonus"><span class="myth-card-tag">OPTIMAL PATH</span><p>Every choice this run was the strongest option on the table — +${bonusXp} bonus XP.</p></div>` : '';
+
+    main.innerHTML = `
+      <p class="quest-prompt">${activity.summaryIntro || "Here's how the challenge played out."}</p>
+      <div class="opcost-summary" id="bossc-summary">
+        <div class="opcost-summary-item"><strong>${activity.dashboardLabel} ended at:</strong> ${formatMoney(value)}</div>
+        ${endNote ? `<div class="opcost-summary-item">${endNote}</div>` : ''}
+      </div>
+      ${bonusHtml}
+      ${takeawayHtml}`;
+    setQuestContinue('Finish →', () => finishBonusActivity(mod, lesson, state.activeLessonIdx, bonusXp), true);
   }
 
   renderIntro();
@@ -4235,12 +5075,7 @@ function finishQuiz() {
   showScreen('screen-results');
   renderResults(mod, score, total, xpEarned, wasLessonDone, newAchs, coinsEarned, diamondsEarned);
 
-  if (leveled) {
-    setTimeout(() => {
-      document.getElementById('new-tier').textContent = getTier(state.level).name;
-      document.getElementById('levelup-overlay').classList.add('visible');
-    }, 700);
-  }
+  maybeShowPostCompletionOverlays(mod, leveled);
 }
 
 function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEarned, diamondsEarned) {
@@ -4264,7 +5099,7 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
     `<div class="new-ach-banner"><span class="ach-abbr">${a.abbr}</span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
   ).join('');
   const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
-  const gradHtml = newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '';
+  const gradHtml = (newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '') + buildMilestoneRewardBanner(newAchs);
 
   document.getElementById('results-wrap').innerHTML = `
     <div class="results-grade">${grade}</div>
@@ -4273,7 +5108,7 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
     <div class="results-rewards-row">
       <div class="results-xp-card">
         <div class="results-xp-num">+${xpEarned} XP</div>
-        <div class="results-xp-label">${getTier(state.level).name} · ${state.xp.toLocaleString()} total</div>
+        <div class="results-xp-label">${getTier(Object.keys(state.completedModules).length).name} · ${state.xp.toLocaleString()} total</div>
       </div>
       <div class="results-coins-card">
         <div class="results-coins-num">+${coinsEarned || 0} 🪙</div>
@@ -4362,7 +5197,7 @@ function questLabel(mod, quest) {
 }
 
 // Chapter types that are pure narrative/reading — no live Hammy reaction avatar needed
-// (his small inline dialogue portrait already appears within the story beats themselves).
+// (their small inline dialogue portrait already appears within the story beats themselves).
 const HAMMY_SIDE_HIDDEN_TYPES = ['story'];
 
 // Every chapter type's big pink title now lives in one shared banner above the two-column
@@ -4429,7 +5264,7 @@ function renderChapter(mod, idx) {
   const hammyMsg = document.getElementById('hammy-side-msg');
   questSide.style.display = HAMMY_SIDE_HIDDEN_TYPES.includes(chapter.type) ? 'none' : 'flex';
   hammySide.className = 'hammy-side-avatar';
-  hammySide.innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItemSvg());
+  hammySide.innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItem());
   hammyMsg.className = 'hammy-side-msg';
   hammyMsg.textContent = '';
 
@@ -4519,7 +5354,7 @@ function applyQuestStateDelta(mod, delta) {
 // Compact Hammy face (reuses the existing pig markup, cropped to just the head via .pig-head-stage).
 // Shows the player's own equipped item so a purchase shows up here too, not just full-body views.
 function getHammyFaceMarkup(scale) {
-  return getPigWithItemMarkup(scale, getEquippedItemSvg()).replace('class="pig-stage"', 'class="pig-stage pig-head-stage"');
+  return getPigWithItemMarkup(scale, getEquippedItem()).replace('class="pig-stage"', 'class="pig-stage pig-head-stage"');
 }
 
 // Glossary tray — every term taught moves here once the student clicks past it, so they can
@@ -4688,7 +5523,7 @@ const HAMMY_OUTCOME_GENTLE_MSGS = ["Hmm, that one stings a bit.", "That'll cost 
 // Shared emotional-feedback moment, used after EVERY activity across the whole quest (knowledge
 // checks, myth cards, matching, decisions, the simulator, price guesses, the boss battle): the
 // persistent Hammy pinned top-left reacts happy/gentle in place, and tracks a running
-// correct-streak for 3-in-a-row — no new avatar is created, he's always already there. The
+// correct-streak for 3-in-a-row — no new avatar is created, they're always already there. The
 // bubble auto-clears itself a couple seconds later so it never sits stale through a later,
 // unrelated activity in the same chapter (e.g. a second question, or a chapter with no
 // true/false check at all).
@@ -4812,8 +5647,9 @@ function renderTeachChapter(chapter, mod, onDone) {
           if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
           onDone();
         } else {
-          idx++;
-          renderConcept();
+          const advance = () => { idx++; renderConcept(); };
+          const lifeEvent = maybeTriggerAmbientLifeEvent();
+          if (lifeEvent) showLifeEvent(lifeEvent, advance); else advance();
         }
       }, true);
     }
@@ -4828,7 +5664,7 @@ function renderHintChapter(chapter, mod, onDone) {
   main.innerHTML = `
     <div class="hint-tag">${chapter.tag || "🎉 Hammy's Tip"}</div>
     <div class="speech-bubble teach-bubble hint-bubble" id="hint-bubble">
-      <p class="teach-plain hint-placeholder">Tap Hammy to hear what he has to say.</p>
+      <p class="teach-plain hint-placeholder">Tap Hammy to hear what they have to say.</p>
     </div>`;
 
   const hammySide = document.getElementById('hammy-side-avatar');
@@ -5467,7 +6303,7 @@ const SIMULATORS = {
             renderQuestDashboard(mod);
             document.getElementById('sim-marker').style.left = pctFor(score) + '%';
             tweenNumber(document.getElementById('sim-score'), from, score, {});
-            // Hammy narrates the actual explanation for this decision, in his speech bubble,
+            // Hammy narrates the actual explanation for this decision, in their speech bubble,
             // instead of a generic "Nice!"/"Not quite" reaction.
             showHammyMessage(d.note, d.scoreDelta >= 0);
             btn.disabled = true;
@@ -5647,12 +6483,7 @@ function finishQuest(mod, chosenConsequence) {
   showScreen('screen-results');
   renderQuestResults(mod, bossXP, coinsEarned, newAchs, chosenConsequence.text, qp, diamondsEarned);
 
-  if (leveled) {
-    setTimeout(() => {
-      document.getElementById('new-tier').textContent = getTier(state.level).name;
-      document.getElementById('levelup-overlay').classList.add('visible');
-    }, 700);
-  }
+  maybeShowPostCompletionOverlays(mod, leveled);
 }
 
 // Comprehensive end-of-quest report: every term taught, a score breakdown per activity type,
@@ -5728,7 +6559,7 @@ function buildQuestReport(mod, qp) {
       ${strengthsHtml}
       ${weakHtml}
       <div class="report-advice">
-        <div class="hammy-report-avatar">${getPigWithItemMarkup(0.4, getEquippedItemSvg())}</div>
+        <div class="hammy-report-avatar">${getPigWithItemMarkup(0.4, getEquippedItem())}</div>
         <p><strong>Hammy's advice:</strong> ${advice}</p>
       </div>
     </div>`;
@@ -5739,7 +6570,7 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
     `<div class="new-ach-banner"><span class="ach-abbr">${a.abbr}</span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
   ).join('');
   const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
-  const gradHtml = newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '';
+  const gradHtml = (newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '') + buildMilestoneRewardBanner(newAchs);
 
   const dashHtml = Object.entries(qp.dashboard).map(([key, val]) => {
     const isMoney = key !== 'creditScore';
@@ -5755,7 +6586,7 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
     <div class="results-rewards-row">
       <div class="results-xp-card">
         <div class="results-xp-num">+${xpEarned} XP</div>
-        <div class="results-xp-label">${getTier(state.level).name} · ${state.xp.toLocaleString()} total</div>
+        <div class="results-xp-label">${getTier(Object.keys(state.completedModules).length).name} · ${state.xp.toLocaleString()} total</div>
       </div>
       <div class="results-coins-card">
         <div class="results-coins-num">+${coinsEarned || 0} 🪙</div>
@@ -5810,14 +6641,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('btn-next').addEventListener('click', () => {
     if (state.currentQ < state.sessionQuestions.length - 1) {
-      state.currentQ++;
-      renderQuestion();
+      const advance = () => { state.currentQ++; renderQuestion(); };
+      const lifeEvent = maybeTriggerAmbientLifeEvent();
+      if (lifeEvent) showLifeEvent(lifeEvent, advance); else advance();
     } else {
       finishQuiz();
     }
   });
   document.getElementById('levelup-ok').addEventListener('click', () => {
     document.getElementById('levelup-overlay').classList.remove('visible');
+    if (pendingLifeEvent) {
+      const ev = pendingLifeEvent;
+      pendingLifeEvent = null;
+      setTimeout(() => showLifeEvent(ev), 300);
+    }
   });
 
   const shopModal = document.getElementById('shop-modal');
@@ -5825,14 +6662,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === shopModal) { closeShopModal(); return; }
     const btn = e.target.closest('.shop-btn[data-id]');
     if (btn) {
-      handleShopAction(btn.dataset.id);
-      refreshShopModal(btn.dataset.id);
-      renderShopPage();
+      const clickedItem = SHOP_ITEMS.find(i => i.id === btn.dataset.id);
+      if (clickedItem && clickedItem.isMysteryBox) {
+        const won = openMysteryBox(btn.dataset.id);
+        if (won) showMysteryReveal(won);
+        renderShopPage();
+      } else {
+        handleShopAction(btn.dataset.id);
+        refreshShopModal(btn.dataset.id);
+        renderShopPage();
+      }
     }
   });
   document.getElementById('shop-modal-close').addEventListener('click', closeShopModal);
 
   loadState();
+  state.lifeEvents.sessionCount++;
+  saveState();
   renderHome();
 
   const maybeShowOnboardingSurvey = () => {
