@@ -109,6 +109,160 @@ const MODULES = [
       { title: 'Gig Work & Side Income', hook: 'You start picking up dog-walking and tutoring gigs for extra cash, paid straight to Venmo. No W-4, no withholding — just money landing in your account. Is that too good to be true?', qIndices: [6, 7] },
       { title: 'Reading Your Pay Stub', hook: 'Your paycheck seems short this week. Before assuming payroll made a mistake — or missing one that actually happened — do you even know how to read everything on your pay stub?', qIndices: [8, 9] },
       { title: 'Raises & Growing Your Income', hook: 'Your manager offers you a raise from $16/hour to $17.50/hour, and mentions the university\'s 403(b) retirement match up to 3%. Between the raise and the match, what should you actually do with the extra money?', qIndices: [10, 11] }
+    ],
+    quests: [
+      {
+        id: 'gross_net_pay',
+        topic: 'Understanding Your Paycheck: Gross vs. Net Pay',
+        character: { name: 'Hammy', tagline: 'Opening a first paycheck and doing the math' },
+        initialState: {},
+        chapters: [
+          { id: 'gross_net_pay_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Understanding Your Paycheck: Gross vs. Net Pay." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'w4_withholding',
+        topic: 'Tax Withholding & W-4s',
+        character: { name: 'Hammy', tagline: 'Filling out a W-4 for a new job' },
+        initialState: {},
+        chapters: [
+          { id: 'w4_withholding_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Tax Withholding & W-4s." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'pay_stub',
+        topic: 'Reading Your Pay Stub Line by Line',
+        character: { name: 'Hammy', tagline: 'Trying to decode a pay stub for the first time' },
+        initialState: {},
+        chapters: [
+          { id: 'pay_stub_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Reading Your Pay Stub Line by Line." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'work_study',
+        topic: 'Work-Study & Campus Jobs',
+        character: { name: 'Hammy', tagline: 'Weighing a work-study offer on campus' },
+        initialState: {},
+        chapters: [
+          { id: 'work_study_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Work-Study & Campus Jobs." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'gig_income',
+        topic: 'Gig Work & 1099 Income',
+        character: { name: 'Hammy', tagline: 'Picking up gig work between classes' },
+        initialState: {},
+        chapters: [
+          { id: 'gig_income_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Gig Work & 1099 Income." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'gig_taxes',
+        topic: 'Setting Aside Taxes as a Gig Worker',
+        character: { name: 'Hammy', tagline: 'Realizing gig income doesn\'t come with taxes withheld' },
+        initialState: {},
+        chapters: [
+          { id: 'gig_taxes_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Setting Aside Taxes as a Gig Worker." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'negotiating_raises',
+        topic: 'Negotiating Raises & Growing Your Income',
+        character: { name: 'Hammy', tagline: 'Asking for a raise for the first time' },
+        initialState: {},
+        chapters: [
+          { id: 'negotiating_raises_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Negotiating Raises & Growing Your Income." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'multiple_incomes',
+        topic: 'Multiple Income Streams: Job + Side Gigs',
+        character: { name: 'Hammy', tagline: 'Juggling a part-time job and a side hustle' },
+        initialState: {},
+        chapters: [
+          { id: 'multiple_incomes_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Multiple Income Streams: Job + Side Gigs." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'direct_deposit',
+        parentQuestId: 'pay_stub',
+        topic: 'Setting Up Direct Deposit: A Step-by-Step Guide',
+        character: { name: 'Hammy', tagline: 'Actually setting up direct deposit for a first paycheck' },
+        initialState: {},
+        chapters: [
+          {
+            id: 'dd0', type: 'story', title: 'The New Job Paperwork',
+            beats: [
+              { speaker: 'intro', text: "Hammy just got hired for a campus job, and the onboarding paperwork asks for direct deposit information. Knowing what a pay stub says is one thing — actually setting up how the money gets there is another." }
+            ]
+          },
+          {
+            id: 'dd1', type: 'teach', title: 'Step 1 & 2: Find the Numbers, Fill the Form',
+            concepts: [
+              { term: 'Step 1: Find the Routing & Account Numbers', plain: "Both numbers are printed at the bottom of a paper check, or found in the banking app under account details. The routing number identifies the bank; the account number identifies the specific account.", analogy: "The routing number is like a zip code — it gets the deposit to the right bank. The account number is the exact address once it's there.", check: { statement: 'The routing number identifies your specific account, and the account number identifies your bank.', isTrue: false } },
+              { term: 'Step 2: Fill Out the Employer Form', plain: "Most employers use a simple form or online portal asking for the bank name, routing number, account number, and whether it's checking or savings. Double-check every digit — one wrong number can send a paycheck to the wrong place.", analogy: "It's a one-time setup, like adding a new payment method, just in the other direction.", check: { statement: 'A single wrong digit on a direct deposit form has no real consequence.', isTrue: false } }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'dd2', type: 'teach', title: 'Step 3 & 4: Confirm & Troubleshoot',
+            concepts: [
+              { term: 'Step 3: Confirm With the First Paycheck', plain: "The first deposit is the real test — check that the amount matches what's expected (gross pay minus deductions) and that it landed in the right account.", analogy: "Like double-checking a package tracking number the first time shipping somewhere new.", check: { statement: 'The first paycheck is a reasonable time to double-check that direct deposit is actually working correctly.', isTrue: true } },
+              { term: "Step 4: If Pay Doesn't Show Up", plain: "Some employers take one pay cycle to fully activate direct deposit, and a paper check may be issued in the meantime. If a payment is genuinely missing on payday, contact HR or payroll directly — don't just wait and assume it'll appear.", analogy: "Think of it like a package marked delivered that never arrived — worth a call, not just a shrug.", check: {} }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'dd3', type: 'decision', title: 'The Onboarding Form',
+            prompt: "Hammy is filling out the direct deposit form and isn't sure whether the 9-digit number on the check is the routing number or the account number.",
+            hintText: "Which number identifies the BANK, and which identifies the specific account?",
+            choices: [
+              { id: 'a', label: 'Guess and fill it in quickly to finish the paperwork', outcome: { text: "Guessing risks sending the paycheck to the wrong place entirely — worth 30 extra seconds to check.", delta: {}, compare: [{ label: 'Risk of error', value: 1 }, { label: 'Time saved', value: 0 }] } },
+              { id: 'b', label: "Check the bank's app or a sample check to confirm which number is which", outcome: { text: "A quick check confirms the routing number (bank) and account number (specific account) before submitting.", delta: {}, compare: [{ label: 'Risk of error', value: 0 }, { label: 'Time spent', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'dd4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 8],
+            hintTexts: [
+              "Think about the difference between what you earned and what actually lands in the account.",
+              "Think about what to do the moment a pay stub looks off."
+            ]
+          }
+        ]
+      }
     ]
   },
   {
@@ -309,6 +463,275 @@ const MODULES = [
           bonusXpForOptimalPath: 8
         }
       }
+    ],
+    quests: [
+      {
+        id: 'budget_rule',
+        topic: 'The 50/30/20 Budget Rule',
+        character: { name: 'Hammy', tagline: 'Building a budget from scratch' },
+        initialState: {},
+        chapters: [
+          { id: 'budget_rule_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on The 50/30/20 Budget Rule." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'needs_wants',
+        topic: 'Needs vs. Wants: Staying in the Black',
+        character: { name: 'Hammy', tagline: 'Deciding what actually belongs in the budget' },
+        initialState: {},
+        chapters: [
+          { id: 'needs_wants_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Needs vs. Wants: Staying in the Black." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'campus_money',
+        topic: 'Day-to-Day Money Management on Campus',
+        character: { name: 'Hammy', tagline: 'Managing meal swipes, cash, and cards day to day' },
+        initialState: { checking: 150 },
+        chapters: [
+          {
+            id: 'cm0', type: 'story', title: 'The Last Week',
+            beats: [
+              { speaker: 'intro', text: "Hammy has $150 in checking and a full week of decisions before their financial aid refund posts. Every choice either protects that cushion or eats into it." }
+            ]
+          },
+          {
+            id: 'cm1', type: 'decision', title: 'Monday: Meal Swipes',
+            prompt: "Hammy's meal plan is unlimited, but they've been skipping the dining hall to DoorDash instead, about $18 an order, four times this week so far.",
+            hintText: "Is the meal plan already covering this for free?",
+            choices: [
+              { id: 'a', label: 'Keep DoorDashing, it\'s already how the week started', outcome: { text: 'Another $54 gone on delivery fees for food already free at the dining hall.', delta: { checking: -54 }, compare: [{ label: 'Spent', value: 54 }, { label: 'Kept', value: 0 }] } },
+              { id: 'b', label: 'Actually use the meal swipes for the rest of the week', outcome: { text: 'Zero extra spent — the meal plan was already covering this.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 54 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cm2', type: 'decision', title: 'Wednesday: The Surprise Show',
+            prompt: "A favorite band just announced a surprise $45 show this weekend. Tickets are going fast.",
+            hintText: "Rent is due in 2 days — how much cushion is left after that?",
+            choices: [
+              { id: 'a', label: 'Buy the ticket now, before it sells out', outcome: { text: 'Rent\'s still due in 2 days, and now there\'s less cushion heading into it.', delta: { checking: -45 }, compare: [{ label: 'Spent', value: 45 }, { label: 'Kept', value: 0 }] } },
+              { id: 'b', label: 'Skip this one, catch the next show after the refund posts', outcome: { text: 'A real skip, but nothing this week\'s budget couldn\'t afford to lose.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 45 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cm3', type: 'decision', title: 'Saturday: Brunch',
+            prompt: "A group of friends invites Hammy to brunch, about $22, with two days left until the refund posts.",
+            hintText: "Is there a free version of the same time together?",
+            choices: [
+              { id: 'a', label: 'Go to brunch', outcome: { text: 'A nice morning, but that\'s $22 that could\'ve been the cushion between Hammy and $0.', delta: { checking: -22 }, compare: [{ label: 'Spent', value: 22 }, { label: 'Kept', value: 0 }] } },
+              { id: 'b', label: 'Suggest a free hangout instead — coffee and a study session at home', outcome: { text: 'Same friends, same time together, $22 still in checking.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 22 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cm4', type: 'bossbattle', title: 'Friday: Rent Day',
+            scenario: "Rent auto-pays tomorrow: $110, already accounted for in Hammy's checking balance. But a friend suggests putting $50 of it on a credit card instead, \"to save cash.\"",
+            hintText: "Does moving money to a card actually save anything, or just add interest on top?",
+            choices: [
+              { id: 'a', label: 'Let rent auto-pay as planned', consequence: { text: 'Handled — exactly what that $110 was already budgeted for.', delta: { checking: -110 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: 'Panic and put $50 of it on a credit card "to save cash"', consequence: { text: 'Now there\'s a card balance accruing interest on top of everything else — the "cash saved" cost more than it kept.', delta: { checking: -60 }, xpMultiplier: 0.6 } }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'fafsa_timeline',
+        topic: 'The FAFSA & Financial Aid Timeline',
+        character: { name: 'Hammy', tagline: 'Racing a FAFSA deadline' },
+        initialState: {},
+        chapters: [
+          { id: 'fafsa_timeline_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on The FAFSA & Financial Aid Timeline." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'aid_offer',
+        topic: 'Grants & Scholarships: Your Aid Offer',
+        character: { name: 'Hammy', tagline: 'Reading a financial aid offer letter' },
+        initialState: {},
+        chapters: [
+          { id: 'aid_offer_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Grants & Scholarships: Your Aid Offer." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'payment_plans',
+        topic: 'Payment Plans & Closing the Tuition Gap',
+        character: { name: 'Hammy', tagline: 'Figuring out how to cover the rest of tuition' },
+        initialState: {},
+        chapters: [
+          { id: 'payment_plans_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Payment Plans & Closing the Tuition Gap." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'opportunity_cost',
+        topic: 'Opportunity Cost of Spending Decisions',
+        character: { name: 'Hammy', tagline: 'Weighing one purchase against another' },
+        initialState: { checking: 150, savings: 65 },
+        chapters: [
+          {
+            id: 'oc0', type: 'story', title: 'Every Dollar Has a Job',
+            beats: [
+              { speaker: 'intro', text: "Hammy just spent $80 on a concert ticket without a second thought. But that $80 didn't just disappear — it was a choice. Today, you'll help Hammy see exactly what three spending decisions this week actually cost beyond the price tag." }
+            ]
+          },
+          {
+            id: 'oc1', type: 'teach', title: 'Opportunity Cost',
+            concepts: [
+              { term: 'Opportunity Cost', plain: "Every dollar you spend is a dollar that could have gone somewhere else. Opportunity cost is the value of the next-best thing you gave up to make that purchase.", analogy: "It's not just what you bought — it's everything else that money could have been instead.", check: { statement: 'Opportunity cost only applies to big purchases, not everyday spending.', isTrue: false } }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'oc2', type: 'decision', title: 'Monday: The Concert',
+            prompt: "Hammy's friends invite them to a concert. Tickets are $80. Hammy has $150 in checking and $65 saved toward a new laptop.",
+            hintText: "Think about what that $80 could otherwise cover.",
+            choices: [
+              { id: 'a', label: 'Buy the ticket', outcome: { text: 'That\'s about 3 weeks of groceries, or $80 closer to the laptop fund, gone for one night out.', delta: { checking: -80 }, compare: [{ label: 'Spent', value: 80 }, { label: 'Kept', value: 0 }] } },
+              { id: 'b', label: 'Skip it, keep the $80', outcome: { text: 'A night out with friends, given up — but the $80 stays put.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 80 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'oc3', type: 'decision', title: 'Wednesday: The Textbook',
+            prompt: "Next semester's textbook is $110 new, or $70 used online with 3–5 day shipping. Hammy needs it by Friday for an assignment preview.",
+            hintText: "Is guaranteed speed worth the extra $40?",
+            choices: [
+              { id: 'a', label: 'Buy new today, guaranteed on time', outcome: { text: 'That\'s $40 that could have covered a week of gas, spent on speed alone.', delta: { checking: -110 }, compare: [{ label: 'Spent', value: 110 }, { label: 'Alternative', value: 70 }] } },
+              { id: 'b', label: 'Order used and borrow a friend\'s copy until it arrives', outcome: { text: 'A little extra coordinating, but $40 stays in checking.', delta: { checking: -70 }, compare: [{ label: 'Spent', value: 70 }, { label: 'Saved', value: 40 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'oc4', type: 'decision', title: 'Saturday: The Hoodie',
+            prompt: "A promo email offers 40% off a $60 hoodie — $36 for the next 2 hours. Hammy wasn't planning to buy anything.",
+            hintText: "Was this already on the list, or is the countdown doing the deciding?",
+            choices: [
+              { id: 'a', label: 'Buy it, the deal is too good to pass up', outcome: { text: 'Almost a whole week of food delivery budget, spent on something not planned.', delta: { checking: -36 }, compare: [{ label: 'Spent', value: 36 }, { label: 'Kept', value: 0 }] } },
+              { id: 'b', label: 'Close the email and think it over for 24 hours', outcome: { text: 'If it\'s still wanted tomorrow, it\'ll likely still be there — the urgency wasn\'t real.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 36 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'oc5', type: 'bossbattle', title: 'The Week in Review',
+            scenario: "Looking back at the week, Hammy realizes every \"yes\" had a real cost attached, even the small ones. One more offer shows up: a friend wants to split a $40 Uber to a party across town instead of taking a $6 bus.",
+            hintText: "What's the actual gap between these two options, and what could that gap buy instead?",
+            choices: [
+              { id: 'a', label: 'Split the Uber, it\'s more fun and faster', consequence: { text: 'That\'s $14 more than the bus for the same trip — a real cost for convenience.', delta: { checking: -20 }, xpMultiplier: 0.75 } },
+              { id: 'b', label: 'Take the bus and pocket the difference', consequence: { text: 'Same destination, more of that $40 still in checking — opportunity cost, applied.', delta: { checking: -6 }, xpMultiplier: 1.25 } }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'gray_zone',
+        topic: 'The Gray Zone: When Needs and Wants Overlap',
+        character: { name: 'Hammy', tagline: "Arguing with themself over a \"need\"" },
+        initialState: {},
+        chapters: [
+          {
+            id: 'gz0', type: 'story', title: 'Sorting It Out',
+            beats: [
+              { speaker: 'intro', text: "Marketing is designed to make wants feel like needs. Before Hammy's next purchase, can they actually tell the difference — and does it matter?" }
+            ]
+          },
+          {
+            id: 'gz1', type: 'teach', title: 'Needs, Wants & the Gray Zone',
+            concepts: [
+              { term: 'Need', plain: "Something you can't reasonably go without — rent, groceries, a required textbook, insurance.", analogy: "If skipping it creates a real problem, it's a need.", check: { statement: 'A daily $6 coffee is generally considered a need.', isTrue: false } },
+              { term: '"It Depends"', plain: "Some expenses genuinely depend on context — a gym membership used three times a week supports your health; one forgotten about is just a recurring charge.", analogy: "Same expense, different situation, different answer.", check: { statement: 'Every expense fits neatly into either "need" or "want" with no in-between.', isTrue: false } }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'gz2', type: 'matching', title: 'Match It! Need, Want, or Depends',
+            pairs: [
+              { term: 'Rent', definition: 'Need — a real problem if skipped' },
+              { term: 'Concert tickets', definition: 'Want — nice to have, not essential' },
+              { term: 'A gym membership used 3x/week', definition: 'Depends — a want that supports health, if actually used' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'gz3', type: 'decision', title: 'The Streaming Stack',
+            prompt: "Hammy has five streaming subscriptions but can only remember actively watching two of them this month.",
+            hintText: "Which category fits a subscription nobody remembers using?",
+            choices: [
+              { id: 'a', label: 'Keep all five, cancelling feels like a hassle', outcome: { text: 'The three forgotten subscriptions are pure subscription creep — a want quietly billing every month.', delta: {}, compare: [{ label: 'Monthly cost kept', value: 45 }, { label: 'Could be saved', value: 27 }] } },
+              { id: 'b', label: 'Cancel the three unused ones', outcome: { text: 'A monthly reminder to check for creep pays off immediately.', delta: {}, compare: [{ label: 'Monthly cost kept', value: 18 }, { label: 'Saved', value: 27 }] } }
+            ],
+            xpOnComplete: 5
+          }
+        ]
+      },
+      {
+        id: 'budget_setup',
+        parentQuestId: 'budget_rule',
+        topic: 'Setting Up a Real Budget: A Step-by-Step Guide',
+        character: { name: 'Hammy', tagline: 'Actually building a working budget instead of just knowing the rule' },
+        initialState: { checking: 300 },
+        chapters: [
+          {
+            id: 'bs0', type: 'story', title: 'Knowing It vs. Doing It',
+            beats: [
+              { speaker: 'intro', text: "Hammy can recite the 50/30/20 rule perfectly. The actual budget, though, has never been written down anywhere. Let's fix that." }
+            ]
+          },
+          {
+            id: 'bs1', type: 'teach', title: 'Step 1 & 2: Track & Sort',
+            concepts: [
+              { term: 'Step 1: Track a Real Week of Spending', plain: "Before building a budget, look at what actually gets spent — pull up a week or two of bank and card transactions. Most people are surprised by at least one category.", analogy: "You can't fix a leak without first finding where the water is going.", check: { statement: 'The most useful first step in budgeting is guessing spending amounts instead of checking real transactions.', isTrue: false } },
+              { term: 'Step 2: Sort Into Needs, Wants, Savings', plain: "Label each expense from the tracked week as a need (rent, groceries), a want (dining out, subscriptions), or savings/debt payoff. This turns a vague sense of overspending into actual numbers per category.", analogy: "It's the same sorting exercise as needs vs. wants, just applied to real transactions instead of hypothetical examples.", check: {} }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bs2', type: 'teach', title: 'Step 3 & 4: Pick a Tool & Review',
+            concepts: [
+              { term: 'Step 3: Pick a Tool to Track It', plain: "A budgeting app (many banks include one free), a simple spreadsheet, or even a notes app all work — the best tool is whichever one actually gets checked regularly. Set the 50/30/20 percentages as targets to compare against.", analogy: "The fanciest budgeting app in the world does nothing if it's never opened.", check: { statement: 'The most important feature of a budgeting tool is that it actually gets used consistently.', isTrue: true } },
+              { term: 'Step 4: Review & Adjust Monthly', plain: "At the end of each month, compare actual spending against the 50/30/20 targets. Going over in one category isn't a failure — it's information for adjusting next month.", analogy: "A budget isn't a grade to pass or fail, it's a dashboard to check and steer by.", check: {} }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bs3', type: 'decision', title: 'The First Month',
+            prompt: "Hammy's first tracked month shows 42% went to wants instead of the targeted 30%. What's the best next move?",
+            hintText: "Is one over-budget month a crisis, or a data point?",
+            choices: [
+              { id: 'a', label: 'Give up on budgeting since the numbers were already off', outcome: { text: "Abandoning the budget after one imperfect month means losing the exact data needed to actually improve.", delta: {}, compare: [{ label: 'Insight gained', value: 0 }, { label: 'Insight from adjusting', value: 1 }] } },
+              { id: 'b', label: "Look at which specific \"want\" categories ran high and adjust next month's plan", outcome: { text: "Now there's a specific target to adjust instead of a vague sense of overspending.", delta: {}, compare: [{ label: 'Insight gained', value: 1 }, { label: 'Insight from quitting', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bs4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [1, 3],
+            hintTexts: [
+              "20% of a monthly take-home amount is one-fifth of it.",
+              "Think about what it means when spending is bigger than income."
+            ]
+          }
+        ]
+      }
     ]
   },
   {
@@ -396,11 +819,185 @@ const MODULES = [
       { title: 'Sinking Funds for Predictable Costs', hook: 'Your laptop just died during finals week. A replacement costs $400. You have $47 in your checking account. This is what a missing emergency fund looks like — and it\'s completely avoidable.', qIndices: [7, 1] },
       { title: 'Automating Your Savings', hook: 'You\'ve decided to start saving, but at the end of every month there\'s nothing left. You keep saying "I\'ll save whatever\'s left" — but there\'s never anything left. What changes?', qIndices: [4, 8] },
       { title: 'Setting & Prioritizing Savings Goals', hook: 'You\'re saving for an emergency fund, a new laptop, and a spring break trip all at once, with only $60 free this month. Do you split it evenly, or does one of these actually matter more right now?', qIndices: [9, 10] }
+    ],
+    quests: [
+      {
+        id: 'emergency_fund',
+        topic: 'Building Your First Emergency Fund',
+        character: { name: 'Hammy', tagline: 'Starting an emergency fund from zero' },
+        initialState: {},
+        chapters: [
+          { id: 'emergency_fund_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Building Your First Emergency Fund." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'hy_savings',
+        topic: 'High-Yield Savings Accounts Explained',
+        character: { name: 'Hammy', tagline: 'Comparing savings accounts for the first time' },
+        initialState: {},
+        chapters: [
+          { id: 'hy_savings_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on High-Yield Savings Accounts Explained." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'checking_vs_savings',
+        topic: 'Checking vs. Savings: Avoiding Fees',
+        character: { name: 'Hammy', tagline: 'Untangling checking and savings accounts' },
+        initialState: {},
+        chapters: [
+          { id: 'checking_vs_savings_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Checking vs. Savings: Avoiding Fees." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'interest_consistency',
+        topic: 'How Interest & Consistency Compound Over Time',
+        character: { name: 'Hammy', tagline: 'Setting up a recurring transfer and forgetting about it' },
+        initialState: {},
+        chapters: [
+          { id: 'interest_consistency_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on How Interest & Consistency Compound Over Time." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'automate_savings',
+        topic: 'Automating Your Savings Habits',
+        character: { name: 'Hammy', tagline: 'Trying to make saving automatic' },
+        initialState: {},
+        chapters: [
+          { id: 'automate_savings_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Automating Your Savings Habits." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'sinking_funds',
+        topic: 'Sinking Funds for Predictable Costs',
+        character: { name: 'Hammy', tagline: 'Planning ahead for a cost they know is coming' },
+        initialState: {},
+        chapters: [
+          { id: 'sinking_funds_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Sinking Funds for Predictable Costs." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'savings_goals',
+        topic: 'Setting & Prioritizing Savings Goals',
+        character: { name: 'Hammy', tagline: 'Juggling three savings goals at once' },
+        initialState: {},
+        chapters: [
+          { id: 'savings_goals_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Setting & Prioritizing Savings Goals." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'big_purchase',
+        topic: 'Saving for a Big Purchase (Study Abroad, Car, Moving Out)',
+        character: { name: 'Hammy', tagline: 'Saving up for one big goal' },
+        initialState: {},
+        chapters: [
+          { id: 'big_purchase_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Saving for a Big Purchase (Study Abroad, Car, Moving Out)." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'open_savings',
+        parentQuestId: 'hy_savings',
+        topic: 'Opening a High-Yield Savings Account: A Step-by-Step Guide',
+        character: { name: 'Hammy', tagline: 'Actually opening a savings account that pays real interest' },
+        initialState: { savings: 0 },
+        chapters: [
+          {
+            id: 'os0', type: 'story', title: 'Time to Actually Open One',
+            beats: [
+              { speaker: 'intro', text: "Hammy knows a high-yield savings account beats a big bank's 0.01% APY — but the account itself doesn't exist yet. Knowing the theory and actually doing the paperwork are two different things. Let's walk through it, step by step." }
+            ]
+          },
+          {
+            id: 'os1', type: 'teach', title: 'Step 1 & 2: Comparing & Applying',
+            concepts: [
+              {
+                term: 'Step 1: Compare a Few Options',
+                plain: "Look for the highest APY with no monthly fees and no minimum balance requirement — many online banks (Ally, Marcus, SoFi, Discover) offer 4%+ with none of those catches. FDIC insurance up to $250,000 is standard on real banks and non-negotiable — never open an account without it.",
+                analogy: "Shopping for a savings account is like comparing phone plans — same basic service, but the fine print on fees and rates varies a lot.",
+                check: { statement: 'FDIC insurance is an optional extra that most savings accounts don\'t include.', isTrue: false }
+              },
+              {
+                term: 'Step 2: Apply Online',
+                plain: "Most online banks let you apply in about 10 minutes: legal name, address, Social Security number, and a way to fund the initial deposit — often by linking an existing checking account.",
+                analogy: "It's the same basic information as any account signup, just with a routing and account number at the end to link it.",
+                check: { statement: 'Opening an online HYSA typically requires visiting a branch in person.', isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'os2', type: 'teach', title: 'Step 3 & 4: Funding & Automating',
+            concepts: [
+              {
+                term: 'Step 3: Make the First Deposit',
+                plain: "Transfer money from an existing checking account — this usually takes 1–3 business days to clear the first time. Many online banks have no minimum opening deposit at all.",
+                analogy: "Think of it as the first move-in payment — after that, deposits and transfers move faster.",
+                check: { statement: 'Most online HYSAs require a large minimum deposit just to open the account.', isTrue: false }
+              },
+              {
+                term: 'Step 4: Automate a Recurring Transfer',
+                plain: "Set up an automatic transfer for payday — even $25 per paycheck — so saving happens without having to remember. This is the single easiest way to actually build the habit.",
+                analogy: "\"Pay yourself first\" — the transfer happens before there's a chance to spend it.",
+                check: { statement: 'Automating a recurring transfer is one of the most effective ways to actually save consistently.', isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'os3', type: 'decision', title: 'Picking the Account',
+            prompt: "Hammy is comparing two options: a big-name bank paying 0.01% APY with a familiar app, or an online bank paying 4.5% APY that Hammy's never heard of but is FDIC-insured.",
+            hintText: "Does FDIC insurance depend on how famous the bank is?",
+            choices: [
+              { id: 'a', label: 'Stick with the familiar big-name bank', outcome: { text: "Same FDIC-insured safety as the online option, but $1,000 earns about $0.10 a year instead of $45.", delta: { savings: 0 }, compare: [{ label: 'Interest on $1,000/yr', value: 0 }, { label: 'Online bank option', value: 45 }] } },
+              { id: 'b', label: 'Open the online bank account instead', outcome: { text: "Same insured safety, a less familiar name, and roughly $45 a year instead of $0.10 on the same $1,000.", delta: { savings: 0 }, compare: [{ label: 'Interest on $1,000/yr', value: 45 }, { label: 'Big-bank option', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'os4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 4],
+            hintTexts: [
+              "Think about the interest-rate gap between a big bank and an online HYSA.",
+              "Think about what actually makes saving happen without relying on willpower alone."
+            ]
+          }
+        ]
+      }
     ]
   },
   {
     id: 'investing', title: 'Investing', icon: '04', iconColor: 'lav', xpReward: 35,
-    hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Jordan starts at 28. At 65, Alex has $21,000. Jordan has $10,700. They invested the exact same amount. What made the difference?',
+    hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Sam starts at 28. At 65, Alex has $21,000. Sam has $10,700. They invested the exact same amount. What made the difference?',
     desc: 'Compound interest, Roth IRAs, diversification, and why starting at 18 changes everything.',
     questions: [
       {
@@ -477,12 +1074,186 @@ const MODULES = [
       }
     ],
     lessons: [
-      { title: 'Compound Interest & Time', hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Jordan starts at 28. At 65, Alex has $21,000. Jordan has $10,700. Same amount invested. What made the difference?', qIndices: [1, 2] },
+      { title: 'Compound Interest & Time', hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Sam starts at 28. At 65, Alex has $21,000. Sam has $10,700. Same amount invested. What made the difference?', qIndices: [1, 2] },
       { title: 'Roth IRA Basics', hook: 'You have $50/month to invest and someone says "open a Roth IRA." You\'ve heard the words but don\'t know if you even qualify — do you need a big salary, a certain age, or a special account first?', qIndices: [0, 6] },
       { title: 'Contribution Limits & Where to Save First', hook: 'Your job offers a 403(b) with a match, and you\'re also eligible for a Roth IRA with a $7,000 annual limit. You can\'t max out both right now — which comes first?', qIndices: [4, 9] },
       { title: 'Index Funds & Diversification', hook: 'A friend tells you to put your $500 savings into one stock they\'re sure will "blow up." Another friend says index funds are the smarter move. What\'s actually different about spreading your money across hundreds of companies?', qIndices: [3, 5] },
       { title: 'Risk, Time Horizon & Staying the Course', hook: 'The market drops 15% the same month you started investing, right as your 60-year-old parent\'s retirement account also takes a hit. Should you both be reacting the same way?', qIndices: [7, 11] },
       { title: 'Getting Started Small', hook: 'You only have $25/month to invest and figure it\'s not worth starting until you\'ve saved up more. Meanwhile a friend jumps into whatever fund had the best return last year. Is either of you making the smart move?', qIndices: [8, 10] }
+    ],
+    quests: [
+      {
+        id: 'compound_early',
+        topic: 'Compound Interest & Why Starting Early Wins',
+        character: { name: 'Hammy', tagline: 'Wondering if it\'s too early to start investing' },
+        initialState: {},
+        chapters: [
+          { id: 'compound_early_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Compound Interest & Why Starting Early Wins." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'roth_ira',
+        topic: 'Roth IRA Basics',
+        character: { name: 'Hammy', tagline: 'Opening a first retirement account' },
+        initialState: {},
+        chapters: [
+          { id: 'roth_ira_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Roth IRA Basics." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'index_funds',
+        topic: 'Index Funds & Diversification',
+        character: { name: 'Hammy', tagline: 'Picking a first investment' },
+        initialState: {},
+        chapters: [
+          { id: 'index_funds_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Index Funds & Diversification." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'contribution_limits',
+        topic: 'Contribution Limits & Where to Save First',
+        character: { name: 'Hammy', tagline: 'Deciding where extra money should go first' },
+        initialState: {},
+        chapters: [
+          { id: 'contribution_limits_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Contribution Limits & Where to Save First." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'risk_horizon',
+        topic: 'Risk, Time Horizon & Staying the Course',
+        character: { name: 'Hammy', tagline: 'Watching the market dip for the first time' },
+        initialState: {},
+        chapters: [
+          { id: 'risk_horizon_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Risk, Time Horizon & Staying the Course." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'start_small',
+        topic: 'Getting Started With Very Little Money',
+        character: { name: 'Hammy', tagline: 'Starting to invest with not much to spare' },
+        initialState: {},
+        chapters: [
+          { id: 'start_small_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Getting Started With Very Little Money." }
+            ]
+          }
+        ]
+      },
+      {
+        id: '401k_match',
+        topic: '401(k)s & Employer Matches: Free Money on the Table',
+        character: { name: 'Hammy', tagline: 'Signing up for a workplace retirement plan' },
+        initialState: {},
+        chapters: [
+          { id: '401k_match_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on 401(k)s & Employer Matches: Free Money on the Table." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'brokerage_vs_retirement',
+        topic: 'Brokerage vs. Retirement Accounts: Where to Invest',
+        character: { name: 'Hammy', tagline: 'Deciding which account to open first' },
+        initialState: {},
+        chapters: [
+          { id: 'brokerage_vs_retirement_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Brokerage vs. Retirement Accounts: Where to Invest." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'open_brokerage',
+        parentQuestId: 'roth_ira',
+        topic: 'Opening a Brokerage Account: A Step-by-Step Guide',
+        character: { name: 'Hammy', tagline: 'Actually opening a first investment account' },
+        initialState: {},
+        chapters: [
+          {
+            id: 'ob0', type: 'story', title: 'Ready to Actually Start',
+            beats: [
+              { speaker: 'intro', text: "Hammy understands compound interest and index funds now — but the account itself has never actually been opened. Knowing the theory and doing the paperwork are two different things. Let's walk through it." }
+            ]
+          },
+          {
+            id: 'ob1', type: 'teach', title: 'Step 1 & 2: Choosing & Opening',
+            concepts: [
+              {
+                term: 'Step 1: Pick a Brokerage',
+                plain: "Fidelity, Schwab, and Vanguard are common no-fee options for beginners — look for $0 account minimums, $0 commission on stock and ETF trades, and no monthly maintenance fees. Any of the major ones work fine for a first account.",
+                analogy: "Picking a brokerage is like picking a bank — the big reputable ones are all safe bets, the differences are mostly app experience and fund selection.",
+                check: { statement: 'You need thousands of dollars saved up before you can open a brokerage account.', isTrue: false }
+              },
+              {
+                term: 'Step 2: Choose an Account Type',
+                plain: "A Roth IRA is specifically for retirement money and comes with tax advantages, but has annual contribution limits. A standard taxable brokerage account has no limits and no withdrawal restrictions, but no special tax treatment. Most people eventually use both.",
+                analogy: "A Roth IRA is a locked box with a tax reward for waiting. A taxable account is a regular drawer you can open any time.",
+                check: { statement: 'A Roth IRA and a taxable brokerage account are the exact same thing with different names.', isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ob2', type: 'teach', title: 'Step 3 & 4: Funding & First Trade',
+            concepts: [
+              {
+                term: 'Step 3: Link a Bank & Fund It',
+                plain: "Connect a checking account the same way as any other online account — routing and account number, or a secure bank login. Most brokerages let you start with any amount, even $5 or $10, there's no minimum most of the time.",
+                analogy: "Funding the account is just a transfer, like Venmo-ing money into a separate account that happens to invest it.",
+                check: { statement: 'Most modern brokerages require a large minimum deposit before you can fund the account.', isTrue: false }
+              },
+              {
+                term: 'Step 4: Buy an Index Fund',
+                plain: "Once funded, search for a broad index fund (like one tracking the S&P 500), enter a dollar amount or number of shares, and place the order. A \"market order\" buys at the current price immediately — the simplest choice for a first trade.",
+                analogy: "It's like checkout on a shopping site: pick the item, confirm the amount, submit.",
+                check: { statement: 'A market order buys at whatever the current price happens to be right now.', isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ob3', type: 'decision', title: 'The First $50',
+            prompt: "Hammy has $50 to invest for the first time. The brokerage account is open and funded. What's the smartest first move?",
+            hintText: "Think back to diversification — one company, or many at once?",
+            choices: [
+              { id: 'a', label: 'Buy $50 of a single trending stock', outcome: { text: "One company's bad quarter can wipe out the investment — concentrated risk for a first trade.", delta: {}, compare: [{ label: 'Companies owned', value: 1 }, { label: 'Diversified option', value: 500 }] } },
+              { id: 'b', label: 'Buy $50 of a broad index fund', outcome: { text: "Instant exposure to hundreds of companies at once, with the exact same $50.", delta: {}, compare: [{ label: 'Companies owned', value: 500 }, { label: 'Single-stock option', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ob4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [3, 5],
+            hintTexts: [
+              "Think about what an index fund actually tracks and why it's recommended for beginners.",
+              "Think about spreading money across many companies vs. betting everything on one."
+            ]
+          }
+        ]
+      }
     ]
   },
   {
@@ -574,51 +1345,29 @@ const MODULES = [
     quests: [
       {
       id: 'maya',
-      topic: 'Your First Credit Card',
-      character: { name: 'Maya', tagline: 'Sophomore who just got her first credit card' },
+      topic: 'Credit Cards & Building Your Credit Score',
+      character: { name: 'Hammy', tagline: 'Just got their first credit card' },
       initialState: { creditScore: 640, checking: 200, savings: 0 },
       bossAchievementId: 'crisis_averted',
       chapters: [
         {
-          id: 'c0', type: 'story', title: 'Meet Maya',
-          beats: [
-            { speaker: 'intro', text: "This is Maya. She just started her first year of college, and like a lot of first-years, she's never had to manage her own money before. Today, you're going to help her handle something brand new: her very first credit card." }
-          ]
-        },
-        {
-          id: 'c0b', type: 'story', title: 'Meet Maya',
-          beats: [
-            { speaker: 'Maya', text: '"Wait, I get to make my OWN money decisions now? No pressure or anything..."' },
-            { speaker: 'narrator', text: "Hi, I'm Hammy! I'll be right here the whole time, explaining anything confusing, one small piece at a time. Nothing is assumed here. We'll go step by step, together." }
-          ]
-        },
-        {
           id: 'c1', type: 'story', title: 'The Offer',
           beats: [
+            { speaker: 'intro', text: "Hammy just started their first year of college, and like a lot of first-years, they've never had to manage their own money before. Today, you're going to help them handle something brand new: their very first credit card." },
+            { speaker: 'Hammy', text: '"Wait, I get to make my OWN money decisions now? No pressure or anything..."' },
             { speaker: 'narrator', text: 'A table in the student union is handing out free t-shirts... for signing up for a credit card.' },
-            { speaker: 'Maya', text: '"A free tee AND a $1,000 limit? Sign me up."' },
-            { speaker: 'narrator', text: 'Two weeks later the card arrives. Before Maya uses it, let\'s slow down and make sure you know exactly what she\'s holding in her hands, no assumptions, no jargon.' }
+            { speaker: 'Hammy', text: '"A free tee AND a $1,000 limit? Sign me up."' },
+            { speaker: 'narrator', text: 'Two weeks later the card arrives. Before Hammy uses it, let\'s make sure you know exactly what they\'re holding in their hands.' }
           ]
         },
         {
           id: 't0', type: 'teach', title: 'Your Mission Control', highlightDashboard: true,
           concepts: [
             {
-              term: 'Checking Account',
-              plain: 'This is like Maya\'s everyday spending money, the account she uses to pay for things like food, gas, and bills. You\'ll see it labeled "CHECKING" at the top of your screen for the rest of this quest.',
-              analogy: 'Think of it like her wallet, money goes in, money goes out, all the time.',
-              check: { statement: 'Checking is the money Maya sets aside and tries not to touch.', isTrue: false }
-            },
-            {
-              term: 'Savings Account',
-              plain: 'This is money Maya sets aside and tries not to touch, for emergencies or big goals later. You\'ll see it labeled "SAVINGS" at the top of your screen.',
-              analogy: 'Think of it like a piggy bank she\'s not allowed to raid just because she wants a snack.',
-              check: { statement: 'Savings is the account Maya uses for everyday spending, like food and gas.', isTrue: false }
-            },
-            {
-              term: 'Credit Score (coming up next!)',
-              plain: 'The third box at the top says "CREDIT SCORE", that one\'s a little more involved, so we\'re going to slow way down and cover it all on its own, right after this.',
-              analogy: 'Think of this as a sneak peek, the full explanation is just one step away.'
+              term: 'Checking vs. Savings',
+              plain: 'Checking is Hammy\'s everyday spending money, for food, gas, and bills. Savings is money set aside and left alone, for emergencies or bigger goals later. You\'ll see both labeled at the top of your screen for the rest of this quest.',
+              analogy: 'Checking is like a wallet, money moves in and out constantly. Savings is like a piggy bank you don\'t raid for a snack.',
+              check: { statement: 'Checking is the account Hammy uses for everyday spending, like food and gas.', isTrue: true }
             }
           ],
           xpOnComplete: 2
@@ -630,13 +1379,13 @@ const MODULES = [
               term: 'Credit Card',
               plain: 'A credit card isn\'t free money. It\'s a loan. When you swipe it, the bank pays the store for you, and you promise to pay the bank back later.',
               analogy: 'It\'s like borrowing $20 from a friend for lunch. You still owe them $20, a credit card just makes the borrowing invisible, since no cash changes hands.',
-              check: { statement: 'A credit card is free money that Maya never has to pay back.', isTrue: false }
+              check: { statement: 'A credit card is free money that Hammy never has to pay back.', isTrue: false }
             },
             {
               term: 'Credit Limit',
-              plain: 'Your "limit" is the most the bank will let you borrow at once. Maya\'s card has a $1,000 limit. That\'s a ceiling, not a goal to reach.',
+              plain: 'Your "limit" is the most the bank will let you borrow at once. Hammy\'s card has a $1,000 limit. That\'s a ceiling, not a goal to reach.',
               analogy: 'Think of it like a bucket that holds $1,000. Every purchase pours a little in; paying your bill empties it back out.',
-              check: { statement: "Maya's credit limit is a goal she should try to spend up to every month.", isTrue: false }
+              check: { statement: "Hammy's credit limit is a goal they should try to spend up to every month.", isTrue: false }
             }
           ],
           xpOnComplete: 2
@@ -646,7 +1395,7 @@ const MODULES = [
           concepts: [
             {
               term: 'Credit Score',
-              plain: 'A credit score is a 3-digit number, from 300 to 850, that tells lenders how reliable you\'ve been about paying back money you\'ve borrowed. Higher = more trustworthy. You\'ll see Maya\'s score at the top of the screen for the rest of this quest.',
+              plain: 'A credit score is a 3-digit number, from 300 to 850, that tells lenders how reliable you\'ve been about paying back money you\'ve borrowed. Higher = more trustworthy. You\'ll see Hammy\'s score at the top of the screen for the rest of this quest.',
               analogy: 'Think of it like a trust rating. The same way a driver with a clean record gets cheaper car insurance, someone with a high credit score gets approved for apartments and loans at better rates.',
               check: { statement: 'A higher credit score means lenders trust you less.', isTrue: false }
             }
@@ -663,13 +1412,6 @@ const MODULES = [
           xpOnComplete: 4
         },
         {
-          id: 'e1', type: 'explainback', title: 'In Your Own Words',
-          prompt: 'In your own words, what is a credit score, and why does it matter? Type a sentence or two. There\'s no wrong way to start.',
-          keywords: ['number', 'trust', 'borrow', 'pay back', 'lend', '300', '850', 'reliable', 'score'],
-          fullDefinition: 'A credit score is a 3-digit number (300–850) that tells lenders how reliable you\'ve been about paying back borrowed money. The higher it is, the more lenders trust you, which gets you approved for things like apartments and loans at better rates.',
-          xpOnComplete: 3
-        },
-        {
           id: 'h1', type: 'hint', tag: "🎉 Hammy's Tip",
           text: 'Fun fact: checking your OWN credit score is always free and 100% safe. It never lowers your score. Only applying for new credit cards or loans can cause a small dip, so check it often and stay in the know.',
           xpOnComplete: 1
@@ -679,16 +1421,10 @@ const MODULES = [
           concepts: [
             {
               term: 'Interest (APR)',
-              plain: 'If you don\'t pay your full bill, the bank charges you extra for the privilege of waiting, that\'s called interest. The letters "APR" stand for Annual Percentage Rate, a fancy way of saying the yearly rate the bank charges you. You\'ll see "APR" a lot from here on, just remember it means "the yearly interest rate."',
-              analogy: 'It\'s like a late fee that keeps growing the longer you wait to pay, except instead of a flat fee, it\'s a percentage of what you still owe.',
-              check: { statement: "If Maya pays her full balance every month, she avoids paying interest.", isTrue: true }
-            }
-          ],
-          xpOnComplete: 2
-        },
-        {
-          id: 't4', type: 'teach', title: 'The Minimum Payment',
-          concepts: [
+              plain: 'If you don\'t pay your full bill, the bank charges you extra for the privilege of waiting, that\'s called interest. "APR" stands for Annual Percentage Rate, the yearly interest rate the bank charges you.',
+              analogy: 'It\'s like a late fee that keeps growing the longer you wait to pay, except it\'s a percentage of what you still owe.',
+              check: { statement: "If Hammy pays their full balance every month, they avoid paying interest.", isTrue: true }
+            },
             {
               term: 'Minimum Payment',
               plain: 'Every statement lists a "minimum payment", the smallest amount you\'re allowed to pay to avoid a late fee. But paying only that leaves most of your bill, plus interest, unpaid and growing.',
@@ -696,38 +1432,28 @@ const MODULES = [
               check: { statement: 'Paying only the minimum payment pays off your whole balance quickly.', isTrue: false }
             }
           ],
-          xpOnComplete: 2
-        },
-        {
-          id: 'm2', type: 'matching', title: 'Match It! Round 2',
-          pairs: [
-            { term: 'Interest (APR)', definition: 'The extra money a bank charges you for not paying your full bill right away.' },
-            { term: 'Minimum Payment', definition: 'The smallest amount you\'re allowed to pay to avoid a late fee, but it leaves most of your bill unpaid.' },
-            { term: 'Credit Score', definition: 'A 3-digit number that shows lenders how trustworthy you are with borrowed money.' }
-          ],
-          hintText: "Both new words were just taught above, 'APR' is about the COST of not paying in full, and 'Minimum Payment' is about the SMALLEST amount allowed.",
-          xpOnComplete: 4
+          xpOnComplete: 3
         },
         {
           id: 'c2', type: 'decision',
           title: 'Move-In Shopping',
-          prompt: 'Maya needs $800 in textbooks and dorm supplies. She has $200 in checking. What should she put on the new card?',
+          prompt: 'Hammy needs $800 in textbooks and dorm supplies. They have $200 in checking. What should they put on the new card?',
           hintText: "Think back to Interest (APR): does the bank charge extra for balances you DON'T pay off right away, or is carrying a balance free?",
           choices: [
             {
               id: 'a', label: 'Put it all on the card, pay only the minimum',
               outcome: {
-                text: 'Maya carries a $600 balance at 24% APR, projected around $300 in interest over the next 3 years, on top of the $600 she already owes.',
+                text: 'Hammy carries a $600 balance at 24% APR, projected around $300 in interest over the next 3 years, on top of the $600 they already owe.',
                 delta: { creditScore: -10 },
-                compare: [{ label: 'Her choice, interest paid', value: 300 }, { label: 'Pay-in-full path, interest paid', value: 0 }]
+                compare: [{ label: 'Their choice, interest paid', value: 300 }, { label: 'Pay-in-full path, interest paid', value: 0 }]
               }
             },
             {
               id: 'b', label: 'Charge $200, pay it off immediately; cover the rest with savings and a work-study shift',
               outcome: {
-                text: 'Maya pays her statement in full, so no interest ever gets charged, and she\'s using less of her limit, which helps her score too.',
+                text: 'Hammy pays their statement in full, so no interest ever gets charged, and they\'re using less of their limit, which helps their score too.',
                 delta: { creditScore: 8 },
-                compare: [{ label: 'Her choice, interest paid', value: 0 }, { label: 'Minimum-payment path, interest paid', value: 300 }]
+                compare: [{ label: 'Their choice, interest paid', value: 0 }, { label: 'Minimum-payment path, interest paid', value: 300 }]
               }
             }
           ],
@@ -736,7 +1462,7 @@ const MODULES = [
         {
           id: 'c3', type: 'microsim',
           title: 'The Monthly Squeeze',
-          prompt: 'Maya\'s paycheck is $600/month. Fixed costs already eat $430 of it. Help her fit in a card payment and some savings without going negative.',
+          prompt: 'Hammy\'s paycheck is $600/month. Fixed costs already eat $430 of it. Help them fit in a card payment and some savings without going negative.',
           hintText: 'Add up the fixed costs first ($45 + $150 + $35 + $100 + $100 = $430). That leaves $170 of her $600 to split between the two sliders before she goes negative.',
           income: 600,
           fixedCosts: [
@@ -751,9 +1477,9 @@ const MODULES = [
             { id: 'savings', label: 'Savings deposit', min: 0, max: 150, step: 25, default: 0 }
           ],
           feedbackTiers: [
-            { maxLeftover: -1, text: 'That budget goes negative. Maya can\'t sustain this. Try a smaller card payment or savings deposit.', ok: false },
+            { maxLeftover: -1, text: 'That budget goes negative. Hammy can\'t sustain this. Try a smaller card payment or savings deposit.', ok: false },
             { maxLeftover: 24, text: 'Workable, but there\'s almost no cushion left for a surprise expense.', ok: true },
-            { maxLeftover: Infinity, text: 'Solid. She\'s covering her bill and still building a cushion.', ok: true }
+            { maxLeftover: Infinity, text: 'Solid. They\'re covering their bill and still building a cushion.', ok: true }
           ],
           xpOnComplete: 6
         },
@@ -762,7 +1488,7 @@ const MODULES = [
           concepts: [
             {
               term: 'Credit Utilization',
-              plain: 'This is how much of your credit limit you\'re currently using. If Maya has a $1,000 limit and owes $300, she\'s using 30% of it. Lenders like to see this number stay low, under 30% is a good rule of thumb.',
+              plain: 'This is how much of your credit limit you\'re currently using. If Hammy has a $1,000 limit and owes $300, they\'re using 30% of it. Lenders like to see this number stay low, under 30% is a good rule of thumb.',
               analogy: 'Picture your limit as a gas tank. Riding around on three-quarters of a tank looks fine to lenders. Riding around on empty, maxed out, looks risky, even if you always pay on time.',
               check: { statement: 'Using less of your available credit limit is better for your score than using almost all of it.', isTrue: true }
             }
@@ -770,7 +1496,7 @@ const MODULES = [
           xpOnComplete: 2
         },
         {
-          id: 'm3', type: 'matching', title: 'Match It! Round 3',
+          id: 'm2', type: 'matching', title: 'Match It! Round 2',
           pairs: [
             { term: 'Credit Utilization', definition: 'How much of your credit limit you\'re currently using, shown as a percentage.' },
             { term: 'Interest (APR)', definition: 'The extra money a bank charges you for not paying your full bill right away.' },
@@ -791,7 +1517,6 @@ const MODULES = [
           id: 'c4', type: 'mythcards', title: 'Credit Myths',
           cards: [
             { myth: 'Carrying a small balance helps your credit score.', isTrue: false, explanation: 'Paying your bill in full every month is what actually helps. Carrying a balance just costs you extra in interest, it never boosts your score.' },
-            { myth: 'Checking your own credit score hurts it.', isTrue: false, explanation: 'Checking your own score is always safe and free, and it never lowers it. Only applying for new credit causes a small, temporary dip.' },
             { myth: 'Closing an old, unused card can hurt your score.', isTrue: true, explanation: 'It can! Closing your oldest card shortens your credit history and raises your utilization, both of those can lower your score.' },
             { myth: 'Paying on time, every time, is the single biggest factor in your credit score.', isTrue: true, explanation: 'True, payment history matters more than anything else. It\'s worth more to your score than your utilization, your history length, or anything else combined.' }
           ],
@@ -806,92 +1531,41 @@ const MODULES = [
         },
         {
           id: 'c6', type: 'simulator', simulatorId: 'credit-climb', title: 'Credit Climb',
-          intro: 'Watch Maya\'s score move in real time over her first year of card use. Tap each decision below to see the impact.',
+          intro: 'Watch Hammy\'s score move in real time over their first year of card use. Tap each decision below to see the impact.',
           hintText: 'Payment history and utilization are the two biggest score factors, decisions that touch those move the needle the most, for better or worse.',
           decisions: [
             { id: 'd1', label: 'Pay every statement in full, on time, for 6 months', scoreDelta: 35, note: 'Paying on time, every time, is the single biggest thing that helps your score.' },
             { id: 'd2', label: 'Keep utilization under 30% instead of maxing the card', scoreDelta: 15, note: 'Using less of your available credit is the second-biggest factor.' },
             { id: 'd3', label: 'Apply for two more store cards this month', scoreDelta: -12, note: 'Applying for several cards at once makes lenders nervous and dings your score a little.' },
-            { id: 'd4', label: 'Keep her oldest card open, barely used', scoreDelta: 8, note: 'The longer you\'ve had credit, the more it helps, so old accounts are worth keeping open.' }
+            { id: 'd4', label: 'Keep their oldest card open, barely used', scoreDelta: 8, note: 'The longer you\'ve had credit, the more it helps, so old accounts are worth keeping open.' }
           ],
           xpOnComplete: 6
-        },
-        {
-          id: 'c7', type: 'priceisright',
-          title: 'The Price Is Right: Minimum Payments',
-          prompt: 'Maya carries a $1,000 balance at 24% APR for a year, paying only the $25 minimum each month. Guess the total interest she pays that year.',
-          hintText: "24% APR means roughly a quarter of what she owes gets added back as interest over a full year if she barely pays it down. Start your guess near there.",
-          actualValue: 230, guessRange: { min: 0, max: 500, step: 10 },
-          explanation: 'Minimum payments barely dent what you actually owe, most of each payment goes toward interest first, and only a little toward the original balance.',
-          xpOnComplete: 5
         },
         {
           id: 't6', type: 'teach', title: 'Building Credit From Zero',
           concepts: [
             {
               term: 'The Five Factors of Your Score',
-              plain: "Your credit score isn't one mystery number, it's built from five weighted factors: payment history (35%), amounts owed (30%), length of credit history (15%), new credit (10%), and credit mix (10%). Payment history alone is worth more than the other four combined.",
+              plain: "Your credit score is built from five weighted factors: payment history (35%), amounts owed (30%), length of credit history (15%), new credit (10%), and credit mix (10%). Payment history alone is worth more than the other four combined.",
               analogy: "Think of it like a report card where one class — showing up on time, every time — counts for over a third of your grade.",
               check: { statement: 'New credit inquiries and credit mix matter more to your score than payment history.', isTrue: false }
             },
             {
               term: 'Starting With Nothing',
-              plain: "No credit history isn't a bad score, it's no score at all, and everyone starts there. The two most common ways students build from zero: a secured credit card, where you put down a refundable deposit (usually $200–500) that becomes your limit, then use it like a debit card and pay it off monthly. Or become an authorized user on a parent or family member's well-managed card, which can add their positive history to your own report.",
+              plain: "No credit history isn't a bad score, it's no score at all, and everyone starts there. The two most common ways to build from zero: a secured credit card, where a refundable deposit becomes your limit, then you use it like a debit card and pay it off monthly. Or become an authorized user on a family member's well-managed card.",
               analogy: "A secured card is training wheels — same bike, same rules, just a deposit backing you up until you've built trust.",
               check: { statement: 'You need to carry a balance from month to month to build credit — paying in full every month won\'t help as much.', isTrue: false }
-            },
-            {
-              term: "Credit Doesn't Cross Borders",
-              plain: "If you're an international student, this matters a lot: credit history does not transfer between countries. Excellent credit in Germany, Brazil, or South Korea means starting at zero in the US — the same as anyone with no history at all. The good news: the exact same roadmap applies to you, a secured card or authorized user status works identically.",
-              analogy: "It's less like a translation and more like starting a brand new file — the old one doesn't follow you across the border."
-            }
-          ],
-          xpOnComplete: 3
-        },
-        {
-          id: 'poll2', type: 'poll', title: 'What Do Most People Think?',
-          intro: "One more before Maya sets up her payments. Tap True or False, then see the answer.",
-          statement: 'If you had excellent credit in another country, that history transfers when you move to the US.',
-          isTrue: false,
-          explanation: "It's a myth. Credit history is tied to the country's own reporting system and doesn't transfer — international students start at zero here no matter their credit history back home.",
-          xpOnComplete: 2
-        },
-        {
-          id: 't7', type: 'teach', title: 'Setting Up Your Card Payments',
-          concepts: [
-            {
-              term: "Step 1: Log Into Your Card's App",
-              plain: "Every major card issuer — Chase, Discover, Capital One, Bank of America — has an app or web portal. After your card arrives, activate it (usually a quick phone call or a tap in the app), then create your login. This is command central for everything that follows.",
-              analogy: "Think of it like setting up any new account — one login, and everything else lives inside it."
-            },
-            {
-              term: 'Step 2: Connect Your Bank Account',
-              plain: "To pay your bill, link a checking account using two numbers: your routing number (identifies your BANK) and your account number (identifies YOUR specific account there). Both are printed at the bottom of a paper check, or found in your bank's app under account details.",
-              analogy: "The routing number is like a zip code — it gets your payment to the right bank. The account number is the exact street address once it's there.",
-              check: { statement: 'The routing number identifies your bank, and the account number identifies your specific account.', isTrue: true }
-            },
-            {
-              term: 'Step 3: Autopay — Minimum vs. Full Balance',
-              plain: "Most apps let you set autopay to one of three options: minimum due, a set amount, or full statement balance. Full balance is almost always the right choice — it guarantees you never pay interest and never miss a payment. Autopaying only the minimum still avoids late fees, but leaves the rest of your balance to accrue interest every single day.",
-              analogy: "Full-balance autopay is like paying off a group tab in full. Minimum autopay is chipping in $5 and letting the rest sit there, growing.",
-              check: { statement: 'Setting autopay to the minimum due guarantees you\'ll never pay any interest.', isTrue: false }
-            },
-            {
-              term: 'Step 4: If a Payment Is Missed',
-              plain: "Miss a payment entirely — autopay fails, linked account is empty — and you're looking at a late fee, and if you're 30+ days late, it gets reported to the credit bureaus, a real hit to your score that can take months to recover from. Carry a balance instead of missing a payment, and interest compounds daily — small balances can grow surprisingly fast.",
-              analogy: "A late payment is a single bruise. A carried balance is a slow leak — less dramatic in the moment, but it adds up.",
-              linkOut: { label: 'See exactly how a carried balance grows', action: 'compound-interest' }
             }
           ],
           xpOnComplete: 3
         },
         {
           id: 'c8', type: 'bossbattle', title: 'The Car Repair',
-          scenario: 'Finals week. Maya\'s car needs an $800 repair or she can\'t make it to her internship. She has $150 in savings and $700 of available credit (room left on her limit).',
+          scenario: 'Finals week. Hammy\'s car needs an $800 repair or they can\'t make it to their internship. They have $150 in savings and $700 of available credit (room left on their limit).',
           hintText: 'Compare the interest rates: a regular credit card is around 24% APR. A payday loan can be 300%+ APR. One of those is dramatically more expensive.',
           choices: [
-            { id: 'a', label: 'Cover it with savings, put the rest on the card, pay it off in 2 months', consequence: { text: 'A smart trade-off, a little short-term interest, but she avoids an expensive loan and her credit stays healthy.', delta: { creditScore: 5, savings: -150 }, xpMultiplier: 1.25 } },
-            { id: 'b', label: 'Put the whole $800 on the card, pay minimums', consequence: { text: 'She\'s now using almost all of her limit, with roughly $140 in projected interest ahead, both hurt her score.', delta: { creditScore: -15 }, xpMultiplier: 0.6 } },
+            { id: 'a', label: 'Cover it with savings, put the rest on the card, pay it off in 2 months', consequence: { text: 'A smart trade-off, a little short-term interest, but they avoid an expensive loan and their credit stays healthy.', delta: { creditScore: 5, savings: -150 }, xpMultiplier: 1.25 } },
+            { id: 'b', label: 'Put the whole $800 on the card, pay minimums', consequence: { text: 'They\'re now using almost all of their limit, with roughly $140 in projected interest ahead, both hurt their score.', delta: { creditScore: -15 }, xpMultiplier: 0.6 } },
             { id: 'c', label: 'Take a same-day payday loan (a very short-term loan, repaid fast, with steep fees)', consequence: { text: 'Fast cash, but payday loans often carry 300%+ APR, usually the most expensive option available, by far.', delta: { creditScore: -5 }, xpMultiplier: 0.5 } },
             { id: 'd', label: 'Ask a parent to cover it and pay them back over time', consequence: { text: 'No interest, but this only works as a safety net if that arrangement is actually reliable for both sides.', delta: { creditScore: 0 }, xpMultiplier: 0.9 } }
           ]
@@ -900,17 +1574,17 @@ const MODULES = [
       },
       {
         id: 'jordan',
-        topic: 'The Store Card Trap',
-        character: { name: 'Jordan', tagline: 'Junior tempted by a store card discount at checkout' },
+        topic: 'Store Credit Cards & APR',
+        character: { name: 'Hammy', tagline: 'Tempted by a store card discount at checkout' },
         initialState: { creditScore: 700, checking: 150, savings: 50 },
         bossAchievementId: 'store_card_smart',
         chapters: [
           {
-            id: 'j1', type: 'story', title: 'Meet Jordan',
+            id: 'j1', type: 'story', title: 'The Checkout Offer',
             beats: [
-              { speaker: 'intro', text: "This is Jordan. He's a junior who's had a regular credit card for two years and always pays it off in full. Today, a checkout screen is about to test everything he knows." },
-              { speaker: 'Jordan', text: '"Wait, sign up for a store card and save 20% right now? That\'s basically free money... right?"' },
-              { speaker: 'narrator', text: "Let's slow down before Jordan taps \"Sign Up.\" A discount today can turn into an expensive mistake later, let's break down why." }
+              { speaker: 'intro', text: "Hammy's had a regular credit card for two years now and always pays it off in full. Today, a checkout screen is about to test everything they know." },
+              { speaker: 'Hammy', text: '"Wait, sign up for a store card and save 20% right now? That\'s basically free money... right?"' },
+              { speaker: 'narrator', text: "Let's slow down before Hammy taps \"Sign Up.\" A discount today can turn into an expensive mistake later, let's break down why." }
             ]
           },
           {
@@ -933,21 +1607,21 @@ const MODULES = [
           },
           {
             id: 'j2', type: 'decision', title: 'Sign Up at Checkout?',
-            prompt: "The cashier offers Jordan 20% off his $150 purchase, $30 saved, if he opens the store's credit card right now. What should he do?",
-            hintText: "Weigh the one-time $30 discount against what you just learned about store card APR. Does saying yes cost him anything besides a small score dip if he pays in full?",
+            prompt: "The cashier offers Hammy 20% off their $150 purchase, $30 saved, if they open the store's credit card right now. What should they do?",
+            hintText: "Weigh the one-time $30 discount against what you just learned about store card APR. Does saying yes cost them anything besides a small score dip if they pay in full?",
             choices: [
               {
                 id: 'a', label: 'Open the card for the discount, and pay the full statement immediately',
                 outcome: {
-                  text: 'Jordan saves $30 up front and pays his statement in full, so no interest hits, but the new account and credit check ding his score slightly.',
+                  text: 'Hammy saves $30 up front and pays their statement in full, so no interest hits, but the new account and credit check ding their score slightly.',
                   delta: { creditScore: -5 },
                   compare: [{ label: 'Total spent (with discount)', value: 120 }, { label: 'Total spent (no discount)', value: 150 }]
                 }
               },
               {
-                id: 'b', label: 'Skip the store card and pay full price with his regular card',
+                id: 'b', label: 'Skip the store card and pay full price with their regular card',
                 outcome: {
-                  text: 'Jordan skips the discount but keeps his credit file simple: no new inquiry, no new account to manage.',
+                  text: 'Hammy skips the discount but keeps their credit file simple: no new inquiry, no new account to manage.',
                   delta: { creditScore: 0 },
                   compare: [{ label: 'Total spent (no discount)', value: 150 }, { label: 'Total spent (with discount)', value: 120 }]
                 }
@@ -956,8 +1630,8 @@ const MODULES = [
             xpOnComplete: 5
           },
           {
-            id: 'j3', type: 'microsim', title: "Jordan's Monthly Numbers",
-            prompt: 'Jordan takes home $900/month. Fixed costs already use $650. Help him fit a credit card payment and some savings in without going negative.',
+            id: 'j3', type: 'microsim', title: "Hammy's Monthly Numbers",
+            prompt: 'Hammy takes home $900/month. Fixed costs already use $650. Help them fit a credit card payment and some savings in without going negative.',
             hintText: 'Add up the fixed costs ($400 + $120 + $50 + $80 = $650). That leaves $250 of his $900 to split between the two sliders before he goes negative.',
             income: 900,
             fixedCosts: [
@@ -971,9 +1645,9 @@ const MODULES = [
               { id: 'savings', label: 'Savings deposit', min: 0, max: 100, step: 25, default: 0 }
             ],
             feedbackTiers: [
-              { maxLeftover: -1, text: "That budget goes negative. Jordan can't sustain this. Try a smaller card payment or savings deposit.", ok: false },
+              { maxLeftover: -1, text: "That budget goes negative. Hammy can't sustain this. Try a smaller card payment or savings deposit.", ok: false },
               { maxLeftover: 24, text: "Workable, but there's almost no cushion left for a surprise expense.", ok: true },
-              { maxLeftover: Infinity, text: "Solid. He's covering his bill and still building a cushion.", ok: true }
+              { maxLeftover: Infinity, text: "Solid. They're covering their bill and still building a cushion.", ok: true }
             ],
             xpOnComplete: 6
           },
@@ -1019,7 +1693,7 @@ const MODULES = [
           {
             id: 'j6', type: 'priceisright',
             title: 'The Price Is Right: Store Card Interest',
-            prompt: 'Jordan carries a $500 balance on a store card with 29% APR for a year, paying only the minimum each month. Guess the total interest he pays that year.',
+            prompt: 'Hammy carries a $500 balance on a store card with 29% APR for a year, paying only the minimum each month. Guess the total interest they pay that year.',
             hintText: 'At 29% APR, interest costs roughly a bit more than a quarter of the balance over a full year if it\'s barely paid down. Start your guess near there.',
             actualValue: 145, guessRange: { min: 0, max: 300, step: 10 },
             explanation: 'At 29% APR, interest piles up fast, minimum payments barely touch the principal, so almost the whole payment goes toward interest first.',
@@ -1027,13 +1701,159 @@ const MODULES = [
           },
           {
             id: 'j7', type: 'bossbattle', title: 'The Second Store Card',
-            scenario: "Another store offers Jordan 25% off a $300 purchase for opening yet another store card, his third one this year. What does he do?",
+            scenario: "Another store offers Hammy 25% off a $300 purchase for opening yet another store card, their third one this year. What do they do?",
             hintText: "Remember Hammy's tip about opening several store cards in a short time, each one is a small ding, and it's easy to lose track of multiple bills.",
             choices: [
-              { id: 'a', label: 'Decline: one store card is already enough to manage', consequence: { text: 'Keeping his credit file simple pays off: no new inquiry, no new bill to track.', delta: { creditScore: 5 }, xpMultiplier: 1.25 } },
-              { id: 'b', label: 'Open it anyway for the discount', consequence: { text: 'Three store cards in one year is a lot to manage, and each one dinged his score a little.', delta: { creditScore: -10 }, xpMultiplier: 0.6 } },
+              { id: 'a', label: 'Decline: one store card is already enough to manage', consequence: { text: 'Keeping their credit file simple pays off: no new inquiry, no new bill to track.', delta: { creditScore: 5 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: 'Open it anyway for the discount', consequence: { text: 'Three store cards in one year is a lot to manage, and each one dinged their score a little.', delta: { creditScore: -10 }, xpMultiplier: 0.6 } },
               { id: 'c', label: "Ask if they'll honor the discount without opening a card", consequence: { text: 'Some stores will, worth asking before assuming a new card is the only way to save.', delta: { creditScore: 3 }, xpMultiplier: 1.1 } },
-              { id: 'd', label: 'Put the purchase on his existing regular card instead, and skip the discount', consequence: { text: 'He loses the discount, but keeps everything on one card he already manages well.', delta: { creditScore: 2 }, xpMultiplier: 0.9 } }
+              { id: 'd', label: 'Put the purchase on their existing regular card instead, and skip the discount', consequence: { text: 'They lose the discount, but keep everything on one card they already manage well.', delta: { creditScore: 2 }, xpMultiplier: 0.9 } }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'credit_from_scratch',
+        topic: 'Building Credit From Scratch',
+        character: { name: 'Hammy', tagline: 'Starting with no credit history at all' },
+        initialState: {},
+        chapters: [
+          { id: 'credit_from_scratch_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Building Credit From Scratch." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'fico_scale',
+        topic: 'The FICO Scale',
+        character: { name: 'Hammy', tagline: 'Trying to understand what actually makes up a credit score' },
+        initialState: {},
+        chapters: [
+          { id: 'fico_scale_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on The FICO Scale." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'common_mistakes',
+        topic: 'Common Mistakes That Hurt Your Score',
+        character: { name: 'Hammy', tagline: 'About to make a classic credit mistake' },
+        initialState: {},
+        chapters: [
+          { id: 'common_mistakes_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Common Mistakes That Hurt Your Score." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'disputing_errors',
+        topic: 'Credit Reports & Disputing Errors',
+        character: { name: 'Hammy', tagline: 'Spotting something wrong on a credit report' },
+        initialState: {},
+        chapters: [
+          { id: 'disputing_errors_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Credit Reports & Disputing Errors." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'secured_cards',
+        topic: 'Secured Cards & Authorized-User Status',
+        character: { name: 'Hammy', tagline: 'Looking for a way to build credit from zero' },
+        initialState: {},
+        chapters: [
+          { id: 'secured_cards_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Secured Cards & Authorized-User Status." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'avalanche_snowball',
+        topic: 'Paying Off Debt: Avalanche vs. Snowball',
+        character: { name: 'Hammy', tagline: 'Deciding how to tackle multiple balances' },
+        initialState: {},
+        chapters: [
+          { id: 'avalanche_snowball_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Paying Off Debt: Avalanche vs. Snowball." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'card_setup',
+        parentQuestId: 'maya',
+        topic: 'Opening & Setting Up Your Card: A Step-by-Step Guide',
+        character: { name: 'Hammy', tagline: 'Actually setting up the card that just arrived in the mail' },
+        initialState: { checking: 200 },
+        chapters: [
+          {
+            id: 'cs0', type: 'story', title: 'The Card Arrives',
+            beats: [
+              { speaker: 'intro', text: "Hammy's new credit card just showed up in the mail. Knowing what a credit card IS is one thing — actually setting it up correctly is another. Let's walk through it together, step by step." }
+            ]
+          },
+          {
+            id: 'cs1', type: 'teach', title: 'Step 1 & 2: Activate & Connect',
+            concepts: [
+              {
+                term: 'Step 1: Activate & Log In',
+                plain: "Every major card issuer — Chase, Discover, Capital One, Bank of America — has an app or web portal. After the card arrives, activate it (usually a quick phone call or a tap in the app), then create a login. This is command central for everything that follows.",
+                analogy: "Like setting up any new account — one login, and everything else lives inside it.",
+                check: { statement: 'A credit card can be used normally right out of the envelope, with no activation step.', isTrue: false }
+              },
+              {
+                term: 'Step 2: Connect a Bank Account',
+                plain: "To pay the bill, link a checking account using two numbers: the routing number (identifies the BANK) and the account number (identifies the specific account). Both are printed at the bottom of a paper check, or found in the bank's app.",
+                analogy: "The routing number is like a zip code — it gets the payment to the right bank. The account number is the exact address once it's there.",
+                check: { statement: 'The routing number identifies your bank, and the account number identifies your specific account.', isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cs2', type: 'teach', title: 'Step 3 & 4: Autopay & Safety Net',
+            concepts: [
+              {
+                term: 'Step 3: Set Up Autopay',
+                plain: "Most apps let you set autopay to minimum due, a set amount, or full statement balance. Full balance is almost always the right choice — it guarantees no interest and no missed payments.",
+                analogy: "Full-balance autopay is like paying off a group tab in full. Minimum autopay is chipping in $5 and letting the rest sit there, growing.",
+                check: { statement: 'Setting autopay to the minimum due guarantees you\'ll never pay any interest.', isTrue: false }
+              },
+              {
+                term: 'Step 4: If a Payment Is Missed',
+                plain: "Autopay fails or the linked account is empty, and there's a late fee — 30+ days late, and it's reported to the credit bureaus, a real hit that can take months to recover from.",
+                analogy: "A late payment is a single bruise. A carried balance is a slow leak — less dramatic in the moment, but it adds up.",
+                linkOut: { label: 'See exactly how a carried balance grows', action: 'compound-interest' }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cs3', type: 'decision', title: 'Setting the Autopay',
+            prompt: "Hammy's app asks which autopay option to choose: minimum due, a fixed $50, or full statement balance.",
+            hintText: "Which option guarantees zero interest, no matter what?",
+            choices: [
+              { id: 'a', label: 'Full statement balance', outcome: { text: "Every bill gets paid in full automatically — no interest, no missed payments, no thinking about it again.", delta: { checking: 0 }, compare: [{ label: 'Interest risk', value: 0 }, { label: 'Effort required', value: 0 }] } },
+              { id: 'b', label: 'Minimum due, to keep more cash available', outcome: { text: "Late fees get avoided, but the rest of the balance sits there accruing interest every single day.", delta: { checking: 0 }, compare: [{ label: 'Interest risk', value: 1 }, { label: 'Effort required', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cs4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 3],
+            hintTexts: [
+              "Think about what happens to a balance when only the minimum gets paid.",
+              "Think about which habit — paying in full, on time — carries the most weight for your score."
             ]
           }
         ]
@@ -1125,6 +1945,160 @@ const MODULES = [
       { title: 'What Insurance Actually Pays Out', hook: 'In the same week, you notice a $47 charge you don\'t recognize on your debit card, and you\'re filing your first-ever renter\'s insurance claim after a burst pipe. Do you know what to expect from either process?', qIndices: [9, 4] },
       { title: 'Identity Theft & Staying Safe Online', hook: 'You get a text claiming to be your bank, asking you to confirm your login while you\'re on public coffee-shop WiFi. Something about it feels off, but you\'re not totally sure why.', qIndices: [3, 10] },
       { title: 'If Something Is Stolen or Compromised', hook: 'Your wallet gets stolen the same week you get a suspicious "verify your financial aid account" email. Reacting fast to both keeps a bad day from turning into months of cleanup.', qIndices: [11, 8] }
+    ],
+    quests: [
+      {
+        id: 'health_basics',
+        topic: 'Health Insurance Basics: Premiums & Deductibles',
+        character: { name: 'Hammy', tagline: 'Picking a health plan for the first time' },
+        initialState: {},
+        chapters: [
+          { id: 'health_basics_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Health Insurance Basics: Premiums & Deductibles." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'health_waiver',
+        topic: 'Navigating Your Student Health Insurance Options',
+        character: { name: 'Hammy', tagline: 'Deciding whether to waive the school\'s health plan' },
+        initialState: {},
+        chapters: [
+          { id: 'health_waiver_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Navigating Your Student Health Insurance Options." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'renters_insurance',
+        topic: 'Renter\'s Insurance: Protecting Your Stuff',
+        character: { name: 'Hammy', tagline: 'Moving into a first apartment' },
+        initialState: {},
+        chapters: [
+          { id: 'renters_insurance_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Renter's Insurance: Protecting Your Stuff." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'auto_insurance',
+        topic: 'Auto Insurance Basics: What Coverage Actually Means',
+        character: { name: 'Hammy', tagline: 'Getting a first car insurance policy' },
+        initialState: {},
+        chapters: [
+          { id: 'auto_insurance_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Auto Insurance Basics: What Coverage Actually Means." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'insurance_payout',
+        topic: 'What Insurance Actually Pays Out',
+        character: { name: 'Hammy', tagline: 'Filing a claim for the first time' },
+        initialState: {},
+        chapters: [
+          { id: 'insurance_payout_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on What Insurance Actually Pays Out." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'life_disability',
+        topic: 'Life & Disability Insurance in Your 20s',
+        character: { name: 'Hammy', tagline: 'Wondering if life insurance matters this early' },
+        initialState: {},
+        chapters: [
+          { id: 'life_disability_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Life & Disability Insurance in Your 20s." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'umbrella_coverage',
+        topic: 'Umbrella Coverage & Extra Liability Protection',
+        character: { name: 'Hammy', tagline: 'Learning what an umbrella policy actually covers' },
+        initialState: {},
+        chapters: [
+          { id: 'umbrella_coverage_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Umbrella Coverage & Extra Liability Protection." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'reading_policy',
+        topic: 'Reading a Policy Before You Need It',
+        character: { name: 'Hammy', tagline: 'Actually reading the fine print on a policy' },
+        initialState: {},
+        chapters: [
+          { id: 'reading_policy_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Reading a Policy Before You Need It." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'health_enroll',
+        parentQuestId: 'health_basics',
+        topic: 'Enrolling in a Health Insurance Plan: A Step-by-Step Guide',
+        character: { name: 'Hammy', tagline: 'Actually enrolling in — or waiving — a health plan' },
+        initialState: {},
+        chapters: [
+          {
+            id: 'he0', type: 'story', title: 'The Enrollment Deadline',
+            beats: [
+              { speaker: 'intro', text: "Hammy's school just sent an email: enroll in the student health plan, or submit a waiver, by the deadline in two weeks. Understanding premiums and deductibles is one thing — actually doing the paperwork is another." }
+            ]
+          },
+          {
+            id: 'he1', type: 'teach', title: 'Step 1 & 2: Compare & Gather',
+            concepts: [
+              { term: 'Step 1: Compare the Real Options', plain: "If already covered under a parent's plan (allowed until age 26), compare that coverage against the school's plan — network of doctors, cost, and whether it covers care near campus.", analogy: "It's a side-by-side comparison, like comparing two phone plans before switching.", check: { statement: "Students can generally stay on a parent's health plan until age 26.", isTrue: true } },
+              { term: "Step 2: Gather What's Needed", plain: "To waive the school's plan, proof of comparable existing coverage is required — usually the insurance card or a benefits summary showing the plan meets the school's minimum requirements.", analogy: "It's like providing proof of address — a specific document, not just a verbal claim.", check: {} }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'he2', type: 'teach', title: 'Step 3 & 4: Submit & Save',
+            concepts: [
+              { term: 'Step 3: Submit Before the Deadline', plain: "Waivers and enrollments both have hard deadlines, often within the first few weeks of the semester. Miss it, and the school's plan (and its cost) gets automatically billed with no way to reverse it until next term.", analogy: "It's like an opt-out window — miss it, and the default choice sticks for the whole term.", check: { statement: 'Missing a health plan waiver deadline usually has no real consequence.', isTrue: false } },
+              { term: 'Step 4: Save the Confirmation', plain: "Whether waiving or enrolling, save the confirmation email or screenshot. If a bill shows up later that shouldn't be there, this proof makes it easy to get it corrected.", analogy: "A receipt for a decision that saves an argument later.", check: {} }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'he3', type: 'decision', title: 'The Auto-Bill',
+            prompt: "Hammy's bursar bill shows a $2,000 student health plan charge, even though Hammy is already covered under a parent's plan. The waiver deadline was yesterday.",
+            hintText: "Is a missed deadline always truly final, or worth a call first?",
+            choices: [
+              { id: 'a', label: 'Just pay the charge since the deadline already passed', outcome: { text: "Paying without checking first means possibly losing $2,000 that a quick call to the health services office might have resolved.", delta: {}, compare: [{ label: 'Cost paid', value: 2000 }, { label: 'Cost if resolved', value: 0 }] } },
+              { id: 'b', label: 'Call the health services or bursar office to ask about a late waiver exception', outcome: { text: "Many schools allow a short grace period or exception process — worth asking before assuming the charge is final.", delta: {}, compare: [{ label: 'Cost if waived', value: 0 }, { label: 'Cost if not', value: 2000 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'he4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [5, 6],
+            hintTexts: [
+              "Think about what a deductible actually means before insurance starts paying.",
+              "Think about what a school requires as proof before removing an automatic charge."
+            ]
+          }
+        ]
+      }
     ]
   },
   {
@@ -1212,6 +2186,160 @@ const MODULES = [
       { title: 'Borrowing Only What You Need', hook: 'Your financial aid offer shows $5,500 in federal loans available for the year. You only need $3,200 to cover the gap after grants. It\'s tempting to take it all as extra cash. Should you?', qIndices: [4, 5] },
       { title: 'Repayment Plans & Interest Capitalization', hook: 'You defer your loan for a semester while between jobs, and later hear terms like "income-driven repayment" and "capitalized interest" for the first time. Do you actually know what either means for your balance?', qIndices: [8, 9] },
       { title: 'Grace Periods & Planning Ahead', hook: 'You graduate in May with $28,000 in federal loans and a job offer that starts in July. When does your first payment actually hit — and how do you know if you can afford it?', qIndices: [7, 11] }
+    ],
+    quests: [
+      {
+        id: 'federal_loans',
+        topic: 'Federal Loans: Subsidized vs. Unsubsidized',
+        character: { name: 'Hammy', tagline: 'Comparing loan offers in a financial aid package' },
+        initialState: {},
+        chapters: [
+          { id: 'federal_loans_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Federal Loans: Subsidized vs. Unsubsidized." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'plus_loans',
+        topic: 'Parent PLUS Loans & Who\'s Responsible',
+        character: { name: 'Hammy', tagline: 'Figuring out who\'s actually on the hook for a loan' },
+        initialState: {},
+        chapters: [
+          { id: 'plus_loans_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Parent PLUS Loans & Who's Responsible." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'loan_paperwork',
+        topic: 'FAFSA Eligibility & Loan Paperwork',
+        character: { name: 'Hammy', tagline: 'Wading through loan paperwork' },
+        initialState: {},
+        chapters: [
+          { id: 'loan_paperwork_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on FAFSA Eligibility & Loan Paperwork." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'borrow_only_need',
+        topic: 'Borrowing Only What You Need',
+        character: { name: 'Hammy', tagline: 'Deciding how much to actually borrow' },
+        initialState: {},
+        chapters: [
+          { id: 'borrow_only_need_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Borrowing Only What You Need." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'repayment_plans',
+        topic: 'Loan Repayment Plans Explained',
+        character: { name: 'Hammy', tagline: 'Picking a repayment plan after graduation' },
+        initialState: {},
+        chapters: [
+          { id: 'repayment_plans_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Loan Repayment Plans Explained." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'capitalization',
+        topic: 'Interest Capitalization: The True Cost of Waiting',
+        character: { name: 'Hammy', tagline: 'Learning what happens to unpaid interest' },
+        initialState: {},
+        chapters: [
+          { id: 'capitalization_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Interest Capitalization: The True Cost of Waiting." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'grace_periods',
+        topic: 'Grace Periods & Planning Ahead',
+        character: { name: 'Hammy', tagline: 'Planning for the day payments start' },
+        initialState: {},
+        chapters: [
+          { id: 'grace_periods_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Grace Periods & Planning Ahead." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'private_loans',
+        topic: 'Private Loans: When to Consider Them',
+        character: { name: 'Hammy', tagline: 'Weighing a private loan against federal options' },
+        initialState: {},
+        chapters: [
+          { id: 'private_loans_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Private Loans: When to Consider Them." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'accept_loan',
+        parentQuestId: 'federal_loans',
+        topic: 'Accepting Your Loan Offer on StudentAid.gov: A Step-by-Step Guide',
+        character: { name: 'Hammy', tagline: 'Actually accepting — or reducing — a federal loan offer' },
+        initialState: {},
+        chapters: [
+          {
+            id: 'al0', type: 'story', title: 'The Aid Offer Is In',
+            beats: [
+              { speaker: 'intro', text: "Hammy's financial aid offer just arrived with $5,500 in federal loans listed. Knowing subsidized from unsubsidized is one thing — actually accepting, reducing, or declining the offer is another." }
+            ]
+          },
+          {
+            id: 'al1', type: 'teach', title: 'Step 1 & 2: Log In & Complete Counseling',
+            concepts: [
+              { term: 'Step 1: Log Into StudentAid.gov', plain: "First-time federal borrowers need an FSA ID to log in. This account is the hub for everything: loan counseling, the Master Promissory Note, and later, servicing the loan after graduation.", analogy: "It's the single login that follows a federal loan through its entire life.", check: {} },
+              { term: 'Step 2: Complete Entrance Counseling', plain: "Before any funds are disbursed, first-time borrowers must complete Loan Entrance Counseling — a short online module covering how interest works, repayment options, and borrower rights.", analogy: "It's like a short orientation before getting the keys — quick, but required.", check: { statement: 'Entrance Counseling is optional for first-time federal borrowers.', isTrue: false } }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'al2', type: 'teach', title: 'Step 3 & 4: Sign & Decide',
+            concepts: [
+              { term: 'Step 3: Sign the Master Promissory Note', plain: "The MPN is the legal promise to repay the loan under its terms. It's typically only signed once and can cover multiple years of loans from the same school.", analogy: "It's the signature on the loan itself, not a form for questions.", check: {} },
+              { term: 'Step 4: Accept, Reduce, or Decline Each Loan', plain: "The school's portal lists each loan offered. Nothing requires accepting the full amount — accept only what covers the actual gap after other aid, and reduce or decline the rest.", analogy: "It's a menu, not an all-or-nothing bundle.", check: { statement: 'A student must always accept the full loan amount offered in their aid package.', isTrue: false } }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'al3', type: 'decision', title: 'The Extra $2,300',
+            prompt: "After grants and savings, Hammy only needs $3,200 of the $5,500 in federal loans offered. What's the smartest move in the portal?",
+            hintText: "Does extra loan money offered mean it has to be borrowed?",
+            choices: [
+              { id: 'a', label: 'Accept the full $5,500 for extra spending money', outcome: { text: "The extra $2,300 accrues interest like the rest and has to be repaid with interest after graduation.", delta: {}, compare: [{ label: 'Borrowed', value: 5500 }, { label: 'Actually needed', value: 3200 }] } },
+              { id: 'b', label: 'Accept only the $3,200 needed and decline the rest', outcome: { text: "Only the amount actually needed gets borrowed — smaller balance, smaller future payments.", delta: {}, compare: [{ label: 'Borrowed', value: 3200 }, { label: 'Declined', value: 2300 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'al4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [3, 4],
+            hintTexts: [
+              "Think about what's required before any federal loan funds get disbursed.",
+              "Think about whether a full loan offer has to be accepted in full."
+            ]
+          }
+        ]
+      }
     ]
   },
   {
@@ -1299,6 +2427,160 @@ const MODULES = [
       { title: 'Dependency Status & Common Mistakes', hook: 'Your parents still claim you as a dependent, and your friend who got $600 back after filing says you should definitely file too, even though you were "just an intern." What are you both getting wrong or right?', qIndices: [6, 5] },
       { title: 'Freelance Income: Estimated Taxes & State Filing', hook: 'You earned $8,000 freelancing this year with nothing withheld, and half of it came from clients in the state where you go to school — not your home state. Is April the only deadline you need to worry about?', qIndices: [8, 9] },
       { title: 'Getting Your Withholding Right & Filing for Free', hook: 'Last year\'s tax bill caught you off guard, and this year a friend says campus has a free clinic that\'ll actually file your return for you. Do either of those things sound too good to be true?', qIndices: [10, 11] }
+    ],
+    quests: [
+      {
+        id: 'first_return',
+        topic: 'Filing Your First Tax Return',
+        character: { name: 'Hammy', tagline: 'Filing a tax return for the first time' },
+        initialState: {},
+        chapters: [
+          { id: 'first_return_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Filing Your First Tax Return." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'w2_vs_1099',
+        topic: 'W-2s vs. 1099s',
+        character: { name: 'Hammy', tagline: 'Sorting out two different income forms' },
+        initialState: {},
+        chapters: [
+          { id: 'w2_vs_1099_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on W-2s vs. 1099s." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'education_credits',
+        topic: 'Education Tax Credits & Your 1098-T',
+        character: { name: 'Hammy', tagline: 'Trying to make sense of a 1098-T' },
+        initialState: {},
+        chapters: [
+          { id: 'education_credits_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Education Tax Credits & Your 1098-T." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'dependency_status',
+        topic: 'Dependency Status & Common Mistakes',
+        character: { name: 'Hammy', tagline: 'Figuring out dependency status at tax time' },
+        initialState: {},
+        chapters: [
+          { id: 'dependency_status_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Dependency Status & Common Mistakes." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'estimated_taxes',
+        topic: 'Estimated Taxes for Freelance/Gig Income',
+        character: { name: 'Hammy', tagline: 'Owing taxes nobody withheld' },
+        initialState: {},
+        chapters: [
+          { id: 'estimated_taxes_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Estimated Taxes for Freelance/Gig Income." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'withholding_free_file',
+        topic: 'Getting Withholding Right & Filing for Free',
+        character: { name: 'Hammy', tagline: 'Fixing a withholding mistake' },
+        initialState: {},
+        chapters: [
+          { id: 'withholding_free_file_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Getting Withholding Right & Filing for Free." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'tax_brackets',
+        topic: 'How Tax Brackets Actually Work (Marginal vs. Effective Rate)',
+        character: { name: 'Hammy', tagline: 'Trying to understand what tax bracket actually means' },
+        initialState: {},
+        chapters: [
+          { id: 'tax_brackets_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on How Tax Brackets Actually Work (Marginal vs. Effective Rate)." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'deadlines_refunds',
+        topic: 'Tax Deadlines, Extensions & Refunds: What to Expect',
+        character: { name: 'Hammy', tagline: 'Waiting on a tax refund' },
+        initialState: {},
+        chapters: [
+          { id: 'deadlines_refunds_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Tax Deadlines, Extensions & Refunds: What to Expect." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'file_free',
+        parentQuestId: 'first_return',
+        topic: 'Filing Your Taxes for Free: A Step-by-Step Guide',
+        character: { name: 'Hammy', tagline: 'Actually filing a first tax return without paying for it' },
+        initialState: {},
+        chapters: [
+          {
+            id: 'ff0', type: 'story', title: 'April Is Coming',
+            beats: [
+              { speaker: 'intro', text: "Hammy has a W-2 from a campus job and has never filed a tax return. Knowing what a W-2 means is one thing — actually filing the return is another." }
+            ]
+          },
+          {
+            id: 'ff1', type: 'teach', title: 'Step 1 & 2: Gather & Choose a Tool',
+            concepts: [
+              { term: 'Step 1: Gather the Documents', plain: "Collect every income form received — W-2s from jobs, 1099s from gig work or freelancing — plus a 1098-T if enrolled, and last year's return if one exists.", analogy: "It's like packing for a trip — everything is much easier with the full list gathered first.", check: {} },
+              { term: 'Step 2: Pick a Free Filing Tool', plain: "IRS Free File is free for most students' income levels, and many schools host free VITA (Volunteer Income Tax Assistance) clinics. Paying a tax prep company usually isn't necessary for a simple return.", analogy: "Same result as a paid preparer, for most simple student returns, at no cost.", check: { statement: 'Most students with simple returns are required to pay a tax preparation company to file.', isTrue: false } }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ff2', type: 'teach', title: 'Step 3 & 4: Enter & Submit',
+            concepts: [
+              { term: 'Step 3: Enter Info & Review', plain: "Most free tools walk through entering each form step by step, then flag likely credits — like education credits from a 1098-T — automatically. Review the summary before submitting; a small typo in a number can delay everything.", analogy: "It's a guided interview, not a blank form.", check: {} },
+              { term: 'Step 4: Submit & Track the Refund', plain: "E-filing is faster than mailing a paper return, and most refunds arrive within 1-3 weeks. The IRS's own tracking tool shows exactly where a return stands.", analogy: "Like tracking a package instead of wondering when it'll show up.", check: { statement: 'E-filing a tax return is typically faster than mailing a paper return.', isTrue: true } }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ff3', type: 'decision', title: 'The Paid App Ad',
+            prompt: "Hammy sees an ad for a tax app charging $40 to file, right as free IRS Free File and a campus VITA clinic are also both available.",
+            hintText: "Does a simple student return usually need a paid service?",
+            choices: [
+              { id: 'a', label: 'Pay the $40 since it looked professional in the ad', outcome: { text: "$40 spent for a result the free options would have produced identically for a simple return.", delta: {}, compare: [{ label: 'Cost', value: 40 }, { label: 'Free alternative', value: 0 }] } },
+              { id: 'b', label: 'Use IRS Free File or the campus VITA clinic instead', outcome: { text: "Same accurate return, filed for $0 instead of $40.", delta: {}, compare: [{ label: 'Cost', value: 0 }, { label: 'Paid alternative', value: 40 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ff4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 11],
+            hintTexts: [
+              "Think about what documents and status need to be confirmed before filing anything.",
+              "Think about what free options exist for a simple student return."
+            ]
+          }
+        ]
+      }
     ]
   },
   {
@@ -1460,6 +2742,208 @@ const MODULES = [
           bonusXpForOptimalPath: 8
         }
       }
+    ],
+    quests: [
+      {
+        id: 'knowing_not_enough',
+        topic: 'Why Knowing Isn\'t Enough',
+        character: { name: 'Hammy', tagline: 'Knowing the right answer and still overspending' },
+        initialState: {},
+        chapters: [
+          { id: 'knowing_not_enough_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Why Knowing Isn't Enough." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'lifestyle_inflation',
+        topic: 'Lifestyle Inflation: Why Spending Grows With Income',
+        character: { name: 'Hammy', tagline: 'Noticing spending creep up with a raise' },
+        initialState: {},
+        chapters: [
+          { id: 'lifestyle_inflation_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Lifestyle Inflation: Why Spending Grows With Income." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'social_pressure',
+        topic: 'Social Pressure & Comparison Spending',
+        character: { name: 'Hammy', tagline: 'Feeling pressure to keep up with friends\' spending' },
+        initialState: {},
+        chapters: [
+          { id: 'social_pressure_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Social Pressure & Comparison Spending." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'subscription_creep',
+        topic: 'Subscription Creep & Recurring Payments',
+        character: { name: 'Hammy', tagline: 'Losing track of monthly subscriptions' },
+        initialState: {},
+        chapters: [
+          { id: 'subscription_creep_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Subscription Creep & Recurring Payments." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'bnpl_cost',
+        topic: 'Buy Now, Pay Later: The Real Cost',
+        character: { name: 'Hammy', tagline: 'Considering a BNPL plan at checkout' },
+        initialState: {},
+        chapters: [
+          { id: 'bnpl_cost_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Buy Now, Pay Later: The Real Cost." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'mental_accounting',
+        topic: 'Mental Accounting & Targeted Ads',
+        character: { name: 'Hammy', tagline: 'Noticing how ads target their spending habits' },
+        initialState: {},
+        chapters: [
+          { id: 'mental_accounting_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Mental Accounting & Targeted Ads." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'sunk_cost',
+        topic: 'Sunk Cost Fallacy & Breaking Spending Triggers',
+        character: { name: 'Hammy', tagline: 'Stuck justifying a bad purchase' },
+        initialState: {},
+        chapters: [
+          { id: 'sunk_cost_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Sunk Cost Fallacy & Breaking Spending Triggers." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'automate_habits',
+        topic: 'Automating Good Habits & Coping With Triggers',
+        character: { name: 'Hammy', tagline: 'Trying to build better spending habits automatically' },
+        initialState: { checking: 200 },
+        chapters: [
+          {
+            id: 'ah0', type: 'story', title: 'Nine PM, Tight on Cash',
+            beats: [
+              { speaker: 'intro', text: "It's 9pm and Hammy's friends just texted about a $60 concert this weekend. Hammy's tight on cash — rent is due Monday. Everyone's waiting on an answer. Does the pressure to decide fast change the decision itself?" }
+            ]
+          },
+          {
+            id: 'ah1', type: 'teach', title: 'The Scarcity Mindset',
+            concepts: [
+              { term: 'Scarcity Mindset', plain: "Being tight on time or money changes how you decide — when resources feel scarce, your brain narrows in on the immediate problem and gets worse at weighing tradeoffs. Before any purchase over $50, run it through three questions: what's the actual cost, what's the consequence if you say yes, and can you undo it if you're wrong?", analogy: "Pressure shrinks your field of view right when you need it widest.", check: { statement: 'Feeling rushed to decide has no real effect on decision quality.', isTrue: false } }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ah2', type: 'decision', title: 'The Group Chat',
+            prompt: "Hammy's friends are going to a $60 concert this weekend, but rent is due Monday. The group chat is waiting. What does Hammy do?",
+            hintText: "Is there an honest option that costs nothing and explains nothing away?",
+            choices: [
+              { id: 'a', label: "Say yes and put it on a credit card — don't want to miss out", outcome: { text: "Now $60 closer to not covering rent, on a card that charges interest if not paid in full.", delta: { checking: -60 }, compare: [{ label: 'Cost', value: 60 }, { label: 'Alternative', value: 0 }] } },
+              { id: 'b', label: 'Make a vague excuse and skip it without explaining why', outcome: { text: 'Money stays fine, but friends are left guessing — repeated unexplained no\'s quietly create distance.', delta: { checking: 0 }, compare: [{ label: 'Cost', value: 0 }, { label: 'Social cost', value: 1 }] } },
+              { id: 'c', label: '"I\'m tight this week, but I\'m in for something free after"', outcome: { text: 'Nothing lost — rent stays covered, and real friends respect honesty more than a vague no or an unrepaid flex.', delta: { checking: 0 }, compare: [{ label: 'Cost', value: 0 }, { label: 'Social cost', value: 0 }] } }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'ah3', type: 'decision', title: 'Morning: The Countdown Timer',
+            prompt: 'A checkout page shows "⏰ 2 left, offer ends in 9:58" for a $70 jacket Hammy wasn\'t planning to buy.',
+            hintText: "Does the timer reset for the next visitor too?",
+            choices: [
+              { id: 'a', label: 'Buy now, before the timer runs out', outcome: { text: 'That timer resets for the next visitor too — the urgency was never really about the jacket running out.', delta: { checking: -70 }, compare: [{ label: 'Spent', value: 70 }, { label: 'Kept', value: 0 }] } },
+              { id: 'b', label: 'Close the tab and give it 24 hours', outcome: { text: 'Real scarcity is rare online — if it\'s still there tomorrow, it was never actually about to disappear.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 70 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ah4', type: 'decision', title: 'Evening: The Bad Grade',
+            prompt: 'A rough exam grade lands right as an ad for a "$40 treat yourself" skincare set pops up.',
+            hintText: "Does the relief from an impulse buy usually outlast the bill?",
+            choices: [
+              { id: 'a', label: 'Buy it, today earned it', outcome: { text: 'The relief from an impulse purchase fades faster than the bill does.', delta: { checking: -40 }, compare: [{ label: 'Spent', value: 40 }, { label: 'Kept', value: 0 }] } },
+              { id: 'b', label: 'Text a friend instead, revisit tomorrow if still wanted', outcome: { text: 'Still an option tomorrow, just without deciding while stressed.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 40 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ah5', type: 'bossbattle', title: 'Late Night: The Influencer Code',
+            scenario: "An influencer posts a \"24-hours-only\" 30%-off code for a $120 haircare bundle Hammy doesn't currently need.",
+            hintText: "A discount only saves money on something you were already buying.",
+            choices: [
+              { id: 'a', label: 'Use the code, it\'s basically free money saved', consequence: { text: 'A 30% discount on something not needed still costs the other 70% that didn\'t have to be spent.', delta: { checking: -84 }, xpMultiplier: 0.6 } },
+              { id: 'b', label: "Skip it — a sale isn't a reason to buy something not already on the list", consequence: { text: 'That\'s the actual rule: a discount only saves money on something already being bought.', delta: { checking: 0 }, xpMultiplier: 1.25 } }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'autosave_setup',
+        parentQuestId: 'automate_habits',
+        topic: 'Setting Up Auto-Save & Spending Alerts: A Step-by-Step Guide',
+        character: { name: 'Hammy', tagline: 'Actually automating the habits instead of just meaning to' },
+        initialState: { checking: 200 },
+        chapters: [
+          {
+            id: 'as0', type: 'story', title: 'Meaning to vs. Doing It',
+            beats: [
+              { speaker: 'intro', text: "Hammy knows exactly why willpower alone doesn't stop late-night impulse spending. The auto-save rule and spending alerts that would actually help, though, have never been set up. Let's fix that." }
+            ]
+          },
+          {
+            id: 'as1', type: 'teach', title: 'Step 1 & 2: Pick a Tool & Automate',
+            concepts: [
+              { term: 'Step 1: Pick an App With Real Alerts', plain: "Most banking apps support custom alerts — a text or push notification when a balance drops below a set amount, or when a purchase exceeds a chosen threshold.", analogy: "It's a tripwire that notices before the balance gets to zero, not after.", check: {} },
+              { term: 'Step 2: Set an Automatic Transfer Rule', plain: "Set a recurring transfer to savings for payday, even a small amount — $20-$25 per paycheck is enough to start. The habit matters more than the amount at first.", analogy: '"Pay yourself first" happens automatically instead of relying on remembering.', check: { statement: 'An automatic transfer rule needs to move a large amount to be worthwhile.', isTrue: false } }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'as2', type: 'teach', title: 'Step 3 & 4: Set Limits & Review',
+            concepts: [
+              { term: 'Step 3: Set Spending Alerts & Category Limits', plain: "Many apps allow setting a monthly limit per category — like dining or shopping — and send an alert when getting close. This catches subscription creep and mood-spending patterns before the statement arrives.", analogy: "A speedometer for spending, instead of finding out the total at the end of the month.", check: {} },
+              { term: 'Step 4: Review Once a Month', plain: "Automation isn't set-and-forget forever — a quick monthly check confirms the alerts and transfer amount still make sense as income or expenses change.", analogy: "Like checking tire pressure occasionally, even on a car that mostly runs fine.", check: { statement: 'Automated savings and alerts never need to be revisited once set up.', isTrue: false } }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'as3', type: 'decision', title: 'The Late-Night Alert',
+            prompt: "It's 1am, Hammy is about to make an impulse purchase, and a spending alert pops up showing this category is already near its monthly limit.",
+            hintText: "What was the whole point of setting this alert up in the first place?",
+            choices: [
+              { id: 'a', label: 'Dismiss the alert and buy it anyway', outcome: { text: "The alert did its job — noticing it and buying anyway defeats the purpose it was set up for.", delta: { checking: -40 }, compare: [{ label: 'Category limit respected', value: 0 }, { label: 'Ignored', value: 1 }] } },
+              { id: 'b', label: 'Close the app and revisit tomorrow if still wanted', outcome: { text: "The exact scenario this system was built for — a pause instead of an in-the-moment decision.", delta: { checking: 0 }, compare: [{ label: 'Category limit respected', value: 1 }, { label: 'Ignored', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'as4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [5, 11],
+            hintTexts: [
+              "Think about what actually makes a financial habit stick long-term.",
+              "Think about a better response to stress than an impulse purchase."
+            ]
+          }
+        ]
+      }
     ]
   },
   {
@@ -1558,12 +3042,166 @@ const MODULES = [
           xpOnComplete: 5
         }
       }
+    ],
+    quests: [
+      {
+        id: 'offer_letter',
+        topic: 'Reading Your Offer Letter',
+        character: { name: 'Hammy', tagline: 'Reading a job offer letter for the first time' },
+        initialState: {},
+        chapters: [
+          { id: 'offer_letter_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Reading Your Offer Letter." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'negotiate_salary',
+        topic: 'Negotiating Your First Salary',
+        character: { name: 'Hammy', tagline: 'About to accept a salary offer without negotiating' },
+        initialState: {},
+        chapters: [
+          { id: 'negotiate_salary_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Negotiating Your First Salary." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'total_comp',
+        topic: 'Benefits & Total Compensation',
+        character: { name: 'Hammy', tagline: 'Comparing benefits packages between offers' },
+        initialState: {},
+        chapters: [
+          { id: 'total_comp_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Benefits & Total Compensation." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'retirement_equity',
+        topic: 'Retirement Match & Equity',
+        character: { name: 'Hammy', tagline: 'Trying to understand an equity offer' },
+        initialState: {},
+        chapters: [
+          { id: 'retirement_equity_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Retirement Match & Equity." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'comparing_offers',
+        topic: 'Comparing Offers & Job-Hopping',
+        character: { name: 'Hammy', tagline: 'Weighing two job offers against each other' },
+        initialState: {},
+        chapters: [
+          { id: 'comparing_offers_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Comparing Offers & Job-Hopping." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'building_network',
+        topic: 'Building Your Network for Long-Term Impact',
+        character: { name: 'Hammy', tagline: 'Building a professional network from scratch' },
+        initialState: {},
+        chapters: [
+          { id: 'building_network_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Building Your Network for Long-Term Impact." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'negotiating_compounds',
+        topic: 'Why Negotiating Compounds Over Your Career',
+        character: { name: 'Hammy', tagline: 'Wondering if negotiating this one offer really matters' },
+        initialState: {},
+        chapters: [
+          { id: 'negotiating_compounds_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Why Negotiating Compounds Over Your Career." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'first_90_days',
+        topic: 'Starting Your First Job: What to Expect in the First 90 Days',
+        character: { name: 'Hammy', tagline: 'Starting a first full-time job' },
+        initialState: {},
+        chapters: [
+          { id: 'first_90_days_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Starting Your First Job: What to Expect in the First 90 Days." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'negotiate_email',
+        parentQuestId: 'negotiate_salary',
+        topic: 'Negotiating Your Offer by Email: A Step-by-Step Guide',
+        character: { name: 'Hammy', tagline: 'Actually writing the counter-offer email' },
+        initialState: {},
+        chapters: [
+          {
+            id: 'ne0', type: 'story', title: 'The Offer Just Landed',
+            beats: [
+              { speaker: 'intro', text: "Hammy just got a $58,000 offer and knows negotiating is worth it in theory. Actually writing the email that asks for more is a different challenge entirely." }
+            ]
+          },
+          {
+            id: 'ne1', type: 'teach', title: 'Step 1 & 2: Research & Draft',
+            concepts: [
+              { term: 'Step 1: Research the Market Rate', plain: "Sites like Glassdoor, Levels.fyi, and LinkedIn Salary show typical pay for the role, location, and experience level. A specific number backed by data is far more persuasive than a vague request for more.", analogy: "Showing up with comparable listings, like researching a car's fair price before negotiating.", check: {} },
+              { term: 'Step 2: Draft the Counter-Offer', plain: "A good counter-offer email thanks them for the offer, expresses enthusiasm for the role, states a specific target number backed by research, and asks if there's flexibility. Keep it short, professional, and non-confrontational.", analogy: "It reads like a business email, not a demand — friendly but specific.", check: { statement: 'A vague request for "more money" is generally more effective than a specific number backed by research.', isTrue: false } }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ne2', type: 'teach', title: 'Step 3 & 4: Respond & Confirm',
+            concepts: [
+              { term: 'Step 3: Respond to Pushback', plain: "If the employer can't move on base salary, ask about other levers: signing bonus, extra PTO, an earlier review date, or remote flexibility. Many companies have more room on these than on the base number.", analogy: "If one door doesn't open, there are usually several other doors in the same room.", check: {} },
+              { term: 'Step 4: Get the Final Offer in Writing', plain: "Once terms are agreed verbally or by phone, always ask for a written, updated offer letter before accepting or resigning from anything else. Verbal promises can be forgotten; written offers can't.", analogy: "A handshake is nice, but the signed paper is what actually holds.", check: { statement: 'A verbally agreed salary change is just as reliable as getting the updated offer in writing.', isTrue: false } }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ne3', type: 'decision', title: 'The Reply',
+            prompt: "The recruiter replies: \"We can't move on base salary, but we do have some flexibility on signing bonus and start date.\" What's the smartest next move?",
+            hintText: "Is base salary the only lever worth pulling?",
+            choices: [
+              { id: 'a', label: "Drop the conversation since base salary won't change", outcome: { text: "The signing bonus and start-date flexibility mentioned go completely unexplored.", delta: {}, compare: [{ label: 'Value captured', value: 0 }, { label: 'Value available', value: 1 }] } },
+              { id: 'b', label: 'Follow up asking specifically about the signing bonus and flexible start date', outcome: { text: "Real value on the table gets captured instead of left unaddressed.", delta: {}, compare: [{ label: 'Value captured', value: 1 }, { label: 'Value left unexplored', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ne4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [1, 6],
+            hintTexts: [
+              "Think about what actually makes a negotiation ask effective.",
+              "Think about what to check before accepting a signing bonus offer."
+            ]
+          }
+        ]
+      }
     ]
   },
   {
     id: 'scams', title: 'Scams & Fraud Prevention', icon: '11', iconColor: 'rust', xpReward: 30,
     hook: 'You get a text: "Your financial aid is on hold. Click here to verify your bank info within 24 hours or funds will be released to another account." Your stomach drops for a second. Is this real?',
-    desc: 'The scams that specifically target college students — fake jobs, housing fraud, financial aid phishing, identity theft, and P2P payment traps — and exactly how to spot them before they cost you anything.',
+    desc: 'The scams that specifically target college students — fake jobs, housing fraud, financial aid phishing, identity theft, P2P payment traps, and online shopping scams — and exactly how to spot them before they cost you anything.',
     questions: [
       {
         q: 'You\'re offered a remote job paying $35/hour with almost no interview. The recruiter only messages you on WhatsApp and asks for your bank routing number to "set up payroll" before you\'ve signed anything. What\'s the biggest red flag?',
@@ -1624,6 +3262,18 @@ const MODULES = [
         opts: ['There\'s no real difference between them', 'P2P apps are built for paying people you already trust — once money is sent, there is generally no fraud protection or dispute process, unlike a credit card', 'P2P apps always charge higher fees', 'Credit cards are slower, which is the only real difference'],
         correct: 1,
         exp: 'Credit cards come with built-in fraud protection and a formal dispute process. Venmo, Cash App, and Zelle are designed for people you already know — once that money moves, it\'s very hard to get back, which is exactly why scammers prefer them.'
+      },
+      {
+        q: 'A clearance site is selling everything at 80% off, was registered three weeks ago, and offers an extra 10% off if you pay with a gift card instead of a credit card. What\'s the biggest red flag?',
+        opts: ['The discount is too generous to pass up', 'Pushing you toward a gift card — a payment method with no dispute or refund protection — instead of a credit card', 'The site has too many product categories', 'It offers free shipping over $25'],
+        correct: 1,
+        exp: 'Gift cards and wire transfers can\'t be reversed if an order never shows up. A site that specifically rewards you for using the least-protected payment method is showing its hand.'
+      },
+      {
+        q: 'You\'re about to buy from an online store you\'ve never heard of. Which detail should worry you the most?',
+        opts: ['It has a simple, modern-looking website', 'It was registered a few weeks ago, has no customer service number, and every review is five stars and posted this week', 'It sells more than one type of product', 'It has a countdown timer for a holiday sale'],
+        correct: 1,
+        exp: 'A brand-new site with no way to reach a real person and a wall of suspiciously uniform, recent reviews are the two most reliable warning signs of a fake storefront — much more telling than a countdown timer alone.'
       }
     ],
     lessons: [
@@ -1631,26 +3281,26 @@ const MODULES = [
       { title: 'Housing Scams', hook: 'A $650/month apartment shows up near campus — half the going rate — and the "landlord" just needs a deposit before showing it in person. Great deal, or something else?', qIndices: [2, 3] },
       { title: 'Financial Aid & Scholarship Fraud', hook: 'An email says your FAFSA needs "verification" and links to a login page that looks exactly like studentaid.gov. Does it matter that it looks right?', qIndices: [4, 5] },
       { title: 'Phishing & Identity Theft', hook: 'A text claims your bank account is locked, with a countdown clock and a link to fix it right now. Is the urgency the point, or a warning sign?', qIndices: [6, 7] },
-      { title: 'Peer-to-Peer Payment Scams', hook: 'A buyer on a marketplace app "accidentally" overpays you and asks for the difference back over Venmo, right now. What actually happens to that first payment?', qIndices: [8, 9] }
+      { title: 'Peer-to-Peer Payment Scams', hook: 'A buyer on a marketplace app "accidentally" overpays you and asks for the difference back over Venmo, right now. What actually happens to that first payment?', qIndices: [8, 9] },
+      { title: 'Online Shopping & Marketplace Scams', hook: 'An ad promises a gadget at 80% off from a site that didn\'t exist a month ago, and only takes gift cards or wire transfers. Free shipping, or something else?', qIndices: [10, 11] }
     ],
     quests: [
       {
-        id: 'devon',
-        topic: 'A Month of Almost-Scams',
-        character: { name: 'Devon', tagline: 'Junior juggling job hunting, apartment hunting, and FAFSA renewal at the same time' },
+        id: 'job_scams',
+        topic: 'Fake Job Offers',
+        character: { name: 'Hammy', tagline: 'Applying to a dozen summer jobs online' },
         initialState: { savings: 450 },
-        bossAchievementId: 'scam_spotter',
         chapters: [
           {
-            id: 'd0', type: 'story', title: 'Meet Devon',
+            id: 'jb0', type: 'story', title: 'The Perfect Posting',
             beats: [
-              { speaker: 'narrator', text: 'Devon is a junior juggling three things at once this month: applying for summer jobs, apartment hunting for next year with two roommates, and renewing FAFSA before the deadline.' },
-              { speaker: 'Devon', text: "Between job sites, group chats, and financial aid emails, my inbox is chaos right now. I don't have time to double-check everything." },
-              { speaker: 'narrator', text: "Scammers count on exactly that — busy, distracted, a little rushed. Let's slow down together and go through what Devon runs into this month." }
+              { speaker: 'intro', text: "Hammy's applying to summer jobs between classes, mostly remote gigs that fit around a class schedule. One posting stands out immediately: great pay, almost no requirements." },
+              { speaker: 'Hammy', text: '"$38 an hour for data entry? And they want to start THIS week? Okay, where do I sign?"' },
+              { speaker: 'narrator', text: "Let's slow down before Hammy replies. A posting that looks too good is worth a second look." }
             ]
           },
           {
-            id: 'd1', type: 'teach', title: 'Job Post Red Flags',
+            id: 'jb1', type: 'teach', title: 'Job Post Red Flags',
             concepts: [
               {
                 term: 'Pay-Upfront / Overpayment Scam',
@@ -1668,7 +3318,7 @@ const MODULES = [
             xpOnComplete: 2
           },
           {
-            id: 'd2', type: 'spotcheck', title: 'Spot the Red Flags',
+            id: 'jb2', type: 'spotcheck', title: 'Spot the Red Flags',
             intro: "Below is a real-looking job posting. Tap every phrase you think is a red flag, then hit Continue to see what you caught.",
             postingTitle: 'Remote Data Entry Assistant — $38/hr, Start This Week!',
             segments: [
@@ -1681,14 +3331,49 @@ const MODULES = [
             ],
             xpOnComplete: 4
           },
-          { id: 'd3', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
+          { id: 'jb3', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
             hintTexts: [
               "Think about WHEN a real employer needs your banking details — before or after you've signed something official?",
               "Think about the direction money is supposed to flow when you're the one being hired."
             ]
           },
           {
-            id: 'd4', type: 'teach', title: 'Apartment Hunting Red Flags',
+            id: 'jb4', type: 'bossbattle', title: 'GlobalHire Solutions',
+            scenario: "Hammy applied to 12 jobs last week. An email arrives from \"GlobalHire Solutions\" offering $35/hour for a remote position — no interview required. The email says to start immediately and asks for direct deposit info to \"set up payroll\" before anything else is signed.",
+            hintText: "Think back to the very first lesson: what's supposed to happen BEFORE an employer ever needs your banking details?",
+            choices: [
+              {
+                id: 'a', label: "Send the direct deposit info right away so payroll is ready before the start date",
+                consequence: { text: "Hammy sends the routing and account number. Within days, unauthorized charges show up on the linked account, and \"GlobalHire Solutions\" stops responding entirely. There was never a real job.", delta: { savings: -300 }, xpMultiplier: 0.75 }
+              },
+              {
+                id: 'b', label: "Ignore the email and delete it without responding",
+                consequence: { text: "Hammy deletes the email. Safe — but the listing stays up and keeps targeting other students searching the same job boards.", delta: { savings: 0 }, xpMultiplier: 1 }
+              },
+              {
+                id: 'c', label: "Report the email to the job board and the school's career center, and don't send anything",
+                consequence: { text: "Hammy reports it. The career center confirms three other students got the identical message this week and gets the listing taken down before it reaches anyone else.", delta: { savings: 0 }, xpMultiplier: 1.25 }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'housing_scams',
+        topic: 'Housing & Rental Scams',
+        character: { name: 'Hammy', tagline: "Apartment hunting for next year with two roommates" },
+        initialState: { savings: 450 },
+        chapters: [
+          {
+            id: 'hs0', type: 'story', title: 'The Listing',
+            beats: [
+              { speaker: 'intro', text: "Hammy and two roommates are hunting for a place near campus for next year, and rent nearby is brutal — most places are well over $1,000 a month." },
+              { speaker: 'Hammy', text: '"Wait, this one\'s $650 a month and it looks amazing? That has to be a typo."' },
+              { speaker: 'narrator', text: "Maybe. Or maybe it's designed to look too good to pass up. Let's check it out properly before anyone sends a dollar." }
+            ]
+          },
+          {
+            id: 'hs1', type: 'teach', title: 'Apartment Hunting Red Flags',
             concepts: [
               {
                 term: 'Deposit-Before-Viewing',
@@ -1706,39 +3391,71 @@ const MODULES = [
             xpOnComplete: 2
           },
           {
-            id: 'd5', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before Devon deals with this listing, take a guess. Tap True or False, then see the answer.",
+            id: 'hs2', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before Hammy deals with this listing, take a guess. Tap True or False, then see the answer.",
             statement: 'If an apartment listing is posted on Zillow or Apartments.com, it must be legitimate.',
             isTrue: false,
             explanation: "It's a myth. Scammers regularly post on trusted, legitimate platforms — the platform hosting a listing doesn't mean anyone verified who posted it or that the deal is real.",
             xpOnComplete: 2
           },
           {
-            id: 'd6', type: 'decision', title: 'The Move-In Deadline',
-            prompt: "A listing near campus looks perfect: $650/month when everything else nearby runs $1,100+, photos look real, and the \"landlord\" says they're traveling for work but will mail the keys once you Venmo a $500 deposit. Move-in is in 3 days, and they mention two other people are asking about it too. What does Devon do?",
+            id: 'hs3', type: 'decision', title: 'The Move-In Deadline',
+            prompt: "A listing near campus looks perfect: $650/month when everything else nearby runs $1,100+, photos look real, and the \"landlord\" says they're traveling for work but will mail the keys once you Venmo a $500 deposit. Move-in is in 3 days, and they mention two other people are asking about it too. What does Hammy do?",
             hintText: "Think about all three signals together: price, urgency, and whether the place can actually be verified.",
             choices: [
               {
                 id: 'a', label: "Send the $500 deposit today so the apartment doesn't slip away",
-                outcome: { text: "Devon sends the deposit. The \"landlord\" stops responding within a day. There is no apartment, no keys, and no way to get the money back through Venmo.", delta: { savings: -500 }, compare: [{ label: 'Sent', value: 500 }, { label: 'Recovered', value: 0 }] }
+                outcome: { text: "Hammy sends the deposit. The \"landlord\" stops responding within a day. There is no apartment, no keys, and no way to get the money back through Venmo.", delta: { savings: -500 }, compare: [{ label: 'Sent', value: 500 }, { label: 'Recovered', value: 0 }] }
               },
               {
                 id: 'b', label: "Ask to tour the unit in person or on a live video call before sending anything",
-                outcome: { text: "The \"landlord\" makes excuses and goes quiet once Devon pushes for a real tour. That's $500 that never left the account for an apartment that never existed.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Deposit avoided', value: 500 }] }
+                outcome: { text: "The \"landlord\" makes excuses and goes quiet once Hammy pushes for a real tour. That's $500 that never left the account for an apartment that never existed.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Deposit avoided', value: 500 }] }
               },
               {
                 id: 'c', label: "Report the listing and start looking somewhere else",
-                outcome: { text: "Devon flags the listing to the platform and moves on. A few weeks later, a friend mentions the exact same photos showed up under a different \"landlord\" name — Devon wasn't the only target.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Deposit avoided', value: 500 }] }
+                outcome: { text: "Hammy flags the listing to the platform and moves on. A few weeks later, a friend mentions the exact same photos showed up under a different \"landlord\" name — Hammy wasn't the only target.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Deposit avoided', value: 500 }] }
               }
             ],
             xpOnComplete: 5
           },
-          { id: 'd7', type: 'hint', tag: "🎉 Hammy's Tip",
-            text: "You don't need to treat every listing or DM like a threat — most job posts and apartments are exactly what they say they are. The goal isn't paranoia, it's knowing the handful of patterns that actually matter, so you can move fast and confident on the real ones.",
+          { id: 'hs4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 3],
+            hintTexts: [
+              "Think about the three signals together: a price that's too good, pressure to act fast, and no way to actually see the place.",
+              "A platform hosting a listing isn't the same as that platform verifying who posted it."
+            ]
+          },
+          { id: 'hs5', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "You don't need to treat every listing or DM like a threat — most apartments are exactly what they say they are. The goal isn't paranoia, it's knowing the handful of patterns that actually matter, so you can move fast and confident on the real ones.",
             xpOnComplete: 1
           },
           {
-            id: 'd8', type: 'teach', title: 'Reading a URL Like It Matters',
+            id: 'hs6', type: 'bossbattle', title: 'The Wire Transfer "Upgrade"',
+            scenario: "A different listing looks just as good, but this \"landlord\" says Venmo has been giving them trouble lately, and asks Hammy to wire the deposit directly to a bank account instead — for \"security.\" Move-in is supposedly next week.",
+            hintText: "A payment method switch that removes buyer protection is still a payment-before-viewing problem underneath.",
+            choices: [
+              { id: 'a', label: 'Wire the deposit since a bank transfer sounds more official than Venmo', consequence: { text: "The account goes silent within hours. A wire transfer has even less recourse than Venmo — this money is gone for good.", delta: { savings: -500 }, xpMultiplier: 0.6 } },
+              { id: 'b', label: 'Ask to see the unit in person first, regardless of payment method', consequence: { text: "The \"landlord\" stalls and eventually stops replying. No deposit was ever sent for a place that never existed.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'c', label: 'Report the listing and keep looking', consequence: { text: "Hammy flags it and moves on — and the roommates find a legitimate place within the week by touring in person first.", delta: { savings: 0 }, xpMultiplier: 1 } }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'aid_scams',
+        topic: 'Financial Aid & Scholarship Fraud',
+        character: { name: 'Hammy', tagline: 'Renewing FAFSA before the deadline' },
+        initialState: { savings: 450 },
+        chapters: [
+          {
+            id: 'af0', type: 'story', title: 'The Verification Email',
+            beats: [
+              { speaker: 'intro', text: "FAFSA renewal is due soon, and Hammy's inbox is full of financial aid emails — real reminders from the school, newsletter blasts, and now one that says the account needs \"urgent verification.\"" },
+              { speaker: 'Hammy', text: '"It says click here to verify my info or my aid gets delayed. The logo looks right..."' },
+              { speaker: 'narrator', text: "Looking right and being right aren't the same thing. Let's actually check where that link goes." }
+            ]
+          },
+          {
+            id: 'af1', type: 'teach', title: 'Reading a URL Like It Matters',
             concepts: [
               {
                 term: 'Anatomy of a URL',
@@ -1750,7 +3467,7 @@ const MODULES = [
             xpOnComplete: 2
           },
           {
-            id: 'd9', type: 'urlinspect', title: 'Real URL or Fake?',
+            id: 'af2', type: 'urlinspect', title: 'Real URL or Fake?',
             intro: "Here's a link claiming to be from the FAFSA / Federal Student Aid office. Tap the part of the URL you think is suspicious, then hit Continue to see the full breakdown.",
             url: 'https://studentaid-gov.verify-account.net/login',
             parts: [
@@ -1763,7 +3480,7 @@ const MODULES = [
             xpOnComplete: 4
           },
           {
-            id: 'd10', type: 'mythcards', title: 'Financial Aid Myths',
+            id: 'af3', type: 'mythcards', title: 'Financial Aid Myths',
             cards: [
               { myth: 'A scholarship that requires a small "processing fee" is fine as long as the payout is much bigger.', isTrue: false, explanation: 'Real scholarships never require you to pay to receive money. Any upfront fee — no matter how small compared to the promised award — is a hallmark of a scam.' },
               { myth: 'The real FAFSA / Federal Student Aid site is studentaid.gov, and legitimate government sites use the .gov domain.', isTrue: true, explanation: 'Correct — .gov is a restricted domain that scammers cannot simply purchase the way they can a lookalike .net or .com.' },
@@ -1771,14 +3488,40 @@ const MODULES = [
             ],
             xpPerCorrect: 2
           },
-          { id: 'd11', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 5],
+          { id: 'af4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 5],
             hintTexts: [
               "Look at the actual domain, not just how official the surrounding email looks.",
               "Remember the one-sentence rule: real scholarships pay you, not the other way around."
             ]
           },
           {
-            id: 'd12', type: 'teach', title: 'Spotting Phishing',
+            id: 'af5', type: 'bossbattle', title: 'The Scholarship "Processing Fee"',
+            scenario: "A scholarship search site emails Hammy: you've been \"pre-selected\" for a $2,500 award, but a $75 refundable \"processing fee\" is required within 48 hours to release the funds.",
+            hintText: "Which direction is money supposed to move when someone owes YOU an award?",
+            choices: [
+              { id: 'a', label: 'Pay the $75 fee to unlock the $2,500 award', consequence: { text: "The $75 goes through instantly. The promised $2,500 never arrives, and the site stops responding to emails.", delta: { savings: -75 }, xpMultiplier: 0.6 } },
+              { id: 'b', label: "Skip it — real scholarships don't charge you to pay you", consequence: { text: "Hammy deletes the email. No award existed to begin with — this was the scam's entire business model.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'c', label: "Report it to the school's financial aid office and ask if it's legitimate", consequence: { text: "The financial aid office confirms it's a known scam circulating that semester and helps get it reported.", delta: { savings: 0 }, xpMultiplier: 1.1 } }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'phishing_scams',
+        topic: 'Phishing & Identity Theft',
+        character: { name: 'Hammy', tagline: 'A suspicious text about a "locked" bank account' },
+        initialState: { savings: 450 },
+        chapters: [
+          {
+            id: 'ph0', type: 'story', title: 'The Countdown Timer',
+            beats: [
+              { speaker: 'intro', text: "A text lands on Hammy's phone: \"Your account has been locked for suspicious activity. Verify now or funds may be restricted.\" There's a countdown clock ticking down from 10 minutes." },
+              { speaker: 'Hammy', text: '"Ten minutes? Okay, I need to click this right now before something bad happens."' },
+              { speaker: 'narrator', text: "That rush to act fast is the whole point of the message. Let's figure out what's actually going on before tapping anything." }
+            ]
+          },
+          {
+            id: 'ph1', type: 'teach', title: 'Spotting Phishing',
             concepts: [
               {
                 term: 'Spoofed Senders & Urgency Language',
@@ -1796,15 +3539,15 @@ const MODULES = [
             xpOnComplete: 3
           },
           {
-            id: 'd13', type: 'poll', title: 'What Do Most People Think?',
-            intro: "One more before we move on. Tap True or False, then see the answer.",
+            id: 'ph2', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess before we move on. Tap True or False, then see the answer.",
             statement: 'If someone\'s email and password are exposed in a data breach, changing the password on that one site is enough to stay safe.',
             isTrue: false,
             explanation: "It's a myth. Credential stuffing means attackers try that same email/password combo across many other sites automatically — reused passwords are the real risk, not just the one breached site.",
             xpOnComplete: 2
           },
           {
-            id: 'd14', type: 'teach', title: 'If Your Identity Is Stolen',
+            id: 'ph3', type: 'teach', title: 'If Your Identity Is Stolen',
             concepts: [
               {
                 term: 'Reporting & Freezing',
@@ -1822,21 +3565,47 @@ const MODULES = [
             xpOnComplete: 3
           },
           {
-            id: 'd15', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Last one for this section. Tap True or False, then see the answer.",
+            id: 'ph4', type: 'poll', title: 'What Do Most People Think?',
+            intro: "One more before the quick check. Tap True or False, then see the answer.",
             statement: 'Financial aid offices will sometimes email students asking them to confirm their bank account details.',
             isTrue: false,
             explanation: "It's a myth — and an important one. Real financial aid offices will never ask you to confirm bank account details over email. Any message that does is impersonating them.",
             xpOnComplete: 2
           },
-          { id: 'd16', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 7],
+          { id: 'ph5', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 7],
             hintTexts: [
               "Focus on what's designed to make you feel rushed, not on how official the message looks.",
               "Think about what actually protects you: your own habits, not how much time has passed."
             ]
           },
           {
-            id: 'd17', type: 'teach', title: 'Peer-to-Peer Payment Scams',
+            id: 'ph6', type: 'bossbattle', title: 'The Locked Account Text',
+            scenario: "The countdown from that text hits zero. A second, more urgent message arrives with a link and the words \"FINAL NOTICE.\"",
+            hintText: "What did the URL-anatomy lesson say to check before trusting any link, no matter how urgent it looks?",
+            choices: [
+              { id: 'a', label: 'Tap the link now, before the account actually gets locked', consequence: { text: "The page looks exactly like the real bank login — because it's built to. Hammy's real credentials just went straight to a scammer.", delta: { savings: -200 }, xpMultiplier: 0.6 } },
+              { id: 'b', label: "Ignore the text and open the bank's app directly to check", consequence: { text: "The real app shows nothing wrong — no lock, no alert. The text was fake from the start.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'c', label: 'Call the number on the back of the debit card to ask', consequence: { text: "The real bank confirms there's no issue and flags the number the text came from as a known scam line.", delta: { savings: 0 }, xpMultiplier: 1.1 } }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'p2p_scams',
+        topic: 'Peer-to-Peer Payment Scams',
+        character: { name: 'Hammy', tagline: 'Selling old textbooks and furniture online' },
+        initialState: { savings: 450 },
+        chapters: [
+          {
+            id: 'p2p0', type: 'story', title: 'The Accidental Overpayment',
+            beats: [
+              { speaker: 'intro', text: "Hammy's selling a mini fridge and a stack of old textbooks on a local marketplace app before moving out for the summer. A buyer messages about the fridge right away." },
+              { speaker: 'Hammy', text: '"They just sent me $50 more than we agreed on and asked for the difference back over Venmo. Weird, but I guess people fat-finger the amount sometimes?"' },
+              { speaker: 'narrator', text: "Maybe. Or maybe that first payment isn't as real as it looks. Let's check before sending anything back." }
+            ]
+          },
+          {
+            id: 'p2p1', type: 'teach', title: 'Peer-to-Peer Payment Scams',
             concepts: [
               {
                 term: 'No Fraud Protection, No Undo Button',
@@ -1853,29 +3622,186 @@ const MODULES = [
             ],
             xpOnComplete: 3
           },
-          { id: 'd19', type: 'knowledgecheck', title: 'Quick Check', qIndices: [8, 9],
+          {
+            id: 'p2p2', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess before we go further. Tap True or False, then see the answer.",
+            statement: 'If a buyer overpays and asks for the difference back, sending the refund quickly is the safest way to resolve it.',
+            isTrue: false,
+            explanation: "It's a myth. The safest move is to cancel or reverse the ORIGINAL payment through the app first — sending a fresh refund on top of a payment that might not be real just doubles the loss.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'p2p3', type: 'decision', title: 'The Refund Request',
+            prompt: "The buyer is messaging again, more urgently: \"Can you send that $50 back now? I need to fix this before my bank notices.\" What does Hammy do?",
+            hintText: "What happens to the ORIGINAL payment after a refund like this gets sent?",
+            choices: [
+              { id: 'a', label: 'Send the $50 back right away to be helpful', outcome: { text: "A day later, the original payment reverses as fraudulent. Hammy is out the $50 refund plus the fridge, which the buyer already picked up.", delta: { savings: -50 }, compare: [{ label: 'Lost', value: 50 }, { label: 'Avoided', value: 0 }] } },
+              { id: 'b', label: 'Cancel the original transaction through the app instead of sending anything new', outcome: { text: "The app flags the original payment as fraudulent before anything is sent back. Nothing is lost.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Avoided', value: 50 }] } }
+            ],
+            xpOnComplete: 5
+          },
+          { id: 'p2p4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [8, 9],
             hintTexts: [
               "Think about what happens to the FIRST payment after the refund is sent.",
               "Compare what a credit card can do that Venmo, Cash App, and Zelle can't."
             ]
           },
           {
-            id: 'd20', type: 'bossbattle', title: 'GlobalHire Solutions',
-            scenario: "Devon applied to 12 jobs last week. An email arrives from \"GlobalHire Solutions\" offering $35/hour for a remote position — no interview required. The email says to start immediately and asks for direct deposit info to \"set up payroll\" before anything else is signed.",
-            hintText: "Think back to the very first lesson: what's supposed to happen BEFORE an employer ever needs your banking details?",
+            id: 'p2p5', type: 'bossbattle', title: 'The Too-Fast Textbook Buyer',
+            scenario: "A different buyer wants all of Hammy's old textbooks, sight unseen, and offers to pay double the asking price by Zelle immediately, no questions asked, then asks Hammy to ship them same-day.",
+            hintText: "An unusually generous, rushed offer is a pattern worth recognizing by now.",
             choices: [
+              { id: 'a', label: 'Accept and ship immediately since the payment already went through', consequence: { text: "The Zelle payment reverses days later as unauthorized. The textbooks are gone and the money is gone with them.", delta: { savings: -120 }, xpMultiplier: 0.6 } },
+              { id: 'b', label: 'Wait a few days to confirm the payment fully clears before shipping anything', consequence: { text: "The payment reverses within 48 hours, exactly as expected. Nothing shipped, nothing lost.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'c', label: 'Ask the buyer to meet in person for a local, in-hand exchange instead', consequence: { text: "The buyer stops responding the moment cash-in-hand is suggested — a strong sign it was never a real sale.", delta: { savings: 0 }, xpMultiplier: 1.1 } }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'shopping_scams',
+        topic: 'Online Shopping & Marketplace Scams',
+        character: { name: 'Hammy', tagline: 'Hunting for a cheap deal on dorm essentials' },
+        initialState: { savings: 450 },
+        chapters: [
+          {
+            id: 'sh0', type: 'story', title: 'The Too-Good Deal',
+            beats: [
+              { speaker: 'intro', text: "Hammy needs a new laptop stand and a couple of dorm essentials, and a targeted ad shows up for a clearance site selling everything at 80% off." },
+              { speaker: 'Hammy', text: '"Wait, this laptop stand is $8 instead of $40? And the whole site is like this? I\'m stocking up."' },
+              { speaker: 'narrator', text: "Before Hammy fills a cart, let's actually look at what's on this page." }
+            ]
+          },
+          {
+            id: 'sh1', type: 'teach', title: 'Fake Storefronts & Too-Good Deals',
+            concepts: [
               {
-                id: 'a', label: "Send the direct deposit info right away so payroll is ready before the start date",
-                consequence: { text: "Devon sends the routing and account number. Within days, unauthorized charges show up on the linked account, and \"GlobalHire Solutions\" stops responding entirely. There was never a real job.", delta: { savings: -300 }, xpMultiplier: 0.75 }
+                term: 'Brand-New, Reviewless Stores',
+                plain: "Scam storefronts are often only weeks old, with no reviews outside the ones built into the site itself, and no verifiable business address or customer service phone number. A real retailer selling everything at 80% off with zero track record is a contradiction.",
+                analogy: "It's like a pop-up shop with no name on the door and no way to find them again if something goes wrong.",
+                check: { statement: "A store with glowing reviews only on its own website is a reliable sign that it's trustworthy.", isTrue: false }
               },
               {
-                id: 'b', label: "Ignore the email and delete it without responding",
-                consequence: { text: "Devon deletes the email. Safe — but the listing stays up and keeps targeting other students searching the same job boards.", delta: { savings: 0 }, xpMultiplier: 1 }
-              },
-              {
-                id: 'c', label: "Report the email to the job board and the school's career center, and don't send anything",
-                consequence: { text: "Devon reports it. The career center confirms three other students got the identical message this week and gets the listing taken down before it reaches anyone else.", delta: { savings: 0 }, xpMultiplier: 1.25 }
+                term: 'Checkout Red Flags',
+                plain: "Legitimate stores let you pay with a credit card. Scam storefronts often push you toward payment methods with no buyer protection — wire transfer, gift cards, or cryptocurrency — sometimes offering an extra discount specifically for using them.",
+                analogy: "A cashier who only takes cash under the table isn't operating like a normal cashier.",
+                check: { statement: "A discount for paying with gift cards or crypto instead of a credit card is a bonus with no downside.", isTrue: false }
               }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'sh2', type: 'spotcheck', title: 'Spot the Red Flags',
+            intro: "Below is a real-looking product page. Tap every phrase you think is a red flag, then hit Continue to see what you caught.",
+            postingTitle: 'MEGA CLEARANCE — Everything 80% Off, Today Only!',
+            segments: [
+              { id: 's1', text: 'Free shipping on orders over $25.', isRedFlag: false, explanation: "A totally normal, common offer on its own." },
+              { id: 's2', text: 'Founded 3 weeks ago, no customer service number listed.', isRedFlag: true, explanation: "A brand-new store with no way to reach a real person is a serious warning sign, especially paired with steep discounts." },
+              { id: 's3', text: 'Pay by gift card for an extra 10% off.', isRedFlag: true, explanation: "Gift cards can't be reversed or disputed — legitimate stores don't need to push you toward the one payment method with zero protection." },
+              { id: 's4', text: 'Countdown timer: "Sale ends in 09:58!"', isRedFlag: true, explanation: "Manufactured urgency is a pressure tactic to stop you from thinking it through or comparing prices elsewhere." },
+              { id: 's5', text: '30-day return policy.', isRedFlag: false, explanation: "A normal policy to state, though it only matters if the company is actually reachable when you need it." },
+              { id: 's6', text: 'All reviews are 5 stars and posted this week.', isRedFlag: true, explanation: "A wall of suspiciously uniform, brand-new reviews is a common way scam sites fake social proof." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sh3', type: 'decision', title: 'Checkout Time',
+            prompt: "At checkout, the site offers 10% off for paying with a gift card instead of a credit card. What does Hammy do?",
+            hintText: "Which payment method actually lets you dispute a charge if the order never shows up?",
+            choices: [
+              { id: 'a', label: 'Take the extra discount and pay with a gift card', outcome: { text: "The order never arrives. Since gift card payments can't be disputed or reversed, the money is simply gone.", delta: { savings: -80 }, compare: [{ label: 'Lost', value: 80 }, { label: 'Protected', value: 0 }] } },
+              { id: 'b', label: 'Skip the discount and pay with a credit card instead', outcome: { text: "The order never arrives either way — but Hammy disputes the charge with the credit card company and gets a full refund.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Refunded via dispute', value: 80 }] } }
+            ],
+            xpOnComplete: 5
+          },
+          { id: 'sh4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [10, 11],
+            hintTexts: [
+              "Think about which payment methods actually let you dispute a charge versus which ones are final the moment you pay.",
+              "A brand-new store with no way to contact a real person is a pattern worth remembering."
+            ]
+          },
+          {
+            id: 'sh5', type: 'bossbattle', title: 'The Viral Gadget Ad',
+            scenario: "A social media ad shows a popular gadget at 75% off, ships from overseas, only accepts payment via wire transfer or crypto, and the site was registered two weeks ago.",
+            hintText: "Count how many red-flag patterns from this quest are stacked in one place.",
+            choices: [
+              { id: 'a', label: 'Order it — the ad looked professional and the price is amazing', consequence: { text: "Weeks pass with no package. The site goes offline entirely, and the wire transfer has no way to be reversed.", delta: { savings: -60 }, xpMultiplier: 0.6 } },
+              { id: 'b', label: "Look up the exact product on a retailer with a real return policy and pay by credit card instead", consequence: { text: "Hammy finds the same item for a bit more, but from a real store — and it actually arrives, with dispute protection if it hadn't.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'c', label: 'Search the store\'s name plus "scam" before ordering anything', consequence: { text: "The search turns up several recent reports of the same site taking payment and never shipping. Order skipped entirely.", delta: { savings: 0 }, xpMultiplier: 1.1 } }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'romance_scams',
+        topic: 'Romance & Social Media Scams',
+        character: { name: 'Hammy', tagline: 'Talking to someone online who seems a little too perfect' },
+        initialState: {},
+        chapters: [
+          { id: 'romance_scams_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Romance & Social Media Scams." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'tech_support_scams',
+        topic: 'Tech Support & Impersonation Scams',
+        character: { name: 'Hammy', tagline: 'Getting a call claiming to be tech support' },
+        initialState: {},
+        chapters: [
+          { id: 'tech_support_scams_0', type: 'story', title: 'Coming Soon',
+            beats: [
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Tech Support & Impersonation Scams." }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'freeze_credit',
+        parentQuestId: 'phishing_scams',
+        topic: 'Freezing Your Credit & Setting Fraud Alerts: A Step-by-Step Guide',
+        character: { name: 'Hammy', tagline: 'Actually locking down accounts after a scare' },
+        initialState: {},
+        chapters: [
+          {
+            id: 'fc0', type: 'story', title: 'After the Close Call',
+            beats: [
+              { speaker: 'intro', text: "Hammy almost fell for a phishing text last week. Knowing identity theft is a risk is one thing — actually freezing credit and setting up fraud alerts is another." }
+            ]
+          },
+          {
+            id: 'fc1', type: 'teach', title: 'Step 1 & 2: Contact & Freeze',
+            concepts: [
+              { term: 'Step 1: Contact All Three Bureaus', plain: "A credit freeze only works if placed at all three bureaus — Equifax, Experian, and TransUnion — since lenders can pull from any one of them. Each has its own free online portal.", analogy: "Locking one door out of three still leaves two open.", check: { statement: 'Freezing your credit at just one bureau is enough to fully protect you.', isTrue: false } },
+              { term: 'Step 2: Place the Freeze', plain: "Placing a freeze is free by law and takes about 10 minutes per bureau online. It blocks new accounts from being opened in your name without explicit approval.", analogy: "Like changing the locks — it doesn't undo the past, but stops new break-ins.", check: {} }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fc2', type: 'teach', title: 'Step 3 & 4: Secure & Know the Lift',
+            concepts: [
+              { term: 'Step 3: Set a PIN', plain: "Each bureau provides a PIN or password when the freeze is placed — save it somewhere secure. That PIN is required to lift the freeze later, so losing it means an extra identity-verification step.", analogy: "It's the key to the lock just placed — worth keeping somewhere safe.", check: {} },
+              { term: 'Step 4: Know How to Lift It Later', plain: "A freeze can be lifted temporarily (for a specific lender) or permanently, usually instantly online with the PIN. This matters when applying for a new credit card, apartment, or loan down the line.", analogy: "The lock can be opened again anytime — it's not a permanent barrier, just a default off switch.", check: { statement: 'Once placed, a credit freeze can never be lifted again.', isTrue: false } }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fc3', type: 'decision', title: 'Applying for a New Card',
+            prompt: "Six months after freezing credit at all three bureaus, Hammy wants to apply for a new credit card. The application gets rejected due to the freeze.",
+            hintText: "Is a credit freeze permanent, or does it need one extra step first?",
+            choices: [
+              { id: 'a', label: 'Assume credit is permanently broken and give up on the application', outcome: { text: "The freeze is still active and just needs to be lifted first — nothing is actually broken.", delta: {}, compare: [{ label: 'Extra steps needed', value: 1 }, { label: 'Steps if unfrozen first', value: 0 }] } },
+              { id: 'b', label: 'Log into the bureau site with the saved PIN and lift the freeze before reapplying', outcome: { text: "A quick PIN-based lift clears the way for the application to go through normally.", delta: {}, compare: [{ label: 'Extra steps needed', value: 0 }, { label: 'Steps if left frozen', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'fc4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 7],
+            hintTexts: [
+              "Think about what actually protects you when a message creates urgency.",
+              "Think about what changing just one password does or doesn't fix."
             ]
           }
         ]
@@ -1904,25 +3830,53 @@ const SHOP_ITEMS = [
   {
     id: 'party_hat', name: 'Party Hat', category: 'hat', price: 50,
     mysteryOnly: true, mysteryPool: 'hat',
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 5 },
     desc: 'Every lesson deserves a celebration.',
     svg: `<defs>
-            <linearGradient id="ph-g" x1="25%" y1="0%" x2="75%" y2="100%"><stop offset="0%" stop-color="#FFCAE5"/><stop offset="100%" stop-color="#C84882"/></linearGradient>
-            <radialGradient id="ph-hl" cx="38%" cy="12%" r="60%"><stop offset="0%" stop-color="rgba(255,255,255,0.7)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient>
+            <linearGradient id="ph-g" x1="15%" y1="0%" x2="85%" y2="100%">
+              <stop offset="0%" stop-color="#FF8A75"/>
+              <stop offset="50%" stop-color="#E5372B"/>
+              <stop offset="100%" stop-color="#8A1010"/>
+            </linearGradient>
+            <linearGradient id="ph-rim" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#FF5A4A"/>
+              <stop offset="100%" stop-color="#7A1010"/>
+            </linearGradient>
             <clipPath id="ph-clip"><path d="M 60 4 L 37 27 L 83 27 Z"/></clipPath>
           </defs>
+          <ellipse cx="60" cy="28.3" rx="25" ry="5.2" fill="#5E0A0A"/>
+          <ellipse cx="60" cy="27" rx="24" ry="4.6" fill="url(#ph-rim)" stroke="#6E0E0E" stroke-width="0.8"/>
+          <ellipse cx="60" cy="26.2" rx="18.5" ry="2.4" fill="#3E0606"/>
           <path d="M 60 4 L 37 27 L 83 27 Z" fill="url(#ph-g)"/>
-          <rect x="37" y="4" width="46" height="23" fill="url(#ph-hl)" clip-path="url(#ph-clip)"/>
-          <circle cx="50" cy="15" r="2" fill="white" opacity="0.65"/>
-          <circle cx="70" cy="15" r="2" fill="white" opacity="0.65"/>
-          <ellipse cx="60" cy="28.5" rx="26" ry="5.8" fill="#943060"/>
-          <ellipse cx="60" cy="27" rx="25" ry="5" fill="#E285BA"/>
-          <ellipse cx="60" cy="25.7" rx="14.5" ry="2.3" fill="rgba(255,255,255,0.25)"/>
-          <circle cx="60" cy="1" r="4.5" fill="#FFD240"/>
-          <circle cx="59" cy="-1" r="2.6" fill="#FFE68A"/>`
+          <path d="M 60 4 L 46 27 L 53 27 Z" fill="rgba(255,255,255,0.22)"/>
+          <path d="M 60 4 L 72 27 L 65 27 Z" fill="rgba(0,0,0,0.16)"/>
+          <line x1="60" y1="4" x2="60" y2="27" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+          <g clip-path="url(#ph-clip)">
+            <circle cx="56" cy="10" r="2" fill="#FFE45A"/>
+            <circle cx="65" cy="9" r="1.8" fill="#5AC8FA"/>
+            <circle cx="60" cy="14" r="1.6" fill="#FF9ED8"/>
+            <circle cx="50" cy="15" r="1.8" fill="#7BE0A0"/>
+            <circle cx="70" cy="16" r="1.7" fill="#FFE45A"/>
+            <circle cx="58" cy="19" r="1.8" fill="#5AC8FA"/>
+            <circle cx="45" cy="20" r="1.6" fill="#FF9ED8"/>
+            <circle cx="66" cy="21" r="1.7" fill="#7BE0A0"/>
+            <circle cx="75" cy="22" r="1.5" fill="#FFE45A"/>
+            <circle cx="41" cy="24" r="1.6" fill="#5AC8FA"/>
+            <circle cx="52" cy="25" r="1.7" fill="#FF9ED8"/>
+            <circle cx="63" cy="25.5" r="1.6" fill="#7BE0A0"/>
+            <circle cx="73" cy="25" r="1.5" fill="#FFE45A"/>
+            <circle cx="45" cy="26.5" r="1.4" fill="#FFE45A"/>
+            <circle cx="79" cy="26" r="1.4" fill="#5AC8FA"/>
+          </g>
+          <circle cx="55" cy="0.5" r="3" fill="#FFCE30"/>
+          <circle cx="65" cy="0.5" r="3" fill="#FFCE30"/>
+          <circle cx="60" cy="-3.5" r="3" fill="#FFDD60"/>
+          <circle cx="60" cy="1.5" r="3.6" fill="#FFD240"/>
+          <circle cx="58" cy="-1.5" r="1.6" fill="rgba(255,255,255,0.7)"/>`
   },
   {
     id: 'flower_crown', name: 'Flower Crown', category: 'hat', price: 80,
-    mysteryOnly: true, mysteryPool: 'hat', rarity: 'ultra_rare',
+    mysteryOnly: true, mysteryPool: 'hat', rarity: 'epic',
     desc: 'Bloom where you are planted.',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 45 },
     svg: `<path d="M 20 30 C 35 22 50 18 60 15 C 70 18 85 22 100 30" stroke="#4A7840" stroke-width="5" fill="none" stroke-linecap="round"/>
@@ -1974,8 +3928,8 @@ const SHOP_ITEMS = [
           <ellipse cx="55" cy="27.7" rx="15" ry="1.6" fill="rgba(255,255,255,0.09)"/>
           <path d="M 60 3 L 37 29 L 84 29 Z" fill="url(#wh-g)"/>
           <rect x="37" y="3" width="47" height="26" fill="url(#wh-hl)" clip-path="url(#wh-clip)"/>
-          <rect x="44" y="17" width="32" height="8" fill="#7B3FB0"/>
-          <rect x="44" y="17" width="32" height="3.2" fill="#8F4FC8"/>
+          <rect x="36" y="17" width="48" height="6" fill="#7B3FB0" clip-path="url(#wh-clip)"/>
+          <rect x="36" y="17" width="48" height="2.4" fill="#8F4FC8" clip-path="url(#wh-clip)"/>
           <rect x="53" y="18.5" width="14" height="5" rx="1.2" fill="#1C0E30"/>
           <rect x="55.2" y="19.5" width="9.6" height="3" rx="0.6" fill="none" stroke="#FFD700" stroke-width="1.3"/>
           <line x1="60" y1="19.5" x2="60" y2="23" stroke="#FFD700" stroke-width="1.3"/>`
@@ -2030,7 +3984,7 @@ const SHOP_ITEMS = [
   },
   {
     id: 'chef_hat', name: 'Chef Hat', category: 'hat', price: 125,
-    mysteryOnly: true, mysteryPool: 'hat',
+    mysteryOnly: true, mysteryPool: 'hat', rarity: 'rare',
     desc: 'Cooking up a budget.',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 6 },
     svg: `<defs><linearGradient id="ch-dome" x1="30%" y1="0%" x2="70%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#DCDCDC"/></linearGradient></defs>
@@ -2052,7 +4006,7 @@ const SHOP_ITEMS = [
   },
   {
     id: 'cowboy_hat', name: 'Cowboy Hat', category: 'hat', price: 150,
-    mysteryOnly: true, mysteryPool: 'hat',
+    mysteryOnly: true, mysteryPool: 'hat', rarity: 'rare',
     desc: 'Riding off into a debt-free sunset.',
     svg: `<defs>
             <linearGradient id="cw-crown" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A87040"/><stop offset="100%" stop-color="#5A3618"/></linearGradient>
@@ -2076,7 +4030,7 @@ const SHOP_ITEMS = [
   },
   {
     id: 'pirate_hat', name: 'Pirate Hat', category: 'hat', price: 175,
-    mysteryOnly: true, mysteryPool: 'hat',
+    mysteryOnly: true, mysteryPool: 'hat', rarity: 'epic',
     desc: 'Yarr, no debt on this ship.',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 18 },
     svg: `<defs><linearGradient id="pi-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#282828"/><stop offset="100%" stop-color="#0C0C0C"/></linearGradient></defs>
@@ -2110,7 +4064,7 @@ const SHOP_ITEMS = [
   },
   {
     id: 'crown', name: 'Crown', category: 'hat', price: 200,
-    mysteryOnly: true, mysteryPool: 'hat', rarity: 'rare',
+    mysteryOnly: true, mysteryPool: 'hat', rarity: 'legendary',
     desc: 'The financially literate royalty.',
     svg: `<defs>
             <linearGradient id="cr-body" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE440"/><stop offset="50%" stop-color="#C88010"/><stop offset="100%" stop-color="#FFD030"/></linearGradient>
@@ -2142,24 +4096,11 @@ const SHOP_ITEMS = [
           <circle cx="68" cy="29" r="1.8" fill="#FFE060"/>
           <circle cx="83" cy="29" r="1.8" fill="#FFE060"/>`
   },
-  // ── GLASSES ──
+  // ── ACCESSORIES (glasses) ──
   {
-    id: 'glasses_mystery_box', name: 'Glasses Mystery Box', category: 'glasses', price: 90,
-    isMysteryBox: true, mysteryPool: 'glasses',
-    viewBox: '20 20 80 75',
-    desc: 'A random pair of specs, no peeking!',
-    svg: `<defs><linearGradient id="gb-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8FC6FF"/><stop offset="100%" stop-color="#4A7FE0"/></linearGradient></defs>
-          <rect x="35" y="45" width="50" height="40" rx="3" fill="url(#gb-g)"/>
-          <rect x="35" y="45" width="50" height="10" fill="rgba(255,255,255,0.2)"/>
-          <rect x="55" y="45" width="10" height="40" fill="#FFD700"/>
-          <rect x="35" y="60" width="50" height="10" fill="#FFD700"/>
-          <path d="M60,45 Q48,32 40,38 Q38,45 48,46 Q54,46 60,45Z" fill="#FFD700"/>
-          <path d="M60,45 Q72,32 80,38 Q82,45 72,46 Q66,46 60,45Z" fill="#FFD700"/>
-          <circle cx="60" cy="45" r="4" fill="#FFE87A"/>`
-  },
-  {
-    id: 'round_glasses', name: 'Round Glasses', category: 'glasses', price: 60,
-    mysteryOnly: true, mysteryPool: 'glasses',
+    id: 'round_glasses', name: 'Round Glasses', category: 'accessory', price: 60,
+    mysteryOnly: true, mysteryPool: 'accessory',
+    viewBox: '6 41 108 34',
     desc: 'For the bookish budgeter.',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 },
     svg: `<circle cx="36" cy="61" r="10" fill="rgba(180,220,255,0.15)" stroke="#6B4C3A" stroke-width="2.2"/>
@@ -2171,8 +4112,9 @@ const SHOP_ITEMS = [
           <line x1="95" y1="60" x2="104" y2="59" stroke="#6B4C3A" stroke-width="2.2"/>`
   },
   {
-    id: 'sunglasses', name: 'Sunglasses', category: 'glasses', price: 75,
-    mysteryOnly: true, mysteryPool: 'glasses',
+    id: 'sunglasses', name: 'Sunglasses', category: 'accessory', price: 75,
+    mysteryOnly: true, mysteryPool: 'accessory', rarity: 'rare',
+    viewBox: '6 41 108 34',
     desc: 'Too cool for financial stress.',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 },
     svg: `<rect x="24" y="52" width="24" height="18" rx="8" fill="#1A1A1A"/>
@@ -2186,8 +4128,9 @@ const SHOP_ITEMS = [
           <path d="M 76 54 Q 81 51 88 54" stroke="rgba(255,255,255,0.4)" stroke-width="1.8" fill="none" stroke-linecap="round"/>`
   },
   {
-    id: 'heart_glasses', name: 'Heart Glasses', category: 'glasses', price: 90,
-    mysteryOnly: true, mysteryPool: 'glasses',
+    id: 'heart_glasses', name: 'Heart Glasses', category: 'accessory', price: 90,
+    mysteryOnly: true, mysteryPool: 'accessory', rarity: 'epic',
+    viewBox: '6 41 108 34',
     desc: 'In love with compound interest.',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 },
     svg: `<path d="M 36 56 C 33 50 24 50 24 58 C 24 64 30 68 36 76 C 42 68 48 64 48 58 C 48 50 39 50 36 56 Z" fill="#FF6B8A"/>
@@ -2199,8 +4142,9 @@ const SHOP_ITEMS = [
           <line x1="97" y1="58" x2="106" y2="56" stroke="#CC2255" stroke-width="2.2"/>`
   },
   {
-    id: 'star_glasses', name: 'Star Glasses', category: 'glasses', price: 110,
-    mysteryOnly: true, mysteryPool: 'glasses', rarity: 'rare',
+    id: 'star_glasses', name: 'Star Glasses', category: 'accessory', price: 110,
+    mysteryOnly: true, mysteryPool: 'accessory', rarity: 'legendary',
+    viewBox: '6 41 108 34',
     desc: 'Your portfolio is looking stellar.',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 },
     svg: `<polygon points="36,48 41.9,52.9 48.4,57.0 45.5,64.1 43.6,71.5 36,71 28.4,71.5 26.5,64.1 23.6,57.0 30.1,52.9" fill="#FFD700"/>
@@ -2239,7 +4183,7 @@ const SHOP_ITEMS = [
   },
   {
     id: 'necktie', name: 'Necktie', category: 'accessory', price: 70,
-    mysteryOnly: true, mysteryPool: 'accessory',
+    mysteryOnly: true, mysteryPool: 'accessory', rarity: 'rare',
     desc: 'Dressed for a shareholder meeting.',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 55 },
     svg: `<path d="M53,78 L67,78 L63,86 L57,86 Z" fill="#8B2635"/>
@@ -2251,7 +4195,7 @@ const SHOP_ITEMS = [
   },
   {
     id: 'cape', name: 'Cape', category: 'accessory', price: 130,
-    mysteryOnly: true, mysteryPool: 'accessory', rarity: 'rare',
+    mysteryOnly: true, mysteryPool: 'accessory', rarity: 'legendary',
     viewBox: '-10 68 144 72',
     desc: 'The hero of your own budget.',
     layer: 'back',
@@ -2262,19 +4206,19 @@ const SHOP_ITEMS = [
           <path d="M 8 82 Q 60 96 112 82" stroke="#3D1470" stroke-width="1" fill="none" opacity="0.4"/>
           <path d="M 30 88 L 34 128" stroke="#EEDCFF" stroke-width="1.2" opacity="0.4"/>
           <path d="M 60 84 L 60 130" stroke="#EEDCFF" stroke-width="1.2" opacity="0.4"/>
-          <path d="M 90 88 L 86 128" stroke="#EEDCFF" stroke-width="1.2" opacity="0.4"/>
-          <path d="M -4 132 Q 8 128 20 132 Q 32 128 44 132 Q 56 128 68 132 Q 80 128 92 132 Q 104 128 116 132 Q 120 130 124 132" stroke="#3D1470" stroke-width="1" fill="none" opacity="0.5"/>`
+          <path d="M 90 88 L 86 128" stroke="#EEDCFF" stroke-width="1.2" opacity="0.4"/>`
   },
   {
     id: 'necklace', name: 'Charm Necklace', category: 'accessory', price: 95,
-    mysteryOnly: true, mysteryPool: 'accessory',
+    mysteryOnly: true, mysteryPool: 'accessory', rarity: 'epic',
+    viewBox: '10 58 100 52',
     desc: 'A little sparkle for your budget glow-up.',
-    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 75 },
-    svg: `<path d="M32,72 Q60,90 88,72" stroke="#C0C0C8" stroke-width="3" fill="none" stroke-linecap="round"/>
-          <path d="M32,72 Q60,90 88,72" stroke="#EFEFF4" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.7"/>
-          <circle cx="60" cy="90" r="6" fill="#F4C2D8"/>
-          <circle cx="60" cy="90" r="6" fill="none" stroke="#C0C0C8" stroke-width="1.5"/>
-          <circle cx="58" cy="88" r="2" fill="rgba(255,255,255,0.6)"/>`
+    fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 37 },
+    svg: `<path d="M20,64 Q60,90 100,64 L100,70 Q60,96 20,70 Z" fill="#C0C0C8"/>
+          <path d="M20,64 Q60,90 100,64 L98,66 Q60,92 22,66 Z" fill="#EFEFF4" opacity="0.6"/>
+          <circle cx="60" cy="88" r="6" fill="#4A90D9"/>
+          <circle cx="60" cy="88" r="6" fill="none" stroke="#2C6FB8" stroke-width="1.5"/>
+          <circle cx="58" cy="86" r="2" fill="rgba(255,255,255,0.6)"/>`
   },
   // ── ROOM DECOR ──
   {
@@ -2442,7 +4386,7 @@ const SHOP_ITEMS = [
   },
   {
     id: 'diamond_shades', name: 'Diamond Shades', category: 'exclusive', currency: 'diamond', price: 20,
-    mysteryOnly: true, mysteryPool: 'exclusive',
+    mysteryOnly: true, mysteryPool: 'exclusive', rarity: 'rare',
     viewBox: '6 41 108 34',
     desc: 'Too cool to be affordable in coins.',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 },
@@ -2459,7 +4403,7 @@ const SHOP_ITEMS = [
   },
   {
     id: 'golden_cape', name: 'Golden Cape', category: 'exclusive', currency: 'diamond', price: 25,
-    mysteryOnly: true, mysteryPool: 'exclusive', rarity: 'rare',
+    mysteryOnly: true, mysteryPool: 'exclusive', rarity: 'epic',
     viewBox: '-10 68 144 72',
     desc: 'The rarest flex in Hammy\'s closet.',
     layer: 'back',
@@ -2471,7 +4415,6 @@ const SHOP_ITEMS = [
           <path d="M 30 88 L 34 128" stroke="#FFF3CC" stroke-width="1.2" opacity="0.4"/>
           <path d="M 60 84 L 60 130" stroke="#FFF3CC" stroke-width="1.2" opacity="0.4"/>
           <path d="M 90 88 L 86 128" stroke="#FFF3CC" stroke-width="1.2" opacity="0.4"/>
-          <path d="M -4 132 Q 8 128 20 132 Q 32 128 44 132 Q 56 128 68 132 Q 80 128 92 132 Q 104 128 116 132 Q 120 130 124 132" stroke="#A66E08" stroke-width="1" fill="none" opacity="0.5"/>
           <circle cx="10" cy="92" r="4.5" fill="#8FE3F5"/>
           <circle cx="10" cy="92" r="2.3" fill="#E8FBFF"/>
           <circle cx="110" cy="92" r="4.5" fill="#8FE3F5"/>
@@ -2479,25 +4422,23 @@ const SHOP_ITEMS = [
   },
   {
     id: 'gold_chain', name: 'Gold Chain', category: 'exclusive', currency: 'diamond', price: 35,
-    mysteryOnly: true, mysteryPool: 'exclusive', rarity: 'ultra_rare',
-    viewBox: '18 60 84 46',
+    mysteryOnly: true, mysteryPool: 'exclusive', rarity: 'legendary',
+    viewBox: '12 56 96 52',
     desc: 'The ultimate flex for a maxed-out savings account.',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 32 },
     svg: `<defs><linearGradient id="gch-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#FFF3B0"/><stop offset="50%" stop-color="#FFD23F"/><stop offset="100%" stop-color="#C68A0A"/></linearGradient></defs>
-          <path d="M30,72 Q60,90 90,72" stroke="url(#gch-g)" stroke-width="7" fill="none" stroke-linecap="round"/>
-          <path d="M30,72 Q60,90 90,72" stroke="#FFF3B0" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
-          <circle cx="34" cy="74" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
-          <circle cx="42" cy="80" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
-          <circle cx="51" cy="84.5" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
-          <circle cx="69" cy="84.5" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
-          <circle cx="78" cy="80" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
-          <circle cx="86" cy="74" r="3" fill="none" stroke="#C68A0A" stroke-width="1.6"/>
-          <path d="M52,88 L60,102 L68,88 Z" fill="url(#gch-g)" stroke="#A66E08" stroke-width="1"/>
-          <circle cx="60" cy="93" r="4.5" fill="#8FE3F5"/>
-          <circle cx="60" cy="93" r="2.3" fill="#E8FBFF"/>
-          <path d="M53,89 L59,90.5" stroke="rgba(255,255,255,0.5)" stroke-width="1.2"/>
-          <path d="M32,72 L30,68 L28,72 L24,73 L28,74 L30,78 L32,74 L36,73 Z" fill="#FFF7C4" opacity="0.85"/>
-          <path d="M92,72 L90.5,69 L89,72 L86,72.8 L89,73.6 L90.5,76.6 L92,73.6 L95,72.8 Z" fill="#FFF7C4" opacity="0.7"/>`
+          <path d="M20,64 Q60,90 100,64 L100,70 Q60,96 20,70 Z" fill="url(#gch-g)" stroke="#A66E08" stroke-width="1"/>
+          <path d="M20,64 Q60,90 100,64 L98,66 Q60,92 22,66 Z" fill="#FFF9DD" opacity="0.5"/>
+          <circle cx="32" cy="73.6" r="2.6" fill="none" stroke="#A66E08" stroke-width="1.4"/>
+          <circle cx="44" cy="77.9" r="2.6" fill="none" stroke="#A66E08" stroke-width="1.4"/>
+          <circle cx="54" cy="79.7" r="2.6" fill="none" stroke="#A66E08" stroke-width="1.4"/>
+          <circle cx="66" cy="79.7" r="2.6" fill="none" stroke="#A66E08" stroke-width="1.4"/>
+          <circle cx="76" cy="77.9" r="2.6" fill="none" stroke="#A66E08" stroke-width="1.4"/>
+          <circle cx="88" cy="73.6" r="2.6" fill="none" stroke="#A66E08" stroke-width="1.4"/>
+          <path d="M51,83 L69,83 L60,99 Z" fill="url(#gch-g)" stroke="#A66E08" stroke-width="1"/>
+          <circle cx="60" cy="89" r="4.5" fill="#8FE3F5"/>
+          <circle cx="60" cy="89" r="2.3" fill="#E8FBFF"/>
+          <path d="M53,85 L59,86.5" stroke="rgba(255,255,255,0.5)" stroke-width="1.2"/>`
   },
 
   // ── REWARDS (not for sale — auto-awarded for major milestones) ──
@@ -2516,7 +4457,7 @@ const SHOP_ITEMS = [
           <circle cx="66" cy="30" r="2" fill="#C9A227"/>`
   },
   {
-    id: 'grandmaster_halo', name: 'Grandmaster Halo', category: 'reward', reward: true,
+    id: 'grandmaster_halo', name: 'Angelic Halo', category: 'reward', reward: true,
     rewardHint: 'Unlock every other achievement to earn this',
     viewBox: '14 -8 92 40',
     desc: 'Awarded for unlocking every single achievement. Can\'t be bought, only earned.',
@@ -2530,15 +4471,15 @@ const SHOP_ITEMS = [
   {
     id: 'marathon_medal', name: 'Marathon Medal', category: 'reward', reward: true,
     rewardHint: 'Reach a 30-day streak to earn this',
-    viewBox: '40 60 40 50',
+    viewBox: '10 58 100 56',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 32 },
     desc: 'Awarded for a 30-day streak without missing a day. Can\'t be bought, only earned.',
     svg: `<defs><linearGradient id="mm-g" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#FFE9A6"/><stop offset="55%" stop-color="#FFC93F"/><stop offset="100%" stop-color="#C68A0A"/></linearGradient></defs>
-          <path d="M48,68 L60,84 L72,68" stroke="#3B5FA0" stroke-width="6" fill="none" stroke-linecap="round"/>
-          <path d="M48,68 L60,84 L72,68" stroke="#7B9FE0" stroke-width="2" fill="none" opacity="0.5" stroke-linecap="round"/>
-          <circle cx="60" cy="93" r="11" fill="url(#mm-g)" stroke="#A66E08" stroke-width="1.5"/>
-          <circle cx="60" cy="93" r="7" fill="none" stroke="#FFF3B0" stroke-width="1.2"/>
-          <path d="M60,87 L62,91 L66,91.5 L63,94.5 L64,99 L60,96.5 L56,99 L57,94.5 L54,91.5 L58,91 Z" fill="#FFF3B0"/>`
+          <path d="M20,64 Q60,90 100,64 L100,70 Q60,96 20,70 Z" fill="#3B5FA0"/>
+          <path d="M20,64 Q60,90 100,64 L98,66 Q60,92 22,66 Z" fill="#7B9FE0" opacity="0.5"/>
+          <circle cx="60" cy="90" r="9" fill="url(#mm-g)" stroke="#A66E08" stroke-width="1.5"/>
+          <circle cx="60" cy="90" r="6" fill="none" stroke="#FFF3B0" stroke-width="1.2"/>
+          <polygon points="60,85.5 61.1,88.5 64.3,88.6 61.7,90.6 62.7,93.6 60,91.8 57.4,93.6 58.3,90.6 55.7,88.6 58.9,88.5" fill="#FFF3B0"/>`
   },
 ];
 
@@ -2571,7 +4512,7 @@ function questWasFlawless(qp) {
 function moduleQuestsFlawless(s, modId) {
   const mod = MODULES.find(m => m.id === modId);
   if (!mod || !hasQuest(mod)) return false;
-  return mod.quests.every(q => questWasFlawless(s.questProgress[questKey(modId, q.id)]));
+  return mainQuests(mod).every(q => questWasFlawless(s.questProgress[questKey(modId, q.id)]));
 }
 
 // Sums every vocab term learned across every quest ever played (both Credit quests + Scams).
@@ -2603,7 +4544,7 @@ const ACHIEVEMENTS = [
     icon: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/>' },
   { id: 'investor', tier: 'bronze', color: '#3B7FC4', label: 'Future Millionaire', desc: 'Master the Investing module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'investing'),
     icon: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>' },
-  { id: 'credit_champ', tier: 'bronze', color: '#2E9BD6', label: 'Credit Champ', desc: 'Flawlessly complete every credit quest — Maya\'s and Jordan\'s — with every knowledge check, myth card, and poll guessed right.', check: s => hasMasteredModule(s, 'credit'),
+  { id: 'credit_champ', tier: 'bronze', color: '#2E9BD6', label: 'Credit Champ', desc: 'Flawlessly complete every credit quest — both of Hammy\'s — with every knowledge check, myth card, and poll guessed right.', check: s => hasMasteredModule(s, 'credit'),
     icon: '<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>' },
   { id: 'risk_ready', tier: 'bronze', color: '#5B6B8C', label: 'Risk Ready', desc: 'Master the Managing Risk module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'risk'),
     icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' },
@@ -2615,13 +4556,13 @@ const ACHIEVEMENTS = [
     icon: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>' },
   { id: 'offer_ready', tier: 'bronze', color: '#5C6BC0', label: 'Offer Ready', desc: 'Master Career & Salary — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'career'),
     icon: '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>' },
-  { id: 'scam_spotter', tier: 'bronze', color: '#C0453A', label: 'Scam Spotter', desc: 'Flawlessly complete Devon\'s scam quest — every knowledge check, myth card, and poll guessed right.', check: s => hasMasteredModule(s, 'scams'),
+  { id: 'scam_spotter', tier: 'bronze', color: '#C0453A', label: 'Scam Spotter', desc: 'Flawlessly complete every scam quest — every knowledge check, myth card, and poll guessed right.', check: s => hasMasteredModule(s, 'scams'),
     icon: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
   { id: 'crisis_averted', tier: 'silver', color: '#E0A72E', label: 'Crisis Averted', desc: 'Beat the Credit boss battle — finish either of the credit quests through to its final scenario.', check: s => (s.questBossesWon || []).includes('credit'),
     icon: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>' },
-  { id: 'fraud_fighter', tier: 'silver', color: '#B33A3A', label: 'Fraud Fighter', desc: 'Beat the Scams boss battle — finish Devon\'s quest through to its final scenario.', check: s => (s.questBossesWon || []).includes('scams'),
+  { id: 'fraud_fighter', tier: 'silver', color: '#B33A3A', label: 'Fraud Fighter', desc: 'Beat a Scams boss battle — finish any one of Hammy\'s scam quests through to its final scenario.', check: s => (s.questBossesWon || []).includes('scams'),
     icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>' },
-  { id: 'no_hints', tier: 'silver', color: '#7952B3', label: 'No Hints Needed', desc: 'Finish Maya\'s credit quest from start to finish without using a single hint.', check: s => { const qp = s.questProgress['credit::maya']; return !!(qp && qp.done && (qp.hintsUsed || 0) === 0); },
+  { id: 'no_hints', tier: 'silver', color: '#7952B3', label: 'No Hints Needed', desc: 'Finish Hammy\'s first credit quest from start to finish without using a single hint.', check: s => { const qp = s.questProgress['credit::maya']; return !!(qp && qp.done && (qp.hintsUsed || 0) === 0); },
     icon: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>' },
   { id: 'word_nerd', tier: 'silver', color: '#3F8757', label: 'Word Nerd', desc: 'Learn 15 or more vocabulary terms across every quest played.', check: s => totalTermsLearned(s) >= 15,
     icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
@@ -2946,7 +4887,7 @@ function buildGraduationBanner() {
 
 function buildMilestoneRewardBanner(newAchs) {
   if (newAchs.some(a => a.id === 'grandmaster')) {
-    return buildRewardBanner('🏆', 'Grandmaster!', 'Every achievement unlocked. Your Grandmaster Halo is equipped, check out your pig.');
+    return buildRewardBanner('🏆', 'Grandmaster!', 'Every achievement unlocked. Your Angelic Halo is equipped, check out your pig.');
   }
   if (newAchs.some(a => a.id === 'marathoner')) {
     return buildRewardBanner('🏅', '30-Day Streak!', 'A full month with no missed days. Your Marathon Medal is equipped, check out your pig.');
@@ -2968,7 +4909,7 @@ function checkAchievements() {
     state.ownedItems = [...(state.ownedItems || []), 'graduation_cap'];
     state.equippedItem = 'graduation_cap';
   }
-  // Unlocking every other achievement auto-awards the Grandmaster Halo — the hardest badge in the app.
+  // Unlocking every other achievement auto-awards the Angelic Halo — the hardest badge in the app.
   if (newOnes.some(a => a.id === 'grandmaster') && !(state.ownedItems || []).includes('grandmaster_halo')) {
     state.ownedItems = [...(state.ownedItems || []), 'grandmaster_halo'];
     state.equippedItem = 'grandmaster_halo';
@@ -2994,7 +4935,16 @@ function showPage(id) {
   document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.toggle('active', item.dataset.page === id);
   });
+  const subnav = document.querySelector('.nav-subnav');
+  if (subnav) subnav.classList.toggle('mobile-open', id === 'shop');
+  if (id === 'shop') updateShopNavHighlight();
   window.scrollTo(0, 0);
+}
+
+function updateShopNavHighlight() {
+  document.querySelectorAll('.nav-subitem[data-shop-tab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.shopTab === shopActiveTab);
+  });
 }
 
 function updateSidebarStats() {
@@ -3014,47 +4964,47 @@ function renderModuleList(containerId) {
   if (!container) return;
   container.innerHTML = '';
 
-  // Personalize order once the onboarding survey is done: modules the student is least
-  // familiar with, or that match a stated goal, float up top. Ties keep the original module
-  // order. Already-finished modules are never pulled up or badged, this only steers where to
-  // go next, it doesn't hide or gate anything.
+  // Modules always stay in their fixed numeric order (01–11) — personalization only
+  // affects which one gets the "Recommended" highlight below, never the list order, so
+  // the module list reads as a stable, predictable sequence.
   const survey = state.onboardingSurvey;
-  const orderedModules = survey && survey.completed
-    ? MODULES.map((m, i) => ({ m, i, score: computeModulePriority(m, survey) }))
-        .sort((a, b) => b.score - a.score || a.i - b.i)
-        .map(x => x.m)
-    : MODULES;
   const topRecommendedId = survey && survey.completed
-    ? (orderedModules.find(m => computeModulePriority(m, survey) > 0) || {}).id
+    ? (MODULES.map((m, i) => ({ m, i, score: computeModulePriority(m, survey) }))
+        .sort((a, b) => b.score - a.score || a.i - b.i)
+        .find(x => x.score > 0) || {}).m?.id
     : null;
 
-  orderedModules.forEach(m => {
+  MODULES.forEach(m => {
     const quest = hasQuest(m);
     const lessonsDone = quest ? 0 : m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
     const allDone = quest
-      ? m.quests.every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
+      ? mainQuests(m).every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
       : lessonsDone === m.lessons.length;
 
+    const isRecommended = !allDone && m.id === topRecommendedId;
     const row = document.createElement('div');
-    row.className = 'module-row' + (allDone ? ' completed' : '');
+    row.className = 'module-row' + (allDone ? ' completed' : '') + (isRecommended ? ' recommended' : '');
 
     const badge = allDone
       ? `<span class="card-badge badge-done">✓ Complete</span>`
-      : m.id === topRecommendedId
+      : isRecommended
         ? `<span class="card-badge badge-recommend">★ Recommended</span>`
         : `<span class="card-badge badge-xp">+${m.xpReward} XP</span>`;
 
     let bodyHtml;
     if (quest) {
-      bodyHtml = `<div class="module-row-lessons">${m.quests.map((q, idx) => {
+      bodyHtml = `<div class="module-row-lessons">${mainQuests(m).map((q, idx) => {
         const qp = state.questProgress[questKey(m.id, q.id)];
         const done = !!(qp && qp.done);
         const cta = done ? '↻ Replay Quest' : (qp && qp.chapterIdx > 0 ? `Resume — ${questLabel(m, q)} →` : 'Begin Quest →');
+        const sub = subQuestFor(m, q.id);
+        const subHtml = sub ? `<div class="lt-subquest" data-module="${m.id}" data-quest="${sub.id}">🎯 Real-life sub-quest: ${sub.topic} →</div>` : '';
         return `<div class="lesson-tile quest-tile${done ? ' done' : ''}" data-module="${m.id}" data-quest="${q.id}">
           <div class="lt-body">
             <div class="lt-num">Lesson ${idx + 1}</div>
             <div class="lt-title">${q.topic || q.character.name}</div>
             <div class="lt-meta">${q.character.tagline} · ${q.chapters.length} chapters</div>
+            ${subHtml}
           </div>
           <span class="lt-cta">${cta}</span>
         </div>`;
@@ -3085,7 +5035,7 @@ function renderModuleList(containerId) {
         <div class="mrh-left">
           <div class="mod-icon ${m.iconColor}">${m.icon}</div>
           <div class="mrh-info">
-            <div class="mrh-title">${m.title}${quest ? ' <span class="quest-tag">Quest</span>' : ''}</div>
+            <div class="mrh-title">${m.title}</div>
             <div class="mrh-desc">${m.desc}</div>
           </div>
         </div>
@@ -3096,6 +5046,12 @@ function renderModuleList(containerId) {
     if (quest) {
       row.querySelectorAll('.quest-tile').forEach(tile => {
         tile.addEventListener('click', () => startQuest(tile.dataset.module, tile.dataset.quest));
+      });
+      row.querySelectorAll('.lt-subquest').forEach(hint => {
+        hint.addEventListener('click', (e) => {
+          e.stopPropagation();
+          startQuest(hint.dataset.module, hint.dataset.quest);
+        });
       });
     } else {
       row.querySelectorAll('.lesson-tile').forEach(tile => {
@@ -3146,7 +5102,7 @@ let surveyDraft = { moduleFamiliarity: {}, focusGoals: [] };
 
 function isModuleFullyDone(m) {
   return hasQuest(m)
-    ? m.quests.every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
+    ? mainQuests(m).every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
     : m.lessons.every((_, i) => !!state.completedLessons[`${m.id}_${i}`]);
 }
 
@@ -3454,10 +5410,8 @@ function getPigWithItemMarkup(scale, item) {
 }
 
 // The player's own equipped cosmetic (bought and worn from the Shop) — used everywhere
-// "their" Hammy appears (Home, Progress, quest/activity companion, results) so a purchase
-// visibly shows up across the whole app, not just on the Room page. Distinct from the quest
-// engine's per-character narrative accessory (Maya's bow, Devon's bowtie), which stays tied
-// to that character's own story portraits, not the player's mascot.
+// "their" Hammy appears (Home, Progress, quest/activity companion, quest story portraits,
+// results) so a purchase visibly shows up across the whole app, not just on the Room page.
 function getEquippedItem() {
   if (!state.equippedItem) return null;
   return SHOP_ITEMS.find(i => i.id === state.equippedItem) || null;
@@ -3507,9 +5461,11 @@ function buildPigPreviewSvg(itemSvg, viewBox = '0 0 120 162') {
   </svg>`;
 }
 
-const RARITY_WEIGHT = { common: 6, rare: 2, ultra_rare: 1 };
-const RARITY_LABEL = { common: 'Common', rare: 'Rare', ultra_rare: 'Ultra Rare' };
-function itemRarity(item) { return item.rarity === 'rare' ? 'rare' : item.rarity === 'ultra_rare' ? 'ultra_rare' : 'common'; }
+const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
+const RARITY_WEIGHT = { common: 8, rare: 4, epic: 2, legendary: 1 };
+const RARITY_LABEL = { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
+const RARITY_COLOR = { common: '#2F9E44', rare: '#2E6FE0', epic: '#9B3FD6', legendary: '#C9781A' };
+function itemRarity(item) { return RARITY_ORDER.includes(item.rarity) ? item.rarity : 'common'; }
 
 function mysteryPoolAll(poolKey) {
   return SHOP_ITEMS.filter(i => i.mysteryPool === poolKey && !i.isMysteryBox);
@@ -3534,7 +5490,8 @@ function mysteryDropChance(item) {
 function mysteryOddsLabel(item) {
   const pct = mysteryDropChance(item);
   const pctStr = pct >= 10 ? Math.round(pct) : Math.round(pct * 10) / 10;
-  return `${RARITY_LABEL[itemRarity(item)]} · ${pctStr}%`;
+  const rarity = itemRarity(item);
+  return `<span style="color:${RARITY_COLOR[rarity]}">${RARITY_LABEL[rarity]} · ${pctStr}%</span>`;
 }
 
 function refreshShopModal(itemId) {
@@ -3575,7 +5532,7 @@ function refreshShopModal(itemId) {
     : `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
   document.getElementById('shop-modal-name').textContent = item.name;
   document.getElementById('shop-modal-desc').innerHTML = item.desc + (item.mysteryPool && !item.isMysteryBox
-    ? `<br><span class="shop-modal-odds">${mysteryOddsLabel(item)} from the ${mysteryBoxNameFor(item.mysteryPool)}</span>`
+    ? `<br><span class="shop-modal-odds">${mysteryOddsLabel(item)}</span>`
     : '');
   document.getElementById('shop-modal-btn-wrap').innerHTML = btn;
 }
@@ -3599,18 +5556,18 @@ function closeShopModal() {
 }
 
 // ── SHOP ───────────────────────────────────────
+let shopActiveTab = 'boutique';
+
 const SHOP_CATEGORIES = [
-  { key: 'exclusive', label: 'Diamond Exclusives', icon: '💎' },
-  { key: 'reward',  label: 'Rewards', icon: '🏆' },
-  { key: 'hat',     label: 'Hats',    icon: '🎩' },
-  { key: 'glasses', label: 'Glasses', icon: '🕶️' },
-  { key: 'accessory', label: 'Accessories', icon: '💍' },
-  { key: 'room',    label: 'Room Decor', icon: '🛋️' },
+  { key: 'exclusive', label: 'Diamond Exclusives', icon: '💎', tab: 'boutique' },
+  { key: 'hat',     label: 'Hats',    icon: '🎩', tab: 'boutique' },
+  { key: 'accessory', label: 'Accessories', icon: '🕶️', tab: 'boutique' },
+  { key: 'reward',  label: 'Rewards', icon: '🏆', tab: 'boutique' },
+  { key: 'room',    label: 'Room Decor', icon: '🛋️', tab: 'room' },
 ];
 
 const CAT_VIEWBOX = {
   hat:     '14 -4 92 46',
-  glasses: '6 41 108 34',
   accessory: '6 72 108 62',
 };
 
@@ -3629,8 +5586,14 @@ function renderShopPage() {
 
   const equippedItem = SHOP_ITEMS.find(i => i.id === state.equippedItem);
 
-  const categoriesHtml = SHOP_CATEGORIES.map(cat => {
-    const items = SHOP_ITEMS.filter(i => i.category === cat.key);
+  const categoriesHtml = SHOP_CATEGORIES.filter(cat => cat.tab === shopActiveTab).map(cat => {
+    const items = SHOP_ITEMS.filter(i => i.category === cat.key).slice().sort((a, b) => {
+      if (!!a.isMysteryBox !== !!b.isMysteryBox) return a.isMysteryBox ? -1 : 1;
+      const aIsPool = !!a.mysteryPool && !a.isMysteryBox;
+      const bIsPool = !!b.mysteryPool && !b.isMysteryBox;
+      if (aIsPool && bIsPool) return RARITY_ORDER.indexOf(itemRarity(a)) - RARITY_ORDER.indexOf(itemRarity(b));
+      return 0;
+    });
     const isExclusiveCat = cat.key === 'exclusive';
     const isRewardCat = cat.key === 'reward';
     const cardsHtml = items.map(item => {
@@ -3659,9 +5622,9 @@ function renderShopPage() {
           ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
           : getPigWithItemMarkup(0.29, item);
       return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${(isReward || isLocked) && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
-        ${isDiamond && !isBox ? '<span class="shop-exclusive-ribbon">Exclusive</span>' : ''}
+        ${isDiamond && !isBox ? '<span class="shop-exclusive-ribbon">Mystery</span>' : ''}
         ${isBox ? '<span class="shop-exclusive-ribbon">Mystery</span>' : ''}
-        ${isLocked ? '<span class="shop-reward-ribbon">Mystery</span>' : ''}
+        ${isLocked && !isDiamond ? '<span class="shop-reward-ribbon">Mystery</span>' : ''}
         ${isReward && !owned ? '<span class="shop-reward-ribbon">Reward</span>' : ''}
         <div class="shop-preview">
           ${preview}
@@ -3684,25 +5647,44 @@ function renderShopPage() {
     </div>`;
   }).join('');
 
-  grid.innerHTML = `
-    <div class="shop-storefront">
-      <div class="shop-storefront-awning">
-        <span></span><span></span><span></span><span></span><span></span>
-      </div>
-      <div class="shop-storefront-inner">
-        <div class="shop-storefront-pig">${getPigWithItemMarkup(0.2, getEquippedItem())}</div>
-        <div class="shop-storefront-text">
-          <div class="shop-storefront-sign">Hammy's Boutique</div>
-          <div class="shop-storefront-sub">${equippedItem ? `Currently wearing: <strong>${equippedItem.name}</strong>` : 'Pick something cute for your pig!'}</div>
-          <div class="shop-earn-tip">Earn 🪙 coins by completing lessons · 💎 diamonds every 3-day streak</div>
+  const filledRoomSlots = Object.values(state.equippedRoom || {}).filter(Boolean).length;
+  const storefrontHtml = shopActiveTab === 'room'
+    ? `<div class="shop-storefront shop-storefront-room">
+        <div class="shop-storefront-awning">
+          <span></span><span></span><span></span><span></span><span></span>
         </div>
-      </div>
-    </div>
+        <div class="shop-storefront-inner">
+          <div class="shop-storefront-room-icon">🛋️</div>
+          <div class="shop-storefront-text">
+            <div class="shop-storefront-sign">The Furniture Farm</div>
+            <div class="shop-storefront-sub">${filledRoomSlots ? `${filledRoomSlots} piece${filledRoomSlots === 1 ? '' : 's'} furnished so far` : 'Furnish Hammy\'s room — every cozy upgrade compounds!'}</div>
+            <div class="shop-earn-tip">Earn 🪙 coins by completing lessons · 💎 diamonds every 3-day streak</div>
+          </div>
+        </div>
+      </div>`
+    : `<div class="shop-storefront">
+        <div class="shop-storefront-awning">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="shop-storefront-inner">
+          <div class="shop-storefront-pig">${getPigWithItemMarkup(0.2, getEquippedItem())}</div>
+          <div class="shop-storefront-text">
+            <div class="shop-storefront-sign">Porky's Boutique</div>
+            <div class="shop-storefront-sub">${equippedItem ? `Currently wearing: <strong>${equippedItem.name}</strong>` : 'Pick something cute for your pig!'}</div>
+            <div class="shop-earn-tip">Earn 🪙 coins by completing lessons · 💎 diamonds every 3-day streak</div>
+          </div>
+        </div>
+      </div>`;
+
+  grid.innerHTML = `
+    ${storefrontHtml}
     ${categoriesHtml}`;
 
   grid.querySelectorAll('.shop-card[data-item-id]').forEach(card => {
     card.addEventListener('click', () => openShopModal(card.dataset.itemId));
   });
+
+  updateShopNavHighlight();
 }
 
 function pickMysteryItem(poolKey) {
@@ -3897,6 +5879,13 @@ function renderModulesPage() {
   const done = Object.keys(state.completedModules).length;
   document.getElementById('modules-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
   renderModuleList('modules-grid');
+}
+
+// Exiting a lesson, quiz, or quest always returns to the Modules tab (not Home), since
+// that's where every one of these is launched from.
+function exitToModules() {
+  showPage('modules');
+  renderModulesPage();
 }
 
 // ── BADGES PAGE ────────────────────────────────
@@ -5096,7 +7085,7 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
   }).join('');
 
   const achHtml = newAchs.map(a =>
-    `<div class="new-ach-banner"><span class="ach-abbr">${a.abbr}</span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
+    `<div class="new-ach-banner"><span class="ach-abbr" style="--ach-color: ${a.color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">${a.icon}</svg></span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
   ).join('');
   const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
   const gradHtml = (newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '') + buildMilestoneRewardBanner(newAchs);
@@ -5120,11 +7109,11 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
     ${achHtml}
     <div class="results-breakdown">${breakdown}</div>
     <div class="results-actions">
-      <button class="btn-primary" id="res-home">Back to Dashboard</button>
+      <button class="btn-primary" id="res-home">Back to Modules</button>
       <button class="btn-secondary" id="res-replay">Replay Module</button>
     </div>`;
 
-  document.getElementById('res-home').addEventListener('click', renderHome);
+  document.getElementById('res-home').addEventListener('click', exitToModules);
   document.getElementById('res-replay').addEventListener('click', () => showModuleDetail(mod.id));
 }
 
@@ -5133,6 +7122,11 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
 // ══════════════════════════════════════════════
 
 function hasQuest(mod) { return Array.isArray(mod.quests) && mod.quests.length > 0; }
+// Core lesson quests only — excludes "real-life" sub-quests (bonus practical walkthroughs
+// attached to a parent quest via parentQuestId), so module completion/mastery and the tile
+// grid don't require the bonus content to be counted as one of the module's lessons.
+function mainQuests(mod) { return (mod.quests || []).filter(q => !q.parentQuestId); }
+function subQuestFor(mod, questId) { return (mod.quests || []).find(q => q.parentQuestId === questId); }
 function questKey(moduleId, questId) { return `${moduleId}::${questId}`; }
 function getActiveQuest(mod) { return mod.quests.find(q => q.id === state.activeQuestId); }
 function getQP(mod) { return state.questProgress[questKey(mod.id, state.activeQuestId)]; }
@@ -5255,10 +7249,7 @@ function renderChapter(mod, idx) {
   titleRow.classList.remove('centered');
   document.getElementById('quest-layout').style.minHeight = Math.max(240, computeAvailableQuestHeight()) + 'px';
 
-  // Reset the persistent Hammy to a neutral idle pose for the new chapter. This side avatar
-  // is always plain Hammy, the consistent narrator/companion — the quest character's own
-  // accessory (Maya's bow, Devon's bowtie) only appears in their own story-beat dialogue
-  // portraits, not here, so the two stay visually distinct.
+  // Reset the persistent Hammy to a neutral idle pose for the new chapter.
   const questSide = document.getElementById('quest-side');
   const hammySide = document.getElementById('hammy-side-avatar');
   const hammyMsg = document.getElementById('hammy-side-msg');
@@ -5472,45 +7463,6 @@ function renderHintBudget(mod, chapterType, hintText) {
   }
 }
 
-// Same Hammy mascot, wearing a small quest-specific accessory, so each quest's protagonist
-// reads as visually distinct instead of interchangeable copies of the same mascot.
-// Maya — a purple bow sitting on the side of her left ear at a jaunty tilt, Hello Kitty
-// style, instead of centered low on the head.
-const MAYA_BOW_SVG = `
-  <g transform="translate(30,34) rotate(-20)">
-    <path d="M0 0 C -6 -5, -13 -4, -12 2 C -11 7, -5 6, 0 0 Z" fill="#8A4FD6"/>
-    <path d="M0 0 C 6 -5, 13 -4, 12 2 C 11 7, 5 6, 0 0 Z" fill="#8A4FD6"/>
-    <path d="M-2 3 L -4.5 9 L -0.5 6 Z" fill="#6B35B8"/>
-    <path d="M2 3 L 4.5 9 L 0.5 6 Z" fill="#6B35B8"/>
-    <circle cx="0" cy="1" r="2.6" fill="#6B35B8"/>
-  </g>
-`;
-// Devon — a small red bowtie centered just below the chin, so it reads distinctly from
-// Maya's ear bow at a glance even at the tiny sizes the side avatar renders at.
-const DEVON_BOWTIE_SVG = `
-  <g transform="translate(60,69)">
-    <path d="M0 0 C -7 -5, -14 -4, -13 3 C -12 8, -5 6, 0 0 Z" fill="#C23B3B"/>
-    <path d="M0 0 C 7 -5, 14 -4, 13 3 C 12 8, 5 6, 0 0 Z" fill="#C23B3B"/>
-    <circle cx="0" cy="1" r="3" fill="#8F2A2A"/>
-  </g>
-`;
-// Keyed by quest id (not module id — Credit has two quests, Maya and Jordan, and only Maya
-// has a defined accessory so far). Falls back to the plain, unaccessorized mascot.
-const QUEST_CHARACTER_ACCESSORY = {
-  maya: MAYA_BOW_SVG,
-  devon: DEVON_BOWTIE_SVG,
-};
-
-function getCharacterMarkup(scale, questId) {
-  const accessory = QUEST_CHARACTER_ACCESSORY[questId];
-  return accessory ? getPigWithItemMarkup(scale, accessory) : getPigMarkup(scale);
-}
-
-// Face only (no body) — used in dialogue avatars where a full-body illustration would be
-// too large and unnecessary.
-function getCharacterFaceMarkup(scale, questId) {
-  return getCharacterMarkup(scale, questId).replace('class="pig-stage"', 'class="pig-stage pig-head-stage"');
-}
 
 const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it!', 'Great job!'];
 // "Here's why / here's what's true" only makes sense when an explanation is actually shown
@@ -5829,13 +7781,13 @@ function renderStoryChapter(chapter, mod, onDone) {
       const captionBudget = 210; // rough space reserved for the caption + gap below the avatar
       const maxScale = window.innerWidth <= 640 ? 0.62 : 0.85;
       const introScale = Math.max(0.4, Math.min(maxScale, (available - captionBudget) / 460));
-      entry.innerHTML = `<div class="intro-avatar">${getCharacterMarkup(introScale, state.activeQuestId)}</div><p class="intro-caption">${beat.text}</p>`;
+      entry.innerHTML = `<div class="intro-avatar">${getPigWithItemMarkup(introScale, getEquippedItem())}</div><p class="intro-caption">${beat.text}</p>`;
       log.appendChild(entry);
       entry.style.minHeight = Math.max(240, available) + 'px';
     } else {
       const isNarrator = beat.speaker === 'narrator';
       const isProtagonist = beat.speaker === charName;
-      const avatarHtml = isNarrator ? getHammyFaceMarkup(0.13) : isProtagonist ? getCharacterFaceMarkup(0.13, state.activeQuestId) : beat.speaker.charAt(0);
+      const avatarHtml = (isNarrator || isProtagonist) ? getHammyFaceMarkup(0.13) : beat.speaker.charAt(0);
       entry.className = `story-beat ${isNarrator ? 'is-narrator' : ''}`;
       entry.innerHTML = `
         <div class="story-avatar ${isNarrator || isProtagonist ? 'has-character' : ''}">${avatarHtml}</div>
@@ -6567,7 +8519,7 @@ function buildQuestReport(mod, qp) {
 
 function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText, qp, diamondsEarned) {
   const achHtml = newAchs.map(a =>
-    `<div class="new-ach-banner"><span class="ach-abbr">${a.abbr}</span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
+    `<div class="new-ach-banner"><span class="ach-abbr" style="--ach-color: ${a.color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">${a.icon}</svg></span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
   ).join('');
   const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
   const gradHtml = (newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '') + buildMilestoneRewardBanner(newAchs);
@@ -6599,11 +8551,11 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
     <div class="results-breakdown quest-final-dashboard">${dashHtml}</div>
     ${buildQuestReport(mod, qp)}
     <div class="results-actions">
-      <button class="btn-primary" id="res-home">Back to Dashboard</button>
+      <button class="btn-primary" id="res-home">Back to Modules</button>
       <button class="btn-secondary" id="res-replay">Replay Quest</button>
     </div>`;
 
-  document.getElementById('res-home').addEventListener('click', renderHome);
+  document.getElementById('res-home').addEventListener('click', exitToModules);
   document.getElementById('res-replay').addEventListener('click', () => startQuest(mod.id, state.activeQuestId));
 }
 
@@ -6625,19 +8577,35 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  document.getElementById('mod-detail-exit').addEventListener('click', renderHome);
-  document.getElementById('hook-exit').addEventListener('click', renderHome);
+  const shopSubnav = document.getElementById('nav-shop-subnav');
+  document.getElementById('nav-shop-btn').addEventListener('click', () => {
+    shopSubnav.classList.toggle('open');
+    document.getElementById('nav-shop-btn').classList.toggle('collapsed', !shopSubnav.classList.contains('open'));
+  });
+
+  document.querySelectorAll('.nav-subitem[data-shop-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      shopActiveTab = btn.dataset.shopTab;
+      shopSubnav.classList.add('open');
+      document.getElementById('nav-shop-btn').classList.remove('collapsed');
+      showPage('shop');
+      renderShopPage();
+    });
+  });
+
+  document.getElementById('mod-detail-exit').addEventListener('click', exitToModules);
+  document.getElementById('hook-exit').addEventListener('click', exitToModules);
   document.getElementById('hook-start').addEventListener('click', startQuiz);
   document.getElementById('quiz-exit').addEventListener('click', () => {
-    if (confirm('Exit quiz? Your progress for this session will be lost.')) renderHome();
+    if (confirm('Exit quiz? Your progress for this session will be lost.')) exitToModules();
   });
   document.getElementById('quest-exit').addEventListener('click', () => {
     if (state.inBonusActivity) {
       state.inBonusActivity = false;
-      renderHome();
+      exitToModules();
       return;
     }
-    if (confirm('Exit the quest? Your progress is saved up to your last completed chapter.')) renderHome();
+    if (confirm('Exit the quest? Your progress is saved up to your last completed chapter.')) exitToModules();
   });
   document.getElementById('btn-next').addEventListener('click', () => {
     if (state.currentQ < state.sessionQuestions.length - 1) {
