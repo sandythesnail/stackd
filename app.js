@@ -7813,12 +7813,21 @@ function renderStoryChapter(chapter, mod, onDone) {
   const charName = getActiveQuest(mod).character.name;
   main.innerHTML = `<div class="story-log" id="story-log"></div>`;
   const log = document.getElementById('story-log');
+
+  // The establishing "intro" beat(s) — Hammy's whole body plus a caption — get their own
+  // screen. Once the story shifts into back-and-forth dialogue, Continue reveals one beat
+  // at a time, but they build up together on that same second screen instead of replacing
+  // each other — the log only clears once, right at that intro-to-dialogue handoff.
+  let splitIdx = 0;
+  while (splitIdx < chapter.beats.length && chapter.beats[splitIdx].speaker === 'intro') splitIdx++;
+
   let beatIdx = 0;
   showBeat();
 
   function showBeat() {
     const beat = chapter.beats[beatIdx];
     const isLast = beatIdx === chapter.beats.length - 1;
+    if (beatIdx === 0 || beatIdx === splitIdx) log.innerHTML = '';
     const entry = document.createElement('div');
     // Title centers to match the centered establishing shot, then moves back to the left
     // edge once the beats shift into back-and-forth dialogue.
@@ -7836,7 +7845,6 @@ function renderStoryChapter(chapter, mod, onDone) {
       const maxScale = window.innerWidth <= 640 ? 0.62 : 0.85;
       const introScale = Math.max(0.4, Math.min(maxScale, (available - captionBudget) / 460));
       entry.innerHTML = `<div class="intro-avatar">${getPigWithItemMarkup(introScale, getEquippedItem())}</div><p class="intro-caption">${beat.text}</p>`;
-      log.appendChild(entry);
       entry.style.minHeight = Math.max(240, available) + 'px';
     } else {
       const isNarrator = beat.speaker === 'narrator';
@@ -7846,9 +7854,8 @@ function renderStoryChapter(chapter, mod, onDone) {
       entry.innerHTML = `
         <div class="story-avatar ${isNarrator || isProtagonist ? 'has-character' : ''}">${avatarHtml}</div>
         <div class="story-bubble ${isNarrator ? 'narrator' : ''}">${beat.text}</div>`;
-      log.appendChild(entry);
-      entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+    log.appendChild(entry);
 
     setQuestContinue(`${isLast ? 'Continue' : 'Next'} →`, () => {
       if (isLast) onDone(); else { beatIdx++; showBeat(); }
@@ -7945,19 +7952,29 @@ function renderMicrosimChapter(chapter, mod, onDone) {
     const leftover = computeLeftover();
     const tier = chapter.feedbackTiers.find(t => leftover <= t.maxLeftover);
     clearQuestContinue();
-    const resultBlock = document.createElement('div');
-    resultBlock.className = `microsim-result ${tier.ok ? 'ok' : 'bad'}`;
     showHammyReaction(mod, tier.ok);
+    // Swap the interactive sliders out for a compact recap of what was chosen, instead of
+    // appending the result underneath everything — that extra height was pushing the page
+    // past the viewport and forcing a scroll right when the result appears.
+    const chosenHtml = chapter.sliders.map(s => `<div class="microsim-cost-row"><span>${s.label}</span><span>$${sliderValues[s.id]}</span></div>`).join('');
+    main.innerHTML = `
+      <p class="quest-prompt">${chapter.prompt}</p>
+      <div class="microsim-costs">
+        <div class="microsim-cost-row microsim-income-row"><span>Monthly income</span><span>$${chapter.income}</span></div>
+        ${costsHtml}
+        ${chosenHtml}
+      </div>
+      <div class="microsim-leftover-row"><span>Left over</span><span class="microsim-leftover ${leftover < 0 ? 'negative' : ''}">$${leftover}</span></div>
+      <div class="microsim-result ${tier.ok ? 'ok' : 'bad'}">
+        <p>${tier.text}</p>
+        ${tier.ok ? '' : '<button class="btn-secondary" id="microsim-retry-btn">Try Again</button>'}
+      </div>`;
     if (tier.ok) {
-      resultBlock.innerHTML = `<p>${tier.text}</p>`;
-      main.appendChild(resultBlock);
       setQuestContinue('Continue →', () => {
         if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
         onDone();
       }, true);
     } else {
-      resultBlock.innerHTML = `<p>${tier.text}</p><button class="btn-secondary" id="microsim-retry-btn">Try Again</button>`;
-      main.appendChild(resultBlock);
       document.getElementById('microsim-retry-btn').addEventListener('click', () => {
         renderMicrosimChapter(chapter, mod, onDone);
       });
