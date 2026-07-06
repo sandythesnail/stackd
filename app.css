@@ -1389,6 +1389,7 @@ select.budget-input { cursor: pointer; }
   max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem;
   display: flex; flex-direction: column; gap: 1.25rem;
 }
+.subquest-celebrate-hammy { display: flex; justify-content: center; margin-bottom: -0.5rem; }
 .results-grade {
   display: inline-block; font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
   letter-spacing: 1.2px; padding: 0.25rem 0.7rem; border-radius: var(--radius-sm);

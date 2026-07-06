@@ -4998,7 +4998,8 @@ function renderModuleList(containerId) {
         const done = !!(qp && qp.done);
         const cta = done ? '↻ Replay Quest' : (qp && qp.chapterIdx > 0 ? `Resume — ${questLabel(m, q)} →` : 'Begin Quest →');
         const sub = subQuestFor(m, q.id);
-        const subHtml = sub ? `<div class="lt-subquest" data-module="${m.id}" data-quest="${sub.id}">🎯 Real-life sub-quest: ${sub.topic} →</div>` : '';
+        const subDone = sub && !!state.questProgress[questKey(m.id, sub.id)]?.done;
+        const subHtml = sub ? `<div class="lt-subquest${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">${subDone ? '✓' : '🎯'} Real-life sub-quest: ${sub.topic} →</div>` : '';
         return `<div class="lesson-tile quest-tile${done ? ' done' : ''}" data-module="${m.id}" data-quest="${q.id}">
           <div class="lt-body">
             <div class="lt-num">Lesson ${idx + 1}</div>
@@ -7156,6 +7157,11 @@ function startQuest(moduleId, questId) {
   state.inBonusActivity = false;
   const key = questKey(moduleId, questId);
   const existing = state.questProgress[key];
+  // Repairs saves left over from the old Continue-button bug, where chapterIdx climbed
+  // past the quest's actual chapter count instead of the quest ever being marked done.
+  if (existing && !existing.done && existing.chapterIdx >= quest.chapters.length) {
+    existing.done = true;
+  }
   if (!existing || existing.done) {
     state.questProgress[key] = {
       chapterIdx: 0,
@@ -7297,10 +7303,58 @@ function clearQuestContinue() {
 function advanceChapter(mod) {
   const qp = getQP(mod);
   qp.chapterIdx++;
-  saveState();
   if (qp.chapterIdx < getActiveQuest(mod).chapters.length) {
+    saveState();
     renderChapter(mod, qp.chapterIdx);
+  } else {
+    // Sub-quests (real-life step-by-step guides) end on a knowledgecheck instead of a
+    // bossbattle, so there's no finishQuest() call to close them out — without this,
+    // chapterIdx climbed past the chapter array on every extra Continue click, which
+    // both broke the progress bar (>100%) and crashed the next render (chapters[idx]
+    // was undefined), making Continue look dead.
+    finishSubQuest(mod);
   }
+}
+
+// ── Sub-quest finish (no boss battle — closes out via a lighter congrats screen) ──
+function finishSubQuest(mod) {
+  const qp = getQP(mod);
+  qp.done = true;
+  const newAchs = checkAchievements();
+  saveState();
+  showScreen('screen-results');
+  renderSubQuestResults(mod, qp, newAchs);
+}
+
+function renderSubQuestResults(mod, qp, newAchs) {
+  const quest = getActiveQuest(mod);
+  // Sub-quest chapters award their XP as they go (via each chapter's own xpOnComplete),
+  // so the total here is just what those chapters are worth — nothing left to add now.
+  const xpEarned = quest.chapters.reduce((sum, c) => sum + (c.xpOnComplete || 0), 0);
+  const achHtml = newAchs.map(a =>
+    `<div class="new-ach-banner"><span class="ach-abbr" style="--ach-color: ${a.color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">${a.icon}</svg></span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
+  ).join('');
+
+  document.getElementById('results-wrap').innerHTML = `
+    <div class="subquest-celebrate-hammy hammy-side-avatar streak">${getPigWithItemMarkup(0.55, getEquippedItem())}</div>
+    <div class="results-grade">Sub-Quest Complete</div>
+    <h2 class="results-title">${quest.topic}</h2>
+    <p class="results-score">Hammy just walked through this one step by step, for real — here's what stuck.</p>
+    <div class="results-rewards-row">
+      <div class="results-xp-card">
+        <div class="results-xp-num">+${xpEarned} XP</div>
+        <div class="results-xp-label">${getTier(Object.keys(state.completedModules).length).name} · ${state.xp.toLocaleString()} total</div>
+      </div>
+    </div>
+    ${achHtml}
+    ${buildQuestReport(mod, qp)}
+    <div class="results-actions">
+      <button class="btn-primary" id="res-home">Back to Modules</button>
+      <button class="btn-secondary" id="res-replay">Replay Sub-Quest</button>
+    </div>`;
+
+  document.getElementById('res-home').addEventListener('click', exitToModules);
+  document.getElementById('res-replay').addEventListener('click', () => startQuest(mod.id, state.activeQuestId));
 }
 
 function renderQuestDashboard(mod) {
