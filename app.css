@@ -976,7 +976,6 @@ select.budget-input { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--green-dark);
   flex-shrink: 0; font-family: var(--font-display); overflow: hidden;
 }
-.story-beat.is-narrator .story-avatar { background: var(--bg); color: var(--text-soft); }
 .story-avatar.has-character { background: var(--bg); }
 .story-bubble {
   background: #fff; border: 2px solid var(--border); border-radius: var(--radius);

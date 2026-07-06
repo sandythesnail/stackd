@@ -115,11 +115,198 @@ const MODULES = [
         id: 'gross_net_pay',
         topic: 'Understanding Your Paycheck: Gross vs. Net Pay',
         character: { name: 'Hammy', tagline: 'Opening a first paycheck and doing the math' },
-        initialState: {},
+        initialState: { checking: 0, savings: 0, moneyScore: 50 },
+        bossAchievementId: 'paycheck_literate',
         chapters: [
-          { id: 'gross_net_pay_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'gnp1', type: 'story', title: 'Where Did $59 Go?',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Understanding Your Paycheck: Gross vs. Net Pay." }
+              { speaker: 'intro', text: "Hammy just worked their first shift at a campus job, 20 hours at $15/hour. That's $300. But the direct deposit that landed this morning says $241." },
+              { speaker: 'Hammy', text: '"Wait, that\'s $59 short. Did payroll mess up my hours?"' },
+              { speaker: 'narrator', text: "Before Hammy emails HR in a panic, let's actually look at what a paycheck is made of." },
+              { speaker: 'Hammy', text: '"Okay. Walk me through it, because right now $59 just feels like it vanished."' }
+            ]
+          },
+          {
+            id: 'gnp_t1', type: 'teach', title: 'Gross Pay vs. Net Pay',
+            concepts: [
+              {
+                term: 'Gross Pay',
+                plain: "Gross pay is the full amount you earned before anything gets taken out, in Hammy's case, 20 hours × $15 = $300. It's the number on the offer letter, not the number in your bank account.",
+                analogy: "It's like a restaurant bill before tax and tip get added, the menu price isn't what actually leaves your wallet.",
+                check: { statement: "Gross pay is the amount that actually lands in your bank account.", isTrue: false }
+              },
+              {
+                term: 'Net Pay',
+                plain: "Net pay, sometimes called \"take-home pay,\" is what's left after taxes and other deductions come out. It's the number that actually hits your bank account, and the only number you should ever budget from.",
+                analogy: "It's the amount you actually get to keep, after the restaurant bill, tax, and tip are all settled.",
+                check: { statement: "You should build your budget around your net pay, not your gross pay.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'gnp_t2', type: 'teach', title: 'FICA & Payroll Deductions',
+            concepts: [
+              {
+                term: 'FICA',
+                plain: "FICA stands for the Federal Insurance Contributions Act, it's 7.65% of your gross pay (6.2% Social Security, 1.45% Medicare). This money isn't lost, it funds benefits you'll actually draw on later in life.",
+                analogy: "Think of it like a mandatory subscription you're paying into now for a service, retirement and healthcare coverage, you'll use decades from now.",
+                check: { statement: "FICA money simply disappears and funds nothing you'll ever use.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'gnp_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Gross Pay', definition: 'What you earned before any deductions come out.' },
+              { term: 'Net Pay', definition: 'What actually lands in your bank account, after deductions.' },
+              { term: 'FICA', definition: 'The 7.65% deduction funding Social Security and Medicare.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'gnp_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: FICA is split evenly in spirit, 6.2% goes to Social Security, 1.45% to Medicare. Self-employed and gig workers pay both the employee AND employer share themselves, which is exactly why setting money aside matters even more for gig income.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'gnp_t3', type: 'teach', title: 'Federal Income Tax Withholding',
+            concepts: [
+              {
+                term: 'Withholding',
+                plain: "Beyond FICA, your employer also withholds federal (and often state) income tax, an estimate of what you'll owe in April, taken out a little at a time instead of all at once. How much gets withheld depends on the W-4 form you filled out when you were hired.",
+                analogy: "It's like paying off a big bill in small installments throughout the year instead of one lump sum, so April doesn't blindside you.",
+                check: { statement: "How much income tax gets withheld from each paycheck depends on the W-4 form filled out when you were hired.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gnp_d1', type: 'decision',
+            title: "First Paycheck Lands",
+            prompt: "Hammy's $241 net pay just hit their account. What should they do with it first?",
+            hintText: "Think back to Net Pay: this $241 is the real number to work with. What's a smart first move before it starts disappearing into small purchases?",
+            choices: [
+              {
+                id: 'a', label: 'Spend it as it comes, no real plan',
+                outcome: {
+                  text: "Without a plan, small purchases quietly eat through the $241 within days, and Hammy has nothing to show for their first paycheck.",
+                  delta: { checking: 241, savings: 0, moneyScore: -4 },
+                  compare: [{ label: 'Saved from this check', value: 0 }, { label: 'Take-home pay', value: 241 }]
+                }
+              },
+              {
+                id: 'b', label: 'Move $40 to savings first, then budget the rest',
+                outcome: {
+                  text: "Hammy pays themselves first, savings grows immediately, and the remaining $201 is what's actually available to spend.",
+                  delta: { checking: 201, savings: 40, moneyScore: 6 },
+                  compare: [{ label: 'Saved from this check', value: 40 }, { label: 'Take-home pay', value: 241 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'gnp_ms1', type: 'microsim', title: "Budgeting From Net, Not Gross",
+            prompt: "Hammy's actual take-home pay this month is $600, not the $720 their gross hours would suggest. Help them fit a savings deposit and phone bill into what they REALLY have.",
+            hintText: "Add up the fixed cost ($75 phone). That leaves $525 of the real $600 net pay to split between the two sliders before going negative.",
+            income: 600,
+            fixedCosts: [
+              { label: 'Phone bill', amount: 75 }
+            ],
+            sliders: [
+              { id: 'savings', label: 'Savings deposit', min: 0, max: 300, step: 25, default: 0 },
+              { id: 'spendingMoney', label: 'Discretionary spending', min: 25, max: 500, step: 25, default: 25 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative, this is exactly the mistake of planning around gross pay instead of net. Try smaller amounts.", ok: false },
+              { maxLeftover: 24, text: "It fits, but there's almost nothing left over if net pay dips even slightly next month.", ok: true },
+              { maxLeftover: Infinity, text: "Solid. Hammy built this budget around their REAL take-home number, exactly the right habit.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'gnp_t4', type: 'teach', title: 'Why the Offer-Letter Number Is Never the Whole Story',
+            concepts: [
+              {
+                term: 'Take-Home Percentage',
+                plain: "As a rough rule of thumb, expect somewhere around 70-80% of gross pay to actually reach your bank account, the rest goes to FICA and income tax withholding. Two jobs advertising the same hourly rate can still hand you different take-home amounts, depending on your withholding elections and where you live.",
+                analogy: "It's like comparing two apartment listings by rent alone, without factoring in utilities and fees, the sticker price isn't the full cost of the decision.",
+                check: { statement: "Two jobs with the identical advertised hourly rate are guaranteed to produce identical take-home pay.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gnp_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Withholding', definition: "An estimate of income tax taken out of each paycheck, based on your W-4." },
+              { term: 'Take-Home Percentage', definition: 'Roughly 70-80% of gross pay, after FICA and income tax withholding.' },
+              { term: 'Pay Stub', definition: 'The document listing gross pay, every deduction, and net pay for that period.' }
+            ],
+            hintText: "One term is about the ESTIMATE taken out, one is the rough PORTION you keep, and one is the DOCUMENT showing it all.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'gnp_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "Your gross salary is the number that actually lands in your bank account.",
+            isTrue: false,
+            explanation: "It's a myth. Taxes and FICA come out before you ever see the money, net pay, not gross, is what's actually available to spend or save.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'gnp_myth1', type: 'mythcards', title: 'Paycheck Myths',
+            cards: [
+              { myth: "If you and a friend both make $15/hour, your take-home pay per hour is guaranteed to be identical.", isTrue: false, explanation: "Withholding elections, state taxes, and benefit deductions can all differ, even at the same hourly rate." },
+              { myth: "FICA deductions fund benefits you can eventually use yourself, like Social Security and Medicare.", isTrue: true, explanation: "True, it's not a fee that disappears, it's funding programs you'll draw on later in life." },
+              { myth: "A first paycheck can look smaller than expected due to how many days it actually covers.", isTrue: true, explanation: "True, pay periods don't always start on day one of a job, so a first check can cover fewer days than a full cycle." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'gnp_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
+            hintTexts: [
+              "Think about which number is what you earned, and which is what actually hits your bank account.",
+              "Think about what FICA actually stands for and which two programs it funds."
+            ]
+          },
+          {
+            id: 'gnp_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Paycheck Habits Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's money habits improve as they make smarter paycheck decisions. Tap each one to see the impact.",
+            hintText: "Budgeting from net pay and catching pay stub errors protect money Hammy already earned, from being lost to mistakes or overspending.",
+            decisions: [
+              { id: 'd1', label: "Budget strictly from net pay, never gross", scoreDelta: 15, note: "This single habit prevents the most common new-earner budgeting mistake." },
+              { id: 'd2', label: "Check every pay stub against actual hours worked", scoreDelta: 10, note: "Payroll errors happen, catching them early makes them easy to fix." },
+              { id: 'd3', label: "Assume the offer letter's hourly rate is the take-home rate", scoreDelta: -12, note: "This mismatch is exactly what causes budgets to break in the first month." },
+              { id: 'd4', label: "Move a set amount to savings the moment each paycheck lands", scoreDelta: 8, note: "Paying yourself first, before spending temptation kicks in, is a habit that compounds." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'gnp_t5', type: 'teach', title: 'Budget From Net, Always',
+            concepts: [
+              {
+                term: 'The One Habit That Matters Most',
+                plain: "Every paycheck-related mistake in this quest traces back to one thing: planning around the wrong number. Gross pay is what you earned, net pay is what you actually have. Build every budget, rent split, and spending plan around net, and most paycheck surprises disappear.",
+                analogy: "It's like planning a road trip around your car's full tank size instead of how much gas is actually left after the drive to get there.",
+                check: { statement: "Building a budget around gross pay instead of net pay is a safe, reliable habit.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gnp_boss', type: 'bossbattle', title: 'The Rent Split Argument',
+            scenario: "Hammy's roommate wants to split a shared expense based on each person's advertised hourly rate ($15/hour for Hammy, $18/hour for the roommate), not their actual take-home pay. Hammy's withholding is higher this year. What does Hammy do?",
+            hintText: "Remember Take-Home Percentage: two different advertised rates don't guarantee two proportionally different real paychecks once deductions are factored in.",
+            choices: [
+              { id: 'a', label: "Explain net pay and suggest splitting based on actual take-home amounts", consequence: { text: "A slightly awkward conversation, but the split now reflects what each person can actually afford.", delta: { moneyScore: 10 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Go along with the gross-pay-based split to avoid the conversation", consequence: { text: "Hammy ends up overcommitted relative to their real take-home pay, the exact mistake this quest was built to prevent.", delta: { moneyScore: -10, checking: -30 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Offer to show both pay stubs side by side so the split is based on real numbers", consequence: { text: "Full transparency settles it fast, the split lands fairly for both people's actual paychecks.", delta: { moneyScore: 8 }, xpMultiplier: 1.1 } },
+              { id: 'd', label: "Avoid the conversation entirely and quietly cut back on savings to cover the gap", consequence: { text: "It avoids conflict short-term, but it comes straight out of the savings habit Hammy just built.", delta: { moneyScore: -4, savings: -40 }, xpMultiplier: 0.75 } }
             ]
           }
         ]
@@ -128,11 +315,200 @@ const MODULES = [
         id: 'w4_withholding',
         topic: 'Tax Withholding & W-4s',
         character: { name: 'Hammy', tagline: 'Filling out a W-4 for a new job' },
-        initialState: {},
+        initialState: { checking: 0, savings: 0, moneyScore: 50 },
+        bossAchievementId: 'withholding_smart',
         chapters: [
-          { id: 'w4_withholding_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'w4_1', type: 'story', title: 'The Form on Day One',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Tax Withholding & W-4s." }
+              { speaker: 'intro', text: "It's Hammy's first day at a new campus job, and HR just handed them a W-4 form before they've even found their desk." },
+              { speaker: 'Hammy', text: '"Filing status? Multiple jobs worksheet? I just wanted to know where the breakroom is."' },
+              { speaker: 'narrator', text: "This form quietly decides how much of every paycheck gets withheld all year, worth understanding before Hammy just checks random boxes." },
+              { speaker: 'Hammy', text: '"Okay, if this affects every single paycheck, I want to actually get it right."' }
+            ]
+          },
+          {
+            id: 'w4_t1', type: 'teach', title: 'The W-4 Form',
+            concepts: [
+              {
+                term: 'W-4 Form',
+                plain: "A W-4 tells your employer how much federal income tax to withhold from each paycheck. You fill one out when you're hired, and you can submit a new one anytime your situation changes, a raise, a second job, or a life change.",
+                analogy: "It's like setting a thermostat for your whole year of paychecks, one setting now controls the temperature of every check until you change it.",
+                check: { statement: "A W-4 is only ever filled out once and can never be updated afterward.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'w4_t2', type: 'teach', title: 'Under-Withholding vs. Over-Withholding',
+            concepts: [
+              {
+                term: 'Under-Withholding',
+                plain: "If too little gets withheld, your paychecks look bigger now, but you'll owe the difference, sometimes with a penalty, when you file your taxes in April.",
+                analogy: "It's like skipping a few loan payments because the cash feels nice now, the balance is still due, just later and possibly with a fee.",
+                check: { statement: "Under-withholding means smaller paychecks now in exchange for a refund later.", isTrue: false }
+              },
+              {
+                term: 'Over-Withholding',
+                plain: "If too much gets withheld, you get a refund at tax time, but that's money you loaned to the government, interest-free, all year, that could've been in your own savings account instead.",
+                analogy: "It's like handing a friend an extra $20 a month and getting it back in one lump sum a year later, with zero interest for the favor.",
+                check: { statement: "A big tax refund means you lent the government your own money interest-free all year.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'w4_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'W-4 Form', definition: "Tells your employer how much federal income tax to withhold." },
+              { term: 'Under-Withholding', definition: 'Too little taken out, bigger paychecks now, a bill (maybe with a penalty) in April.' },
+              { term: 'Over-Withholding', definition: 'Too much taken out, smaller paychecks now, an interest-free refund later.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'w4_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: a huge tax refund might feel like a win, but it usually means too much was withheld all year. Adjusting your W-4 to get closer to $0 owed/refunded puts that money in YOUR paycheck (and your own savings account) all year instead.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'w4_t3', type: 'teach', title: 'Claiming Exempt',
+            concepts: [
+              {
+                term: 'Exempt Status',
+                plain: "Claiming \"exempt\" on a W-4 stops federal income tax withholding completely, your paycheck looks bigger every period. But if you actually owe tax for the year, you'll face the ENTIRE bill at once in April, often with an underpayment penalty.",
+                analogy: "It's like turning off your monthly insurance payment to save cash now, the risk doesn't disappear, it just all lands at once, at the worst possible time.",
+                check: { statement: "Claiming exempt on a W-4 has no downside if you actually end up owing income tax.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'w4_d1', type: 'decision',
+            title: "Bigger Paycheck, Right Now?",
+            prompt: "Hammy's coworker suggests claiming exempt on the W-4 \"so more money hits your account every payday.\" Hammy does expect to owe some tax this year. What should they do?",
+            hintText: "Think back to Exempt Status: if Hammy actually owes tax this year, what happens to that bill if nothing was withheld all along?",
+            choices: [
+              {
+                id: 'a', label: 'Follow the advice and claim exempt for bigger paychecks',
+                outcome: {
+                  text: "Paychecks look great all year, until April, when Hammy owes the full tax bill at once, with no cushion set aside for it.",
+                  delta: { moneyScore: -10, checking: 60 },
+                  compare: [{ label: 'Tax bill due in April', value: 600 }, { label: 'Tax bill if withheld correctly', value: 0 }]
+                }
+              },
+              {
+                id: 'b', label: 'Fill out the W-4 accurately based on actual expected income',
+                outcome: {
+                  text: "Paychecks are a bit smaller now, but taxes are covered gradually, no surprise bill waiting in April.",
+                  delta: { moneyScore: 8 },
+                  compare: [{ label: 'Tax bill due in April', value: 0 }, { label: 'Tax bill if claimed exempt', value: 600 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'w4_ms1', type: 'microsim', title: "Planning Around an Accurate W-4",
+            prompt: "Hammy's net pay after accurate withholding is $550/month. Fixed costs already use $310. Help them fit a savings deposit in without going negative, so April never comes as a surprise.",
+            hintText: "Add up the fixed costs ($150 + $100 + $60 = $310). That leaves $240 of the $550 to split between the two sliders before going negative.",
+            income: 550,
+            fixedCosts: [
+              { label: 'Rent share', amount: 150 },
+              { label: 'Meal plan top-up', amount: 100 },
+              { label: 'Phone & subscriptions', amount: 60 }
+            ],
+            sliders: [
+              { id: 'savings', label: 'Savings deposit', min: 0, max: 200, step: 25, default: 0 },
+              { id: 'discretionary', label: 'Discretionary spending', min: 25, max: 225, step: 25, default: 25 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Try a smaller savings deposit or discretionary amount.", ok: false },
+              { maxLeftover: 24, text: "It fits, but there's very little cushion if an expense comes up.", ok: true },
+              { maxLeftover: Infinity, text: "Solid. Hammy's living comfortably on their accurately-withheld paycheck.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'w4_t4', type: 'teach', title: 'Multiple Jobs & Side Income',
+            concepts: [
+              {
+                term: 'Multiple Jobs Adjustment',
+                plain: "If you work two jobs, or add gig income on top of a W-2 job, your W-4 has a specific section (Step 2) for this. Skipping it often means too little gets withheld overall, since each employer only withholds based on the pay THEY give you, not your combined total.",
+                analogy: "It's like two separate faucets each filling the same tub to a level that's fine on its own, but together they overflow the tub if no one accounts for both.",
+                check: { statement: "If you have two jobs, each employer automatically knows about and adjusts for the other job's pay.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'w4_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Exempt Status', definition: 'Stops federal withholding entirely, risky if you actually owe tax.' },
+              { term: 'Multiple Jobs Adjustment', definition: 'The W-4 section accounting for combined income across more than one job.' },
+              { term: 'Underpayment Penalty', definition: 'An extra charge for withholding too little tax over the year.' }
+            ],
+            hintText: "One term turns withholding OFF, one ADJUSTS it for multiple jobs, and one is the CONSEQUENCE of getting it wrong.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'w4_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "A big tax refund every year is proof that you're managing your withholding well.",
+            isTrue: false,
+            explanation: "It's a myth. A large refund usually means too much was withheld all year, money that could've been in your own paycheck and earning you interest, instead of sitting with the government interest-free.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'w4_myth1', type: 'mythcards', title: 'Withholding Myths',
+            cards: [
+              { myth: "You can only submit a W-4 once, on your very first day at a job.", isTrue: false, explanation: "You can submit a new W-4 anytime your situation changes, a raise, a second job, marriage, and more." },
+              { myth: "Claiming exempt is risk-free if you genuinely expect to owe no tax for the year.", isTrue: true, explanation: "True, exempt status is meant for people who truly expect zero tax liability, the risk is claiming it when you don't actually qualify." },
+              { myth: "Working two jobs means each employer automatically withholds the correct combined amount.", isTrue: false, explanation: "Each employer only sees the pay THEY give you, without the Multiple Jobs adjustment, combined withholding often comes up short." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'w4_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 3],
+            hintTexts: [
+              "Think about what the W-4 actually controls for every paycheck going forward.",
+              "Think about what happens in April if nothing at all was withheld during the year."
+            ]
+          },
+          {
+            id: 'w4_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Withholding IQ Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's money habits shift as they make W-4 and withholding decisions. Tap each one to see the impact.",
+            hintText: "Accurate withholding and adjusting for multiple jobs protect Hammy from an ugly April surprise, that's where most of the impact comes from.",
+            decisions: [
+              { id: 'd1', label: "Fill out the W-4 accurately instead of guessing", scoreDelta: 14, note: "Accuracy here prevents both an underpayment penalty AND an interest-free loan to the government." },
+              { id: 'd2', label: "Complete the Multiple Jobs adjustment after picking up a second job", scoreDelta: 10, note: "This keeps combined withholding accurate across both paychecks." },
+              { id: 'd3', label: "Claim exempt despite expecting to owe tax this year", scoreDelta: -14, note: "This trades bigger paychecks now for a full, possibly penalized, tax bill in April." },
+              { id: 'd4', label: "Update the W-4 after a raise instead of leaving it untouched", scoreDelta: 6, note: "Keeping the form current as income changes avoids withholding drifting out of sync." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'w4_t5', type: 'teach', title: 'You Can Always Update It',
+            concepts: [
+              {
+                term: 'Revisiting Your W-4',
+                plain: "A W-4 isn't a one-time, permanent decision. Anytime your income, jobs, or life situation changes, a raise, a second job, moving, you can submit a new W-4 to your employer to keep withholding accurate.",
+                analogy: "It's less like a tattoo and more like a thermostat setting, easy to adjust the moment conditions change.",
+                check: { statement: "Once submitted, a W-4 is locked in for the rest of your time at that job.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'w4_boss', type: 'bossbattle', title: 'The Second Job',
+            scenario: "Hammy just picked up a second part-time job on top of their campus job. Their combined pay pushed them into owing more tax than either employer's individual withholding accounts for. What does Hammy do?",
+            hintText: "Remember Multiple Jobs Adjustment: each employer only withholds based on the pay THEY give you, not your combined total from both jobs.",
+            choices: [
+              { id: 'a', label: "Update the W-4 at both jobs using the Multiple Jobs adjustment", consequence: { text: "Combined withholding now actually reflects both paychecks, no surprise bill waiting in April.", delta: { moneyScore: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Leave both W-4s as they are and deal with it at tax time", consequence: { text: "Both employers keep under-withholding relative to the combined income, stacking up a bigger bill for April.", delta: { moneyScore: -10 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Set aside extra savings each month to cover the expected gap instead of adjusting withholding", consequence: { text: "Not the textbook fix, but proactively saving for the known gap still avoids an April crisis.", delta: { moneyScore: 6, savings: 40 }, xpMultiplier: 0.95 } },
+              { id: 'd', label: "Quit the second job to avoid dealing with the paperwork", consequence: { text: "It sidesteps the withholding problem, but also gives up income Hammy was counting on.", delta: { moneyScore: -2, checking: -100 }, xpMultiplier: 0.7 } }
             ]
           }
         ]
@@ -469,11 +845,198 @@ const MODULES = [
         id: 'budget_rule',
         topic: 'The 50/30/20 Budget Rule',
         character: { name: 'Hammy', tagline: 'Building a budget from scratch' },
-        initialState: {},
+        initialState: { checking: 800, savings: 0, moneyScore: 50 },
+        bossAchievementId: 'budget_builder',
         chapters: [
-          { id: 'budget_rule_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'br1', type: 'story', title: 'Week 6, $23 Left',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on The 50/30/20 Budget Rule." }
+              { speaker: 'intro', text: "It's week 6 of the semester. Hammy had $800 for the month. They check their account: $23 left. Nothing big was ever bought, just a steady drip of small purchases." },
+              { speaker: 'Hammy', text: '"I didn\'t buy anything crazy. Where did $777 actually go?"' },
+              { speaker: 'narrator', text: "Without a plan, money doesn't disappear all at once, it leaks out a little at a time. Today Hammy builds an actual plan." },
+              { speaker: 'Hammy', text: '"Okay, I need a system, not just vibes."' }
+            ]
+          },
+          {
+            id: 'br_t1', type: 'teach', title: 'The 50/30/20 Rule',
+            concepts: [
+              {
+                term: '50/30/20 Rule',
+                plain: "A simple way to split your after-tax income: 50% to needs, 30% to wants, and 20% to savings or debt repayment. It's a starting framework, not a strict law, but it gives every dollar a job before it disappears.",
+                analogy: "It's like dividing a pizza into three slices before anyone starts eating, instead of hoping there's enough left for everyone at the end.",
+                check: { statement: "The 50/30/20 rule splits your PRE-tax income, before any deductions.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'br_t2', type: 'teach', title: 'Needs vs. Wants',
+            concepts: [
+              {
+                term: 'Needs',
+                plain: "Needs are the 50%, essentials you can't function without: rent, groceries, utilities, transportation to class or work. If skipping it would seriously disrupt your life, it's a need.",
+                analogy: "Needs are the foundation of a house, skip them and everything else becomes unstable.",
+                check: { statement: 'A monthly streaming subscription is generally classified as a "need."', isTrue: false }
+              },
+              {
+                term: 'Wants',
+                plain: "Wants are the 30%, things that make life more enjoyable but aren't essential: dining out, streaming services, concert tickets. Nothing wrong with wants, the rule just gives them a boundary.",
+                analogy: "Wants are the furniture and decor, they make the house comfortable, but the house still stands without them.",
+                check: { statement: 'Rent is generally classified as a "want" rather than a "need."', isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'br_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: '50/30/20 Rule', definition: 'Splits after-tax income into needs, wants, and savings/debt.' },
+              { term: 'Needs', definition: "Essentials you can't function without, the 50% slice." },
+              { term: 'Wants', definition: 'Things that make life more enjoyable but are not essential, the 30% slice.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'br_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: the 50/30/20 rule is a STARTING framework, not a strict law. Living in an expensive city might mean 60% goes to needs, and that's okay, the real value is that every dollar has a job before it's spent.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'br_t3', type: 'teach', title: 'Budgeting From After-Tax Income',
+            concepts: [
+              {
+                term: 'After-Tax Income',
+                plain: "The 50/30/20 split applies to your after-tax (take-home) income, not what you earned before taxes and deductions came out. Building a budget on your gross number, before it's actually shrunk by taxes, leads straight to a budget that doesn't work.",
+                analogy: "It's the same idea as budgeting from net pay instead of gross, you can only spend what's actually left after the government takes its cut.",
+                check: { statement: "The 50/30/20 rule should be applied to gross income, before taxes are taken out.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'br_d1', type: 'decision',
+            title: "Setting Up the Buckets",
+            prompt: "Hammy takes home $800/month. A friend suggests just \"winging it\" instead of setting up buckets ahead of time. What should Hammy do?",
+            hintText: "Think back to the 50/30/20 Rule: does giving every dollar a job BEFORE spending make a deficit more or less likely than deciding as you go?",
+            choices: [
+              {
+                id: 'a', label: "Wing it and see how the month goes",
+                outcome: {
+                  text: "With no plan, small purchases add up unnoticed, this is exactly the pattern that left Hammy with $23 by week 6.",
+                  delta: { checking: -50, moneyScore: -6 },
+                  compare: [{ label: 'Typical shortfall by month end', value: 300 }, { label: 'Shortfall with a plan', value: 0 }]
+                }
+              },
+              {
+                id: 'b', label: "Set up needs/wants/savings buckets before spending a dollar",
+                outcome: {
+                  text: "Every dollar has a job from day one, wants and savings both fit inside a boundary that needs can't run over.",
+                  delta: { savings: 40, moneyScore: 6 },
+                  compare: [{ label: 'Shortfall with a plan', value: 0 }, { label: 'Typical shortfall without one', value: 300 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'br_ms1', type: 'microsim', title: 'Building the 50/30/20 Split',
+            prompt: "Hammy's take-home pay is $800/month. Needs already lock up $400 (50%). Split the rest between wants and savings, and see how close to the 30/20 target Hammy lands.",
+            hintText: "The needs bucket is fixed at $400. That leaves $400 to split between wants and savings, aim near $240 wants / $160 savings for a textbook 30/20 split.",
+            income: 800,
+            fixedCosts: [
+              { label: 'Needs (rent, food, utilities)', amount: 400 }
+            ],
+            sliders: [
+              { id: 'wants', label: 'Wants', min: 0, max: 400, step: 20, default: 100 },
+              { id: 'savingsDebt', label: 'Savings / debt repayment', min: 0, max: 400, step: 20, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That goes negative, needs alone already use half the budget. Try smaller amounts.", ok: false },
+              { maxLeftover: 39, text: "It fits, but check whether savings is getting shortchanged compared to wants.", ok: true },
+              { maxLeftover: Infinity, text: "Nice, there's room left over, consider routing it toward savings instead of letting it sit unassigned.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'br_t4', type: 'teach', title: 'The 20% Isn\'t Just Savings',
+            concepts: [
+              {
+                term: 'Savings & Debt Repayment',
+                plain: "The 20% slice covers BOTH building savings and paying down debt beyond the minimum, credit card balances, student loan extra payments, and more. If you're carrying debt, extra payments toward it count as part of your 20%, not as a \"want.\"",
+                analogy: "It's like one shared lane for two kinds of traffic, both savings deposits and extra debt payments are heading the same direction: a stronger financial position.",
+                check: { statement: "Extra payments toward paying down debt faster count as part of the 20% savings/debt slice.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'br_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'After-Tax Income', definition: 'Take-home income after taxes, the number the 50/30/20 rule applies to.' },
+              { term: 'Savings & Debt Repayment', definition: 'The 20% slice, covers both building savings and extra debt payments.' },
+              { term: 'Budget', definition: "A plan that gives every dollar of income a job before it's spent." }
+            ],
+            hintText: "One term is the INCOME the rule applies to, one is the 20% SLICE itself, and one is the overall PLAN.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'br_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "The 50/30/20 rule is a strict law, every category must be exactly on target every month.",
+            isTrue: false,
+            explanation: "It's a myth. It's a flexible starting framework, some months lean more toward needs, the real value is giving every dollar a job ahead of time.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'br_myth1', type: 'mythcards', title: 'Budgeting Myths',
+            cards: [
+              { myth: "A budget only matters if you're bad with money.", isTrue: false, explanation: "A budget is a plan for EVERYONE's money, regardless of how responsible they already are, it just prevents small leaks from adding up." },
+              { myth: "Extra debt payments count toward the 20% slice, not the 30% wants slice.", isTrue: true, explanation: "True, paying down debt faster is a financial-position builder, just like savings." },
+              { myth: "If you're living somewhere expensive, needs might reasonably take up more than 50% of income.", isTrue: true, explanation: "True, the 50/30/20 split is a flexible starting point, not a rule that applies identically everywhere." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'br_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
+            hintTexts: [
+              "Think about which slice of the 50/30/20 rule covers essentials you can't function without.",
+              "Think about what percentage of $1,500 goes toward the SAVINGS slice specifically."
+            ]
+          },
+          {
+            id: 'br_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Budgeting Habits Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's money habits improve as they build real budgeting discipline. Tap each decision to see the impact.",
+            hintText: "Assigning every dollar a job ahead of time is the single habit behind most of these gains.",
+            decisions: [
+              { id: 'd1', label: "Set up needs/wants/savings buckets before the month starts", scoreDelta: 15, note: "Planning ahead of spending is the core of the whole rule." },
+              { id: 'd2', label: "Track spending weekly against the plan", scoreDelta: 10, note: "Catching drift early keeps small leaks from becoming a $23-by-week-6 situation." },
+              { id: 'd3', label: "Classify a daily coffee run as a \"need\"", scoreDelta: -8, note: "Miscategorizing wants as needs quietly breaks the whole framework." },
+              { id: 'd4', label: "Route extra cash at month's end into the savings/debt bucket", scoreDelta: 7, note: "Leftover money without a job tends to just get spent." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'br_t5', type: 'teach', title: 'A Framework, Not a Cage',
+            concepts: [
+              {
+                term: 'Adjusting the Split',
+                plain: "50/30/20 is a starting point. If your needs genuinely take up 60% because of where you live, the goal shifts to trimming wants, not ignoring the framework entirely. The real win is that every dollar has an assigned job, whatever the exact split ends up being.",
+                analogy: "It's like a recipe you're allowed to season to taste, the structure holds even as the exact ratios flex to fit your real life.",
+                check: { statement: "If your needs cost more than 50% of income, the entire 50/30/20 framework becomes useless.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'br_boss', type: 'bossbattle', title: 'The Mid-Semester Squeeze',
+            scenario: "Week 9. Hammy's rent just went up $50/month and a friend wants to plan a weekend trip. Hammy's buckets are already tight. What does Hammy do?",
+            hintText: "Remember: needs took a real hit here. Does the fix come from the wants bucket, the savings bucket, or ignoring the plan entirely?",
+            choices: [
+              { id: 'a', label: "Trim the wants bucket to absorb the higher rent, skip the trip this time", consequence: { text: "The plan flexes exactly as intended, needs stay covered, savings stays untouched.", delta: { moneyScore: 10, savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Pull the difference from savings instead of adjusting wants", consequence: { text: "It covers the gap short-term, but quietly undoes the progress the savings bucket was making.", delta: { moneyScore: -6, savings: -50 }, xpMultiplier: 0.75 } },
+              { id: 'c', label: "Ignore the plan entirely and put the trip on a credit card", consequence: { text: "The buckets get abandoned right when they mattered most, and now there's a balance to pay off too.", delta: { moneyScore: -12 }, xpMultiplier: 0.5 } },
+              { id: 'd', label: "Skip the trip, and also pick up a few extra work-study hours to cover the rent increase", consequence: { text: "More effort, but it protects both the wants and savings buckets by growing income instead of shrinking them.", delta: { moneyScore: 9, checking: 50 }, xpMultiplier: 1.15 } }
             ]
           }
         ]
@@ -482,11 +1045,192 @@ const MODULES = [
         id: 'needs_wants',
         topic: 'Needs vs. Wants: Staying in the Black',
         character: { name: 'Hammy', tagline: 'Deciding what actually belongs in the budget' },
-        initialState: {},
+        initialState: { checking: 200, savings: 0, moneyScore: 50 },
+        bossAchievementId: 'black_not_red',
         chapters: [
-          { id: 'needs_wants_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'nw1', type: 'story', title: 'Labeled Right, Spent Wrong',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Needs vs. Wants: Staying in the Black." }
+              { speaker: 'intro', text: "Hammy carefully labeled rent as a need and brunch as a want, exactly like the 50/30/20 rule says. By the end of the month, they'd still spent more than they earned." },
+              { speaker: 'Hammy', text: '"I did the categories right! How am I still in the red?"' },
+              { speaker: 'narrator', text: "Labeling things correctly isn't the same as catching a deficit before it happens. Let's find the gap." },
+              { speaker: 'Hammy', text: '"Okay, so knowing the categories isn\'t enough on its own. What am I missing?"' }
+            ]
+          },
+          {
+            id: 'nw_t1', type: 'teach', title: 'Budget Deficit',
+            concepts: [
+              {
+                term: 'Budget Deficit',
+                plain: "A deficit simply means your expenses exceeded your income for the period, you spent more than you actually had coming in. It's not about any one purchase, it's the total running behind the total.",
+                analogy: "It's like a bathtub draining faster than the faucet fills it, even if every drop leaving is \"justified,\" the water level still falls.",
+                check: { statement: 'A budget deficit means you saved more than 20% of your income this month.', isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'nw_t2', type: 'teach', title: 'The Gray Zone',
+            concepts: [
+              {
+                term: 'Semi-Needs (the Gray Zone)',
+                plain: "Some expenses aren't purely a need or a want, a $60 phone plan might be a need for safety and class coordination, but a $200 top-tier plan is partly a want. The mistake isn't miscategorizing occasionally, it's never questioning the categories at all.",
+                analogy: "It's like a menu item that's \"healthy-ish,\" it's not automatically a splurge OR automatically fine, it depends on the specific choice.",
+                check: { statement: 'Every expense fits perfectly into either "need" or "want" with zero gray area.', isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'nw_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Budget Deficit', definition: 'When expenses exceed income for the period.' },
+              { term: 'Semi-Needs', definition: "Expenses that are part need, part want, and require real judgment." },
+              { term: 'Tracking', definition: 'Checking actual spending against the plan as the month goes, not just at the end.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'nw_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: most deficits aren't caused by one big purchase, they're caused by several small \"it's just $8\" purchases that never got tracked. Checking your balance weekly catches drift while it's still small.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'nw_t3', type: 'teach', title: 'Catching It Early',
+            concepts: [
+              {
+                term: 'Mid-Month Check-In',
+                plain: "A quick weekly glance at what's actually left in each bucket, compared to what should be left at this point in the month, catches a deficit while there's still time to adjust. Waiting until the statement arrives means the damage is already done.",
+                analogy: "It's like checking the gas gauge on a road trip instead of finding out you're empty only when the car actually stops.",
+                check: { statement: 'A weekly check-in against the budget can catch a developing deficit before the month ends.', isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'nw_d1', type: 'decision',
+            title: "Week 3 Check-In",
+            prompt: "Hammy checks their wants bucket at week 3 (of 4) and it's already 90% spent. What should they do?",
+            hintText: "Think back to Mid-Month Check-In: is week 3 a good time to notice this, or too late to matter?",
+            choices: [
+              {
+                id: 'a', label: "Notice, but keep spending the same way, it's only a feeling",
+                outcome: {
+                  text: "By week 4, the wants bucket runs out entirely and spending spills over into money meant for needs.",
+                  delta: { checking: -60, moneyScore: -6 },
+                  compare: [{ label: 'Overspend by month end', value: 60 }, { label: 'Overspend if adjusted now', value: 0 }]
+                }
+              },
+              {
+                id: 'b', label: "Pull back on wants spending for the rest of the month",
+                outcome: {
+                  text: "Catching it at week 3 leaves enough runway to adjust before it turns into an actual deficit.",
+                  delta: { savings: 20, moneyScore: 6 },
+                  compare: [{ label: 'Overspend if adjusted now', value: 0 }, { label: 'Overspend by month end', value: 60 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'nw_ms1', type: 'microsim', title: 'Recovering Mid-Month',
+            prompt: "Hammy has $200 left in checking with 10 days left in the month. Fixed remaining needs are $90. Fit remaining wants spending and a savings top-up in without going negative.",
+            hintText: "$90 is already committed to needs. That leaves $110 to split between the two sliders before going negative.",
+            income: 200,
+            fixedCosts: [
+              { label: 'Remaining needs this month', amount: 90 }
+            ],
+            sliders: [
+              { id: 'wants', label: 'Remaining wants spending', min: 0, max: 110, step: 10, default: 40 },
+              { id: 'savings', label: 'Savings top-up', min: 0, max: 110, step: 10, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That goes negative with 10 days still left in the month. Pull back on one of the sliders.", ok: false },
+              { maxLeftover: 19, text: "It fits, but it's tight for the rest of the month.", ok: true },
+              { maxLeftover: Infinity, text: "Solid recovery, Hammy caught the drift with enough runway to fix it.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'nw_t4', type: 'teach', title: 'Fixing a Deficit After It Happens',
+            concepts: [
+              {
+                term: 'Recovering From a Deficit',
+                plain: "If a deficit already happened, the fix is the same either way: cut wants spending first (it's the most flexible category), then look for a short-term way to add income if the gap is large. Never treat a one-time deficit as reason to abandon the budget altogether.",
+                analogy: "It's like course-correcting a bike after a wobble, small steering adjustments, not slamming the brakes and giving up on the ride.",
+                check: { statement: "The recommended first move to fix a deficit is cutting the wants category before anything else.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'nw_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Mid-Month Check-In', definition: 'A weekly glance at spending against the plan, catches drift early.' },
+              { term: 'Recovering From a Deficit', definition: 'Cut wants first, then look for short-term income if the gap is large.' },
+              { term: 'Budget Deficit', definition: 'When expenses exceed income for the period.' }
+            ],
+            hintText: "One term is a HABIT that prevents deficits, one is the FIX after one happens, and one is the deficit itself.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'nw_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "Correctly labeling every expense as a need or want automatically prevents a budget deficit.",
+            isTrue: false,
+            explanation: "It's a myth. Categorizing correctly matters, but a deficit still happens if you don't actually TRACK spending against the plan as the month goes.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'nw_myth1', type: 'mythcards', title: 'Needs vs. Wants Myths',
+            cards: [
+              { myth: "A single small purchase is usually what causes a budget deficit.", isTrue: false, explanation: "Deficits are usually the sum of several small untracked purchases, not one big splurge." },
+              { myth: "Some expenses genuinely fall in a gray area between need and want.", isTrue: true, explanation: "True, a basic phone plan versus a premium one is a good example, the categorization requires judgment, not a rigid rule." },
+              { myth: "Waiting until the end-of-month statement is a fine way to catch a deficit.", isTrue: false, explanation: "By the time the statement arrives, the deficit already happened, a weekly check-in catches it while there's still time to adjust." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'nw_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 3],
+            hintTexts: [
+              "Think about which category, need or want, an expense you truly can't function without belongs in.",
+              "Think about what it means when total expenses end up higher than total income."
+            ]
+          },
+          {
+            id: 'nw_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Staying in the Black Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's money habits shift as they practice catching deficits before they happen. Tap each decision to see the impact.",
+            hintText: "Weekly check-ins and cutting wants first when things get tight are what drive most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "Check the wants bucket weekly instead of only at month's end", scoreDelta: 14, note: "Catching drift early is the single biggest deficit-prevention habit." },
+              { id: 'd2', label: "Cut wants spending first when a bucket runs low", scoreDelta: 9, note: "Wants is the most flexible category, the natural first place to adjust." },
+              { id: 'd3', label: "Ignore a bucket that's already 90% spent with a week still left", scoreDelta: -13, note: "Ignoring an early warning sign is exactly how small drift turns into a real deficit." },
+              { id: 'd4', label: "Reclassify a daily $8 coffee habit as a \"need\" to justify it", scoreDelta: -7, note: "Miscategorizing wants as needs hides the real picture from yourself." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'nw_t5', type: 'teach', title: 'The Goal Is Awareness, Not Perfection',
+            concepts: [
+              {
+                term: 'Staying in the Black',
+                plain: "\"Staying in the black\" just means expenses stay at or below income, consistently. It doesn't require perfect categorization every time, it requires noticing drift early and adjusting before it becomes an actual deficit.",
+                analogy: "It's less like a strict exam with one right answer, and more like driving with your eyes on the road, small corrections beat a single perfect starting angle.",
+                check: { statement: '"Staying in the black" requires perfectly categorizing every single expense with no exceptions.', isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'nw_boss', type: 'bossbattle', title: 'The Group Trip Invite',
+            scenario: "Hammy's wants bucket is already at 85% with a week left in the month when friends invite them on a $70 weekend trip. What does Hammy do?",
+            hintText: "Remember Mid-Month Check-In: an 85% bucket with a week left is exactly the kind of early signal worth acting on.",
+            choices: [
+              { id: 'a', label: "Decline the trip this month, wants bucket is nearly spent", consequence: { text: "A hard pass, but the budget stays intact and next month isn't playing catch-up.", delta: { moneyScore: 10 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Go anyway and let the wants bucket run over", consequence: { text: "Fun for a weekend, but the overspend eats into money meant for needs or savings.", delta: { moneyScore: -9, checking: -70 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Ask if there's a cheaper way to join part of the trip instead of the full cost", consequence: { text: "A partial yes keeps the wants bucket mostly intact while still staying connected with friends.", delta: { moneyScore: 6, checking: -25 }, xpMultiplier: 1.05 } },
+              { id: 'd', label: "Cover it by skipping this month's savings deposit instead", consequence: { text: "It avoids overspending the wants bucket, but quietly stalls the progress the savings bucket was making.", delta: { moneyScore: -4, savings: -40 }, xpMultiplier: 0.8 } }
             ]
           }
         ]
@@ -825,11 +1569,195 @@ const MODULES = [
         id: 'emergency_fund',
         topic: 'Building Your First Emergency Fund',
         character: { name: 'Hammy', tagline: 'Starting an emergency fund from zero' },
-        initialState: {},
+        initialState: { checking: 47, savings: 0, moneyScore: 50 },
+        bossAchievementId: 'cushion_builder',
         chapters: [
-          { id: 'emergency_fund_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ef1', type: 'story', title: 'The Laptop Died at the Worst Time',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Building Your First Emergency Fund." }
+              { speaker: 'intro', text: "Hammy's laptop just died. It's finals week. A replacement costs $400. Hammy has $47 in checking." },
+              { speaker: 'Hammy', text: '"This is the WORST possible timing. What do I even do right now?"' },
+              { speaker: 'narrator', text: "This is exactly what a missing emergency fund looks like, and it was completely avoidable. Let's fix that going forward." },
+              { speaker: 'Hammy', text: '"Okay, I clearly need a cushion. Where do I even start with $47 to my name?"' }
+            ]
+          },
+          {
+            id: 'ef_t1', type: 'teach', title: 'The Emergency Fund',
+            concepts: [
+              {
+                term: 'Emergency Fund',
+                plain: "Money set aside specifically for genuine surprises, a broken laptop, a medical bill, a sudden car repair. It's kept separate from everyday spending money so it's never accidentally used on anything else.",
+                analogy: "It's like a fire extinguisher mounted on the wall, you hope to never need it, but it's useless if it's not there when you do.",
+                check: { statement: "An emergency fund is meant to be spent on planned expenses like a vacation.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ef_t2', type: 'teach', title: 'How Much Is Enough',
+            concepts: [
+              {
+                term: 'Starter Emergency Fund',
+                plain: "A full emergency fund covers 3-6 months of expenses, but that number is intimidating from zero. A starter goal of $500-$1,000 covers most single surprises, a dead laptop, a car repair, a medical copay, and is a realistic first target.",
+                analogy: "It's like training for a marathon by first running a 5K, the smaller milestone builds real momentum toward the bigger goal.",
+                check: { statement: "A $500-$1,000 starter fund is a reasonable first goal before working toward 3-6 months of expenses.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ef_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Emergency Fund', definition: 'Money set aside specifically for genuine surprises, kept separate from spending money.' },
+              { term: 'Starter Emergency Fund', definition: 'A realistic first goal of $500-$1,000 before working toward a bigger cushion.' },
+              { term: 'Full Emergency Fund', definition: 'Enough savings to cover 3-6 months of expenses.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ef_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: an emergency fund doesn't have to start big. Even $10/week builds a $500 cushion in about a year, and every dollar in it is a dollar that doesn't have to go on a credit card during a real crisis.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ef_t3', type: 'teach', title: 'Where It Lives',
+            concepts: [
+              {
+                term: 'Keeping It Separate',
+                plain: "An emergency fund works best in its own account, not mixed into everyday checking. Separate means you won't accidentally spend it on a normal Tuesday, and it stays easy to access quickly when an actual emergency hits.",
+                analogy: "It's like keeping spare keys somewhere specific instead of loose in a junk drawer, separate and easy to find exactly when you need it.",
+                check: { statement: "Keeping emergency fund money mixed into your everyday checking account makes it easier to protect.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ef_d1', type: 'decision',
+            title: "The Financial Aid Refund",
+            prompt: "Hammy's financial aid refund comes in $300 higher than expected. What's the smartest move?",
+            hintText: "Think back to Starter Emergency Fund: Hammy currently has $0 saved. Does this windfall get them closer to a real cushion, or does it just disappear into spending?",
+            choices: [
+              {
+                id: 'a', label: 'Treat it as free money and spend it',
+                outcome: {
+                  text: "The $300 disappears within days, and Hammy is right back to zero cushion, one surprise away from a crisis.",
+                  delta: { checking: 300, moneyScore: -6 },
+                  compare: [{ label: 'Emergency fund after', value: 0 }, { label: 'Emergency fund if saved', value: 300 }]
+                }
+              },
+              {
+                id: 'b', label: 'Move it directly into a new emergency fund',
+                outcome: {
+                  text: "Hammy goes from $0 to $300 toward their starter goal, more than halfway there, from one windfall.",
+                  delta: { savings: 300, moneyScore: 8 },
+                  compare: [{ label: 'Emergency fund if saved', value: 300 }, { label: 'Emergency fund if spent', value: 0 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'ef_ms1', type: 'microsim', title: "Fitting In a Monthly Deposit",
+            prompt: "Hammy's monthly income is $650. Fixed costs already use $480. Help them fit an emergency fund deposit in without going negative.",
+            hintText: "Add up the fixed costs ($250 + $130 + $60 + $40 = $480). That leaves $170 of the $650 to split between the two sliders before going negative.",
+            income: 650,
+            fixedCosts: [
+              { label: 'Rent share', amount: 250 },
+              { label: 'Meal plan top-up', amount: 130 },
+              { label: 'Phone & subscriptions', amount: 60 },
+              { label: 'Transit', amount: 40 }
+            ],
+            sliders: [
+              { id: 'emergencyFund', label: 'Emergency fund deposit', min: 0, max: 150, step: 10, default: 0 },
+              { id: 'discretionary', label: 'Discretionary spending', min: 20, max: 170, step: 10, default: 20 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Try a smaller emergency fund deposit or spending amount.", ok: false },
+              { maxLeftover: 19, text: "It fits, but the emergency fund is growing slowly at this rate.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, the emergency fund is actually growing month over month.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'ef_t4', type: 'teach', title: 'Replenishing After Use',
+            concepts: [
+              {
+                term: 'Replenishing the Fund',
+                plain: "Using the emergency fund for an actual emergency is exactly what it's for, that's a win, not a failure. The habit that matters most afterward is rebuilding it back to the target, treating the refill like any other recurring bill until it's whole again.",
+                analogy: "It's like refilling a fire extinguisher after using it, using it correctly doesn't mean you're done maintaining it.",
+                check: { statement: "Using your emergency fund for a real emergency means you failed at budgeting.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ef_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Keeping It Separate', definition: 'Storing emergency money apart from everyday checking so it stays protected.' },
+              { term: 'Replenishing the Fund', definition: 'Rebuilding the fund back to target after using it for a real emergency.' },
+              { term: 'Emergency Fund', definition: 'Money set aside specifically for genuine surprises.' }
+            ],
+            hintText: "One term is about WHERE it lives, one is about REBUILDING it after use, and one is the fund itself.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ef_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "You need a full 3-6 months of expenses saved before an emergency fund is worth having at all.",
+            isTrue: false,
+            explanation: "It's a myth. Even a small starter fund of $500-$1,000 prevents most everyday emergencies from turning into debt, it doesn't need to be the full target to already be useful.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ef_myth1', type: 'mythcards', title: 'Emergency Fund Myths',
+            cards: [
+              { myth: "A credit card is just as good as an emergency fund for surprise expenses.", isTrue: false, explanation: "A credit card charges interest on the balance, an emergency fund doesn't cost you anything to use." },
+              { myth: "A $500 starter fund is genuinely useful, even though it's far from the full 3-6 month target.", isTrue: true, explanation: "True, it covers most single surprises and prevents the immediate need to borrow." },
+              { myth: "Emergency fund money should sit in the same account as everyday spending money.", isTrue: false, explanation: "Keeping it separate protects it from being spent by accident on a normal day." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ef_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [1, 10],
+            hintTexts: [
+              "Think about what the smartest first move is with a little extra money at month's end.",
+              "Think about which savings goal should generally come first when money is tight."
+            ]
+          },
+          {
+            id: 'ef_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Cushion-Building Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's financial cushion grow as they build better saving habits. Tap each decision to see the impact.",
+            hintText: "Automating deposits and redirecting windfalls into the fund are what drive most of the growth here.",
+            decisions: [
+              { id: 'd1', label: "Move a financial aid refund straight into the emergency fund", scoreDelta: 14, note: "A windfall used this way turns into a real cushion instead of disappearing." },
+              { id: 'd2', label: "Set up a small automatic weekly transfer to the fund", scoreDelta: 12, note: "Consistency matters more than the size of any single deposit." },
+              { id: 'd3', label: "Treat the emergency fund like a spare checking account", scoreDelta: -10, note: "Mixing it with everyday spending defeats the purpose of keeping it separate." },
+              { id: 'd4', label: "Skip refilling the fund after using it for a real repair", scoreDelta: -6, note: "The fund only keeps protecting you if it gets rebuilt after use." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'ef_t5', type: 'teach', title: 'A Cushion, Not a Cage',
+            concepts: [
+              {
+                term: 'What the Fund Actually Buys You',
+                plain: "An emergency fund isn't really about the dollar amount, it's about not having a $400 laptop death turn into a $400 credit card balance with interest. Even a small cushion changes a crisis into an inconvenience.",
+                analogy: "It's the difference between a pothole that jolts the car and one that blows the tire, the cushion doesn't remove the bump, it just keeps it from becoming a much bigger problem.",
+                check: { statement: "The main value of an emergency fund is avoiding high-interest debt when something unexpected happens.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ef_boss', type: 'bossbattle', title: 'The Replacement Laptop',
+            scenario: "Hammy still needs that $400 laptop. Three months into building the habit, they now have $250 in their new emergency fund. What's the smartest way to cover the gap?",
+            hintText: "Weigh using the $250 cushion against other options, remember what an emergency fund is actually FOR.",
+            choices: [
+              { id: 'a', label: "Use the $250 fund, cover the remaining $150 with a work-study shift this week", consequence: { text: "The fund does exactly its job, and the gap gets closed without any interest charges at all.", delta: { moneyScore: 12, savings: -250, checking: 150 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Put the whole $400 on a credit card instead of touching savings", consequence: { text: "The emergency fund sits untouched, but now there's a balance accruing interest for something it was literally built to cover.", delta: { moneyScore: -10 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Use the $250 fund and put the remaining $150 on a card, paid off next check", consequence: { text: "A reasonable middle ground, most of the cost is covered without debt, and the rest is paid off fast.", delta: { moneyScore: 6, savings: -250 }, xpMultiplier: 0.95 } },
+              { id: 'd', label: "Borrow $400 from a friend instead of using the fund", consequence: { text: "It avoids touching savings, but trades a financial problem for a social one, and the fund still isn't doing its job.", delta: { moneyScore: -4 }, xpMultiplier: 0.8 } }
             ]
           }
         ]
@@ -838,11 +1766,203 @@ const MODULES = [
         id: 'hy_savings',
         topic: 'High-Yield Savings Accounts Explained',
         character: { name: 'Hammy', tagline: 'Comparing savings accounts for the first time' },
-        initialState: {},
+        initialState: { checking: 200, savings: 1000, moneyScore: 50 },
+        bossAchievementId: 'hysa_switcher',
         chapters: [
-          { id: 'hy_savings_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'hy1', type: 'story', title: 'The Same $1,000, Two Different Banks',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on High-Yield Savings Accounts Explained." }
+              { speaker: 'intro', text: "Hammy checks their big bank's savings account: 0.01% APY. A friend mentions their online account pays 4.5%. Same $1,000 balance, same FDIC insurance." },
+              { speaker: 'Hammy', text: '"Wait, that can\'t be a big difference... can it?"' },
+              { speaker: 'narrator', text: "Let's actually run the numbers before Hammy assumes it doesn't matter." },
+              { speaker: 'Hammy', text: '"Okay, show me. If it\'s free money just for switching banks, I want to know."' }
+            ]
+          },
+          {
+            id: 'hy_t1', type: 'teach', title: 'High-Yield Savings Accounts',
+            concepts: [
+              {
+                term: 'High-Yield Savings Account (HYSA)',
+                plain: "A HYSA is a savings account, usually at an online bank, that pays significantly more interest than a traditional big-bank savings account. Same FDIC-insured safety, dramatically different return for holding the exact same money.",
+                analogy: "It's like two identical parking garages charging wildly different monthly rates, same safety and function, very different cost of holding your car there.",
+                check: { statement: "A HYSA is riskier than a traditional savings account because it pays more interest.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'hy_t2', type: 'teach', title: 'APY',
+            concepts: [
+              {
+                term: 'APY (Annual Percentage Yield)',
+                plain: "APY is the rate your balance actually grows over a year, including compounding. A traditional big-bank savings account might pay 0.01% APY, a HYSA might pay 4-5%, on the same $1,000, that's the difference between about 10 cents and about $45 a year.",
+                analogy: "It's like two gardens with the exact same seed, one gets almost no sunlight, the other gets full sun, same starting point, very different growth.",
+                check: { statement: "APY measures how much your savings balance actually grows over a year.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'hy_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'High-Yield Savings Account', definition: 'A savings account, usually online, that pays significantly more interest.' },
+              { term: 'APY', definition: 'The rate your balance grows over a year, including compounding.' },
+              { term: 'FDIC Insurance', definition: 'Protection that covers deposits up to $250,000 per bank, per depositor.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'hy_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: moving idle savings from a 0.01% account into a 4.5% HYSA is one of the easiest wins in personal finance, it takes about 10 minutes to open an account online, and the money is exactly as safe as it was before.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'hy_t3', type: 'teach', title: 'Checking vs. Savings',
+            concepts: [
+              {
+                term: 'Checking vs. Savings',
+                plain: "Checking is for everyday spending, debit swipes, bill pay, constant movement. Savings, especially a HYSA, is for money you're holding toward a goal, it earns interest and is meant to sit largely untouched.",
+                analogy: "Checking is a wallet, money moves in and out constantly. Savings is a piggy bank on a shelf, mostly left alone to grow.",
+                check: { statement: "Checking accounts are generally meant for holding money long-term to earn interest.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'hy_d1', type: 'decision',
+            title: "Switching Banks",
+            prompt: "Hammy has $1,000 sitting in a 0.01% APY account. Opening a HYSA takes about 10 minutes online. What should they do?",
+            hintText: "Think back to APY: on $1,000, what's the real difference between 0.01% and 4.5% over a year?",
+            choices: [
+              {
+                id: 'a', label: "Leave it where it is, switching seems like a hassle",
+                outcome: {
+                  text: "The $1,000 earns about 10 cents this year, essentially nothing, for no real reason beyond avoiding a 10-minute signup.",
+                  delta: { moneyScore: -4 },
+                  compare: [{ label: 'Interest earned (0.01% APY)', value: 0 }, { label: 'Interest earned (4.5% APY)', value: 45 }]
+                }
+              },
+              {
+                id: 'b', label: "Open a HYSA and move the $1,000 over",
+                outcome: {
+                  text: "Same $1,000, same safety, but now it earns roughly $45 this year instead of pennies, for about 10 minutes of setup.",
+                  delta: { moneyScore: 8 },
+                  compare: [{ label: 'Interest earned (4.5% APY)', value: 45 }, { label: 'Interest earned (0.01% APY)', value: 0 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'hy_ms1', type: 'microsim', title: "Growing the HYSA Balance",
+            prompt: "Hammy's monthly income is $600. Fixed costs already use $420. Help them fit a HYSA deposit in without going negative.",
+            hintText: "Add up the fixed costs ($220 + $120 + $50 + $30 = $420). That leaves $180 of the $600 to split between the two sliders before going negative.",
+            income: 600,
+            fixedCosts: [
+              { label: 'Rent share', amount: 220 },
+              { label: 'Meal plan top-up', amount: 120 },
+              { label: 'Phone & subscriptions', amount: 50 },
+              { label: 'Transit', amount: 30 }
+            ],
+            sliders: [
+              { id: 'hysaDeposit', label: 'HYSA deposit', min: 0, max: 150, step: 10, default: 0 },
+              { id: 'discretionary', label: 'Discretionary spending', min: 30, max: 180, step: 10, default: 30 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Try a smaller HYSA deposit or spending amount.", ok: false },
+              { maxLeftover: 19, text: "It fits, but the HYSA balance is growing slowly at this rate.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, the HYSA balance is compounding steadily now.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'hy_price1', type: 'priceisright', title: 'The Price Is Right: A Year of Interest',
+            prompt: 'Hammy deposits $500 into a HYSA paying 4.5% APY and leaves it untouched for a year. Guess how much interest they earn.',
+            hintText: '4.5% of $500 is the starting point, APY compounding adds just a little more on top of that simple estimate.',
+            actualValue: 23, guessRange: { min: 0, max: 100, step: 5 },
+            explanation: '$500 × 4.5% ≈ $22.50, rounding to about $23 with compounding. Small on its own, but it scales up fast as the balance grows.',
+            xpOnComplete: 5
+          },
+          {
+            id: 'hy_t4', type: 'teach', title: 'Avoiding Overdraft With a Linked Backup',
+            concepts: [
+              {
+                term: 'Overdraft Protection',
+                plain: "Many banks let you link a savings account as free automatic backup for checking. If checking runs to $0 and a small charge hits, the bank pulls the shortfall from linked savings instead of charging a $30+ overdraft fee.",
+                analogy: "It's like a spare tire in the trunk, you rarely need it, but it turns a roadside disaster into a quick fix.",
+                check: { statement: "Linking a savings account as overdraft backup always costs extra money to set up.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'hy_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Checking vs. Savings', definition: 'Checking is for daily spending, savings holds money toward a goal and earns interest.' },
+              { term: 'Overdraft Protection', definition: 'A linked savings account that covers a checking shortfall instead of triggering a fee.' },
+              { term: 'APY', definition: 'The rate your balance grows over a year, including compounding.' }
+            ],
+            hintText: "One pair is about the PURPOSE of two account types, one is a SAFETY NET between them, and one is the growth RATE.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'hy_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "A high-yield savings account is meaningfully riskier than a traditional big-bank savings account.",
+            isTrue: false,
+            explanation: "It's a myth. Both are FDIC-insured up to the same limits, the only real difference is the interest rate.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'hy_myth1', type: 'mythcards', title: 'Savings Account Myths',
+            cards: [
+              { myth: "Online HYSAs are less safe than a traditional big-bank savings account.", isTrue: false, explanation: "Both are FDIC-insured the same way, the interest rate is the only meaningful difference." },
+              { myth: "A 0.01% APY versus a 4.5% APY makes almost no real difference on a typical student balance.", isTrue: false, explanation: "On $1,000, that's about 10 cents versus about $45 a year, a real difference for zero extra risk." },
+              { myth: "Linking a savings account as overdraft backup can help you avoid a $30+ overdraft fee.", isTrue: true, explanation: "True, many banks pull small shortfalls from linked savings automatically instead of charging the fee." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'hy_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 5],
+            hintTexts: [
+              "Think about what actually makes a savings account \"high-yield\" compared to a standard one.",
+              "Think about the dollar gap between 0.01% and 4.5% APY on the exact same $1,000 balance."
+            ]
+          },
+          {
+            id: 'hy_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Smarter Savings Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's money habits improve as they make smarter decisions about where their savings actually live. Tap each one to see the impact.",
+            hintText: "Moving idle money into a HYSA and linking overdraft protection are the two biggest wins here.",
+            decisions: [
+              { id: 'd1', label: "Move idle savings from a 0.01% account into a HYSA", scoreDelta: 14, note: "Same safety, dramatically better return, for about 10 minutes of setup." },
+              { id: 'd2', label: "Link savings as free automatic overdraft backup", scoreDelta: 9, note: "This turns a $30+ fee into a non-event." },
+              { id: 'd3', label: "Keep thousands sitting in a checking account earning nothing", scoreDelta: -10, note: "Checking accounts virtually never pay meaningful interest, that money should be working harder." },
+              { id: 'd4', label: "Let checking run to exactly $0 with no backup linked", scoreDelta: -7, note: "One surprise charge at $0 balance is exactly how overdraft fees happen." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'hy_t5', type: 'teach', title: 'A Ten-Minute Decision, A Yearlong Payoff',
+            concepts: [
+              {
+                term: 'Why This Is an Easy Win',
+                plain: "Unlike investing, which carries real risk, moving savings into a HYSA is close to a free upgrade, same FDIC protection, same liquidity, meaningfully more interest. It's one of the few financial moves with almost no downside.",
+                analogy: "It's like switching to a free upgrade at checkout, same product, same guarantee, just objectively better terms.",
+                check: { statement: "Moving savings into a HYSA involves meaningfully more risk than a traditional savings account.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'hy_boss', type: 'bossbattle', title: 'The Idle $1,000',
+            scenario: "Hammy realizes $1,000 has been sitting in a 0.01% APY account for over a year, untouched. What's the smartest move now?",
+            hintText: "Remember APY: the account itself hasn't changed, but the difference in what it COULD be earning has been adding up the whole time.",
+            choices: [
+              { id: 'a', label: "Open a HYSA today and move the full $1,000 over immediately", consequence: { text: "The money starts earning real interest immediately, with the exact same safety it had before.", delta: { moneyScore: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Keep putting it off, it's been fine so far", consequence: { text: "Every extra month in the old account is more missed interest for literally no benefit.", delta: { moneyScore: -8 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Move half now, and half after comparing a couple more HYSA options", consequence: { text: "A reasonable middle ground, most of the money starts earning more right away while Hammy finishes comparing rates.", delta: { moneyScore: 8 }, xpMultiplier: 1.05 } },
+              { id: 'd', label: "Ask a friend for a recommendation before doing anything", consequence: { text: "Research is reasonable, but the money keeps earning close to nothing every day this drags on.", delta: { moneyScore: 2 }, xpMultiplier: 0.85 } }
             ]
           }
         ]
@@ -1085,12 +2205,196 @@ const MODULES = [
       {
         id: 'compound_early',
         topic: 'Compound Interest & Why Starting Early Wins',
-        character: { name: 'Hammy', tagline: 'Wondering if it\'s too early to start investing' },
-        initialState: {},
+        character: { name: 'Hammy', tagline: "Wondering if it's too early to start investing" },
+        initialState: { savings: 1000, portfolioValue: 1000, moneyScore: 50 },
+        bossAchievementId: 'early_starter',
         chapters: [
-          { id: 'compound_early_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ce1', type: 'story', title: 'Same $1,000, Ten Years Apart',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Compound Interest & Why Starting Early Wins." }
+              { speaker: 'intro', text: "Hammy hears about two students who each invested $1,000 in the same fund. One started at 18, the other at 28. At 65, the early starter has $21,000. The later starter has $10,700." },
+              { speaker: 'Hammy', text: '"Same amount invested. Ten years apart. That\'s a $10,000 difference?"' },
+              { speaker: 'narrator', text: "That gap is entirely explained by one concept, and it's worth understanding before Hammy decides investing can wait." },
+              { speaker: 'Hammy', text: '"Okay, I want to actually understand this before I talk myself into waiting."' }
+            ]
+          },
+          {
+            id: 'ce_t1', type: 'teach', title: 'Compound Interest',
+            concepts: [
+              {
+                term: 'Compound Interest',
+                plain: "Compound interest means you earn returns on your original investment AND on the returns it already earned. Every year, the base that's growing gets a little bigger, so the growth itself grows too.",
+                analogy: "It's like a snowball rolling downhill, it doesn't just add snow at a steady rate, the bigger it gets, the more it picks up with every rotation.",
+                check: { statement: "Compound interest only pays out on your original deposit, never on interest already earned.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ce_t2', type: 'teach', title: 'Time Horizon',
+            concepts: [
+              {
+                term: 'Time Horizon',
+                plain: "This is how long your money stays invested before you need it. A longer horizon means more compounding cycles, which is why 10 extra years mattered more than any difference in skill or luck between the two investors.",
+                analogy: "It's like two identical plants, one gets 10 extra years of sunlight and water. The extra TIME, not a different seed, explains the size difference.",
+                check: { statement: "A longer time horizon gives compound interest more cycles to work with.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ce_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Compound Interest', definition: 'Earning returns on both your original investment and its past returns.' },
+              { term: 'Time Horizon', definition: 'How long money stays invested before it\'s needed.' },
+              { term: 'Principal', definition: 'The original amount of money invested, before any growth.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ce_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: the Rule of 72 estimates how long money takes to double, divide 72 by the annual return rate. At 7% average returns, 72 ÷ 7 ≈ 10 years to double. That's a fast, rough way to see compounding's power without a calculator.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ce_t3', type: 'teach', title: 'The Cost of Waiting',
+            concepts: [
+              {
+                term: 'The Cost of Waiting',
+                plain: "Every year you delay investing isn't just \"one year less,\" it's one fewer compounding cycle stacked on top of all the others still to come. That's why the gap between starting at 18 versus 28 is $10,000, not just proportionally 10 years' worth of contributions.",
+                analogy: "It's like joining a relay race late, you're not just missing your leg of the race, you're missing the momentum the whole team builds by starting together.",
+                check: { statement: "Delaying investing by a few years only costs you those exact years' worth of contributions, nothing more.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ce_d1', type: 'decision',
+            title: "Wait Until There's More?",
+            prompt: "Hammy has $50 saved up and is tempted to wait until they have \"a real amount\" before opening an investment account. What should they do?",
+            hintText: "Think back to The Cost of Waiting: does the delay only cost the amount not yet saved, or something bigger too?",
+            choices: [
+              {
+                id: 'a', label: 'Wait a few years until there\'s more to invest',
+                outcome: {
+                  text: "Every year of waiting is a year of compounding that can never be recovered later, no matter how much gets invested afterward.",
+                  delta: { moneyScore: -6 },
+                  compare: [{ label: 'Portfolio at 65 if started now', value: 21000 }, { label: 'Portfolio at 65 if delayed 10 years', value: 10700 }]
+                }
+              },
+              {
+                id: 'b', label: 'Invest the $50 now and add more as it comes',
+                outcome: {
+                  text: "The exact dollar amount matters less than getting started, every year invested now is a compounding cycle that can't be bought back later.",
+                  delta: { portfolioValue: 50, moneyScore: 8 },
+                  compare: [{ label: 'Portfolio at 65 if started now', value: 21000 }, { label: 'Portfolio at 65 if delayed 10 years', value: 10700 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'ce_ms1', type: 'microsim', title: "Fitting In a Monthly Investment",
+            prompt: "Hammy's monthly income is $700. Fixed costs already use $520. Help them fit a monthly investment contribution in without going negative.",
+            hintText: "Add up the fixed costs ($280 + $140 + $60 + $40 = $520). That leaves $180 of the $700 to split between the two sliders before going negative.",
+            income: 700,
+            fixedCosts: [
+              { label: 'Rent share', amount: 280 },
+              { label: 'Meal plan top-up', amount: 140 },
+              { label: 'Phone & subscriptions', amount: 60 },
+              { label: 'Transit', amount: 40 }
+            ],
+            sliders: [
+              { id: 'investing', label: 'Investment contribution', min: 0, max: 150, step: 10, default: 0 },
+              { id: 'discretionary', label: 'Discretionary spending', min: 30, max: 180, step: 10, default: 30 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Try a smaller investment contribution or spending amount.", ok: false },
+              { maxLeftover: 19, text: "It fits, but the contribution is small, even a small consistent amount compounds over decades.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, and remember: consistency matters far more than the size of any single contribution.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'ce_t4', type: 'teach', title: 'Dollar-Cost Averaging',
+            concepts: [
+              {
+                term: 'Dollar-Cost Averaging',
+                plain: "This means investing a fixed amount on a regular schedule, regardless of whether the market is up or down that week. It removes the pressure to \"time\" the market perfectly, and it's exactly what waiting for a bigger lump sum tends to prevent.",
+                analogy: "It's like watering a plant on a fixed schedule instead of waiting for the \"perfect\" weather, consistency beats waiting for ideal conditions that may never come.",
+                check: { statement: "Dollar-cost averaging requires correctly predicting when the market will go up before investing.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ce_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'The Cost of Waiting', definition: 'Delaying investing costs more than the unsaved amount, it costs compounding cycles that can\'t be recovered.' },
+              { term: 'Dollar-Cost Averaging', definition: 'Investing a fixed amount on a regular schedule, regardless of market conditions.' },
+              { term: 'Rule of 72', definition: 'Divide 72 by the annual return rate to estimate years to double your money.' }
+            ],
+            hintText: "One term is about the RISK of delay, one is a HABIT for investing regularly, and one is a quick MATH shortcut.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ce_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "You need at least a few thousand dollars saved up before it's worth opening an investment account.",
+            isTrue: false,
+            explanation: "It's a myth. Many accounts have no minimum, and starting small now beats waiting for a bigger amount later, since the delay costs compounding time you can't buy back.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ce_myth1', type: 'mythcards', title: 'Compound Interest Myths',
+            cards: [
+              { myth: "The exact dollar amount you start with matters more than how early you start.", isTrue: false, explanation: "Time horizon has an outsized effect, 10 extra years turned the same $1,000 into nearly double." },
+              { myth: "A market drop right after you start investing means you should sell to avoid further losses.", isTrue: false, explanation: "Selling during a dip locks in a loss that was only temporary on paper, staying invested lets you recover as markets historically have." },
+              { myth: "Investing a small, consistent amount is generally better than waiting to invest a larger lump sum later.", isTrue: true, explanation: "True, the lost compounding time from waiting usually outweighs the benefit of a bigger starting amount." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ce_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [1, 2],
+            hintTexts: [
+              "Think about the exact same $1,000 invested 10 years apart, who ends up with more at 65, and by how much?",
+              "Think about what it means to earn returns on your returns, not just your original deposit."
+            ]
+          },
+          {
+            id: 'ce_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'The Long Game: Portfolio Climb',
+            meterKey: 'portfolioValue', meterMin: 1000, meterMax: 21000,
+            intro: "Watch Hammy's original $1,000 grow across a lifetime of decisions. Tap each one to see the impact on where it ends up by 65.",
+            hintText: "Starting now and staying invested through dips are what separate the $21,000 outcome from the $10,700 one.",
+            decisions: [
+              { id: 'd1', label: "Start investing now instead of waiting a decade", scoreDelta: 8000, note: "This single decision is the entire gap between the two students in the story." },
+              { id: 'd2', label: "Stay invested through a 15% market dip instead of selling", scoreDelta: 4000, note: "Selling during a dip locks in a loss that recovery would have erased." },
+              { id: 'd3', label: "Chase last year's best-performing fund instead of staying diversified", scoreDelta: -3000, note: "Past performance doesn't reliably predict future returns." },
+              { id: 'd4', label: "Keep contributing consistently instead of stopping during a busy semester", scoreDelta: 5000, note: "Consistency across decades is what compounding actually rewards." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'ce_t5', type: 'teach', title: 'Time in the Market, Not Timing It',
+            concepts: [
+              {
+                term: 'Time in the Market',
+                plain: "Trying to perfectly predict market ups and downs (timing the market) is extremely difficult, even for professionals. Staying invested consistently over a long time horizon (time IN the market) has historically outperformed trying to guess the perfect moments to buy and sell.",
+                analogy: "It's like trying to catch every green light across a whole city versus just consistently driving the route, one is nearly impossible, the other reliably gets you there.",
+                check: { statement: "Historically, consistently staying invested over time has tended to outperform trying to perfectly time the market.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ce_boss', type: 'bossbattle', title: 'The 15% Drop',
+            scenario: "The market drops 15% the same month Hammy started investing. A friend is panic-selling everything. What does Hammy do?",
+            hintText: "Remember Time in the Market: with decades until retirement, does a temporary dip actually threaten Hammy's long-term outcome?",
+            choices: [
+              { id: 'a', label: "Stay invested and keep contributing on schedule", consequence: { text: "The dip is temporary on paper only if Hammy stays invested, staying the course keeps decades of compounding intact.", delta: { moneyScore: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Sell everything to avoid further losses", consequence: { text: "Selling turns a temporary paper loss into a permanent one, and misses the recovery that historically follows.", delta: { moneyScore: -12, portfolioValue: -200 }, xpMultiplier: 0.5 } },
+              { id: 'c', label: "Stop contributing for a while until things feel more stable", consequence: { text: "It avoids buying during the dip, but also means missing out on buying in at lower prices, which often pays off later.", delta: { moneyScore: -4 }, xpMultiplier: 0.8 } },
+              { id: 'd', label: "Keep contributing AND treat the dip as buying in at a discount", consequence: { text: "Buying consistently through a dip means more shares purchased at lower prices, a textbook long-term-investor move.", delta: { moneyScore: 10, portfolioValue: 50 }, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -1099,11 +2403,179 @@ const MODULES = [
         id: 'roth_ira',
         topic: 'Roth IRA Basics',
         character: { name: 'Hammy', tagline: 'Opening a first retirement account' },
-        initialState: {},
+        initialState: { savings: 200, portfolioValue: 0, moneyScore: 50 },
+        bossAchievementId: 'roth_opener',
         chapters: [
-          { id: 'roth_ira_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ri1', type: 'story', title: '"Just Open a Roth IRA"',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Roth IRA Basics." }
+              { speaker: 'intro', text: "Hammy has $50/month they could invest, and a friend keeps saying \"just open a Roth IRA.\" Hammy has heard the words, but has no idea if they even qualify." },
+              { speaker: 'Hammy', text: '"Do I need a big salary for this? A certain age? A special account first?"' },
+              { speaker: 'narrator', text: "None of those assumptions are actually true. Let's clear this up before Hammy talks themselves out of something they already qualify for." },
+              { speaker: 'Hammy', text: '"Okay, let\'s actually figure out if this is something I can use right now."' }
+            ]
+          },
+          {
+            id: 'ri_t1', type: 'teach', title: 'The Roth IRA',
+            concepts: [
+              {
+                term: 'Roth IRA',
+                plain: "A Roth IRA is a retirement account where you contribute money you've already paid tax on. In exchange, all the growth AND every withdrawal in retirement is completely tax-free, forever.",
+                analogy: "It's like paying tax on a seed once, then never owing tax again on the entire tree it grows into.",
+                check: { statement: "Roth IRA withdrawals in retirement are taxed just like regular income.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ri_t2', type: 'teach', title: 'Earned Income Eligibility',
+            concepts: [
+              {
+                term: 'Earned Income Eligibility',
+                plain: "You don't need a big salary, a certain age, or a college degree to open a Roth IRA, you just need earned income. Babysitting, tutoring, and part-time jobs all count, even without formal paperwork.",
+                analogy: "It's less about WHO you are and more about whether money came in from actual work, however informal that work was.",
+                check: { statement: "Informal income like babysitting or tutoring does not count as earned income for Roth IRA eligibility.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ri_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Roth IRA', definition: 'A retirement account funded with after-tax money that grows and withdraws tax-free.' },
+              { term: 'Earned Income Eligibility', definition: 'Qualification based on having earned income, not age or job type.' },
+              { term: 'Tax-Free Growth', definition: 'Investment gains inside a Roth IRA are never taxed, even decades later.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ri_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: you can contribute to a Roth IRA up to whichever is SMALLER, your actual earned income for the year or the annual IRS limit. Even a summer of babysitting money can open the door.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ri_t3', type: 'teach', title: 'Contribution Limits',
+            concepts: [
+              {
+                term: 'Annual Contribution Limit',
+                plain: "The IRS sets a yearly cap on Roth IRA contributions, $7,000 for 2024. You can contribute up to that limit or your total earned income for the year, whichever is lower. Most students are nowhere near the cap, the limit exists to prevent very high earners from sheltering huge amounts.",
+                analogy: "It's like a speed limit that's far above what a beginner driver is going anyway, it matters eventually, just not on day one.",
+                check: { statement: "Most students contributing to a Roth IRA are limited by their earned income, not by the IRS annual cap.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ri_d1', type: 'decision',
+            title: "\"It's Only $50/Month\"",
+            prompt: "Hammy has $50/month available and wonders if that's even worth opening a Roth IRA for. What should they do?",
+            hintText: "Think back to Compound Interest from the previous lesson, does a small consistent contribution matter less than the delay of waiting for a bigger one?",
+            choices: [
+              {
+                id: 'a', label: "Wait until there's a bigger amount to justify opening one",
+                outcome: {
+                  text: "Every month of waiting is a month of tax-free growth that can never be recovered later.",
+                  delta: { moneyScore: -6 },
+                  compare: [{ label: 'Years of tax-free growth if started now', value: 40 }, { label: 'Years lost if delayed 2 years', value: 2 }]
+                }
+              },
+              {
+                id: 'b', label: "Open a Roth IRA now and contribute the $50/month",
+                outcome: {
+                  text: "$50/month starting now builds a real foundation, and every dollar in it grows completely tax-free from day one.",
+                  delta: { portfolioValue: 50, moneyScore: 8 },
+                  compare: [{ label: 'Years of tax-free growth if started now', value: 40 }, { label: 'Years lost if delayed 2 years', value: 2 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'ri_ms1', type: 'microsim', title: "Fitting In a Roth Contribution",
+            prompt: "Hammy's monthly income is $650. Fixed costs already use $470. Help them fit a Roth IRA contribution in without going negative.",
+            hintText: "Add up the fixed costs ($250 + $120 + $60 + $40 = $470). That leaves $180 of the $650 to split between the two sliders before going negative.",
+            income: 650,
+            fixedCosts: [
+              { label: 'Rent share', amount: 250 },
+              { label: 'Meal plan top-up', amount: 120 },
+              { label: 'Phone & subscriptions', amount: 60 },
+              { label: 'Transit', amount: 40 }
+            ],
+            sliders: [
+              { id: 'rothContribution', label: 'Roth IRA contribution', min: 0, max: 150, step: 10, default: 0 },
+              { id: 'discretionary', label: 'Discretionary spending', min: 30, max: 180, step: 10, default: 30 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Try a smaller Roth contribution or spending amount.", ok: false },
+              { maxLeftover: 19, text: "It fits, and remember, even a small contribution is growing completely tax-free.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, this is real tax-free growth being built starting today.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'ri_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Annual Contribution Limit', definition: 'The IRS yearly cap on Roth IRA contributions.' },
+              { term: 'Employer Match', definition: 'Free money added by an employer when you contribute to a workplace plan like a 403(b).' },
+              { term: 'Order of Operations', definition: 'Capture the full employer match first, then build a Roth IRA.' }
+            ],
+            hintText: "One term is the IRS's own CAP, one is FREE money from an employer plan, and one is the correct ORDER to use both.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ri_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "You need a college degree or a full-time salaried job to be eligible for a Roth IRA.",
+            isTrue: false,
+            explanation: "It's a myth. Eligibility is based on earned income, babysitting, tutoring, and part-time work all count, regardless of age or education.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ri_myth1', type: 'mythcards', title: 'Roth IRA Myths',
+            cards: [
+              { myth: "You must be at least 25 years old to open a Roth IRA.", isTrue: false, explanation: "There's no minimum age, only a requirement of having earned income." },
+              { myth: "If your job offers an employer match, it's smart to capture the full match before maxing out a Roth IRA.", isTrue: true, explanation: "True, the employer match is an immediate guaranteed return, worth prioritizing before other accounts." },
+              { myth: "Roth IRA growth and withdrawals in retirement are completely tax-free.", isTrue: true, explanation: "True, that's the entire point of the account, you pay tax once, upfront, and never again." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ri_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 6],
+            hintTexts: [
+              "Think about WHEN taxes are paid on the money in a Roth IRA, and when they're not.",
+              "Think about what actually determines Roth IRA eligibility, age, job type, or something else."
+            ]
+          },
+          {
+            id: 'ri_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Retirement Foundation Climb',
+            meterKey: 'portfolioValue', meterMin: 0, meterMax: 5000,
+            intro: "Watch Hammy's Roth IRA grow as they make smarter contribution decisions. Tap each one to see the impact.",
+            hintText: "Starting now and capturing any available employer match first are what drive most of the growth here.",
+            decisions: [
+              { id: 'd1', label: "Open the Roth IRA now instead of waiting for a bigger amount", scoreDelta: 800, note: "Every month invested now is tax-free growth that can't be bought back later." },
+              { id: 'd2', label: "Capture the full employer match before maxing out the Roth", scoreDelta: 600, note: "The match is free money, worth prioritizing first." },
+              { id: 'd3', label: "Skip contributing during a busy semester", scoreDelta: -400, note: "Gaps in contributing are gaps in tax-free growth that don't come back." },
+              { id: 'd4', label: "Withdraw contributions early to cover an unrelated expense", scoreDelta: -500, note: "Pulling money out defeats the purpose of decades of compounding tax-free." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'ri_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why does opening a Roth IRA at 19, even with just $50/month, matter more than it might seem right now?",
+            keywords: ['tax-free', 'compound', 'decades', 'early', 'time'],
+            fullDefinition: "Because a Roth IRA grows completely tax-free, every year it's open adds another year of compounding that never gets taxed, on the way in during retirement, or ever again. Starting at 19 instead of 29 isn't just 10 extra years of contributions, it's 10 extra years of tax-free compounding that can't be recreated later, no matter how much gets contributed afterward.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'ri_boss', type: 'bossbattle', title: 'The Two Accounts',
+            scenario: "Hammy's campus job offers a 403(b) with a 3% match, and Hammy is also eligible for a Roth IRA. They only have enough extra money to fully fund one this month. What's the smartest order?",
+            hintText: "Remember Order of Operations: one of these accounts hands you free money immediately, guaranteed, the moment you contribute.",
+            choices: [
+              { id: 'a', label: "Contribute enough to the 403(b) to get the full match, then put anything extra into the Roth", consequence: { text: "This captures the guaranteed free money first, then builds tax-free growth with what's left, the textbook order.", delta: { moneyScore: 12, portfolioValue: 100 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Put everything into the Roth IRA and skip the 403(b) match entirely", consequence: { text: "The Roth is a fine account, but walking away from a guaranteed employer match leaves free money on the table.", delta: { moneyScore: -8 }, xpMultiplier: 0.7 } },
+              { id: 'c', label: "Split the money evenly between both without checking the match threshold first", consequence: { text: "Close, but without hitting the exact match threshold, some of that free employer money still goes unclaimed.", delta: { moneyScore: 2 }, xpMultiplier: 0.9 } },
+              { id: 'd', label: "Skip both this month and keep the cash in checking", consequence: { text: "No harm done today, but it's a missed month of both a guaranteed match and tax-free growth.", delta: { moneyScore: -5 }, xpMultiplier: 0.75 } }
             ]
           }
         ]
@@ -1573,141 +3045,203 @@ const MODULES = [
       ]
       },
       {
-        id: 'jordan',
-        topic: 'Store Credit Cards & APR',
-        character: { name: 'Hammy', tagline: 'Tempted by a store card discount at checkout' },
-        initialState: { creditScore: 700, checking: 150, savings: 50 },
-        bossAchievementId: 'store_card_smart',
+        id: 'common_mistakes',
+        topic: 'Common Mistakes That Hurt Your Score',
+        character: { name: 'Hammy', tagline: 'About to make a classic credit mistake' },
+        initialState: { creditScore: 700, checking: 200, savings: 100 },
+        bossAchievementId: 'mistake_free',
         chapters: [
           {
-            id: 'j1', type: 'story', title: 'The Checkout Offer',
+            id: 'cm1', type: 'story', title: "A Friend's 60-Point Drop",
             beats: [
-              { speaker: 'intro', text: "Hammy's had a regular credit card for two years now and always pays it off in full. Today, a checkout screen is about to test everything they know." },
-              { speaker: 'Hammy', text: '"Wait, sign up for a store card and save 20% right now? That\'s basically free money... right?"' },
-              { speaker: 'narrator', text: "Let's slow down before Hammy taps \"Sign Up.\" A discount today can turn into an expensive mistake later, let's break down why." }
+              { speaker: 'intro', text: "Hammy's friend just spent an afternoon \"cleaning up\" their credit: they co-signed a car loan for a sibling, and closed their oldest credit card the same week to simplify things. Their score dropped 60 points almost overnight." },
+              { speaker: 'Hammy', text: '"Wait, they were trying to do the RESPONSIBLE thing. How did that tank their score?"' },
+              { speaker: 'narrator', text: "Hammy has a card of their own now, in good standing. Today's about making sure they never make the same well-meaning mistakes." },
+              { speaker: 'Hammy', text: '"Okay. If \'helping out\' can backfire this badly, I want to actually understand why before I do anything like that."' }
             ]
           },
           {
-            id: 'jt1', type: 'teach', title: 'Store Credit Cards',
+            id: 'cm_t1', type: 'teach', title: 'Co-Signing',
             concepts: [
               {
-                term: 'Store Credit Card',
-                plain: "A store card works just like a regular credit card, it's a loan you pay back later, but it usually only works at one retailer, and it often comes with a much higher interest rate than a regular card.",
-                analogy: "It's like a regular credit card, but with a much steeper penalty if you don't pay it off in full.",
-                check: { statement: 'A store card usually works at any store, just like a regular credit card.', isTrue: false }
-              },
-              {
-                term: 'Store Card APR',
-                plain: 'APR stands for Annual Percentage Rate, it just means the yearly interest rate a card charges you for carrying a balance. Store cards often charge a 25-30%+ APR, noticeably higher than most regular credit cards. A one-time discount can get wiped out fast if you carry a balance.',
-                analogy: "It's like a discount coupon that expires the moment you don't pay in full, after that, it starts costing you more than you saved.",
-                check: { statement: 'Store cards often have a HIGHER interest rate than regular credit cards.', isTrue: true }
+                term: 'Co-Signing',
+                plain: "When you co-sign a loan, you're not vouching for someone, you're legally on the hook for the debt yourself. If they miss a payment, it hits YOUR credit report too, and the lender can come after you directly for the money.",
+                analogy: "It's like putting your own name on someone else's rent lease. If they stop paying, the landlord doesn't shrug, they knock on your door next.",
+                check: { statement: "Co-signing a loan only affects the other person's credit, never the co-signer's.", isTrue: false }
               }
             ],
             xpOnComplete: 2
           },
           {
-            id: 'j2', type: 'decision', title: 'Sign Up at Checkout?',
-            prompt: "The cashier offers Hammy 20% off their $150 purchase, $30 saved, if they open the store's credit card right now. What should they do?",
-            hintText: "Weigh the one-time $30 discount against what you just learned about store card APR. Does saying yes cost them anything besides a small score dip if they pay in full?",
+            id: 'cm_t2', type: 'teach', title: 'Length of Credit History',
+            concepts: [
+              {
+                term: 'Length of Credit History',
+                plain: "This is how long your accounts have existed, especially your oldest one. It's one of the five factors in your score, and it's the reason closing your oldest card, even one you barely use, can quietly hurt you.",
+                analogy: "It's like a reference who's known you for ten years versus one you met last month. The long-standing one carries more weight, and you don't want to lose them.",
+                check: { statement: "Closing a credit card you rarely use has zero effect on your credit score.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'cm_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Co-Signing', definition: 'Becoming legally responsible for someone else\'s loan if they stop paying.' },
+              { term: 'Length of Credit History', definition: 'How long your accounts have existed, especially your oldest one.' },
+              { term: 'Closing an Account', definition: 'Shortens your credit history and can raise your utilization, both can hurt your score.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cm_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: getting removed as a co-signer is much harder than it sounds, most lenders require the primary borrower to refinance the whole loan on their own. Think of co-signing as permanent until proven otherwise.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'cm_t3', type: 'teach', title: 'The Cost of Applying Around',
+            concepts: [
+              {
+                term: 'Hard Inquiry',
+                plain: "Every time you formally apply for a card or loan, the lender pulls your credit, that's a hard inquiry, and it causes a small, temporary dip. Apply for several cards in a short window and those dips stack up fast.",
+                analogy: "One background check for a new apartment is normal. Five landlords all running one in the same week makes you look like you're scrambling.",
+                check: { statement: "Applying for several new credit cards within the same month has no effect on your score.", isTrue: false }
+              },
+              {
+                term: 'Soft Inquiry',
+                plain: "Checking your own score, or a lender pre-qualifying you, is a soft inquiry, it never affects your score at all. Only a full application triggers the hard-inquiry dip.",
+                analogy: "It's the difference between glancing at a menu and actually placing an order. Only the order commits you to anything.",
+                check: { statement: "Checking your own credit score counts as a hard inquiry and can lower your score.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cm_d1', type: 'decision',
+            title: "Your Sibling Needs a Co-Signer",
+            prompt: "Hammy's younger sibling wants a $6,000 car loan but has no credit history, so the dealership needs a co-signer. What should Hammy do?",
+            hintText: "Think back to Co-Signing: if your sibling misses even one payment, whose credit report takes the hit alongside theirs?",
             choices: [
               {
-                id: 'a', label: 'Open the card for the discount, and pay the full statement immediately',
+                id: 'a', label: 'Co-sign the loan without any conditions',
                 outcome: {
-                  text: 'Hammy saves $30 up front and pays their statement in full, so no interest hits, but the new account and credit check ding their score slightly.',
-                  delta: { creditScore: -5 },
-                  compare: [{ label: 'Total spent (with discount)', value: 120 }, { label: 'Total spent (no discount)', value: 150 }]
+                  text: "Hammy is now fully on the hook for $6,000 if their sibling ever misses a payment, with zero say over how the car gets used or the loan gets paid.",
+                  delta: { creditScore: -3 },
+                  compare: [{ label: "Hammy's exposure if missed", value: 6000 }, { label: "Exposure if declined", value: 0 }]
                 }
               },
               {
-                id: 'b', label: 'Skip the store card and pay full price with their regular card',
+                id: 'b', label: 'Suggest their sibling build credit first with a secured card, and revisit the loan in a year',
                 outcome: {
-                  text: 'Hammy skips the discount but keeps their credit file simple: no new inquiry, no new account to manage.',
-                  delta: { creditScore: 0 },
-                  compare: [{ label: 'Total spent (no discount)', value: 150 }, { label: 'Total spent (with discount)', value: 120 }]
+                  text: "It's a harder conversation, but Hammy keeps zero legal exposure, and their sibling starts building their OWN credit history instead of borrowing Hammy's.",
+                  delta: { creditScore: 4 },
+                  compare: [{ label: "Hammy's exposure if declined", value: 0 }, { label: "Exposure if co-signed", value: 6000 }]
                 }
               }
             ],
             xpOnComplete: 5
           },
           {
-            id: 'j3', type: 'microsim', title: "Hammy's Monthly Numbers",
-            prompt: 'Hammy takes home $900/month. Fixed costs already use $650. Help them fit a credit card payment and some savings in without going negative.',
-            hintText: 'Add up the fixed costs ($400 + $120 + $50 + $80 = $650). That leaves $250 of his $900 to split between the two sliders before he goes negative.',
-            income: 900,
+            id: 'cm_ms1', type: 'microsim', title: "Building a Cushion Instead",
+            prompt: "Hammy's paycheck is $700/month. Fixed costs already eat $460 of it. Help them fit in a card payment and an emergency cushion, so a future favor for a friend never has to mean co-signing a loan they can't actually back.",
+            hintText: "Add up the fixed costs ($200 + $130 + $60 + $70 = $460). That leaves $240 of their $700 to split between the two sliders before they go negative.",
+            income: 700,
             fixedCosts: [
-              { label: 'Rent share', amount: 400 },
-              { label: 'Groceries', amount: 120 },
-              { label: 'Phone', amount: 50 },
-              { label: 'Car insurance', amount: 80 }
+              { label: 'Rent share', amount: 200 },
+              { label: 'Meal plan top-up', amount: 130 },
+              { label: 'Phone & subscriptions', amount: 60 },
+              { label: 'Transit & gas', amount: 70 }
             ],
             sliders: [
-              { id: 'cardPayment', label: 'Credit card payment', min: 25, max: 150, step: 25, default: 25 },
-              { id: 'savings', label: 'Savings deposit', min: 0, max: 100, step: 25, default: 0 }
+              { id: 'cardPayment', label: 'Credit card payment', min: 25, max: 175, step: 25, default: 25 },
+              { id: 'emergencyFund', label: 'Emergency fund deposit', min: 0, max: 150, step: 25, default: 0 }
             ],
             feedbackTiers: [
-              { maxLeftover: -1, text: "That budget goes negative. Hammy can't sustain this. Try a smaller card payment or savings deposit.", ok: false },
-              { maxLeftover: 24, text: "Workable, but there's almost no cushion left for a surprise expense.", ok: true },
-              { maxLeftover: Infinity, text: "Solid. They're covering their bill and still building a cushion.", ok: true }
+              { maxLeftover: -1, text: "That budget goes negative. Hammy can't sustain this. Try a smaller card payment or fund deposit.", ok: false },
+              { maxLeftover: 24, text: "Workable, but there's almost no cushion left if a friend or family member ever needs real help.", ok: true },
+              { maxLeftover: Infinity, text: "Solid. Hammy's covering their bill AND building a cushion, real help without co-signing anything.", ok: true }
             ],
             xpOnComplete: 6
           },
           {
-            id: 'jm1', type: 'matching', title: 'Match It!',
-            pairs: [
-              { term: 'Store Credit Card', definition: 'A card that works like a loan but usually only at one retailer.' },
-              { term: 'Store Card APR', definition: 'The often much-higher yearly interest rate many store cards charge.' },
-              { term: 'Credit Utilization', definition: "How much of your credit limit you're currently using, shown as a percentage." }
+            id: 'cm_t4', type: 'teach', title: 'Rate-Shopping the Right Way',
+            concepts: [
+              {
+                term: 'Rate-Shopping Window',
+                plain: "There's one big exception to the hard-inquiry rule: shopping around for the SAME type of loan (like an auto loan or mortgage) within a focused window, usually 14-45 days, gets counted as a single inquiry by most scoring models, not several.",
+                analogy: "It's like a store that says 'the first three fitting-room trips today are free, only the fourth one costs you.' Scoring models know shopping for one big purchase looks different from applying for five separate credit cards.",
+                check: { statement: "Comparing rates from several auto lenders within the same two-week window always counts as several separate hard inquiries.", isTrue: false }
+              }
             ],
-            hintText: "The two Store Card terms were just taught above, 'Card' is the WHERE it works, 'APR' is the interest RATE.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'cm_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Hard Inquiry', definition: 'A credit check from a full application, causes a small, temporary dip.' },
+              { term: 'Soft Inquiry', definition: "Checking your own score or getting pre-qualified, never affects your score." },
+              { term: 'Rate-Shopping Window', definition: 'A focused period where comparing the SAME loan type counts as just one inquiry.' }
+            ],
+            hintText: "Two of these are about WHO is checking (you vs. a lender), the third is about a special TIMING rule.",
             xpOnComplete: 4
           },
           {
-            id: 'jh1', type: 'hint', tag: "🎉 Hammy's Tip",
-            text: "Fun fact: opening several store cards in a short time adds up fast, each one is a small ding to your score, and it's easy to lose track of multiple bills. One well-managed card often beats five barely-used ones.",
-            xpOnComplete: 1
-          },
-          {
-            id: 'jpoll1', type: 'poll', title: 'What Do Most People Think?',
+            id: 'cm_poll1', type: 'poll', title: 'What Do Most People Think?',
             intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
-            statement: 'Signing up for a store card just to get the one-time discount is basically free money with no downside.',
+            statement: 'If your friend defaults on a loan you co-signed, it only shows up on their credit report, not yours.',
             isTrue: false,
-            explanation: "It's a myth. That new account triggers a credit check and lowers your average account age, both can ding your score. And if you carry a balance even one month at a high store-card APR, the interest can wipe out the discount entirely.",
+            explanation: "It's a myth. Co-signers are equally liable, a missed payment reports to BOTH credit files, and the lender can pursue either person for the full balance.",
             xpOnComplete: 2
           },
           {
-            id: 'j4', type: 'mythcards', title: 'Store Card Myths',
+            id: 'cm_myth1', type: 'mythcards', title: 'Credit Mistake Myths',
             cards: [
-              { myth: 'Store cards always have the same interest rate as regular credit cards.', isTrue: false, explanation: 'Store cards often charge noticeably higher APR than average credit cards, sometimes 29% or more.' },
-              { myth: 'A discount from opening a store card is guaranteed to save you money overall.', isTrue: false, explanation: 'It only saves you money if you pay the balance in full. Carry it even one month at a high APR and the interest can erase the discount.' },
-              { myth: 'Opening a new store card can cause a small, temporary dip in your credit score.', isTrue: true, explanation: 'New accounts trigger a credit check and lower your average account age, both can cause a small, temporary dip.' }
+              { myth: "Closing a credit card you don't use can't hurt your score.", isTrue: false, explanation: 'It can shorten your credit history and raise your utilization on the remaining cards, both can lower your score.' },
+              { myth: 'Co-signing a loan makes you legally responsible for the debt if the other person misses a payment.', isTrue: true, explanation: "True, a co-signer isn't a reference, they're equally on the hook for the full balance." },
+              { myth: 'Rate-shopping for the same type of loan within a couple weeks counts as just one inquiry, not several.', isTrue: true, explanation: 'True for most scoring models, comparing offers for ONE big purchase in a focused window is treated as a single inquiry.' }
             ],
             xpPerCorrect: 2
           },
           {
-            id: 'j5', type: 'knowledgecheck', title: 'Quick Check', qIndices: [7, 6],
+            id: 'cm_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [3, 6],
             hintTexts: [
-              "Think about the APR difference you just learned: store cards usually charge MORE than regular cards, not the same or less.",
-              "Think about the three score-hurting habits covered so far: co-signing for someone else, closing your oldest card, or applying for several cards at once."
+              "Think about the three habits covered so far: co-signing for someone else, closing your oldest card, or applying for several cards at once.",
+              "Think about what makes store cards riskier than a regular card if you don't pay in full."
             ]
           },
           {
-            id: 'j6', type: 'priceisright',
-            title: 'The Price Is Right: Store Card Interest',
-            prompt: 'Hammy carries a $500 balance on a store card with 29% APR for a year, paying only the minimum each month. Guess the total interest they pay that year.',
-            hintText: 'At 29% APR, interest costs roughly a bit more than a quarter of the balance over a full year if it\'s barely paid down. Start your guess near there.',
-            actualValue: 145, guessRange: { min: 0, max: 300, step: 10 },
-            explanation: 'At 29% APR, interest piles up fast, minimum payments barely touch the principal, so almost the whole payment goes toward interest first.',
-            xpOnComplete: 5
+            id: 'cm_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Mistake Recovery Climb',
+            intro: "Watch Hammy's score move as they face the same tempting shortcuts their friend fell for. Tap each decision below to see the impact.",
+            hintText: "Declining a risky favor and spacing out applications protect the two biggest factors: payment history exposure and new-credit activity.",
+            decisions: [
+              { id: 'd1', label: "Decline co-signing, suggest their sibling build credit independently", scoreDelta: 12, note: "Zero legal exposure to someone else's debt is worth protecting." },
+              { id: 'd2', label: 'Keep the oldest card open with one small recurring charge', scoreDelta: 18, note: 'Length of credit history is a real scoring factor, this keeps it intact.' },
+              { id: 'd3', label: 'Apply for three unrelated store cards in one month', scoreDelta: -15, note: 'Multiple hard inquiries close together is exactly the pattern that spooks lenders.' },
+              { id: 'd4', label: 'Rate-shop for ONE auto loan across lenders within a 2-week window', scoreDelta: 5, note: "Same loan type, tight window, most models count this as a single inquiry." }
+            ],
+            xpOnComplete: 6
           },
           {
-            id: 'j7', type: 'bossbattle', title: 'The Second Store Card',
-            scenario: "Another store offers Hammy 25% off a $300 purchase for opening yet another store card, their third one this year. What do they do?",
-            hintText: "Remember Hammy's tip about opening several store cards in a short time, each one is a small ding, and it's easy to lose track of multiple bills.",
+            id: 'cm_t5', type: 'teach', title: 'Mistakes Fade, They Don\'t Follow You Forever',
+            concepts: [
+              {
+                term: 'Recovering From a Setback',
+                plain: "A single mistake, a missed payment, a maxed-out card, a hard-inquiry cluster, isn't permanent. Most negative marks matter most in the first year or two and fade in impact well before they eventually drop off your report entirely. Consistent good habits going forward rebuild a score faster than most people expect.",
+                analogy: "It's like a bad semester on a transcript. It doesn't disappear, but strong semesters afterward matter more to where you end up than that one rough stretch.",
+                check: { statement: "One credit mistake permanently caps how high your score can ever recover.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cm_boss', type: 'bossbattle', title: 'The Double Ask',
+            scenario: "The same week Hammy's card issuer emails suggesting they \"declutter\" by closing an old, unused card, their sibling asks again about co-signing, this time for a $9,000 loan. What does Hammy do?",
+            hintText: "Weigh both temptations against what you now know: closing your oldest card shortens your history, and co-signing makes you liable for someone else's full balance.",
             choices: [
-              { id: 'a', label: 'Decline: one store card is already enough to manage', consequence: { text: 'Keeping their credit file simple pays off: no new inquiry, no new bill to track.', delta: { creditScore: 5 }, xpMultiplier: 1.25 } },
-              { id: 'b', label: 'Open it anyway for the discount', consequence: { text: 'Three store cards in one year is a lot to manage, and each one dinged their score a little.', delta: { creditScore: -10 }, xpMultiplier: 0.6 } },
-              { id: 'c', label: "Ask if they'll honor the discount without opening a card", consequence: { text: 'Some stores will, worth asking before assuming a new card is the only way to save.', delta: { creditScore: 3 }, xpMultiplier: 1.1 } },
-              { id: 'd', label: 'Put the purchase on their existing regular card instead, and skip the discount', consequence: { text: 'They lose the discount, but keep everything on one card they already manage well.', delta: { creditScore: 2 }, xpMultiplier: 0.9 } }
+              { id: 'a', label: 'Keep the old card open and decline to co-sign, offering to help research secured cards instead', consequence: { text: "Hammy protects their credit history AND avoids $9,000 of exposure, while still actually helping their sibling.", delta: { creditScore: 10, savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: 'Close the old card, but decline to co-sign', consequence: { text: "Declining the co-sign was smart, but closing their oldest card still shortened their history and nudged their utilization up.", delta: { creditScore: -6 }, xpMultiplier: 0.85 } },
+              { id: 'c', label: 'Keep the old card open, but co-sign the loan anyway', consequence: { text: "Good instinct on the card, but Hammy is now fully exposed to $9,000 of someone else's debt if a single payment gets missed.", delta: { creditScore: -8, savings: -200 }, xpMultiplier: 0.6 } },
+              { id: 'd', label: 'Close the old card AND co-sign the loan', consequence: { text: "Both mistakes their friend made, in one week, shortened history, raised utilization, and $9,000 of exposure all at once.", delta: { creditScore: -18, savings: -200 }, xpMultiplier: 0.4 } }
             ]
           }
         ]
@@ -1739,14 +3273,14 @@ const MODULES = [
         ]
       },
       {
-        id: 'common_mistakes',
-        topic: 'Common Mistakes That Hurt Your Score',
-        character: { name: 'Hammy', tagline: 'About to make a classic credit mistake' },
+        id: 'balance_transfers',
+        topic: 'Balance Transfers: When They Actually Help',
+        character: { name: 'Hammy', tagline: 'Considering a 0% APR balance transfer offer' },
         initialState: {},
         chapters: [
-          { id: 'common_mistakes_0', type: 'story', title: 'Coming Soon',
+          { id: 'balance_transfers_0', type: 'story', title: 'Coming Soon',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Common Mistakes That Hurt Your Score." }
+              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Balance Transfers: When They Actually Help." }
             ]
           }
         ]
@@ -1951,11 +3485,201 @@ const MODULES = [
         id: 'health_basics',
         topic: 'Health Insurance Basics: Premiums & Deductibles',
         character: { name: 'Hammy', tagline: 'Picking a health plan for the first time' },
-        initialState: {},
+        initialState: { checking: 300, savings: 100, moneyScore: 50 },
+        bossAchievementId: 'health_literate',
         chapters: [
-          { id: 'health_basics_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'hb1', type: 'story', title: 'The $2,000 Letter',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Health Insurance Basics: Premiums & Deductibles." }
+              { speaker: 'intro', text: "Hammy just turned 20 and got a letter asking if they want to enroll in their school's health plan, $2,000/year. They're pretty sure they're already covered under a parent's plan." },
+              { speaker: 'Hammy', text: '"Premium, deductible, copay... I nod along at the doctor\'s office but I don\'t actually know what any of these mean."' },
+              { speaker: 'narrator', text: "Before Hammy decides anything about this $2,000 letter, let's make the vocabulary make sense." },
+              { speaker: 'Hammy', text: '"Okay, break it down for me, because right now this all just looks like a bill."' }
+            ]
+          },
+          {
+            id: 'hb_t1', type: 'teach', title: 'Premium',
+            concepts: [
+              {
+                term: 'Premium',
+                plain: "Your premium is what you pay, usually monthly, just to HAVE the insurance plan, whether or not you use it that month. It's the cost of having coverage in place at all.",
+                analogy: "It's like a gym membership fee, you pay it whether or not you actually go that month, it's the cost of having access.",
+                check: { statement: "A premium is only charged in months when you actually use your health insurance.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'hb_t2', type: 'teach', title: 'Deductible & Copay',
+            concepts: [
+              {
+                term: 'Deductible',
+                plain: "Your deductible is what you pay out of pocket BEFORE insurance starts covering costs. A $500 deductible means you pay the first $500 of care yourself, then insurance kicks in.",
+                analogy: "It's like a cover charge at a venue, you pay it first, then everything after that follows the venue's normal pricing.",
+                check: { statement: "A deductible is the amount insurance pays before you owe anything.", isTrue: false }
+              },
+              {
+                term: 'Copay',
+                plain: "A copay is a flat fee you pay per visit or service, often after your deductible is met, like $30 for a doctor's visit. It's predictable and separate from the deductible.",
+                analogy: "It's like a flat cover charge every time you go out, regardless of how much you actually spend once you're inside.",
+                check: { statement: "A copay is a flat fee paid per visit, separate from the deductible.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'hb_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Premium', definition: 'What you pay, usually monthly, just to have coverage at all.' },
+              { term: 'Deductible', definition: 'What you pay out of pocket before insurance starts covering costs.' },
+              { term: 'Copay', definition: 'A flat fee paid per visit or service.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'hb_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: a plan with a lower premium usually has a higher deductible, and vice versa. There's no universally \"best\" plan, the right one depends on how often you expect to actually use care.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'hb_t3', type: 'teach', title: 'The ACA Age-26 Rule',
+            concepts: [
+              {
+                term: 'Coverage Until 26',
+                plain: "Under the Affordable Care Act, you can typically stay on a parent's health insurance plan until you turn 26, regardless of student status, marriage, or where you live. A lot of students don't realize this and pay for duplicate coverage.",
+                analogy: "It's like a family phone plan you don't get bumped off of just because you moved out, the coverage keeps applying until a specific age cutoff.",
+                check: { statement: "You are automatically removed from a parent's health plan the moment you start college.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'hb_d1', type: 'decision',
+            title: "The $2,000 Letter, Again",
+            prompt: "Hammy's school auto-bills $2,000/year for its health plan unless they take action. They're pretty sure they're still covered under a parent's plan. What should they do?",
+            hintText: "Think back to Coverage Until 26: if Hammy is still eligible for a parent's plan, is paying for a second, separate plan actually necessary?",
+            choices: [
+              {
+                id: 'a', label: "Just pay the $2,000, it's easier than dealing with paperwork",
+                outcome: {
+                  text: "Hammy pays for duplicate coverage they likely didn't need, on top of whatever their parent's plan already costs.",
+                  delta: { checking: -300, moneyScore: -6 },
+                  compare: [{ label: 'Cost if duplicate coverage paid', value: 2000 }, { label: 'Cost if waived with proof', value: 0 }]
+                }
+              },
+              {
+                id: 'b', label: "Verify parent's plan coverage first, then look into waiving the school plan",
+                outcome: {
+                  text: "A few minutes of checking saves $2,000 a year, assuming the parent's plan coverage checks out.",
+                  delta: { checking: 100, moneyScore: 8 },
+                  compare: [{ label: 'Cost if waived with proof', value: 0 }, { label: 'Cost if duplicate coverage paid', value: 2000 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'hb_ms1', type: 'microsim', title: "Budgeting Around a Health Plan Decision",
+            prompt: "Hammy's monthly income is $600. Fixed costs already use $430. Help them fit a health-plan-related cost and some savings in without going negative.",
+            hintText: "Add up the fixed costs ($220 + $120 + $50 + $40 = $430). That leaves $170 of the $600 to split between the two sliders before going negative.",
+            income: 600,
+            fixedCosts: [
+              { label: 'Rent share', amount: 220 },
+              { label: 'Meal plan top-up', amount: 120 },
+              { label: 'Phone & subscriptions', amount: 50 },
+              { label: 'Transit', amount: 40 }
+            ],
+            sliders: [
+              { id: 'healthCosts', label: 'Health-related costs', min: 0, max: 120, step: 10, default: 20 },
+              { id: 'savings', label: 'Savings deposit', min: 0, max: 150, step: 10, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Try smaller amounts on one of the sliders.", ok: false },
+              { maxLeftover: 19, text: "It fits, but there's little cushion for an unexpected medical cost.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, health costs are covered and savings is still growing.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'hb_t4', type: 'teach', title: 'In-Network vs. Out-of-Network',
+            concepts: [
+              {
+                term: 'In-Network vs. Out-of-Network',
+                plain: "In-network providers have a negotiated rate with your insurance, meaning you pay less. Out-of-network providers don't, and can cost dramatically more, sometimes the full price with no insurance discount at all. Checking a provider's network status before an appointment can prevent a surprise bill.",
+                analogy: "It's like a store that only honors a coupon for certain brands, walk in expecting the discount everywhere and you might get a very different total at checkout.",
+                check: { statement: "Insurance typically covers in-network and out-of-network care at the exact same cost to you.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'hb_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Coverage Until 26', definition: "The age up to which you can typically stay on a parent's health plan under the ACA." },
+              { term: 'In-Network', definition: 'A provider with a negotiated rate with your insurance, meaning lower cost to you.' },
+              { term: 'Out-of-Network', definition: 'A provider without a negotiated rate, often meaning a much higher cost.' }
+            ],
+            hintText: "One term is an AGE cutoff, and the other two describe whether a PROVIDER has a deal with your insurer.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'hb_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "Once you start college, you're automatically dropped from a parent's health insurance plan.",
+            isTrue: false,
+            explanation: "It's a myth. Under the ACA, you can typically stay on a parent's plan until age 26, regardless of student status.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'hb_myth1', type: 'mythcards', title: 'Health Insurance Myths',
+            cards: [
+              { myth: "A lower monthly premium always means a better overall deal.", isTrue: false, explanation: "Lower premiums usually come with higher deductibles, the better plan depends on how much care you actually expect to use." },
+              { myth: "A copay and a deductible are the exact same thing.", isTrue: false, explanation: "A deductible is what you pay before coverage starts, a copay is a flat per-visit fee, they work differently." },
+              { myth: "Going to an out-of-network provider can cost significantly more than an in-network one.", isTrue: true, explanation: "True, out-of-network providers don't have a negotiated rate with your insurer, which can mean a much higher bill." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'hb_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 5],
+            hintTexts: [
+              "Think about the specific age the ACA allows you to stay on a parent's health plan until.",
+              "Think about which term describes money paid out of pocket BEFORE insurance starts covering costs."
+            ]
+          },
+          {
+            id: 'hb_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Health Plan Smarts Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's health-plan decisions get smarter. Tap each one to see the impact.",
+            hintText: "Verifying existing coverage and checking network status before appointments are the two biggest wins here.",
+            decisions: [
+              { id: 'd1', label: "Verify parent's plan coverage before paying for a duplicate student plan", scoreDelta: 14, note: "This single check can save $2,000/year in unnecessary duplicate coverage." },
+              { id: 'd2', label: "Check whether a provider is in-network before an appointment", scoreDelta: 9, note: "This avoids a surprise bill at the out-of-network rate." },
+              { id: 'd3', label: "Skip reading the plan details and assume the cheapest premium is the best deal", scoreDelta: -10, note: "Cheapest premium often means a much higher deductible, the full picture matters." },
+              { id: 'd4', label: "Miss the school's waiver deadline entirely", scoreDelta: -8, note: "A missed deadline means paying for coverage that may not have been needed." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'hb_t5', type: 'teach', title: 'Reading a Plan Before You Need It',
+            concepts: [
+              {
+                term: 'Reading the Plan Early',
+                plain: "The best time to learn premium, deductible, copay, and network details is BEFORE you need care, not while sitting in an urgent care waiting room. A few minutes reading the plan summary now prevents confusion and surprise bills later.",
+                analogy: "It's like reading the emergency exit card before takeoff, not useful information to learn for the first time during an actual emergency.",
+                check: { statement: "The best time to understand your health plan's terms is after you've already needed care.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'hb_boss', type: 'bossbattle', title: 'The Urgent Care Visit',
+            scenario: "Hammy gets sick and needs urgent care. There's an in-network clinic 20 minutes away and an out-of-network one 5 minutes away. What does Hammy do?",
+            hintText: "Remember In-Network vs. Out-of-Network: how different can the actual cost be for otherwise similar care?",
+            choices: [
+              { id: 'a', label: "Take the extra 15 minutes to go in-network", consequence: { text: "The negotiated rate keeps the bill manageable, a little extra travel time for a meaningfully lower cost.", delta: { moneyScore: 10, checking: -40 }, xpMultiplier: 1.2 } },
+              { id: 'b', label: "Go to the closer out-of-network clinic without checking the cost difference", consequence: { text: "The bill comes back dramatically higher than expected, the full price with no insurance discount applied.", delta: { moneyScore: -10, checking: -220 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Call the insurance line first to confirm both options' actual costs before deciding", consequence: { text: "A few minutes on the phone gives Hammy real numbers instead of guessing, then they can choose with full information.", delta: { moneyScore: 8, checking: -40 }, xpMultiplier: 1.15 } },
+              { id: 'd', label: "Skip care entirely to avoid any cost", consequence: { text: "It avoids a bill today, but delaying care for something that needed attention can turn into a bigger cost later.", delta: { moneyScore: -6 }, xpMultiplier: 0.7 } }
             ]
           }
         ]
@@ -1963,12 +3687,194 @@ const MODULES = [
       {
         id: 'health_waiver',
         topic: 'Navigating Your Student Health Insurance Options',
-        character: { name: 'Hammy', tagline: 'Deciding whether to waive the school\'s health plan' },
-        initialState: {},
+        character: { name: 'Hammy', tagline: "Deciding whether to waive the school's health plan" },
+        initialState: { checking: 300, savings: 100, moneyScore: 50 },
+        bossAchievementId: 'waiver_ready',
         chapters: [
-          { id: 'health_waiver_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'hw1', type: 'story', title: 'Move-In Day, Deadline Day',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Navigating Your Student Health Insurance Options." }
+              { speaker: 'intro', text: "It's move-in day. Hammy's school also has a health insurance waiver deadline buried somewhere in their email, easy to miss with everything else going on." },
+              { speaker: 'Hammy', text: '"Wait, if I miss this deadline, do I just get auto-billed for a plan I don\'t need?"' },
+              { speaker: 'narrator', text: "Exactly right, and that deadline is closer than Hammy thinks. Let's make sure it doesn't slip through the cracks." },
+              { speaker: 'Hammy', text: '"Okay, tell me exactly what this waiver process actually involves."' }
+            ]
+          },
+          {
+            id: 'hw_t1', type: 'teach', title: 'The Health Insurance Waiver',
+            concepts: [
+              {
+                term: 'Health Insurance Waiver',
+                plain: "Many schools automatically enroll every student in their health plan and bill for it, unless you actively submit a waiver proving you already have comparable coverage. No waiver means no automatic exemption, even if you're covered elsewhere.",
+                analogy: "It's like an opt-OUT subscription, silence isn't a no, you have to actually cancel it yourself.",
+                check: { statement: "Being covered under a parent's plan automatically removes the school's health plan charge with no action needed.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'hw_t2', type: 'teach', title: 'The Waiver Deadline',
+            concepts: [
+              {
+                term: 'Waiver Deadline',
+                plain: "Waiver deadlines are hard cutoffs, often within the first few weeks of the semester. Miss it, and you're billed for the full plan regardless of what other coverage you actually have, there's typically no exception for forgetting.",
+                analogy: "It's like a course drop deadline, missing it by even a day usually means you're stuck with the enrollment either way.",
+                check: { statement: "Waiver deadlines are usually flexible and can be submitted any time during the semester.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'hw_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Health Insurance Waiver', definition: "A form proving comparable coverage exists, submitted to opt out of the school's plan." },
+              { term: 'Waiver Deadline', definition: 'A hard cutoff, often early in the semester, with no exceptions for missing it.' },
+              { term: 'Proof of Comparable Coverage', definition: "Documentation from your existing plan showing it meets the school's coverage requirements." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'hw_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: waiver forms usually just need your existing insurance card info and policy details, most students can complete one in under 10 minutes once they have that information handy.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'hw_t3', type: 'teach', title: 'Gathering Proof of Coverage',
+            concepts: [
+              {
+                term: 'Proof of Comparable Coverage',
+                plain: "Most waiver forms require specific details from your existing plan: insurer name, policy number, and effective dates. Having your insurance card or a parent's plan summary on hand before starting the waiver makes the process fast instead of a scramble.",
+                analogy: "It's like gathering ingredients before cooking, having everything ready up front turns a stressful process into a quick one.",
+                check: { statement: "Waiver forms typically require specific details from your existing insurance plan, not just a verbal confirmation.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'hw_d1', type: 'decision',
+            title: "The Buried Email",
+            prompt: "Hammy finds the waiver deadline email three weeks deep in their inbox, it's due in 4 days. What should they do?",
+            hintText: "Think back to Waiver Deadline: is a 4-day window still enough time, and what's the cost of letting it slip further?",
+            choices: [
+              {
+                id: 'a', label: "Put it off for a few more days since move-in is hectic",
+                outcome: {
+                  text: "The deadline passes before Hammy gets to it, resulting in a $2,000 charge for coverage they didn't need.",
+                  delta: { checking: -300, moneyScore: -8 },
+                  compare: [{ label: 'Cost if waiver missed', value: 2000 }, { label: 'Cost if waiver submitted on time', value: 0 }]
+                }
+              },
+              {
+                id: 'b', label: "Gather the proof of coverage tonight and submit the waiver immediately",
+                outcome: {
+                  text: "A focused 15 minutes tonight avoids a $2,000 charge and one less thing to worry about all semester.",
+                  delta: { checking: 50, moneyScore: 8 },
+                  compare: [{ label: 'Cost if waiver submitted on time', value: 0 }, { label: 'Cost if waiver missed', value: 2000 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'hw_ms1', type: 'microsim', title: "Budgeting Move-In Week",
+            prompt: "Hammy's move-in week budget is $250. Fixed costs already use $150. Help them fit dorm essentials and some savings in without going negative.",
+            hintText: "Add up the fixed costs ($90 + $60 = $150). That leaves $100 of the $250 to split between the two sliders before going negative.",
+            income: 250,
+            fixedCosts: [
+              { label: 'Dorm essentials already ordered', amount: 90 },
+              { label: 'Move-in transportation', amount: 60 }
+            ],
+            sliders: [
+              { id: 'extras', label: 'Additional move-in extras', min: 0, max: 80, step: 10, default: 20 },
+              { id: 'savings', label: 'Savings deposit', min: 0, max: 100, step: 10, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That goes negative during an already expensive week. Try smaller amounts.", ok: false },
+              { maxLeftover: 19, text: "It fits, move-in week is covered with a little left over.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, move-in week is covered and savings still gets a deposit.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'hw_t4', type: 'teach', title: 'What Happens If You Miss It',
+            concepts: [
+              {
+                term: 'Missing the Deadline',
+                plain: "If the waiver deadline passes, most schools bill the FULL health plan cost with no exceptions, even with perfectly valid outside coverage. Some schools allow an appeal for extenuating circumstances, but it's not guaranteed, and it's far more work than submitting on time.",
+                analogy: "It's like missing a flight versus rebooking before departure, one is a quick fix, the other is a much bigger hassle after the fact.",
+                check: { statement: "Schools generally guarantee a full refund if you submit a waiver after the deadline with valid proof.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'hw_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Missing the Deadline', definition: 'Usually results in the full plan cost billed, with no guaranteed exception.' },
+              { term: 'Waiver Appeal', definition: 'A request to reconsider a missed deadline, not guaranteed to work.' },
+              { term: 'Health Insurance Waiver', definition: "A form proving comparable coverage exists, submitted to opt out of the school's plan." }
+            ],
+            hintText: "One term is the CONSEQUENCE of missing it, one is a possible FIX after missing it, and one is the form itself.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'hw_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "If you're already covered under a parent's plan, the school automatically knows and skips billing you.",
+            isTrue: false,
+            explanation: "It's a myth. Schools don't automatically know about outside coverage, you have to actively submit a waiver with proof before the deadline.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'hw_myth1', type: 'mythcards', title: 'Health Waiver Myths',
+            cards: [
+              { myth: "Waiver deadlines are usually flexible if you have a good reason for being late.", isTrue: false, explanation: "Most schools enforce a hard cutoff, exceptions are rare and never guaranteed." },
+              { myth: "A waiver form typically requires specific details like your insurer's name and policy number.", isTrue: true, explanation: "True, generic proof isn't enough, schools want the specific plan details on record." },
+              { myth: "Missing the waiver deadline usually means paying for the full school health plan regardless of other coverage.", isTrue: true, explanation: "True, most schools don't make exceptions after the deadline passes." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'hw_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 0],
+            hintTexts: [
+              "Think about what a student needs to submit, by a deadline, to avoid being billed for a school health plan they don't need.",
+              "Think about the specific age the ACA allows you to stay on a parent's health plan until."
+            ]
+          },
+          {
+            id: 'hw_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Deadline Discipline Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's habits improve around deadlines and paperwork. Tap each decision to see the impact.",
+            hintText: "Acting early on the waiver and having proof of coverage ready are what drive most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "Submit the waiver with proof of coverage well before the deadline", scoreDelta: 15, note: "Early action avoids the entire $2,000 charge with zero stress." },
+              { id: 'd2', label: "Set a calendar reminder for every school deadline during move-in week", scoreDelta: 8, note: "Move-in week is chaotic, a reminder protects against buried emails." },
+              { id: 'd3', label: "Assume outside coverage is automatically recognized with no waiver", scoreDelta: -12, note: "Schools require an active waiver, assuming otherwise is exactly how the charge slips through." },
+              { id: 'd4', label: "Wait until the deadline has already passed to start gathering proof", scoreDelta: -9, note: "By then, most schools no longer accept the waiver at all." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'hw_t5', type: 'teach', title: 'Making It a Move-In Ritual',
+            concepts: [
+              {
+                term: 'Building the Habit',
+                plain: "The fix isn't remembering harder, it's building a simple move-in ritual: check for a waiver deadline, gather proof of coverage, and submit within the first few days. Doing this every year removes the risk of a buried email costing $2,000.",
+                analogy: "It's like a pre-flight checklist, the same few steps, done every time, before things get busy.",
+                check: { statement: "The most reliable fix for missing waiver deadlines is simply trying to remember better each year.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'hw_boss', type: 'bossbattle', title: 'Three Days Left',
+            scenario: "Hammy discovers the waiver deadline is in 3 days, and their parent's insurance card is at home, a two-hour drive away. What's the smartest move?",
+            hintText: "Remember Proof of Comparable Coverage: is a physical card the only way to get the needed policy details?",
+            choices: [
+              { id: 'a', label: "Call the parent's insurance company or check the online portal for the policy details remotely", consequence: { text: "Most insurers provide digital access to policy details, no physical card or road trip required.", delta: { moneyScore: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Give up and accept the school plan charge since the card isn't available", consequence: { text: "A $2,000 charge for coverage that likely wasn't needed, solvable with a phone call or app login.", delta: { moneyScore: -10, checking: -300 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Drive home to get the card in person", consequence: { text: "It works, but costs a 4-hour round trip during a busy week for information that was likely available online.", delta: { moneyScore: 4, checking: -30 }, xpMultiplier: 0.9 } },
+              { id: 'd', label: "Ask a parent to email a photo of the insurance card today", consequence: { text: "Fast, simple, and gets the waiver submitted well within the deadline.", delta: { moneyScore: 10 }, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -2192,11 +4098,195 @@ const MODULES = [
         id: 'federal_loans',
         topic: 'Federal Loans: Subsidized vs. Unsubsidized',
         character: { name: 'Hammy', tagline: 'Comparing loan offers in a financial aid package' },
-        initialState: {},
+        initialState: { checking: 200, savings: 100, moneyScore: 50 },
+        bossAchievementId: 'loan_literate',
         chapters: [
-          { id: 'federal_loans_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'fl1', type: 'story', title: 'Two Loans, One Confusing Page',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Federal Loans: Subsidized vs. Unsubsidized." }
+              { speaker: 'intro', text: "Hammy's financial aid offer lists Direct Subsidized and Direct Unsubsidized loans, plus a mention of private loan options from a bank. They've never had to compare loan types before." },
+              { speaker: 'Hammy', text: '"They\'re both just... loans, right? Does the label actually matter?"' },
+              { speaker: 'narrator', text: "It matters more than Hammy expects, the difference shows up the moment interest starts accruing. Let's break it down." },
+              { speaker: 'Hammy', text: '"Okay, walk me through what actually separates these."' }
+            ]
+          },
+          {
+            id: 'fl_t1', type: 'teach', title: 'Direct Subsidized Loans',
+            concepts: [
+              {
+                term: 'Direct Subsidized Loan',
+                plain: "A need-based federal loan where the government pays the interest while you're enrolled at least half-time. Nothing accrues against you while you're in school.",
+                analogy: "It's like a loan on pause, the clock isn't running on interest while you're still a student.",
+                check: { statement: "Interest accrues on a Direct Subsidized Loan while you're enrolled in school.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'fl_t2', type: 'teach', title: 'Direct Unsubsidized Loans',
+            concepts: [
+              {
+                term: 'Direct Unsubsidized Loan',
+                plain: "Not based on financial need, and interest starts accruing from day one, including the entire time you're still in school. If unpaid, that interest gets added to your balance later.",
+                analogy: "Unlike the subsidized version, the clock starts running immediately, whether or not you're making payments yet.",
+                check: { statement: "Interest on a Direct Unsubsidized Loan begins accruing immediately, even while you're still enrolled.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'fl_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Direct Subsidized Loan', definition: "Need-based, the government pays interest while you're enrolled at least half-time." },
+              { term: 'Direct Unsubsidized Loan', definition: 'Not need-based, interest accrues starting immediately, even while in school.' },
+              { term: 'Interest Accrual', definition: "Interest building up on a balance over time, whether or not it's being paid." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'fl_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: even small interest payments on an unsubsidized loan while you're still in school can meaningfully reduce what you owe later, since that unpaid interest would otherwise get added to your principal after graduation.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'fl_t3', type: 'teach', title: 'Federal vs. Private Loans',
+            concepts: [
+              {
+                term: 'Federal vs. Private Loans',
+                plain: "Federal loans come with built-in borrower protections by law, income-driven repayment, deferment, forgiveness programs, regardless of credit. Private loans come from banks or credit unions, often require a credit check or cosigner, and rarely offer the same flexibility. Exhaust federal options first.",
+                analogy: "It's like a warranty that comes standard versus one you have to negotiate separately, one is built in no matter what, the other depends on the lender's terms.",
+                check: { statement: "Private student loans generally offer the exact same borrower protections as federal loans.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fl_d1', type: 'decision',
+            title: "Which Loan First?",
+            prompt: "Hammy's aid offer includes both Subsidized and Unsubsidized loan amounts, but they only need part of the total offered. Which should they prioritize accepting first?",
+            hintText: "Think back to the difference in Interest Accrual: which loan type costs nothing extra while Hammy is still in school?",
+            choices: [
+              {
+                id: 'a', label: 'Accept the Unsubsidized amount first since it\'s listed first',
+                outcome: {
+                  text: "Interest starts piling up immediately on the unsubsidized portion, an avoidable cost if the subsidized amount alone would have covered the need.",
+                  delta: { moneyScore: -6 },
+                  compare: [{ label: 'Interest accrued in school (Unsubsidized first)', value: 180 }, { label: 'Interest accrued in school (Subsidized first)', value: 0 }]
+                }
+              },
+              {
+                id: 'b', label: 'Accept the Subsidized amount first, only add Unsubsidized if still needed',
+                outcome: {
+                  text: "No interest accrues on the subsidized portion while in school, the cheapest borrowing option gets used first.",
+                  delta: { moneyScore: 8 },
+                  compare: [{ label: 'Interest accrued in school (Subsidized first)', value: 0 }, { label: 'Interest accrued in school (Unsubsidized first)', value: 180 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'fl_ms1', type: 'microsim', title: "Budgeting on a Student Income With Loans in the Mix",
+            prompt: "Hammy's monthly income (work-study + a small loan disbursement) is $700. Fixed costs already use $520. Help them fit a savings deposit in without going negative.",
+            hintText: "Add up the fixed costs ($280 + $140 + $60 + $40 = $520). That leaves $180 of the $700 to split between the two sliders before going negative.",
+            income: 700,
+            fixedCosts: [
+              { label: 'Rent share', amount: 280 },
+              { label: 'Meal plan top-up', amount: 140 },
+              { label: 'Phone & subscriptions', amount: 60 },
+              { label: 'Transit', amount: 40 }
+            ],
+            sliders: [
+              { id: 'savings', label: 'Savings deposit', min: 0, max: 150, step: 10, default: 0 },
+              { id: 'discretionary', label: 'Discretionary spending', min: 30, max: 180, step: 10, default: 30 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Try smaller amounts on one of the sliders.", ok: false },
+              { maxLeftover: 19, text: "It fits, but there's little room if a loan disbursement is ever delayed.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, the budget holds even with loan money as part of the income mix.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'fl_t4', type: 'teach', title: 'Enrollment Status & Eligibility',
+            concepts: [
+              {
+                term: 'Enrollment Status & Loan Eligibility',
+                plain: "Federal loan eligibility is tied to enrollment status, usually requiring at least half-time (commonly 6+ credits per semester). Drop below that threshold mid-semester and aid, including loans already disbursed, can be reduced or reversed.",
+                analogy: "It's like a membership tier that changes if you drop below a usage minimum, the terms aren't fixed regardless of what you do afterward.",
+                check: { statement: "Dropping below half-time enrollment mid-semester can affect federal loans already disbursed.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fl_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Federal vs. Private Loans', definition: 'Federal loans have built-in legal protections; private loans depend on the lender.' },
+              { term: 'Enrollment Status & Eligibility', definition: 'Federal loans generally require at least half-time enrollment to stay eligible.' },
+              { term: 'Master Promissory Note (MPN)', definition: 'A legal promise to repay, required before any federal loan funds disburse.' }
+            ],
+            hintText: "One term compares LENDER types, one is about your ENROLLMENT status, and one is a required legal DOCUMENT.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'fl_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "Subsidized and Unsubsidized federal loans work exactly the same way, the names don't reflect any real difference.",
+            isTrue: false,
+            explanation: "It's a myth. On Subsidized loans, the government pays interest while you're in school. On Unsubsidized loans, interest accrues from day one, a real, meaningful difference.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'fl_myth1', type: 'mythcards', title: 'Federal Loan Myths',
+            cards: [
+              { myth: "Interest never accrues on a federal student loan while you're still enrolled in school.", isTrue: false, explanation: "This is only true for Subsidized loans, Unsubsidized loans accrue interest the entire time, including while enrolled." },
+              { myth: "Federal loans generally come with more borrower protections than private loans.", isTrue: true, explanation: "True, income-driven repayment, deferment, and forgiveness programs are built into federal loans by law." },
+              { myth: "You can drop below half-time enrollment mid-semester with zero effect on already-disbursed federal loans.", isTrue: false, explanation: "Enrollment status changes can reduce or reverse aid, including loans already disbursed." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'fl_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 6],
+            hintTexts: [
+              "Think about which loan type has the government covering interest WHILE you're still in school.",
+              "Think about what federal loans offer, by law, that private loans generally don't."
+            ]
+          },
+          {
+            id: 'fl_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Smart Borrowing Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's borrowing decisions get smarter. Tap each one to see the impact.",
+            hintText: "Prioritizing subsidized loans and paying accruing interest early are what drive most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "Accept Subsidized loan amounts before Unsubsidized ones", scoreDelta: 13, note: "No interest accrues on the subsidized portion while still in school." },
+              { id: 'd2', label: "Pay small amounts toward accruing interest on Unsubsidized loans while still in school", scoreDelta: 8, note: "This prevents that interest from capitalizing into a bigger balance later." },
+              { id: 'd3', label: "Accept the full loan amount offered without checking actual need", scoreDelta: -11, note: "Borrowing more than needed just means more interest and a bigger balance to repay." },
+              { id: 'd4', label: "Drop below half-time enrollment without checking the effect on loan eligibility", scoreDelta: -9, note: "This can reduce or reverse aid already disbursed for the semester." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'fl_t5', type: 'teach', title: 'Every Dollar Borrowed Comes Back Around',
+            concepts: [
+              {
+                term: 'Borrowing With the End in Mind',
+                plain: "Federal loans are flexible and often necessary, but every dollar borrowed still needs to be repaid, with interest. Understanding the type of loan you're accepting, and only accepting what's actually needed, keeps that future payment manageable instead of a surprise.",
+                analogy: "It's like packing for a trip knowing you'll be the one carrying the bag the whole way, worth being thoughtful about what actually goes in.",
+                check: { statement: "The type of federal loan you accept has no real effect on your total cost of borrowing.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fl_boss', type: 'bossbattle', title: 'The Extra $2,300',
+            scenario: "Hammy's offer includes $5,500 in loans, but only $3,200 is actually needed to cover the gap after grants. The extra $2,300 would be nice to have as a cushion. What does Hammy do?",
+            hintText: "Remember: every dollar borrowed accrues interest and must be repaid, whether or not it was actually needed.",
+            choices: [
+              { id: 'a', label: "Accept only the $3,200 needed, decline the rest through the aid portal", consequence: { text: "Borrowing exactly what's needed keeps the future balance, and the interest on it, as small as possible.", delta: { moneyScore: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Accept the full $5,500 as a cushion", consequence: { text: "The extra $2,300 accrues interest for years before it's ever needed, a cushion that costs real money to hold onto.", delta: { moneyScore: -10 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Accept the full amount but immediately pay back the unneeded portion", consequence: { text: "Some schools allow this within a short window, avoiding most of the interest, though it takes extra paperwork most students skip.", delta: { moneyScore: 6 }, xpMultiplier: 1.05 } },
+              { id: 'd', label: "Decline all loans, even the $3,200 actually needed", consequence: { text: "Avoiding all debt sounds appealing, but it can leave Hammy short on genuinely necessary costs this semester.", delta: { moneyScore: -3, checking: -100 }, xpMultiplier: 0.85 } }
             ]
           }
         ]
@@ -2204,12 +4294,196 @@ const MODULES = [
       {
         id: 'plus_loans',
         topic: 'Parent PLUS Loans & Who\'s Responsible',
-        character: { name: 'Hammy', tagline: 'Figuring out who\'s actually on the hook for a loan' },
-        initialState: {},
+        character: { name: 'Hammy', tagline: "Figuring out who's actually on the hook for a loan" },
+        initialState: { checking: 200, savings: 100, moneyScore: 50 },
+        bossAchievementId: 'plus_aware',
         chapters: [
-          { id: 'plus_loans_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'pl1', type: 'story', title: "Whose Debt Is This, Really?",
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Parent PLUS Loans & Who's Responsible." }
+              { speaker: 'intro', text: "Hammy's parent takes out a Parent PLUS loan to cover the remaining gap in Hammy's tuition bill. Hammy figures they'll just pay it off themselves after graduation." },
+              { speaker: 'Hammy', text: '"It paid for MY school, so it\'s basically my debt too, right?"' },
+              { speaker: 'narrator', text: "That assumption is actually wrong, and it's worth getting right before graduation, not after." },
+              { speaker: 'Hammy', text: '"Wait, really? Okay, tell me exactly how this works."' }
+            ]
+          },
+          {
+            id: 'pl_t1', type: 'teach', title: 'The Parent PLUS Loan',
+            concepts: [
+              {
+                term: 'Parent PLUS Loan',
+                plain: "A federal loan taken out BY a parent, in the parent's name, to help cover their dependent student's education costs. It fills the gap after other financial aid is applied.",
+                analogy: "It's like a parent co-signing a lease that's entirely in their own name, the apartment is for the student, but the paperwork and liability belong to the parent alone.",
+                check: { statement: "A Parent PLUS loan is issued directly in the student's name.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'pl_t2', type: 'teach', title: 'Legal Responsibility',
+            concepts: [
+              {
+                term: 'Legal Responsibility',
+                plain: "The parent who took out a Parent PLUS loan is legally responsible for repaying it, even though it paid for the student's education. It cannot simply be transferred to the student's name after the fact, that requires a separate refinancing process through a private lender.",
+                analogy: "It's like a car loan taken out by one family member for another to drive, the driver benefits, but the name on the loan is who the bank comes after.",
+                check: { statement: "A Parent PLUS loan automatically becomes the student's legal responsibility once they graduate.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'pl_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Parent PLUS Loan', definition: "A federal loan taken out by a parent to help cover a dependent student's costs." },
+              { term: 'Legal Responsibility', definition: 'Falls on the parent who took out the loan, not the student, unless refinanced.' },
+              { term: 'Refinancing', definition: "A separate private process that can move the debt into the student's name." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'pl_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: some families set up an informal agreement where the student pays the parent back directly, that's a personal arrangement, though, not something the loan servicer or the law recognizes. The parent remains legally on the hook either way.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'pl_t3', type: 'teach', title: 'Grad PLUS Loans',
+            concepts: [
+              {
+                term: 'Grad PLUS Loan',
+                plain: "A related but different loan, taken out by GRADUATE or professional students themselves (not a parent), also to cover costs beyond other aid. Both PLUS loan types require a credit check and typically carry a higher interest rate than Direct loans, making them a last resort, not a first option.",
+                analogy: "Same family of loan, different borrower, a Parent PLUS loan is the parent's name on it, a Grad PLUS loan is the graduate student's own name.",
+                check: { statement: "PLUS loans, whether Parent or Grad, typically require a credit check.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'pl_d1', type: 'decision',
+            title: "The Repayment Conversation",
+            prompt: "Hammy wants to help cover the Parent PLUS loan payments after graduation. What's the smartest way to approach it?",
+            hintText: "Think back to Legal Responsibility: does simply sending money casually change whose name is legally on the loan?",
+            choices: [
+              {
+                id: 'a', label: 'Just send money whenever, no real plan or paperwork',
+                outcome: {
+                  text: "It might work out informally, but there's no legal protection for either side if income gets tight or plans change.",
+                  delta: { moneyScore: -4 },
+                  compare: [{ label: 'Clarity with a real plan', value: 1 }, { label: 'Clarity with an informal arrangement', value: 0 }]
+                }
+              },
+              {
+                id: 'b', label: "Set up a clear, written agreement, or look into refinancing into Hammy's name",
+                outcome: {
+                  text: "A real plan, written down or formally refinanced, protects both people and avoids confusion down the road.",
+                  delta: { moneyScore: 8 },
+                  compare: [{ label: 'Clarity with a real plan', value: 1 }, { label: 'Clarity with an informal arrangement', value: 0 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'pl_ms1', type: 'microsim', title: "Helping Without Overextending",
+            prompt: "Hammy's first post-grad paycheck take-home is $2,200/month. Fixed costs already use $1,600. Help them fit a contribution toward the family's Parent PLUS payment and some savings in without going negative.",
+            hintText: "Add up the fixed costs ($900 + $400 + $150 + $150 = $1,600). That leaves $600 of the $2,200 to split between the two sliders before going negative.",
+            income: 2200,
+            fixedCosts: [
+              { label: 'Rent', amount: 900 },
+              { label: 'Groceries & utilities', amount: 400 },
+              { label: 'Transportation', amount: 150 },
+              { label: 'Insurance & phone', amount: 150 }
+            ],
+            sliders: [
+              { id: 'parentContribution', label: 'Contribution toward Parent PLUS payment', min: 0, max: 400, step: 25, default: 0 },
+              { id: 'savings', label: 'Savings deposit', min: 0, max: 500, step: 25, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Try a smaller contribution or savings amount.", ok: false },
+              { maxLeftover: 49, text: "It fits, but there's little cushion left for Hammy's own expenses.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, Hammy can help the family AND keep building their own savings.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'pl_t4', type: 'teach', title: 'Why This Matters Before Graduation',
+            concepts: [
+              {
+                term: 'Planning the Conversation Early',
+                plain: "Having the who-pays-what conversation BEFORE the first Parent PLUS payment is due avoids confusion or resentment later. Understanding that the parent is legally responsible, regardless of any informal family arrangement, helps everyone plan realistically.",
+                analogy: "It's like discussing chores before moving in together, not after the first disagreement about who was supposed to do what.",
+                check: { statement: "It's better to have the repayment conversation with family before the first payment is due, not after.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'pl_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Grad PLUS Loan', definition: "A PLUS loan taken out by graduate students themselves, not a parent." },
+              { term: 'Planning the Conversation Early', definition: 'Discussing repayment responsibility with family before the first payment is due.' },
+              { term: 'Parent PLUS Loan', definition: "A federal loan taken out by a parent to help cover a dependent student's costs." }
+            ],
+            hintText: "One term is a DIFFERENT PLUS loan for grad students, one is a HABIT worth building early, and one is the loan itself.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'pl_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "Once a student graduates, a Parent PLUS loan automatically transfers into the student's name.",
+            isTrue: false,
+            explanation: "It's a myth. The parent remains legally responsible unless the debt is formally refinanced into the student's name through a private lender.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'pl_myth1', type: 'mythcards', title: 'Parent PLUS Loan Myths',
+            cards: [
+              { myth: "A Parent PLUS loan automatically becomes the student's responsibility after graduation.", isTrue: false, explanation: "It stays the parent's legal debt unless formally refinanced into the student's name." },
+              { myth: "PLUS loans, unlike Direct Subsidized/Unsubsidized loans, typically require a credit check.", isTrue: true, explanation: "True, this is a key difference from Direct loans, which don't require a credit check." },
+              { myth: "A Grad PLUS loan is taken out by a parent, just like a Parent PLUS loan.", isTrue: false, explanation: "A Grad PLUS loan is taken out by the graduate student themselves, not a parent." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'pl_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [1, 10],
+            hintTexts: [
+              "Think about who Direct PLUS loans, Grad or Parent, are actually designed for.",
+              "Think about whose name legally stays on a Parent PLUS loan after the student graduates."
+            ]
+          },
+          {
+            id: 'pl_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Family Loan Clarity Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's family navigate the Parent PLUS loan more clearly. Tap each decision to see the impact.",
+            hintText: "Clear agreements and early conversations are what drive most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "Put the repayment plan in writing before the first payment is due", scoreDelta: 13, note: "Clarity upfront avoids confusion or resentment down the road." },
+              { id: 'd2', label: "Look into refinancing into the student's name once income is stable", scoreDelta: 8, note: "This is the only way to formally shift legal responsibility." },
+              { id: 'd3', label: "Assume the debt transfers to the student automatically at graduation", scoreDelta: -12, note: "It doesn't, the parent stays legally responsible unless refinanced." },
+              { id: 'd4', label: "Avoid discussing repayment responsibility with family at all", scoreDelta: -7, note: "Avoiding the conversation just delays confusion instead of preventing it." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'pl_t5', type: 'teach', title: 'Helping Doesn\'t Require Confusion',
+            concepts: [
+              {
+                term: 'Supporting Without Blurring the Lines',
+                plain: "A student can absolutely help their family with a Parent PLUS loan, that's a generous, common choice. The key is doing it with a clear plan, whether that's a written agreement or formal refinancing, so everyone understands who's actually legally responsible.",
+                analogy: "It's like helping a roommate with a bill they're technically responsible for, generous and fine, as long as everyone's clear on whose name is actually on the lease.",
+                check: { statement: "Helping a parent repay a PLUS loan requires legally transferring the debt first.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'pl_boss', type: 'bossbattle', title: 'The First Payment Notice',
+            scenario: "The first Parent PLUS payment notice arrives the same month Hammy starts their first job. Hammy's parent hasn't budgeted for it and hints that Hammy should just \"handle it.\"",
+            hintText: "Remember Legal Responsibility: whose name is actually on this loan, and what does that mean for how this gets resolved?",
+            choices: [
+              { id: 'a', label: "Sit down with the parent, review the loan terms together, and agree on a clear, written contribution plan", consequence: { text: "A clear plan protects both people and turns an awkward assumption into an actual agreement.", delta: { moneyScore: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Just start paying the full amount without any conversation", consequence: { text: "It solves the immediate problem, but sets an unclear precedent with no agreement on how long or how much this continues.", delta: { moneyScore: -6, checking: -100 }, xpMultiplier: 0.75 } },
+              { id: 'c', label: "Ignore the hint entirely and let the parent handle their own loan", consequence: { text: "Legally accurate, since the parent IS responsible, but it may strain the relationship if help was genuinely expected.", delta: { moneyScore: 2 }, xpMultiplier: 0.9 } },
+              { id: 'd', label: "Look into refinancing the loan into Hammy's name now that they have income", consequence: { text: "A bigger step, but it formally clarifies responsibility instead of leaving it as an ongoing assumption.", delta: { moneyScore: 9 }, xpMultiplier: 1.15 } }
             ]
           }
         ]
@@ -2433,11 +4707,192 @@ const MODULES = [
         id: 'first_return',
         topic: 'Filing Your First Tax Return',
         character: { name: 'Hammy', tagline: 'Filing a tax return for the first time' },
-        initialState: {},
+        initialState: { checking: 300, savings: 100, moneyScore: 50 },
+        bossAchievementId: 'first_filer',
         chapters: [
-          { id: 'first_return_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'fr1', type: 'story', title: "April, and a Blank Return",
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Filing Your First Tax Return." }
+              { speaker: 'intro', text: "It's April. Hammy has a W-2 from an on-campus job, a 1099 from a freelance gig, and has never filed a tax return in their life." },
+              { speaker: 'Hammy', text: '"Where do I even start? Do I even NEED to file anything?"' },
+              { speaker: 'narrator', text: "Most students do need to file, and it's far less intimidating once broken into steps. Let's start there." },
+              { speaker: 'Hammy', text: '"Okay, walk me through this from the very beginning."' }
+            ]
+          },
+          {
+            id: 'fr_t1', type: 'teach', title: 'Do You Need to File',
+            concepts: [
+              {
+                term: 'Filing Requirement',
+                plain: "Many students, even with part-time or internship income, need to file a tax return. The first real step is gathering every income document, W-2s and 1099s, and confirming whether a parent claims you as a dependent, since that changes some of the numbers.",
+                analogy: "It's like packing for a trip, gather everything first, THEN figure out how it all fits together.",
+                check: { statement: "Students with only part-time or internship income never need to file a tax return.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'fr_t2', type: 'teach', title: 'Reading Box 1 on Your W-2',
+            concepts: [
+              {
+                term: 'W-2 Box 1',
+                plain: "Box 1 shows your TAXABLE wages, not your full gross pay. Pre-tax deductions, like retirement contributions, are already subtracted out. This is one of the numbers you'll actually enter on your return.",
+                analogy: "It's like a receipt showing the post-discount price, not the full sticker price, some things were already taken off before this number was printed.",
+                check: { statement: "Box 1 on a W-2 always equals your full gross pay for the year with nothing subtracted.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'fr_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Filing Requirement', definition: 'Whether you need to file a return, based on income and other factors.' },
+              { term: 'W-2 Box 1', definition: 'Taxable wages after pre-tax deductions, not full gross pay.' },
+              { term: 'Dependency Status', definition: "Whether a parent claims you, affects your standard deduction and available credits." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'fr_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: many campuses host free VITA (Volunteer Income Tax Assistance) clinics during tax season, staffed by IRS-certified volunteers. Most students never need to pay a company to file a simple first return.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'fr_t3', type: 'teach', title: 'The Filing Deadline & Free Options',
+            concepts: [
+              {
+                term: 'Filing Deadline',
+                plain: "The federal deadline is typically April 15th. Missing it when you owe money can add penalties, filing on time (or requesting an extension) avoids that entirely. Many students qualify for IRS Free File or a campus VITA clinic, both free.",
+                analogy: "It's like a due date on a class assignment, submitting late has real consequences even if the content itself would've been fine.",
+                check: { statement: "Most students filing a simple first return need to pay a tax prep company.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fr_d1', type: 'decision',
+            title: "\"Taxes Were Already Withheld, So...\"",
+            prompt: "Hammy's W-2 job already withheld taxes all year. A friend says that means there's nothing left to do. Should Hammy skip filing?",
+            hintText: "Think back to Filing Requirement: does having taxes withheld already mean filing is pointless, or could it actually work in Hammy's favor?",
+            choices: [
+              {
+                id: 'a', label: "Skip filing since taxes were already withheld",
+                outcome: {
+                  text: "If more was withheld than actually owed, that refund money just never gets claimed, left on the table entirely.",
+                  delta: { checking: -80, moneyScore: -6 },
+                  compare: [{ label: 'Refund left unclaimed', value: 80 }, { label: 'Refund if filed', value: 0 }]
+                }
+              },
+              {
+                id: 'b', label: "File anyway to see if a refund is owed",
+                outcome: {
+                  text: "Filing reveals over-withheld taxes come back as an actual refund, real money Hammy would've otherwise missed entirely.",
+                  delta: { checking: 80, moneyScore: 8 },
+                  compare: [{ label: 'Refund if filed', value: 80 }, { label: 'Refund left unclaimed', value: 0 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'fr_ms1', type: 'microsim', title: "Planning for Refund Season",
+            prompt: "Hammy expects a $200 refund this year. Along with $500 of regular monthly income, help them fit a plan for the refund and monthly savings without going negative.",
+            hintText: "The $500 monthly income is separate from the one-time $200 refund. Balance both sliders against the total $700 available this month.",
+            income: 700,
+            fixedCosts: [
+              { label: 'Fixed monthly costs', amount: 400 }
+            ],
+            sliders: [
+              { id: 'savings', label: 'Savings deposit (refund + monthly)', min: 0, max: 250, step: 10, default: 0 },
+              { id: 'discretionary', label: 'Discretionary spending', min: 20, max: 300, step: 10, default: 20 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Try smaller amounts on one of the sliders.", ok: false },
+              { maxLeftover: 49, text: "It fits, consider routing more of the refund toward savings instead of spending it all.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, the refund is helping build savings instead of just disappearing into spending.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'fr_t4', type: 'teach', title: 'Refunds From Over-Withholding',
+            concepts: [
+              {
+                term: 'Refund From Over-Withholding',
+                plain: "Many students have more withheld from each paycheck than they actually owe for the year, based on their total income. Filing is literally how that extra money gets returned, skipping the return means skipping the refund too.",
+                analogy: "It's like a deposit you get back after moving out, you only get it if you actually ask for it back.",
+                check: { statement: "A tax refund is money that automatically returns to you without filing a return.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fr_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Filing Deadline', definition: 'Typically April 15th for federal returns.' },
+              { term: 'Refund From Over-Withholding', definition: 'Extra tax withheld throughout the year, returned only by filing.' },
+              { term: 'VITA Clinic', definition: 'A free, IRS-certified tax prep service often available on campus.' }
+            ],
+            hintText: "One term is a DATE, one is MONEY you get back, and one is a free service available to you.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'fr_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "If your employer already withheld taxes from every paycheck, filing a return is pointless.",
+            isTrue: false,
+            explanation: "It's a myth. Filing is exactly how you find out if too much was withheld, and get that difference back as a refund.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'fr_myth1', type: 'mythcards', title: 'First-Return Myths',
+            cards: [
+              { myth: "You only need to file taxes once your income passes $50,000.", isTrue: false, explanation: "Filing requirements depend on total income and other factors, often at levels well below that." },
+              { myth: "Free filing options like IRS Free File and VITA clinics can handle W-2s, 1099s, and education credits.", isTrue: true, explanation: "True, most students never need to pay a company for a simple first return." },
+              { myth: "A W-2's Box 1 always shows your exact gross pay for the year.", isTrue: false, explanation: "Box 1 shows TAXABLE wages, after pre-tax deductions are already subtracted." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'fr_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
+            hintTexts: [
+              "Think about the first concrete step recommended before filing any tax return.",
+              "Think about what pre-tax deductions do to the number shown in Box 1 of a W-2."
+            ]
+          },
+          {
+            id: 'fr_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'First-Filer Smarts Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's tax-filing habits improve. Tap each decision to see the impact.",
+            hintText: "Filing even when taxes were already withheld and using free resources drive most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "File even though taxes were already withheld all year", scoreDelta: 13, note: "This is exactly how an over-withholding refund gets claimed." },
+              { id: 'd2', label: "Use a free VITA clinic instead of a paid tax prep service", scoreDelta: 8, note: "A simple first return rarely needs a paid preparer." },
+              { id: 'd3', label: "Skip filing because \"it seems complicated\"", scoreDelta: -12, note: "Skipping filing risks leaving a real refund unclaimed entirely." },
+              { id: 'd4', label: "Gather every income document before starting, W-2s and 1099s alike", scoreDelta: 7, note: "Having everything upfront turns filing from a scramble into a straightforward process." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'fr_t5', type: 'teach', title: 'A Yearly Habit, Not a Yearly Crisis',
+            concepts: [
+              {
+                term: 'Building the Filing Habit',
+                plain: "Your first tax return feels overwhelming mostly because it's unfamiliar. Once you've gathered documents, checked dependency status, and filed once, the process repeats in a very similar shape every year, and gets faster each time.",
+                analogy: "It's like the first time doing your own laundry, confusing at first, routine within a semester.",
+                check: { statement: "Filing a tax return is a fundamentally different, unpredictable process every single year.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fr_boss', type: 'bossbattle', title: 'The Two Forms',
+            scenario: "It's finally time to file. Hammy has both a W-2 and a 1099 in hand, and a parent mentions they might still be claiming Hammy as a dependent. What does Hammy do?",
+            hintText: "Remember Filing Requirement and Dependency Status: does having two income forms and being a dependent change whether Hammy still needs to file?",
+            choices: [
+              { id: 'a', label: "Confirm dependency status with the parent first, then gather both forms and file, using free VITA help if needed", consequence: { text: "Confirming dependency status first avoids errors, and using free help keeps the whole process at zero cost.", delta: { moneyScore: 12, checking: 80 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "File only the W-2 income and skip the 1099 since it feels optional", consequence: { text: "Unreported 1099 income is a common, costly mistake, the IRS still expects it reported even without automatic withholding.", delta: { moneyScore: -10 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Assume the dependency question doesn't matter and file as fully independent", consequence: { text: "Filing incorrectly on dependency status can cause issues on both Hammy's and the parent's returns.", delta: { moneyScore: -6 }, xpMultiplier: 0.75 } },
+              { id: 'd', label: "Ask the parent directly, then gather all documents and use IRS Free File", consequence: { text: "Getting the facts straight first, then using a free tool, is exactly the right order of operations.", delta: { moneyScore: 10, checking: 60 }, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -2446,11 +4901,192 @@ const MODULES = [
         id: 'w2_vs_1099',
         topic: 'W-2s vs. 1099s',
         character: { name: 'Hammy', tagline: 'Sorting out two different income forms' },
-        initialState: {},
+        initialState: { checking: 300, savings: 100, moneyScore: 50 },
+        bossAchievementId: 'forms_sorted',
         chapters: [
-          { id: 'w2_vs_1099_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'wv1', type: 'story', title: 'Two Forms, Two Different Deals',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on W-2s vs. 1099s." }
+              { speaker: 'intro', text: "Hammy's friend did freelance design work over the summer and got a 1099-NEC. Hammy had a paid internship and got a normal W-2. They assume it's basically the same thing." },
+              { speaker: 'Hammy', text: '"We both just got paid for work, right? Why would the form even matter?"' },
+              { speaker: 'narrator', text: "It matters more than either of them realizes, especially when it comes to what's already been handled versus what hasn't." },
+              { speaker: 'Hammy', text: '"Okay, what\'s actually different here?"' }
+            ]
+          },
+          {
+            id: 'wv_t1', type: 'teach', title: 'The W-2',
+            concepts: [
+              {
+                term: 'W-2',
+                plain: "A W-2 comes from a traditional employer. Taxes, federal income tax, Social Security, Medicare, are already withheld from every paycheck automatically. By tax time, most of the work is already done for you.",
+                analogy: "It's like a subscription that auto-bills correctly every month, you don't have to remember to pay it yourself.",
+                check: { statement: "A W-2 job automatically withholds taxes from each paycheck.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'wv_t2', type: 'teach', title: 'The 1099-NEC',
+            concepts: [
+              {
+                term: '1099-NEC',
+                plain: "A 1099-NEC reports freelance or gig income, with NO taxes withheld upfront. That responsibility shifts entirely to you, to track the income, set money aside, and report it yourself.",
+                analogy: "It's like getting paid in cash with no automatic bill-pay set up, the full responsibility for handling it correctly falls on you.",
+                check: { statement: "1099 income has taxes automatically withheld, just like W-2 income.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'wv_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'W-2', definition: 'Traditional employment income with taxes automatically withheld.' },
+              { term: '1099-NEC', definition: 'Freelance or gig income with no taxes withheld upfront.' },
+              { term: 'Self-Employment Tax', definition: 'An additional ~15.3% tax on 1099 net earnings over $400, covering Social Security and Medicare.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'wv_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: setting aside 20-30% of every 1099 payment the moment it's received means tax season never comes as a surprise, the money's already earmarked before it even feels like \"real\" spending money.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'wv_t3', type: 'teach', title: 'Self-Employment Tax',
+            concepts: [
+              {
+                term: 'Self-Employment Tax',
+                plain: "Beyond regular income tax, 1099 earners may owe self-employment tax, roughly 15.3%, covering the same Social Security and Medicare that a W-2 employer would normally split with you. This kicks in once net 1099 earnings pass $400.",
+                analogy: "As a W-2 employee, your employer covers half of this cost automatically. As a 1099 earner, you're covering both halves yourself.",
+                check: { statement: "1099 earners may owe self-employment tax on top of regular income tax.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'wv_d1', type: 'decision',
+            title: "The $900 Freelance Check",
+            prompt: "Hammy earned $900 through a 1099-NEC freelance gig, with no taxes withheld. What should they do with it?",
+            hintText: "Think back to Self-Employment Tax: is the full $900 actually Hammy's to spend, or does part of it already have a job?",
+            choices: [
+              {
+                id: 'a', label: 'Spend the full $900, taxes can be figured out later',
+                outcome: {
+                  text: "Come tax time, a real bill is due with nothing set aside for it, an avoidable scramble.",
+                  delta: { checking: 900, moneyScore: -8 },
+                  compare: [{ label: 'Tax bill with nothing set aside', value: 250 }, { label: 'Tax bill if 25% set aside upfront', value: 0 }]
+                }
+              },
+              {
+                id: 'b', label: 'Set aside 25% for taxes immediately, keep the rest',
+                outcome: {
+                  text: "The tax portion is already earmarked, so April brings no surprise, just a bill that's already covered.",
+                  delta: { checking: 675, savings: 225, moneyScore: 8 },
+                  compare: [{ label: 'Tax bill if 25% set aside upfront', value: 0 }, { label: 'Tax bill with nothing set aside', value: 250 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'wv_ms1', type: 'microsim', title: "Splitting Freelance Income the Right Way",
+            prompt: "Hammy earns $500 this month from a mix of W-2 and 1099 work. Help them fit a tax set-aside and savings deposit in without going negative.",
+            hintText: "The 1099 portion needs a tax set-aside before anything else. Balance both sliders against the $500 total.",
+            income: 500,
+            fixedCosts: [
+              { label: 'Fixed monthly costs', amount: 250 }
+            ],
+            sliders: [
+              { id: 'taxSetAside', label: 'Tax set-aside (1099 portion)', min: 0, max: 125, step: 5, default: 0 },
+              { id: 'savings', label: 'Savings deposit', min: 0, max: 125, step: 5, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Try smaller amounts on one of the sliders.", ok: false },
+              { maxLeftover: 24, text: "It fits, double check the tax set-aside is enough to cover the 1099 portion.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, taxes are covered and savings is still growing.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'wv_t4', type: 'teach', title: 'Filing Both Forms Together',
+            concepts: [
+              {
+                term: 'Filing With Multiple Income Types',
+                plain: "Having both a W-2 and a 1099 in the same year is common and completely fine, both get reported on the same tax return. The key difference is that the 1099 portion needs its own tax set-aside throughout the year, since nothing was withheld on it automatically.",
+                analogy: "It's like combining two different paychecks into one budget, both count toward the total, but they arrived with very different amounts of prep work already done.",
+                check: { statement: "Having both W-2 and 1099 income in the same year means they must be filed as two completely separate tax returns.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'wv_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Filing With Multiple Income Types', definition: 'W-2 and 1099 income in the same year are combined on one tax return.' },
+              { term: 'Estimated Quarterly Payments', definition: '1099 earners expecting to owe $1,000+ may need to pay tax throughout the year, not just in April.' },
+              { term: '1099-NEC', definition: 'Freelance or gig income with no taxes withheld upfront.' }
+            ],
+            hintText: "One term is about COMBINING income types on one return, one is about PAYING throughout the year, and one is the FORM itself.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'wv_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "1099 income under $1,000 doesn't need to be reported on your tax return.",
+            isTrue: false,
+            explanation: "It's a myth. There's no blanket exemption like that, 1099 income generally needs to be reported regardless of the amount.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'wv_myth1', type: 'mythcards', title: 'W-2 vs. 1099 Myths',
+            cards: [
+              { myth: "1099 income is taxed exactly like W-2 income, with taxes already withheld.", isTrue: false, explanation: "No taxes are withheld on 1099 income upfront, that responsibility shifts entirely to the earner." },
+              { myth: "1099 earners may owe self-employment tax in addition to regular income tax.", isTrue: true, explanation: "True, roughly 15.3% on net earnings over $400, covering both halves of Social Security and Medicare." },
+              { myth: "Having both a W-2 and a 1099 in the same year requires filing two separate tax returns.", isTrue: false, explanation: "Both income types are reported together on one combined tax return." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'wv_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 3],
+            hintTexts: [
+              "Think about what's different about 1099 income compared to W-2 income when it comes to taxes withheld.",
+              "Think about whether having taxes already withheld from a W-2 job means filing is optional."
+            ]
+          },
+          {
+            id: 'wv_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Freelance Tax Smarts Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's habits improve around managing income from multiple sources. Tap each decision to see the impact.",
+            hintText: "Setting aside taxes immediately on 1099 income is what drives most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "Set aside 25% of every 1099 payment immediately", scoreDelta: 14, note: "This turns a scary April bill into money that's already covered." },
+              { id: 'd2', label: "Track 1099 income separately from W-2 income all year", scoreDelta: 8, note: "Clear records make filing far less stressful when the forms arrive." },
+              { id: 'd3', label: "Spend 1099 income as if it were fully take-home pay", scoreDelta: -12, note: "Nothing was withheld, so this money isn't fully available to spend." },
+              { id: 'd4', label: "Ignore self-employment tax entirely when budgeting freelance income", scoreDelta: -9, note: "This tax applies on top of regular income tax once net earnings pass $400." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'wv_t5', type: 'teach', title: 'Two Forms, One Responsible Habit',
+            concepts: [
+              {
+                term: 'The Core Habit',
+                plain: "Whether income comes with taxes withheld (W-2) or not (1099), the underlying habit is the same: know what's already been handled, and proactively handle what hasn't. That one habit prevents nearly every tax-season surprise.",
+                analogy: "It's like knowing which chores are on autopilot in a shared house and which ones nobody's actually doing, the risk is always in the second category.",
+                check: { statement: "The tax responsibility is identical for W-2 and 1099 income, since both eventually get reported.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'wv_boss', type: 'bossbattle', title: 'The Mixed-Income Year',
+            scenario: "Hammy's first full year out of school includes a W-2 internship, a 1099 freelance side gig earning $6,000, and no idea whether estimated quarterly payments apply. What does Hammy do?",
+            hintText: "Remember Estimated Quarterly Payments: this applies once you expect to owe $1,000+ in tax with no withholding on that income.",
+            choices: [
+              { id: 'a', label: "Calculate expected 1099 tax owed and set up quarterly estimated payments", consequence: { text: "Spreading the tax cost across the year avoids both a shocking April bill and an underpayment penalty.", delta: { moneyScore: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Ignore quarterly payments and plan to pay everything in April", consequence: { text: "This risks an underpayment penalty on top of a large lump-sum bill, exactly what quarterly payments are meant to avoid.", delta: { moneyScore: -10, checking: -300 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Set aside 25% of 1099 income but skip the formal quarterly payment process", consequence: { text: "The money is there when April arrives, but skipping the formal quarterly process could still mean a penalty despite having the cash on hand.", delta: { moneyScore: 2 }, xpMultiplier: 0.9 } },
+              { id: 'd', label: "Ask a free VITA clinic to help estimate and set up quarterly payments", consequence: { text: "Getting help estimating the right amount removes the guesswork entirely, at zero cost.", delta: { moneyScore: 10 }, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -2748,11 +5384,191 @@ const MODULES = [
         id: 'knowing_not_enough',
         topic: 'Why Knowing Isn\'t Enough',
         character: { name: 'Hammy', tagline: 'Knowing the right answer and still overspending' },
-        initialState: {},
+        initialState: { checking: 150, savings: 0, moneyScore: 50 },
+        bossAchievementId: 'gap_closer',
         chapters: [
-          { id: 'knowing_not_enough_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'kn1', type: 'story', title: 'The DoorDash Tag',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Why Knowing Isn't Enough." }
+              { speaker: 'intro', text: 'Hammy knows they should be saving. Just last week they said out loud, "I need to stop spending on DoorDash." Twenty minutes later, a friend tags them in a group order.' },
+              { speaker: 'Hammy', text: '"I LITERALLY just said that. Why did I say yes anyway?"' },
+              { speaker: 'narrator', text: "Knowing the right move and actually doing it are two completely different skills. Let's figure out why." },
+              { speaker: 'Hammy', text: '"Okay, because clearly just \'knowing better\' isn\'t working."' }
+            ]
+          },
+          {
+            id: 'kn_t1', type: 'teach', title: 'The Knowledge-Action Gap',
+            concepts: [
+              {
+                term: 'Knowledge-Action Gap',
+                plain: "This is the space between knowing the right financial move and actually doing it consistently. Financial decisions are driven as much by emotion, habit, and environment as by logic, so knowledge alone rarely changes behavior on its own.",
+                analogy: "It's like knowing exactly how a treadmill works and still not using it, understanding isn't the same as doing.",
+                check: { statement: "Knowing the right financial move is usually enough to guarantee you'll actually do it.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'kn_t2', type: 'teach', title: 'Willpower vs. Environment Design',
+            concepts: [
+              {
+                term: 'Environment Design',
+                plain: "Willpower fades, especially under stress or around friends. The more reliable fix is designing your environment, automatic transfers, separate accounts, fewer triggers, so the good choice takes less effort than the bad one.",
+                analogy: "It's like removing snacks from the house instead of just promising yourself you won't eat them, the environment does the work willpower can't.",
+                check: { statement: "Relying purely on willpower is generally the most reliable way to change financial behavior long-term.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'kn_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Knowledge-Action Gap', definition: 'The space between knowing the right move and actually doing it.' },
+              { term: 'Environment Design', definition: 'Structuring your surroundings so the good choice takes less effort.' },
+              { term: 'Trigger', definition: 'A specific emotion or situation, like boredom or a group chat, that sets off a spending urge.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'kn_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: a 24-hour waiting rule for non-essential purchases over a set amount, say $30, works because it doesn't require willpower in the moment, it just delays the decision until the emotional urge has already faded.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'kn_t3', type: 'teach', title: 'Triggers & Friction',
+            concepts: [
+              {
+                term: 'Adding Friction',
+                plain: "Friction means making the impulsive choice slightly harder, deleting a saved card, adding a 24-hour rule, muting a group chat during a tight week. It doesn't remove the option, it just adds enough of a pause for the rational brain to weigh in.",
+                analogy: "It's like putting the cookie jar on a high shelf instead of the counter, still reachable, just enough extra effort to make you pause and decide on purpose.",
+                check: { statement: "Adding friction to a spending trigger means making the impulsive choice completely impossible.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'kn_d1', type: 'decision',
+            title: "The Group Order Tag",
+            prompt: "Hammy gets tagged in a $22 DoorDash group order twenty minutes after saying they'd cut back. What should they do?",
+            hintText: "Think back to Adding Friction: is there a middle ground between an automatic yes and an awkward no?",
+            choices: [
+              {
+                id: 'a', label: 'Say yes automatically, it\'s just $22',
+                outcome: {
+                  text: "One $22 order rarely breaks a budget alone, but saying yes automatically every time is exactly the pattern that adds up.",
+                  delta: { checking: -22, moneyScore: -5 },
+                  compare: [{ label: 'This week\'s food spending if joined', value: 22 }, { label: 'This week\'s food spending if skipped', value: 0 }]
+                }
+              },
+              {
+                id: 'b', label: 'Pause 5 minutes, check the budget, then decide',
+                outcome: {
+                  text: "A short pause turns an automatic yes into an actual decision, sometimes it's still yes, but now it's on purpose.",
+                  delta: { moneyScore: 7 },
+                  compare: [{ label: 'This week\'s food spending if skipped', value: 0 }, { label: 'This week\'s food spending if joined', value: 22 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'kn_ms1', type: 'microsim', title: "Building In Friction",
+            prompt: "Hammy's monthly income is $600. Fixed costs already use $420. Help them fit a food/social spending cap and savings deposit in without going negative.",
+            hintText: "Add up the fixed costs ($220 + $120 + $50 + $30 = $420). That leaves $180 of the $600 to split between the two sliders before going negative.",
+            income: 600,
+            fixedCosts: [
+              { label: 'Rent share', amount: 220 },
+              { label: 'Meal plan top-up', amount: 120 },
+              { label: 'Phone & subscriptions', amount: 50 },
+              { label: 'Transit', amount: 30 }
+            ],
+            sliders: [
+              { id: 'foodSocial', label: 'Food & social spending cap', min: 20, max: 150, step: 10, default: 150 },
+              { id: 'savings', label: 'Savings deposit', min: 0, max: 150, step: 10, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative. Try a smaller spending cap or savings amount.", ok: false },
+              { maxLeftover: 19, text: "It fits, but the spending cap leaves little room for savings this month.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, the cap creates real friction and savings is still growing.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'kn_t4', type: 'teach', title: 'Automating the Right Choice',
+            concepts: [
+              {
+                term: 'Automating Good Behavior',
+                plain: "The most reliable habits run automatically, an auto-transfer to savings on payday, a spending cap that texts an alert, so the right choice happens by default instead of requiring a fresh decision every single time.",
+                analogy: "It's like a sprinkler system on a timer instead of remembering to water the plants every day, it happens whether or not you remember.",
+                check: { statement: "Habits that require remembering and willpower every time tend to be the most reliable long-term.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'kn_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Adding Friction', definition: 'Making an impulsive choice slightly harder, without making it impossible.' },
+              { term: 'Automating Good Behavior', definition: 'Setting up the right choice to happen by default, without a fresh decision each time.' },
+              { term: 'Knowledge-Action Gap', definition: 'The space between knowing the right move and actually doing it.' }
+            ],
+            hintText: "One term makes the BAD choice harder, one makes the GOOD choice automatic, and one names the GAP between the two.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'kn_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "If you know the right financial move, willpower alone is usually enough to follow through consistently.",
+            isTrue: false,
+            explanation: "It's a myth. Willpower fades, especially under stress or social pressure, systems and environment design are far more reliable.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'kn_myth1', type: 'mythcards', title: 'Knowledge-Action Myths',
+            cards: [
+              { myth: "Budgets simply don't work for most people.", isTrue: false, explanation: "The issue usually isn't the budget itself, it's relying on willpower instead of systems to follow it." },
+              { myth: "A 24-hour waiting rule can meaningfully reduce impulse purchases.", isTrue: true, explanation: "True, it gives the emotional urge time to fade before a decision is finalized." },
+              { myth: "Automatic transfers are less reliable than manually deciding to save each time.", isTrue: false, explanation: "Automation tends to be MORE reliable, since it doesn't depend on remembering or willpower in the moment." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'kn_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
+            hintTexts: [
+              "Think about what usually causes a budget to fail even when someone genuinely knows the right moves.",
+              "Think about what actually helps reduce impulse spending, willpower alone, or something else."
+            ]
+          },
+          {
+            id: 'kn_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Closing the Gap Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy's habits improve as they design their environment instead of relying on willpower. Tap each decision to see the impact.",
+            hintText: "Automating good choices and adding friction to impulsive ones are what drive most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "Set up an automatic transfer to savings on payday", scoreDelta: 13, note: "This removes the need for a fresh decision every single payday." },
+              { id: 'd2', label: "Add a 24-hour rule for non-essential purchases over $30", scoreDelta: 9, note: "This gives the emotional urge time to fade before the money's spent." },
+              { id: 'd3', label: "Rely purely on willpower with no systems in place", scoreDelta: -11, note: "Willpower fades fast, especially under stress or social pressure." },
+              { id: 'd4', label: "Mute a group chat during a genuinely tight week", scoreDelta: 6, note: "Removing a known trigger is a small but real form of friction." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'kn_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: what's ONE personal trigger that tends to cause you to overspend, and what's one piece of friction you could add to it?",
+            keywords: ['trigger', 'friction', 'habit', 'automatic', 'environment'],
+            fullDefinition: "Whatever the specific trigger, boredom, a group chat, a stressful week, the fix is the same shape: you don't need more willpower, you need a small piece of friction (a waiting rule, a muted chat, a deleted saved card) that turns an automatic yes into an actual decision.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'kn_boss', type: 'bossbattle', title: 'The Second Tag',
+            scenario: "A week after building a spending cap, Hammy gets tagged in ANOTHER group order, right after a stressful exam. The old automatic-yes urge is strong. What does Hammy do?",
+            hintText: "Remember Adding Friction and Automating Good Behavior: what system was already set up for exactly this moment?",
+            choices: [
+              { id: 'a', label: "Check the spending cap first, then decide based on what's actually left", consequence: { text: "The system does the work, Hammy decides with real numbers instead of an automatic yes.", delta: { moneyScore: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Say yes automatically since it's been a stressful week", consequence: { text: "Stress is exactly the trigger this whole quest was about, and the automatic yes wins again without a system in place.", delta: { moneyScore: -9, checking: -20 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Skip the order and go for a walk instead, a non-spending stress response", consequence: { text: "Addressing the actual trigger, stress, instead of the group order itself, breaks the automatic link between the two.", delta: { moneyScore: 10 }, xpMultiplier: 1.2 } },
+              { id: 'd', label: "Feel guilty, say yes anyway, and beat themselves up about it after", consequence: { text: "The guilt doesn't undo the spending, and it adds an emotional cost on top of the financial one.", delta: { moneyScore: -6, checking: -20 }, xpMultiplier: 0.7 } }
             ]
           }
         ]
@@ -2761,11 +5577,192 @@ const MODULES = [
         id: 'lifestyle_inflation',
         topic: 'Lifestyle Inflation: Why Spending Grows With Income',
         character: { name: 'Hammy', tagline: 'Noticing spending creep up with a raise' },
-        initialState: {},
+        initialState: { checking: 400, savings: 100, moneyScore: 50 },
+        bossAchievementId: 'inflation_aware',
         chapters: [
-          { id: 'lifestyle_inflation_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'li1', type: 'story', title: 'The Friend Group Upgrade',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Lifestyle Inflation: Why Spending Grows With Income." }
+              { speaker: 'intro', text: "Hammy's friend group keeps upgrading, concert tickets, new clothes, a spring break trip everyone's going on. Hammy's own spending has crept up to match, even though their income hasn't changed at all." },
+              { speaker: 'Hammy', text: '"Wait, my paycheck is the same as six months ago. Why does it feel so much tighter?"' },
+              { speaker: 'narrator', text: "This creep has a name, and understanding it is the first step to catching it before it goes further." },
+              { speaker: 'Hammy', text: '"Okay, name it for me, because right now it just feels like bad luck."' }
+            ]
+          },
+          {
+            id: 'li_t1', type: 'teach', title: 'Lifestyle Inflation',
+            concepts: [
+              {
+                term: 'Lifestyle Inflation',
+                plain: "This is when spending rises to match perceived social norms or income increases, often without a matching rise in savings. It happens gradually, each individual \"yes\" feels small, but they add up fast over months.",
+                analogy: "It's like a balloon that slowly fills to match whatever container it's in, spending naturally expands to meet whatever room feels available.",
+                check: { statement: "Lifestyle inflation is when spending increases to match income or social norms, without a matching rise in savings.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'li_t2', type: 'teach', title: 'Why It Happens Gradually',
+            concepts: [
+              {
+                term: 'The Gradual Creep',
+                plain: "Lifestyle inflation rarely shows up as one big decision, it's a series of small, individually reasonable \"yeses\" that compound. That gradual pace is exactly what makes it hard to notice until a budget that used to work suddenly doesn't.",
+                analogy: "It's like a slowly rising water level, no single wave is dramatic, but the overall level has changed a lot by the time you notice.",
+                check: { statement: "Lifestyle inflation usually happens as one single large spending decision, not a series of small ones.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'li_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Lifestyle Inflation', definition: 'Spending rising to match income or social norms, without matching savings growth.' },
+              { term: 'The Gradual Creep', definition: 'A series of small, individually reasonable spending increases that compound over time.' },
+              { term: 'Spending Cap', definition: 'A pre-set limit for a category, like social activities, decided before the situation arises.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'li_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: naming the pattern out loud, \"this is lifestyle inflation\", tends to make it easier to catch. It turns a vague feeling of tightness into a specific, addressable habit.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'li_t3', type: 'teach', title: 'Deciding Before the Raise Hits',
+            concepts: [
+              {
+                term: 'Deciding Upfront',
+                plain: "The most effective defense against lifestyle inflation is deciding, in advance, how much of any new income (a raise, a bonus) goes to savings or debt versus lifestyle spending, before it ever hits your account. Deciding after it arrives tends to default to \"spend it.\"",
+                analogy: "It's like assigning seats before a party starts, much easier than sorting it out once everyone's already settled somewhere.",
+                check: { statement: "Deciding how to split a raise before it arrives is more effective than deciding after it's already in your account.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'li_d1', type: 'decision',
+            title: "The Raise Lands",
+            prompt: "Hammy gets a raise from $16/hour to $17.50/hour. What's the smartest way to handle the extra income?",
+            hintText: "Think back to Deciding Upfront: does waiting until the extra money is already in checking make it easier or harder to route some toward savings?",
+            choices: [
+              {
+                id: 'a', label: 'Let the extra money flow into everyday spending without a plan',
+                outcome: {
+                  text: "Within a month, spending quietly rises to absorb the entire raise, and savings never sees a dime of it.",
+                  delta: { moneyScore: -6 },
+                  compare: [{ label: 'Extra saved per month if no plan', value: 0 }, { label: 'Extra saved per month if split upfront', value: 60 }]
+                }
+              },
+              {
+                id: 'b', label: 'Decide upfront to route half the raise to savings, half to lifestyle',
+                outcome: {
+                  text: "Hammy still gets to enjoy part of the raise, while savings grows with every single paycheck from now on.",
+                  delta: { savings: 60, moneyScore: 8 },
+                  compare: [{ label: 'Extra saved per month if split upfront', value: 60 }, { label: 'Extra saved per month if no plan', value: 0 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'li_ms1', type: 'microsim', title: "Splitting a Raise on Purpose",
+            prompt: "Hammy's new monthly income after the raise is $720. Fixed costs still only use $480. Help them decide how the extra room gets used.",
+            hintText: "Fixed costs are locked at $480. That leaves $240 of new room to split between the two sliders before going negative.",
+            income: 720,
+            fixedCosts: [
+              { label: 'Fixed monthly costs', amount: 480 }
+            ],
+            sliders: [
+              { id: 'savings', label: 'Additional savings from the raise', min: 0, max: 240, step: 20, default: 0 },
+              { id: 'lifestyle', label: 'Additional lifestyle spending', min: 0, max: 240, step: 20, default: 240 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That goes negative, double check the two sliders add up to the $240 available.", ok: false },
+              { maxLeftover: 239, text: "Notice how much of the raise is actually reaching savings versus lifestyle spending.", ok: true },
+              { maxLeftover: Infinity, text: "The raise is intentionally split, exactly the habit that prevents lifestyle inflation.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'li_t4', type: 'teach', title: "Social Comparison's Role",
+            concepts: [
+              {
+                term: 'Social Comparison',
+                plain: "Lifestyle inflation is accelerated by comparison, spending often tracks the people around you rather than your actual budget or goals. Recognizing \"I want this because everyone around me has it\" versus \"I actually want this for myself\" helps interrupt the pattern.",
+                analogy: "It's like adjusting your own thermostat based on a neighbor's setting instead of what's actually comfortable for you.",
+                check: { statement: "Spending habits are generally unaffected by the spending patterns of the people around you.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'li_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Deciding Upfront', definition: 'Committing to a split for new income before it ever arrives.' },
+              { term: 'Social Comparison', definition: "Spending that tracks the people around you rather than your own budget or goals." },
+              { term: 'Lifestyle Inflation', definition: 'Spending rising to match income or social norms, without matching savings growth.' }
+            ],
+            hintText: "One term is a TIMING habit, one is about COMPARING to others, and one is the overall PATTERN.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'li_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "Lifestyle inflation is usually the result of one big, obvious spending decision.",
+            isTrue: false,
+            explanation: "It's a myth. It's typically a series of small, individually reasonable increases that quietly compound over months.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'li_myth1', type: 'mythcards', title: 'Lifestyle Inflation Myths',
+            cards: [
+              { myth: "A raise should always translate into a proportional increase in everyday spending.", isTrue: false, explanation: "Deciding upfront how much goes to savings versus lifestyle prevents the entire raise from disappearing into spending." },
+              { myth: "Spending habits are influenced by the people you spend the most time around.", isTrue: true, explanation: "True, social comparison is a real accelerator of lifestyle inflation." },
+              { myth: "Setting a spending cap for social activities before a situation arises makes it easier to stick to.", isTrue: true, explanation: "True, deciding in advance removes the pressure of deciding in the moment." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'li_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 6],
+            hintTexts: [
+              "Think about what it's called when spending rises to match income or social norms without more savings to show for it.",
+              "Think about the healthiest way to handle a friend group activity that doesn't fit your current budget."
+            ]
+          },
+          {
+            id: 'li_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Staying Ahead of the Creep Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy get better at catching lifestyle inflation before it takes hold. Tap each decision to see the impact.",
+            hintText: "Deciding upfront and setting a spending cap for social activities are what drive most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "Decide the savings split for a raise before it hits the account", scoreDelta: 14, note: "This is the single most effective defense against lifestyle inflation." },
+              { id: 'd2', label: "Set a spending cap for social activities in advance", scoreDelta: 9, note: "Deciding the number ahead of time removes the in-the-moment pressure to match everyone else." },
+              { id: 'd3', label: "Let every raise flow directly into matching a friend group's spending", scoreDelta: -12, note: "This is lifestyle inflation happening in real time, with zero of the raise reaching savings." },
+              { id: 'd4', label: "Be upfront with friends about a budget instead of pretending otherwise", scoreDelta: 7, note: "Real friends tend to adjust, and honesty removes the pressure to overspend silently." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'li_t5', type: 'teach', title: 'A Raise Is a Choice Point, Not an Autopilot',
+            concepts: [
+              {
+                term: 'Treating Every Raise as a Choice Point',
+                plain: "Every raise, bonus, or windfall is a moment to consciously decide how it gets used, not a default signal to spend more. Treating it as a deliberate choice point, every time, is what actually breaks the lifestyle inflation cycle long-term.",
+                analogy: "It's like being handed a blank check with your name on the memo line, worth pausing to fill it in on purpose instead of letting it fill itself in.",
+                check: { statement: "The best long-term defense against lifestyle inflation is treating every raise as an automatic spending increase.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'li_boss', type: 'bossbattle', title: 'The Spring Break Trip',
+            scenario: "Hammy's friend group is planning a spring break trip that doesn't fit their current budget, but everyone's going and it's all anyone talks about. What does Hammy do?",
+            hintText: "Remember Deciding Upfront and Social Comparison: has Hammy actually set a number for this, or is the pressure driving the decision instead?",
+            choices: [
+              { id: 'a', label: "Decide a real budget first, then either find a cheaper way to join or opt out and say so honestly", consequence: { text: "A clear number and honest communication keep the friendship intact without blowing the budget.", delta: { moneyScore: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Go anyway and figure out the money later, possibly on a credit card", consequence: { text: "This is lifestyle inflation and social comparison combining at full strength, exactly the pattern this quest was built to catch.", delta: { moneyScore: -12, checking: -300 }, xpMultiplier: 0.5 } },
+              { id: 'c', label: "Make a vague excuse and skip it without explaining why", consequence: { text: "The budget stays safe, but an unexplained no, repeated enough times, can quietly strain friendships.", delta: { moneyScore: 2 }, xpMultiplier: 0.9 } },
+              { id: 'd', label: "Suggest a cheaper group alternative everyone could actually afford", consequence: { text: "This reframes the pressure into a shared problem to solve together, instead of an individual budget to defend alone.", delta: { moneyScore: 9 }, xpMultiplier: 1.15 } }
             ]
           }
         ]
@@ -3048,11 +6045,193 @@ const MODULES = [
         id: 'offer_letter',
         topic: 'Reading Your Offer Letter',
         character: { name: 'Hammy', tagline: 'Reading a job offer letter for the first time' },
-        initialState: {},
+        initialState: { checking: 200, savings: 100, moneyScore: 50 },
+        bossAchievementId: 'offer_reader',
         chapters: [
-          { id: 'offer_letter_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ol1', type: 'story', title: 'The Fine Print',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Reading Your Offer Letter." }
+              { speaker: 'intro', text: 'Hammy\'s offer letter lists "$70,000 total target compensation," plus a $5,000 signing bonus. There\'s a repayment clause near the bottom Hammy almost scrolled past entirely.' },
+              { speaker: 'Hammy', text: '"Wait, do I have to pay this bonus BACK under some condition? I almost missed that."' },
+              { speaker: 'narrator', text: "Offer letters are full of details like this, worth understanding before signing, not after." },
+              { speaker: 'Hammy', text: '"Okay, let\'s actually go through this letter line by line."' }
+            ]
+          },
+          {
+            id: 'ol_t1', type: 'teach', title: 'Base Salary vs. Total Target Compensation',
+            concepts: [
+              {
+                term: 'Total Target Compensation',
+                plain: "This headline number usually combines your guaranteed base salary with a TARGET bonus that isn't guaranteed. A \"$70,000 total target compensation\" offer built from a $60,000 base and a $10,000 target bonus means only $60,000 is actually promised.",
+                analogy: "It's like a restaurant menu price that includes an optional tip already factored in, the base price is what's actually guaranteed.",
+                check: { statement: "The full total target compensation number, including bonus, is always guaranteed regardless of performance.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ol_t2', type: 'teach', title: 'Signing Bonus Clawback Clauses',
+            concepts: [
+              {
+                term: 'Clawback Clause',
+                plain: "Many signing bonuses must be repaid, often on a prorated basis, if you leave before a set period, commonly 1-2 years. It's not free money with zero conditions, it's money tied to a minimum commitment.",
+                analogy: "It's like a phone carrier's device discount that gets clawed back if you cancel service early, the deal comes with strings attached.",
+                check: { statement: "Signing bonuses are always yours to keep with zero conditions attached.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ol_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Total Target Compensation', definition: 'Base salary plus a target bonus that is often not fully guaranteed.' },
+              { term: 'Clawback Clause', definition: 'A requirement to repay a signing bonus if you leave before a set period.' },
+              { term: 'Base Salary', definition: 'The guaranteed, predictable portion of your pay.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ol_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: it's completely normal, and expected, to take 24-48 hours to review a full offer letter before responding. No reasonable employer rescinds an offer because you asked for a day to read it carefully.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ol_t3', type: 'teach', title: 'PTO as Compensation',
+            concepts: [
+              {
+                term: 'PTO as Compensation',
+                plain: "Paid time off has real financial value, unused time off is essentially unpaid time if you need it and don't have enough banked. Two offers with identical salary but different PTO amounts are NOT actually equal offers.",
+                analogy: "It's like comparing two jobs with the same hourly rate but very different amounts of included sick days, the number alone doesn't tell the whole story.",
+                check: { statement: "Two job offers with the same salary but different amounts of PTO are effectively identical offers.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ol_d1', type: 'decision',
+            title: "The Clawback Clause",
+            prompt: "Hammy is excited about the $5,000 signing bonus and about to accept without reading the repayment clause closely. What should they do?",
+            hintText: "Think back to Clawback Clause: what's the actual condition attached to this bonus, and does it change how \"free\" it really is?",
+            choices: [
+              {
+                id: 'a', label: 'Accept immediately, a bonus is a bonus',
+                outcome: {
+                  text: "Hammy later realizes leaving within 12 months means repaying a prorated portion, a detail worth knowing upfront, not after accepting.",
+                  delta: { moneyScore: -6 },
+                  compare: [{ label: 'Bonus risk understood before signing', value: 0 }, { label: 'Bonus risk discovered after signing', value: 5000 }]
+                }
+              },
+              {
+                id: 'b', label: 'Read the full clause and factor the commitment period into the decision',
+                outcome: {
+                  text: "Hammy goes in with full information, the bonus is real, just tied to staying at least 12 months, an easy condition once it's actually understood upfront.",
+                  delta: { moneyScore: 8 },
+                  compare: [{ label: 'Bonus risk understood before signing', value: 0 }, { label: 'Bonus risk discovered after signing', value: 5000 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'ol_ms1', type: 'microsim', title: "Budgeting Off the Guaranteed Base",
+            prompt: "Hammy's offer has a $60,000 base ($4,300/month take-home) plus a NOT-guaranteed $10,000 target bonus. Build a budget using only the guaranteed base.",
+            hintText: "Fixed costs use $2,800. That leaves $1,500 of the guaranteed $4,300 monthly take-home to split between the two sliders before going negative.",
+            income: 4300,
+            fixedCosts: [
+              { label: 'Rent, utilities, groceries', amount: 2800 }
+            ],
+            sliders: [
+              { id: 'savings', label: 'Savings deposit', min: 0, max: 1000, step: 50, default: 0 },
+              { id: 'discretionary', label: 'Discretionary spending', min: 100, max: 1500, step: 50, default: 100 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That budget goes negative using only the guaranteed base. Try smaller amounts.", ok: false },
+              { maxLeftover: 199, text: "It fits on the guaranteed base alone, if the bonus arrives too, it's a genuine bonus, not a bailout.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, this budget works even in a year the target bonus isn't fully paid out.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'ol_spot1', type: 'spotcheck', title: 'Spot the Concerning Clauses',
+            intro: "Here's a sample offer letter paragraph. Tap any parts that are worth a closer look before signing.",
+            postingTitle: 'Offer Letter Excerpt',
+            segments: [
+              { id: 's1', text: "We are pleased to offer you a position with total target compensation of $70,000, ", isRedFlag: false, explanation: "A normal opening line, though remember: this figure blends guaranteed and non-guaranteed pay." },
+              { id: 's2', text: "consisting of a $60,000 base salary and a $10,000 target annual bonus based on company and individual performance. ", isRedFlag: true, explanation: "Worth flagging: this confirms the bonus is NOT guaranteed, it depends on performance and company results." },
+              { id: 's3', text: "You will also receive a $5,000 signing bonus, payable within your first 30 days. ", isRedFlag: false, explanation: "A clear, straightforward benefit on its own, the condition comes in the next line." },
+              { id: 's4', text: "This signing bonus must be repaid in full if your employment ends within 12 months of your start date, ", isRedFlag: true, explanation: "This is the clawback clause, exactly the detail worth catching before accepting." },
+              { id: 's5', text: "and you will be eligible for 15 days of PTO annually, accrued monthly.", isRedFlag: false, explanation: "Useful to know for comparing against other offers, but not a red flag on its own." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'ol_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'PTO as Compensation', definition: 'Paid time off has real financial value, even though it isn\'t part of the salary number.' },
+              { term: 'Target Bonus', definition: 'A bonus amount tied to performance or company results, not guaranteed.' },
+              { term: 'Guaranteed Base', definition: "The part of an offer you can safely count on and budget around."}
+            ],
+            hintText: "One term is a non-salary BENEFIT, one is a NOT-guaranteed bonus, and one is what's actually PROMISED.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ol_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "A \"total target compensation\" number on an offer letter is fully guaranteed, just like a base salary.",
+            isTrue: false,
+            explanation: "It's a myth. The bonus portion is usually tied to performance or company results, and may not be fully paid out every year.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ol_myth1', type: 'mythcards', title: 'Offer Letter Myths',
+            cards: [
+              { myth: "A signing bonus is always yours to keep no matter what happens next.", isTrue: false, explanation: "Clawback clauses commonly require repayment if you leave before a set period." },
+              { myth: "Two offers with identical salary but very different PTO amounts are financially equivalent.", isTrue: false, explanation: "PTO has real value, more paid time off is a meaningful part of total compensation." },
+              { myth: "It's reasonable to take 24-48 hours to review a full offer before responding.", isTrue: true, explanation: "True, no reasonable employer penalizes a candidate for asking for a day to review the details." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ol_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [11, 6],
+            hintTexts: [
+              "Think about which portion of a \"total target compensation\" offer is actually guaranteed.",
+              "Think about what a signing bonus clawback clause requires if you leave too soon."
+            ]
+          },
+          {
+            id: 'ol_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Offer-Reading Smarts Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy get sharper at reading the fine print. Tap each decision to see the impact.",
+            hintText: "Reading the full letter and budgeting off the guaranteed base are what drive most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "Read the entire offer letter, including the fine print, before responding", scoreDelta: 13, note: "This is exactly how a clawback clause gets caught before it's a surprise." },
+              { id: 'd2', label: "Budget off the guaranteed base salary, not the total target number", scoreDelta: 9, note: "A budget built on non-guaranteed bonus money is a risky budget." },
+              { id: 'd3', label: "Accept a signing bonus without checking for a repayment condition", scoreDelta: -11, note: "This is exactly the kind of detail that can turn into an unexpected bill later." },
+              { id: 'd4', label: "Ignore PTO differences when comparing two similarly-paid offers", scoreDelta: -6, note: "PTO is part of total compensation, ignoring it means comparing offers incompletely." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'ol_t4', type: 'teach', title: 'Ask Before You Sign, Not After',
+            concepts: [
+              {
+                term: 'Asking Clarifying Questions',
+                plain: "Nothing in an offer letter is off-limits to ask about: what percentage of the target bonus is typically paid out historically, exactly what the clawback terms cover, when PTO starts accruing. Asking before signing is normal and expected, not pushy.",
+                analogy: "It's like asking about a lease's early termination fee before signing, not after you've already moved in.",
+                check: { statement: "Asking clarifying questions about bonus structure or clawback terms before signing is considered unprofessional.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ol_boss', type: 'bossbattle', title: 'The Signing Deadline',
+            scenario: "Hammy's offer letter gives 3 days to sign. It includes a target bonus, a signing bonus with a clawback clause, and PTO details Hammy hasn't fully compared to a second offer yet. What does Hammy do?",
+            hintText: "Remember: reading the full letter and asking clarifying questions is normal, even on a tight deadline.",
+            choices: [
+              { id: 'a', label: "Ask for a short extension if needed, read every clause, and ask clarifying questions before signing", consequence: { text: "A day or two of careful review, plus a few good questions, is worth far more than rushing a multi-year decision.", delta: { moneyScore: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Sign immediately without reading the clawback or PTO details closely", consequence: { text: "Hammy accepts without understanding real conditions attached to the bonus and how the PTO stacks up against the other offer.", delta: { moneyScore: -10 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Compare the guaranteed base and PTO against the other offer, then decide based on those, not the bonus", consequence: { text: "Weighing the guaranteed parts most heavily is exactly the right instinct when comparing two offers.", delta: { moneyScore: 9 }, xpMultiplier: 1.15 } },
+              { id: 'd', label: "Let the deadline pressure force a same-day decision without reviewing anything closely", consequence: { text: "Rushing a multi-year decision under artificial pressure risks missing a detail that mattered.", delta: { moneyScore: -6 }, xpMultiplier: 0.75 } }
             ]
           }
         ]
@@ -3061,11 +6240,186 @@ const MODULES = [
         id: 'negotiate_salary',
         topic: 'Negotiating Your First Salary',
         character: { name: 'Hammy', tagline: 'About to accept a salary offer without negotiating' },
-        initialState: {},
+        initialState: { checking: 200, savings: 100, moneyScore: 50 },
+        bossAchievementId: 'negotiator',
         chapters: [
-          { id: 'negotiate_salary_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ns1', type: 'story', title: '$58,000, About to Accept on the Spot',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Negotiating Your First Salary." }
+              { speaker: 'intro', text: "Hammy gets a job offer: $58,000. Thrilled, they're about to accept on the spot. A friend just negotiated theirs from $55,000 to $60,000 with a single email." },
+              { speaker: 'Hammy', text: '"Wait, they just... asked? And it worked?"' },
+              { speaker: 'narrator', text: "Before Hammy hits accept, let's talk about what that one email actually did, and why silence is the more expensive choice." },
+              { speaker: 'Hammy', text: '"Okay, I want to understand this before I possibly leave money on the table."' }
+            ]
+          },
+          {
+            id: 'ns_t1', type: 'teach', title: 'Silence Is the Most Expensive Mistake',
+            concepts: [
+              {
+                term: 'The Cost of Not Asking',
+                plain: "The biggest mistake new grads make isn't negotiating badly, it's never asking at all, assuming the first number is final. Most starting offers have flexibility built in, and simply asking \"is there room to negotiate?\" costs nothing.",
+                analogy: "It's like never asking for a discount at checkout because you assume the price is fixed, sometimes it genuinely is, but you'll never know unless you ask.",
+                check: { statement: "Most companies expect their first salary offer to be final with zero room to negotiate.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ns_t2', type: 'teach', title: 'Anchoring to Market Research',
+            concepts: [
+              {
+                term: 'Anchoring to Research',
+                plain: "Effective negotiation isn't demanding a number out of thin air, it's researching market rate for the role and location (sites like Glassdoor or Levels.fyi, or a school's career center), then anchoring your ask to that data.",
+                analogy: "It's like citing comparable home sales before making an offer, the number means a lot more backed by real data than a guess.",
+                check: { statement: "Effective salary negotiation is best done without any market research to back up the number.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ns_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'The Cost of Not Asking', definition: 'Assuming the first offer is final, when most have built-in flexibility.' },
+              { term: 'Anchoring to Research', definition: 'Backing a counter-offer number with market rate data for the role and location.' },
+              { term: 'Counter-Offer', definition: 'A professional, specific request for more, typically made in writing.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ns_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: you don't need a competing offer in hand to negotiate. A reasonable, researched ask is enough on its own, competing offers help, but they're not a requirement.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ns_t3', type: 'teach', title: 'Why the Gap Compounds',
+            concepts: [
+              {
+                term: 'Compounding Salary Gaps',
+                plain: "Future raises, bonuses, and even new job offers are often calculated as a percentage of your current salary. A $5,000 gap at your first job doesn't stay $5,000, it widens every year raises get calculated as a percentage, similar to compound interest.",
+                analogy: "It's like two savings accounts starting at slightly different balances, both earning the same percentage return, the gap between them keeps growing every year, not shrinking.",
+                check: { statement: "An early salary gap tends to widen over a career because future raises are often a percentage of current salary.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ns_d1', type: 'decision',
+            title: "The Reply Email",
+            prompt: "Hammy's $58,000 offer arrives with a request to reply within a week. What's the smartest move?",
+            hintText: "Think back to The Cost of Not Asking: what's the actual risk of simply asking a professional, researched question?",
+            choices: [
+              {
+                id: 'a', label: 'Accept immediately at $58,000',
+                outcome: {
+                  text: "Hammy never finds out if there was room to negotiate, and that gap compounds through every future percentage-based raise.",
+                  delta: { moneyScore: -6 },
+                  compare: [{ label: 'Salary if never negotiated', value: 58000 }, { label: 'Salary if negotiated up', value: 61000 }]
+                }
+              },
+              {
+                id: 'b', label: 'Send a professional counter-offer backed by market research',
+                outcome: {
+                  text: "A researched, professional ask costs nothing to send and can mean thousands more per year, compounding through every future raise.",
+                  delta: { moneyScore: 8 },
+                  compare: [{ label: 'Salary if negotiated up', value: 61000 }, { label: 'Salary if never negotiated', value: 58000 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'ns_ms1', type: 'microsim', title: "Budgeting the Negotiated Raise",
+            prompt: "Hammy successfully negotiated from $58,000 to $61,000, about $250 more per month take-home. Decide how the extra room gets used.",
+            hintText: "The extra $250/month is new room on top of an already-working budget. Split it between the two sliders.",
+            income: 250,
+            fixedCosts: [],
+            sliders: [
+              { id: 'savings', label: 'Additional savings from the negotiated raise', min: 0, max: 250, step: 25, default: 0 },
+              { id: 'lifestyle', label: 'Additional lifestyle spending', min: 0, max: 250, step: 25, default: 250 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "Double check the two sliders add up to the $250 available.", ok: false },
+              { maxLeftover: 249, text: "Notice how much of the negotiated gain is reaching savings versus lifestyle spending.", ok: true },
+              { maxLeftover: Infinity, text: "The negotiated raise is intentionally split, getting real value from the negotiation instead of letting it quietly disappear.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'ns_price1', type: 'priceisright', title: 'The Price Is Right: One Negotiation, Decades Later',
+            prompt: "Hammy negotiates an extra $5,000/year starting at 22, and invests all of it monthly at a 7% average return until 65. Guess what that one negotiation is worth by retirement.",
+            hintText: "This is compound interest at work across 43 years, the number is much bigger than $5,000 × 43.",
+            actualValue: 1400000, guessRange: { min: 0, max: 2000000, step: 50000 },
+            explanation: "Roughly $1.4 million. One negotiated $5,000/year raise, invested consistently from 22 to 65 at a 7% average return, compounds into a genuinely life-changing number, far more than the simple $5,000 × 43 years might suggest.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'ns_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Compounding Salary Gaps', definition: 'An early salary difference that widens over a career through percentage-based raises.' },
+              { term: 'Job-Hopping for Market Value', definition: 'Periodically checking outside offers, since internal raises are often smaller than external ones.' },
+              { term: 'Anchoring to Research', definition: 'Backing a counter-offer number with market rate data for the role and location.' }
+            ],
+            hintText: "One term is about a GAP growing over time, one is about CHECKING your value elsewhere, and one is about BACKING an ask with data.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ns_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "You need a competing job offer in hand before you're allowed to negotiate a salary.",
+            isTrue: false,
+            explanation: "It's a myth. A reasonable, researched ask is enough on its own, a competing offer can help, but it's not a requirement.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ns_myth1', type: 'mythcards', title: 'Salary Negotiation Myths',
+            cards: [
+              { myth: "Asking if there's room to negotiate risks having the entire offer pulled.", isTrue: false, explanation: "A professional, reasonable question almost never results in a rescinded offer." },
+              { myth: "A $5,000 starting salary gap tends to widen, not shrink, over a career.", isTrue: true, explanation: "True, since future raises are often a percentage of current salary, the gap compounds year after year." },
+              { myth: "Switching employers periodically is a normal way to grow income, since internal raises are often smaller.", isTrue: true, explanation: "True, internal raises are frequently capped lower than what a new employer might offer." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ns_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
+            hintTexts: [
+              "Think about the single biggest mistake new grads make when they receive their first offer.",
+              "Think about what backs up an effective salary negotiation ask, beyond just naming a number."
+            ]
+          },
+          {
+            id: 'ns_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Negotiation Confidence Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy get more confident negotiating. Tap each decision to see the impact.",
+            hintText: "Asking the question and backing it with research are what drive most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "Ask \"is there room to negotiate?\" instead of accepting immediately", scoreDelta: 14, note: "This single question costs nothing and can mean thousands more per year." },
+              { id: 'd2', label: "Research market rate before naming a counter-offer number", scoreDelta: 9, note: "A researched ask lands far better than a number pulled from thin air." },
+              { id: 'd3', label: "Accept the first offer immediately, assuming it's final", scoreDelta: -12, note: "This is the single most expensive mistake new grads make." },
+              { id: 'd4', label: "Check market value every couple of years, even while happy at a job", scoreDelta: 7, note: "Knowing your market value keeps internal raises honest." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'ns_t5', type: 'teach', title: 'A Professional Ask, Every Time',
+            concepts: [
+              {
+                term: 'Making It a Habit, Not a One-Time Event',
+                plain: "Negotiating isn't a one-time trick for a first job, it's a habit worth repeating at every raise cycle and every new offer for the rest of a career. The specific number changes, the habit of asking, researching, and asking professionally in writing stays the same.",
+                analogy: "It's like flossing, one good day doesn't matter nearly as much as making it a repeated habit over years.",
+                check: { statement: "Negotiating is a one-time skill only relevant for a person's very first job offer.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ns_boss', type: 'bossbattle', title: 'The Second Offer',
+            scenario: "Three years in, Hammy gets a competing offer paying 15% more for a similar role, while their current employer's typical raise is 3%. What does Hammy do?",
+            hintText: "Remember Compounding Salary Gaps and Job-Hopping for Market Value: how does a bigger early number affect every future raise calculated as a percentage of it?",
+            choices: [
+              { id: 'a', label: "Bring the competing offer to the current employer as leverage, or take it if they can't match it", consequence: { text: "Either way, Hammy captures a bigger percentage gain now, which compounds through every future raise from here.", delta: { moneyScore: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Stay loyal and ignore the competing offer entirely", consequence: { text: "Loyalty has value, but a 3% internal raise versus a 15% external one is a gap that compounds for years.", delta: { moneyScore: -6 }, xpMultiplier: 0.8 } },
+              { id: 'c', label: "Take the competing offer without ever mentioning it to the current employer", consequence: { text: "This captures the raise, though a conversation first might have surfaced a counter-offer worth considering too.", delta: { moneyScore: 6 }, xpMultiplier: 1.05 } },
+              { id: 'd', label: "Ignore market value checks entirely going forward since this worked out once", consequence: { text: "One good outcome doesn't replace the ongoing habit, market value is worth rechecking periodically, not just once.", delta: { moneyScore: 2 }, xpMultiplier: 0.9 } }
             ]
           }
         ]
@@ -3289,14 +6643,16 @@ const MODULES = [
         id: 'job_scams',
         topic: 'Fake Job Offers',
         character: { name: 'Hammy', tagline: 'Applying to a dozen summer jobs online' },
-        initialState: { savings: 450 },
+        initialState: { savings: 450, checking: 200, moneyScore: 50 },
+        bossAchievementId: 'scam_spotter',
         chapters: [
           {
             id: 'jb0', type: 'story', title: 'The Perfect Posting',
             beats: [
               { speaker: 'intro', text: "Hammy's applying to summer jobs between classes, mostly remote gigs that fit around a class schedule. One posting stands out immediately: great pay, almost no requirements." },
               { speaker: 'Hammy', text: '"$38 an hour for data entry? And they want to start THIS week? Okay, where do I sign?"' },
-              { speaker: 'narrator', text: "Let's slow down before Hammy replies. A posting that looks too good is worth a second look." }
+              { speaker: 'narrator', text: "Let's slow down before Hammy replies. A posting that looks too good is worth a second look." },
+              { speaker: 'Hammy', text: '"Okay, walk me through what to actually check before I reply to anything."' }
             ]
           },
           {
@@ -3318,6 +6674,20 @@ const MODULES = [
             xpOnComplete: 2
           },
           {
+            id: 'jb_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Pay-Upfront / Overpayment Scam', definition: 'A "job" asking you to pay first, or sending a check to partially wire back.' },
+              { term: 'Personal-Channel Push', definition: 'Getting moved off the platform into WhatsApp or personal email, with no paper trail.' },
+              { term: 'Direction of Money', definition: 'Money should flow FROM an employer TO you, never the reverse before you\'re paid.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'jb_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: legitimate companies almost always have a verifiable presence, an official careers page, a LinkedIn company profile with real employees, reviews on Glassdoor. A quick search before replying costs nothing and catches most fakes instantly.",
+            xpOnComplete: 1
+          },
+          {
             id: 'jb2', type: 'spotcheck', title: 'Spot the Red Flags',
             intro: "Below is a real-looking job posting. Tap every phrase you think is a red flag, then hit Continue to see what you caught.",
             postingTitle: 'Remote Data Entry Assistant — $38/hr, Start This Week!',
@@ -3331,11 +6701,118 @@ const MODULES = [
             ],
             xpOnComplete: 4
           },
-          { id: 'jb3', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
+          {
+            id: 'jb_t2', type: 'teach', title: 'Verifying an Employer Before Replying',
+            concepts: [
+              {
+                term: 'Verifying an Employer',
+                plain: "Before responding to any promising job post, a quick check helps: does the company have a real careers page, a LinkedIn company profile with actual employees listed, and reviews you can find independently? A company that's impossible to verify outside the job post itself is a major warning sign.",
+                analogy: "It's like checking a restaurant has real reviews and an actual address before ordering, not just trusting the flyer someone handed you.",
+                check: { statement: "A company that's impossible to find any information about outside the job posting itself is a warning sign.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'jb_d1', type: 'decision',
+            title: "The 'Skills Assessment' Fee",
+            prompt: "A different posting says Hammy passed the initial screening, but must pay a $45 'skills assessment platform fee' to proceed to the paid interview round. What should Hammy do?",
+            hintText: "Think back to Direction of Money: does a real employer typically charge YOU to be considered for a job?",
+            choices: [
+              {
+                id: 'a', label: "Pay the $45 fee to keep moving forward in the process",
+                outcome: {
+                  text: "The 'interview' never materializes, and the fee, along with the company, disappears entirely.",
+                  delta: { checking: -45, moneyScore: -6 },
+                  compare: [{ label: 'Lost to the fee', value: 45 }, { label: 'Lost if declined', value: 0 }]
+                }
+              },
+              {
+                id: 'b', label: "Decline, real employers don't charge candidates to be considered",
+                outcome: {
+                  text: "No loss, and no real interview was ever waiting on the other side of that fee anyway.",
+                  delta: { moneyScore: 8 },
+                  compare: [{ label: 'Lost if declined', value: 0 }, { label: 'Lost to the fee', value: 45 }]
+                }
+              }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'jb_ms1', type: 'microsim', title: "Budgeting a Real Job Search",
+            prompt: "Hammy has $150 set aside for summer job-search costs (professional clothes, transit to interviews). Help them fit real search costs and savings in without going negative.",
+            hintText: "Real job-search costs should never include paying a company just to be considered. Balance both sliders against the $150 total.",
+            income: 150,
+            fixedCosts: [],
+            sliders: [
+              { id: 'searchCosts', label: 'Real job-search costs (clothes, transit)', min: 0, max: 100, step: 10, default: 50 },
+              { id: 'savings', label: 'Savings deposit', min: 0, max: 150, step: 10, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That goes negative. A real job search shouldn't cost more than this budget allows.", ok: false },
+              { maxLeftover: 149, text: "Reasonable, and remember: no legitimate employer ever charges you a fee to be considered.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, a real job search costs very little, any request for a large upfront fee is the red flag itself.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'jb_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Verifying an Employer', definition: 'Checking for a real careers page, LinkedIn presence, and independent reviews.' },
+              { term: 'Skills Assessment Fee Scam', definition: 'Being charged to advance in a hiring process, a request real employers don\'t make.' },
+              { term: 'Overpayment Check Scam', definition: "A check for more than owed, with a request to wire back the difference before it bounces." }
+            ],
+            hintText: "One term is a research HABIT, and the other two are specific SCAM patterns.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'jb_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "A job that pays significantly above market rate for the skill level required is usually just a great opportunity.",
+            isTrue: false,
+            explanation: "It's a myth. Pay far above market rate for simple work, especially paired with urgency, is one of the most common lures in job scams.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'jb_myth1', type: 'mythcards', title: 'Job Scam Myths',
+            cards: [
+              { myth: "A bank deposits a check and clears the funds, so the check must be real.", isTrue: false, explanation: "Banks make funds available quickly, but a fraudulent check can still bounce weeks later, leaving you responsible for the full amount." },
+              { myth: "Legitimate employers collect direct deposit information through official onboarding, after a signed offer.", isTrue: true, explanation: "True, never before, and never through a personal chat app." },
+              { myth: "Being asked to pay a fee to advance in a hiring process is a normal part of competitive jobs.", isTrue: false, explanation: "Real employers never charge candidates to be considered or to advance in an interview process." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'jb3', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
             hintTexts: [
               "Think about WHEN a real employer needs your banking details — before or after you've signed something official?",
               "Think about the direction money is supposed to flow when you're the one being hired."
             ]
+          },
+          {
+            id: 'jb_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Scam-Spotting Confidence Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy get sharper at spotting job scams. Tap each decision to see the impact.",
+            hintText: "Verifying employers and refusing any upfront fee are what drive most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "Verify a company's careers page and LinkedIn presence before replying", scoreDelta: 13, note: "A company that can't be found anywhere else is a major warning sign." },
+              { id: 'd2', label: "Refuse to pay any fee to advance in a hiring process", scoreDelta: 12, note: "Real employers never charge candidates money to be considered." },
+              { id: 'd3', label: "Send banking details before any signed offer, just to seem eager", scoreDelta: -14, note: "This is exactly the moment a job scam is designed to exploit." },
+              { id: 'd4', label: "Deposit an unexpectedly large employer check and wire back the difference", scoreDelta: -13, note: "This is the classic overpayment scam, the check bounces after the wire is already gone." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'jb_t3', type: 'teach', title: 'Reporting Protects Other Students Too',
+            concepts: [
+              {
+                term: 'Reporting a Scam Listing',
+                plain: "Beyond protecting yourself, reporting a suspicious listing to the job board and your school's career center can get it taken down before it reaches other students. Scam job posts often target the exact same job boards repeatedly.",
+                analogy: "It's like reporting a pothole, fixing it for yourself matters less than making sure the next person doesn't hit it too.",
+                check: { statement: "Reporting a suspicious job listing can help protect other students searching the same job boards.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
           },
           {
             id: 'jb4', type: 'bossbattle', title: 'GlobalHire Solutions',
@@ -3362,14 +6839,16 @@ const MODULES = [
         id: 'housing_scams',
         topic: 'Housing & Rental Scams',
         character: { name: 'Hammy', tagline: "Apartment hunting for next year with two roommates" },
-        initialState: { savings: 450 },
+        initialState: { savings: 450, checking: 200, moneyScore: 50 },
+        bossAchievementId: 'housing_savvy',
         chapters: [
           {
             id: 'hs0', type: 'story', title: 'The Listing',
             beats: [
               { speaker: 'intro', text: "Hammy and two roommates are hunting for a place near campus for next year, and rent nearby is brutal — most places are well over $1,000 a month." },
               { speaker: 'Hammy', text: '"Wait, this one\'s $650 a month and it looks amazing? That has to be a typo."' },
-              { speaker: 'narrator', text: "Maybe. Or maybe it's designed to look too good to pass up. Let's check it out properly before anyone sends a dollar." }
+              { speaker: 'narrator', text: "Maybe. Or maybe it's designed to look too good to pass up. Let's check it out properly before anyone sends a dollar." },
+              { speaker: 'Hammy', text: '"Okay, tell me exactly what to check before we get excited about this."' }
             ]
           },
           {
@@ -3391,12 +6870,33 @@ const MODULES = [
             xpOnComplete: 2
           },
           {
+            id: 'hs_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Deposit-Before-Viewing', definition: 'Being asked for money before the unit is verified or shown, the scam working as designed.' },
+              { term: '"Overseas Landlord" + Urgency', definition: 'A convenient excuse to avoid meeting, paired with pressure to act fast.' },
+              { term: 'Borrowed Platform Trust', definition: "Assuming a listing is legitimate just because it's on a trusted site." }
+            ],
+            xpOnComplete: 4
+          },
+          {
             id: 'hs2', type: 'poll', title: 'What Do Most People Think?',
             intro: "Before Hammy deals with this listing, take a guess. Tap True or False, then see the answer.",
             statement: 'If an apartment listing is posted on Zillow or Apartments.com, it must be legitimate.',
             isTrue: false,
             explanation: "It's a myth. Scammers regularly post on trusted, legitimate platforms — the platform hosting a listing doesn't mean anyone verified who posted it or that the deal is real.",
             xpOnComplete: 2
+          },
+          {
+            id: 'hs_t2', type: 'teach', title: 'Verifying the Real Owner',
+            concepts: [
+              {
+                term: 'Verifying Ownership',
+                plain: "Beyond touring the unit, it's worth confirming the person you're paying actually owns or manages the property, county property records are often public and searchable online, and a legitimate leasing office will have a real address and staff you can call.",
+                analogy: "It's like checking a car's title matches the seller's name before handing over cash, ownership matters as much as the item itself.",
+                check: { statement: "Touring a unit in person is enough on its own, without ever needing to confirm who actually owns it.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
           },
           {
             id: 'hs3', type: 'decision', title: 'The Move-In Deadline',
@@ -3418,6 +6918,35 @@ const MODULES = [
             ],
             xpOnComplete: 5
           },
+          {
+            id: 'hs_ms1', type: 'microsim', title: "Budgeting a Real Deposit Safely",
+            prompt: "Hammy's real, verified apartment needs a $500 deposit plus first month's $1,100 rent, split three ways with roommates. Help Hammy fit their $550 share and some savings in without going negative.",
+            hintText: "Hammy's share of deposit + rent is $550 total. Balance that against savings from a $700 available amount.",
+            income: 700,
+            fixedCosts: [
+              { label: "Hammy's share of deposit + first month's rent", amount: 550 }
+            ],
+            sliders: [
+              { id: 'savings', label: 'Savings kept as a cushion', min: 0, max: 150, step: 10, default: 0 },
+              { id: 'discretionary', label: 'Move-in extras', min: 0, max: 150, step: 10, default: 20 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That goes negative. Try smaller amounts on one of the sliders.", ok: false },
+              { maxLeftover: 19, text: "It fits, a verified deposit is a real cost worth planning for.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, the real deposit is covered with a cushion still intact.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'hs_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Verifying Ownership', definition: 'Confirming the person collecting rent actually owns or manages the property.' },
+              { term: 'Wire Transfer Risk', definition: 'A payment method with even less recourse than Venmo once money is sent.' },
+              { term: 'Live Video Tour', definition: 'A reasonable substitute for an in-person tour when distance makes it hard to visit.' }
+            ],
+            hintText: "One term is about confirming WHO owns the place, one is about a risky PAYMENT method, and one is a reasonable ALTERNATIVE to an in-person visit.",
+            xpOnComplete: 4
+          },
           { id: 'hs4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 3],
             hintTexts: [
               "Think about the three signals together: a price that's too good, pressure to act fast, and no way to actually see the place.",
@@ -3427,6 +6956,40 @@ const MODULES = [
           { id: 'hs5', type: 'hint', tag: "🎉 Hammy's Tip",
             text: "You don't need to treat every listing or DM like a threat — most apartments are exactly what they say they are. The goal isn't paranoia, it's knowing the handful of patterns that actually matter, so you can move fast and confident on the real ones.",
             xpOnComplete: 1
+          },
+          {
+            id: 'hs_myth1', type: 'mythcards', title: 'Housing Scam Myths',
+            cards: [
+              { myth: "A listing on a trusted platform like Zillow is guaranteed to be legitimate.", isTrue: false, explanation: "Scammers regularly post on trusted platforms, the platform's reputation doesn't vouch for any one listing." },
+              { myth: "A live video call touring the unit is a reasonable substitute for an in-person visit when distance is a factor.", isTrue: true, explanation: "True, the key is seeing the actual unit live, not just photos, regardless of the format." },
+              { myth: "A wire transfer offers similar protection to a credit card if a rental deal turns out to be fake.", isTrue: false, explanation: "Wire transfers have very little recourse once sent, often even less than P2P apps like Venmo." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'hs_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Housing-Search Confidence Climb',
+            meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
+            intro: "Watch Hammy get sharper at spotting housing scams. Tap each decision to see the impact.",
+            hintText: "Insisting on a real tour and verifying ownership are what drive most of the gains here.",
+            decisions: [
+              { id: 'd1', label: "Insist on touring the unit, in person or live video, before paying anything", scoreDelta: 14, note: "This single habit catches nearly every fake listing before money moves." },
+              { id: 'd2', label: "Verify the actual owner through public property records", scoreDelta: 9, note: "Confirming who actually owns the property adds another layer of protection." },
+              { id: 'd3', label: "Send a deposit because the listing said two other people were asking", scoreDelta: -13, note: "Manufactured urgency is one of the most common rental-scam tactics." },
+              { id: 'd4', label: "Switch to a wire transfer because the \"landlord\" says Venmo is having issues", scoreDelta: -11, note: "A payment method switch away from any buyer protection is a major warning sign." }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'hs_t3', type: 'teach', title: 'When a Deal Is Actually Real',
+            concepts: [
+              {
+                term: 'Confidence, Not Paranoia',
+                plain: "The goal isn't suspicion of every listing, most apartments are exactly what they say they are. It's recognizing the handful of patterns, payment before viewing, urgency, an unreachable owner, so real deals can move fast with confidence and fake ones get caught early.",
+                analogy: "It's like knowing the specific signs of a counterfeit bill, not distrusting every dollar you're handed, just knowing what to check.",
+                check: { statement: "The goal of learning these patterns is to treat every listing with equal suspicion.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
           },
           {
             id: 'hs6', type: 'bossbattle', title: 'The Wire Transfer "Upgrade"',
@@ -7357,15 +10920,27 @@ function renderSubQuestResults(mod, qp, newAchs) {
   document.getElementById('res-replay').addEventListener('click', () => startQuest(mod.id, state.activeQuestId));
 }
 
+// Per-module quests track different dashboard stats (credit score, portfolio value, a
+// mistake-avoidance meter, etc.) — this is the one place that knows how to label/format
+// each. Unlisted keys default to a plain rounded number, not money.
+const DASHBOARD_STAT_META = {
+  creditScore: { label: 'Credit Score', isMoney: false },
+  checking: { label: 'Checking', isMoney: true },
+  savings: { label: 'Savings', isMoney: true },
+  // Shared 0-100 "how are you doing" meter for every non-credit module's simulator chapter
+  // (credit keeps its own 300-850 creditScore meter) — one generic gauge reused everywhere
+  // instead of a bespoke dashboard stat per module.
+  moneyScore: { label: 'Money Smarts', isMoney: false },
+  portfolioValue: { label: 'Portfolio', isMoney: true },
+};
 function renderQuestDashboard(mod) {
   const dash = getQP(mod).dashboard;
-  const labels = { creditScore: 'Credit Score', checking: 'Checking', savings: 'Savings' };
   const el = document.getElementById('quest-dashboard');
   el.innerHTML = Object.keys(dash).map(key => {
-    const isMoney = key !== 'creditScore';
+    const meta = DASHBOARD_STAT_META[key] || { label: key, isMoney: false };
     return `<div class="quest-stat-chip" data-key="${key}">
-      <span class="qs-label">${labels[key] || key}</span>
-      <span class="qs-val">${isMoney ? formatMoney(dash[key]) : Math.round(dash[key])}</span>
+      <span class="qs-label">${meta.label}</span>
+      <span class="qs-val">${meta.isMoney ? formatMoney(dash[key]) : Math.round(dash[key])}</span>
     </div>`;
   }).join('');
 }
@@ -7387,7 +10962,7 @@ function applyQuestStateDelta(mod, delta) {
     const chipWrap = document.querySelector(`.quest-stat-chip[data-key="${key}"]`);
     if (!chipWrap) return;
     const chipVal = chipWrap.querySelector('.qs-val');
-    const isMoney = key !== 'creditScore';
+    const isMoney = (DASHBOARD_STAT_META[key] || { isMoney: false }).isMoney;
     chipWrap.classList.remove('qs-up', 'qs-down');
     if (to !== from) chipWrap.classList.add(to > from ? 'qs-up' : 'qs-down');
     tweenNumber(chipVal, from, to, { money: isMoney });
@@ -7849,10 +11424,12 @@ function renderStoryChapter(chapter, mod, onDone) {
     } else {
       const isNarrator = beat.speaker === 'narrator';
       const isProtagonist = beat.speaker === charName;
-      const avatarHtml = (isNarrator || isProtagonist) ? getHammyFaceMarkup(0.13) : beat.speaker.charAt(0);
       entry.className = `story-beat ${isNarrator ? 'is-narrator' : ''}`;
+      // Narration isn't Hammy talking, so it gets no avatar at all — showing Hammy's face
+      // next to narrator text made it read as if Hammy were narrating, which was confusing.
+      const avatarDiv = isNarrator ? '' : `<div class="story-avatar has-character">${isProtagonist ? getHammyFaceMarkup(0.13) : beat.speaker.charAt(0)}</div>`;
       entry.innerHTML = `
-        <div class="story-avatar ${isNarrator || isProtagonist ? 'has-character' : ''}">${avatarHtml}</div>
+        ${avatarDiv}
         <div class="story-bubble ${isNarrator ? 'narrator' : ''}">${beat.text}</div>`;
     }
     log.appendChild(entry);
@@ -7881,7 +11458,11 @@ function renderDecisionChapter(chapter, mod, onDone) {
       const qp = getQP(mod);
       qp.analytics.decisions.push({ title: chapter.title, choice: choice.label });
       saveState();
-      const wasGoodChoice = (choice.outcome.delta && choice.outcome.delta.creditScore || 0) >= 0;
+      // Net effect across every dashboard stat the choice touches — not just creditScore —
+      // so modules whose decisions move checking/savings/etc. still get an accurate
+      // positive/negative Hammy reaction instead of always reading as "good."
+      const deltaSum = Object.values(choice.outcome.delta || {}).reduce((a, b) => a + b, 0);
+      const wasGoodChoice = deltaSum >= 0;
       renderDecisionOutcome(chapter, choice.outcome, mod, wasGoodChoice, onDone);
     });
     choicesEl.appendChild(btn);
@@ -8296,12 +11877,19 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
 
 // ── Chapter type: simulator (registry) ──────────
 const SIMULATORS = {
+  // A live meter that climbs/falls as one-shot decisions are clicked. Originally hardcoded
+  // to "credit score, 300-850" — now reads meterKey/meterMin/meterMax from chapter data
+  // (defaulting to those exact values) so every module can reuse the same mechanic with its
+  // own topic-appropriate meter (savings rate, mistake-avoidance score, etc.).
   'credit-climb': {
     render(container, chapter, mod, onDone) {
       const qp = getQP(mod);
-      let score = qp.dashboard.creditScore;
+      const meterKey = chapter.meterKey || 'creditScore';
+      const min = chapter.meterMin ?? 300;
+      const max = chapter.meterMax ?? 850;
+      let score = qp.dashboard[meterKey];
       const usedIds = new Set();
-      const pctFor = s => Math.max(0, Math.min(100, (s - 300) / (850 - 300) * 100));
+      const pctFor = s => Math.max(0, Math.min(100, (s - min) / (max - min) * 100));
 
       function render() {
         container.innerHTML = `
@@ -8309,7 +11897,7 @@ const SIMULATORS = {
           <div class="sim-meter-wrap">
             <div class="sim-meter-score" id="sim-score">${Math.round(score)}</div>
             <div class="sim-meter-track"><div class="sim-meter-marker" id="sim-marker" style="left:${pctFor(score)}%"></div></div>
-            <div class="sim-meter-scale"><span>300</span><span>850</span></div>
+            <div class="sim-meter-scale"><span>${min}</span><span>${max}</span></div>
           </div>
           <div class="sim-decisions" id="sim-decisions">
             ${chapter.decisions.map(d => `<button class="option-btn sim-decision-btn" data-id="${d.id}" ${usedIds.has(d.id) ? 'disabled' : ''}>${d.label}</button>`).join('')}
@@ -8320,8 +11908,8 @@ const SIMULATORS = {
             const d = chapter.decisions.find(x => x.id === btn.dataset.id);
             usedIds.add(d.id);
             const from = score;
-            score = Math.max(300, Math.min(850, score + d.scoreDelta));
-            qp.dashboard.creditScore = score;
+            score = Math.max(min, Math.min(max, score + d.scoreDelta));
+            qp.dashboard[meterKey] = score;
             saveState();
             renderQuestDashboard(mod);
             document.getElementById('sim-marker').style.left = pctFor(score) + '%';
