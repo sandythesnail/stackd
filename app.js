@@ -7828,6 +7828,29 @@ const SHOP_ITEMS = [
           <text x="50" y="95" font-size="10" text-anchor="middle" fill="var(--pink-dark)" font-weight="700">YOU GOT THIS</text>`
   },
   {
+    id: 'wall_plant_frame', name: 'Plant Frame Art', category: 'room', slot: 'wall', price: 65,
+    viewBox: '0 0 100 130',
+    desc: 'A little greenery, framed up.',
+    svg: `<rect x="4" y="4" width="92" height="122" rx="4" fill="var(--white)" stroke="var(--border)" stroke-width="4"/>
+          <rect x="14" y="14" width="72" height="102" fill="var(--green-pale)"/>
+          <path d="M50,100 L50,55" stroke="#4A7840" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="38" cy="58" rx="14" ry="9" fill="#7EC96A" transform="rotate(-25 38 58)"/>
+          <ellipse cx="62" cy="52" rx="14" ry="9" fill="#8FDD78" transform="rotate(25 62 52)"/>
+          <ellipse cx="50" cy="40" rx="12" ry="16" fill="#6FAE5C"/>`
+  },
+  {
+    id: 'wall_savings_chart', name: 'Rising Chart Poster', category: 'room', slot: 'wall', price: 75,
+    viewBox: '0 0 100 130',
+    desc: 'Up and to the right, baby.',
+    svg: `<rect x="4" y="4" width="92" height="122" rx="4" fill="var(--white)" stroke="var(--border)" stroke-width="4"/>
+          <rect x="14" y="14" width="72" height="102" fill="var(--green-pale)"/>
+          <rect x="26" y="86" width="10" height="20" fill="var(--green-light)"/>
+          <rect x="42" y="70" width="10" height="36" fill="var(--green)"/>
+          <rect x="58" y="50" width="10" height="56" fill="var(--green-dark)"/>
+          <path d="M24,64 L44,44 L58,54 L76,28" stroke="#FFD700" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M68,28 L76,28 L76,36" stroke="#FFD700" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+  },
+  {
     id: 'rug_green', name: 'Sage Rug', category: 'room', slot: 'rug', price: 60,
     viewBox: '0 0 220 70',
     desc: 'Ties the room together.',
@@ -7842,6 +7865,24 @@ const SHOP_ITEMS = [
     svg: `<ellipse cx="110" cy="40" rx="105" ry="28" fill="var(--pink-light)"/>
           <ellipse cx="110" cy="40" rx="80" ry="20" fill="none" stroke="var(--pink-dark)" stroke-width="3" opacity="0.35"/>
           <ellipse cx="110" cy="40" rx="55" ry="13" fill="none" stroke="var(--pink-dark)" stroke-width="2.5" opacity="0.3"/>`
+  },
+  {
+    id: 'rug_yellow', name: 'Mustard Rug', category: 'room', slot: 'rug', price: 60,
+    viewBox: '0 0 220 70',
+    desc: 'A sunny spot to stand on.',
+    svg: `<ellipse cx="110" cy="40" rx="105" ry="28" fill="#F5D67A"/>
+          <ellipse cx="110" cy="40" rx="80" ry="20" fill="none" stroke="#B8935E" stroke-width="3" opacity="0.35"/>
+          <ellipse cx="110" cy="40" rx="55" ry="13" fill="none" stroke="#B8935E" stroke-width="2.5" opacity="0.3"/>`
+  },
+  {
+    id: 'rug_braided', name: 'Braided Rug', category: 'room', slot: 'rug', price: 70,
+    viewBox: '0 0 220 70',
+    desc: 'Ringed in every color of the collection.',
+    svg: `<ellipse cx="110" cy="40" rx="105" ry="28" fill="var(--pink-light)"/>
+          <ellipse cx="110" cy="40" rx="88" ry="23" fill="var(--white)"/>
+          <ellipse cx="110" cy="40" rx="70" ry="18" fill="var(--green-light)"/>
+          <ellipse cx="110" cy="40" rx="45" ry="11" fill="var(--white)"/>
+          <ellipse cx="110" cy="40" rx="22" ry="5.5" fill="var(--pink-light)"/>`
   },
   {
     id: 'plant_pothos', name: 'Potted Pothos', category: 'room', slot: 'plant', price: 55,
@@ -7868,6 +7909,25 @@ const SHOP_ITEMS = [
           <circle cx="40" cy="34" r="4" fill="#FF96B8"/>`
   },
   {
+    id: 'plant_succulent', name: 'Succulent Trio', category: 'room', slot: 'plant', price: 50,
+    viewBox: '0 0 80 120',
+    desc: 'A little cluster of low-key vibes.',
+    svg: `<path d="M22,96 L18,116 L62,116 L58,96 Z" fill="#D68A54"/>
+          <rect x="20" y="92" width="40" height="8" fill="#B06A38"/>
+          <ellipse cx="30" cy="82" rx="12" ry="9" fill="#7EC96A"/>
+          <ellipse cx="50" cy="80" rx="13" ry="10" fill="#6FAE5C"/>
+          <ellipse cx="40" cy="70" rx="10" ry="12" fill="#8FDD78"/>`
+  },
+  {
+    id: 'plant_fern', name: 'Leafy Fern', category: 'room', slot: 'plant', price: 55,
+    viewBox: '0 0 80 120',
+    desc: 'Growing steadily, like your savings.',
+    svg: `<path d="M30,90 L26,116 L54,116 L50,90 Z" fill="#C87848"/>
+          <rect x="28" y="86" width="24" height="8" fill="#A56238"/>
+          <path d="M40,88 C40,60 40,40 40,18" stroke="#4A7840" stroke-width="3" fill="none"/>
+          <path d="M40,80 L20,66 M40,80 L60,66 M40,64 L18,52 M40,64 L62,52 M40,48 L22,38 M40,48 L58,38 M40,32 L26,24 M40,32 L54,24" stroke="#5E9950" stroke-width="3" stroke-linecap="round"/>`
+  },
+  {
     id: 'bed_cozy', name: 'Cozy Bed', category: 'room', slot: 'bed', price: 140,
     viewBox: '0 0 160 100',
     desc: 'Every good saver needs good rest.',
@@ -7887,6 +7947,29 @@ const SHOP_ITEMS = [
           <rect x="14" y="70" width="132" height="12" rx="6" fill="var(--white)" opacity="0.4"/>
           <rect x="8" y="14" width="8" height="96" fill="#8A6438"/>
           <rect x="144" y="14" width="8" height="96" fill="#8A6438"/>`
+  },
+  {
+    id: 'bed_daybed', name: 'Daybed', category: 'room', slot: 'bed', price: 130,
+    viewBox: '0 0 160 100',
+    desc: 'Perfect for a mid-budgeting nap.',
+    svg: `<rect x="10" y="56" width="140" height="30" rx="8" fill="var(--green)"/>
+          <rect x="10" y="56" width="140" height="12" rx="6" fill="var(--green-light)"/>
+          <rect x="16" y="40" width="18" height="24" rx="6" fill="var(--white)" stroke="var(--border)" stroke-width="2"/>
+          <rect x="126" y="40" width="18" height="24" rx="6" fill="var(--white)" stroke="var(--border)" stroke-width="2"/>
+          <rect x="20" y="86" width="10" height="10" fill="#8A6438"/>
+          <rect x="130" y="86" width="10" height="10" fill="#8A6438"/>`
+  },
+  {
+    id: 'bed_canopy', name: 'Canopy Bed', category: 'room', slot: 'bed', price: 175,
+    viewBox: '0 0 160 100',
+    desc: 'A dreamy upgrade for a top saver.',
+    svg: `<rect x="6" y="10" width="6" height="90" fill="#8A6438"/>
+          <rect x="148" y="10" width="6" height="90" fill="#8A6438"/>
+          <path d="M12,10 Q80,-4 148,10" stroke="#8A6438" stroke-width="4" fill="none"/>
+          <path d="M14,12 Q80,50 14,90" fill="var(--pink-pale)" opacity="0.55"/>
+          <path d="M146,12 Q80,50 146,90" fill="var(--pink-pale)" opacity="0.55"/>
+          <rect x="10" y="60" width="140" height="34" rx="8" fill="var(--pink)"/>
+          <rect x="10" y="60" width="140" height="12" rx="6" fill="var(--pink-light)"/>`
   },
   {
     id: 'lamp_moon', name: 'Moon Lamp', category: 'room', slot: 'lamp', price: 50,
@@ -7911,6 +7994,53 @@ const SHOP_ITEMS = [
           <circle cx="60" cy="10" r="5" fill="#8FDD78"/>
           <circle cx="60" cy="60" r="5" fill="#FFE45A"/>
           <circle cx="60" cy="110" r="5" fill="#FF96B8"/>`
+  },
+  {
+    id: 'lamp_desk', name: 'Desk Lamp', category: 'room', slot: 'lamp', price: 55,
+    viewBox: '0 0 70 110',
+    desc: 'For late-night budget spreadsheets.',
+    svg: `<rect x="14" y="98" width="42" height="8" rx="3" fill="#8A6438"/>
+          <line x1="35" y1="98" x2="35" y2="70" stroke="#B8935E" stroke-width="4"/>
+          <line x1="35" y1="70" x2="55" y2="46" stroke="#B8935E" stroke-width="4"/>
+          <path d="M40,30 L64,42 L52,58 L32,48 Z" fill="#FFF6D8"/>`
+  },
+  {
+    id: 'lamp_lava', name: 'Lava Lamp', category: 'room', slot: 'lamp', price: 70,
+    viewBox: '0 0 70 110',
+    desc: 'Groovy glow for the room.',
+    svg: `<rect x="26" y="94" width="18" height="12" rx="3" fill="#4A4A52"/>
+          <path d="M18,92 L52,92 L46,30 Q35,20 24,30 Z" fill="none" stroke="#C0C0C8" stroke-width="3"/>
+          <ellipse cx="35" cy="70" rx="9" ry="12" fill="#FF6F91"/>
+          <ellipse cx="33" cy="46" rx="6" ry="8" fill="#FF6F91"/>`
+  },
+  {
+    id: 'window_sunny', name: 'Sunny Window', category: 'room', slot: 'window', price: 90,
+    viewBox: '0 0 220 100',
+    desc: 'A bright view to budget by.',
+    svg: `<rect x="4" y="4" width="212" height="92" rx="6" fill="#8A6438"/>
+          <rect x="14" y="14" width="192" height="72" fill="#7EC1E8"/>
+          <circle cx="55" cy="34" r="14" fill="#FFE45A"/>
+          <ellipse cx="130" cy="46" rx="26" ry="10" fill="var(--white)" opacity="0.85"/>
+          <ellipse cx="160" cy="38" rx="20" ry="8" fill="var(--white)" opacity="0.85"/>
+          <rect x="14" y="14" width="192" height="72" fill="none" stroke="#8A6438" stroke-width="4"/>
+          <line x1="110" y1="14" x2="110" y2="86" stroke="#8A6438" stroke-width="4"/>
+          <line x1="14" y1="50" x2="206" y2="50" stroke="#8A6438" stroke-width="4"/>`
+  },
+  {
+    id: 'window_night', name: 'Starry Window', category: 'room', slot: 'window', price: 95,
+    viewBox: '0 0 220 100',
+    desc: 'Stargaze while your streak grows.',
+    svg: `<rect x="4" y="4" width="212" height="92" rx="6" fill="#5E5E68"/>
+          <rect x="14" y="14" width="192" height="72" fill="#2B2E4A"/>
+          <circle cx="150" cy="34" r="16" fill="#F5E5A8"/>
+          <circle cx="45" cy="30" r="2.5" fill="var(--white)"/>
+          <circle cx="70" cy="50" r="2" fill="var(--white)"/>
+          <circle cx="95" cy="26" r="2" fill="var(--white)"/>
+          <circle cx="185" cy="60" r="2" fill="var(--white)"/>
+          <circle cx="60" cy="70" r="2" fill="var(--white)"/>
+          <rect x="14" y="14" width="192" height="72" fill="none" stroke="#5E5E68" stroke-width="4"/>
+          <line x1="110" y1="14" x2="110" y2="86" stroke="#5E5E68" stroke-width="4"/>
+          <line x1="14" y1="50" x2="206" y2="50" stroke="#5E5E68" stroke-width="4"/>`
   },
 
   // ── DIAMOND EXCLUSIVES (earned via 3-day streak bonuses, not coins) ──
@@ -8129,7 +8259,7 @@ const ACHIEVEMENTS = [
     icon: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>' },
   { id: 'word_nerd', tier: 'silver', color: '#3F8757', label: 'Word Nerd', desc: 'Learn 15 or more vocabulary terms across every quest played.', check: s => totalTermsLearned(s) >= 15,
     icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
-  { id: 'homebody', tier: 'silver', color: '#C08552', label: 'Homebody', desc: 'Fully decorate Hammy\'s Room — every slot (wall art, lamp, plant, bed, rug) filled with a purchased item.', check: s => s.equippedRoom && Object.keys(s.equippedRoom).length > 0 && Object.values(s.equippedRoom).every(v => !!v),
+  { id: 'homebody', tier: 'silver', color: '#C08552', label: 'Homebody', desc: 'Fully decorate Hammy\'s Room — every slot (wall art, lamp, plant, bed, rug, window) filled with a purchased item.', check: s => s.equippedRoom && Object.keys(s.equippedRoom).length > 0 && Object.values(s.equippedRoom).every(v => !!v),
     icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
   { id: 'on_fire', tier: 'gold', color: '#E8622C', label: 'On a Roll', desc: 'Play Stacked 7 days in a row without missing a day.', check: s => s.streak >= 7,
     icon: '<path d="M12 2c1 4-3 5-3 9a3 3 0 0 0 6 0c0-2-1-3-1-3s2 1 2 4a5 5 0 0 1-10 0c0-5 4-6 4-10z"/>' },
@@ -8316,7 +8446,7 @@ let state = {
   activeModuleId: null, activeLessonIdx: 0, activeQuestId: null, sessionQuestions: [],
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
   coins: 0, diamonds: 0, ownedItems: [], equippedItem: null,
-  ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null },
+  ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null },
   metHammy: false,
   questProgress: {}, questBossesWon: [],
   onboardingSurvey: { completed: false, moduleFamiliarity: {}, focusGoals: [], completedAt: null },
@@ -9283,7 +9413,7 @@ function handleShopAction(itemId) {
   const isDiamond = item.currency === 'diamond';
 
   if (item.slot) {
-    if (!state.equippedRoom) state.equippedRoom = { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null };
+    if (!state.equippedRoom) state.equippedRoom = { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null };
     const owned = (state.ownedRoomItems || []).includes(itemId);
     const equipped = state.equippedRoom[item.slot] === itemId;
     if (equipped) {
@@ -9351,6 +9481,7 @@ function renderRoomPage() {
         <h1 class="room-title">Hammy's Room</h1>
         <span class="room-subtitle">Decorate with items from the Shop</span>
       </div>
+      ${slotBlock('window', 'Window')}
       ${slotBlock('wall', 'Wall art')}
       ${slotBlock('lamp', 'Lamp')}
       ${slotBlock('plant', 'Plant')}
