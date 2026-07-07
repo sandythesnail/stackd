@@ -1,6 +1,7 @@
 window.addEventListener('load', async function () {
   await Clerk.load({
     ui: { ClerkUI: window.__internal_ClerkUICtor },
+    afterSignOutUrl: window.location.origin + '/',
   });
 
   if (!Clerk.isSignedIn) {
