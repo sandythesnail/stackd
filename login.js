@@ -1,6 +1,11 @@
 window.addEventListener('load', async function () {
   await Clerk.load({
     ui: { ClerkUI: window.__internal_ClerkUICtor },
+    appearance: {
+      elements: {
+        headerTitle: { color: '#4A6844' },
+      },
+    },
   });
 
   if (Clerk.isSignedIn) {
