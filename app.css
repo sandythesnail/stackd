@@ -1648,9 +1648,9 @@ select.budget-input { cursor: pointer; }
 }
 
 /* ─── ROOM PAGE ─── */
-.page-room.active { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-.page-room .page-header { flex-shrink: 0; }
-.page-room .page-body {
+#page-room.active { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+#page-room .page-header { flex-shrink: 0; }
+#page-room .page-body {
   max-width: none; margin: 0; padding: 0; gap: 0;
   flex: 1; min-height: 0; overflow: hidden;
 }
@@ -1693,7 +1693,7 @@ select.budget-input { cursor: pointer; }
 .room-slot-plus { font-size: 1.3rem; font-weight: 700; color: var(--text-soft); line-height: 1; }
 .room-slot-label { font-size: 0.72rem; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.04em; }
 
-.room-hint { margin-top: 0.9rem; font-size: 0.85rem; color: var(--text-mid); }
+.room-hint { font-size: 0.85rem; color: var(--text-mid); }
 .room-shop-link {
   background: none; border: none; padding: 0; font: inherit; font-weight: 700;
   color: var(--green-dark); text-decoration: underline; cursor: pointer;
@@ -1724,7 +1724,7 @@ select.budget-input { cursor: pointer; }
   .app-main { margin-left: 0; padding-bottom: 68px; }
   .page-header { padding: 1.25rem 1rem 1rem; }
   .page-body { padding: 1.25rem 1rem 3rem; }
-  .page-room.active { height: calc(100vh - 68px); }
+  #page-room.active { height: calc(100vh - 68px); }
   .quiz-body { padding: 1.5rem 1rem 140px; }
   .feedback-panel { max-width: 100%; }
   .pg-stats-row { grid-template-columns: 1fr 1fr; }
