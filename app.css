@@ -17,7 +17,7 @@ body { background: var(--bg); min-height: 100vh; }
 .sidebar-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 2rem; }
 .sidebar-brand {
   display: flex; align-items: center; gap: 0.4rem;
-  padding: 0 0.5rem; overflow: hidden;
+  padding: 0 0.5rem; flex-shrink: 0;
 }
 .sidebar-brand-icon { flex-shrink: 0; }
 .brand-text {
