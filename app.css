@@ -1688,9 +1688,10 @@ select.budget-input { cursor: pointer; }
 .room-slot-window { top: 17%; left: 50%; transform: translateX(-50%); width: 30%; height: 24%; }
 .room-slot-wall  { top: 6%; left: 6%; width: 15%; height: 40%; }
 .room-slot-lamp  { top: 5%; right: 6%; width: 9%; height: 38%; }
-.room-slot-plant { bottom: 9%; left: 5%; width: 11%; height: 30%; z-index: 1; }
+.room-slot-plant { bottom: 6%; left: 31%; width: 6%; height: 14%; z-index: 1; }
 .room-slot-bed   { bottom: 6%; right: 4%; width: 24%; height: 26%; z-index: 1; }
 .room-slot-rug   { bottom: 3%; left: 50%; transform: translateX(-50%); width: 34%; height: 16%; z-index: 1; }
+.room-slot-desk  { bottom: 5%; left: 3%; width: 26%; height: 30%; z-index: 1; }
 
 .room-slot.empty {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem;

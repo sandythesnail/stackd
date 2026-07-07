@@ -7972,6 +7972,34 @@ const SHOP_ITEMS = [
           <rect x="10" y="60" width="140" height="12" rx="6" fill="var(--pink-light)"/>`
   },
   {
+    id: 'desk_study', name: 'Study Desk', category: 'room', slot: 'desk', price: 115,
+    viewBox: '0 0 160 100',
+    desc: 'A chair and a desk for getting things done.',
+    svg: `<rect x="10" y="70" width="22" height="6" rx="2" fill="#8A6438"/>
+          <rect x="14" y="46" width="6" height="26" fill="#8A6438"/>
+          <rect x="12" y="80" width="4" height="12" fill="#8A6438"/>
+          <rect x="28" y="80" width="4" height="12" fill="#8A6438"/>
+          <rect x="50" y="56" width="100" height="8" rx="2" fill="#C6935B"/>
+          <rect x="56" y="64" width="6" height="28" fill="#8A6438"/>
+          <rect x="138" y="64" width="6" height="28" fill="#8A6438"/>
+          <rect x="93" y="56" width="38" height="4" rx="1" fill="var(--border)"/>
+          <rect x="95" y="40" width="34" height="18" rx="2" fill="var(--green-pale)" stroke="var(--border)" stroke-width="2"/>`
+  },
+  {
+    id: 'desk_vanity', name: 'Vanity Desk', category: 'room', slot: 'desk', price: 135,
+    viewBox: '0 0 160 100',
+    desc: 'A chair, a desk, and a little mirror to match.',
+    svg: `<rect x="10" y="70" width="22" height="6" rx="2" fill="#8A6438"/>
+          <rect x="14" y="46" width="6" height="26" fill="#8A6438"/>
+          <rect x="12" y="80" width="4" height="12" fill="#8A6438"/>
+          <rect x="28" y="80" width="4" height="12" fill="#8A6438"/>
+          <rect x="50" y="56" width="100" height="8" rx="2" fill="#E8B896"/>
+          <rect x="56" y="64" width="6" height="28" fill="#8A6438"/>
+          <rect x="138" y="64" width="6" height="28" fill="#8A6438"/>
+          <rect x="108" y="50" width="8" height="8" fill="var(--border)"/>
+          <ellipse cx="112" cy="32" rx="16" ry="20" fill="var(--pink-pale)" stroke="var(--border)" stroke-width="2"/>`
+  },
+  {
     id: 'lamp_moon', name: 'Moon Lamp', category: 'room', slot: 'lamp', price: 50,
     viewBox: '0 0 70 110',
     desc: 'Soft light for late-night budgeting.',
@@ -8259,7 +8287,7 @@ const ACHIEVEMENTS = [
     icon: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>' },
   { id: 'word_nerd', tier: 'silver', color: '#3F8757', label: 'Word Nerd', desc: 'Learn 15 or more vocabulary terms across every quest played.', check: s => totalTermsLearned(s) >= 15,
     icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
-  { id: 'homebody', tier: 'silver', color: '#C08552', label: 'Homebody', desc: 'Fully decorate Hammy\'s Room — every slot (wall art, lamp, plant, bed, rug, window) filled with a purchased item.', check: s => s.equippedRoom && Object.keys(s.equippedRoom).length > 0 && Object.values(s.equippedRoom).every(v => !!v),
+  { id: 'homebody', tier: 'silver', color: '#C08552', label: 'Homebody', desc: 'Fully decorate Hammy\'s Room — every slot (wall art, lamp, plant, bed, desk, rug, window) filled with a purchased item.', check: s => s.equippedRoom && Object.keys(s.equippedRoom).length > 0 && Object.values(s.equippedRoom).every(v => !!v),
     icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
   { id: 'on_fire', tier: 'gold', color: '#E8622C', label: 'On a Roll', desc: 'Play Stacked 7 days in a row without missing a day.', check: s => s.streak >= 7,
     icon: '<path d="M12 2c1 4-3 5-3 9a3 3 0 0 0 6 0c0-2-1-3-1-3s2 1 2 4a5 5 0 0 1-10 0c0-5 4-6 4-10z"/>' },
@@ -8446,7 +8474,7 @@ let state = {
   activeModuleId: null, activeLessonIdx: 0, activeQuestId: null, sessionQuestions: [],
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
   coins: 0, diamonds: 0, ownedItems: [], equippedItem: null,
-  ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null },
+  ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null },
   metHammy: false,
   questProgress: {}, questBossesWon: [],
   onboardingSurvey: { completed: false, moduleFamiliarity: {}, focusGoals: [], completedAt: null },
@@ -9413,7 +9441,7 @@ function handleShopAction(itemId) {
   const isDiamond = item.currency === 'diamond';
 
   if (item.slot) {
-    if (!state.equippedRoom) state.equippedRoom = { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null };
+    if (!state.equippedRoom) state.equippedRoom = { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null };
     const owned = (state.ownedRoomItems || []).includes(itemId);
     const equipped = state.equippedRoom[item.slot] === itemId;
     if (equipped) {
@@ -9486,6 +9514,7 @@ function renderRoomPage() {
       ${slotBlock('lamp', 'Lamp')}
       ${slotBlock('plant', 'Plant')}
       ${slotBlock('bed', 'Bed')}
+      ${slotBlock('desk', 'Desk')}
       <div class="room-floor">
         ${slotBlock('rug', 'Rug')}
         <div class="room-pig">${getPigWithItemMarkup(0.75, equippedOutfit || '')}</div>
