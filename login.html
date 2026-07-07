@@ -8,6 +8,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="login.css">
+  <script
+    defer
+    crossorigin="anonymous"
+    src="https://handy-dinosaur-0.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"
+    type="text/javascript">
+  </script>
+  <script
+    defer
+    crossorigin="anonymous"
+    data-clerk-publishable-key="pk_test_aGFuZHktZGlub3NhdXItMC5jbGVyay5hY2NvdW50cy5kZXYk"
+    src="https://handy-dinosaur-0.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+    type="text/javascript">
+  </script>
 </head>
 <body>
   <div class="login-layout">
@@ -78,52 +91,12 @@
       <div class="login-box">
         <div class="login-brand">Stacked</div>
         <h1 class="login-h1">Sign in to Stacked</h1>
-        <p class="login-sub">Use your university credentials to access your account.</p>
+        <p class="login-sub">Sign in to access your account.</p>
 
-        <!-- Microsoft SSO -->
-        <button class="sso-btn" id="sso-btn">
-          <svg class="ms-logo" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-            <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-            <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-            <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-            <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-          </svg>
-          Sign in with UConn NetID
-        </button>
-        <p class="sso-note">Redirects to Microsoft identity services (netid.uconn.edu)</p>
-
-        <div class="divider"><span>or continue with email</span></div>
-
-        <!-- Email fallback -->
-        <form class="login-form" id="login-form">
-          <div class="field-group">
-            <label for="email">Email address</label>
-            <input type="email" id="email" placeholder="netid@uconn.edu" required autocomplete="email">
-          </div>
-          <div class="field-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
-          </div>
-          <button type="submit" class="btn-login">Sign In</button>
-        </form>
+        <div id="clerk-sign-in"></div>
 
         <p class="signup-note">Student access is granted through your institution. <a href="index.html#universities">Is your university on Stacked?</a></p>
       </div>
-    </div>
-  </div>
-
-  <!-- SSO redirect overlay -->
-  <div class="sso-overlay" id="sso-overlay">
-    <div class="sso-card">
-      <svg viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
-        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-      </svg>
-      <p class="sso-connecting">Connecting to UConn NetID...</p>
-      <div class="sso-prog-track"><div class="sso-prog-fill" id="sso-prog-fill"></div></div>
-      <p class="sso-fine">Redirecting to Microsoft identity services</p>
     </div>
   </div>
 

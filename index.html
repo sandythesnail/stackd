@@ -8,6 +8,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="landing.css">
+  <script
+    defer
+    crossorigin="anonymous"
+    src="https://handy-dinosaur-0.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"
+    type="text/javascript">
+  </script>
+  <script
+    defer
+    crossorigin="anonymous"
+    data-clerk-publishable-key="pk_test_aGFuZHktZGlub3NhdXItMC5jbGVyay5hY2NvdW50cy5kZXYk"
+    src="https://handy-dinosaur-0.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+    type="text/javascript">
+  </script>
 </head>
 <body>
 
@@ -40,8 +53,10 @@
         <a href="#story">My Story</a>
         <a href="#modules">Modules</a>
         <a href="#universities">For Universities</a>
-        <a href="login.html" class="btn-outline-sm">Sign In</a>
-        <a href="login.html" class="btn-sm">Get Started</a>
+        <div id="nav-auth-slot">
+          <a href="login.html" class="btn-outline-sm">Sign In</a>
+          <a href="login.html" class="btn-sm">Get Started</a>
+        </div>
       </div>
       <button class="nav-burger" id="nav-burger">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -629,5 +644,25 @@
   </button>
 
   <script src="landing.js"></script>
+  <script>
+    window.addEventListener('load', async function () {
+      await Clerk.load({
+        ui: { ClerkUI: window.__internal_ClerkUICtor },
+      });
+
+      function renderNavAuth() {
+        const slot = document.getElementById('nav-auth-slot');
+        if (Clerk.isSignedIn) {
+          slot.innerHTML = '<a href="app.html" class="btn-sm">Go to Dashboard</a><div id="clerk-nav-user-button"></div>';
+          Clerk.mountUserButton(document.getElementById('clerk-nav-user-button'));
+        } else {
+          slot.innerHTML = '<a href="login.html" class="btn-outline-sm">Sign In</a><a href="login.html" class="btn-sm">Get Started</a>';
+        }
+      }
+
+      renderNavAuth();
+      Clerk.addListener(renderNavAuth);
+    });
+  </script>
 </body>
 </html>
