@@ -9486,7 +9486,7 @@ function renderProgressPage() {
   document.getElementById('progress-body').innerHTML = `
     <!-- Pig mascot -->
     <div class="pg-mascot-wrap">
-      <div class="pg-mascot-pig">${getPigWithItemMarkup(0.45, getEquippedItem())}</div>
+      <div class="pg-mascot-pig">${getPigWithItemMarkup(0.36, getEquippedItem())}</div>
       <div class="pg-mascot-bubble">${pigMsg}</div>
     </div>
 
