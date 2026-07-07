@@ -8,7 +8,10 @@ window.addEventListener('load', async function () {
     return;
   }
 
-  Clerk.mountSignIn(document.getElementById('clerk-sign-in'));
+  Clerk.mountSignIn(document.getElementById('clerk-sign-in'), {
+    fallbackRedirectUrl: window.location.origin + '/app.html',
+    forceRedirectUrl: window.location.origin + '/app.html',
+  });
 
   Clerk.addListener(({ user }) => {
     if (user) window.location.href = 'app.html';
