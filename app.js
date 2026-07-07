@@ -9355,14 +9355,11 @@ function renderRoomPage() {
         ${slotBlock('rug', 'Rug')}
         <div class="room-pig">${getPigWithItemMarkup(0.42, equippedOutfit || '')}</div>
       </div>
-    </div>
-    <p class="room-hint">Buy furniture, wallpaper, and decor in the <button class="room-shop-link" id="room-shop-link" type="button">Shop</button> to fill in the empty spots.</p>`;
+    </div>`;
 
   scene.querySelectorAll('.room-slot.empty').forEach(el => {
     el.addEventListener('click', () => { showPage('shop'); renderShopPage(); });
   });
-  const shopLink = document.getElementById('room-shop-link');
-  if (shopLink) shopLink.addEventListener('click', () => { showPage('shop'); renderShopPage(); });
 }
 
 // ── HOME ───────────────────────────────────────
