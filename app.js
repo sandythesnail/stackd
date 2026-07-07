@@ -9347,13 +9347,17 @@ function renderRoomPage() {
   scene.innerHTML = `
     <div class="room-backdrop">
       <div class="room-wall-zone" id="room-wall-zone" style="${wallpaper ? wallpaper.wallCss : ''}"></div>
+      <div class="room-title-overlay">
+        <h1 class="room-title">Hammy's Room</h1>
+        <span class="room-subtitle">Decorate with items from the Shop</span>
+      </div>
       ${slotBlock('wall', 'Wall art')}
       ${slotBlock('lamp', 'Lamp')}
       ${slotBlock('plant', 'Plant')}
       ${slotBlock('bed', 'Bed')}
       <div class="room-floor">
         ${slotBlock('rug', 'Rug')}
-        <div class="room-pig">${getPigWithItemMarkup(0.42, equippedOutfit || '')}</div>
+        <div class="room-pig">${getPigWithItemMarkup(0.75, equippedOutfit || '')}</div>
       </div>
     </div>`;
 
