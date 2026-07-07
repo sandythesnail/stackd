@@ -88,10 +88,21 @@ body { background: var(--bg); min-height: 100vh; }
   .sidebar.collapsed + .app-main { margin-left: 68px; }
 }
 .sf-account {
-  display: flex; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
   padding-bottom: 0.6rem; margin-bottom: 0.6rem;
   border-bottom: 1px solid var(--border);
 }
+.sf-account-name {
+  font-size: 0.78rem; font-weight: 600; color: var(--text);
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sf-signout-btn {
+  font-size: 0.72rem; font-weight: 600; color: var(--text-mid);
+  background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 0.2rem 0.6rem; cursor: pointer; font-family: inherit;
+  transition: color 0.2s, border-color 0.2s;
+}
+.sf-signout-btn:hover { color: var(--pink-dark); border-color: var(--pink-light); }
 .sf-meta {
   display: flex; align-items: center; margin-bottom: 0.3rem;
 }

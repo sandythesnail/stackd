@@ -1,7 +1,6 @@
 window.addEventListener('load', async function () {
   await Clerk.load({
     ui: { ClerkUI: window.__internal_ClerkUICtor },
-    afterSignOutUrl: window.location.origin + '/',
   });
 
   if (!Clerk.isSignedIn) {
@@ -9,10 +8,18 @@ window.addEventListener('load', async function () {
     return;
   }
 
-  Clerk.mountUserButton(document.getElementById('clerk-user-button'));
-  document.getElementById('app').style.visibility = 'visible';
+  const accountEl = document.getElementById('clerk-user-button');
+  if (accountEl) {
+    const name = Clerk.user.firstName || Clerk.user.primaryEmailAddress?.emailAddress || 'Account';
+    accountEl.innerHTML = `
+      <span class="sf-account-name">${name}</span>
+      <button type="button" class="sf-signout-btn" id="sf-signout-btn">Sign out</button>
+    `;
+    document.getElementById('sf-signout-btn').addEventListener('click', async () => {
+      await Clerk.signOut({ redirectUrl: window.location.origin + '/' });
+      window.location.href = window.location.origin + '/';
+    });
+  }
 
-  Clerk.addListener(({ user }) => {
-    if (!user) window.location.href = 'index.html';
-  });
+  document.getElementById('app').style.visibility = 'visible';
 });
