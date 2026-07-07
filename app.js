@@ -7974,30 +7974,22 @@ const SHOP_ITEMS = [
   {
     id: 'desk_study', name: 'Study Desk', category: 'room', slot: 'desk', price: 115,
     viewBox: '0 0 160 100',
-    desc: 'A chair and a desk for getting things done.',
-    svg: `<rect x="10" y="70" width="22" height="6" rx="2" fill="#8A6438"/>
-          <rect x="14" y="46" width="6" height="26" fill="#8A6438"/>
-          <rect x="12" y="80" width="4" height="12" fill="#8A6438"/>
-          <rect x="28" y="80" width="4" height="12" fill="#8A6438"/>
-          <rect x="50" y="56" width="100" height="8" rx="2" fill="#C6935B"/>
-          <rect x="56" y="64" width="6" height="28" fill="#8A6438"/>
-          <rect x="138" y="64" width="6" height="28" fill="#8A6438"/>
-          <rect x="93" y="56" width="38" height="4" rx="1" fill="var(--border)"/>
-          <rect x="95" y="40" width="34" height="18" rx="2" fill="var(--green-pale)" stroke="var(--border)" stroke-width="2"/>`
+    desc: 'A tidy desk for getting things done.',
+    svg: `<rect x="15" y="56" width="130" height="8" rx="2" fill="#C6935B"/>
+          <rect x="21" y="64" width="6" height="28" fill="#8A6438"/>
+          <rect x="133" y="64" width="6" height="28" fill="#8A6438"/>
+          <rect x="63" y="56" width="34" height="4" rx="1" fill="var(--border)"/>
+          <rect x="65" y="40" width="30" height="18" rx="2" fill="var(--green-pale)" stroke="var(--border)" stroke-width="2"/>`
   },
   {
     id: 'desk_vanity', name: 'Vanity Desk', category: 'room', slot: 'desk', price: 135,
     viewBox: '0 0 160 100',
-    desc: 'A chair, a desk, and a little mirror to match.',
-    svg: `<rect x="10" y="70" width="22" height="6" rx="2" fill="#8A6438"/>
-          <rect x="14" y="46" width="6" height="26" fill="#8A6438"/>
-          <rect x="12" y="80" width="4" height="12" fill="#8A6438"/>
-          <rect x="28" y="80" width="4" height="12" fill="#8A6438"/>
-          <rect x="50" y="56" width="100" height="8" rx="2" fill="#E8B896"/>
-          <rect x="56" y="64" width="6" height="28" fill="#8A6438"/>
-          <rect x="138" y="64" width="6" height="28" fill="#8A6438"/>
-          <rect x="108" y="50" width="8" height="8" fill="var(--border)"/>
-          <ellipse cx="112" cy="32" rx="16" ry="20" fill="var(--pink-pale)" stroke="var(--border)" stroke-width="2"/>`
+    desc: 'A desk with a little mirror to match.',
+    svg: `<rect x="15" y="56" width="130" height="8" rx="2" fill="#E8B896"/>
+          <rect x="21" y="64" width="6" height="28" fill="#8A6438"/>
+          <rect x="133" y="64" width="6" height="28" fill="#8A6438"/>
+          <rect x="76" y="50" width="8" height="8" fill="var(--border)"/>
+          <ellipse cx="80" cy="32" rx="16" ry="20" fill="var(--pink-pale)" stroke="var(--border)" stroke-width="2"/>`
   },
   {
     id: 'lamp_moon', name: 'Moon Lamp', category: 'room', slot: 'lamp', price: 50,
