@@ -12,6 +12,6 @@ window.addEventListener('load', async function () {
   document.getElementById('app').style.visibility = 'visible';
 
   Clerk.addListener(({ user }) => {
-    if (!user) window.location.href = 'login.html';
+    if (!user) window.location.href = 'index.html';
   });
 });
