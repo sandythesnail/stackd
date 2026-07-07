@@ -8,14 +8,13 @@ window.addEventListener('load', async function () {
     return;
   }
 
-  const accountEl = document.getElementById('clerk-user-button');
-  if (accountEl) {
-    const name = Clerk.user.firstName || Clerk.user.primaryEmailAddress?.emailAddress || 'Account';
-    accountEl.innerHTML = `
-      <span class="sf-account-name">${name}</span>
-      <button type="button" class="sf-signout-btn" id="sf-signout-btn">Sign out</button>
-    `;
-    document.getElementById('sf-signout-btn').addEventListener('click', async () => {
+  const nameEl = document.getElementById('settings-account-name');
+  if (nameEl) {
+    nameEl.textContent = Clerk.user.primaryEmailAddress?.emailAddress || Clerk.user.firstName || 'Account';
+  }
+  const signOutBtn = document.getElementById('settings-signout-btn');
+  if (signOutBtn) {
+    signOutBtn.addEventListener('click', async () => {
       await Clerk.signOut({ redirectUrl: window.location.origin + '/' });
       window.location.href = window.location.origin + '/';
     });
