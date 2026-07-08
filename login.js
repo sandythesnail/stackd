@@ -4,6 +4,7 @@ window.addEventListener('load', async function () {
     appearance: {
       elements: {
         headerTitle: { color: '#4A6844' },
+        footerAction: { display: 'none' },
       },
     },
   });
