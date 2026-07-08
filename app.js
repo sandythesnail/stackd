@@ -12504,13 +12504,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('onboarding-skip').addEventListener('click', () => finishOnboardingSurvey(true));
 
   // Sidebar expand/collapse
-  const SIDEBAR_KEY = 'stackd_sidebar_collapsed';
   const sidebar = document.getElementById('sidebar');
-  const storedCollapsed = localStorage.getItem(SIDEBAR_KEY);
-  sidebar.classList.toggle('collapsed', storedCollapsed === null ? true : storedCollapsed === '1');
+  sidebar.classList.remove('collapsed');
   document.getElementById('sidebar-toggle').addEventListener('click', () => {
-    const collapsed = !sidebar.classList.contains('collapsed');
-    sidebar.classList.toggle('collapsed', collapsed);
-    localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
+    sidebar.classList.toggle('collapsed');
   });
 });
