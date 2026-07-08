@@ -8497,7 +8497,28 @@ function loadState() {
 
 function saveState() {
   const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, noImpulseStreak } = state;
-  localStorage.setItem('stackd_v2', JSON.stringify({ level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, noImpulseStreak }));
+  const snapshot = { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, noImpulseStreak };
+  localStorage.setItem('stackd_v2', JSON.stringify(snapshot));
+  scheduleSupabaseSync(snapshot);
+}
+
+let supabaseSyncTimeout = null;
+function scheduleSupabaseSync(snapshot) {
+  if (!window.stackdSupabase || !window.Clerk?.user) return;
+  clearTimeout(supabaseSyncTimeout);
+  supabaseSyncTimeout = setTimeout(() => {
+    window.stackdSupabase
+      .from('user_progress')
+      .upsert({ clerk_user_id: Clerk.user.id, state: snapshot })
+      .then(({ error }) => { if (error) console.error('Supabase sync failed:', error); });
+  }, 2000);
+}
+
+function applyRemoteState(remote) {
+  if (!remote) return;
+  Object.assign(state, remote);
+  saveState();
+  renderHome();
 }
 
 // ── XP / Level ─────────────────────────────────

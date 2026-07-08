@@ -8,6 +8,23 @@ window.addEventListener('load', async function () {
     return;
   }
 
+  window.stackdSupabase = window.supabase.createClient(
+    'https://fapuxciloeyonxfvtgix.supabase.co',
+    'sb_publishable_8i-NzWyy1fOlR5iER4k1dQ_gGN0HtkL',
+    { accessToken: () => Clerk.session.getToken() }
+  );
+
+  const { data: remoteRow, error: remoteError } = await window.stackdSupabase
+    .from('user_progress')
+    .select('state')
+    .eq('clerk_user_id', Clerk.user.id)
+    .maybeSingle();
+  if (remoteError) {
+    console.error('Failed to load Supabase progress:', remoteError);
+  } else if (remoteRow && typeof window.applyRemoteState === 'function') {
+    window.applyRemoteState(remoteRow.state);
+  }
+
   const nameEl = document.getElementById('settings-account-name');
   if (nameEl) {
     nameEl.textContent = Clerk.user.primaryEmailAddress?.emailAddress || Clerk.user.firstName || 'Account';
