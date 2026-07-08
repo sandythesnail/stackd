@@ -13,7 +13,7 @@ window.addEventListener('load', async function () {
 
 // Typewriter effect on hero subtitle
 const typewriterEl = document.getElementById('hero-typewriter');
-const typewriterText = 'Learn budgeting, saving, and investing through digestible and fun lessons, streaks, and rewards, built for the way students actually learn.';
+const typewriterText = 'Budgeting, saving, and investing, taught in quick lessons that actually stick. Earn streaks and rewards while you learn.';
 let twIndex = 0;
 function typeNextChar() {
   if (!typewriterEl || twIndex > typewriterText.length) return;
