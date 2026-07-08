@@ -17,6 +17,7 @@ window.addEventListener('load', async function () {
   Clerk.mountSignIn(document.getElementById('clerk-sign-in'), {
     fallbackRedirectUrl: window.location.origin + '/app.html',
     forceRedirectUrl: window.location.origin + '/app.html',
+    signUpUrl: window.location.origin + '/signup.html',
   });
 
   Clerk.addListener(({ user }) => {
