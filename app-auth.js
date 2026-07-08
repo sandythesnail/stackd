@@ -24,6 +24,9 @@ window.addEventListener('load', async function () {
   } else if (remoteRow && typeof window.applyRemoteState === 'function') {
     window.applyRemoteState(remoteRow.state);
   }
+  if (typeof window.maybeShowFirstTimeExperience === 'function') {
+    window.maybeShowFirstTimeExperience();
+  }
 
   const nameEl = document.getElementById('settings-account-name');
   if (nameEl) {

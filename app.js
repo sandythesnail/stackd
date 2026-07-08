@@ -12486,12 +12486,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!state.onboardingSurvey.completed) showOnboardingSurvey();
   };
 
-  if (!state.metHammy) {
-    document.getElementById('birth-pig-wrap').innerHTML = getPigMarkup(0.22);
-    document.getElementById('birth-overlay').classList.add('visible');
-  } else {
-    maybeShowOnboardingSurvey();
-  }
+  window.maybeShowFirstTimeExperience = function () {
+    if (!state.metHammy) {
+      document.getElementById('birth-pig-wrap').innerHTML = getPigMarkup(0.22);
+      document.getElementById('birth-overlay').classList.add('visible');
+    } else {
+      maybeShowOnboardingSurvey();
+    }
+  };
+
   document.getElementById('birth-ok').addEventListener('click', () => {
     document.getElementById('birth-overlay').classList.remove('visible');
     state.metHammy = true;
