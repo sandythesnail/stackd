@@ -1,3 +1,10 @@
+window.addEventListener('load', async function () {
+  await Clerk.load();
+  if (Clerk.isSignedIn) {
+    window.location.href = 'app.html';
+  }
+});
+
 // Typewriter effect on hero subtitle
 const typewriterEl = document.getElementById('hero-typewriter');
 const typewriterText = 'Learn budgeting, saving, and investing through digestible and fun lessons, streaks, and rewards, built for the way students actually learn.';
