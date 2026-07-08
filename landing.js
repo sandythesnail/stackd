@@ -1,8 +1,14 @@
 window.addEventListener('load', async function () {
-  await Clerk.load();
-  if (Clerk.isSignedIn) {
-    window.location.href = 'app.html';
+  try {
+    await Clerk.load();
+    if (Clerk.isSignedIn) {
+      window.location.href = 'app.html';
+      return;
+    }
+  } catch (e) {
+    // Clerk failed to load; fall through and show the page anyway.
   }
+  document.documentElement.style.visibility = 'visible';
 });
 
 // Typewriter effect on hero subtitle
