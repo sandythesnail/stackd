@@ -8716,7 +8716,7 @@ function renderModuleList(containerId) {
     }
 
     row.innerHTML = `
-      <div class="module-row-header">
+      <div class="module-row-header" role="button" tabindex="0" aria-expanded="false">
         <div class="mrh-left">
           <div class="mod-icon ${m.iconColor}">${m.icon}</div>
           <div class="mrh-info">
@@ -8725,8 +8725,19 @@ function renderModuleList(containerId) {
           </div>
         </div>
         <div class="mrh-right">${badge}</div>
+        <svg class="mrh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       ${bodyHtml}`;
+
+    const header = row.querySelector('.module-row-header');
+    const toggleExpanded = () => {
+      const expanded = row.classList.toggle('expanded');
+      header.setAttribute('aria-expanded', String(expanded));
+    };
+    header.addEventListener('click', toggleExpanded);
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpanded(); }
+    });
 
     if (quest) {
       row.querySelectorAll('.quest-tile').forEach(tile => {
