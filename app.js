@@ -8560,47 +8560,6 @@ function updateStreak() {
   return 0;
 }
 
-// ── No-Impulse-Buy Streak (honor system) ────────
-// A second, independent streak from the main daily one: the player self-reports "I skipped
-// an impulse buy today," at most once per calendar day, same date-comparison convention as
-// updateStreak(). Never punitive — missing a day just resets the count, no other penalty.
-const NO_IMPULSE_AVOIDED_PER_DAY = 12;
-const NO_IMPULSE_MILESTONES = [3, 7, 14, 30];
-let noImpulseMilestoneJustHit = null;
-
-function checkInNoImpulseBuy() {
-  const ns = state.noImpulseStreak;
-  const today = new Date().toDateString();
-  if (ns.lastCheckinDate === today) return;
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
-  ns.count = ns.lastCheckinDate === yesterday ? ns.count + 1 : 1;
-  ns.lastCheckinDate = today;
-  saveState();
-  noImpulseMilestoneJustHit = NO_IMPULSE_MILESTONES.includes(ns.count) ? ns.count : null;
-  renderHome();
-}
-
-function renderNoImpulseBuyWidget() {
-  const ns = state.noImpulseStreak;
-  const today = new Date().toDateString();
-  const checkedInToday = ns.lastCheckinDate === today;
-  const savedEstimate = ns.count * NO_IMPULSE_AVOIDED_PER_DAY;
-  const milestoneHtml = noImpulseMilestoneJustHit
-    ? `<p class="noimpulse-milestone">🎉 ${noImpulseMilestoneJustHit}-day streak! That's roughly $${(noImpulseMilestoneJustHit * NO_IMPULSE_AVOIDED_PER_DAY).toLocaleString()} in avoided impulse spending, keep it up.</p>`
-    : '';
-  noImpulseMilestoneJustHit = null;
-  return `
-    <div class="noimpulse-head">
-      <h3>No-Impulse-Buy Streak</h3>
-      <span class="noimpulse-count">${ns.count} day${ns.count === 1 ? '' : 's'}</span>
-    </div>
-    <p class="noimpulse-sub">Self-reported, honor system — about $${savedEstimate.toLocaleString()} estimated avoided spending at $${NO_IMPULSE_AVOIDED_PER_DAY}/day.</p>
-    ${milestoneHtml}
-    <button type="button" class="noimpulse-btn" id="noimpulse-checkin-btn" ${checkedInToday ? 'disabled' : ''}>
-      ${checkedInToday ? '✓ Checked in today' : 'I skipped an impulse buy today'}
-    </button>`;
-}
-
 function buildStreakDiamondBanner(diamondsEarned) {
   return `<div class="streak-diamond-banner">
     <span class="diamond-icon">💎</span>
@@ -9272,6 +9231,16 @@ function refreshShopModal(itemId) {
   document.getElementById('shop-modal-btn-wrap').innerHTML = btn;
 }
 
+function playMysteryBoxSpin(item) {
+  const accessoryEl = document.getElementById('shop-modal-accessory');
+  document.getElementById('shop-modal-pig').innerHTML = '';
+  document.getElementById('shop-modal-name').textContent = 'Opening...';
+  document.getElementById('shop-modal-desc').textContent = '';
+  document.getElementById('shop-modal-btn-wrap').innerHTML = '';
+  accessoryEl.innerHTML = `<div class="mystery-spin-icon">🎁</div>`;
+  setTimeout(() => showMysteryReveal(item), 1800);
+}
+
 function showMysteryReveal(item) {
   const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
   document.getElementById('shop-modal-pig').innerHTML = getPigWithItemMarkup(0.42, item);
@@ -9540,33 +9509,6 @@ function renderRoomPage() {
 }
 
 // ── HOME ───────────────────────────────────────
-function renderFinancialDashboardWidget() {
-  const fs = state.financialState;
-  const netWorth = fs.checking + fs.savings;
-  return `
-    <div class="findash-head">
-      <h3>Your Simulated Finances</h3>
-      <span class="findash-sub">Shifts as life events happen — practice, not real money</span>
-    </div>
-    <div class="findash-row">
-      <div class="findash-stat">
-        <div class="findash-label">Checking</div>
-        <div class="findash-num">$${fs.checking.toLocaleString()}</div>
-      </div>
-      <div class="findash-stat">
-        <div class="findash-label">Savings</div>
-        <div class="findash-num">$${fs.savings.toLocaleString()}</div>
-      </div>
-      <div class="findash-stat">
-        <div class="findash-label">Credit Score</div>
-        <div class="findash-num">${fs.creditScore}</div>
-      </div>
-      <div class="findash-stat">
-        <div class="findash-label">Net Worth</div>
-        <div class="findash-num">$${netWorth.toLocaleString()}</div>
-      </div>
-    </div>`;
-}
 
 function renderHome() {
   showPage('home');
@@ -9582,12 +9524,6 @@ function renderHome() {
       <div class="mascot-tier-name">${tier.name}</div>
       <div class="mascot-unlock">${getPigAccessoryDesc(state.level)}</div>
     </div>`;
-
-  document.getElementById('home-findash').innerHTML = renderFinancialDashboardWidget();
-
-  document.getElementById('home-noimpulse').innerHTML = renderNoImpulseBuyWidget();
-  const checkinBtn = document.getElementById('noimpulse-checkin-btn');
-  if (checkinBtn) checkinBtn.addEventListener('click', checkInNoImpulseBuy);
 
   document.getElementById('home-stats-row').innerHTML = `
     <div class="hs-card">
@@ -10018,17 +9954,22 @@ function renderBudgetCalculatorPanel() {
         </select>
       </div>
       <input type="range" class="microsim-range" id="whatif-slider" min="0" max="${Math.max(1, maxCut)}" step="5" value="${cut}">
-      <p class="budget-whatif-result">Cut this by <strong>$${cut.toFixed(0)}</strong> → remaining balance becomes <strong>$${newRemaining.toFixed(0)}</strong>${plan.savingsGoal > 0 ? (newRemaining >= plan.savingsGoal ? ' — enough to hit your savings goal.' : `, still $${Math.max(0, plan.savingsGoal - newRemaining).toFixed(0)} short of your goal.`) : '.'}</p>`;
+      <p class="budget-whatif-result" id="whatif-result">Cut this by <strong>$${cut.toFixed(0)}</strong> → remaining balance becomes <strong>$${newRemaining.toFixed(0)}</strong>${plan.savingsGoal > 0 ? (newRemaining >= plan.savingsGoal ? ' — enough to hit your savings goal.' : `, still $${Math.max(0, plan.savingsGoal - newRemaining).toFixed(0)} short of your goal.`) : '.'}</p>`;
 
     document.getElementById('whatif-category').addEventListener('change', (e) => {
       whatif.dataset.category = e.target.value;
       whatif.dataset.cut = 0;
       renderWhatIf(computeBudgetTotals(plan));
     });
+    // Update only the result text on drag, rather than re-rendering the whole widget:
+    // replacing the slider's own DOM node mid-drag (via renderWhatIf's innerHTML swap)
+    // broke the browser's native drag tracking and made it undraggable.
     document.getElementById('whatif-slider').addEventListener('input', (e) => {
+      const liveCut = Number(e.target.value);
       whatif.dataset.category = savedCategory;
-      whatif.dataset.cut = e.target.value;
-      renderWhatIf(computeBudgetTotals(plan));
+      whatif.dataset.cut = liveCut;
+      const liveRemaining = totals.remaining + liveCut;
+      document.getElementById('whatif-result').innerHTML = `Cut this by <strong>$${liveCut.toFixed(0)}</strong> → remaining balance becomes <strong>$${liveRemaining.toFixed(0)}</strong>${plan.savingsGoal > 0 ? (liveRemaining >= plan.savingsGoal ? ' — enough to hit your savings goal.' : `, still $${Math.max(0, plan.savingsGoal - liveRemaining).toFixed(0)} short of your goal.`) : '.'}`;
     });
   }
 
@@ -12466,7 +12407,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const clickedItem = SHOP_ITEMS.find(i => i.id === btn.dataset.id);
       if (clickedItem && clickedItem.isMysteryBox) {
         const won = openMysteryBox(btn.dataset.id);
-        if (won) showMysteryReveal(won);
+        if (won) playMysteryBoxSpin(won);
         renderShopPage();
       } else {
         handleShopAction(btn.dataset.id);

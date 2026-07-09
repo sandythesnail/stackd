@@ -187,48 +187,6 @@ body { background: var(--bg); min-height: 100vh; }
 }
 .mascot-unlock { font-size: 0.85rem; color: var(--text-mid); line-height: 1.5; }
 
-/* ─── FINANCIAL DASHBOARD WIDGET ─── */
-.fin-dashboard-card {
-  background: #fff; border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 1.25rem 1.5rem;
-}
-.findash-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
-.findash-head h3 { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
-.findash-sub { font-size: 0.72rem; color: var(--text-soft); font-weight: 500; }
-.findash-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
-.findash-stat {
-  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: 0.75rem 0.9rem;
-}
-.findash-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-soft); margin-bottom: 0.25rem; }
-.findash-num { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
-
-@media (max-width: 700px) {
-  .findash-row { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* ─── NO-IMPULSE-BUY STREAK WIDGET ─── */
-.noimpulse-card {
-  background: #fff; border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 1.25rem 1.5rem;
-}
-.noimpulse-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.35rem; }
-.noimpulse-head h3 { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
-.noimpulse-count { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--green-dark); }
-.noimpulse-sub { font-size: 0.78rem; color: var(--text-soft); font-weight: 500; margin-bottom: 1rem; line-height: 1.5; }
-.noimpulse-milestone {
-  font-size: 0.82rem; font-weight: 600; color: var(--green-dark); background: var(--green-pale);
-  border: 1px solid var(--green-light); border-radius: var(--radius-sm); padding: 0.6rem 0.85rem;
-  margin-bottom: 1rem; line-height: 1.5;
-}
-.noimpulse-btn {
-  width: 100%; padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: none;
-  background: var(--green-dark); color: #fff; font-family: inherit; font-size: 0.88rem; font-weight: 700;
-  cursor: pointer; transition: background 0.2s, transform 0.2s;
-}
-.noimpulse-btn:hover:not(:disabled) { background: #3D5938; transform: translateY(-1px); }
-.noimpulse-btn:disabled { background: var(--green-pale); color: var(--green-dark); cursor: default; }
-
 /* ─── HOME SECTIONS ─── */
 .home-section { display: flex; flex-direction: column; gap: 1rem; }
 .section-head { display: flex; align-items: baseline; justify-content: space-between; }
@@ -618,9 +576,12 @@ select.budget-input { cursor: pointer; }
 .ci-preset-btn.active span { color: var(--green-dark); }
 
 .ci-result-card { }
-.ci-headline { margin-bottom: 1rem; }
+.ci-headline { margin-bottom: 1rem; min-height: 5.3rem; }
 .ci-headline-num { display: block; font-family: var(--font-display); font-size: 2.2rem; font-weight: 700; color: var(--green-dark); line-height: 1.1; }
-.ci-headline-sub { display: block; font-size: 0.8rem; color: var(--text-mid); margin-top: 0.4rem; line-height: 1.5; }
+.ci-headline-sub {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  font-size: 0.8rem; color: var(--text-mid); margin-top: 0.4rem; line-height: 1.5;
+}
 .ci-chart-wrap { width: 100%; }
 .ci-svg { width: 100%; height: auto; display: block; }
 .ci-area-contrib { fill: var(--green-light); opacity: 0.55; }
@@ -2138,6 +2099,15 @@ select.budget-input { cursor: pointer; }
   height: 130px; padding: 0.75rem; margin-bottom: 0.15rem;
 }
 .shop-modal-item-preview svg { height: 100%; width: auto; max-width: 100%; }
+.mystery-spin-icon {
+  font-size: 3.2rem;
+  animation: mystery-spin-anim 1.8s cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+}
+@keyframes mystery-spin-anim {
+  0%   { transform: rotate(0deg) scale(1); }
+  70%  { transform: rotate(1080deg) scale(1.15); }
+  100% { transform: rotate(1440deg) scale(1); }
+}
 .shop-modal-name {
   font-family: var(--font-display);
   font-size: 1.15rem; font-weight: 700; color: var(--text);
