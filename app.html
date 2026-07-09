@@ -93,10 +93,19 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
         <span class="nav-label">Badges</span>
       </button>
-      <button class="nav-item" data-page="room">
+      <button class="nav-item nav-item-expandable collapsed" data-page="room" id="nav-room-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M3 12h18v6a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1H6v1a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M5 12V8a2 2 0 012-2h10a2 2 0 012 2v4"/></svg>
         <span class="nav-label">Room</span>
+        <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
+      <div class="nav-subnav" id="nav-room-subnav">
+        <button class="nav-subitem" data-room-tab="room">
+          <span class="nav-label">Room</span>
+        </button>
+        <button class="nav-subitem" data-room-tab="wardrobe">
+          <span class="nav-label">Hammy's Wardrobe</span>
+        </button>
+      </div>
       <button class="nav-item nav-item-expandable collapsed" data-page="shop" id="nav-shop-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
         <span class="nav-label">Shop</span>

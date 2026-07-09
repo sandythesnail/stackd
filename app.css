@@ -945,7 +945,7 @@ select.budget-input { cursor: pointer; }
   display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--green-dark);
   flex-shrink: 0; font-family: var(--font-display); overflow: hidden;
 }
-.story-avatar.has-character { background: var(--bg); }
+.story-avatar.has-character { background: var(--bg); overflow: visible; }
 .story-bubble {
   background: #fff; border: 2px solid var(--border); border-radius: var(--radius);
   padding: 0.9rem 1.1rem; font-size: 1.18rem; line-height: 1.55; color: var(--text);
@@ -1645,7 +1645,7 @@ select.budget-input { cursor: pointer; }
     repeating-linear-gradient(90deg, #C6935B 0, #C6935B 58px, #B98650 58px, #B98650 62px),
     linear-gradient(180deg, #D7A968, #B9834C);
 }
-.room-pig { position: relative; z-index: 2; margin-bottom: 0.5%; }
+.room-pig { position: relative; z-index: 2; margin-bottom: 0.5%; cursor: pointer; }
 .room-pig .pig-stage { transform-origin: bottom center; }
 .room-slot { position: absolute; }
 .room-slot svg { width: 100%; height: 100%; display: block; }
@@ -1668,6 +1668,37 @@ select.budget-input { cursor: pointer; }
 
 .wallpaper-swatch { width: 100%; height: 100%; border-radius: var(--radius-sm); }
 
+/* ─── WARDROBE ─── */
+.wardrobe-backdrop {
+  background:
+    repeating-linear-gradient(90deg, #7A5A44 0, #7A5A44 68px, #6B4C38 68px, #6B4C38 72px),
+    linear-gradient(180deg, #8C6A50 0%, #8C6A50 14%, #5E4433 14%, #5E4433 100%);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 1.75rem 2rem 2.5rem; overflow-y: auto;
+}
+.wardrobe-header { text-align: center; margin-bottom: 1rem; }
+.wardrobe-header .room-title, .wardrobe-header .room-subtitle { color: #fff; }
+.wardrobe-header .room-subtitle { opacity: 0.85; }
+.wardrobe-pig-stage { display: flex; justify-content: center; margin: 1rem 0 2rem; position: relative; z-index: 2; }
+.wardrobe-items-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.9rem;
+  width: 100%; max-width: 640px; position: relative; z-index: 2;
+}
+.wardrobe-item {
+  background: #fff; border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 0.75rem 0.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  cursor: pointer; position: relative; transition: border-color 0.2s, transform 0.2s;
+}
+.wardrobe-item:hover { transform: translateY(-2px); }
+.wardrobe-item.equipped { border-color: var(--green); background: var(--green-pale); }
+.wardrobe-item svg { width: 48px; height: 48px; }
+.wardrobe-item-name { font-size: 0.72rem; font-weight: 700; color: var(--text); text-align: center; }
+.wardrobe-item-check {
+  position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--green-dark); color: #fff; font-size: 0.7rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.wardrobe-empty { color: #fff; opacity: 0.9; font-size: 0.95rem; margin-top: 2rem; text-align: center; max-width: 320px; }
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
@@ -2040,6 +2071,16 @@ select.budget-input { cursor: pointer; }
   height: 185px; overflow: hidden;
 }
 .shop-preview .pig-stage { flex-shrink: 0; }
+
+/* Mystery boxes are the shop's headline mechanic, so give them a much bigger, harder-to-miss
+   card instead of the same footprint as a single cosmetic item. */
+.shop-card.shop-card-mystery { grid-column: span 2; }
+.shop-card.shop-card-mystery .shop-preview { height: 280px; padding: 1.5rem; }
+.shop-card.shop-card-mystery .shop-item-name { font-size: 1.15rem; }
+.shop-card.shop-card-mystery .shop-item-price { font-size: 0.92rem; }
+@media (max-width: 520px) {
+  .shop-card.shop-card-mystery { grid-column: span 1; }
+}
 
 .shop-card-body {
   padding: 0.75rem 1rem 0.85rem;

@@ -8283,16 +8283,12 @@ const ACHIEVEMENTS = [
     icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
   { id: 'on_fire', tier: 'gold', color: '#E8622C', label: 'On a Roll', desc: 'Play Stacked 7 days in a row without missing a day.', check: s => s.streak >= 7,
     icon: '<path d="M12 2c1 4-3 5-3 9a3 3 0 0 0 6 0c0-2-1-3-1-3s2 1 2 4a5 5 0 0 1-10 0c0-5 4-6 4-10z"/>' },
-  { id: 'discipline', tier: 'gold', color: '#2AA8C4', label: 'Discipline', desc: 'Self-report 7 days in a row of skipping an impulse buy on the Home dashboard.', check: s => !!(s.noImpulseStreak && s.noImpulseStreak.count >= 7),
-    icon: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' },
   { id: 'iron_will', tier: 'gold', color: '#4A4A57', label: 'Iron Will', desc: 'Land the optimal path on both Boss Challenges — Budgeting\'s and Consumer Psychology\'s — resisting or avoiding every costly choice.', check: s => bossChallengeOptimal(s, 'spending') && bossChallengeOptimal(s, 'psychology'),
     icon: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>' },
   { id: 'excellent_credit', tier: 'gold', color: '#1F9D6B', label: 'Excellent Credit', desc: 'Push your simulated credit score to 800 or above — years of consistently good life-event decisions.', check: s => !!(s.financialState && s.financialState.creditScore >= 800),
     icon: '<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/><path d="M9 3l3 6-3 12"/><path d="M15 3l-3 6 3 12"/>' },
   { id: 'marathoner', tier: 'diamond', color: '#2856A8', label: 'Marathoner', desc: 'Play Stacked 30 days in a row without missing a single day. Ultra rare — most students never make it this far.', check: s => s.streak >= 30,
     icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' },
-  { id: 'untouchable', tier: 'diamond', color: '#6A3FA0', label: 'Untouchable', desc: 'Self-report 30 days in a row of skipping an impulse buy. A full month of discipline, ultra rare.', check: s => !!(s.noImpulseStreak && s.noImpulseStreak.count >= 30),
-    icon: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>' },
   { id: 'stackd_star', tier: 'diamond', color: '#D4A017', label: 'Stacked Star', desc: 'Master every single module in Stacked — the full curriculum, flawlessly. Ultra rare.', check: s => MODULES.every(m => hasMasteredModule(s, m.id)),
     icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
   { id: 'grandmaster', tier: 'diamond', color: '#9B1B30', label: 'Grandmaster', desc: 'Unlock every other badge in Stacked. The single hardest badge in the app — there is nothing beyond this one.', check: s => ACHIEVEMENTS.filter(x => x.id !== 'grandmaster').every(x => (s.unlockedAchievements || []).includes(x.id)),
@@ -8465,7 +8461,7 @@ let state = {
   completedModules: {}, completedLessons: {}, unlockedAchievements: [], hadPerfect: false,
   activeModuleId: null, activeLessonIdx: 0, activeQuestId: null, sessionQuestions: [],
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
-  coins: 0, diamonds: 0, ownedItems: [], equippedItem: null,
+  coins: 0, diamonds: 0, ownedItems: [], equippedItems: [],
   ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null },
   metHammy: false,
   questProgress: {}, questBossesWon: [],
@@ -8483,9 +8479,6 @@ let state = {
   // separate from any single quest's own dashboard, and never touched by lessons/quizzes directly.
   financialState: { checking: 600, savings: 200, creditScore: 650 },
   lifeEvents: { history: [], sessionCount: 0, lastTriggeredSession: -99 },
-  // Separate from the main daily streak — an honor-system self-report for "I skipped an
-  // impulse buy today," checked in at most once per calendar day.
-  noImpulseStreak: { count: 0, lastCheckinDate: null },
 };
 
 function loadState() {
@@ -8496,8 +8489,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, noImpulseStreak } = state;
-  const snapshot = { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItem, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, noImpulseStreak };
+  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents } = state;
+  const snapshot = { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents };
   localStorage.setItem('stackd_v2', JSON.stringify(snapshot));
   scheduleSupabaseSync(snapshot);
 }
@@ -8600,17 +8593,17 @@ function checkAchievements() {
   // and equips it immediately so the payoff is visible the moment they land back on the pig.
   if (newOnes.some(a => a.id === 'stackd_star') && !(state.ownedItems || []).includes('graduation_cap')) {
     state.ownedItems = [...(state.ownedItems || []), 'graduation_cap'];
-    state.equippedItem = 'graduation_cap';
+    equipItem('graduation_cap');
   }
   // Unlocking every other achievement auto-awards the Angelic Halo — the hardest badge in the app.
   if (newOnes.some(a => a.id === 'grandmaster') && !(state.ownedItems || []).includes('grandmaster_halo')) {
     state.ownedItems = [...(state.ownedItems || []), 'grandmaster_halo'];
-    state.equippedItem = 'grandmaster_halo';
+    equipItem('grandmaster_halo');
   }
   // A 30-day streak auto-awards the Marathon Medal.
   if (newOnes.some(a => a.id === 'marathoner') && !(state.ownedItems || []).includes('marathon_medal')) {
     state.ownedItems = [...(state.ownedItems || []), 'marathon_medal'];
-    state.equippedItem = 'marathon_medal';
+    equipItem('marathon_medal');
   }
   return newOnes;
 }
@@ -9064,22 +9057,28 @@ function getPigMarkup(scale) {
 // glasses, and neckwear each live in a very different part of the pig's own 440×460 frame.
 const DEFAULT_ITEM_FIT = { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 };
 
-function getPigWithItemMarkup(scale, item) {
-  let svg = '', fit = DEFAULT_ITEM_FIT, layer = 'front';
-  if (typeof item === 'string') {
-    svg = item;
-  } else if (item && item.svg) {
-    svg = item.svg;
-    fit = item.fit || DEFAULT_ITEM_FIT;
-    layer = item.layer || 'front';
-  }
-  const matrixStr = `matrix(${fit.a},${fit.b},${fit.c},${fit.d},${fit.e},${fit.f})`;
-  const overlaySvg = svg ? `<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:440px;height:460px;pointer-events:none;overflow:visible"><g transform="${matrixStr}">${svg}</g></svg>` : '';
+function getPigWithItemMarkup(scale, itemOrItems) {
+  // Accepts a single item (shop preview) or an array (multiple simultaneously equipped items).
+  const items = Array.isArray(itemOrItems) ? itemOrItems : (itemOrItems ? [itemOrItems] : []);
   // Front-layer items (hats, glasses, neckwear) paint above the head/body; back-layer items
   // (capes) are inserted as the FIRST child of .pig so they paint behind body/arms/head —
   // draped over the shoulders instead of floating in front covering the whole pig.
-  const overlayBack = svg && layer === 'back' ? overlaySvg : '';
-  const overlayFront = svg && layer !== 'back' ? overlaySvg.replace('pointer-events:none;', 'pointer-events:none;z-index:10;') : '';
+  let overlayBack = '', overlayFront = '';
+  items.forEach(item => {
+    let svg = '', fit = DEFAULT_ITEM_FIT, layer = 'front';
+    if (typeof item === 'string') {
+      svg = item;
+    } else if (item && item.svg) {
+      svg = item.svg;
+      fit = item.fit || DEFAULT_ITEM_FIT;
+      layer = item.layer || 'front';
+    }
+    if (!svg) return;
+    const matrixStr = `matrix(${fit.a},${fit.b},${fit.c},${fit.d},${fit.e},${fit.f})`;
+    const overlaySvg = `<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:440px;height:460px;pointer-events:none;overflow:visible"><g transform="${matrixStr}">${svg}</g></svg>`;
+    if (layer === 'back') overlayBack += overlaySvg;
+    else overlayFront += overlaySvg.replace('pointer-events:none;', 'pointer-events:none;z-index:10;');
+  });
   return `<div class="pig-stage" style="--pig-scale:${scale}">
   <div class="pig-inner">
     <div class="pig-shadow"></div>
@@ -9106,9 +9105,18 @@ function getPigWithItemMarkup(scale, item) {
 // The player's own equipped cosmetic (bought and worn from the Shop) — used everywhere
 // "their" Hammy appears (Home, Progress, quest/activity companion, quest story portraits,
 // results) so a purchase visibly shows up across the whole app, not just on the Room page.
-function getEquippedItem() {
-  if (!state.equippedItem) return null;
-  return SHOP_ITEMS.find(i => i.id === state.equippedItem) || null;
+const MAX_EQUIPPED_ITEMS = 3;
+
+function getEquippedItems() {
+  return (state.equippedItems || []).map(id => SHOP_ITEMS.find(i => i.id === id)).filter(Boolean);
+}
+
+// Auto-awarded rewards (Graduation Cap, Angelic Halo, Marathon Medal) equip immediately as
+// the celebratory payoff, bypassing MAX_EQUIPPED_ITEMS since they're rare, one-time moments.
+function equipItem(itemId) {
+  if (!(state.equippedItems || []).includes(itemId)) {
+    state.equippedItems = [...(state.equippedItems || []), itemId];
+  }
 }
 
 function buildPigPreviewSvg(itemSvg, viewBox = '0 0 120 162') {
@@ -9194,7 +9202,7 @@ function refreshShopModal(itemId) {
   const isRoom = !!item.slot;
   const isWallpaper = item.slot === 'wallpaper';
   const owned = isRoom ? (state.ownedRoomItems || []).includes(itemId) : (state.ownedItems || []).includes(itemId);
-  const equipped = isRoom ? state.equippedRoom[item.slot] === itemId : state.equippedItem === itemId;
+  const equipped = isRoom ? state.equippedRoom[item.slot] === itemId : (state.equippedItems || []).includes(itemId);
   const canAfford = item.reward ? false : shopBalanceFor(item) >= item.price;
   let btn;
   if (item.isMysteryBox) {
@@ -9206,6 +9214,8 @@ function refreshShopModal(itemId) {
     }
   } else if (equipped) {
     btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'} · Remove</button>`;
+  } else if (owned && !isRoom && (state.equippedItems || []).length >= MAX_EQUIPPED_ITEMS) {
+    btn = `<button class="shop-btn shop-btn-broke" disabled>Unequip something first (max ${MAX_EQUIPPED_ITEMS})</button>`;
   } else if (owned) {
     btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">${isWallpaper ? 'Apply' : isRoom ? 'Place in room' : 'Equip'}</button>`;
   } else if (item.mysteryOnly) {
@@ -9263,6 +9273,7 @@ function closeShopModal() {
 
 // ── SHOP ───────────────────────────────────────
 let shopActiveTab = 'boutique';
+let roomActiveTab = 'room';
 
 const SHOP_CATEGORIES = [
   { key: 'exclusive', label: 'Diamond Exclusives', icon: '💎', tab: 'boutique' },
@@ -9290,7 +9301,7 @@ function renderShopPage() {
   const grid = document.getElementById('shop-grid');
   if (!grid) return;
 
-  const equippedItem = SHOP_ITEMS.find(i => i.id === state.equippedItem);
+  const wornItems = getEquippedItems();
 
   const categoriesHtml = SHOP_CATEGORIES.filter(cat => cat.tab === shopActiveTab).map(cat => {
     const items = SHOP_ITEMS.filter(i => i.category === cat.key).slice().sort((a, b) => {
@@ -9309,7 +9320,7 @@ function renderShopPage() {
       const isBox = !!item.isMysteryBox;
       const isPoolItem = !!item.mysteryPool && !isBox;
       const owned = isRoom ? (state.ownedRoomItems || []).includes(item.id) : (state.ownedItems || []).includes(item.id);
-      const equipped = isRoom ? state.equippedRoom[item.slot] === item.id : state.equippedItem === item.id;
+      const equipped = isRoom ? state.equippedRoom[item.slot] === item.id : (state.equippedItems || []).includes(item.id);
       const isLocked = !!item.mysteryOnly && !owned;
       const boxRemaining = isBox ? mysteryPoolUnowned(item.mysteryPool).length : 0;
       const canAfford = isReward ? false : isLocked ? false : (isBox && !boxRemaining) ? false : shopBalanceFor(item) >= item.price;
@@ -9327,7 +9338,7 @@ function renderShopPage() {
         : (isRoom || isBox)
           ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
           : getPigWithItemMarkup(0.29, item);
-      return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${(isReward || isLocked) && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
+      return `<div class="shop-card${isBox ? ' shop-card-mystery' : ''}${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${(isReward || isLocked) && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
         ${isDiamond && !isBox ? '<span class="shop-exclusive-ribbon">Mystery</span>' : ''}
         ${isBox ? '<span class="shop-exclusive-ribbon">Mystery</span>' : ''}
         ${isLocked && !isDiamond ? '<span class="shop-reward-ribbon">Mystery</span>' : ''}
@@ -9373,10 +9384,10 @@ function renderShopPage() {
           <span></span><span></span><span></span><span></span><span></span>
         </div>
         <div class="shop-storefront-inner">
-          <div class="shop-storefront-pig">${getPigWithItemMarkup(0.2, getEquippedItem())}</div>
+          <div class="shop-storefront-pig">${getPigWithItemMarkup(0.2, getEquippedItems())}</div>
           <div class="shop-storefront-text">
             <div class="shop-storefront-sign">Porky's Boutique</div>
-            <div class="shop-storefront-sub">${equippedItem ? `Currently wearing: <strong>${equippedItem.name}</strong>` : 'Pick something cute for your pig!'}</div>
+            <div class="shop-storefront-sub">${wornItems.length ? `Currently wearing: <strong>${wornItems.map(i => i.name).join(', ')}</strong>` : 'Pick something cute for your pig!'}</div>
             <div class="shop-earn-tip">Earn 🪙 coins by completing lessons · 💎 diamonds every 3-day streak</div>
           </div>
         </div>
@@ -9444,17 +9455,22 @@ function handleShopAction(itemId) {
   }
 
   const owned = (state.ownedItems || []).includes(itemId);
-  const equipped = state.equippedItem === itemId;
+  const equipped = (state.equippedItems || []).includes(itemId);
 
   if (equipped) {
-    state.equippedItem = null;
+    state.equippedItems = state.equippedItems.filter(id => id !== itemId);
   } else if (owned) {
-    state.equippedItem = itemId;
+    if ((state.equippedItems || []).length >= MAX_EQUIPPED_ITEMS) return;
+    state.equippedItems = [...(state.equippedItems || []), itemId];
   } else {
     if (shopBalanceFor(item) < item.price) return;
     if (isDiamond) state.diamonds -= item.price; else state.coins -= item.price;
     state.ownedItems = [...(state.ownedItems || []), itemId];
-    state.equippedItem = itemId;
+    // Auto-equip the new purchase only if there's a free slot; otherwise it's owned but
+    // stays unworn until the player frees one up from the shop.
+    if ((state.equippedItems || []).length < MAX_EQUIPPED_ITEMS) {
+      state.equippedItems = [...(state.equippedItems || []), itemId];
+    }
   }
   saveState();
   renderShopPage();
@@ -9462,12 +9478,13 @@ function handleShopAction(itemId) {
 
 // ── ROOM ───────────────────────────────────────
 function renderRoomPage() {
+  if (roomActiveTab === 'wardrobe') { renderWardrobeScene(); return; }
   updateSidebarStats();
   const scene = document.getElementById('room-scene');
   if (!scene) return;
 
   const room = state.equippedRoom || {};
-  const equippedOutfit = SHOP_ITEMS.find(i => i.id === state.equippedItem);
+  const equippedOutfit = getEquippedItems();
 
   function slotBlock(slotKey, emptyLabel) {
     const itemId = room[slotKey];
@@ -9501,12 +9518,56 @@ function renderRoomPage() {
       ${slotBlock('desk', 'Desk')}
       <div class="room-floor">
         ${slotBlock('rug', 'Rug')}
-        <div class="room-pig">${getPigWithItemMarkup(0.75, equippedOutfit || '')}</div>
+        <div class="room-pig">${getPigWithItemMarkup(0.75, equippedOutfit)}</div>
       </div>
     </div>`;
 
   scene.querySelectorAll('.room-slot.empty').forEach(el => {
     el.addEventListener('click', () => { showPage('shop'); renderShopPage(); });
+  });
+
+  scene.querySelector('.room-pig').addEventListener('click', () => {
+    roomActiveTab = 'wardrobe';
+    document.getElementById('nav-room-subnav').classList.add('open');
+    document.getElementById('nav-room-btn').classList.remove('collapsed');
+    renderRoomPage();
+  });
+}
+
+function renderWardrobeScene() {
+  updateSidebarStats();
+  const scene = document.getElementById('room-scene');
+  if (!scene) return;
+
+  const wornIds = state.equippedItems || [];
+  const closetItems = SHOP_ITEMS.filter(i => (i.category === 'hat' || i.category === 'accessory') && !i.isMysteryBox && (state.ownedItems || []).includes(i.id));
+
+  const itemsHtml = closetItems.length
+    ? closetItems.map(item => {
+        const isWorn = wornIds.includes(item.id);
+        return `<button type="button" class="wardrobe-item${isWorn ? ' equipped' : ''}" data-id="${item.id}">
+          <svg viewBox="${item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120'}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>
+          <span class="wardrobe-item-name">${item.name}</span>
+          ${isWorn ? '<span class="wardrobe-item-check">✓</span>' : ''}
+        </button>`;
+      }).join('')
+    : `<div class="wardrobe-empty">No hats or accessories yet, visit Porky's Boutique in the Shop to get some.</div>`;
+
+  scene.innerHTML = `
+    <div class="room-backdrop wardrobe-backdrop">
+      <div class="wardrobe-header">
+        <h1 class="room-title">Hammy's Wardrobe</h1>
+        <span class="room-subtitle">Click an item to dress Hammy up (up to ${MAX_EQUIPPED_ITEMS} at once)</span>
+      </div>
+      <div class="wardrobe-pig-stage">${getPigWithItemMarkup(0.9, getEquippedItems())}</div>
+      <div class="wardrobe-items-grid">${itemsHtml}</div>
+    </div>`;
+
+  scene.querySelectorAll('.wardrobe-item[data-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      handleShopAction(btn.dataset.id);
+      renderWardrobeScene();
+    });
   });
 }
 
@@ -9521,7 +9582,7 @@ function renderHome() {
   document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
 
   document.getElementById('home-mascot-card').innerHTML = `
-    <div class="mascot-pig-wrap">${getPigWithItemMarkup(0.25, getEquippedItem())}</div>
+    <div class="mascot-pig-wrap">${getPigWithItemMarkup(0.25, getEquippedItems())}</div>
     <div class="mascot-info">
       <div class="mascot-tier-name">${tier.name}</div>
       <div class="mascot-unlock">${getPigAccessoryDesc(state.level)}</div>
@@ -9598,7 +9659,7 @@ function renderProgressPage() {
   document.getElementById('progress-body').innerHTML = `
     <!-- Pig mascot -->
     <div class="pg-mascot-wrap">
-      <div class="pg-mascot-pig">${getPigWithItemMarkup(0.36, getEquippedItem())}</div>
+      <div class="pg-mascot-pig">${getPigWithItemMarkup(0.36, getEquippedItems())}</div>
       <div class="pg-mascot-bubble">${pigMsg}</div>
     </div>
 
@@ -10293,7 +10354,7 @@ function startBonusActivity(moduleId, lessonIdx) {
   document.getElementById('glossary-tray').classList.remove('show');
   document.getElementById('hint-budget').innerHTML = '';
   document.getElementById('quest-side').style.display = 'flex';
-  document.getElementById('hammy-side-avatar').innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItem());
+  document.getElementById('hammy-side-avatar').innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItems());
   document.getElementById('hammy-side-avatar').className = 'hammy-side-avatar';
   document.getElementById('hammy-side-msg').textContent = '';
   document.getElementById('hammy-side-msg').className = 'hammy-side-msg';
@@ -10965,7 +11026,7 @@ function renderChapter(mod, idx) {
   const hammyMsg = document.getElementById('hammy-side-msg');
   questSide.style.display = HAMMY_SIDE_HIDDEN_TYPES.includes(chapter.type) ? 'none' : 'flex';
   hammySide.className = 'hammy-side-avatar';
-  hammySide.innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItem());
+  hammySide.innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItems());
   hammyMsg.className = 'hammy-side-msg';
   hammyMsg.textContent = '';
 
@@ -11040,7 +11101,7 @@ function renderSubQuestResults(mod, qp, newAchs) {
   ).join('');
 
   document.getElementById('results-wrap').innerHTML = `
-    <div class="subquest-celebrate-hammy hammy-side-avatar streak">${getPigWithItemMarkup(0.55, getEquippedItem())}</div>
+    <div class="subquest-celebrate-hammy hammy-side-avatar streak">${getPigWithItemMarkup(0.55, getEquippedItems())}</div>
     <div class="results-grade">Sub-Quest Complete</div>
     <h2 class="results-title">${quest.topic}</h2>
     <p class="results-score">Hammy just walked through this one step by step, for real — here's what stuck.</p>
@@ -11115,7 +11176,7 @@ function applyQuestStateDelta(mod, delta) {
 // Compact Hammy face (reuses the existing pig markup, cropped to just the head via .pig-head-stage).
 // Shows the player's own equipped item so a purchase shows up here too, not just full-body views.
 function getHammyFaceMarkup(scale) {
-  return getPigWithItemMarkup(scale, getEquippedItem()).replace('class="pig-stage"', 'class="pig-stage pig-head-stage"');
+  return getPigWithItemMarkup(scale, getEquippedItems()).replace('class="pig-stage"', 'class="pig-stage pig-head-stage"');
 }
 
 // Glossary tray — every term taught moves here once the student clicks past it, so they can
@@ -11560,7 +11621,7 @@ function renderStoryChapter(chapter, mod, onDone) {
       const captionBudget = 210; // rough space reserved for the caption + gap below the avatar
       const maxScale = window.innerWidth <= 640 ? 0.62 : 0.85;
       const introScale = Math.max(0.4, Math.min(maxScale, (available - captionBudget) / 460));
-      entry.innerHTML = `<div class="intro-avatar">${getPigWithItemMarkup(introScale, getEquippedItem())}</div><p class="intro-caption">${beat.text}</p>`;
+      entry.innerHTML = `<div class="intro-avatar">${getPigWithItemMarkup(introScale, getEquippedItems())}</div><p class="intro-caption">${beat.text}</p>`;
       entry.style.minHeight = Math.max(240, available) + 'px';
     } else {
       const isNarrator = beat.speaker === 'narrator';
@@ -12311,7 +12372,7 @@ function buildQuestReport(mod, qp) {
       ${strengthsHtml}
       ${weakHtml}
       <div class="report-advice">
-        <div class="hammy-report-avatar">${getPigWithItemMarkup(0.4, getEquippedItem())}</div>
+        <div class="hammy-report-avatar">${getPigWithItemMarkup(0.4, getEquippedItems())}</div>
         <p><strong>Hammy's advice:</strong> ${advice}</p>
       </div>
     </div>`;
@@ -12390,6 +12451,22 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('nav-shop-btn').classList.remove('collapsed');
       showPage('shop');
       renderShopPage();
+    });
+  });
+
+  const roomSubnav = document.getElementById('nav-room-subnav');
+  document.getElementById('nav-room-btn').addEventListener('click', () => {
+    roomSubnav.classList.toggle('open');
+    document.getElementById('nav-room-btn').classList.toggle('collapsed', !roomSubnav.classList.contains('open'));
+  });
+
+  document.querySelectorAll('.nav-subitem[data-room-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      roomActiveTab = btn.dataset.roomTab;
+      roomSubnav.classList.add('open');
+      document.getElementById('nav-room-btn').classList.remove('collapsed');
+      showPage('room');
+      renderRoomPage();
     });
   });
 
