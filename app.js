@@ -7377,7 +7377,7 @@ const MODULES = [
 const SHOP_ITEMS = [
   // ── HATS ──
   {
-    id: 'hat_mystery_box', name: 'Hat Mystery Box', category: 'hat', price: 0, // TEMP: 0 for testing, was 150
+    id: 'hat_mystery_box', name: 'Hat Mystery Box', category: 'hat', price: 150,
     isMysteryBox: true, mysteryPool: 'hat',
     viewBox: '20 20 80 75',
     desc: 'A random hat, ribbon and all. You never know what you\'ll get!',
@@ -7718,7 +7718,7 @@ const SHOP_ITEMS = [
   },
   // ── ACCESSORIES ──
   {
-    id: 'accessory_mystery_box', name: 'Accessory Mystery Box', category: 'accessory', price: 0, // TEMP: 0 for testing, was 110
+    id: 'accessory_mystery_box', name: 'Accessory Mystery Box', category: 'accessory', price: 110,
     isMysteryBox: true, mysteryPool: 'accessory',
     viewBox: '20 20 80 75',
     desc: 'A random accessory to complete the look.',
@@ -8063,7 +8063,7 @@ const SHOP_ITEMS = [
 
   // ── DIAMOND EXCLUSIVES (earned via 3-day streak bonuses, not coins) ──
   {
-    id: 'diamond_mystery_box', name: 'Diamond Mystery Box', category: 'exclusive', currency: 'diamond', price: 0, // TEMP: 0 for testing, was 20
+    id: 'diamond_mystery_box', name: 'Diamond Mystery Box', category: 'exclusive', currency: 'diamond', price: 20,
     isMysteryBox: true, mysteryPool: 'exclusive',
     viewBox: '20 20 80 75',
     desc: 'Crack open a dazzling diamond-tier surprise.',
