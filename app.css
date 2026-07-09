@@ -1899,20 +1899,21 @@ select.budget-input { cursor: pointer; }
 .module-row.expanded .mrh-chevron { transform: rotate(180deg); }
 
 .module-row-lessons {
-  display: grid; grid-template-columns: 1fr 1fr;
+  display: grid; grid-template-columns: 1fr;
   max-height: 0; overflow: hidden;
-  transition: max-height 0.25s ease;
+  transition: max-height 0.3s ease;
 }
 .module-row.expanded .module-row-lessons {
-  max-height: 1200px;
+  max-height: 2600px;
 }
 
 .lesson-tile {
   padding: 1rem 1.4rem; cursor: pointer;
   display: flex; align-items: center; gap: 0.85rem;
   transition: background 0.15s;
+  border-bottom: 1px solid var(--border);
 }
-.lesson-tile:first-child { border-right: 1px solid var(--border); }
+.lesson-tile:last-child { border-bottom: none; }
 .lesson-tile:hover { background: var(--green-pale); }
 
 .lt-status {
@@ -1947,17 +1948,11 @@ select.budget-input { cursor: pointer; }
   white-space: nowrap;
 }
 
-.lesson-tile:nth-child(2) { border-right: none; }
 .lesson-tile .lt-cta {
   background: var(--text); color: #fff;
 }
 .lesson-tile.done .lt-cta {
   background: var(--border); color: var(--text-mid);
-}
-
-@media (max-width: 600px) {
-  .module-row-lessons { grid-template-columns: 1fr; }
-  .lesson-tile:first-child { border-right: none; border-bottom: 1px solid var(--border); }
 }
 
 /* ─── SIDEBAR COINS ─── */
