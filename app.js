@@ -9422,14 +9422,17 @@ function renderShopPage() {
   updateShopNavHighlight();
 }
 
+// Owned items keep a reduced (not zero) share of their normal odds, so duplicates can
+// happen but stay the minority outcome rather than something that hits every other pull.
+const MYSTERY_OWNED_WEIGHT_FACTOR = 0.35;
+
 function pickMysteryItem(poolKey) {
-  // Every pull draws from the full pool, owned or not, so duplicates are a normal, common
-  // outcome (like a real gacha) rather than something that only happens once you've
-  // collected everything. openMysteryBox() handles the duplicate case with a partial refund.
   const pool = mysteryPoolAll(poolKey);
   const weighted = [];
   pool.forEach(item => {
-    const weight = RARITY_WEIGHT[itemRarity(item)];
+    const owned = (state.ownedItems || []).includes(item.id);
+    const baseWeight = RARITY_WEIGHT[itemRarity(item)];
+    const weight = owned ? Math.max(1, Math.round(baseWeight * MYSTERY_OWNED_WEIGHT_FACTOR)) : baseWeight;
     for (let k = 0; k < weight; k++) weighted.push(item);
   });
   return weighted[Math.floor(Math.random() * weighted.length)];
@@ -9445,9 +9448,8 @@ function openMysteryBox(itemId) {
   const won = pickMysteryItem(item.mysteryPool);
   if (!won) return null;
   if (item.currency === 'diamond') state.diamonds -= item.price; else state.coins -= item.price;
-  // pickMysteryItem draws from the whole pool every time, so duplicates are a normal, common
-  // outcome now, not just an edge case. Partial refund, not a full one, so pulling a
-  // duplicate still costs something (keeps completing a collection meaningfully hard).
+  // pickMysteryItem can still land on an owned item (at reduced odds), so duplicates do
+  // happen occasionally. Partial refund, not a full one, so it still costs something.
   const isDuplicate = (state.ownedItems || []).includes(won.id);
   const refundAmount = isDuplicate ? Math.floor(item.price * MYSTERY_DUPLICATE_REFUND_RATE) : 0;
   if (isDuplicate) {
