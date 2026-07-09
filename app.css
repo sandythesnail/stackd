@@ -173,6 +173,24 @@ body { background: var(--bg); min-height: 100vh; }
   font-size: 0.78rem; font-weight: 700; color: var(--text-soft);
   text-transform: uppercase; letter-spacing: 0.08em;
 }
+.hs-card-streak {
+  position: relative; text-align: left; cursor: pointer; font-family: inherit;
+  appearance: none; -webkit-appearance: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.hs-card-streak.hs-card-reward {
+  border-color: #F0C22E; box-shadow: 0 0 0 3px rgba(240, 194, 46, 0.18);
+  animation: hsRewardPulse 1.8s ease-in-out infinite;
+}
+@keyframes hsRewardPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(240, 194, 46, 0.18); }
+  50% { box-shadow: 0 0 0 6px rgba(240, 194, 46, 0.1); }
+}
+.hs-reward-dot {
+  position: absolute; top: 0.9rem; right: 0.9rem;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #F0C22E; border: 2px solid #fff;
+}
 
 /* ─── MASCOT CARD ─── */
 .mascot-card {

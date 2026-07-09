@@ -27,7 +27,7 @@ window.addEventListener('load', async function () {
 
   // Referral capture: if this browser arrived via a referral link before signing up,
   // record a pending row now that a real Clerk user id exists. The reward itself is never
-  // paid here — only claim_referral_activation() (called once the referred user finishes
+  // paid here, only claim_referral_activation() (called once the referred user finishes
   // their first lesson) can do that. Safe to attempt every load: a unique constraint on
   // referred_id makes a repeat insert a harmless no-op.
   const pendingRefCode = localStorage.getItem('stackd_referral_code');
@@ -40,9 +40,6 @@ window.addEventListener('load', async function () {
   localStorage.removeItem('stackd_referral_code');
   if (typeof window.maybeShowFirstTimeExperience === 'function') {
     window.maybeShowFirstTimeExperience();
-  }
-  if (typeof window.maybeClaimDailyLoginBonus === 'function') {
-    window.maybeClaimDailyLoginBonus();
   }
 
   const nameEl = document.getElementById('settings-account-name');

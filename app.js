@@ -8591,6 +8591,13 @@ const DAILY_LOGIN_BASE_COINS = 10;
 const DAILY_LOGIN_STEP_COINS = 2;
 const DAILY_LOGIN_CAP_COINS = 20;
 
+// Whether today's bonus hasn't been claimed yet, used to highlight the streak card on
+// Home rather than auto-popping a modal on every login.
+function dailyLoginBonusPending() {
+  const today = new Date().toDateString();
+  return !(state.dailyLoginLog && state.dailyLoginLog[today]);
+}
+
 // Returns coins awarded this call (0 if today was already claimed).
 function claimDailyLoginBonus() {
   const today = new Date().toDateString();
@@ -8661,25 +8668,29 @@ function showToast(message, icon) {
 // ── Referrals ────────────────────────────────
 // The pending referral row (referrer -> this account) is created at signup by app-auth.js.
 // The actual reward only ever pays out through the claim_referral_activation() Postgres
-// function (SECURITY DEFINER) so a client can never credit itself or someone else directly —
-// this call just asks the server "did I just do the thing that activates my referral, if any".
+// function (SECURITY DEFINER) so a client can never credit itself or someone else directly.
+// This call just asks the server "did I just do the thing that activates my referral, if any".
 const REFERRAL_REWARD_DIAMONDS = 25;
 const REFERRAL_ACTIVATION_COINS = 15;
 
 async function maybeClaimReferralActivation() {
   if (state.referralClaimAttempted) return;
   if (!window.stackdSupabase || !window.Clerk?.user) return;
-  state.referralClaimAttempted = true;
+  // Only mark this permanently "attempted" once we get a real answer from the server, not
+  // before calling it. Marking it early meant a network hiccup or the function not existing
+  // yet (e.g. before the SQL migration was run) would permanently skip this account forever.
   try {
     const { data, error } = await window.stackdSupabase.rpc('claim_referral_activation');
     if (error) { console.error('Referral activation check failed:', error); return; }
+    state.referralClaimAttempted = true;
     if (data && data.claimed) {
       state.coins = (state.coins || 0) + REFERRAL_ACTIVATION_COINS;
       showToast(`+${REFERRAL_ACTIVATION_COINS} coins, thanks for joining through a friend!`, '🪙');
       updateSidebarStats();
     }
-  } finally {
     saveState();
+  } catch (e) {
+    console.error('Referral activation check failed:', e);
   }
 }
 
@@ -8995,6 +9006,21 @@ function finishOnboardingSurvey(skipped) {
   saveState();
   document.getElementById('onboarding-overlay').classList.remove('visible');
   renderHome();
+  runFirstLoadSequence();
+}
+
+// Runs on every load and after each step of the first-time flow completes, so the sequence
+// is always: onboarding survey, then meeting Hammy, in that fixed order, never both stacked
+// on screen at once. A returning user who's already done both just falls through immediately.
+function runFirstLoadSequence() {
+  if (!state.onboardingSurvey.completed) {
+    showOnboardingSurvey();
+    return;
+  }
+  if (!state.metHammy) {
+    document.getElementById('birth-pig-wrap').innerHTML = getPigMarkup(0.22);
+    document.getElementById('birth-overlay').classList.add('visible');
+  }
 }
 
 function renderSurveyStep() {
@@ -9814,6 +9840,7 @@ function renderHome() {
       <div class="mascot-unlock">${getPigAccessoryDesc(state.level)}</div>
     </div>`;
 
+  const loginBonusPending = dailyLoginBonusPending();
   document.getElementById('home-stats-row').innerHTML = `
     <div class="hs-card">
       <div class="hs-num">${state.xp.toLocaleString()}</div>
@@ -9823,14 +9850,24 @@ function renderHome() {
       <div class="hs-num">${state.level}</div>
       <div class="hs-label">Level</div>
     </div>
-    <div class="hs-card">
+    <button type="button" class="hs-card hs-card-streak${loginBonusPending ? ' hs-card-reward' : ''}" id="hs-streak-card">
       <div class="hs-num">${state.streak}</div>
       <div class="hs-label">Day Streak</div>
-    </div>
+      ${loginBonusPending ? '<span class="hs-reward-dot" title="A coin bonus is waiting"></span>' : ''}
+    </button>
     <div class="hs-card">
       <div class="hs-num">${done}<span style="font-size:1rem;letter-spacing:0;color:var(--text-soft)">/${MODULES.length}</span></div>
       <div class="hs-label">Modules Done</div>
     </div>`;
+
+  document.getElementById('hs-streak-card').addEventListener('click', () => {
+    const coins = claimDailyLoginBonus();
+    if (coins > 0) {
+      showDailyLoginModal(coins);
+      updateSidebarStats();
+      renderHome();
+    }
+  });
 
   renderModuleList('home-modules-grid');
   renderAchievementBadges('home-achievements-row', 'home-achieve-sub', { onlyUnlocked: true });
@@ -12809,34 +12846,13 @@ document.addEventListener('DOMContentLoaded', () => {
   saveState();
   renderHome();
 
-  const maybeShowOnboardingSurvey = () => {
-    if (!state.onboardingSurvey.completed) showOnboardingSurvey();
-  };
-
-  window.maybeShowFirstTimeExperience = function () {
-    if (!state.metHammy) {
-      document.getElementById('birth-pig-wrap').innerHTML = getPigMarkup(0.22);
-      document.getElementById('birth-overlay').classList.add('visible');
-    } else {
-      maybeShowOnboardingSurvey();
-    }
-  };
-
-  // Runs once per calendar day, after the authoritative synced state has loaded, so the
-  // day-count and popup reflect the account's real login history rather than a stale local copy.
-  window.maybeClaimDailyLoginBonus = function () {
-    const coins = claimDailyLoginBonus();
-    if (coins > 0) {
-      showDailyLoginModal(coins);
-      updateSidebarStats();
-    }
-  };
+  window.maybeShowFirstTimeExperience = runFirstLoadSequence;
 
   document.getElementById('birth-ok').addEventListener('click', () => {
     document.getElementById('birth-overlay').classList.remove('visible');
     state.metHammy = true;
     saveState();
-    maybeShowOnboardingSurvey();
+    runFirstLoadSequence();
   });
   document.getElementById('onboarding-skip').addEventListener('click', () => finishOnboardingSurvey(true));
 
