@@ -8293,6 +8293,23 @@ const ACHIEVEMENTS = [
     icon: '<path d="M2 18h20L19 8l-5 4-2-6-2 6-5-4z"/>' },
 ];
 
+// One-time currency payout on badge unlock, scaled by tier — bronze/silver read as "Common"
+// (+5 coins), gold as "Rare" (+15 coins), and diamond as "Legendary" (+10 diamonds, since
+// diamonds are the rarer currency reserved for the hardest badges).
+const BADGE_TIER_REWARD = {
+  bronze:  { type: 'coins',    amount: 5 },
+  silver:  { type: 'coins',    amount: 5 },
+  gold:    { type: 'coins',    amount: 15 },
+  diamond: { type: 'diamonds', amount: 10 },
+};
+function badgeReward(a) { return BADGE_TIER_REWARD[a.tier]; }
+
+function buildNewAchBanner(a) {
+  const reward = badgeReward(a);
+  const rewardLabel = reward.type === 'diamonds' ? `+${reward.amount} 💎` : `+${reward.amount} 🪙`;
+  return `<div class="new-ach-banner"><span class="ach-abbr" style="--ach-color: ${a.color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">${a.icon}</svg></span><div><strong>Unlocked: ${a.label} · ${rewardLabel}</strong><span>${a.desc}</span></div></div>`;
+}
+
 // ── Life Events ────────────────────────────────
 // A small, ambient "random life happens" layer on top of the module/quest system. It fires
 // mid-lesson — right after the player advances past a concept, quiz question, or decision,
@@ -8460,6 +8477,7 @@ let state = {
   activeModuleId: null, activeLessonIdx: 0, activeQuestId: null, sessionQuestions: [],
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
   coins: 0, diamonds: 0, ownedItems: [], equippedItems: [],
+  dailyLoginLog: {}, claimedBadgeRewards: [],
   ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null },
   metHammy: false,
   questProgress: {}, questBossesWon: [],
@@ -8487,8 +8505,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents } = state;
-  const snapshot = { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents };
+  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards } = state;
+  const snapshot = { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards };
   localStorage.setItem('stackd_v2', JSON.stringify(snapshot));
   scheduleSupabaseSync(snapshot);
 }
@@ -8558,6 +8576,55 @@ function buildStreakDiamondBanner(diamondsEarned) {
   </div>`;
 }
 
+// ── Daily Login Bonus ───────────────────────────
+// A small "thanks for showing up" coin drip, entirely separate from the streak/diamond
+// system above — missing a day never breaks it and it never breaks the streak. Scales
+// modestly by the count of distinct calendar days ever logged (not consecutive days),
+// then flattens out so it stays a nudge, never a grind target.
+const DAILY_LOGIN_BASE_COINS = 10;
+const DAILY_LOGIN_STEP_COINS = 2;
+const DAILY_LOGIN_CAP_COINS = 20;
+
+// Returns coins awarded this call (0 if today was already claimed).
+function claimDailyLoginBonus() {
+  const today = new Date().toDateString();
+  state.dailyLoginLog = state.dailyLoginLog || {};
+  if (state.dailyLoginLog[today]) return 0;
+  const dayNumber = Object.keys(state.dailyLoginLog).length + 1;
+  const coins = Math.min(DAILY_LOGIN_BASE_COINS + DAILY_LOGIN_STEP_COINS * (dayNumber - 1), DAILY_LOGIN_CAP_COINS);
+  state.dailyLoginLog[today] = coins;
+  state.coins = (state.coins || 0) + coins;
+  saveState();
+  return coins;
+}
+
+// ── Lightweight toasts ──────────────────────────
+// Small, auto-dismissing notices for low-stakes moments (daily login bonus) that don't
+// warrant a full modal like the streak/achievement/level-up celebrations do.
+function getToastContainer() {
+  let el = document.getElementById('toast-container');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast-container';
+    el.className = 'toast-container';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function showToast(message, icon) {
+  const container = getToastContainer();
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `${icon ? `<span class="toast-icon">${icon}</span>` : ''}<span class="toast-msg">${message}</span>`;
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
 function buildRewardBanner(icon, title, message) {
   return `<div class="graduation-banner">
     <span class="graduation-icon">${icon}</span>
@@ -8581,10 +8648,19 @@ function buildMilestoneRewardBanner(newAchs) {
 
 function checkAchievements() {
   const newOnes = [];
+  state.claimedBadgeRewards = state.claimedBadgeRewards || [];
   ACHIEVEMENTS.forEach(a => {
     if (!state.unlockedAchievements.includes(a.id) && a.check(state)) {
       state.unlockedAchievements.push(a.id);
       newOnes.push(a);
+      // Guarded separately from the unlock push above so a badge reward is paid exactly
+      // once even if something re-processes an already-unlocked badge later.
+      if (!state.claimedBadgeRewards.includes(a.id)) {
+        const reward = badgeReward(a);
+        if (reward.type === 'diamonds') state.diamonds = (state.diamonds || 0) + reward.amount;
+        else state.coins = (state.coins || 0) + reward.amount;
+        state.claimedBadgeRewards.push(a.id);
+      }
     }
   });
   // Finishing every module auto-awards the Graduation Cap — it can't be bought, only earned —
@@ -8941,30 +9017,42 @@ function renderSurveyStep() {
 }
 
 // onlyUnlocked: Home's version — a trophy case of what's actually been earned, not the
-// full locked/unlocked roster (that's what the dedicated Badges page is for).
-function renderAchievementBadges(containerId, subId, onlyUnlocked = false) {
+// full locked/unlocked roster. detailed: the dedicated Badges page's version — every badge,
+// earned or not, always shows its full description, lock state, and reward payout inline
+// so the wall reads as a checklist/roadmap rather than something you click through to see.
+function renderAchievementBadges(containerId, subId, { onlyUnlocked = false, detailed = false, filterTier = 'all', filterStatus = 'all' } = {}) {
   const unlocked = state.unlockedAchievements.length;
   if (subId) document.getElementById(subId).textContent = onlyUnlocked ? `${unlocked} earned` : `${unlocked}/${ACHIEVEMENTS.length} unlocked`;
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = '';
-  const list = onlyUnlocked ? ACHIEVEMENTS.filter(a => state.unlockedAchievements.includes(a.id)) : ACHIEVEMENTS;
-  if (onlyUnlocked && list.length === 0) {
-    container.innerHTML = `<p class="ach-empty">No badges yet — complete a lesson to start earning them.</p>`;
+  let list = onlyUnlocked ? ACHIEVEMENTS.filter(a => state.unlockedAchievements.includes(a.id)) : ACHIEVEMENTS;
+  if (filterTier !== 'all') list = list.filter(a => a.tier === filterTier);
+  if (filterStatus === 'earned') list = list.filter(a => state.unlockedAchievements.includes(a.id));
+  else if (filterStatus === 'unearned') list = list.filter(a => !state.unlockedAchievements.includes(a.id));
+  if (list.length === 0) {
+    container.innerHTML = `<p class="ach-empty">${onlyUnlocked ? 'No badges yet — complete a lesson to start earning them.' : 'No badges match these filters.'}</p>`;
     return;
   }
   list.forEach(a => {
     const isUnlocked = state.unlockedAchievements.includes(a.id);
+    const reward = badgeReward(a);
+    const rewardIcon = reward.type === 'diamonds' ? '💎' : '🪙';
     const el = document.createElement('button');
     el.type = 'button';
-    el.className = `ach-badge${a.tier === 'diamond' ? ' tier-diamond' : ''}`;
+    el.className = `ach-badge${a.tier === 'diamond' ? ' tier-diamond' : ''}${detailed ? ' ach-badge-detailed' : ''}${isUnlocked ? ' unlocked-badge' : ' locked-badge'}`;
     el.style.setProperty('--ach-color', a.color);
     el.innerHTML = `
-      <div class="ach-icon ${a.tier === 'diamond' ? 'tier-diamond ' : ''}${isUnlocked ? 'unlocked' : 'locked'}">
-        ${isUnlocked && a.tier === 'diamond' ? '<span class="ach-shine"></span>' : ''}
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">${a.icon}</svg>
+      <div class="ach-icon-wrap">
+        <div class="ach-icon ${a.tier === 'diamond' ? 'tier-diamond ' : ''}${isUnlocked ? 'unlocked' : 'locked'}">
+          ${isUnlocked && a.tier === 'diamond' ? '<span class="ach-shine"></span>' : ''}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">${a.icon}</svg>
+        </div>
+        ${!isUnlocked && detailed ? '<span class="ach-lock">🔒</span>' : ''}
       </div>
-      <span class="ach-label">${a.label}</span>`;
+      <span class="ach-label">${a.label}</span>
+      ${detailed ? `<p class="ach-desc-inline">${a.desc}</p>` : ''}
+      ${detailed ? `<span class="ach-reward-tag${isUnlocked ? ' claimed' : ''}">${isUnlocked ? '✓ ' : ''}+${reward.amount} ${rewardIcon}${isUnlocked ? ' claimed' : ' on unlock'}</span>` : ''}`;
     el.addEventListener('click', () => showAchievementDetail(a, isUnlocked));
     container.appendChild(el);
   });
@@ -8986,6 +9074,8 @@ function getAchievementModal() {
 
 function showAchievementDetail(a, isUnlocked) {
   const modal = getAchievementModal();
+  const reward = badgeReward(a);
+  const rewardIcon = reward.type === 'diamonds' ? '💎' : '🪙';
   modal.innerHTML = `
     <div class="achievement-modal-card${a.tier === 'diamond' ? ' tier-diamond' : ''}" style="--ach-color: ${a.color}">
       <div class="achievement-modal-tier-chip tier-${a.tier}">${TIER_LABELS[a.tier]} Tier</div>
@@ -8996,6 +9086,7 @@ function showAchievementDetail(a, isUnlocked) {
       <div class="achievement-modal-status ${isUnlocked ? 'unlocked' : 'locked'}">${isUnlocked ? '✓ Unlocked' : '🔒 Locked'}</div>
       <h2 class="achievement-modal-title">${a.label}</h2>
       <p class="achievement-modal-desc">${a.desc}</p>
+      <span class="ach-reward-tag${isUnlocked ? ' claimed' : ''}">${isUnlocked ? '✓ ' : ''}+${reward.amount} ${rewardIcon}${isUnlocked ? ' claimed' : ' on unlock'}</span>
       <button class="btn-primary" id="achievement-modal-close">Close</button>
     </div>`;
   modal.classList.add('show');
@@ -9303,6 +9394,8 @@ function closeShopModal() {
 // ── SHOP ───────────────────────────────────────
 let shopActiveTab = 'boutique';
 let roomActiveTab = 'room';
+let badgesFilterTier = 'all';
+let badgesFilterStatus = 'all';
 
 const SHOP_CATEGORIES = [
   { key: 'exclusive', label: 'Diamond Exclusives', icon: '💎', tab: 'boutique' },
@@ -9677,7 +9770,7 @@ function renderHome() {
     </div>`;
 
   renderModuleList('home-modules-grid');
-  renderAchievementBadges('home-achievements-row', 'home-achieve-sub', true);
+  renderAchievementBadges('home-achievements-row', 'home-achieve-sub', { onlyUnlocked: true });
 }
 
 // ── MODULES PAGE ───────────────────────────────
@@ -9698,7 +9791,9 @@ function exitToModules() {
 // ── BADGES PAGE ────────────────────────────────
 function renderBadgesPage() {
   updateSidebarStats();
-  renderAchievementBadges('achievements-row', 'achieve-sub');
+  renderAchievementBadges('achievements-row', 'achieve-sub', {
+    detailed: true, filterTier: badgesFilterTier, filterStatus: badgesFilterStatus,
+  });
 }
 
 // ── PROGRESS PAGE ──────────────────────────────
@@ -10930,9 +11025,7 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
     </div>`;
   }).join('');
 
-  const achHtml = newAchs.map(a =>
-    `<div class="new-ach-banner"><span class="ach-abbr" style="--ach-color: ${a.color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">${a.icon}</svg></span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
-  ).join('');
+  const achHtml = newAchs.map(buildNewAchBanner).join('');
   const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
   const gradHtml = (newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '') + buildMilestoneRewardBanner(newAchs);
 
@@ -11176,9 +11269,7 @@ function renderSubQuestResults(mod, qp, newAchs) {
   // Sub-quest chapters award their XP as they go (via each chapter's own xpOnComplete),
   // so the total here is just what those chapters are worth — nothing left to add now.
   const xpEarned = quest.chapters.reduce((sum, c) => sum + (c.xpOnComplete || 0), 0);
-  const achHtml = newAchs.map(a =>
-    `<div class="new-ach-banner"><span class="ach-abbr" style="--ach-color: ${a.color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">${a.icon}</svg></span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
-  ).join('');
+  const achHtml = newAchs.map(buildNewAchBanner).join('');
 
   document.getElementById('results-wrap').innerHTML = `
     <div class="subquest-celebrate-hammy hammy-side-avatar streak">${getPigWithItemMarkup(0.55, getEquippedItems())}</div>
@@ -12459,9 +12550,7 @@ function buildQuestReport(mod, qp) {
 }
 
 function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText, qp, diamondsEarned) {
-  const achHtml = newAchs.map(a =>
-    `<div class="new-ach-banner"><span class="ach-abbr" style="--ach-color: ${a.color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">${a.icon}</svg></span><div><strong>Unlocked: ${a.label}</strong><span>${a.desc}</span></div></div>`
-  ).join('');
+  const achHtml = newAchs.map(buildNewAchBanner).join('');
   const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
   const gradHtml = (newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '') + buildMilestoneRewardBanner(newAchs);
 
@@ -12550,6 +12639,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  document.querySelectorAll('#badges-tier-filter .badges-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      badgesFilterTier = btn.dataset.tier;
+      document.querySelectorAll('#badges-tier-filter .badges-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+      renderBadgesPage();
+    });
+  });
+  document.querySelectorAll('#badges-status-filter .badges-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      badgesFilterStatus = btn.dataset.status;
+      document.querySelectorAll('#badges-status-filter .badges-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+      renderBadgesPage();
+    });
+  });
+
   document.getElementById('mod-detail-exit').addEventListener('click', exitToModules);
   document.getElementById('hook-exit').addEventListener('click', exitToModules);
   document.getElementById('hook-start').addEventListener('click', startQuiz);
@@ -12616,6 +12720,16 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('birth-overlay').classList.add('visible');
     } else {
       maybeShowOnboardingSurvey();
+    }
+  };
+
+  // Runs once per calendar day, after the authoritative synced state has loaded, so the
+  // day-count and toast reflect the account's real login history rather than a stale local copy.
+  window.maybeClaimDailyLoginBonus = function () {
+    const coins = claimDailyLoginBonus();
+    if (coins > 0) {
+      showToast(`+${coins} coins — welcome back!`, '🪙');
+      updateSidebarStats();
     }
   };
 

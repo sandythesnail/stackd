@@ -27,6 +27,9 @@ window.addEventListener('load', async function () {
   if (typeof window.maybeShowFirstTimeExperience === 'function') {
     window.maybeShowFirstTimeExperience();
   }
+  if (typeof window.maybeClaimDailyLoginBonus === 'function') {
+    window.maybeClaimDailyLoginBonus();
+  }
 
   const nameEl = document.getElementById('settings-account-name');
   if (nameEl) {

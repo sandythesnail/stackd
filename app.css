@@ -251,7 +251,18 @@ body { background: var(--bg); min-height: 100vh; }
 .achievements-row, .badges-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 1.25rem;
 }
+.badges-grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
 .ach-empty { font-size: 0.85rem; color: var(--text-soft); }
+
+.badges-filters { display: flex; flex-wrap: wrap; gap: 0.6rem 1.5rem; margin-bottom: 1.25rem; }
+.badges-filter-group { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.badges-filter-btn {
+  background: #fff; border: 1.5px solid var(--border); border-radius: 999px;
+  padding: 0.35rem 0.85rem; font-family: inherit; font-size: 0.78rem; font-weight: 600;
+  color: var(--text-mid); cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.badges-filter-btn:hover { border-color: var(--green); }
+.badges-filter-btn.active { background: var(--green-pale); border-color: var(--green); color: var(--green-dark); }
 .ach-badge {
   display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
   padding: 1.75rem 1rem; background: #fff; width: 100%;
@@ -293,6 +304,26 @@ body { background: var(--bg); min-height: 100vh; }
   100% { left: 130%; }
 }
 .ach-label { font-size: 0.78rem; font-weight: 600; text-align: center; color: var(--text-mid); line-height: 1.35; }
+
+/* Badges-page "detailed" tiles: description, lock state, and reward always visible so the
+   wall reads as a checklist/roadmap instead of something you click through to see. */
+.ach-badge-detailed { padding: 1.5rem 1.1rem 1.25rem; text-align: center; }
+.ach-icon-wrap { position: relative; display: inline-flex; }
+.ach-lock {
+  position: absolute; bottom: -2px; right: -2px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; line-height: 1;
+}
+.ach-desc-inline { font-size: 0.78rem; color: var(--text-mid); line-height: 1.45; margin: 0; }
+.locked-badge .ach-desc-inline { opacity: 0.65; }
+.ach-reward-tag {
+  display: inline-block; font-size: 0.72rem; font-weight: 700;
+  padding: 0.25rem 0.65rem; border-radius: 999px;
+  background: var(--bg); color: var(--text-soft); border: 1px solid var(--border);
+}
+.ach-reward-tag.claimed { background: var(--green-pale); color: var(--green-dark); border-color: var(--green-light); }
 
 /* ─── ACHIEVEMENT DETAIL MODAL ─── */
 .achievement-modal-overlay {
@@ -342,7 +373,8 @@ body { background: var(--bg); min-height: 100vh; }
   font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--text);
   margin-bottom: 0.6rem; letter-spacing: -0.3px;
 }
-.achievement-modal-desc { font-size: 0.9rem; color: var(--text-mid); line-height: 1.55; margin-bottom: 1.5rem; }
+.achievement-modal-desc { font-size: 0.9rem; color: var(--text-mid); line-height: 1.55; margin-bottom: 1rem; }
+.achievement-modal-card .ach-reward-tag { margin-bottom: 1.5rem; }
 .achievement-modal-card .btn-primary { width: 100%; }
 
 /* ─── PROGRESS PIG MASCOT ─── */
@@ -2256,4 +2288,23 @@ select.budget-input { cursor: pointer; }
   .shop-items-grid { grid-template-columns: repeat(2, 1fr); }
   .shop-storefront-inner { flex-direction: column; text-align: center; gap: 1rem; }
   .results-rewards-row { flex-direction: column; }
+}
+
+/* ─── TOASTS ─── */
+.toast-container {
+  position: fixed; top: 1.25rem; right: 1.25rem; z-index: 400;
+  display: flex; flex-direction: column; gap: 0.6rem; pointer-events: none;
+}
+.toast {
+  display: flex; align-items: center; gap: 0.6rem;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm); padding: 0.75rem 1.1rem;
+  font-size: 0.85rem; font-weight: 600; color: var(--text);
+  opacity: 0; transform: translateY(-8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast-icon { font-size: 1.1rem; }
+@media (max-width: 600px) {
+  .toast-container { left: 1rem; right: 1rem; top: 1rem; }
 }
