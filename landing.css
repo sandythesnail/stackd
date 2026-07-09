@@ -956,12 +956,16 @@ body { background-color: var(--bg); }
   margin-bottom: 0.85rem; color: var(--text);
 }
 .stat-card p { font-size: 1rem; color: var(--text-mid); line-height: 1.65; }
-.stat-cite { font-size: 0.55em; font-weight: 600; color: var(--green-dark); margin-left: 0.1em; }
-.stat-card-alt .stat-cite { color: var(--pig-pink); }
 
 .stats-sources { margin-top: 1.5rem; font-size: 0.78rem; color: var(--text-mid); opacity: 0.75; }
-.stats-sources p { font-weight: 600; margin-bottom: 0.35rem; }
-.stats-sources ol { padding-left: 1.2rem; margin: 0; }
+.stats-sources summary {
+  font-weight: 600; cursor: pointer; list-style: none; display: inline-flex;
+  align-items: center; gap: 0.3rem;
+}
+.stats-sources summary::-webkit-details-marker { display: none; }
+.stats-sources summary::after { content: '+'; }
+.stats-sources[open] summary::after { content: '-'; }
+.stats-sources ol { padding-left: 1.2rem; margin: 0.5rem 0 0; }
 .stats-sources li { margin-bottom: 0.2rem; line-height: 1.5; }
 .stats-sources a { color: inherit; text-decoration: underline; }
 
@@ -1175,9 +1179,26 @@ body { background-color: var(--bg); }
 .am-green { color: var(--green-dark); }
 .am-pink  { color: var(--pink-dark); }
 .am-lbl { font-size: 0.85rem; color: var(--text-soft); font-weight: 600; margin-top: 0.3rem; }
-.admin-bars { padding: 2.25rem; }
+.admin-bars { padding: 2.25rem 2.25rem 0; }
 .ab-label { font-size: 0.85rem; font-weight: 700; color: var(--text-mid); margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.8px; }
 .ab-label:not(:first-child) { margin-top: 1.5rem; }
+
+.admin-activity {
+  display: flex; align-items: center; gap: 0.55rem;
+  margin: 1.75rem 2.25rem 0; padding-top: 1.5rem; border-top: 1px solid var(--border);
+  font-size: 0.85rem; color: var(--text-mid);
+}
+.admin-activity-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 0 3px var(--green-pale); flex-shrink: 0;
+}
+.admin-export-btn {
+  display: block; width: calc(100% - 4.5rem); margin: 1.25rem 2.25rem 2.25rem;
+  padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font-family: inherit; font-size: 0.88rem; font-weight: 700;
+  cursor: pointer; transition: background 0.2s;
+}
+.admin-export-btn:hover { background: var(--border); }
 
 .uni-callouts { list-style: none; margin: 1.25rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
 .uni-callouts li { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.92rem; color: var(--text-mid); line-height: 1.4; }

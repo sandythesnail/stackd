@@ -7377,7 +7377,7 @@ const MODULES = [
 const SHOP_ITEMS = [
   // ── HATS ──
   {
-    id: 'hat_mystery_box', name: 'Hat Mystery Box', category: 'hat', price: 150,
+    id: 'hat_mystery_box', name: 'Hat Mystery Box', category: 'hat', price: 0, // TEMP: 0 for testing, was 150
     isMysteryBox: true, mysteryPool: 'hat',
     viewBox: '20 20 80 75',
     desc: 'A random hat, ribbon and all. You never know what you\'ll get!',
@@ -7720,7 +7720,7 @@ const SHOP_ITEMS = [
   },
   // ── ACCESSORIES ──
   {
-    id: 'accessory_mystery_box', name: 'Accessory Mystery Box', category: 'accessory', price: 110,
+    id: 'accessory_mystery_box', name: 'Accessory Mystery Box', category: 'accessory', price: 0, // TEMP: 0 for testing, was 110
     isMysteryBox: true, mysteryPool: 'accessory',
     viewBox: '20 20 80 75',
     desc: 'A random accessory to complete the look.',
@@ -8065,7 +8065,7 @@ const SHOP_ITEMS = [
 
   // ── DIAMOND EXCLUSIVES (earned via 3-day streak bonuses, not coins) ──
   {
-    id: 'diamond_mystery_box', name: 'Diamond Mystery Box', category: 'exclusive', currency: 'diamond', price: 20,
+    id: 'diamond_mystery_box', name: 'Diamond Mystery Box', category: 'exclusive', currency: 'diamond', price: 0, // TEMP: 0 for testing, was 20
     isMysteryBox: true, mysteryPool: 'exclusive',
     viewBox: '20 20 80 75',
     desc: 'Crack open a dazzling diamond-tier surprise.',
@@ -9216,12 +9216,16 @@ function refreshShopModal(itemId) {
     btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>${shopPriceLabel(item)}</button>`;
   }
   const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
-  document.getElementById('shop-modal-pig').innerHTML = (isWallpaper)
+  const pigEl = document.getElementById('shop-modal-pig');
+  // Mystery boxes show a single preview (in shop-modal-accessory) rather than splitting
+  // between this panel and the accessory preview, so hide this side entirely for them.
+  pigEl.style.display = item.isMysteryBox ? 'none' : '';
+  pigEl.innerHTML = (isWallpaper)
     ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
-    : (isRoom || item.isMysteryBox)
+    : isRoom
       ? `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
-      : getPigWithItemMarkup(0.42, item);
-  document.getElementById('shop-modal-accessory').innerHTML = (isRoom || item.isMysteryBox)
+      : item.isMysteryBox ? '' : getPigWithItemMarkup(0.42, item);
+  document.getElementById('shop-modal-accessory').innerHTML = isRoom
     ? ''
     : `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
   document.getElementById('shop-modal-name').textContent = item.name;
@@ -9233,7 +9237,6 @@ function refreshShopModal(itemId) {
 
 function playMysteryBoxSpin(item) {
   const accessoryEl = document.getElementById('shop-modal-accessory');
-  document.getElementById('shop-modal-pig').innerHTML = '';
   document.getElementById('shop-modal-name').textContent = 'Opening...';
   document.getElementById('shop-modal-desc').textContent = '';
   document.getElementById('shop-modal-btn-wrap').innerHTML = '';
@@ -9243,7 +9246,6 @@ function playMysteryBoxSpin(item) {
 
 function showMysteryReveal(item) {
   const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
-  document.getElementById('shop-modal-pig').innerHTML = getPigWithItemMarkup(0.42, item);
   document.getElementById('shop-modal-accessory').innerHTML = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
   document.getElementById('shop-modal-name').textContent = `🎉 You got: ${item.name}!`;
   document.getElementById('shop-modal-desc').textContent = item.desc;
@@ -9947,13 +9949,28 @@ function renderBudgetCalculatorPanel() {
     const cut = Math.min(savedCut, maxCut);
     const newRemaining = totals.remaining + cut;
 
-    whatif.innerHTML = `
+    const categoryPicker = `
       <div class="budget-whatif-row">
         <select class="budget-input" id="whatif-category">
           ${BUDGET_CATEGORY_ORDER.map(key => `<option value="${key}" ${key === savedCategory ? 'selected' : ''}>${BUDGET_CATEGORY_LABELS[key].replace(/\s*\(.*?\)/, '')}</option>`).join('')}
         </select>
-      </div>
-      <input type="range" class="microsim-range" id="whatif-slider" min="0" max="${Math.max(1, maxCut)}" step="5" value="${cut}">
+      </div>`;
+
+    // With nothing budgeted in the category, maxCut is 0 and a slider has no meaningful
+    // range to drag across, so show a hint instead of a slider that can't move.
+    if (maxCut <= 0) {
+      whatif.innerHTML = `${categoryPicker}<p class="budget-whatif-result">Add a monthly amount for this category above to see what cutting it would save.</p>`;
+      document.getElementById('whatif-category').addEventListener('change', (e) => {
+        whatif.dataset.category = e.target.value;
+        whatif.dataset.cut = 0;
+        renderWhatIf(computeBudgetTotals(plan));
+      });
+      return;
+    }
+
+    whatif.innerHTML = `
+      ${categoryPicker}
+      <input type="range" class="microsim-range" id="whatif-slider" min="0" max="${maxCut}" step="1" value="${cut}">
       <p class="budget-whatif-result" id="whatif-result">Cut this by <strong>$${cut.toFixed(0)}</strong> → remaining balance becomes <strong>$${newRemaining.toFixed(0)}</strong>${plan.savingsGoal > 0 ? (newRemaining >= plan.savingsGoal ? ' — enough to hit your savings goal.' : `, still $${Math.max(0, plan.savingsGoal - newRemaining).toFixed(0)} short of your goal.`) : '.'}</p>`;
 
     document.getElementById('whatif-category').addEventListener('change', (e) => {
@@ -10103,6 +10120,7 @@ function renderCompoundInterestPanel() {
             <span class="ci-legend-item"><span class="ci-swatch ci-swatch-contrib"></span>What you put in</span>
             <span class="ci-legend-item"><span class="ci-swatch ci-swatch-interest"></span>What interest earned</span>
           </div>
+          <div class="ci-milestones" id="ci-milestones"></div>
         </div>
         <div class="budget-card" id="ci-compare-card" style="display:none;"></div>
       </div>
@@ -10123,6 +10141,14 @@ function renderCompoundInterestPanel() {
         <path d="${chart.totalLine}" class="ci-line-total" pathLength="1000"></path>
       </svg>`;
     requestAnimationFrame(() => chartEl.querySelector('.ci-line-total').classList.add('drawn'));
+
+    const doublingYears = sim.annualRatePct > 0 ? (72 / sim.annualRatePct).toFixed(1) : null;
+    const milestoneTargets = [10000, 50000, 100000, 500000, 1000000];
+    const milestone = milestoneTargets.filter(m => m > sim.startingAmount).find(m => points.some(p => p.balance >= m));
+    const milestonePoint = milestone ? points.find(p => p.balance >= milestone) : null;
+    document.getElementById('ci-milestones').innerHTML = `
+      ${doublingYears ? `<div class="ci-milestone-item">📈 At ${sim.annualRatePct}%, your money roughly doubles every <strong>${doublingYears} years</strong> (Rule of 72).</div>` : ''}
+      ${milestonePoint ? `<div class="ci-milestone-item">🎯 You'll cross <strong>$${milestone.toLocaleString()}</strong> around year <strong>${(milestonePoint.month / 12).toFixed(1)}</strong>.</div>` : ''}`;
   }
 
   function renderDebtChart() {

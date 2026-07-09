@@ -594,6 +594,14 @@ select.budget-input { cursor: pointer; }
 .ci-swatch-contrib { background: var(--green-light); }
 .ci-swatch-interest { background: var(--pink-light); }
 
+.ci-milestones { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.9rem; }
+.ci-milestone-item {
+  font-size: 0.82rem; color: var(--text-mid); line-height: 1.5;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+}
+.ci-milestone-item strong { color: var(--text); }
+
 .ci-compare-row { display: flex; justify-content: space-between; font-size: 0.88rem; color: var(--text-mid); padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
 .ci-compare-row strong { font-family: var(--font-display); font-size: 1.1rem; color: var(--text); }
 .ci-compare-gap { font-size: 0.85rem; font-weight: 600; color: var(--green-dark); background: var(--green-pale); border-radius: var(--radius-sm); padding: 0.7rem 0.9rem; margin-top: 0.8rem; line-height: 1.5; }
