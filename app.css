@@ -377,6 +377,26 @@ body { background: var(--bg); min-height: 100vh; }
 .achievement-modal-card .ach-reward-tag { margin-bottom: 1.5rem; }
 .achievement-modal-card .btn-primary { width: 100%; }
 
+/* ─── DAILY LOGIN BONUS POPUP ─── */
+.daily-login-modal-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 2rem; max-width: 360px; width: 100%; text-align: center;
+  box-shadow: 0 8px 40px rgba(38,56,48,0.1); animation: fadeUp 0.3s ease both;
+}
+.daily-login-modal-icon {
+  width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 1rem;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--green-pale); border: 1px solid var(--green-light);
+  font-size: 2.1rem;
+}
+.daily-login-modal-title {
+  font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--text);
+  margin-bottom: 0.6rem; letter-spacing: -0.3px;
+}
+.daily-login-modal-desc { font-size: 0.9rem; color: var(--text-mid); line-height: 1.55; margin-bottom: 1.5rem; }
+.daily-login-modal-desc strong { color: var(--green-dark); }
+.daily-login-modal-card .btn-primary { width: 100%; }
+
 /* ─── PROGRESS PIG MASCOT ─── */
 .pg-mascot-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin-bottom: 2rem; }
 .pg-mascot-pig { }

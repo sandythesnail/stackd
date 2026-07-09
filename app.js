@@ -8247,49 +8247,49 @@ function bossChallengeOptimal(s, modId) {
 // a hard optional challenge. Gold = a sustained or precise behavioral bar. Diamond = the
 // small handful of genuinely ultra-hard, multi-week or "beat everything" achievements.
 const ACHIEVEMENTS = [
-  { id: 'first_paycheck', tier: 'bronze', color: '#3FA65C', label: 'First Paycheck',    desc: 'Ace every lesson in the Earning module — every quiz question right on at least one attempt each.', check: s => hasMasteredModule(s, 'earning'),
+  { id: 'first_paycheck', tier: 'bronze', color: '#3FA65C', label: 'First Paycheck',    desc: 'Ace every lesson in the Earning module.', check: s => hasMasteredModule(s, 'earning'),
     icon: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>' },
-  { id: 'budget_boss', tier: 'bronze', color: '#E08A2E', label: 'Budget Boss', desc: 'Master the Spending module — perfect quiz scores across every lesson, plus both interactive activities completed.', check: s => hasMasteredModule(s, 'spending'),
+  { id: 'budget_boss', tier: 'bronze', color: '#E08A2E', label: 'Budget Boss', desc: 'Ace Spending and finish both activities.', check: s => hasMasteredModule(s, 'spending'),
     icon: '<path d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 7V4.5A1.5 1.5 0 0 0 14.5 3h-6A1.5 1.5 0 0 0 7 4.5V7"/><circle cx="16" cy="13" r="1.4"/>' },
-  { id: 'safety_net', tier: 'bronze', color: '#1C9C93', label: 'Safety Net', desc: 'Master the Saving module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'saving'),
+  { id: 'safety_net', tier: 'bronze', color: '#1C9C93', label: 'Safety Net', desc: 'Ace every lesson in the Saving module.', check: s => hasMasteredModule(s, 'saving'),
     icon: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/>' },
-  { id: 'investor', tier: 'bronze', color: '#3B7FC4', label: 'Future Millionaire', desc: 'Master the Investing module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'investing'),
+  { id: 'investor', tier: 'bronze', color: '#3B7FC4', label: 'Future Millionaire', desc: 'Ace every lesson in the Investing module.', check: s => hasMasteredModule(s, 'investing'),
     icon: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>' },
-  { id: 'credit_champ', tier: 'bronze', color: '#2E9BD6', label: 'Credit Champ', desc: 'Flawlessly complete every credit quest — both of Hammy\'s — with every knowledge check, myth card, and poll guessed right.', check: s => hasMasteredModule(s, 'credit'),
+  { id: 'credit_champ', tier: 'bronze', color: '#2E9BD6', label: 'Credit Champ', desc: 'Ace both of Hammy\'s credit quests.', check: s => hasMasteredModule(s, 'credit'),
     icon: '<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>' },
-  { id: 'risk_ready', tier: 'bronze', color: '#5B6B8C', label: 'Risk Ready', desc: 'Master the Managing Risk module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'risk'),
+  { id: 'risk_ready', tier: 'bronze', color: '#5B6B8C', label: 'Risk Ready', desc: 'Ace every lesson in the Managing Risk module.', check: s => hasMasteredModule(s, 'risk'),
     icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' },
-  { id: 'loan_smart', tier: 'bronze', color: '#A9713C', label: 'Loan Smart', desc: 'Master the Loans module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'loans'),
+  { id: 'loan_smart', tier: 'bronze', color: '#A9713C', label: 'Loan Smart', desc: 'Ace every lesson in the Loans module.', check: s => hasMasteredModule(s, 'loans'),
     icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>' },
-  { id: 'tax_ready', tier: 'bronze', color: '#8B5FBF', label: 'Tax Ready', desc: 'Master the Taxes module — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'taxes'),
+  { id: 'tax_ready', tier: 'bronze', color: '#8B5FBF', label: 'Tax Ready', desc: 'Ace every lesson in the Taxes module.', check: s => hasMasteredModule(s, 'taxes'),
     icon: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>' },
-  { id: 'mindful_money', tier: 'bronze', color: '#D6538A', label: 'Mindful Spender', desc: 'Master Consumer Psychology — perfect quiz scores on every lesson, plus both interactive activities completed.', check: s => hasMasteredModule(s, 'psychology'),
+  { id: 'mindful_money', tier: 'bronze', color: '#D6538A', label: 'Mindful Spender', desc: 'Ace Consumer Psychology and finish both activities.', check: s => hasMasteredModule(s, 'psychology'),
     icon: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>' },
-  { id: 'offer_ready', tier: 'bronze', color: '#5C6BC0', label: 'Offer Ready', desc: 'Master Career & Salary — perfect quiz scores on every single lesson.', check: s => hasMasteredModule(s, 'career'),
+  { id: 'offer_ready', tier: 'bronze', color: '#5C6BC0', label: 'Offer Ready', desc: 'Ace every lesson in Career & Salary.', check: s => hasMasteredModule(s, 'career'),
     icon: '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>' },
-  { id: 'scam_spotter', tier: 'bronze', color: '#C0453A', label: 'Scam Spotter', desc: 'Flawlessly complete every scam quest — every knowledge check, myth card, and poll guessed right.', check: s => hasMasteredModule(s, 'scams'),
+  { id: 'scam_spotter', tier: 'bronze', color: '#C0453A', label: 'Scam Spotter', desc: 'Ace every scam quest, no wrong answers.', check: s => hasMasteredModule(s, 'scams'),
     icon: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
-  { id: 'crisis_averted', tier: 'silver', color: '#E0A72E', label: 'Crisis Averted', desc: 'Beat the Credit boss battle — finish either of the credit quests through to its final scenario.', check: s => (s.questBossesWon || []).includes('credit'),
+  { id: 'crisis_averted', tier: 'silver', color: '#E0A72E', label: 'Crisis Averted', desc: 'Beat a Credit boss battle.', check: s => (s.questBossesWon || []).includes('credit'),
     icon: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>' },
-  { id: 'fraud_fighter', tier: 'silver', color: '#B33A3A', label: 'Fraud Fighter', desc: 'Beat a Scams boss battle — finish any one of Hammy\'s scam quests through to its final scenario.', check: s => (s.questBossesWon || []).includes('scams'),
+  { id: 'fraud_fighter', tier: 'silver', color: '#B33A3A', label: 'Fraud Fighter', desc: 'Beat a Scams boss battle.', check: s => (s.questBossesWon || []).includes('scams'),
     icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>' },
-  { id: 'no_hints', tier: 'silver', color: '#7952B3', label: 'No Hints Needed', desc: 'Finish Hammy\'s first credit quest from start to finish without using a single hint.', check: s => { const qp = s.questProgress['credit::maya']; return !!(qp && qp.done && (qp.hintsUsed || 0) === 0); },
+  { id: 'no_hints', tier: 'silver', color: '#7952B3', label: 'No Hints Needed', desc: 'Finish the first credit quest with zero hints.', check: s => { const qp = s.questProgress['credit::maya']; return !!(qp && qp.done && (qp.hintsUsed || 0) === 0); },
     icon: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>' },
-  { id: 'word_nerd', tier: 'silver', color: '#3F8757', label: 'Word Nerd', desc: 'Learn 15 or more vocabulary terms across every quest played.', check: s => totalTermsLearned(s) >= 15,
+  { id: 'word_nerd', tier: 'silver', color: '#3F8757', label: 'Word Nerd', desc: 'Learn 15+ vocab terms across your quests.', check: s => totalTermsLearned(s) >= 15,
     icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
-  { id: 'homebody', tier: 'silver', color: '#C08552', label: 'Homebody', desc: 'Fully decorate Hammy\'s Room — every slot (wall art, lamp, plant, bed, desk, rug, window) filled with a purchased item.', check: s => s.equippedRoom && Object.keys(s.equippedRoom).length > 0 && Object.values(s.equippedRoom).every(v => !!v),
+  { id: 'homebody', tier: 'silver', color: '#C08552', label: 'Homebody', desc: 'Fill every slot in Hammy\'s Room.', check: s => s.equippedRoom && Object.keys(s.equippedRoom).length > 0 && Object.values(s.equippedRoom).every(v => !!v),
     icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
-  { id: 'on_fire', tier: 'gold', color: '#E8622C', label: 'On a Roll', desc: 'Play Stacked 7 days in a row without missing a day.', check: s => s.streak >= 7,
+  { id: 'on_fire', tier: 'gold', color: '#E8622C', label: 'On a Roll', desc: 'Play 7 days in a row.', check: s => s.streak >= 7,
     icon: '<path d="M12 2c1 4-3 5-3 9a3 3 0 0 0 6 0c0-2-1-3-1-3s2 1 2 4a5 5 0 0 1-10 0c0-5 4-6 4-10z"/>' },
-  { id: 'iron_will', tier: 'gold', color: '#4A4A57', label: 'Iron Will', desc: 'Land the optimal path on both Boss Challenges — Budgeting\'s and Consumer Psychology\'s — resisting or avoiding every costly choice.', check: s => bossChallengeOptimal(s, 'spending') && bossChallengeOptimal(s, 'psychology'),
+  { id: 'iron_will', tier: 'gold', color: '#4A4A57', label: 'Iron Will', desc: 'Land the optimal path on both Boss Challenges.', check: s => bossChallengeOptimal(s, 'spending') && bossChallengeOptimal(s, 'psychology'),
     icon: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>' },
-  { id: 'excellent_credit', tier: 'gold', color: '#1F9D6B', label: 'Excellent Credit', desc: 'Push your simulated credit score to 800 or above — years of consistently good life-event decisions.', check: s => !!(s.financialState && s.financialState.creditScore >= 800),
+  { id: 'excellent_credit', tier: 'gold', color: '#1F9D6B', label: 'Excellent Credit', desc: 'Push your credit score to 800 or above.', check: s => !!(s.financialState && s.financialState.creditScore >= 800),
     icon: '<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/><path d="M9 3l3 6-3 12"/><path d="M15 3l-3 6 3 12"/>' },
-  { id: 'marathoner', tier: 'diamond', color: '#2856A8', label: 'Marathoner', desc: 'Play Stacked 30 days in a row without missing a single day. Ultra rare — most students never make it this far.', check: s => s.streak >= 30,
+  { id: 'marathoner', tier: 'diamond', color: '#2856A8', label: 'Marathoner', desc: 'Play 30 days in a row. Ultra rare.', check: s => s.streak >= 30,
     icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' },
-  { id: 'stackd_star', tier: 'diamond', color: '#D4A017', label: 'Stacked Star', desc: 'Master every single module in Stacked — the full curriculum, flawlessly. Ultra rare.', check: s => MODULES.every(m => hasMasteredModule(s, m.id)),
+  { id: 'stackd_star', tier: 'diamond', color: '#D4A017', label: 'Stacked Star', desc: 'Master every module. Ultra rare.', check: s => MODULES.every(m => hasMasteredModule(s, m.id)),
     icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
-  { id: 'grandmaster', tier: 'diamond', color: '#9B1B30', label: 'Grandmaster', desc: 'Unlock every other badge in Stacked. The single hardest badge in the app — there is nothing beyond this one.', check: s => ACHIEVEMENTS.filter(x => x.id !== 'grandmaster').every(x => (s.unlockedAchievements || []).includes(x.id)),
+  { id: 'grandmaster', tier: 'diamond', color: '#9B1B30', label: 'Grandmaster', desc: 'Unlock every other badge. The hardest one.', check: s => ACHIEVEMENTS.filter(x => x.id !== 'grandmaster').every(x => (s.unlockedAchievements || []).includes(x.id)),
     icon: '<path d="M2 18h20L19 8l-5 4-2-6-2 6-5-4z"/>' },
 ];
 
@@ -8497,6 +8497,12 @@ let state = {
   lifeEvents: { history: [], sessionCount: 0, lastTriggeredSession: -99 },
 };
 
+// A frozen snapshot of the untouched defaults above, captured before anything can mutate
+// `state` — used by the reset-progress flow to overwrite the synced Supabase row with a
+// truly clean slate rather than relying on a DELETE (which may silently affect 0 rows if
+// no delete policy exists under row-level security).
+const DEFAULT_STATE_JSON = JSON.stringify(state);
+
 function loadState() {
   try {
     const s = localStorage.getItem('stackd_v2');
@@ -8598,8 +8604,35 @@ function claimDailyLoginBonus() {
   return coins;
 }
 
+function getDailyLoginModal() {
+  let modal = document.getElementById('daily-login-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'daily-login-modal';
+    modal.className = 'achievement-modal-overlay';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+  }
+  return modal;
+}
+
+// A popup on login, so the daily coin drip is hard to miss instead of a toast that
+// could get lost in the corner.
+function showDailyLoginModal(coins) {
+  const modal = getDailyLoginModal();
+  modal.innerHTML = `
+    <div class="daily-login-modal-card">
+      <div class="daily-login-modal-icon">🪙</div>
+      <h2 class="daily-login-modal-title">Welcome back!</h2>
+      <p class="daily-login-modal-desc">You earned <strong>+${coins} coins</strong> for logging in today.</p>
+      <button class="btn-primary" id="daily-login-modal-close">Nice!</button>
+    </div>`;
+  modal.classList.add('show');
+  document.getElementById('daily-login-modal-close').addEventListener('click', () => modal.classList.remove('show'));
+}
+
 // ── Lightweight toasts ──────────────────────────
-// Small, auto-dismissing notices for low-stakes moments (daily login bonus) that don't
+// Small, auto-dismissing notices for low-stakes moments (referral activation) that don't
 // warrant a full modal like the streak/achievement/level-up celebrations do.
 function getToastContainer() {
   let el = document.getElementById('toast-container');
@@ -8642,7 +8675,7 @@ async function maybeClaimReferralActivation() {
     if (error) { console.error('Referral activation check failed:', error); return; }
     if (data && data.claimed) {
       state.coins = (state.coins || 0) + REFERRAL_ACTIVATION_COINS;
-      showToast(`+${REFERRAL_ACTIVATION_COINS} coins — thanks for joining through a friend!`, '🪙');
+      showToast(`+${REFERRAL_ACTIVATION_COINS} coins, thanks for joining through a friend!`, '🪙');
       updateSidebarStats();
     }
   } finally {
@@ -9972,13 +10005,16 @@ function renderSettingsPage() {
       clearTimeout(supabaseSyncTimeout);
       localStorage.removeItem('stackd_v2');
       if (window.stackdSupabase && window.Clerk?.user) {
+        // Overwrite the synced row with fresh defaults via upsert (the same write path
+        // saveState() already uses successfully) instead of deleting it. A delete can look
+        // like it succeeded yet silently affect 0 rows if there's no delete policy under
+        // row-level security, which was the actual cause of reset not sticking.
         const { error } = await window.stackdSupabase
           .from('user_progress')
-          .delete()
-          .eq('clerk_user_id', Clerk.user.id);
+          .upsert({ clerk_user_id: Clerk.user.id, state: JSON.parse(DEFAULT_STATE_JSON) });
         if (error) {
           console.error('Failed to reset synced progress:', error);
-          alert('Progress was reset on this device, but syncing the reset to your account failed — it may come back on next login. Check your connection and try again.');
+          alert('Progress was reset on this device, but syncing the reset to your account failed. It may come back on next login. Check your connection and try again.');
         }
       }
       location.reload();
@@ -12787,11 +12823,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Runs once per calendar day, after the authoritative synced state has loaded, so the
-  // day-count and toast reflect the account's real login history rather than a stale local copy.
+  // day-count and popup reflect the account's real login history rather than a stale local copy.
   window.maybeClaimDailyLoginBonus = function () {
     const coins = claimDailyLoginBonus();
     if (coins > 0) {
-      showToast(`+${coins} coins — welcome back!`, '🪙');
+      showDailyLoginModal(coins);
       updateSidebarStats();
     }
   };
