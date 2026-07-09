@@ -8477,7 +8477,7 @@ let state = {
   activeModuleId: null, activeLessonIdx: 0, activeQuestId: null, sessionQuestions: [],
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
   coins: 0, diamonds: 0, ownedItems: [], equippedItems: [],
-  dailyLoginLog: {}, claimedBadgeRewards: [],
+  dailyLoginLog: {}, claimedBadgeRewards: [], referralClaimAttempted: false,
   ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null },
   metHammy: false,
   questProgress: {}, questBossesWon: [],
@@ -8505,8 +8505,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards } = state;
-  const snapshot = { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards };
+  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
+  const snapshot = { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
   localStorage.setItem('stackd_v2', JSON.stringify(snapshot));
   scheduleSupabaseSync(snapshot);
 }
@@ -8625,6 +8625,31 @@ function showToast(message, icon) {
   }, 3500);
 }
 
+// ── Referrals ────────────────────────────────
+// The pending referral row (referrer -> this account) is created at signup by app-auth.js.
+// The actual reward only ever pays out through the claim_referral_activation() Postgres
+// function (SECURITY DEFINER) so a client can never credit itself or someone else directly —
+// this call just asks the server "did I just do the thing that activates my referral, if any".
+const REFERRAL_REWARD_DIAMONDS = 25;
+const REFERRAL_ACTIVATION_COINS = 15;
+
+async function maybeClaimReferralActivation() {
+  if (state.referralClaimAttempted) return;
+  if (!window.stackdSupabase || !window.Clerk?.user) return;
+  state.referralClaimAttempted = true;
+  try {
+    const { data, error } = await window.stackdSupabase.rpc('claim_referral_activation');
+    if (error) { console.error('Referral activation check failed:', error); return; }
+    if (data && data.claimed) {
+      state.coins = (state.coins || 0) + REFERRAL_ACTIVATION_COINS;
+      showToast(`+${REFERRAL_ACTIVATION_COINS} coins — thanks for joining through a friend!`, '🪙');
+      updateSidebarStats();
+    }
+  } finally {
+    saveState();
+  }
+}
+
 function buildRewardBanner(icon, title, message) {
   return `<div class="graduation-banner">
     <span class="graduation-icon">${icon}</span>
@@ -8647,6 +8672,11 @@ function buildMilestoneRewardBanner(newAchs) {
 }
 
 function checkAchievements() {
+  // Fire-and-forget: completing any lesson/quiz/quest is a reasonable proxy for "did
+  // something," and the function itself is a no-op after the first successful/attempted
+  // check, so it's safe to call unconditionally here rather than threading a "first ever
+  // completion" flag through every call site.
+  maybeClaimReferralActivation();
   const newOnes = [];
   state.claimedBadgeRewards = state.claimedBadgeRewards || [];
   ACHIEVEMENTS.forEach(a => {
@@ -9962,6 +9992,39 @@ function renderSettingsPage() {
       showOnboardingSurvey();
     };
   }
+
+  const referralLinkInput = document.getElementById('referral-link-input');
+  if (referralLinkInput && window.Clerk?.user) {
+    referralLinkInput.value = `${window.location.origin}/signup.html?ref=${Clerk.user.id}`;
+  }
+  const referralCopyBtn = document.getElementById('referral-copy-btn');
+  if (referralCopyBtn) {
+    referralCopyBtn.onclick = () => {
+      if (!referralLinkInput || !referralLinkInput.value) return;
+      referralLinkInput.select();
+      (navigator.clipboard?.writeText(referralLinkInput.value) || Promise.reject()).then(() => {
+        const original = referralCopyBtn.textContent;
+        referralCopyBtn.textContent = 'Copied!';
+        setTimeout(() => { referralCopyBtn.textContent = original; }, 1500);
+      }).catch(() => {});
+    };
+  }
+  refreshReferralStats();
+}
+
+async function refreshReferralStats() {
+  const countEl = document.getElementById('referral-stat-count');
+  const diamondsEl = document.getElementById('referral-stat-diamonds');
+  if (!countEl || !diamondsEl) return;
+  if (!window.stackdSupabase || !window.Clerk?.user) return;
+  const { data, error } = await window.stackdSupabase
+    .from('referrals')
+    .select('status')
+    .eq('referrer_id', Clerk.user.id);
+  if (error) { console.error('Failed to load referral stats:', error); return; }
+  const activated = (data || []).filter(r => r.status === 'activated').length;
+  countEl.textContent = activated;
+  diamondsEl.textContent = activated * REFERRAL_REWARD_DIAMONDS;
 }
 
 // ── TOOLS PAGE (Budget Calculator + Compound Interest Simulator) ──────────────

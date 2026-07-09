@@ -14,6 +14,13 @@ window.addEventListener('load', async function () {
     return;
   }
 
+  // Stash a referral code from the URL (?ref=<referrer's Clerk user id>) so app-auth.js can
+  // record it once this visitor actually has a Clerk user id of their own. Only stored when
+  // we're actually showing the sign-up form (not for an already-signed-in visitor above),
+  // since only a genuinely new signup should ever count as a referral.
+  const refCode = new URLSearchParams(window.location.search).get('ref');
+  if (refCode) localStorage.setItem('stackd_referral_code', refCode);
+
   Clerk.mountSignUp(document.getElementById('clerk-sign-up'), {
     fallbackRedirectUrl: window.location.origin + '/app.html',
     forceRedirectUrl: window.location.origin + '/app.html',

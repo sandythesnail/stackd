@@ -24,6 +24,20 @@ window.addEventListener('load', async function () {
   } else if (remoteRow && typeof window.applyRemoteState === 'function') {
     window.applyRemoteState(remoteRow.state);
   }
+
+  // Referral capture: if this browser arrived via a referral link before signing up,
+  // record a pending row now that a real Clerk user id exists. The reward itself is never
+  // paid here — only claim_referral_activation() (called once the referred user finishes
+  // their first lesson) can do that. Safe to attempt every load: a unique constraint on
+  // referred_id makes a repeat insert a harmless no-op.
+  const pendingRefCode = localStorage.getItem('stackd_referral_code');
+  if (pendingRefCode && pendingRefCode !== Clerk.user.id) {
+    const { error: refError } = await window.stackdSupabase
+      .from('referrals')
+      .insert({ referrer_id: pendingRefCode, referred_id: Clerk.user.id });
+    if (refError) console.error('Referral record failed (may already exist):', refError);
+  }
+  localStorage.removeItem('stackd_referral_code');
   if (typeof window.maybeShowFirstTimeExperience === 'function') {
     window.maybeShowFirstTimeExperience();
   }

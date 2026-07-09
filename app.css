@@ -515,6 +515,31 @@ body { background: var(--bg); min-height: 100vh; }
 .settings-item:last-child { border-bottom: none; }
 .settings-label { font-weight: 600; font-size: 1rem; color: var(--text); margin-bottom: 0.2rem; }
 .settings-val { font-size: 0.88rem; color: var(--text-mid); }
+
+.referral-card {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: #fff; max-width: 760px; padding: 1.5rem 1.85rem; margin-bottom: 1.25rem;
+}
+.referral-card-head h2 {
+  font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--text);
+  margin: 0 0 0.3rem;
+}
+.referral-card-head .section-sub { display: block; margin-bottom: 1.1rem; line-height: 1.5; }
+.referral-link-row { display: flex; gap: 0.6rem; }
+.referral-link-input {
+  flex: 1; min-width: 0; font-family: inherit; font-size: 0.85rem; color: var(--text-mid);
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 0.6rem 0.85rem;
+}
+.referral-stats-row { display: flex; gap: 1.5rem; margin-top: 1.25rem; }
+.referral-stat-num {
+  font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; color: var(--green-dark);
+  letter-spacing: -0.5px;
+}
+.referral-stat-label { font-size: 0.78rem; color: var(--text-soft); font-weight: 600; }
+@media (max-width: 480px) {
+  .referral-link-row { flex-direction: column; }
+}
 .btn-danger {
   font-size: 0.85rem; font-weight: 600; padding: 0.5rem 1.15rem;
   border-radius: var(--radius-sm); background: #fff;
