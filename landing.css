@@ -1162,9 +1162,21 @@ body { background-color: var(--bg); }
 .am-green { color: var(--green-dark); }
 .am-pink  { color: var(--pink-dark); }
 .am-lbl { font-size: 0.85rem; color: var(--text-soft); font-weight: 600; margin-top: 0.3rem; }
-.admin-bars { padding: 2.25rem; }
+.admin-bars { padding: 2.25rem; display: grid; grid-template-columns: 1.3fr 1fr; gap: 2.5rem; }
+.admin-chart-col { border-left: 1px solid var(--border); padding-left: 2.5rem; }
 .ab-label { font-size: 0.85rem; font-weight: 700; color: var(--text-mid); margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.8px; }
 .ab-label:not(:first-child) { margin-top: 1.5rem; }
+
+.admin-pie-wrap { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.5rem; }
+.admin-pie { width: 96px; height: 96px; border-radius: 50%; flex-shrink: 0; }
+.admin-pie-legend { display: flex; flex-direction: column; gap: 0.45rem; }
+.admin-pie-legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-mid); font-weight: 600; }
+.admin-pie-swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+
+.admin-year-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
+.admin-year-stat { text-align: center; background: var(--bg); border-radius: var(--radius-sm); padding: 0.75rem 0.5rem; }
+.admin-year-num { display: block; font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--text); }
+.admin-year-lbl { font-size: 0.72rem; color: var(--text-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 
 .uni-callouts { list-style: none; margin: 1.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
 .uni-callouts li { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.92rem; color: var(--text-mid); line-height: 1.4; }
@@ -1370,6 +1382,8 @@ body { background-color: var(--bg); }
   .admin-mockup-wide { padding: 0 1rem; }
 }
 @media (max-width: 700px) {
+  .admin-bars { grid-template-columns: 1fr; gap: 1.5rem; }
+  .admin-chart-col { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 1.5rem; }
   .cc-viewport { margin-top: 1.75rem; }
   .cc-card { flex-basis: 220px; }
   .cc-track { padding: 1.25rem 3.25rem; }

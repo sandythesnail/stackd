@@ -9057,6 +9057,7 @@ function getPigMarkup(scale) {
 // glasses, and neckwear each live in a very different part of the pig's own 440×460 frame.
 const DEFAULT_ITEM_FIT = { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 };
 
+let pigOverlayUidCounter = 0;
 function getPigWithItemMarkup(scale, itemOrItems) {
   // Accepts a single item (shop preview) or an array (multiple simultaneously equipped items).
   const items = Array.isArray(itemOrItems) ? itemOrItems : (itemOrItems ? [itemOrItems] : []);
@@ -9074,8 +9075,17 @@ function getPigWithItemMarkup(scale, itemOrItems) {
       layer = item.layer || 'front';
     }
     if (!svg) return;
+    // Item SVGs use short, hardcoded <defs> ids (gradients/clipPaths). The same item often
+    // renders in multiple places on the page at once (mascot card, sidebar avatar, wardrobe),
+    // and now potentially several items at once too — if two copies of the same id land in
+    // the DOM simultaneously, url(#id) references resolve unpredictably and silently break
+    // fills/clips. Namespace every def id (and its references) uniquely per render call.
+    const uid = 'ov' + (pigOverlayUidCounter++);
+    const namespacedSvg = svg
+      .replace(/id="([^"]+)"/g, (_, id) => `id="${id}-${uid}"`)
+      .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${id}-${uid})`);
     const matrixStr = `matrix(${fit.a},${fit.b},${fit.c},${fit.d},${fit.e},${fit.f})`;
-    const overlaySvg = `<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:440px;height:460px;pointer-events:none;overflow:visible"><g transform="${matrixStr}">${svg}</g></svg>`;
+    const overlaySvg = `<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0;width:440px;height:460px;pointer-events:none;overflow:visible"><g transform="${matrixStr}">${namespacedSvg}</g></svg>`;
     if (layer === 'back') overlayBack += overlaySvg;
     else overlayFront += overlaySvg.replace('pointer-events:none;', 'pointer-events:none;z-index:10;');
   });
@@ -9227,15 +9237,16 @@ function refreshShopModal(itemId) {
   }
   const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
   const pigEl = document.getElementById('shop-modal-pig');
-  // Mystery boxes show a single preview (in shop-modal-accessory) rather than splitting
-  // between this panel and the accessory preview, so hide this side entirely for them.
-  pigEl.style.display = item.isMysteryBox ? 'none' : '';
+  // Mystery boxes: this left panel becomes a large box picture instead of a pig preview,
+  // and the small right-side preview is skipped so there's one big image, not two small ones.
+  document.getElementById('shop-modal-box').classList.toggle('shop-modal-mystery', !!item.isMysteryBox);
+  pigEl.style.display = '';
   pigEl.innerHTML = (isWallpaper)
     ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
-    : isRoom
+    : (isRoom || item.isMysteryBox)
       ? `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
-      : item.isMysteryBox ? '' : getPigWithItemMarkup(0.42, item);
-  document.getElementById('shop-modal-accessory').innerHTML = isRoom
+      : getPigWithItemMarkup(0.42, item);
+  document.getElementById('shop-modal-accessory').innerHTML = (isRoom || item.isMysteryBox)
     ? ''
     : `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
   document.getElementById('shop-modal-name').textContent = item.name;
@@ -9246,17 +9257,18 @@ function refreshShopModal(itemId) {
 }
 
 function playMysteryBoxSpin(item) {
-  const accessoryEl = document.getElementById('shop-modal-accessory');
+  document.getElementById('shop-modal-box').classList.add('shop-modal-mystery');
   document.getElementById('shop-modal-name').textContent = 'Opening...';
   document.getElementById('shop-modal-desc').textContent = '';
   document.getElementById('shop-modal-btn-wrap').innerHTML = '';
-  accessoryEl.innerHTML = `<div class="mystery-spin-icon">🎁</div>`;
+  document.getElementById('shop-modal-pig').innerHTML = `<div class="mystery-spin-icon">🎁</div>`;
   setTimeout(() => showMysteryReveal(item), 1800);
 }
 
 function showMysteryReveal(item) {
   const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
-  document.getElementById('shop-modal-accessory').innerHTML = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
+  document.getElementById('shop-modal-box').classList.add('shop-modal-mystery');
+  document.getElementById('shop-modal-pig').innerHTML = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`;
   document.getElementById('shop-modal-name').textContent = `🎉 You got: ${item.name}!`;
   document.getElementById('shop-modal-desc').textContent = item.desc;
   document.getElementById('shop-modal-btn-wrap').innerHTML = `<button class="shop-btn shop-btn-equip" data-id="${item.id}">Nice!</button>`;
@@ -9338,7 +9350,7 @@ function renderShopPage() {
         : (isRoom || isBox)
           ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
           : getPigWithItemMarkup(0.29, item);
-      return `<div class="shop-card${isBox ? ' shop-card-mystery' : ''}${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${(isReward || isLocked) && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
+      return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${(isReward || isLocked) && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
         ${isDiamond && !isBox ? '<span class="shop-exclusive-ribbon">Mystery</span>' : ''}
         ${isBox ? '<span class="shop-exclusive-ribbon">Mystery</span>' : ''}
         ${isLocked && !isDiamond ? '<span class="shop-reward-ribbon">Mystery</span>' : ''}
@@ -9477,7 +9489,14 @@ function handleShopAction(itemId) {
 }
 
 // ── ROOM ───────────────────────────────────────
+function updateRoomSubnavActiveState() {
+  document.querySelectorAll('.nav-subitem[data-room-tab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.roomTab === roomActiveTab);
+  });
+}
+
 function renderRoomPage() {
+  updateRoomSubnavActiveState();
   if (roomActiveTab === 'wardrobe') { renderWardrobeScene(); return; }
   updateSidebarStats();
   const scene = document.getElementById('room-scene');
@@ -9534,36 +9553,59 @@ function renderRoomPage() {
   });
 }
 
+let wardrobeActiveTab = 'hat';
+
 function renderWardrobeScene() {
   updateSidebarStats();
   const scene = document.getElementById('room-scene');
   if (!scene) return;
 
   const wornIds = state.equippedItems || [];
-  const closetItems = SHOP_ITEMS.filter(i => (i.category === 'hat' || i.category === 'accessory') && !i.isMysteryBox && (state.ownedItems || []).includes(i.id));
+  const closetItems = SHOP_ITEMS.filter(i => i.category === wardrobeActiveTab && !i.isMysteryBox && (state.ownedItems || []).includes(i.id));
 
   const itemsHtml = closetItems.length
     ? closetItems.map(item => {
         const isWorn = wornIds.includes(item.id);
-        return `<button type="button" class="wardrobe-item${isWorn ? ' equipped' : ''}" data-id="${item.id}">
-          <svg viewBox="${item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120'}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>
-          <span class="wardrobe-item-name">${item.name}</span>
-          ${isWorn ? '<span class="wardrobe-item-check">✓</span>' : ''}
+        return `<button type="button" class="wardrobe-row${isWorn ? ' equipped' : ''}" data-id="${item.id}">
+          <span class="wardrobe-row-icon"><svg viewBox="${item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120'}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg></span>
+          <span class="wardrobe-row-name">${item.name}</span>
+          <span class="wardrobe-row-status">${isWorn ? '✓ Worn' : 'Wear'}</span>
         </button>`;
       }).join('')
-    : `<div class="wardrobe-empty">No hats or accessories yet, visit Porky's Boutique in the Shop to get some.</div>`;
+    : `<div class="wardrobe-empty">No ${wardrobeActiveTab === 'hat' ? 'hats' : 'accessories'} yet, visit Porky's Boutique in the Shop to get some.</div>`;
 
   scene.innerHTML = `
     <div class="room-backdrop wardrobe-backdrop">
-      <div class="wardrobe-header">
-        <h1 class="room-title">Hammy's Wardrobe</h1>
-        <span class="room-subtitle">Click an item to dress Hammy up (up to ${MAX_EQUIPPED_ITEMS} at once)</span>
+      <div class="wardrobe-panel">
+        <div class="wardrobe-header">
+          <h1 class="room-title">Hammy's Wardrobe</h1>
+          <span class="room-subtitle">Dress Hammy up with up to ${MAX_EQUIPPED_ITEMS} items at once</span>
+        </div>
+        <div class="wardrobe-tabs">
+          <button type="button" class="wardrobe-tab${wardrobeActiveTab === 'hat' ? ' active' : ''}" data-wardrobe-tab="hat">Hats</button>
+          <button type="button" class="wardrobe-tab${wardrobeActiveTab === 'accessory' ? ' active' : ''}" data-wardrobe-tab="accessory">Accessories</button>
+        </div>
+        <div class="wardrobe-items-list">${itemsHtml}</div>
       </div>
-      <div class="wardrobe-pig-stage">${getPigWithItemMarkup(0.9, getEquippedItems())}</div>
-      <div class="wardrobe-items-grid">${itemsHtml}</div>
+      <div class="wardrobe-pig-side">
+        <div class="wardrobe-rod">
+          <span class="wardrobe-hanger">👕</span>
+          <span class="wardrobe-hanger">🧥</span>
+          <span class="wardrobe-hanger">👗</span>
+          <span class="wardrobe-hanger">🎽</span>
+        </div>
+        <div class="wardrobe-pig-stage">${getPigWithItemMarkup(1, getEquippedItems())}</div>
+      </div>
     </div>`;
 
-  scene.querySelectorAll('.wardrobe-item[data-id]').forEach(btn => {
+  scene.querySelectorAll('.wardrobe-tab[data-wardrobe-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wardrobeActiveTab = btn.dataset.wardrobeTab;
+      renderWardrobeScene();
+    });
+  });
+
+  scene.querySelectorAll('.wardrobe-row[data-id]').forEach(btn => {
     btn.addEventListener('click', () => {
       handleShopAction(btn.dataset.id);
       renderWardrobeScene();
