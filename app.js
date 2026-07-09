@@ -7698,8 +7698,6 @@ const SHOP_ITEMS = [
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 },
     svg: `<path d="M 36 56 C 33 50 24 50 24 58 C 24 64 30 68 36 76 C 42 68 48 64 48 58 C 48 50 39 50 36 56 Z" fill="#FF6B8A"/>
           <path d="M 85 56 C 82 50 73 50 73 58 C 73 64 79 68 85 76 C 91 68 97 64 97 58 C 97 50 88 50 85 56 Z" fill="#FF6B8A"/>
-          <path d="M 27 55 C 28 51 31 50 34 51" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-          <path d="M 76 55 C 77 51 80 50 83 51" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
           <line x1="48" y1="58" x2="73" y2="58" stroke="#CC2255" stroke-width="2.5"/>
           <line x1="15" y1="56" x2="24" y2="58" stroke="#CC2255" stroke-width="2.2"/>
           <line x1="97" y1="58" x2="106" y2="56" stroke="#CC2255" stroke-width="2.2"/>`
@@ -9246,7 +9244,9 @@ function refreshShopModal(itemId) {
     : (isRoom || item.isMysteryBox)
       ? `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
       : getPigWithItemMarkup(0.42, item);
-  document.getElementById('shop-modal-accessory').innerHTML = (isRoom || item.isMysteryBox)
+  const accessoryEl = document.getElementById('shop-modal-accessory');
+  accessoryEl.style.display = (isRoom || item.isMysteryBox) ? 'none' : '';
+  accessoryEl.innerHTML = (isRoom || item.isMysteryBox)
     ? ''
     : `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
   document.getElementById('shop-modal-name').textContent = item.name;
@@ -9269,8 +9269,14 @@ function showMysteryReveal(item) {
   const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
   document.getElementById('shop-modal-box').classList.add('shop-modal-mystery');
   document.getElementById('shop-modal-pig').innerHTML = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`;
-  document.getElementById('shop-modal-name').textContent = `🎉 You got: ${item.name}!`;
-  document.getElementById('shop-modal-desc').textContent = item.desc;
+  if (item.isDuplicate) {
+    const currencyLabel = item.refundCurrency === 'diamond' ? `💎 ${item.refundAmount} diamonds` : `🪙 ${item.refundAmount} coins`;
+    document.getElementById('shop-modal-name').textContent = `You already have: ${item.name}`;
+    document.getElementById('shop-modal-desc').textContent = `Refunded ${currencyLabel} since you already own this one.`;
+  } else {
+    document.getElementById('shop-modal-name').textContent = `🎉 You got: ${item.name}!`;
+    document.getElementById('shop-modal-desc').textContent = item.desc;
+  }
   document.getElementById('shop-modal-btn-wrap').innerHTML = `<button class="shop-btn shop-btn-equip" data-id="${item.id}">Nice!</button>`;
 }
 
@@ -9436,9 +9442,16 @@ function openMysteryBox(itemId) {
   const won = pickMysteryItem(item.mysteryPool);
   if (!won) return null;
   if (item.currency === 'diamond') state.diamonds -= item.price; else state.coins -= item.price;
-  state.ownedItems = [...(state.ownedItems || []), won.id];
+  // pickMysteryItem only falls back to a possible duplicate once every item in the pool is
+  // already owned; refund the box's cost instead of granting a copy that can't be worn twice.
+  const isDuplicate = (state.ownedItems || []).includes(won.id);
+  if (isDuplicate) {
+    if (item.currency === 'diamond') state.diamonds += item.price; else state.coins += item.price;
+  } else {
+    state.ownedItems = [...(state.ownedItems || []), won.id];
+  }
   saveState();
-  return won;
+  return { ...won, isDuplicate, refundAmount: isDuplicate ? item.price : 0, refundCurrency: item.currency || 'coin' };
 }
 
 function handleShopAction(itemId) {
@@ -9562,6 +9575,7 @@ function renderWardrobeScene() {
 
   const wornIds = state.equippedItems || [];
   const closetItems = SHOP_ITEMS.filter(i => i.category === wardrobeActiveTab && !i.isMysteryBox && (state.ownedItems || []).includes(i.id));
+  const wardrobeTabLabels = { hat: 'hats', accessory: 'accessories', exclusive: 'diamond exclusives' };
 
   const itemsHtml = closetItems.length
     ? closetItems.map(item => {
@@ -9572,7 +9586,7 @@ function renderWardrobeScene() {
           <span class="wardrobe-row-status">${isWorn ? '✓ Worn' : 'Wear'}</span>
         </button>`;
       }).join('')
-    : `<div class="wardrobe-empty">No ${wardrobeActiveTab === 'hat' ? 'hats' : 'accessories'} yet, visit Porky's Boutique in the Shop to get some.</div>`;
+    : `<div class="wardrobe-empty">No ${wardrobeTabLabels[wardrobeActiveTab]} yet, visit the Shop to get some.</div>`;
 
   scene.innerHTML = `
     <div class="room-backdrop wardrobe-backdrop">
@@ -9584,16 +9598,12 @@ function renderWardrobeScene() {
         <div class="wardrobe-tabs">
           <button type="button" class="wardrobe-tab${wardrobeActiveTab === 'hat' ? ' active' : ''}" data-wardrobe-tab="hat">Hats</button>
           <button type="button" class="wardrobe-tab${wardrobeActiveTab === 'accessory' ? ' active' : ''}" data-wardrobe-tab="accessory">Accessories</button>
+          <button type="button" class="wardrobe-tab${wardrobeActiveTab === 'exclusive' ? ' active' : ''}" data-wardrobe-tab="exclusive">Exclusives</button>
         </div>
         <div class="wardrobe-items-list">${itemsHtml}</div>
       </div>
       <div class="wardrobe-pig-side">
-        <div class="wardrobe-rod">
-          <span class="wardrobe-hanger">👕</span>
-          <span class="wardrobe-hanger">🧥</span>
-          <span class="wardrobe-hanger">👗</span>
-          <span class="wardrobe-hanger">🎽</span>
-        </div>
+        <div class="wardrobe-pig-backdrop"></div>
         <div class="wardrobe-pig-stage">${getPigWithItemMarkup(1, getEquippedItems())}</div>
       </div>
     </div>`;

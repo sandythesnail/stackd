@@ -1709,20 +1709,15 @@ select.budget-input { cursor: pointer; }
 .wardrobe-empty { color: var(--text-mid); font-size: 0.9rem; text-align: center; padding: 1.5rem 0.5rem; }
 
 .wardrobe-pig-side {
-  flex: 1.2; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 1.2; display: flex; align-items: center; justify-content: center;
   position: relative; z-index: 2; min-width: 0;
 }
-.wardrobe-rod {
-  position: relative; width: 90%; max-width: 420px; display: flex; justify-content: space-evenly;
-  padding-bottom: 0.4rem; border-bottom: 5px solid #3D2A1E; margin-bottom: 3rem;
+.wardrobe-pig-backdrop {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 68%; max-width: 360px; aspect-ratio: 1.25 / 1;
+  background: rgba(255,255,255,0.96); border-radius: 50%; z-index: 1;
 }
-.wardrobe-rod::before, .wardrobe-rod::after {
-  content: ''; position: absolute; top: -3px; width: 10px; height: 10px; border-radius: 50%; background: #3D2A1E;
-}
-.wardrobe-rod::before { left: -5px; }
-.wardrobe-rod::after { right: -5px; }
-.wardrobe-hanger { font-size: 1.9rem; transform: translateY(55%); filter: drop-shadow(0 3px 4px rgba(0,0,0,0.35)); }
-.wardrobe-pig-stage { display: flex; justify-content: center; }
+.wardrobe-pig-stage { position: relative; z-index: 2; display: flex; justify-content: center; }
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
