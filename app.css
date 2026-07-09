@@ -198,11 +198,7 @@ body { background: var(--bg); min-height: 100vh; }
 
 /* ─── MODULE LIST ─── */
 .modules-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
-  align-items: start;
-}
-@media (max-width: 900px) {
-  .modules-grid { grid-template-columns: 1fr; }
+  display: flex; flex-direction: column; gap: 0.75rem;
 }
 .module-card {
   background: #fff; padding: 1.4rem; cursor: pointer;
