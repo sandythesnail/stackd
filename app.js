@@ -9423,16 +9423,19 @@ function renderShopPage() {
 }
 
 function pickMysteryItem(poolKey) {
+  // Every pull draws from the full pool, owned or not, so duplicates are a normal, common
+  // outcome (like a real gacha) rather than something that only happens once you've
+  // collected everything. openMysteryBox() handles the duplicate case with a partial refund.
   const pool = mysteryPoolAll(poolKey);
-  const unowned = pool.filter(i => !(state.ownedItems || []).includes(i.id));
-  const candidates = unowned.length ? unowned : pool;
   const weighted = [];
-  candidates.forEach(item => {
+  pool.forEach(item => {
     const weight = RARITY_WEIGHT[itemRarity(item)];
     for (let k = 0; k < weight; k++) weighted.push(item);
   });
   return weighted[Math.floor(Math.random() * weighted.length)];
 }
+
+const MYSTERY_DUPLICATE_REFUND_RATE = 0.5;
 
 function openMysteryBox(itemId) {
   const item = SHOP_ITEMS.find(i => i.id === itemId);
@@ -9442,16 +9445,18 @@ function openMysteryBox(itemId) {
   const won = pickMysteryItem(item.mysteryPool);
   if (!won) return null;
   if (item.currency === 'diamond') state.diamonds -= item.price; else state.coins -= item.price;
-  // pickMysteryItem only falls back to a possible duplicate once every item in the pool is
-  // already owned; refund the box's cost instead of granting a copy that can't be worn twice.
+  // pickMysteryItem draws from the whole pool every time, so duplicates are a normal, common
+  // outcome now, not just an edge case. Partial refund, not a full one, so pulling a
+  // duplicate still costs something (keeps completing a collection meaningfully hard).
   const isDuplicate = (state.ownedItems || []).includes(won.id);
+  const refundAmount = isDuplicate ? Math.floor(item.price * MYSTERY_DUPLICATE_REFUND_RATE) : 0;
   if (isDuplicate) {
-    if (item.currency === 'diamond') state.diamonds += item.price; else state.coins += item.price;
+    if (item.currency === 'diamond') state.diamonds += refundAmount; else state.coins += refundAmount;
   } else {
     state.ownedItems = [...(state.ownedItems || []), won.id];
   }
   saveState();
-  return { ...won, isDuplicate, refundAmount: isDuplicate ? item.price : 0, refundCurrency: item.currency || 'coin' };
+  return { ...won, isDuplicate, refundAmount, refundCurrency: item.currency || 'coin' };
 }
 
 function handleShopAction(itemId) {

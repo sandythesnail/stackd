@@ -1714,7 +1714,7 @@ select.budget-input { cursor: pointer; }
 }
 .wardrobe-pig-backdrop {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 68%; max-width: 360px; aspect-ratio: 1.25 / 1;
+  width: 95%; max-width: 560px; aspect-ratio: 1.15 / 1;
   background: rgba(255,255,255,0.96); border-radius: 50%; z-index: 1;
 }
 .wardrobe-pig-stage { position: relative; z-index: 2; display: flex; justify-content: center; }
