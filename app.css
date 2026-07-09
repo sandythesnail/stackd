@@ -1899,12 +1899,12 @@ select.budget-input { cursor: pointer; }
 .module-row.expanded .mrh-chevron { transform: rotate(180deg); }
 
 .module-row-lessons {
-  display: grid; grid-template-columns: 1fr;
+  display: grid; grid-template-columns: 1fr 1fr;
   max-height: 0; overflow: hidden;
   transition: max-height 0.3s ease;
 }
 .module-row.expanded .module-row-lessons {
-  max-height: 2600px;
+  max-height: 1600px;
 }
 
 .lesson-tile {
@@ -1913,7 +1913,11 @@ select.budget-input { cursor: pointer; }
   transition: background 0.15s;
   border-bottom: 1px solid var(--border);
 }
-.lesson-tile:last-child { border-bottom: none; }
+.lesson-tile:nth-child(odd) { border-right: 1px solid var(--border); }
+.lesson-tile:nth-last-child(-n+2):nth-child(odd),
+.lesson-tile:nth-last-child(-n+2):nth-child(odd) ~ .lesson-tile {
+  border-bottom: none;
+}
 .lesson-tile:hover { background: var(--green-pale); }
 
 .lt-status {
@@ -1953,6 +1957,16 @@ select.budget-input { cursor: pointer; }
 }
 .lesson-tile.done .lt-cta {
   background: var(--border); color: var(--text-mid);
+}
+
+@media (max-width: 600px) {
+  .module-row-lessons { grid-template-columns: 1fr; }
+  .lesson-tile:nth-child(odd) { border-right: none; }
+  .lesson-tile:nth-last-child(-n+2):nth-child(odd),
+  .lesson-tile:nth-last-child(-n+2):nth-child(odd) ~ .lesson-tile {
+    border-bottom: 1px solid var(--border);
+  }
+  .lesson-tile:last-child { border-bottom: none; }
 }
 
 /* ─── SIDEBAR COINS ─── */
