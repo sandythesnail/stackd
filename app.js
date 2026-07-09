@@ -9842,11 +9842,21 @@ function renderProgressPage() {
 function renderSettingsPage() {
   const resetBtn = document.getElementById('reset-btn');
   if (resetBtn) {
-    resetBtn.onclick = () => {
-      if (confirm('Reset all progress? This cannot be undone.')) {
-        localStorage.removeItem('stackd_v2');
-        location.reload();
+    resetBtn.onclick = async () => {
+      if (!confirm('Reset all progress? This cannot be undone.')) return;
+      clearTimeout(supabaseSyncTimeout);
+      localStorage.removeItem('stackd_v2');
+      if (window.stackdSupabase && window.Clerk?.user) {
+        const { error } = await window.stackdSupabase
+          .from('user_progress')
+          .delete()
+          .eq('clerk_user_id', Clerk.user.id);
+        if (error) {
+          console.error('Failed to reset synced progress:', error);
+          alert('Progress was reset on this device, but syncing the reset to your account failed — it may come back on next login. Check your connection and try again.');
+        }
       }
+      location.reload();
     };
   }
   const retakeBtn = document.getElementById('retake-survey-btn');
