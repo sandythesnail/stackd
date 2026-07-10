@@ -246,7 +246,7 @@ body { background: var(--bg); min-height: 100vh; }
 .mod-icon.berry { background: #F5D9E8; color: #8F2D5E; }
 .mod-icon.indigo { background: #DCE0FA; color: #38408A; }
 
-.card-badge { font-size: 0.68rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: var(--radius-sm); }
+.card-badge { font-size: 0.68rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: var(--radius-sm); white-space: nowrap; }
 .badge-done { background: var(--green-light); color: var(--green-dark); }
 .badge-xp   { background: var(--pink-light);  color: var(--pink-dark); }
 .badge-recommend { background: #FFEDB0; color: #8A6800; }
