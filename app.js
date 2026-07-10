@@ -251,14 +251,14 @@ const MODULES = [
           },
           {
             id: 'gnp_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "Your gross salary is the number that actually lands in your bank account.",
             isTrue: false,
-            explanation: "It's a myth. Taxes and FICA come out before you ever see the money, net pay, not gross, is what's actually available to spend or save.",
+            explanation: "False. Taxes and FICA come out before you ever see the money, net pay, not gross, is what's actually available to spend or save.",
             xpOnComplete: 2
           },
           {
-            id: 'gnp_myth1', type: 'mythcards', title: 'Paycheck Myths',
+            id: 'gnp_myth1', type: 'mythcards', title: 'Paycheck: True or False',
             cards: [
               { myth: "If you and a friend both make $15/hour, your take-home pay per hour is guaranteed to be identical.", isTrue: false, explanation: "Withholding elections, state taxes, and benefit deductions can all differ, even at the same hourly rate." },
               { myth: "FICA deductions fund benefits you can eventually use yourself, like Social Security and Medicare.", isTrue: true, explanation: "True, it's not a fee that disappears, it's funding programs you'll draw on later in life." },
@@ -453,14 +453,14 @@ const MODULES = [
           },
           {
             id: 'w4_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "A big tax refund every year is proof that you're managing your withholding well.",
             isTrue: false,
-            explanation: "It's a myth. A large refund usually means too much was withheld all year, money that could've been in your own paycheck and earning you interest, instead of sitting with the government interest-free.",
+            explanation: "False. A large refund usually means too much was withheld all year, money that could've been in your own paycheck and earning you interest, instead of sitting with the government interest-free.",
             xpOnComplete: 2
           },
           {
-            id: 'w4_myth1', type: 'mythcards', title: 'Withholding Myths',
+            id: 'w4_myth1', type: 'mythcards', title: 'Withholding: True or False',
             cards: [
               { myth: "You can only submit a W-4 once, on your very first day at a job.", isTrue: false, explanation: "You can submit a new W-4 anytime your situation changes, a raise, a second job, marriage, and more." },
               { myth: "Claiming exempt is risk-free if you genuinely expect to owe no tax for the year.", isTrue: true, explanation: "True, exempt status is meant for people who truly expect zero tax liability, the risk is claiming it when you don't actually qualify." },
@@ -629,14 +629,14 @@ const MODULES = [
           },
           {
             id: 'ps_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "If your net pay looks about right, there's no real need to check the rest of the pay stub.",
             isTrue: false,
-            explanation: "It's a myth. A right-looking net pay can still hide a missing overtime line, a wrong deduction, or a benefits error that quietly compounds over months if nobody catches it.",
+            explanation: "False. A right-looking net pay can still hide a missing overtime line, a wrong deduction, or a benefits error that quietly compounds over months if nobody catches it.",
             xpOnComplete: 2
           },
           {
-            id: 'ps_myth1', type: 'mythcards', title: 'Pay Stub Myths',
+            id: 'ps_myth1', type: 'mythcards', title: 'Pay Stub: True or False',
             cards: [
               { myth: "Every pay stub deduction lowers the income you're taxed on.", isTrue: false, explanation: "Only pre-tax deductions do that. Post-tax deductions, like a Roth contribution, come out after taxes are already calculated." },
               { myth: "YTD totals are useful for more than just curiosity, like loan applications or catching a raise that didn't take effect.", isTrue: true, explanation: "True, YTD figures are often exactly what a lender, landlord, or scholarship office asks to see as proof of income." },
@@ -773,14 +773,14 @@ const MODULES = [
           },
           {
             id: 'ws_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "A Work-Study award guarantees a fixed number of work hours every week of the semester.",
             isTrue: false,
-            explanation: "It's a myth. The award guarantees a maximum DOLLAR amount, not a set number of hours, actual hours depend on the job, the schedule, and how the student paces their own earning.",
+            explanation: "False. The award guarantees a maximum DOLLAR amount, not a set number of hours, actual hours depend on the job, the schedule, and how the student paces their own earning.",
             xpOnComplete: 2
           },
           {
-            id: 'ws_myth1', type: 'mythcards', title: 'Work-Study Myths',
+            id: 'ws_myth1', type: 'mythcards', title: 'Work-Study: True or False',
             cards: [
               { myth: "Work-Study jobs are only available in the campus library or dining hall.", isTrue: false, explanation: "Work-Study jobs span research assistant roles, offices, labs, tutoring centers, and more, wherever a department has funded positions available." },
               { myth: "A student who doesn't use their entire Work-Study award simply loses access to the unused portion once the year ends.", isTrue: true, explanation: "True, an unused award amount doesn't roll over or convert to cash, it's only available by actually working during that award year." },
@@ -923,14 +923,14 @@ const MODULES = [
           },
           {
             id: 'gi_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "Gig income only needs to be reported to the IRS if a 1099-NEC form was actually sent for it.",
             isTrue: false,
-            explanation: "It's a myth. Every dollar of gig income is reportable, whether or not a specific payer crossed the $2,000 threshold that triggers a form.",
+            explanation: "False. Every dollar of gig income is reportable, whether or not a specific payer crossed the $2,000 threshold that triggers a form.",
             xpOnComplete: 2
           },
           {
-            id: 'gi_myth1', type: 'mythcards', title: 'Gig Income Myths',
+            id: 'gi_myth1', type: 'mythcards', title: 'Gig Income: True or False',
             cards: [
               { myth: "Cash or Venmo payments for gig work are harder for the IRS to ever find out about, so they're lower priority to report.", isTrue: false, explanation: "Payment method doesn't change the legal requirement to report income, and payment apps above certain thresholds report transaction data to the IRS as well." },
               { myth: "A student with only gig income, no W-2 job at all, still might owe self-employment tax.", isTrue: true, explanation: "True, self-employment tax applies once net self-employment earnings reach a fairly low threshold, regardless of whether any W-2 income exists alongside it." },
@@ -1076,14 +1076,14 @@ const MODULES = [
           },
           {
             id: 'gt_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "It's safe to wait until April to figure out gig taxes, as long as the money is somewhere in a bank account.",
             isTrue: false,
-            explanation: "It's a myth. If it's mixed in with regular spending money, or if a meaningful amount is owed, waiting until April risks both an accidental overspend and a possible underpayment penalty for not paying enough during the year.",
+            explanation: "False. If it's mixed in with regular spending money, or if a meaningful amount is owed, waiting until April risks both an accidental overspend and a possible underpayment penalty for not paying enough during the year.",
             xpOnComplete: 2
           },
           {
-            id: 'gt_myth1', type: 'mythcards', title: 'Gig Tax Myths',
+            id: 'gt_myth1', type: 'mythcards', title: 'Gig Tax: True or False',
             cards: [
               { myth: "Setting aside exactly 20-30% guarantees the precise amount owed down to the dollar.", isTrue: false, explanation: "It's a safe rule-of-thumb buffer, not an exact calculation, actual tax owed depends on total income, deductions, and other factors covered in the Taxes module." },
               { myth: "A separate tax savings account needs to be a special \"tax-only\" product from the bank.", isTrue: false, explanation: "Any regular savings account works, what matters is that it's kept separate from everyday spending, not any special account type." },
@@ -1235,14 +1235,14 @@ const MODULES = [
           },
           {
             id: 'nr_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "Asking for a raise at a part-time campus job is unusual and risks looking pushy.",
             isTrue: false,
-            explanation: "It's a myth. Asking, especially with real research and reasonable timing behind it, is a completely normal part of any job, campus jobs included, not an unusual overstep.",
+            explanation: "False. Asking, especially with real research and reasonable timing behind it, is a completely normal part of any job, campus jobs included, not an unusual overstep.",
             xpOnComplete: 2
           },
           {
-            id: 'nr_myth1', type: 'mythcards', title: 'Raise Myths',
+            id: 'nr_myth1', type: 'mythcards', title: 'Raise: True or False',
             cards: [
               { myth: "Bringing up a specific dollar number makes a raise conversation feel more aggressive than a vague request.", isTrue: false, explanation: "A specific number, backed by research, actually reads as more prepared and reasonable than an open-ended, vague ask." },
               { myth: "A raise conversation that doesn't succeed the first time can never be revisited later.", isTrue: false, explanation: "A reasonable, well-timed follow-up after building more of a track record is a normal next step, not a dead end." },
@@ -1379,14 +1379,14 @@ const MODULES = [
           },
           {
             id: 'mi_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "If a campus job already withholds taxes, that automatically covers any gig income earned on the side too.",
             isTrue: false,
-            explanation: "It's a myth. A job's withholding only accounts for that job's pay, gig income earned alongside it still needs its own set-aside or estimated payments.",
+            explanation: "False. A job's withholding only accounts for that job's pay, gig income earned alongside it still needs its own set-aside or estimated payments.",
             xpOnComplete: 2
           },
           {
-            id: 'mi_myth1', type: 'mythcards', title: 'Multiple Income Myths',
+            id: 'mi_myth1', type: 'mythcards', title: 'Multiple Income: True or False',
             cards: [
               { myth: "Having both a W-2 job and gig income means filing two completely separate tax returns.", isTrue: false, explanation: "Both income types are reported together on the same personal tax return, just on different sections/forms within it." },
               { myth: "It's smarter to build a budget's fixed bills around whichever income source is more predictable, not whichever is currently largest.", isTrue: true, explanation: "True, predictability matters more than size for fixed bills, a smaller but steady income is safer to build a baseline around than a larger but unpredictable one." },
@@ -1816,14 +1816,14 @@ const MODULES = [
           },
           {
             id: 'br_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "The 50/30/20 rule is a strict law, every category must be exactly on target every month.",
             isTrue: false,
-            explanation: "It's a myth. It's a flexible starting framework, some months lean more toward needs, the real value is giving every dollar a job ahead of time.",
+            explanation: "False. It's a flexible starting framework, some months lean more toward needs, the real value is giving every dollar a job ahead of time.",
             xpOnComplete: 2
           },
           {
-            id: 'br_myth1', type: 'mythcards', title: 'Budgeting Myths',
+            id: 'br_myth1', type: 'mythcards', title: 'Budgeting: True or False',
             cards: [
               { myth: "A budget only matters if you're bad with money.", isTrue: false, explanation: "A budget is a plan for EVERYONE's money, regardless of how responsible they already are, it just prevents small leaks from adding up." },
               { myth: "Extra debt payments count toward the 20% slice, not the 30% wants slice.", isTrue: true, explanation: "True, paying down debt faster is a financial-position builder, just like savings." },
@@ -2010,14 +2010,14 @@ const MODULES = [
           },
           {
             id: 'nw_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "Correctly labeling every expense as a need or want automatically prevents a budget deficit.",
             isTrue: false,
-            explanation: "It's a myth. Categorizing correctly matters, but a deficit still happens if you don't actually TRACK spending against the plan as the month goes.",
+            explanation: "False. Categorizing correctly matters, but a deficit still happens if you don't actually TRACK spending against the plan as the month goes.",
             xpOnComplete: 2
           },
           {
-            id: 'nw_myth1', type: 'mythcards', title: 'Needs vs. Wants Myths',
+            id: 'nw_myth1', type: 'mythcards', title: 'Needs vs. Wants: True or False',
             cards: [
               { myth: "A single small purchase is usually what causes a budget deficit.", isTrue: false, explanation: "Deficits are usually the sum of several small untracked purchases, not one big splurge." },
               { myth: "Some expenses genuinely fall in a gray area between need and want.", isTrue: true, explanation: "True, a basic phone plan versus a premium one is a good example, the categorization requires judgment, not a rigid rule." },
@@ -2537,14 +2537,14 @@ const MODULES = [
           },
           {
             id: 'ef_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "You need a full 3-6 months of expenses saved before an emergency fund is worth having at all.",
             isTrue: false,
-            explanation: "It's a myth. Even a small starter fund of $500-$1,000 prevents most everyday emergencies from turning into debt, it doesn't need to be the full target to already be useful.",
+            explanation: "False. Even a small starter fund of $500-$1,000 prevents most everyday emergencies from turning into debt, it doesn't need to be the full target to already be useful.",
             xpOnComplete: 2
           },
           {
-            id: 'ef_myth1', type: 'mythcards', title: 'Emergency Fund Myths',
+            id: 'ef_myth1', type: 'mythcards', title: 'Emergency Fund: True or False',
             cards: [
               { myth: "A credit card is just as good as an emergency fund for surprise expenses.", isTrue: false, explanation: "A credit card charges interest on the balance, an emergency fund doesn't cost you anything to use." },
               { myth: "A $500 starter fund is genuinely useful, even though it's far from the full 3-6 month target.", isTrue: true, explanation: "True, it covers most single surprises and prevents the immediate need to borrow." },
@@ -2742,14 +2742,14 @@ const MODULES = [
           },
           {
             id: 'hy_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "A high-yield savings account is meaningfully riskier than a traditional big-bank savings account.",
             isTrue: false,
-            explanation: "It's a myth. Both are FDIC-insured up to the same limits, the only real difference is the interest rate.",
+            explanation: "False. Both are FDIC-insured up to the same limits, the only real difference is the interest rate.",
             xpOnComplete: 2
           },
           {
-            id: 'hy_myth1', type: 'mythcards', title: 'Savings Account Myths',
+            id: 'hy_myth1', type: 'mythcards', title: 'Savings Account: True or False',
             cards: [
               { myth: "Online HYSAs are less safe than a traditional big-bank savings account.", isTrue: false, explanation: "Both are FDIC-insured the same way, the interest rate is the only meaningful difference." },
               { myth: "A 0.01% APY versus a 4.5% APY makes almost no real difference on a typical student balance.", isTrue: false, explanation: "On $1,000, that's about 10 cents versus about $45 a year, a real difference for zero extra risk." },
@@ -3174,14 +3174,14 @@ const MODULES = [
           },
           {
             id: 'ce_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "You need at least a few thousand dollars saved up before it's worth opening an investment account.",
             isTrue: false,
-            explanation: "It's a myth. Many accounts have no minimum, and starting small now beats waiting for a bigger amount later, since the delay costs compounding time you can't buy back.",
+            explanation: "False. Many accounts have no minimum, and starting small now beats waiting for a bigger amount later, since the delay costs compounding time you can't buy back.",
             xpOnComplete: 2
           },
           {
-            id: 'ce_myth1', type: 'mythcards', title: 'Compound Interest Myths',
+            id: 'ce_myth1', type: 'mythcards', title: 'Compound Interest: True or False',
             cards: [
               { myth: "The exact dollar amount you start with matters more than how early you start.", isTrue: false, explanation: "Time horizon has an outsized effect, 10 extra years turned the same $1,000 into nearly double." },
               { myth: "A market drop right after you start investing means you should sell to avoid further losses.", isTrue: false, explanation: "Selling during a dip locks in a loss that was only temporary on paper, staying invested lets you recover as markets historically have." },
@@ -3359,14 +3359,14 @@ const MODULES = [
           },
           {
             id: 'ri_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "You need a college degree or a full-time salaried job to be eligible for a Roth IRA.",
             isTrue: false,
-            explanation: "It's a myth. Eligibility is based on earned income, babysitting, tutoring, and part-time work all count, regardless of age or education.",
+            explanation: "False. Eligibility is based on earned income, babysitting, tutoring, and part-time work all count, regardless of age or education.",
             xpOnComplete: 2
           },
           {
-            id: 'ri_myth1', type: 'mythcards', title: 'Roth IRA Myths',
+            id: 'ri_myth1', type: 'mythcards', title: 'Roth IRA: True or False',
             cards: [
               { myth: "You must be at least 25 years old to open a Roth IRA.", isTrue: false, explanation: "There's no minimum age, only a requirement of having earned income." },
               { myth: "If your job offers an employer match, it's smart to capture the full match before maxing out a Roth IRA.", isTrue: true, explanation: "True, the employer match is an immediate guaranteed return, worth prioritizing before other accounts." },
@@ -3814,14 +3814,14 @@ const MODULES = [
         },
         {
           id: 'poll1', type: 'poll', title: 'What Do Most People Think?',
-          intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+          intro: "Take a guess. Tap True or False, then see the answer.",
           statement: 'You need to already have good credit to get approved for your first credit card.',
           isTrue: false,
-          explanation: "It's a myth. You don't need existing credit to start. Options built for beginners, like student cards or secured cards backed by a refundable deposit, let you build a credit history from zero.",
+          explanation: "False. You don't need existing credit to start. Options built for beginners, like student cards or secured cards backed by a refundable deposit, let you build a credit history from zero.",
           xpOnComplete: 2
         },
         {
-          id: 'c4', type: 'mythcards', title: 'Credit Myths',
+          id: 'c4', type: 'mythcards', title: 'Credit: True or False',
           cards: [
             { myth: 'Carrying a small balance helps your credit score.', isTrue: false, explanation: 'Paying your bill in full every month is what actually helps. Carrying a balance just costs you extra in interest, it never boosts your score.' },
             { myth: 'Closing an old, unused card can hurt your score.', isTrue: true, explanation: 'It can! Closing your oldest card shortens your credit history and raises your utilization, both of those can lower your score.' },
@@ -4022,14 +4022,14 @@ const MODULES = [
           },
           {
             id: 'cm_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: 'If your friend defaults on a loan you co-signed, it only shows up on their credit report, not yours.',
             isTrue: false,
-            explanation: "It's a myth. Co-signers are equally liable, a missed payment reports to BOTH credit files, and the lender can pursue either person for the full balance.",
+            explanation: "False. Co-signers are equally liable, a missed payment reports to BOTH credit files, and the lender can pursue either person for the full balance.",
             xpOnComplete: 2
           },
           {
-            id: 'cm_myth1', type: 'mythcards', title: 'Credit Mistake Myths',
+            id: 'cm_myth1', type: 'mythcards', title: 'Credit Mistake: True or False',
             cards: [
               { myth: "Closing a credit card you don't use can't hurt your score.", isTrue: false, explanation: 'It can shorten your credit history and raise your utilization on the remaining cards, both can lower your score.' },
               { myth: 'Co-signing a loan makes you legally responsible for the debt if the other person misses a payment.', isTrue: true, explanation: "True, a co-signer isn't a reference, they're equally on the hook for the full balance." },
@@ -4459,14 +4459,14 @@ const MODULES = [
           },
           {
             id: 'hb_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "Once you start college, you're automatically dropped from a parent's health insurance plan.",
             isTrue: false,
-            explanation: "It's a myth. Under the ACA, you can typically stay on a parent's plan until age 26, regardless of student status.",
+            explanation: "False. Under the ACA, you can typically stay on a parent's plan until age 26, regardless of student status.",
             xpOnComplete: 2
           },
           {
-            id: 'hb_myth1', type: 'mythcards', title: 'Health Insurance Myths',
+            id: 'hb_myth1', type: 'mythcards', title: 'Health Insurance: True or False',
             cards: [
               { myth: "A lower monthly premium always means a better overall deal.", isTrue: false, explanation: "Lower premiums usually come with higher deductibles, the better plan depends on how much care you actually expect to use." },
               { myth: "A copay and a deductible are the exact same thing.", isTrue: false, explanation: "A deductible is what you pay before coverage starts, a copay is a flat per-visit fee, they work differently." },
@@ -4654,14 +4654,14 @@ const MODULES = [
           },
           {
             id: 'hw_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "If you're already covered under a parent's plan, the school automatically knows and skips billing you.",
             isTrue: false,
-            explanation: "It's a myth. Schools don't automatically know about outside coverage, you have to actively submit a waiver with proof before the deadline.",
+            explanation: "False. Schools don't automatically know about outside coverage, you have to actively submit a waiver with proof before the deadline.",
             xpOnComplete: 2
           },
           {
-            id: 'hw_myth1', type: 'mythcards', title: 'Health Waiver Myths',
+            id: 'hw_myth1', type: 'mythcards', title: 'Health Waiver: True or False',
             cards: [
               { myth: "Waiver deadlines are usually flexible if you have a good reason for being late.", isTrue: false, explanation: "Most schools enforce a hard cutoff, exceptions are rare and never guaranteed." },
               { myth: "A waiver form typically requires specific details like your insurer's name and policy number.", isTrue: true, explanation: "True, generic proof isn't enough, schools want the specific plan details on record." },
@@ -5066,14 +5066,14 @@ const MODULES = [
           },
           {
             id: 'fl_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "Subsidized and Unsubsidized federal loans work exactly the same way, the names don't reflect any real difference.",
             isTrue: false,
-            explanation: "It's a myth. On Subsidized loans, the government pays interest while you're in school. On Unsubsidized loans, interest accrues from day one, a real, meaningful difference.",
+            explanation: "False. On Subsidized loans, the government pays interest while you're in school. On Unsubsidized loans, interest accrues from day one, a real, meaningful difference.",
             xpOnComplete: 2
           },
           {
-            id: 'fl_myth1', type: 'mythcards', title: 'Federal Loan Myths',
+            id: 'fl_myth1', type: 'mythcards', title: 'Federal Loan: True or False',
             cards: [
               { myth: "Interest never accrues on a federal student loan while you're still enrolled in school.", isTrue: false, explanation: "This is only true for Subsidized loans, Unsubsidized loans accrue interest the entire time, including while enrolled." },
               { myth: "Federal loans generally come with more borrower protections than private loans.", isTrue: true, explanation: "True, income-driven repayment, deferment, and forgiveness programs are built into federal loans by law." },
@@ -5263,14 +5263,14 @@ const MODULES = [
           },
           {
             id: 'pl_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "Once a student graduates, a Parent PLUS loan automatically transfers into the student's name.",
             isTrue: false,
-            explanation: "It's a myth. The parent remains legally responsible unless the debt is formally refinanced into the student's name through a private lender.",
+            explanation: "False. The parent remains legally responsible unless the debt is formally refinanced into the student's name through a private lender.",
             xpOnComplete: 2
           },
           {
-            id: 'pl_myth1', type: 'mythcards', title: 'Parent PLUS Loan Myths',
+            id: 'pl_myth1', type: 'mythcards', title: 'Parent PLUS Loan: True or False',
             cards: [
               { myth: "A Parent PLUS loan automatically becomes the student's responsibility after graduation.", isTrue: false, explanation: "It stays the parent's legal debt unless formally refinanced into the student's name." },
               { myth: "PLUS loans, unlike Direct Subsidized/Unsubsidized loans, typically require a credit check.", isTrue: true, explanation: "True, this is a key difference from Direct loans, which don't require a credit check." },
@@ -5672,14 +5672,14 @@ const MODULES = [
           },
           {
             id: 'fr_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "If your employer already withheld taxes from every paycheck, filing a return is pointless.",
             isTrue: false,
-            explanation: "It's a myth. Filing is exactly how you find out if too much was withheld, and get that difference back as a refund.",
+            explanation: "False. Filing is exactly how you find out if too much was withheld, and get that difference back as a refund.",
             xpOnComplete: 2
           },
           {
-            id: 'fr_myth1', type: 'mythcards', title: 'First-Return Myths',
+            id: 'fr_myth1', type: 'mythcards', title: 'First-Return: True or False',
             cards: [
               { myth: "You only need to file taxes once your income passes $50,000.", isTrue: false, explanation: "Filing requirements depend on total income and other factors, often at levels well below that." },
               { myth: "Free filing options like IRS Free File and VITA clinics can handle W-2s, 1099s, and education credits.", isTrue: true, explanation: "True, most students never need to pay a company for a simple first return." },
@@ -5866,14 +5866,14 @@ const MODULES = [
           },
           {
             id: 'wv_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "1099 income under $1,000 doesn't need to be reported on your tax return.",
             isTrue: false,
-            explanation: "It's a myth. There's no blanket exemption like that, 1099 income generally needs to be reported regardless of the amount.",
+            explanation: "False. There's no blanket exemption like that, 1099 income generally needs to be reported regardless of the amount.",
             xpOnComplete: 2
           },
           {
-            id: 'wv_myth1', type: 'mythcards', title: 'W-2 vs. 1099 Myths',
+            id: 'wv_myth1', type: 'mythcards', title: 'W-2 vs. 1099: True or False',
             cards: [
               { myth: "1099 income is taxed exactly like W-2 income, with taxes already withheld.", isTrue: false, explanation: "No taxes are withheld on 1099 income upfront, that responsibility shifts entirely to the earner." },
               { myth: "1099 earners may owe self-employment tax in addition to regular income tax.", isTrue: true, explanation: "True, roughly 15.3% on net earnings over $400, covering both halves of Social Security and Medicare." },
@@ -6352,14 +6352,14 @@ const MODULES = [
           },
           {
             id: 'kn_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "If you know the right financial move, willpower alone is usually enough to follow through consistently.",
             isTrue: false,
-            explanation: "It's a myth. Willpower fades, especially under stress or social pressure, systems and environment design are far more reliable.",
+            explanation: "False. Willpower fades, especially under stress or social pressure, systems and environment design are far more reliable.",
             xpOnComplete: 2
           },
           {
-            id: 'kn_myth1', type: 'mythcards', title: 'Knowledge-Action Myths',
+            id: 'kn_myth1', type: 'mythcards', title: 'Knowledge-Action: True or False',
             cards: [
               { myth: "Budgets simply don't work for most people.", isTrue: false, explanation: "The issue usually isn't the budget itself, it's relying on willpower instead of systems to follow it." },
               { myth: "A 24-hour waiting rule can meaningfully reduce impulse purchases.", isTrue: true, explanation: "True, it gives the emotional urge time to fade before a decision is finalized." },
@@ -6542,14 +6542,14 @@ const MODULES = [
           },
           {
             id: 'li_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "Lifestyle inflation is usually the result of one big, obvious spending decision.",
             isTrue: false,
-            explanation: "It's a myth. It's typically a series of small, individually reasonable increases that quietly compound over months.",
+            explanation: "False. It's typically a series of small, individually reasonable increases that quietly compound over months.",
             xpOnComplete: 2
           },
           {
-            id: 'li_myth1', type: 'mythcards', title: 'Lifestyle Inflation Myths',
+            id: 'li_myth1', type: 'mythcards', title: 'Lifestyle Inflation: True or False',
             cards: [
               { myth: "A raise should always translate into a proportional increase in everyday spending.", isTrue: false, explanation: "Deciding upfront how much goes to savings versus lifestyle prevents the entire raise from disappearing into spending." },
               { myth: "Spending habits are influenced by the people you spend the most time around.", isTrue: true, explanation: "True, social comparison is a real accelerator of lifestyle inflation." },
@@ -7011,14 +7011,14 @@ const MODULES = [
           },
           {
             id: 'ol_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "A \"total target compensation\" number on an offer letter is fully guaranteed, just like a base salary.",
             isTrue: false,
-            explanation: "It's a myth. The bonus portion is usually tied to performance or company results, and may not be fully paid out every year.",
+            explanation: "False. The bonus portion is usually tied to performance or company results, and may not be fully paid out every year.",
             xpOnComplete: 2
           },
           {
-            id: 'ol_myth1', type: 'mythcards', title: 'Offer Letter Myths',
+            id: 'ol_myth1', type: 'mythcards', title: 'Offer Letter: True or False',
             cards: [
               { myth: "A signing bonus is always yours to keep no matter what happens next.", isTrue: false, explanation: "Clawback clauses commonly require repayment if you leave before a set period." },
               { myth: "Two offers with identical salary but very different PTO amounts are financially equivalent.", isTrue: false, explanation: "PTO has real value, more paid time off is a meaningful part of total compensation." },
@@ -7199,14 +7199,14 @@ const MODULES = [
           },
           {
             id: 'ns_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "You need a competing job offer in hand before you're allowed to negotiate a salary.",
             isTrue: false,
-            explanation: "It's a myth. A reasonable, researched ask is enough on its own, a competing offer can help, but it's not a requirement.",
+            explanation: "False. A reasonable, researched ask is enough on its own, a competing offer can help, but it's not a requirement.",
             xpOnComplete: 2
           },
           {
-            id: 'ns_myth1', type: 'mythcards', title: 'Salary Negotiation Myths',
+            id: 'ns_myth1', type: 'mythcards', title: 'Salary Negotiation: True or False',
             cards: [
               { myth: "Asking if there's room to negotiate risks having the entire offer pulled.", isTrue: false, explanation: "A professional, reasonable question almost never results in a rescinded offer." },
               { myth: "A $5,000 starting salary gap tends to widen, not shrink, over a career.", isTrue: true, explanation: "True, since future raises are often a percentage of current salary, the gap compounds year after year." },
@@ -7602,14 +7602,14 @@ const MODULES = [
           },
           {
             id: 'jb_poll1', type: 'poll', title: 'What Do Most People Think?',
-            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            intro: "Take a guess. Tap True or False, then see the answer.",
             statement: "A job that pays significantly above market rate for the skill level required is usually just a great opportunity.",
             isTrue: false,
-            explanation: "It's a myth. Pay far above market rate for simple work, especially paired with urgency, is one of the most common lures in job scams.",
+            explanation: "False. Pay far above market rate for simple work, especially paired with urgency, is one of the most common lures in job scams.",
             xpOnComplete: 2
           },
           {
-            id: 'jb_myth1', type: 'mythcards', title: 'Job Scam Myths',
+            id: 'jb_myth1', type: 'mythcards', title: 'Job Scam: True or False',
             cards: [
               { myth: "A bank deposits a check and clears the funds, so the check must be real.", isTrue: false, explanation: "Banks make funds available quickly, but a fraudulent check can still bounce weeks later, leaving you responsible for the full amount." },
               { myth: "Legitimate employers collect direct deposit information through official onboarding, after a signed offer.", isTrue: true, explanation: "True, never before, and never through a personal chat app." },
@@ -7718,7 +7718,7 @@ const MODULES = [
             intro: "Before Hammy deals with this listing, take a guess. Tap True or False, then see the answer.",
             statement: 'If an apartment listing is posted on Zillow or Apartments.com, it must be legitimate.',
             isTrue: false,
-            explanation: "It's a myth. Scammers regularly post on trusted, legitimate platforms — the platform hosting a listing doesn't mean anyone verified who posted it or that the deal is real.",
+            explanation: "False. Scammers regularly post on trusted, legitimate platforms — the platform hosting a listing doesn't mean anyone verified who posted it or that the deal is real.",
             xpOnComplete: 2
           },
           {
@@ -7793,7 +7793,7 @@ const MODULES = [
             xpOnComplete: 1
           },
           {
-            id: 'hs_myth1', type: 'mythcards', title: 'Housing Scam Myths',
+            id: 'hs_myth1', type: 'mythcards', title: 'Housing Scam: True or False',
             cards: [
               { myth: "A listing on a trusted platform like Zillow is guaranteed to be legitimate.", isTrue: false, explanation: "Scammers regularly post on trusted platforms, the platform's reputation doesn't vouch for any one listing." },
               { myth: "A live video call touring the unit is a reasonable substitute for an in-person visit when distance is a factor.", isTrue: true, explanation: "True, the key is seeing the actual unit live, not just photos, regardless of the format." },
@@ -7878,7 +7878,7 @@ const MODULES = [
             xpOnComplete: 4
           },
           {
-            id: 'af3', type: 'mythcards', title: 'Financial Aid Myths',
+            id: 'af3', type: 'mythcards', title: 'Financial Aid: True or False',
             cards: [
               { myth: 'A scholarship that requires a small "processing fee" is fine as long as the payout is much bigger.', isTrue: false, explanation: 'Real scholarships never require you to pay to receive money. Any upfront fee — no matter how small compared to the promised award — is a hallmark of a scam.' },
               { myth: 'The real FAFSA / Federal Student Aid site is studentaid.gov, and legitimate government sites use the .gov domain.', isTrue: true, explanation: 'Correct — .gov is a restricted domain that scammers cannot simply purchase the way they can a lookalike .net or .com.' },
@@ -7941,7 +7941,7 @@ const MODULES = [
             intro: "Take a guess before we move on. Tap True or False, then see the answer.",
             statement: 'If someone\'s email and password are exposed in a data breach, changing the password on that one site is enough to stay safe.',
             isTrue: false,
-            explanation: "It's a myth. Credential stuffing means attackers try that same email/password combo across many other sites automatically — reused passwords are the real risk, not just the one breached site.",
+            explanation: "False. Credential stuffing means attackers try that same email/password combo across many other sites automatically — reused passwords are the real risk, not just the one breached site.",
             xpOnComplete: 2
           },
           {
@@ -7967,7 +7967,7 @@ const MODULES = [
             intro: "One more before the quick check. Tap True or False, then see the answer.",
             statement: 'Financial aid offices will sometimes email students asking them to confirm their bank account details.',
             isTrue: false,
-            explanation: "It's a myth — and an important one. Real financial aid offices will never ask you to confirm bank account details over email. Any message that does is impersonating them.",
+            explanation: "False — and an important one to know. Real financial aid offices will never ask you to confirm bank account details over email. Any message that does is impersonating them.",
             xpOnComplete: 2
           },
           { id: 'ph5', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 7],
@@ -8025,7 +8025,7 @@ const MODULES = [
             intro: "Take a guess before we go further. Tap True or False, then see the answer.",
             statement: 'If a buyer overpays and asks for the difference back, sending the refund quickly is the safest way to resolve it.',
             isTrue: false,
-            explanation: "It's a myth. The safest move is to cancel or reverse the ORIGINAL payment through the app first — sending a fresh refund on top of a payment that might not be real just doubles the loss.",
+            explanation: "False. The safest move is to cancel or reverse the ORIGINAL payment through the app first — sending a fresh refund on top of a payment that might not be real just doubles the loss.",
             xpOnComplete: 2
           },
           {
@@ -12133,7 +12133,7 @@ const CHAPTER_TITLE_FALLBACK = {
   explainback: 'In Your Own Words',
   decision: 'Decision Point',
   microsim: 'Micro-Sim',
-  mythcards: 'Myth or Fact?',
+  mythcards: 'True or False?',
   simulator: 'Simulator',
   knowledgecheck: 'Quick Check',
   poll: 'Quick Poll',
@@ -12931,7 +12931,7 @@ function renderPollChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
   clearQuestContinue();
   main.innerHTML = `
-    <p class="quest-prompt">${chapter.intro || "Before we bust some myths, guess what most people believe."}</p>
+    <p class="quest-prompt">${chapter.intro || "Take a guess, then see the answer."}</p>
     <div class="poll-card">
       <span class="myth-card-tag">TRUE OR FALSE?</span>
       <p class="poll-statement">${chapter.statement}</p>
@@ -12965,7 +12965,7 @@ function renderPollChapter(chapter, mod, onDone) {
       const revealEl = document.getElementById('poll-reveal');
       revealEl.innerHTML = `
         <div class="poll-truth ${chapter.isTrue ? 'is-true' : 'is-false'}">
-          <span class="myth-card-tag">${chapter.isTrue ? 'THIS IS A FACT' : 'THIS IS A MYTH'}</span>
+          <span class="myth-card-tag">${chapter.isTrue ? 'TRUE' : 'FALSE'}</span>
           <p class="poll-explanation">${chapter.explanation}</p>
         </div>`;
       revealEl.classList.add('show');
@@ -13164,12 +13164,12 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
       el.innerHTML = `
         <div class="myth-card-inner">
           <div class="myth-card-front">
-            <span class="myth-card-tag">MYTH OR FACT?</span>
+            <span class="myth-card-tag">TRUE OR FALSE?</span>
             <p>${card.myth}</p>
             <span class="myth-swipe-hint">← False &nbsp;·&nbsp; True →</span>
           </div>
           <div class="myth-card-back ${card.isTrue ? 'is-true' : 'is-false'}">
-            <span class="myth-card-tag">${card.isTrue ? 'THIS IS A FACT' : 'THIS IS A MYTH'}</span>
+            <span class="myth-card-tag">${card.isTrue ? 'TRUE' : 'FALSE'}</span>
             <p class="myth-guess-line"></p>
             <p class="myth-explanation">${card.explanation}</p>
           </div>
@@ -13479,7 +13479,7 @@ function buildQuestReport(mod, qp) {
     : '';
   const weakHtml = weakSpots.length
     ? `<div class="report-section"><div class="report-section-title">Worth another look</div><ul class="report-weak-list">${weakSpots.map(w => `<li>${w}</li>`).join('')}</ul></div>`
-    : `<div class="report-section report-perfect">You got every question and myth card right this time.</div>`;
+    : `<div class="report-section report-perfect">You got every question and true/false card right this time.</div>`;
 
   const decisionsHtml = a.decisions.length
     ? `<div class="report-section"><div class="report-section-title">Choices you made</div><ul class="report-decision-list">${a.decisions.map(d => `<li><strong>${d.title}:</strong> ${d.choice}</li>`).join('')}${a.bossChoice ? `<li><strong>Boss battle:</strong> ${a.bossChoice}</li>` : ''}</ul></div>`
@@ -13501,7 +13501,7 @@ function buildQuestReport(mod, qp) {
   } else if (kcWrong.length > 0) {
     adviceParts.push(`Reread the explanation for "${kcWrong[0].question}."`);
   } else if (mythWrong.length > 0) {
-    adviceParts.push(`The myth about "${mythWrong[0].myth}" is worth a second look.`);
+    adviceParts.push(`The statement "${mythWrong[0].myth}" is worth a second look.`);
   }
   if (a.explainback && a.explainback.tier === 'retry') {
     adviceParts.push(`Also reread the definition for "${a.explainback.term}."`);
@@ -13514,13 +13514,13 @@ function buildQuestReport(mod, qp) {
     <div class="quest-report">
       <div class="report-mastery">
         <div class="report-mastery-ring" style="--mastery-pct:${masteryPct}"><span>${masteryPct}%</span></div>
-        <div class="report-mastery-label">Overall mastery this quest<br><span class="report-mastery-sub">${totalRight} of ${totalAnswered} correct across quick checks and myth cards</span></div>
+        <div class="report-mastery-label">Overall mastery this quest<br><span class="report-mastery-sub">${totalRight} of ${totalAnswered} correct across quick checks and true/false cards</span></div>
       </div>
       <div class="report-section-title">Words you learned (${(qp.learnedTerms || []).length})</div>
       <div class="report-terms">${termsHtml}</div>
       <div class="report-stat-row">
         <div class="report-stat"><div class="report-stat-num">${kcRight.length}/${a.knowledgeCheck.length}</div><div class="report-stat-label">Quick Check</div></div>
-        <div class="report-stat"><div class="report-stat-num">${mythRight.length}/${a.mythCards.length}</div><div class="report-stat-label">Myth Cards</div></div>
+        <div class="report-stat"><div class="report-stat-num">${mythRight.length}/${a.mythCards.length}</div><div class="report-stat-label">True/False</div></div>
         <div class="report-stat"><div class="report-stat-num">${a.matchingMistakes}</div><div class="report-stat-label">Matching Misses</div></div>
         <div class="report-stat"><div class="report-stat-num">${qp.hintsUsed || 0}</div><div class="report-stat-label">Hints Used</div></div>
       </div>
