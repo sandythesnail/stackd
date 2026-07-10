@@ -7617,10 +7617,134 @@ const MODULES = [
         topic: 'Renter\'s Insurance: Protecting Your Stuff',
         character: { name: 'Hammy', tagline: 'Moving into a first apartment' },
         initialState: {},
+        bossAchievementId: 'stuff_protected',
         chapters: [
-          { id: 'renters_insurance_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ri0', type: 'story', title: 'The Burst Pipe',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Renter's Insurance: Protecting Your Stuff." }
+              { speaker: 'intro', text: "A pipe bursts in Hammy's off-campus apartment, ruining a laptop, a TV, and a closet full of clothes. The landlord's insurance covers the building repairs, nothing about Hammy's belongings." },
+              { speaker: 'Hammy', text: '"Wait, I owe $2,000 in replacements and none of that is covered by ANY insurance?"' },
+              { speaker: 'narrator', text: "A landlord's policy protects the building, never the tenant's belongings inside it. That gap has its own, cheap, fix." },
+              { speaker: 'Hammy', text: '"A cheap fix? For $2,000 worth of stuff?"' }
+            ]
+          },
+          {
+            id: 'ri_t1', type: 'teach', title: 'What Renter\'s Insurance Actually Covers',
+            concepts: [
+              {
+                term: 'Renter\'s Insurance',
+                plain: "Renter's insurance covers a tenant's personal belongings, furniture, electronics, clothes, against things like fire, theft, and certain water damage. It typically also includes liability coverage if someone gets injured in the apartment.",
+                analogy: "It's like insurance for everything you'd have to replace if you moved out with nothing but the clothes on your back.",
+                check: { statement: "Renter's insurance covers the physical building the apartment is in.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ri_t2', type: 'teach', title: 'The Landlord\'s Policy Doesn\'t Cover You',
+            concepts: [
+              {
+                term: 'Landlord\'s Policy',
+                plain: "A landlord's insurance covers the physical structure, walls, plumbing, the building itself, not a tenant's personal belongings inside it. That's a completely separate policy, and it's the tenant's own responsibility to get one.",
+                analogy: "It's like a parking garage insuring the building, not the cars parked inside it.",
+                check: { statement: "A landlord's insurance policy typically covers a tenant's personal belongings if something goes wrong.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ri_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Renter\'s Insurance', definition: "Covers a tenant's personal belongings and liability, a separate policy from the landlord's." },
+              { term: 'Landlord\'s Policy', definition: 'Covers the physical building structure, never the belongings inside.' },
+              { term: 'Liability Coverage', definition: "Protection if someone else is injured in the apartment and holds the tenant responsible." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ri_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: renter's insurance is often surprisingly cheap, commonly around $10-20/month, far less than the value of what it typically protects. It's one of the highest value-per-dollar protections available to a renter.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ri_spot1', type: 'spotcheck', title: 'Spot What\'s Actually Covered',
+            intro: "Here's a summary of what Hammy's renter's insurance policy includes. Tap anything that's actually covered by this policy, then hit Continue to see what you caught.",
+            postingTitle: "Renter's Insurance Policy Summary",
+            segments: [
+              { id: 's1', text: "Personal belongings (electronics, furniture, clothing) damaged by fire or theft. ", isRedFlag: true, explanation: "This is the core coverage renter's insurance is built for." },
+              { id: 's2', text: "Structural damage to the building itself, like a cracked foundation. ", isRedFlag: false, explanation: "This falls under the landlord's policy, not renter's insurance." },
+              { id: 's3', text: "Liability if a guest is injured and sues over it. ", isRedFlag: true, explanation: "Liability protection is a standard part of most renter's policies." },
+              { id: 's4', text: "A roommate's belongings, unless they're also listed on the same policy. ", isRedFlag: false, explanation: "A roommate generally needs their own coverage, or to be specifically added to the policy, coverage doesn't automatically extend to them." },
+              { id: 's5', text: "Temporary living expenses if the apartment becomes unlivable after a covered event. ", isRedFlag: true, explanation: "Many renter's policies include this, covering a hotel or short-term rental while repairs happen." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'ri_d1', type: 'decision',
+            title: "The Move-In Decision",
+            prompt: "Hammy is signing a lease for a new off-campus apartment. Renter's insurance costs about $15/month.",
+            hintText: "Think back to Landlord's Policy: does the building's insurance protect anything Hammy personally owns?",
+            choices: [
+              { id: 'a', label: 'Skip it, the landlord\'s building insurance should cover enough', outcome: { text: "A burst pipe, fire, or theft would leave every personal item completely uncovered, exactly the gap that just cost $2,000.", delta: {}, compare: [{ label: 'Monthly cost', value: 0 }, { label: 'Risk exposure on belongings', value: 2000 }] } },
+              { id: 'b', label: 'Add renter\'s insurance for about $15/month', outcome: { text: "For the cost of a couple coffees a month, belongings are actually protected against fire, theft, and covered water damage.", delta: {}, compare: [{ label: 'Monthly cost', value: 15 }, { label: 'Risk exposure on belongings', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ri_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Covered Event', definition: 'A specific cause of loss, like fire or theft, that a policy actually pays out for.' },
+              { term: 'Temporary Living Expenses', definition: 'Coverage for a hotel or short-term stay if the apartment becomes unlivable.' },
+              { term: 'Adding a Roommate', definition: "Listing a roommate on the policy so their belongings are covered too." }
+            ],
+            hintText: "One term is a TRIGGER for coverage, one is a TEMPORARY benefit, and one is about EXTENDING coverage to someone else.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ri_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A landlord's building insurance automatically covers a tenant's personal belongings too.",
+            isTrue: false,
+            explanation: "False. The landlord's policy only covers the building structure, a tenant's belongings need a completely separate renter's policy.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ri_myth1', type: 'mythcards', title: 'Renter\'s Insurance: True or False',
+            cards: [
+              { myth: "Renter's insurance is typically one of the more expensive types of insurance to add.", isTrue: false, explanation: "It's actually one of the cheapest, often $10-20/month, for the amount of coverage it provides." },
+              { myth: "A roommate's belongings are automatically covered under someone else's renter's policy.", isTrue: false, explanation: "Coverage generally only extends to people specifically listed on the policy, not automatically to anyone living there." },
+              { myth: "Renter's insurance can include liability coverage, not just belongings.", isTrue: true, explanation: "True, most policies bundle liability protection alongside personal property coverage." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ri_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [1, 2],
+            hintTexts: [
+              "Think about what renter's insurance actually protects, personal belongings or the building.",
+              "Think about what a landlord's insurance policy is actually built to cover."
+            ]
+          },
+          {
+            id: 'ri_t3', type: 'teach', title: 'Cheap Insurance for a Real Gap',
+            concepts: [
+              {
+                term: 'Closing the Gap',
+                plain: "The gap between what a landlord's policy covers and what a tenant actually owns is completely unprotected without renter's insurance. Given how cheap the coverage typically is relative to the value it protects, it's one of the easiest risk-management wins available.",
+                analogy: "It's like a $15 lock protecting a $2,000 bike, a small cost relative to what it's actually protecting.",
+                check: { statement: "The cost of renter's insurance is typically large relative to the value of what it protects.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ri_boss', type: 'bossbattle', title: 'The Break-In',
+            scenario: "Six months into the lease, Hammy's apartment is broken into. A laptop, a gaming console, and some jewelry are stolen, about $1,800 total, and Hammy does have renter's insurance with a $500 deductible.",
+            hintText: "Remember Covered Event: is theft a covered event under a standard renter's policy?",
+            choices: [
+              { id: 'a', label: "File a claim with the police report and the insurance company right away", consequence: { text: "Theft is a standard covered event, filing promptly gets the claims process moving toward an actual payout.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Assume the policy won't cover a break-in and just absorb the full loss", consequence: { text: "Theft is exactly the kind of event renter's insurance covers, skipping the claim leaves real recoverable money unclaimed.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Wait a few weeks to file, in case any items turn up first", consequence: { text: "Most policies expect prompt reporting, delaying the claim risks complications even though the underlying loss is still covered.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'd', label: "File the claim, but skip the police report to save time", consequence: { text: "Most insurers require a police report for a theft claim, skipping it risks the claim being denied entirely.", delta: {}, xpMultiplier: 0.7 } }
             ]
           }
         ]
@@ -7630,10 +7754,129 @@ const MODULES = [
         topic: 'Auto Insurance Basics: What Coverage Actually Means',
         character: { name: 'Hammy', tagline: 'Getting a first car insurance policy' },
         initialState: {},
+        bossAchievementId: 'coverage_confirmed',
         chapters: [
-          { id: 'auto_insurance_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ai0', type: 'story', title: 'The Old Car',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Auto Insurance Basics: What Coverage Actually Means." }
+              { speaker: 'intro', text: "Hammy is bringing an old, not-worth-much car to campus for the first time. \"It's barely worth anything, do I even need real insurance on it?\"" },
+              { speaker: 'Hammy', text: '"The car\'s only worth like $1,500. Seems like insurance is overkill for something this old."' },
+              { speaker: 'narrator', text: "The car's value and the insurance requirement are actually about two very different things." },
+              { speaker: 'Hammy', text: '"Different things? I thought insurance was just about protecting the car."' }
+            ]
+          },
+          {
+            id: 'ai_t1', type: 'teach', title: 'Liability Coverage Protects Others, Not Just the Car',
+            concepts: [
+              {
+                term: 'Liability Coverage',
+                plain: "Liability coverage pays for damage or injury Hammy causes to OTHER people or their property in an accident. It's legally required in nearly every state, regardless of how much the insured car itself is worth.",
+                analogy: "It's less about protecting the old car, and more about protecting Hammy from owing someone else's much more expensive repair bill.",
+                check: { statement: "Liability coverage exists primarily to repair the insured driver's own car.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ai_t2', type: 'teach', title: 'Collision & Comprehensive Are Optional (and Different)',
+            concepts: [
+              {
+                term: 'Collision vs. Comprehensive',
+                plain: "Collision covers damage to YOUR car from an accident. Comprehensive covers non-collision events, theft, weather, a deer strike. Both are usually optional, and for a car worth very little, the premium can sometimes cost more than the car itself is worth to repair.",
+                analogy: "It's like insuring a used couch for its full replacement value, at some point the insurance costs more than just accepting the risk.",
+                check: { statement: "Collision and comprehensive coverage are legally required in every state, just like liability.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ai_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Liability Coverage', definition: "Pays for damage or injury caused to OTHERS, legally required nearly everywhere." },
+              { term: 'Collision Coverage', definition: "Optional coverage for damage to YOUR car from an accident." },
+              { term: 'Comprehensive Coverage', definition: 'Optional coverage for non-collision events like theft or weather damage.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ai_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: for an older, lower-value car, it's worth comparing the annual cost of collision/comprehensive against the car's actual value. If the coverage costs a meaningful chunk of what the car is worth, dropping the optional coverage (while keeping required liability) is a common, reasonable choice.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ai_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why is liability insurance still required on an old, low-value car, even though collision/comprehensive coverage might not be worth it for that same car?",
+            keywords: ['others', 'liability', 'required', 'legal', 'value'],
+            fullDefinition: "Because liability coverage protects OTHER people and their property, not the value of Hammy's own car, so the car's low value doesn't reduce the legal requirement to carry it. Collision/comprehensive, by contrast, protect the car itself, which is exactly why their optional nature depends on how much that specific car is actually worth.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'ai_d1', type: 'decision',
+            title: "Setting Up the Policy",
+            prompt: "Hammy's car is worth about $1,500. Comprehensive/collision coverage would cost roughly $400/year on top of the required liability coverage.",
+            hintText: "Think back to Collision vs. Comprehensive: does this optional coverage's cost make sense relative to the car's value?",
+            choices: [
+              { id: 'a', label: 'Add full comprehensive/collision coverage on top of liability', outcome: { text: "Over just a few years, the optional coverage could cost more than replacing the $1,500 car outright.", delta: {}, compare: [{ label: 'Car value', value: 1500 }, { label: '4-year optional coverage cost', value: 1600 }] } },
+              { id: 'b', label: 'Keep only the required liability coverage, skip the optional collision/comprehensive', outcome: { text: "The legal requirement is met, and the optional coverage's cost, which didn\'t make sense for a car this value, is avoided.", delta: {}, compare: [{ label: 'Car value', value: 1500 }, { label: 'Optional coverage skipped', value: 400 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ai_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Premium', definition: 'The regular amount paid, monthly or annually, to keep a policy active.' },
+              { term: 'Coverage vs. Car Value', definition: 'The comparison worth making before adding optional coverage on a low-value car.' },
+              { term: 'Legally Required Minimum', definition: "The state-mandated liability coverage that applies regardless of a car's value." }
+            ],
+            hintText: "One term is the REGULAR cost, one is a COMPARISON worth making, and one is the LEGAL floor that never changes.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ai_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "An old car worth very little doesn't legally need any car insurance at all.",
+            isTrue: false,
+            explanation: "False. Liability coverage is required by law in nearly every state regardless of the car's value, only the optional collision/comprehensive coverage is actually tied to how much the car is worth.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ai_myth1', type: 'mythcards', title: 'Auto Insurance: True or False',
+            cards: [
+              { myth: "Liability coverage requirements scale down for cars worth very little.", isTrue: false, explanation: "The legal minimum liability requirement is about protecting others, it doesn't change based on the insured car's value." },
+              { myth: "Dropping collision/comprehensive coverage on a low-value car is a common, reasonable choice.", isTrue: true, explanation: "True, many drivers with older cars skip the optional coverage once the premium approaches a meaningful share of the car's value." },
+              { myth: "Comprehensive coverage covers accident damage from a collision with another car.", isTrue: false, explanation: "That's collision coverage, comprehensive covers non-collision events like theft, weather, or hitting an animal." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ai_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 7],
+            hintTexts: [
+              "Think about what to do if you're already covered under a parent's plan but the school auto-bills you anyway.",
+              "Think about what's worth checking on an auto policy before bringing a car to campus."
+            ]
+          },
+          {
+            id: 'ai_t3', type: 'teach', title: 'Match Coverage to What It\'s Actually Protecting',
+            concepts: [
+              {
+                term: 'Two Different Purposes',
+                plain: "Liability protects other people, always required, regardless of the car. Collision/comprehensive protect the car itself, worth evaluating against the car's actual value. Treating them as one single \"insurance\" decision misses that they answer two completely different questions.",
+                analogy: "It's like renter's insurance versus a landlord's policy, similar-sounding coverage, protecting two very different things.",
+                check: { statement: "Liability and collision/comprehensive coverage exist to protect the exact same thing.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ai_boss', type: 'bossbattle', title: 'Move-In Day Deadline',
+            scenario: "It's move-in day, and Hammy realizes the car insurance policy still needs to be set up before driving to campus, with only an hour before needing to leave.",
+            hintText: "Remember Two Different Purposes: which coverage is non-negotiable, and which is worth a quick value comparison?",
+            choices: [
+              { id: 'a', label: "Quickly confirm liability coverage is active, decide on optional coverage after arriving with more time to compare", consequence: { text: "The legally required piece is locked in immediately, and the optional coverage decision gets the fuller comparison it deserves later.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Skip setting up insurance entirely and deal with it after arriving on campus", consequence: { text: "Driving without the legally required liability coverage, even briefly, is a real legal and financial risk.", delta: {}, xpMultiplier: 0.5 } },
+              { id: 'c', label: "Rush through and add full comprehensive/collision without comparing costs, just to be done", consequence: { text: "Coverage gets set up in time, but skipping the value comparison risks overpaying for coverage that might not make sense for this car.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'd', label: "Call the insurance provider directly to get it set up correctly, even if it takes the full hour", consequence: { text: "Taking the full hour to get it right, rather than rushing, protects against a legal gap AND an uninformed coverage decision.", delta: {}, xpMultiplier: 1.1 } }
             ]
           }
         ]
@@ -7643,10 +7886,129 @@ const MODULES = [
         topic: 'What Insurance Actually Pays Out',
         character: { name: 'Hammy', tagline: 'Filing a claim for the first time' },
         initialState: {},
+        bossAchievementId: 'payout_understood',
         chapters: [
-          { id: 'insurance_payout_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ip0', type: 'story', title: 'The First Claim',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on What Insurance Actually Pays Out." }
+              { speaker: 'intro', text: "Hammy's $1,500 laptop gets stolen. Renter's insurance is active, $15/month, $500 deductible. Time to file the very first insurance claim ever." },
+              { speaker: 'Hammy', text: '"So insurance just pays me back the full $1,500, right?"' },
+              { speaker: 'narrator', text: "Not quite, that deductible on the policy plays a bigger role in the payout than most people expect the first time." },
+              { speaker: 'Hammy', text: '"Wait, the deductible affects how much I actually GET? I thought that was just a fee I pay."' }
+            ]
+          },
+          {
+            id: 'ip_t1', type: 'teach', title: 'What a Deductible Actually Does',
+            concepts: [
+              {
+                term: 'Deductible',
+                plain: "A deductible is the amount subtracted from a claim before the payout, not an extra fee paid upfront. On a covered loss, the insurer pays the claim amount MINUS the deductible.",
+                analogy: "It's like a coupon that reduces the payout instead of the price, the deductible comes off the top of whatever the claim is worth.",
+                check: { statement: "A deductible is a fee paid to the insurance company in addition to filing a claim.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ip_t2', type: 'teach', title: 'The Claims Process',
+            concepts: [
+              {
+                term: 'Filing a Claim',
+                plain: "Filing a claim typically means documenting the loss (a police report for theft, photos for damage), submitting it to the insurer, and waiting for review. The insurer verifies the loss is a covered event before approving the payout.",
+                analogy: "It's like submitting a reimbursement request at work, documentation first, approval and payout after.",
+                check: { statement: "An insurance claim is typically paid out immediately, with no documentation or review process.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ip_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Deductible', definition: 'The amount subtracted from a claim payout, not a separate fee.' },
+              { term: 'Filing a Claim', definition: 'Documenting a loss and submitting it to the insurer for review.' },
+              { term: 'Covered Event', definition: "The specific cause of loss (theft, fire) a policy actually pays out for." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ip_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: keep receipts or photos of valuable items BEFORE anything happens to them. Proving what something was actually worth speeds up a claim significantly, versus trying to reconstruct proof of value after the fact.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ip_price1', type: 'priceisright', title: 'The Price Is Right: The Actual Payout',
+            prompt: "Hammy's $1,500 laptop is stolen. The renter's insurance policy has a $500 deductible. Guess the actual payout Hammy receives.",
+            hintText: "The deductible comes off the top of the claim amount before the payout.",
+            actualValue: 1000, guessRange: { min: 0, max: 1500, step: 50 },
+            explanation: "$1,500 claim minus the $500 deductible = a $1,000 payout. The deductible isn't an extra cost on top, it's subtracted directly from what the insurer actually pays out.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'ip_d1', type: 'decision',
+            title: "The Small Claim Question",
+            prompt: "A $150 bike, also covered under the policy, gets stolen a few months later. The deductible is still $500.",
+            hintText: "Think back to Deductible: does filing a claim make sense if the loss is smaller than the deductible itself?",
+            choices: [
+              { id: 'a', label: 'File a claim for the $150 bike anyway', outcome: { text: "Since the loss is smaller than the $500 deductible, the payout is $0, and filing may still affect future premiums.", delta: {}, compare: [{ label: 'Claim amount', value: 150 }, { label: 'Actual payout', value: 0 }] } },
+              { id: 'b', label: 'Skip filing a claim since the loss is smaller than the deductible', outcome: { text: "No payout would have happened anyway, skipping the claim avoids any unnecessary paperwork or premium impact.", delta: {}, compare: [{ label: 'Claim amount', value: 150 }, { label: 'Actual payout if filed', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ip_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Loss Smaller Than Deductible', definition: 'A situation where filing a claim would result in a $0 payout.' },
+              { term: 'Proof of Value', definition: 'Receipts or photos that speed up and support a claim.' },
+              { term: 'Premium Impact', definition: "A possible effect on future policy cost from filing claims, even small ones." }
+            ],
+            hintText: "One term describes a claim NOT worth filing, one is DOCUMENTATION that helps, and one is a POSSIBLE downside of filing.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ip_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "An insurance payout for a covered loss is always the full claim amount, with no deductions.",
+            isTrue: false,
+            explanation: "False. The deductible is subtracted from the claim amount before payout, the actual amount received is generally the claim minus the deductible.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ip_myth1', type: 'mythcards', title: 'Insurance Payouts: True or False',
+            cards: [
+              { myth: "A higher deductible policy generally comes with a lower monthly premium.", isTrue: true, explanation: "True, that's the typical tradeoff, a higher deductible shifts more risk to the policyholder, which usually lowers the premium." },
+              { myth: "Filing a claim for a loss smaller than the deductible still results in some payout.", isTrue: false, explanation: "If the loss is smaller than the deductible, the payout is $0, since the deductible is subtracted entirely from the claim." },
+              { myth: "Documentation like receipts or photos can speed up a claim's approval.", isTrue: true, explanation: "True, proof of value and ownership helps the insurer verify and process a claim faster." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ip_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [9, 4],
+            hintTexts: [
+              "Think about how a deductible affects the actual amount an insurance claim pays out.",
+              "Think about what to do first when you notice an unfamiliar charge."
+            ]
+          },
+          {
+            id: 'ip_t3', type: 'teach', title: 'Know the Deductible Before You Need It',
+            concepts: [
+              {
+                term: 'Checking the Deductible in Advance',
+                plain: "Knowing a policy's deductible before something goes wrong makes it possible to quickly judge whether a claim is even worth filing, and sets realistic expectations for the actual payout instead of assuming full reimbursement.",
+                analogy: "It's like knowing the terms of a return policy before you need to actually return something, no surprises when it matters.",
+                check: { statement: "Understanding a policy's deductible in advance helps set realistic expectations before an actual claim happens.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ip_boss', type: 'bossbattle', title: 'The Big Claim',
+            scenario: "A break-in causes $2,200 in losses, laptop, camera, and some jewelry, all covered under Hammy's renter's policy with the same $500 deductible.",
+            hintText: "Remember Deductible: what does the actual payout look like once the deductible comes off the top?",
+            choices: [
+              { id: 'a', label: "File the claim expecting a $1,700 payout after the deductible", consequence: { text: "The math checks out, $2,200 minus the $500 deductible is exactly the payout to expect.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "File the claim expecting the full $2,200, since that's what was actually lost", consequence: { text: "The full claim amount isn't what gets paid out, the deductible still applies, leading to a smaller-than-expected payout surprise.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'c', label: "Skip filing since the deductible feels like it eats too much of the claim", consequence: { text: "Even after the deductible, $1,700 is a meaningful recovered amount, well worth filing for.", delta: {}, xpMultiplier: 0.5 } },
+              { id: 'd', label: "Gather receipts and a police report before filing, to support the full claim amount", consequence: { text: "Good documentation strengthens the claim and speeds up the process, even though the deductible still applies to the final payout.", delta: {}, xpMultiplier: 1.15 } }
             ]
           }
         ]
@@ -7656,10 +8018,138 @@ const MODULES = [
         topic: 'Life & Disability Insurance in Your 20s',
         character: { name: 'Hammy', tagline: 'Wondering if life insurance matters this early' },
         initialState: {},
+        bossAchievementId: 'income_protected',
         chapters: [
-          { id: 'life_disability_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ld0', type: 'story', title: 'Insurance for... Dying?',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Life & Disability Insurance in Your 20s." }
+              { speaker: 'intro', text: "Hammy's new job offers optional life insurance and disability insurance as employee benefits. \"Life insurance? I'm 22, nobody depends on my income.\"" },
+              { speaker: 'Hammy', text: '"Life insurance seems like a much-later-in-life thing. And disability insurance? For what, breaking a leg?"' },
+              { speaker: 'narrator', text: "One of these two actually matters a lot right now. The other, maybe not yet, and knowing which is which is the whole point." },
+              { speaker: 'Hammy', text: '"Okay, so which one actually matters at 22?"' }
+            ]
+          },
+          {
+            id: 'ld_t1', type: 'teach', title: 'Life Insurance Protects Dependents',
+            concepts: [
+              {
+                term: 'Life Insurance',
+                plain: "Life insurance pays a benefit to dependents if the insured person dies, replacing lost income they relied on. Without a spouse, kids, or anyone financially dependent on your income, the case for life insurance is generally weak, there's no one relying on that income to replace.",
+                analogy: "It's like income-replacement insurance for people who depend on your paycheck, no dependents generally means less need for it.",
+                check: { statement: "Life insurance is generally most valuable when other people financially depend on your income.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ld_t2', type: 'teach', title: 'Disability Insurance Protects YOU',
+            concepts: [
+              {
+                term: 'Disability Insurance',
+                plain: "Disability insurance replaces a portion of YOUR OWN income if illness or injury prevents you from working, not just from a dramatic accident, but from things like a serious illness or a bad injury. Unlike life insurance, this protects the person who has the policy directly, dependents or not.",
+                analogy: "It's like a backup paycheck if the main one suddenly stops, for reasons that are more common than most people assume.",
+                check: { statement: "Disability insurance pays a benefit to a person's dependents after their death.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ld_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Life Insurance', definition: "Pays dependents if the insured person dies, replacing lost income they relied on." },
+              { term: 'Disability Insurance', definition: "Replaces the policyholder's OWN income if illness or injury prevents working." },
+              { term: 'Dependents', definition: "People financially relying on someone else's income." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ld_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: disability, not death, is statistically a far more common reason a young person's income gets interrupted. That's exactly why disability insurance often matters more at 22 than life insurance does, even though life insurance gets talked about more.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ld_ms1', type: 'microsim', title: "Allocating a Small Insurance Budget",
+            prompt: "Hammy has $20/month available for optional insurance benefits and no dependents yet. Decide how to split it between disability insurance and life insurance.",
+            hintText: "With no dependents yet, disability insurance, which protects Hammy's own income, is generally the higher priority of the two.",
+            income: 20,
+            fixedCosts: [],
+            sliders: [
+              { id: 'disability', label: 'Disability insurance', min: 0, max: 20, step: 5, default: 0 },
+              { id: 'lifeIns', label: 'Life insurance', min: 0, max: 20, step: 5, default: 20 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That splits more than the $20 available. Try smaller amounts.", ok: false },
+              { maxLeftover: 19, text: "Double check: with no dependents yet, does this split reflect which coverage protects Hammy directly?", ok: true },
+              { maxLeftover: Infinity, text: "A split that reflects the actual priority for someone with no dependents yet.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'ld_d1', type: 'decision',
+            title: "The Benefits Enrollment",
+            prompt: "Hammy has 10 minutes left to finish benefits enrollment and hasn't decided on either optional coverage yet.",
+            hintText: "Think back to Disability Insurance: which of these two protects Hammy's own income directly, right now?",
+            choices: [
+              { id: 'a', label: 'Skip both, neither seems urgent at 22', outcome: { text: "With no coverage at all, an illness or injury that stops Hammy from working would mean zero income replacement.", delta: {}, compare: [{ label: 'Income protected if disabled', value: 0 }, { label: 'Income protected with disability coverage', value: 1 }] } },
+              { id: 'b', label: 'Prioritize disability insurance, skip life insurance for now', outcome: { text: "The coverage that actually protects Hammy's own income gets set up, life insurance can be revisited if dependents ever enter the picture.", delta: {}, compare: [{ label: 'Income protected if disabled', value: 1 }, { label: 'Income protected without coverage', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ld_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Income Replacement', definition: "What disability insurance provides if illness or injury stops someone from working." },
+              { term: 'Revisiting Coverage Later', definition: 'Reassessing life insurance need if dependents enter the picture in the future.' },
+              { term: 'Employee Benefit', definition: 'Optional insurance coverage often offered through a workplace, usually at a lower cost.' }
+            ],
+            hintText: "One term is what DISABILITY coverage provides, one is a FUTURE check-in, and one describes WHERE this coverage often comes from.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ld_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A single 22-year-old with no dependents generally has more need for life insurance than disability insurance.",
+            isTrue: false,
+            explanation: "False. With no dependents, there's no one relying on the income life insurance would replace, while disability insurance protects the person's own income directly, regardless of dependents.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ld_myth1', type: 'mythcards', title: 'Life & Disability Insurance: True or False',
+            cards: [
+              { myth: "Disability insurance only pays out after a dramatic accident, like losing a limb.", isTrue: false, explanation: "It generally covers a much broader range of situations, including serious illness, not just dramatic accidents." },
+              { myth: "Life insurance need can change over time as someone's life circumstances change.", isTrue: true, explanation: "True, gaining dependents, like a spouse or kids, is exactly the kind of change that increases the case for life insurance." },
+              { myth: "Workplace-offered disability and life insurance are usually more expensive than buying the same coverage independently.", isTrue: false, explanation: "Employer-offered coverage is often cheaper than buying an equivalent policy independently, a common reason it's worth considering." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ld_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 5],
+            hintTexts: [
+              "Think about when coverage under a parent's health plan typically ends.",
+              "Think about what a deductible actually means on a health insurance plan."
+            ]
+          },
+          {
+            id: 'ld_t3', type: 'teach', title: 'Match Coverage to Life Stage',
+            concepts: [
+              {
+                term: 'Right Coverage, Right Time',
+                plain: "Insurance priorities shift as life changes. Disability insurance tends to matter early, protecting your own income, while life insurance's importance tends to grow alongside dependents. Neither is universally more important, it depends on the actual situation.",
+                analogy: "It's like packing for a trip, what's essential depends entirely on the destination and the season, not a fixed universal list.",
+                check: { statement: "The relative importance of life versus disability insurance can shift as someone's life circumstances change.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ld_boss', type: 'bossbattle', title: 'The Growing Family',
+            scenario: "Several years later, Hammy gets married and has a child. The old disability-only insurance setup from the first job hasn't been revisited since.",
+            hintText: "Remember Right Coverage, Right Time: has anything about Hammy's dependents changed since the original decision?",
+            choices: [
+              { id: 'a', label: "Reassess and add life insurance now that a spouse and child depend on the income", consequence: { text: "The coverage now matches the actual life stage, dependents are protected in a way the old setup never accounted for.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Keep the exact same disability-only setup from years ago, it worked fine before", consequence: { text: "The life stage has changed significantly, but the coverage hasn't, leaving new dependents without the protection life insurance would provide.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Drop disability insurance entirely and switch fully to life insurance", consequence: { text: "This overcorrects, disability insurance still protects Hammy's own income, which the family now also depends on even more.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'd', label: "Add a modest life insurance policy while keeping disability coverage as is", consequence: { text: "Both forms of protection now make sense together, income protection for Hammy, and a safety net for the new dependents.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -7669,10 +8159,129 @@ const MODULES = [
         topic: 'Umbrella Coverage & Extra Liability Protection',
         character: { name: 'Hammy', tagline: 'Learning what an umbrella policy actually covers' },
         initialState: {},
+        bossAchievementId: 'liability_covered',
         chapters: [
-          { id: 'umbrella_coverage_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'uc0', type: 'story', title: 'The Lawsuit Question',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Umbrella Coverage & Extra Liability Protection." }
+              { speaker: 'intro', text: "A friend mentions their family carries an \"umbrella policy\" on top of their regular insurance. Hammy has never heard the term before." },
+              { speaker: 'Hammy', text: '"An umbrella policy? Like, for rain? What does that have to do with insurance?"' },
+              { speaker: 'narrator', text: "Not rain, it's about what happens when a liability claim is bigger than a regular policy's limit can actually cover." },
+              { speaker: 'Hammy', text: '"Wait, regular insurance has a LIMIT on what it pays? I assumed it just... covered everything."' }
+            ]
+          },
+          {
+            id: 'uc_t1', type: 'teach', title: 'Every Policy Has a Liability Limit',
+            concepts: [
+              {
+                term: 'Liability Limit',
+                plain: "Auto and renter's/homeowner's policies each have a maximum liability payout, often $100,000-$300,000. If a lawsuit or claim exceeds that limit, the policyholder is personally on the hook for the difference.",
+                analogy: "It's like a spending limit on a card, useful up to a point, but anything beyond it becomes a personal bill.",
+                check: { statement: "Standard auto and renter's insurance policies have unlimited liability coverage.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'uc_t2', type: 'teach', title: 'What an Umbrella Policy Adds',
+            concepts: [
+              {
+                term: 'Umbrella Policy',
+                plain: "An umbrella policy adds extra liability coverage ON TOP of an existing auto or renter's/homeowner's policy, once the underlying policy's limit is used up. It's relatively cheap for a large amount of extra protection, but it requires already having an underlying policy in place.",
+                analogy: "It's like a second, bigger bucket that only starts catching water once the first bucket overflows.",
+                check: { statement: "An umbrella policy can typically be purchased on its own, with no underlying auto or renter's policy required.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'uc_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Liability Limit', definition: 'The maximum a standard policy pays out for a liability claim.' },
+              { term: 'Umbrella Policy', definition: "Extra liability coverage on top of an existing policy's limit." },
+              { term: 'Underlying Policy', definition: 'The base auto or renter\'s/homeowner\'s policy an umbrella policy builds on top of.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'uc_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: umbrella policies are relatively rare for renters with modest assets, since there's less to actually protect from a lawsuit. It becomes more relevant as someone accumulates more assets, savings, property, that a large liability claim could otherwise reach.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'uc_price1', type: 'priceisright', title: 'The Price Is Right: The Cost of Extra Protection',
+            prompt: "A $1,000,000 umbrella policy, on top of an existing auto policy, commonly costs around $150-$300/year. Guess the typical annual cost.",
+            hintText: "Umbrella coverage is known for being relatively cheap per dollar of protection compared to underlying policies.",
+            actualValue: 200, guessRange: { min: 0, max: 1000, step: 50 },
+            explanation: "Roughly $200/year is a commonly cited typical cost for $1,000,000 in umbrella coverage, a small price for a large amount of extra liability protection, though actual cost varies by provider and personal risk factors.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'uc_d1', type: 'decision',
+            title: "Does It Make Sense Yet?",
+            prompt: "Hammy is 22, rents an apartment, has a modest car, and very little in savings or other assets.",
+            hintText: "Think back to Umbrella Policy: how much is there right now for a large liability claim to actually reach?",
+            choices: [
+              { id: 'a', label: 'Buy an umbrella policy right away, just in case', outcome: { text: "It's not a mistake exactly, but with very few assets to protect, the extra cost provides little practical benefit at this stage.", delta: {}, compare: [{ label: 'Assets at risk', value: 1 }, { label: 'Extra annual cost', value: 200 }] } },
+              { id: 'b', label: 'Skip it for now, revisit once assets and savings grow', outcome: { text: "A reasonable call, umbrella coverage tends to matter more once there's meaningfully more to protect.", delta: {}, compare: [{ label: 'Assets at risk', value: 1 }, { label: 'Extra annual cost avoided', value: 200 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'uc_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Excess Liability', definition: 'The portion of a claim beyond an underlying policy\'s limit, what umbrella coverage picks up.' },
+              { term: 'Asset Protection', definition: 'Shielding savings and property from being reached by a large liability claim.' },
+              { term: 'Growing Relevance', definition: 'How umbrella coverage becomes more worthwhile as assets accumulate over time.' }
+            ],
+            hintText: "One term is the GAP an umbrella policy fills, one is what\'s being PROTECTED, and one is about TIMING relevance.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'uc_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "An umbrella policy can be purchased as a standalone policy, without needing an existing auto or renter's policy.",
+            isTrue: false,
+            explanation: "False. Umbrella policies sit on top of an existing underlying policy, they generally can't be purchased entirely on their own.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'uc_myth1', type: 'mythcards', title: 'Umbrella Coverage: True or False',
+            cards: [
+              { myth: "Umbrella coverage is generally cheap relative to the amount of extra protection it provides.", isTrue: true, explanation: "True, that's one of the main reasons it's commonly recommended once someone has meaningful assets to protect." },
+              { myth: "A liability claim can never exceed a standard auto or renter's policy's limit.", isTrue: false, explanation: "Claims, especially involving serious injury, can and do exceed standard policy limits, which is exactly the gap umbrella coverage exists to fill." },
+              { myth: "Umbrella coverage is most relevant for people with very few assets to protect.", isTrue: false, explanation: "It's generally more relevant for people with MORE assets, since there's more that a large claim could otherwise reach." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'uc_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [1, 2],
+            hintTexts: [
+              "Think about what renter's insurance actually protects.",
+              "Think about what a landlord's insurance policy is actually built to cover."
+            ]
+          },
+          {
+            id: 'uc_t3', type: 'teach', title: 'Revisit as Life Changes',
+            concepts: [
+              {
+                term: 'A Growing Consideration',
+                plain: "Umbrella coverage isn't usually the first insurance priority for a student with few assets, but it's worth revisiting as savings, property, or other assets accumulate over time, exactly like life insurance becomes more relevant with dependents.",
+                analogy: "It's like a bigger umbrella becoming worth carrying once you're protecting more than just yourself from the rain.",
+                check: { statement: "Umbrella coverage is generally a fixed priority that doesn't change as someone's financial situation evolves.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'uc_boss', type: 'bossbattle', title: 'The Growing Savings',
+            scenario: "Years later, Hammy has built up meaningful savings and owns a car worth considerably more than the old one. A friend gets sued after a minor car accident, and the claim exceeds their auto policy's liability limit.",
+            hintText: "Remember A Growing Consideration: has Hammy's situation changed enough to revisit this decision?",
+            choices: [
+              { id: 'a', label: "Get a quote for umbrella coverage now that there's real savings to protect", consequence: { text: "The situation has genuinely changed, revisiting the decision now, rather than years from now, protects the assets that have actually accumulated.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Assume the original \"not worth it yet\" decision still applies", consequence: { text: "The original decision made sense at 22 with few assets, but sticking to it unchanged now leaves real accumulated savings exposed.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Increase the liability limits on the existing auto and renter's policies instead of adding umbrella coverage", consequence: { text: "A reasonable partial step that raises the underlying limits, though it may still fall short of what a large claim could reach compared to full umbrella coverage.", delta: {}, xpMultiplier: 0.95 } },
+              { id: 'd', label: "Wait until after seeing how the friend's lawsuit turns out before deciding anything", consequence: { text: "Waiting doesn't reduce Hammy's own actual exposure in the meantime, the assets are still unprotected either way.", delta: {}, xpMultiplier: 0.7 } }
             ]
           }
         ]
@@ -7682,10 +8291,134 @@ const MODULES = [
         topic: 'Reading a Policy Before You Need It',
         character: { name: 'Hammy', tagline: 'Actually reading the fine print on a policy' },
         initialState: {},
+        bossAchievementId: 'fine_print_read',
         chapters: [
-          { id: 'reading_policy_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'rp0', type: 'story', title: 'Scroll and Accept',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Reading a Policy Before You Need It." }
+              { speaker: 'intro', text: "Hammy is signing up for a new renter's policy and, like every other terms-of-service page ever, scrolls straight to the bottom and clicks accept." },
+              { speaker: 'Hammy', text: '"Nobody actually reads these things. It\'s all just standard stuff, right?"' },
+              { speaker: 'narrator', text: "Most of it is standard. The parts that aren't are exactly the parts that matter most, and they're easy to miss by skimming." },
+              { speaker: 'Hammy', text: '"Okay, so what am I actually supposed to be looking for?"' }
+            ]
+          },
+          {
+            id: 'rp_t1', type: 'teach', title: 'Exclusions Matter More Than Coverage Lists',
+            concepts: [
+              {
+                term: 'Exclusions',
+                plain: "Every policy lists what it covers, but the EXCLUSIONS, what it specifically does NOT cover, are often the more important read. A renter's policy that sounds comprehensive can still exclude things like flood damage or high-value jewelry above a certain limit.",
+                analogy: "It's like reading a menu's allergen list, not just what's on the plate, but what's specifically NOT included matters just as much.",
+                check: { statement: "The exclusions section of a policy is generally less important than the coverage section.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'rp_t2', type: 'teach', title: 'Reading It Before, Not During, a Claim',
+            concepts: [
+              {
+                term: 'Reading in Advance',
+                plain: "The best time to understand a policy's deductible, limits, and exclusions is BEFORE anything happens, when there's time to ask questions or shop around. Reading it for the first time while filing a claim means discovering gaps at the worst possible moment.",
+                analogy: "It's like reading a syllabus at the start of the semester, not the night before the final when it's too late to plan around it.",
+                check: { statement: "The best time to fully understand a policy is right after a claim has already been filed.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'rp_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Exclusions', definition: 'What a policy specifically does NOT cover, often the most important section.' },
+              { term: 'Reading in Advance', definition: 'Understanding a policy before something happens, not during a claim.' },
+              { term: 'Policy Limit', definition: 'The maximum amount a policy will pay out for a covered claim.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'rp_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: high-value items, jewelry, musical instruments, expensive electronics, are often capped at a low sub-limit within a standard policy, even if the overall policy limit sounds generous. A specific item worth a lot is worth asking about by name.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'rp_spot1', type: 'spotcheck', title: 'Spot What\'s Worth Asking About',
+            intro: "Here's a section of Hammy's renter's policy. Tap anything worth asking a question about before signing, then hit Continue to see what you caught.",
+            postingTitle: "Renter's Policy — Coverage Details",
+            segments: [
+              { id: 's1', text: "Personal property coverage: up to $30,000 for covered losses. ", isRedFlag: false, explanation: "A clear, standard coverage figure, no red flag on its own." },
+              { id: 's2', text: "Jewelry and watches: sub-limit of $1,500 total, regardless of the overall policy limit. ", isRedFlag: true, explanation: "A sub-limit like this is exactly the kind of detail that matters if Hammy owns anything valuable in this category, worth checking against actual item values." },
+              { id: 's3', text: "Flood damage: not covered under this policy. ", isRedFlag: true, explanation: "An explicit exclusion worth knowing, especially relevant depending on the apartment's location and flood risk." },
+              { id: 's4', text: "Fire and theft: covered as standard events. ", isRedFlag: false, explanation: "Standard, expected coverage, not something requiring a follow-up question." },
+              { id: 's5', text: "Claims must be reported within 60 days of the loss. ", isRedFlag: true, explanation: "A specific deadline worth remembering, missing it could mean an otherwise valid claim gets denied." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'rp_d1', type: 'decision',
+            title: "The Musical Instrument",
+            prompt: "Hammy owns a $2,000 violin and just read the policy's $1,500 jewelry/valuables sub-limit.",
+            hintText: "Think back to Exclusions: does the standard policy actually cover the full value of this specific item?",
+            choices: [
+              { id: 'a', label: 'Assume the general $30,000 policy limit covers it and move on', outcome: { text: "If the violin falls under the $1,500 sub-limit category, a claim would fall $500 short of its actual value, discovered only after a loss.", delta: {}, compare: [{ label: 'Violin value', value: 2000 }, { label: 'Covered under sub-limit', value: 1500 }] } },
+              { id: 'b', label: 'Ask the insurer directly whether the violin needs a separate rider or scheduled item', outcome: { text: "The insurer confirms a small additional rider covers the violin's full value, closing the gap before it ever becomes a problem.", delta: {}, compare: [{ label: 'Violin value', value: 2000 }, { label: 'Covered with a rider', value: 2000 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'rp_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Sub-Limit', definition: 'A lower cap on a specific category, even within a higher overall policy limit.' },
+              { term: 'Scheduled Item / Rider', definition: 'An add-on that covers a specific valuable item beyond a standard sub-limit.' },
+              { term: 'Claim Reporting Deadline', definition: 'The window within which a loss must be reported to remain eligible.' }
+            ],
+            hintText: "One term is a HIDDEN cap, one is a FIX for that cap, and one is a TIME LIMIT worth remembering.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'rp_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A policy's overall coverage limit means every individual item is covered up to that same full amount.",
+            isTrue: false,
+            explanation: "False. Specific categories, like jewelry or musical instruments, often carry their own lower sub-limits, even within a higher overall policy limit.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'rp_myth1', type: 'mythcards', title: 'Reading a Policy: True or False',
+            cards: [
+              { myth: "A valuable item can sometimes be added to a policy through a specific rider or endorsement.", isTrue: true, explanation: "True, this is a common way to cover an item above a standard sub-limit." },
+              { myth: "Every insurance policy from every company covers the exact same things by default.", isTrue: false, explanation: "Coverage, exclusions, and limits vary meaningfully between policies and providers, reading the specific policy matters." },
+              { myth: "Claims can generally be filed at any time, with no deadline after a loss occurs.", isTrue: false, explanation: "Most policies specify a reporting window, missing it can risk a valid claim being denied." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'rp_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [9, 4],
+            hintTexts: [
+              "Think about how a deductible affects the actual amount an insurance claim pays out.",
+              "Think about what to do first when you notice an unfamiliar charge."
+            ]
+          },
+          {
+            id: 'rp_t3', type: 'teach', title: 'Five Minutes Now Beats a Surprise Later',
+            concepts: [
+              {
+                term: 'The Five-Minute Read',
+                plain: "Actually skimming the exclusions and sub-limits sections, not the whole document, takes just a few minutes and catches the specific gaps that matter most. That small effort, done once at signup, prevents finding out about a gap during an actual claim.",
+                analogy: "It's like checking the return policy before buying something expensive, a small check that prevents a bigger problem later.",
+                check: { statement: "Skimming just the exclusions and sub-limits sections can catch most of what actually matters in a policy.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'rp_boss', type: 'bossbattle', title: 'The New Policy',
+            scenario: "Hammy is renewing the renter's policy for a new apartment and gets a slightly cheaper quote from a different insurer, but hasn't read the new policy's exclusions yet.",
+            hintText: "Remember The Five-Minute Read: does a lower price guarantee the same coverage as before?",
+            choices: [
+              { id: 'a', label: "Skim the new policy's exclusions and sub-limits before switching", consequence: { text: "The quick check confirms the cheaper policy has comparable coverage, a genuine savings with no hidden gap.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Switch immediately for the lower price without reading the new policy", consequence: { text: "The new policy turns out to exclude water damage entirely, a gap that wouldn't have existed with the original policy.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Stick with the more expensive original policy just to avoid the hassle of reading a new one", consequence: { text: "It avoids any risk of a coverage gap, but also means paying more than necessary without ever confirming whether that's justified.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'd', label: "Call the new insurer and ask specifically about water damage and the violin rider before switching", consequence: { text: "Asking targeted questions about the items that matter most gets clarity fast, without needing to read the entire document line by line.", delta: {}, xpMultiplier: 1.15 } }
             ]
           }
         ]
