@@ -2001,7 +2001,8 @@ select.budget-input { cursor: pointer; }
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.mrh-right { flex-shrink: 0; }
+.mrh-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; }
+.mrh-total-xp { font-size: 0.7rem; font-weight: 600; color: var(--text-soft); white-space: nowrap; }
 .mrh-chevron { flex-shrink: 0; color: var(--text-soft); transition: transform 0.2s ease; }
 .module-row.expanded .mrh-chevron { transform: rotate(180deg); }
 

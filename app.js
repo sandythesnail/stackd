@@ -9672,6 +9672,42 @@ function updateSidebarStats() {
   if (diamondsEl) diamondsEl.textContent = (state.diamonds || 0).toLocaleString();
 }
 
+// Max XP a single quest chapter can award. Mirrors exactly how each chapter type's renderer
+// actually calls addXP() (see the renderXChapter functions below) so this number is never a
+// guess — knowledgecheck awards no XP at all, mythcards scales with card count, and
+// bossbattle scales off the module's base xpReward times the best available choice's
+// multiplier, everything else is a flat chapter.xpOnComplete.
+function chapterMaxXP(chapter, mod) {
+  if (chapter.type === 'knowledgecheck') return 0;
+  if (chapter.type === 'mythcards') return (chapter.xpPerCorrect || 0) * (chapter.cards ? chapter.cards.length : 0);
+  if (chapter.type === 'bossbattle') {
+    const bestMult = (chapter.choices || []).reduce((max, c) => Math.max(max, c.consequence?.xpMultiplier ?? 1), 1);
+    return Math.round(mod.xpReward * bestMult);
+  }
+  return chapter.xpOnComplete || 0;
+}
+
+// Max XP achievable across an entire quest — the sum every "Lesson N" quest tile shows,
+// and what the module's Total XP figure is built from.
+function questMaxXP(quest, mod) {
+  return (quest.chapters || []).reduce((sum, ch) => sum + chapterMaxXP(ch, mod), 0);
+}
+
+// Max XP for a single plain quiz lesson: a perfect first-attempt score, matching the
+// isPerfect branch in finishQuiz() exactly.
+function lessonMaxXP(lesson, mod) {
+  if (lesson.type) return (lesson.activity && lesson.activity.xpOnComplete) || 0;
+  return Math.round(mod.xpReward * 1.25);
+}
+
+// Total XP shown next to a module — always the sum of whichever per-lesson figures are
+// actually displayed below it (main quests, or plain lessons), so the two numbers can never
+// drift apart.
+function moduleTotalXP(mod) {
+  if (hasQuest(mod)) return mainQuests(mod).reduce((sum, q) => sum + questMaxXP(q, mod), 0);
+  return mod.lessons.reduce((sum, lesson) => sum + lessonMaxXP(lesson, mod), 0);
+}
+
 function renderModuleList(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -9703,6 +9739,7 @@ function renderModuleList(containerId) {
       : isRecommended
         ? `<span class="card-badge badge-recommend">★ Recommended</span>`
         : `<span class="card-badge badge-xp">+${m.xpReward} XP</span>`;
+    const totalXpHtml = `<div class="mrh-total-xp">Total XP: ${moduleTotalXP(m).toLocaleString()}</div>`;
 
     let bodyHtml;
     if (quest) {
@@ -9717,7 +9754,7 @@ function renderModuleList(containerId) {
           <div class="lt-body">
             <div class="lt-num">Lesson ${idx + 1}</div>
             <div class="lt-title">${q.topic || q.character.name}</div>
-            <div class="lt-meta">${q.character.tagline} · ${q.chapters.length} chapters</div>
+            <div class="lt-meta">${q.character.tagline} · ${q.chapters.length} chapters · ${questMaxXP(q, m)} XP</div>
             ${subHtml}
           </div>
           <span class="lt-cta">${cta}</span>
@@ -9731,7 +9768,7 @@ function renderModuleList(containerId) {
         const isActivity = !!lesson.type;
         const meta = done
           ? `Score: ${lessonData.score}/${lessonData.total} · ${lessonData.xpEarned} XP`
-          : isActivity ? 'Interactive' : `${lesson.qIndices.length} questions`;
+          : isActivity ? `Interactive · ${lessonMaxXP(lesson, m)} XP` : `${lesson.qIndices.length} questions · ${lessonMaxXP(lesson, m)} XP`;
         const cta = done ? '↻ Replay' : 'Start →';
         return `<div class="lesson-tile${done ? ' done' : ''}${isActivity ? ' activity-tile' : ''}" data-module="${m.id}" data-lesson="${idx}">
           <div class="lt-body">
@@ -9753,7 +9790,7 @@ function renderModuleList(containerId) {
             <div class="mrh-desc">${m.desc}</div>
           </div>
         </div>
-        <div class="mrh-right">${badge}</div>
+        <div class="mrh-right">${badge}${totalXpHtml}</div>
         <svg class="mrh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       ${bodyHtml}`;
