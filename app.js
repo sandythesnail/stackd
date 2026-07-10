@@ -12957,10 +12957,129 @@ const MODULES = [
         topic: 'Benefits & Total Compensation',
         character: { name: 'Hammy', tagline: 'Comparing benefits packages between offers' },
         initialState: {},
+        bossAchievementId: 'total_comp_calculated',
         chapters: [
-          { id: 'total_comp_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'tc0', type: 'story', title: 'Same Salary, Different Offers',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Benefits & Total Compensation." }
+              { speaker: 'intro', text: "Hammy has two offers, both paying exactly $60,000. Job A has a $2,000/year health insurance premium and no HSA. Job B has a $500/year premium and an HSA with employer contributions." },
+              { speaker: 'Hammy', text: '"They pay the same, so it\'s basically a coin flip, right?"' },
+              { speaker: 'narrator', text: "The salary line is identical, but the total value of these two offers really isn't." },
+              { speaker: 'Hammy', text: '"Wait, how are they different if the salary number is exactly the same?"' }
+            ]
+          },
+          {
+            id: 'tc_t1', type: 'teach', title: 'Total Compensation, Not Just Salary',
+            concepts: [
+              {
+                term: 'Total Compensation',
+                plain: "Total compensation includes salary PLUS everything else with real financial value: health insurance costs, PTO, retirement matching, and other benefits. Two offers with the same salary can have a meaningfully different total value once these are factored in.",
+                analogy: "It's like comparing two apartments by rent alone, without factoring in utilities, parking, or a included gym, the sticker price isn't the full cost.",
+                check: { statement: "Two job offers with the identical salary number always have the identical total value.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'tc_t2', type: 'teach', title: 'PTO Has Real Financial Value',
+            concepts: [
+              {
+                term: 'PTO Value',
+                plain: "Paid time off can be roughly valued in dollars: divide the salary by the number of working days in a year to get a daily rate, then multiply by the extra PTO days. Ten extra paid days off a year is genuinely worth real money, not just a lifestyle nice-to-have.",
+                analogy: "It's like a bonus paid in time instead of cash, still has a calculable dollar value if you actually do the math.",
+                check: { statement: "PTO has no calculable financial value, it's purely a quality-of-life factor.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'tc_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Total Compensation', definition: 'Salary plus the value of benefits like insurance, PTO, and retirement matching.' },
+              { term: 'PTO Value', definition: "Extra paid time off, roughly valued using a daily salary rate." },
+              { term: 'Premium Cost', definition: "The employee's share of a health insurance plan's monthly or annual cost." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'tc_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: an HSA (Health Savings Account) with employer contributions is essentially free money added to a tax-advantaged account, on top of a lower insurance premium. It's easy to overlook next to a salary number, but it adds real value two ways at once.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'tc_price1', type: 'priceisright', title: 'The Price Is Right: The PTO Gap',
+            prompt: "Job A offers 10 PTO days, Job B offers 20 PTO days plus paid holidays, both at a $60,000 salary (roughly $230/workday). Guess the rough dollar value of the extra 10 PTO days alone.",
+            hintText: "Multiply the extra number of days by the rough daily salary rate.",
+            actualValue: 2300, guessRange: { min: 0, max: 5000, step: 100 },
+            explanation: "10 extra days × roughly $230/day ≈ $2,300 in extra value, before even counting the paid holidays or the insurance/HSA difference, a real gap hiding behind two \"identical\" salary numbers.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'tc_d1', type: 'decision',
+            title: "The Final Comparison",
+            prompt: "Both offers pay $60,000. Job B has lower insurance costs, an HSA match, and 10 more PTO days than Job A.",
+            hintText: "Think back to Total Compensation: does the identical salary line tell the whole story?",
+            choices: [
+              { id: 'a', label: 'Treat them as equal since the salary is identical', outcome: { text: "The real total value gap, insurance savings, HSA contributions, and extra PTO, gets completely ignored by comparing salary alone.", delta: {}, compare: [{ label: 'Salary difference', value: 0 }, { label: 'Total comp difference', value: 3800 }] } },
+              { id: 'b', label: 'Calculate the total value of each offer before deciding', outcome: { text: "The full picture reveals Job B is worth meaningfully more overall, despite the identical salary line.", delta: {}, compare: [{ label: 'Salary difference', value: 0 }, { label: 'Total comp difference favoring Job B', value: 3800 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'tc_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'HSA Employer Contribution', definition: "Free money added to a tax-advantaged health savings account." },
+              { term: 'Daily Salary Rate', definition: 'Salary divided by working days in a year, used to value PTO.' },
+              { term: 'Salary-Only Comparison', definition: 'Comparing offers by pay alone, missing the fuller benefits picture.' }
+            ],
+            hintText: "One term is FREE money on top of pay, one is a CALCULATION tool, and one is the INCOMPLETE way to compare offers.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'tc_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Two job offers with the exact same salary always represent the exact same total value.",
+            isTrue: false,
+            explanation: "False. Benefits like insurance costs, PTO, and retirement matching can create a meaningful total value gap, even with identical salaries.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'tc_myth1', type: 'mythcards', title: 'Total Compensation: True or False',
+            cards: [
+              { myth: "PTO days can be roughly converted into a dollar value using a daily salary rate.", isTrue: true, explanation: "True, that's a standard way to compare PTO differences between offers in concrete terms." },
+              { myth: "A lower health insurance premium always means worse coverage.", isTrue: false, explanation: "Premium cost and coverage quality are separate factors, a lower premium doesn't automatically mean worse coverage." },
+              { myth: "Comparing job offers by salary alone captures the full financial picture.", isTrue: false, explanation: "Benefits can add or subtract thousands of dollars of real value that a salary-only comparison completely misses." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'tc_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 7],
+            hintTexts: [
+              "Think about what two offers with different insurance premiums and HSA options actually tell you.",
+              "Think about whether a PTO difference between two equal-salary offers actually matters."
+            ]
+          },
+          {
+            id: 'tc_t3', type: 'teach', title: 'Do the Full Math Before Deciding',
+            concepts: [
+              {
+                term: 'The Full Comparison',
+                plain: "Comparing job offers well means adding up salary, insurance costs, PTO value, and retirement matching into one total picture, not eyeballing the salary line and calling it done. The extra ten minutes of math can reveal a genuinely different winner than the salary alone would suggest.",
+                analogy: "It's like comparing total loan cost instead of just the monthly payment, the fuller number is what actually matters.",
+                check: { statement: "A quick comparison of salary alone is generally sufficient for evaluating two job offers.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'tc_boss', type: 'bossbattle', title: 'The Slightly Lower Offer',
+            scenario: "A third offer comes in at $58,000, $2,000 lower than the other two, but with a much stronger 401(k) match and fully-covered health insurance with no premium at all.",
+            hintText: "Remember The Full Comparison: does the lower salary line automatically make this the worse offer?",
+            choices: [
+              { id: 'a', label: "Calculate the full total compensation, including the match and free insurance, before comparing", consequence: { text: "Once the match and insurance savings are factored in, the $58,000 offer may well come out ahead in total value despite the lower salary.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Rule it out immediately for having the lowest salary number", consequence: { text: "The salary number alone doesn't capture the retirement match or insurance savings that could make this the strongest offer overall.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Ask each employer for a written breakdown of total compensation before deciding", consequence: { text: "A smart, thorough step that gets the exact numbers needed for the full comparison, rather than estimating.", delta: {}, xpMultiplier: 1.2 } },
+              { id: 'd', label: "Pick based on which company seems more exciting, without doing the compensation math", consequence: { text: "A real financial gap between the offers goes unexamined, the decision is made without the information that actually matters most.", delta: {}, xpMultiplier: 0.7 } }
             ]
           }
         ]
@@ -12970,10 +13089,129 @@ const MODULES = [
         topic: 'Retirement Match & Equity',
         character: { name: 'Hammy', tagline: 'Trying to understand an equity offer' },
         initialState: {},
+        bossAchievementId: 'equity_vs_match_clear',
         chapters: [
-          { id: 'retirement_equity_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 're0', type: 'story', title: 'A Startup Offer',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Retirement Match & Equity." }
+              { speaker: 'intro', text: "A startup offers Hammy a lower salary than a corporate job, but includes stock options as part of the package. The corporate job offers a 401(k) with a 4% match instead." },
+              { speaker: 'Hammy', text: '"Stock options in a startup could be worth way more someday. That seems like the better deal."' },
+              { speaker: 'narrator', text: "Could be, that's exactly the key word. One of these two benefits is guaranteed, the other is a genuine bet." },
+              { speaker: 'Hammy', text: '"A bet? I thought stock options were basically free extra money."' }
+            ]
+          },
+          {
+            id: 're_t1', type: 'teach', title: '401(k) Match: Guaranteed',
+            concepts: [
+              {
+                term: 'Guaranteed Match',
+                plain: "A 401(k) match is real, immediate money added the moment a contribution is made, guaranteed regardless of how the company performs. Missing it means leaving free, certain money unclaimed, not a bet, an actual guarantee.",
+                analogy: "It's like a matching donation from an employer, it happens the instant the eligible action is taken, no uncertainty involved.",
+                check: { statement: "A 401(k) employer match is contingent on the company's future stock performance.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 're_t2', type: 'teach', title: 'Stock Options: A Bet on the Future',
+            concepts: [
+              {
+                term: 'Stock Options',
+                plain: "Stock options give the right to buy company stock at a set price later, valuable ONLY if the company's stock price rises above that set price, and often only after a vesting period of staying employed there. Most startups never have a successful exit, meaning many employees' options end up worth very little or nothing at all.",
+                analogy: "It's like a lottery ticket with better odds than most, still a genuine bet, not a guaranteed payout.",
+                check: { statement: "Stock options are guaranteed to have real value regardless of how the company performs.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 're_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Guaranteed Match', definition: 'Real money added immediately upon contribution, certain regardless of outcome.' },
+              { term: 'Stock Options', definition: 'The right to buy stock later at a set price, valuable only if the price rises.' },
+              { term: 'Vesting Period', definition: 'A required length of employment before options or match funds are fully owned.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 're_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: a 401(k) can typically ALSO be opened at a startup job, even one offering equity, the two aren't mutually exclusive. The real comparison is often the SIZE of any match offered at each company, not equity versus retirement account as an either-or choice.",
+            xpOnComplete: 1
+          },
+          {
+            id: 're_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why is a 401(k) match generally considered more reliably valuable than startup stock options, even though the options COULD end up being worth more?",
+            keywords: ['guaranteed', 'certain', 'bet', 'risk', 'immediate'],
+            fullDefinition: "Because a 401(k) match is guaranteed, immediate, and certain the moment a contribution is made, regardless of what happens afterward. Stock options are a genuine bet on the company's future success, most startups don't have a successful exit, and options can end up worth nothing at all. The match's certainty is exactly why it's treated as more reliably valuable, even though the options carry a higher (but much less certain) potential upside.",
+            xpOnComplete: 3
+          },
+          {
+            id: 're_d1', type: 'decision',
+            title: "Weighing the Offers",
+            prompt: "Hammy is deciding between the corporate job's 401(k) match and the startup's equity, purely based on which \"sounds\" like more money.",
+            hintText: "Think back to Guaranteed Match: does \"sounds like more money\" account for how certain each benefit actually is?",
+            choices: [
+              { id: 'a', label: 'Choose based on which benefit sounds more exciting, without weighing the actual certainty of each', outcome: { text: "The decision skips the most important factor entirely, how likely each benefit actually is to be worth something.", delta: {}, compare: [{ label: 'Certainty considered', value: 0 }, { label: 'Factors that matter', value: 2 }] } },
+              { id: 'b', label: 'Weigh both the potential value AND the actual certainty of each benefit', outcome: { text: "A full comparison, guaranteed match versus a genuine but uncertain bet, leads to a much more informed decision.", delta: {}, compare: [{ label: 'Certainty considered', value: 1 }, { label: 'Factors that matter', value: 2 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 're_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Successful Exit', definition: 'A startup event (acquisition, IPO) that can make stock options actually valuable.' },
+              { term: 'Not Mutually Exclusive', definition: 'A 401(k) and equity can often both exist at the same job, not an either-or.' },
+              { term: 'Certainty vs. Upside', definition: 'The tradeoff between a guaranteed smaller benefit and a risky larger one.' }
+            ],
+            hintText: "One term is the EVENT that makes equity valuable, one is a common MISCONCEPTION about the choice, and one is the core TRADEOFF.",
+            xpOnComplete: 4
+          },
+          {
+            id: 're_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Most startup employees' stock options eventually become worth a significant amount of money.",
+            isTrue: false,
+            explanation: "False. Most startups don't have a successful exit, meaning many employees' stock options end up worth very little or nothing, a real risk worth weighing against the excitement of the potential upside.",
+            xpOnComplete: 2
+          },
+          {
+            id: 're_myth1', type: 'mythcards', title: 'Retirement Match & Equity: True or False',
+            cards: [
+              { myth: "A 401(k) match and startup equity are always mutually exclusive, choosing one job type means giving up the other entirely.", isTrue: false, explanation: "Many startups also offer a 401(k), the two benefits aren't automatically an either-or choice." },
+              { myth: "Leaving a job before stock options fully vest can mean forfeiting some or all of them.", isTrue: true, explanation: "True, vesting periods are specifically designed to require staying employed for a set time to fully earn the options." },
+              { myth: "A 401(k) match's value depends on the stock market performing well.", isTrue: false, explanation: "The match itself is guaranteed the moment a contribution is made, independent of how any investment inside the account later performs." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 're_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [3, 8],
+            hintTexts: [
+              "Think about what's actually being missed by not contributing to a 401(k) with an employer match.",
+              "Think about what should be understood before valuing a stock options offer."
+            ]
+          },
+          {
+            id: 're_t3', type: 'teach', title: 'Certain Value First, Upside Second',
+            concepts: [
+              {
+                term: 'Layering Certainty and Upside',
+                plain: "The strongest approach isn't choosing ONE of these benefits, it's capturing the guaranteed value (the match) wherever available, THEN treating any equity as a genuine bonus upside, not a replacement for it. Certainty and upside aren't competing goals, they can be layered together.",
+                analogy: "It's like a base salary plus a commission structure, one part is reliable, the other adds upside on top, not instead of it.",
+                check: { statement: "A guaranteed benefit like a 401(k) match and a risky upside benefit like equity should generally be treated as competing, mutually exclusive choices.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 're_boss', type: 'bossbattle', title: 'The Startup With a Match',
+            scenario: "Hammy discovers the startup ALSO offers a small 2% 401(k) match, on top of the equity, something initially overlooked while focusing purely on the stock options.",
+            hintText: "Remember Layering Certainty and Upside: does finding the match change how the startup offer should be evaluated?",
+            choices: [
+              { id: 'a', label: "Factor in both the guaranteed match AND the equity upside when comparing offers now", consequence: { text: "The fuller picture, guaranteed match plus equity upside, gives a much more accurate comparison than equity alone.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Ignore the match since the equity was the more exciting part of the offer anyway", consequence: { text: "A real, guaranteed piece of the total compensation gets left out of the comparison entirely.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Assume the match is too small to matter and skip factoring it in", consequence: { text: "Even a smaller match is still guaranteed, certain value, worth including rather than dismissing outright.", delta: {}, xpMultiplier: 0.8 } },
+              { id: 'd', label: "Ask the startup for the exact match formula and vesting schedule for the equity before finalizing the comparison", consequence: { text: "Getting the precise details on both benefits gives the most accurate possible comparison between the two offers.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -12983,10 +13221,134 @@ const MODULES = [
         topic: 'Comparing Offers & Job-Hopping',
         character: { name: 'Hammy', tagline: 'Weighing two job offers against each other' },
         initialState: {},
+        bossAchievementId: 'offers_weighed',
         chapters: [
-          { id: 'comparing_offers_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'co0', type: 'story', title: 'Two Very Different Offers',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Comparing Offers & Job-Hopping." }
+              { speaker: 'intro', text: "Hammy has two offers: Job A pays $65,000 in a high-cost city. Job B pays $58,000 in a lower-cost city, with better benefits and a clear promotion timeline." },
+              { speaker: 'Hammy', text: '"$65,000 is just a bigger number. That has to be the better offer."' },
+              { speaker: 'narrator', text: "The bigger number isn't always the bigger opportunity, once cost of living and growth are actually factored in." },
+              { speaker: 'Hammy', text: '"Wait, how much does cost of living actually change the comparison?"' }
+            ]
+          },
+          {
+            id: 'co_t1', type: 'teach', title: 'Cost of Living Changes the Real Number',
+            concepts: [
+              {
+                term: 'Cost of Living Adjustment',
+                plain: "The same salary buys very different amounts of housing, food, and transportation depending on the city. A $65,000 salary in an expensive city can leave LESS real spending power than a $58,000 salary somewhere cheaper, once actual costs are compared.",
+                analogy: "It's like comparing two paychecks without checking the price of the exact same grocery cart in each city, the number alone doesn't tell the full story.",
+                check: { statement: "A higher salary number always translates into more actual spending power, regardless of location.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'co_t2', type: 'teach', title: 'Promotion Timeline Has Real Value Too',
+            concepts: [
+              {
+                term: 'Growth Trajectory',
+                plain: "A clear, faster promotion path can be worth more over several years than a slightly higher starting salary, since raises and promotions typically compound on top of the current salary. A strong first job for GROWTH can outperform a strong first job for starting pay alone.",
+                analogy: "It's like choosing a faster highway on-ramp over a slightly better starting position stuck in traffic, the trajectory matters as much as the starting point.",
+                check: { statement: "A faster promotion timeline has no real financial value compared to a higher starting salary.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'co_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Cost of Living Adjustment', definition: 'Comparing real spending power, not just the raw salary number, across cities.' },
+              { term: 'Growth Trajectory', definition: 'How quickly a role leads to raises and promotions over time.' },
+              { term: 'Real Spending Power', definition: 'What a salary actually affords after accounting for local costs.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'co_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: online cost-of-living calculators can convert a salary in one city into an \"equivalent\" salary in another, a quick way to see the real gap between two offers in different locations before deciding based on the raw numbers alone.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'co_spot1', type: 'spotcheck', title: 'Spot What\'s Worth Weighing',
+            intro: "Here's a side-by-side rundown of Hammy's two offers. Tap anything that's a genuine factor worth weighing beyond the base salary number, then hit Continue to see what you caught.",
+            postingTitle: "Job A vs. Job B",
+            segments: [
+              { id: 's1', text: "Job A: $65,000 base salary in a high-cost city. ", isRedFlag: false, explanation: "The headline number, but not the full picture on its own." },
+              { id: 's2', text: "Job B: $58,000 base salary in a notably lower-cost city. ", isRedFlag: true, explanation: "Cost of living is exactly the kind of factor that changes what this number actually means in real terms." },
+              { id: 's3', text: "Job A: standard benefits package, no stated promotion timeline. ", isRedFlag: false, explanation: "A neutral detail on its own, worth noting mainly as a contrast to Job B's clearer timeline." },
+              { id: 's4', text: "Job B: stronger benefits package and a documented 18-month promotion track. ", isRedFlag: true, explanation: "A clear growth trajectory is a real factor with long-term financial value beyond the starting salary." },
+              { id: 's5', text: "Job A: office located in a trendy, popular neighborhood. ", isRedFlag: false, explanation: "A lifestyle preference, not really a financial factor worth weighing in the compensation comparison." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'co_d1', type: 'decision',
+            title: "The Decision",
+            prompt: "Hammy is about to accept Job A purely because $65,000 is a bigger number than $58,000.",
+            hintText: "Think back to Cost of Living Adjustment: does the bigger number necessarily mean more real value?",
+            choices: [
+              { id: 'a', label: 'Accept Job A based on the higher salary number alone', outcome: { text: "After adjusting for the higher cost of living, Job A\'s real spending power may actually be lower than Job B\'s, a comparison never actually made.", delta: {}, compare: [{ label: 'Salary comparison only', value: 1 }, { label: 'Full comparison factors', value: 3 }] } },
+              { id: 'b', label: 'Run the cost-of-living comparison and weigh the promotion timeline before deciding', outcome: { text: "The full comparison reveals Job B\'s real value, adjusted spending power plus a faster growth path, genuinely competes with Job A\'s bigger sticker number.", delta: {}, compare: [{ label: 'Salary comparison only', value: 1 }, { label: 'Full comparison factors', value: 3 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'co_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Cost-of-Living Calculator', definition: 'A tool that converts a salary between cities to compare real value.' },
+              { term: 'Documented Promotion Track', definition: 'A stated, specific timeline for advancement, more concrete than a vague promise.' },
+              { term: 'Headline Number', definition: 'The raw salary figure, before any adjustment for location or growth.' }
+            ],
+            hintText: "One term is a COMPARISON tool, one is a CONCRETE growth signal, and one is the RAW number that doesn\'t tell the whole story.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'co_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "The offer with the highest starting salary number is generally the best financial choice.",
+            isTrue: false,
+            explanation: "False. Cost of living and growth trajectory can make a lower-salary offer the stronger financial choice once the full picture is considered.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'co_myth1', type: 'mythcards', title: 'Comparing Offers: True or False',
+            cards: [
+              { myth: "A documented promotion timeline is worth more than a vague verbal promise about future advancement.", isTrue: true, explanation: "True, something specific and stated carries far more weight than a vague, unofficial impression." },
+              { myth: "Cost-of-living calculators can help compare the real value of salaries in different cities.", isTrue: true, explanation: "True, they're specifically built to make this kind of comparison concrete rather than guessed at." },
+              { myth: "Job-hopping to a competing offer for more pay is always the financially optimal move, regardless of the situation.", isTrue: false, explanation: "It often makes sense given how internal raises can lag external offers, but growth trajectory, benefits, and stability at the current job are still worth weighing, not automatically ignored." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'co_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 10],
+            hintTexts: [
+              "Think about how to evaluate two offers with different salaries, cities, and benefits.",
+              "Think about what a competing offer paying meaningfully more suggests about growing income early on."
+            ]
+          },
+          {
+            id: 'co_t3', type: 'teach', title: 'Compare the Whole Picture, Not the Headline',
+            concepts: [
+              {
+                term: 'Beyond the Headline Number',
+                plain: "A genuinely strong offer comparison weighs salary, cost of living, benefits, and growth trajectory together, not the headline salary number in isolation. The offer that looks smaller at first glance sometimes turns out to be the stronger one once the full picture is actually built.",
+                analogy: "It's like judging a car by its price tag alone, without checking fuel efficiency, reliability, or resale value.",
+                check: { statement: "A thorough offer comparison should weigh more than just the headline salary number.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'co_boss', type: 'bossbattle', title: 'The Competing Offer',
+            scenario: "A year into Job B, a competing company offers Hammy 15% more than the current salary for a similar role, no clear promotion timeline stated, in a similarly-priced city.",
+            hintText: "Remember Beyond the Headline Number: does this new offer need the same full comparison as the original two did?",
+            choices: [
+              { id: 'a', label: "Weigh the 15% raise against Job B's existing growth trajectory and benefits before deciding", consequence: { text: "The same full-picture approach applies again, comparing the raise against what's already been built at the current job, not just the number alone.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Take the new offer immediately since 15% is a big jump", consequence: { text: "The decision skips weighing Job B's already-proven growth trajectory and benefits against the new offer's less certain promotion picture.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'c', label: "Turn down the offer automatically out of loyalty to the current job", consequence: { text: "A 15% raise is a meaningful number worth genuinely evaluating, dismissing it without comparison skips real information.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'd', label: "Use the offer as leverage to discuss a raise or promotion timeline at the current job first", consequence: { text: "A smart middle step that could capture value either way, a counter-offer internally, or a stronger position if moving on ends up being the right call.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -12996,10 +13358,129 @@ const MODULES = [
         topic: 'Building Your Network for Long-Term Impact',
         character: { name: 'Hammy', tagline: 'Building a professional network from scratch' },
         initialState: {},
+        bossAchievementId: 'network_started',
         chapters: [
-          { id: 'building_network_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'bnw0', type: 'story', title: 'A Sophomore With No Job Yet',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Building Your Network for Long-Term Impact." }
+              { speaker: 'intro', text: "Hammy is a sophomore, no internships, no job offers, nothing career-related happening yet. \"Isn't networking something you do once you're actually job hunting?\"" },
+              { speaker: 'Hammy', text: '"I don\'t even know what I\'d say to a professional right now. Feels premature."' },
+              { speaker: 'narrator', text: "Waiting until the job search actually starts is exactly when networking is hardest to build from scratch." },
+              { speaker: 'Hammy', text: '"Okay, so what does networking even look like this early?"' }
+            ]
+          },
+          {
+            id: 'bnw_t1', type: 'teach', title: 'Low-Cost Ways to Start',
+            concepts: [
+              {
+                term: 'Informational Interviews',
+                plain: "An informational interview is a short, low-pressure conversation with someone in a field of interest, not asking for a job, just asking about their path and experience. Most professionals are surprisingly open to a genuine, brief request like this.",
+                analogy: "It's like asking a senior for advice on a class you're about to take, low-stakes, informative, and appreciated more than expected.",
+                check: { statement: "Informational interviews are primarily used to directly ask for a job opening.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'bnw_t2', type: 'teach', title: 'Career Fairs & LinkedIn',
+            concepts: [
+              {
+                term: 'Staying Visible Early',
+                plain: "Attending career fairs and keeping an active, updated LinkedIn profile, even years before actively job hunting, builds visibility and connections that compound over time. Waiting until the job search actively starts means beginning from zero, right when there's the least time to build anything.",
+                analogy: "It's like planting a garden the season before you actually need the harvest, timing the effort ahead of when it's needed most.",
+                check: { statement: "Building a LinkedIn presence and attending career fairs is generally more useful if started well before actively job hunting.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bnw_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Informational Interview', definition: 'A low-pressure conversation to learn about someone\'s career path, not a job ask.' },
+              { term: 'Career Fair', definition: 'An in-person event connecting students with employers and recruiters.' },
+              { term: 'Starting Early', definition: 'Building visibility and connections well before actively job hunting.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bnw_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: a short, specific message works far better than a vague one. \"Would you be open to a 15-minute call about how you got into your field?\" gets far more responses than a generic \"can we connect?\" request.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'bnw_price1', type: 'priceisright', title: 'The Price Is Right: Jobs Filled Through Networking',
+            prompt: "Various studies and career-center estimates suggest a large share of jobs are filled through networking and referrals rather than public job postings alone. Guess the commonly cited estimate.",
+            hintText: "It's a notably large majority, not a small minority, this is one of the most-cited stats in career advice for exactly this reason.",
+            actualValue: 70, guessRange: { min: 0, max: 100, step: 5 },
+            explanation: "Commonly cited estimates suggest roughly 70-80% of jobs are filled through networking and referrals rather than purely public applications, a big part of why building connections early, long before actively job hunting, matters so much.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'bnw_d1', type: 'decision',
+            title: "The Career Fair",
+            prompt: "Hammy's campus is hosting a career fair. As a sophomore with no immediate job search, it's tempting to skip it entirely.",
+            hintText: "Think back to Starting Early: does \"not job hunting yet\" mean there's nothing to gain from going?",
+            choices: [
+              { id: 'a', label: 'Skip the career fair since there\'s no active job search yet', outcome: { text: "A low-pressure opportunity to build early connections and visibility passes by, right when there was time to actually build something.", delta: {}, compare: [{ label: 'Connections made', value: 0 }, { label: 'Years before job search starts', value: 2 }] } },
+              { id: 'b', label: 'Attend anyway, treating it as low-pressure practice and early relationship-building', outcome: { text: "A few genuine conversations start building visibility now, with two full years to compound before the job search actually begins.", delta: {}, compare: [{ label: 'Connections made', value: 3 }, { label: 'Years before job search starts', value: 2 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bnw_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Specific Outreach Message', definition: "A short, targeted message, far more effective than a vague connection request." },
+              { term: 'Compounding Connections', definition: 'Early relationships that grow more valuable the longer they\'re maintained.' },
+              { term: 'Job Search Referral', definition: "A job opportunity that comes through a personal or professional connection." }
+            ],
+            hintText: "One term is about WHAT to say, one is about TIME making connections more valuable, and one is the OUTCOME networking often leads to.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'bnw_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Most jobs are filled primarily through public job postings that anyone can apply to.",
+            isTrue: false,
+            explanation: "False. A large share of jobs are commonly estimated to be filled through networking and referrals, not purely public postings, a big reason building connections early matters.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'bnw_myth1', type: 'mythcards', title: 'Building Your Network: True or False',
+            cards: [
+              { myth: "Networking as a sophomore with no job offers yet is premature and not worth the effort.", isTrue: false, explanation: "Starting early, well before an active job search, is exactly when connections have the most time to compound in value." },
+              { myth: "An informational interview is essentially the same thing as asking someone for a job.", isTrue: false, explanation: "It's a lower-pressure conversation focused on learning about someone's path, not a direct job ask." },
+              { myth: "A specific, short outreach message tends to get better responses than a vague one.", isTrue: true, explanation: "True, specificity makes it easy for the other person to say yes to something concrete and low-effort." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'bnw_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [9, 5],
+            hintTexts: [
+              "Think about a low-cost way for a sophomore with no job yet to start building professional relationships.",
+              "Think about why an early salary gap between two grads matters more than it seems."
+            ]
+          },
+          {
+            id: 'bnw_t3', type: 'teach', title: 'Small, Early, Consistent',
+            concepts: [
+              {
+                term: 'The Compounding Habit',
+                plain: "Networking works best as a small, consistent habit started early, one informational interview, one career fair, one LinkedIn update at a time, not a single frantic push right before a job search begins. Like other compounding habits in this app, time invested early matters more than effort crammed in later.",
+                analogy: "It's like building credit history or an investment account, the early start is what makes the biggest difference over time.",
+                check: { statement: "Networking is most effective as a single concentrated effort right before a job search begins.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bnw_boss', type: 'bossbattle', title: 'The Junior Year Check-In',
+            scenario: "A year later, as a junior, Hammy reflects: a few informational interviews happened, LinkedIn got updated, but nothing this whole time led directly to a job. It's tempting to conclude the effort wasn't worth it.",
+            hintText: "Remember The Compounding Habit: does \"no direct job yet\" mean the effort produced nothing valuable?",
+            choices: [
+              { id: 'a', label: "Keep the habit going, recognizing the value compounds even without an immediate job result", consequence: { text: "The connections and visibility built so far continue compounding, exactly the pattern that pays off once active job hunting actually starts.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Stop networking entirely since it hasn't directly produced a job yet", consequence: { text: "The early groundwork gets abandoned right before it would have had the most time to actually pay off.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Switch to only networking with people who might have an immediate job opening", consequence: { text: "This narrows the approach in a way that misses the broader value of a genuine, varied network built over time.", delta: {}, xpMultiplier: 0.8 } },
+              { id: 'd', label: "Reach back out to the strongest existing connections to maintain the relationship going into senior year", consequence: { text: "A smart way to keep the most valuable early connections warm heading into the year the job search actually ramps up.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -13009,10 +13490,129 @@ const MODULES = [
         topic: 'Why Negotiating Compounds Over Your Career',
         character: { name: 'Hammy', tagline: 'Wondering if negotiating this one offer really matters' },
         initialState: {},
+        bossAchievementId: 'gap_compounded_seen',
         chapters: [
-          { id: 'negotiating_compounds_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'nc0', type: 'story', title: 'Just $5,000, Right?',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Why Negotiating Compounds Over Your Career." }
+              { speaker: 'intro', text: "Two grads take jobs with a $5,000 starting salary difference, otherwise identical raise structures ahead of them. \"It's just $5,000. That evens out eventually, doesn't it?\"" },
+              { speaker: 'Hammy', text: '"It\'s one starting number. Surely it doesn\'t matter that much years down the line."' },
+              { speaker: 'narrator', text: "It doesn't just persist, it actually grows, in a way that catches most people off guard the first time they see the math." },
+              { speaker: 'Hammy', text: '"Grows? How does a starting gap get BIGGER over time instead of staying the same?"' }
+            ]
+          },
+          {
+            id: 'nc_t1', type: 'teach', title: 'Percentage Raises on a Bigger Base',
+            concepts: [
+              {
+                term: 'Percentage-Based Raises',
+                plain: "Most raises are a PERCENTAGE of current salary, not a flat dollar amount. A 3% raise on a higher starting salary is a bigger dollar amount than the same 3% raise on a lower one, meaning the original dollar gap between two salaries actually widens with every identical percentage raise.",
+                analogy: "It's like two savings accounts starting at different balances, both earning the same interest rate, the dollar gap between them grows every year, not shrinks.",
+                check: { statement: "A percentage-based raise adds the same dollar amount regardless of the starting salary.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'nc_t2', type: 'teach', title: 'It Compounds Like Interest',
+            concepts: [
+              {
+                term: 'The Compounding Gap',
+                plain: "This works exactly like compound interest, except it's compounding a GAP instead of a balance. Each year, the gap itself earns the same percentage growth as the underlying salaries, meaning a modest starting difference can become a genuinely large one over a full career.",
+                analogy: "It's the same math as an early investment head start, just applied to salary instead of a savings account.",
+                check: { statement: "A starting salary gap between two otherwise identical raise structures tends to shrink over time.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'nc_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Percentage-Based Raises', definition: "A raise calculated as a percent of current salary, not a flat dollar amount." },
+              { term: 'The Compounding Gap', definition: 'A starting salary difference that grows larger over time, like compound interest.' },
+              { term: 'Identical Raise Structure', definition: 'Two employees receiving the same percentage raises, just from different starting points.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'nc_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: this is exactly why negotiating a first offer, even by a few thousand dollars, matters more than it feels like it should in the moment. It's not just that first paycheck, it's the base every future percentage raise builds from.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'nc_price1', type: 'priceisright', title: 'The Price Is Right: The Gap 20 Years Later',
+            prompt: "Two grads start with a $5,000 salary gap. Both receive identical 3% raises every year for 20 years. Guess how large that same original gap has grown to by year 20.",
+            hintText: "The gap itself compounds at the same 3% rate as the salaries, this is compound growth applied to the gap, not just the raw dollar amount staying fixed.",
+            actualValue: 9000, guessRange: { min: 5000, max: 15000, step: 250 },
+            explanation: "$5,000 growing at 3%/year for 20 years compounds to roughly $9,000, the ORIGINAL gap nearly doubling in size, purely from identical percentage raises applied to two different starting points.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'nc_d1', type: 'decision',
+            title: "The Negotiation Moment",
+            prompt: "Hammy has a $58,000 offer and could likely negotiate it up to $61,000 with a single email, but it feels like a small, maybe not-worth-the-awkwardness difference.",
+            hintText: "Think back to The Compounding Gap: is $3,000 today really just $3,000 over a full career?",
+            choices: [
+              { id: 'a', label: 'Skip the negotiation, $3,000 doesn\'t feel worth the awkwardness', outcome: { text: "That $3,000 gap doesn\'t just sit there, it compounds through every future percentage raise for the rest of the career.", delta: {}, compare: [{ label: 'Starting gap', value: 3000 }, { label: 'Gap after 20 years of 3% raises', value: 5418 }] } },
+              { id: 'b', label: 'Send the negotiation email, understanding the base itself is what compounds', outcome: { text: "The higher starting base compounds through every future raise, turning a single email into meaningfully more over a full career.", delta: {}, compare: [{ label: 'Starting gap avoided', value: 3000 }, { label: 'Compounded value protected', value: 5418 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'nc_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'The Base Effect', definition: 'How a higher starting salary becomes the foundation every future raise builds on.' },
+              { term: 'Short-Term Awkwardness', definition: "The small, temporary discomfort of asking, weighed against a much larger long-term gap." },
+              { term: 'One Email, Lasting Impact', definition: 'A single negotiation moment whose effect persists across an entire career.' }
+            ],
+            hintText: "One term is about the STARTING POINT itself, one is a small COST worth weighing, and one is the LASTING scale of the decision.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'nc_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A starting salary gap between two otherwise similar careers tends to shrink over time as both people get raises.",
+            isTrue: false,
+            explanation: "False. With identical percentage-based raises, the original dollar gap actually grows larger over time, not smaller, the same mechanism as compound interest.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'nc_myth1', type: 'mythcards', title: 'Negotiating Compounds: True or False',
+            cards: [
+              { myth: "A small starting salary difference is basically irrelevant over a multi-decade career.", isTrue: false, explanation: "Under identical percentage-based raises, a small starting gap actually compounds into a meaningfully larger one over time." },
+              { myth: "Negotiating a first offer mainly affects that one paycheck, not future raises.", isTrue: false, explanation: "It affects the BASE every future percentage raise is calculated from, which is exactly why it compounds forward." },
+              { myth: "The same compounding math that grows an early salary gap also applies to early investing.", isTrue: true, explanation: "True, it's the identical mechanism, a percentage rate applied repeatedly to a starting amount, whether that's salary or savings." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'nc_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
+            hintTexts: [
+              "Think about the biggest mistake new grads make right after receiving a job offer.",
+              "Think about the most effective way to approach negotiating a first salary."
+            ]
+          },
+          {
+            id: 'nc_t3', type: 'teach', title: 'Small Moments, Long Reach',
+            concepts: [
+              {
+                term: 'The Long Reach of a Small Ask',
+                plain: "Negotiating a first offer feels like a small, single moment, but because it sets the base for every future percentage raise, its effect reaches across an entire career, not just one paycheck. That's exactly why it's worth the brief discomfort of asking.",
+                analogy: "It's like the first domino in a long line, small on its own, but everything after it is shaped by where it lands.",
+                check: { statement: "The effect of negotiating a first salary offer is generally limited to that specific paycheck alone.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'nc_boss', type: 'bossbattle', title: 'The Second Offer, Years Later',
+            scenario: "Ten years into a career, Hammy is offered a new role paying meaningfully more than the current salary, and remembers skipping the very first negotiation years ago.",
+            hintText: "Remember The Long Reach of a Small Ask: is it too late to apply the same lesson now?",
+            choices: [
+              { id: 'a', label: "Negotiate this offer too, applying the same lesson a decade later", consequence: { text: "It's never too late for the base effect to matter, this negotiation compounds forward from here, exactly the same mechanism as before.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Accept whatever's offered without negotiating, assuming the moment for that already passed years ago", consequence: { text: "The same base effect that mattered at the first job applies just as much here, this decision compounds forward for the rest of the career too.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Negotiate aggressively without any research to back up the ask", consequence: { text: "The instinct to negotiate is right, but without market research behind it, the ask is less likely to land as effectively as it could.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'd', label: "Research market rates for the role first, then send a well-supported counter-offer", consequence: { text: "A well-prepared negotiation, a decade of hindsight applied well, sets an even stronger base for the rest of the career from here.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -13022,10 +13622,134 @@ const MODULES = [
         topic: 'Starting Your First Job: What to Expect in the First 90 Days',
         character: { name: 'Hammy', tagline: 'Starting a first full-time job' },
         initialState: {},
+        bossAchievementId: 'first_90_days_planned',
         chapters: [
-          { id: 'first_90_days_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'nd0', type: 'story', title: 'A Stack of Onboarding Forms',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Starting Your First Job: What to Expect in the First 90 Days." }
+              { speaker: 'intro', text: "Hammy's first day at a new full-time job comes with a huge stack of onboarding paperwork, benefits enrollment, direct deposit, retirement plan sign-up, all due at once." },
+              { speaker: 'Hammy', text: '"I\'ll just click through all of this quickly and figure out the details later."' },
+              { speaker: 'narrator', text: "Some of these forms genuinely can wait. A few of them have real deadlines that quietly cost money if missed." },
+              { speaker: 'Hammy', text: '"Wait, some of this stuff has an actual deadline? Which parts matter most?"' }
+            ]
+          },
+          {
+            id: 'nd_t1', type: 'teach', title: 'Benefits Enrollment Windows Are Real Deadlines',
+            concepts: [
+              {
+                term: 'Enrollment Window',
+                plain: "Health insurance and other benefits typically have a specific enrollment window, often 30 days from the start date, after which enrollment locks until the next open enrollment period, sometimes almost a year later. Missing it isn't a small inconvenience, it can mean going without coverage for months.",
+                analogy: "It's like a boarding window for a flight, miss it, and there's no quick do-over, just a long wait for the next one.",
+                check: { statement: "Missing a benefits enrollment window typically has no real consequence, since it can be done anytime.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'nd_t2', type: 'teach', title: 'The 401(k) Match Starts With Enrollment',
+            concepts: [
+              {
+                term: 'Enrolling Early Captures the Match Sooner',
+                plain: "A 401(k) match only applies to contributions actually made, delaying enrollment by even a few paychecks means missing out on real matched money during that gap. Unlike some other paperwork, there's no real reason to put this one off.",
+                analogy: "It's like a coupon that only works starting the day it's activated, delaying activation just means missing out on the earlier savings.",
+                check: { statement: "Delaying 401(k) enrollment by a few paychecks has no real cost, since the match will apply retroactively.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'nd_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Enrollment Window', definition: 'A limited time frame to sign up for benefits, often 30 days from the start date.' },
+              { term: 'Enrolling Early', definition: 'Signing up for a 401(k) match promptly to avoid missing matched contributions.' },
+              { term: 'Open Enrollment', definition: "The next available window if the initial enrollment period is missed, often months later." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'nd_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: it's completely normal to ask HR or a manager directly which onboarding items have real deadlines versus which can be revisited later, nobody expects a first-day hire to instinctively know this, and asking beats guessing wrong on something with a real cost.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'nd_spot1', type: 'spotcheck', title: 'Spot What Actually Has a Deadline',
+            intro: "Here's Hammy's onboarding checklist. Tap anything that has a real, time-sensitive deadline worth prioritizing in the first few weeks, then hit Continue to see what you caught.",
+            postingTitle: "First-Day Onboarding Checklist",
+            segments: [
+              { id: 's1', text: "Health insurance enrollment — due within 30 days of the start date. ", isRedFlag: true, explanation: "A real, hard deadline, missing it can mean waiting months for the next open enrollment." },
+              { id: 's2', text: "401(k) enrollment — no strict deadline, but every delayed paycheck misses the employer match. ", isRedFlag: true, explanation: "Not a hard cutoff, but a real, ongoing cost to delaying, worth prioritizing early." },
+              { id: 's3', text: "Updating an emergency contact in the HR system. ", isRedFlag: false, explanation: "Worth doing, but no real time pressure attached to this one." },
+              { id: 's4', text: "Direct deposit setup — needed before the first paycheck, but no complex enrollment window involved. ", isRedFlag: false, explanation: "Important to complete, but straightforward and low-risk if handled within the first week or so, not a complex deadline like the others." },
+              { id: 's5', text: "Choosing a company email signature template. ", isRedFlag: false, explanation: "Purely cosmetic, no financial or coverage consequence at all." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'nd_d1', type: 'decision',
+            title: "Prioritizing the Stack",
+            prompt: "Hammy has limited time in the first week and a stack of onboarding items to get through.",
+            hintText: "Think back to Enrollment Window: which items actually have a ticking clock attached?",
+            choices: [
+              { id: 'a', label: 'Work through the stack in whatever order it was handed over', outcome: { text: "The health insurance and 401(k) items, the two with real time-sensitive costs, might not get the priority they actually need.", delta: {}, compare: [{ label: 'Time-sensitive items prioritized', value: 0 }, { label: 'Time-sensitive items in stack', value: 2 }] } },
+              { id: 'b', label: 'Sort the stack by which items have real deadlines first', outcome: { text: "Health insurance and 401(k) enrollment get handled promptly, the cosmetic and low-risk items can genuinely wait.", delta: {}, compare: [{ label: 'Time-sensitive items prioritized', value: 2 }, { label: 'Time-sensitive items in stack', value: 2 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'nd_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Asking HR Directly', definition: 'A normal, expected way to clarify which onboarding items have real deadlines.' },
+              { term: 'Cosmetic Task', definition: 'An onboarding item with no real financial or coverage consequence.' },
+              { term: 'Prioritizing by Deadline', definition: 'Sorting onboarding tasks by which ones actually have time pressure.' }
+            ],
+            hintText: "One term is a NORMAL question to ask, one is a task with NO real stakes, and one is the STRATEGY for the whole stack.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'nd_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "All onboarding paperwork at a new job carries roughly the same level of urgency.",
+            isTrue: false,
+            explanation: "False. Benefits enrollment and 401(k) sign-up carry real, time-sensitive costs if delayed, while many other onboarding items can genuinely wait.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'nd_myth1', type: 'mythcards', title: 'The First 90 Days: True or False',
+            cards: [
+              { myth: "Missing a health insurance enrollment window can mean waiting months for the next opportunity to enroll.", isTrue: true, explanation: "True, that's exactly why it's one of the higher-priority items in a new-hire's first weeks." },
+              { myth: "Asking HR which onboarding items are time-sensitive is an unusual or awkward question for a new hire to ask.", isTrue: false, explanation: "It's a completely normal, expected question, HR fields it regularly from new employees." },
+              { myth: "Delaying 401(k) enrollment by a couple months has zero actual cost.", isTrue: false, explanation: "Every paycheck without enrollment misses out on the employer match for that period, a real, if modest, ongoing cost." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'nd_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [3, 8],
+            hintTexts: [
+              "Think about what's actually being missed by not contributing to a 401(k) with an employer match.",
+              "Think about what should be understood before valuing a stock options offer."
+            ]
+          },
+          {
+            id: 'nd_t3', type: 'teach', title: 'Sort the Stack, Don\'t Just Work Through It',
+            concepts: [
+              {
+                term: 'Deadline-First Sorting',
+                plain: "A big stack of onboarding paperwork feels equally urgent at first glance, but a quick sort into \"has a real deadline\" versus \"can wait\" turns an overwhelming pile into a manageable, correctly-prioritized list within the first week.",
+                analogy: "It's like triaging a to-do list by actual due date instead of tackling it top to bottom in whatever order it arrived.",
+                check: { statement: "Sorting onboarding tasks by actual deadline is more effective than completing them in whatever order they're received.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'nd_boss', type: 'bossbattle', title: 'The Missed Reminder',
+            scenario: "Three weeks in, Hammy realizes the 30-day health insurance enrollment window is closing in two days, having been buried under other, less urgent onboarding tasks.",
+            hintText: "Remember Deadline-First Sorting: is there still time to fix this, and how?",
+            choices: [
+              { id: 'a', label: "Complete the health insurance enrollment immediately, today, before anything else", consequence: { text: "With two days still on the clock, acting immediately secures coverage well before the window actually closes.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Finish the other, less urgent onboarding tasks first since they're already in progress", consequence: { text: "This risks running out the two remaining days on the one task that actually has a hard deadline attached.", delta: {}, xpMultiplier: 0.5 } },
+              { id: 'c', label: "Contact HR right away to confirm the exact deadline and complete the enrollment", consequence: { text: "A careful, well-informed move, confirming the precise deadline while still acting with real urgency.", delta: {}, xpMultiplier: 1.2 } },
+              { id: 'd', label: "Assume there's likely some flexibility on the deadline and handle it next week", consequence: { text: "Enrollment windows are often firm, assuming flexibility that may not exist risks missing coverage entirely.", delta: {}, xpMultiplier: 0.6 } }
             ]
           }
         ]
