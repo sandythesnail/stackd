@@ -4857,10 +4857,134 @@ const MODULES = [
         topic: 'Index Funds & Diversification',
         character: { name: 'Hammy', tagline: 'Picking a first investment' },
         initialState: {},
+        bossAchievementId: 'diversified_thinker',
         chapters: [
-          { id: 'index_funds_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'if0', type: 'story', title: 'The Hot Tip',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Index Funds & Diversification." }
+              { speaker: 'intro', text: "Hammy has $500 ready to invest. A friend texts: \"put it ALL into this one stock, it's about to blow up, trust me.\"" },
+              { speaker: 'Hammy', text: '"They seemed really confident about it though."' },
+              { speaker: 'narrator', text: "Confidence isn't the same as being right, and putting everything into one company is a very different bet than it sounds like." },
+              { speaker: 'Hammy', text: '"Okay, what\'s actually risky about it? It\'s just one investment."' }
+            ]
+          },
+          {
+            id: 'if_t1', type: 'teach', title: 'What Diversification Actually Means',
+            concepts: [
+              {
+                term: 'Diversification',
+                plain: "Diversification means spreading money across many different investments instead of concentrating it in one. If one company struggles, it's a small piece of a much bigger picture, not the whole picture.",
+                analogy: "It's like not putting all your eggs in one basket, drop that basket, and everything's gone.",
+                check: { statement: "Diversification means putting more money into the single investment you're most confident about.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'if_t2', type: 'teach', title: 'What an Index Fund Actually Is',
+            concepts: [
+              {
+                term: 'Index Fund',
+                plain: "An index fund is a single investment that automatically holds a slice of hundreds (or thousands) of companies at once, tracking a market index like the S&P 500. Buying one share instantly diversifies across the whole index, no need to research and pick individual companies.",
+                analogy: "It's like buying a pre-made variety pack instead of picking one flavor and hoping it's the best one.",
+                check: { statement: "An index fund requires picking which individual companies will perform best.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'if_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Diversification', definition: 'Spreading money across many investments instead of one.' },
+              { term: 'Index Fund', definition: 'A single fund that holds a slice of hundreds of companies at once.' },
+              { term: 'Concentration Risk', definition: "The risk of one company's struggles wiping out a large share of your money." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'if_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: index funds also tend to have very low fees, since there's no team of analysts picking stocks, just automatically tracking the index. Lower fees mean more of the actual return stays in your account instead of going to management costs.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'if_spot1', type: 'spotcheck', title: 'Spot the Red Flags in the Hot Tip',
+            intro: "Here's the full message Hammy's friend sent about the \"can't miss\" stock. Tap anything that's actually a warning sign, then hit Continue to see what you caught.",
+            postingTitle: "Text From a Friend",
+            segments: [
+              { id: 's1', text: "Yo, put your whole $500 into this one stock, ", isRedFlag: true, explanation: "Recommending 100% of available money into one single company is a concentration risk red flag, regardless of how good the pick sounds." },
+              { id: 's2', text: "it's up 40% this month already ", isRedFlag: true, explanation: "A recent hot streak isn't a reliable predictor of future performance, chasing what already went up is a common, costly mistake." },
+              { id: 's3', text: "my cousin works there and says it's about to blow up even more. ", isRedFlag: true, explanation: "Acting on a friend-of-a-friend tip, without any actual research, is exactly how a lot of money gets lost on hype alone." },
+              { id: 's4', text: "You should probably act fast before the price goes up more. ", isRedFlag: true, explanation: "Urgency pressure (\"act fast\") is a classic tactic that discourages actually thinking it through." },
+              { id: 's5', text: "Anyway let me know if you want the ticker symbol.", isRedFlag: false, explanation: "A neutral, harmless offer on its own, the red flags are everything that came before it." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'if_d1', type: 'decision',
+            title: "The $500 Decision",
+            prompt: "Hammy still has the $500 ready to invest. What's the smarter first move?",
+            hintText: "Think back to Concentration Risk: what happens if the \"can't miss\" stock actually misses?",
+            choices: [
+              { id: 'a', label: "Put the full $500 into the hot tip stock", outcome: { text: "If the stock drops, the entire $500 drops with it, no other holdings to soften the blow.", delta: {}, compare: [{ label: 'Companies exposed to', value: 1 }, { label: 'Companies in an index fund', value: 500 }] } },
+              { id: 'b', label: "Put the $500 into a broad index fund instead", outcome: { text: "The $500 is now spread across hundreds of companies, one company's bad news barely moves the total.", delta: {}, compare: [{ label: 'Companies exposed to', value: 500 }, { label: 'Companies in the single stock', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'if_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Chasing Performance', definition: 'Investing based on what already went up recently, not a reliable strategy.' },
+              { term: 'Low Fees', definition: 'A common advantage of index funds versus actively managed alternatives.' },
+              { term: 'Manufactured Urgency', definition: 'Pressure to "act fast" that discourages actually researching a decision.' }
+            ],
+            hintText: "One term is about following past WINNERS, one is a COST advantage, and one is a PRESSURE tactic.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'if_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A stock that performed the best last year is generally a safe bet to keep performing best going forward.",
+            isTrue: false,
+            explanation: "False. Past performance doesn't reliably predict future results, a stock that had a great year can just as easily underperform the next one.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'if_myth1', type: 'mythcards', title: 'Index Funds: True or False',
+            cards: [
+              { myth: "Buying a single index fund automatically diversifies across hundreds of companies.", isTrue: true, explanation: "True, that's the entire structure of an index fund, one purchase spread across the whole underlying index." },
+              { myth: "Picking individual stocks always outperforms index funds over the long run.", isTrue: false, explanation: "Historically, most actively managed and individually picked portfolios underperform broad index funds over long time horizons." },
+              { myth: "A friend's confident tip about a stock is a reliable substitute for actual research.", isTrue: false, explanation: "Confidence isn't evidence, a tip based on hype rather than research carries real risk, no matter how sure the person sounds." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'if_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [3, 5],
+            hintTexts: [
+              "Think about what an index fund actually holds, and why that's recommended for beginners.",
+              "Think about what happens if all your money goes into just one company."
+            ]
+          },
+          {
+            id: 'if_t3', type: 'teach', title: 'Boring Often Wins',
+            concepts: [
+              {
+                term: 'Boring, Broad, and Consistent',
+                plain: "A broad index fund isn't exciting, no big win-big story to tell. But consistently investing in something diversified and low-cost tends to outperform chasing individual hot tips over the long run, precisely because it doesn't depend on any one company's story working out.",
+                analogy: "It's like a reliable daily commute versus gambling on a shortcut that might save time, or might not exist at all.",
+                check: { statement: "An exciting, high-conviction single stock is generally the recommended starting point for a beginner investor.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'if_boss', type: 'bossbattle', title: 'The Second Hot Tip',
+            scenario: "A month after choosing an index fund, the same friend texts again: a NEW stock, even more confident this time, \"this one's guaranteed.\" Hammy has another $300 ready to invest.",
+            hintText: "Remember Boring, Broad, and Consistent: has anything about the underlying risk of a single-stock bet actually changed?",
+            choices: [
+              { id: 'a', label: "Add the $300 to the existing index fund instead", consequence: { text: "The diversified approach keeps compounding, no single company's story determines the outcome.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Put the $300 into the new hot tip, this time feels different", consequence: { text: "It's the exact same concentration risk as before, just with a new company's name attached to it.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Split it, most into the index fund, a small amount into the tip as a controlled experiment", consequence: { text: "A reasonable middle ground, most of the money stays protected while a small amount tests the idea.", delta: {}, xpMultiplier: 1.05 } },
+              { id: 'd', label: "Do actual research on the new stock before deciding either way", consequence: { text: "A more informed decision either way, though research alone doesn't remove the concentration risk if the money still goes all-in.", delta: {}, xpMultiplier: 0.95 } }
             ]
           }
         ]
@@ -4870,10 +4994,138 @@ const MODULES = [
         topic: 'Contribution Limits & Where to Save First',
         character: { name: 'Hammy', tagline: 'Deciding where extra money should go first' },
         initialState: {},
+        bossAchievementId: 'order_of_operations',
         chapters: [
-          { id: 'contribution_limits_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'cl0', type: 'story', title: 'Two Accounts, One Paycheck',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Contribution Limits & Where to Save First." }
+              { speaker: 'intro', text: "Hammy's campus job offers a 403(b) with a 3% employer match, and Hammy is also eligible for a Roth IRA. There's only enough extra money to fully fund one of them this month." },
+              { speaker: 'Hammy', text: '"They both sound good. Does it actually matter which one I pick first?"' },
+              { speaker: 'narrator', text: "It does, one of these two options hands over free money immediately, guaranteed, the moment Hammy contributes." },
+              { speaker: 'Hammy', text: '"Free money? Okay, now I\'m paying attention."' }
+            ]
+          },
+          {
+            id: 'cl_t1', type: 'teach', title: 'Capture the Match First',
+            concepts: [
+              {
+                term: 'Employer Match',
+                plain: "A 3% employer match means the employer adds 3% of your pay to your 403(b), but ONLY if you contribute enough yourself to trigger it. Not contributing enough to get the full match means leaving free, guaranteed money on the table.",
+                analogy: "It's like a store offering to double your purchase for free, up to a limit, not claiming it means walking away from money that was already yours to take.",
+                check: { statement: "An employer match is added automatically, regardless of how much the employee personally contributes.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'cl_t2', type: 'teach', title: 'Then the Roth IRA',
+            concepts: [
+              {
+                term: 'The Order That Wins',
+                plain: "The typical smart order: contribute enough to the 403(b)/401(k) to capture the FULL match first (guaranteed, immediate return), then put additional money into a Roth IRA up to its annual limit, then go back to the 403(b) for anything beyond that.",
+                analogy: "It's like collecting a guaranteed coupon before shopping around for the next best deal, grab the sure thing first.",
+                check: { statement: "The Roth IRA should generally be maxed out before capturing any employer match.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cl_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Employer Match', definition: "Free money added to a 403(b)/401(k), only if enough is contributed to trigger it." },
+              { term: 'The Order That Wins', definition: 'Capture the full match first, then fund a Roth IRA, then go back if more is available.' },
+              { term: 'Leaving Money on the Table', definition: "Contributing too little to capture the full employer match." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cl_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: check the exact match formula, some employers match dollar-for-dollar up to a percentage, others match 50 cents per dollar. Knowing the exact formula is the only way to know exactly how much needs to be contributed to capture the FULL match, not just some of it.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'cl_ms1', type: 'microsim', title: "Splitting a $150 Contribution",
+            prompt: "Hammy has $150 extra this month. Contributing $100 to the 403(b) captures the full 3% match. Decide how to split the $150 between the 403(b) and the Roth IRA.",
+            hintText: "Aim for at least $100 toward the 403(b) first, that's what triggers the full employer match, before putting the rest toward the Roth.",
+            income: 150,
+            fixedCosts: [],
+            sliders: [
+              { id: 'to403b', label: 'To 403(b)', min: 0, max: 150, step: 10, default: 0 },
+              { id: 'toRoth', label: 'To Roth IRA', min: 0, max: 150, step: 10, default: 150 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That splits more than the $150 available. Try smaller amounts.", ok: false },
+              { maxLeftover: 149, text: "Double check: does this split actually reach the $100 needed to capture the full match?", ok: true },
+              { maxLeftover: Infinity, text: "A thoughtful split that keeps the full match in view while still building the Roth.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'cl_d1', type: 'decision',
+            title: "The Tempting Shortcut",
+            prompt: "A friend suggests skipping the 403(b) entirely and putting everything into the Roth IRA instead, since Roth withdrawals in retirement are tax-free.",
+            hintText: "Think back to Employer Match: does a Roth IRA's tax treatment replace a guaranteed match?",
+            choices: [
+              { id: 'a', label: 'Skip the 403(b) and put it all into the Roth IRA', outcome: { text: "The Roth grows tax-free, but the guaranteed 3% match, free money with zero investment risk, goes completely unclaimed.", delta: {}, compare: [{ label: 'Match captured', value: 0 }, { label: 'Match available', value: 1 }] } },
+              { id: 'b', label: 'Contribute enough to the 403(b) to capture the match, then fund the Roth', outcome: { text: "Both accounts get funded, and the free match money is captured before anything else.", delta: {}, compare: [{ label: 'Match captured', value: 1 }, { label: 'Match available', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cl_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Match Formula', definition: 'The exact rate an employer matches, dollar-for-dollar or a partial rate.' },
+              { term: 'Roth IRA Limit', definition: "The annual cap on how much can be contributed to a Roth IRA." },
+              { term: 'Guaranteed Return', definition: 'An employer match, since it pays out immediately regardless of the market.' }
+            ],
+            hintText: "One term is a RATE, one is a CAP, and one is a return that\'s certain, not tied to the market.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'cl_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A Roth IRA's tax-free growth makes it a better first priority than capturing a guaranteed employer match.",
+            isTrue: false,
+            explanation: "False. An employer match is an immediate, guaranteed return with zero market risk, generally worth capturing in full before prioritizing anything else, tax-free growth included.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'cl_myth1', type: 'mythcards', title: 'Contribution Order: True or False',
+            cards: [
+              { myth: "An employer match is essentially a guaranteed, immediate return on whatever amount triggers it.", isTrue: true, explanation: "True, unlike market returns, an employer match is added the moment it's triggered, no risk of it going down." },
+              { myth: "Contributing $1 more than needed to trigger the full match provides extra matched money.", isTrue: false, explanation: "Once the full match is captured, additional contributions beyond that point aren't matched further, they're just regular contributions." },
+              { myth: "The smart contribution order can change once the Roth IRA's annual limit is reached.", isTrue: true, explanation: "True, once the Roth is maxed for the year, extra money can go back to the 403(b)/401(k) beyond just the matched portion." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'cl_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 9],
+            hintTexts: [
+              "Think about the current annual cap the IRS sets for Roth IRA contributions.",
+              "Think about which account offers a guaranteed, immediate return worth capturing first."
+            ]
+          },
+          {
+            id: 'cl_t3', type: 'teach', title: 'The Order Rarely Changes',
+            concepts: [
+              {
+                term: 'A Repeatable Formula',
+                plain: "This order of operations, match first, then Roth, then back to the 403(b), holds true at almost any income level early in a career. It's less a one-time decision and more a repeatable formula to apply every time extra money becomes available.",
+                analogy: "It's like a recipe that works the same way regardless of how much you're cooking, follow the steps in order, every time.",
+                check: { statement: "The match-first, then-Roth order of operations only applies once, not to future contribution decisions.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cl_boss', type: 'bossbattle', title: 'The Raise',
+            scenario: "Hammy gets a raise and now has an extra $200/month available. The 403(b) match is already fully captured, and the Roth IRA isn't yet maxed for the year.",
+            hintText: "Remember A Repeatable Formula: with the match already captured, what's next in line?",
+            choices: [
+              { id: 'a', label: "Put the extra $200 toward the Roth IRA until it's maxed for the year", consequence: { text: "With the match already secured, the Roth is exactly the next step in the formula.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Put it all back into the 403(b) beyond the match, skipping the Roth entirely", consequence: { text: "Not wrong exactly, but it skips ahead in the order, missing the Roth's tax-free growth in the meantime.", delta: {}, xpMultiplier: 0.75 } },
+              { id: 'c', label: "Leave the extra $200 sitting in checking undecided", consequence: { text: "The money sits idle, missing out on any growth at all while a decision gets put off.", delta: {}, xpMultiplier: 0.5 } },
+              { id: 'd', label: "Split it between the Roth IRA and an emergency fund top-up", consequence: { text: "A reasonable blend, balancing long-term growth with near-term safety, even if it's not the single fastest path to maxing the Roth.", delta: {}, xpMultiplier: 1.05 } }
             ]
           }
         ]
@@ -4883,10 +5135,129 @@ const MODULES = [
         topic: 'Risk, Time Horizon & Staying the Course',
         character: { name: 'Hammy', tagline: 'Watching the market dip for the first time' },
         initialState: {},
+        bossAchievementId: 'stayed_the_course',
         chapters: [
-          { id: 'risk_horizon_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'rh0', type: 'story', title: 'The First Dip',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Risk, Time Horizon & Staying the Course." }
+              { speaker: 'intro', text: "A month after Hammy starts investing, the market drops 15%. The account balance is suddenly smaller than what was put in." },
+              { speaker: 'Hammy', text: '"Should I sell before it drops even more? This feels bad."' },
+              { speaker: 'narrator', text: "Every investor feels this the first time. What happens next depends entirely on something most people forget to check: time horizon." },
+              { speaker: 'Hammy', text: '"Time horizon? I just want to know if I should sell or not."' }
+            ]
+          },
+          {
+            id: 'rh_t1', type: 'teach', title: 'Time Horizon Changes Everything',
+            concepts: [
+              {
+                term: 'Time Horizon',
+                plain: "Time horizon is how long money will stay invested before it's needed. A 19-year-old investing for retirement decades away has an entirely different time horizon than a 60-year-old retiring next year, even if they're looking at the exact same market drop.",
+                analogy: "It's like weather versus climate, a single storm matters a lot if you need to travel tomorrow, far less if you're planning for a season months away.",
+                check: { statement: "A market drop should generally trigger the exact same response for every investor, regardless of when they'll need the money.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'rh_t2', type: 'teach', title: 'A Drop on Paper Isn\'t a Loss Yet',
+            concepts: [
+              {
+                term: 'Unrealized vs. Realized Loss',
+                plain: "A market drop only becomes an actual, locked-in loss when the investment is SOLD at the lower price. Left alone, a drop is just a number on paper that historically has recovered, and grown, over long time horizons.",
+                analogy: "It's like a house's value dipping on paper, it's only a real loss if you actually sell at that lower price.",
+                check: { statement: "A market drop automatically becomes a permanent, locked-in loss the moment it happens.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'rh_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Time Horizon', definition: 'How long money will stay invested before it\'s actually needed.' },
+              { term: 'Unrealized Loss', definition: 'A drop that only exists on paper, not locked in until sold.' },
+              { term: 'Realized Loss', definition: 'A loss that becomes permanent the moment an investment is actually sold.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'rh_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: historically, the stock market has recovered from every single downturn it's ever had, given enough time. That doesn't guarantee the future, but it's exactly why a long time horizon changes how a dip should be treated.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'rh_price1', type: 'priceisright', title: 'The Price Is Right: The Cost of Selling the Dip',
+            prompt: "Hammy has $1,000 invested when the market drops 15% to $850. Panicking, Hammy sells everything, then the market fully recovers 6 months later. Guess how much Hammy missed out on compared to just staying invested.",
+            hintText: "If the market fully recovers back to the original level, think about the gap between selling at the bottom and the eventual recovered value.",
+            actualValue: 150, guessRange: { min: 0, max: 400, step: 25 },
+            explanation: "Selling at $850 locks in a real $150 loss. If the market fully recovers to $1,000, staying invested would have meant ending up right back where Hammy started, selling during the dip turned a paper dip into an actual $150 loss.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'rh_d1', type: 'decision',
+            title: "The Group Chat Panic",
+            prompt: "The market drops again, and a group chat full of friends is talking about pulling everything out \"before it gets worse.\" Hammy is 19, investing for retirement decades away.",
+            hintText: "Think back to Time Horizon: does Hammy's actual timeline match the panic in the group chat?",
+            choices: [
+              { id: 'a', label: 'Sell along with everyone else, better safe than sorry', outcome: { text: "The dip becomes a real, locked-in loss, right before markets historically tend to recover over the following years.", delta: {}, compare: [{ label: 'Loss locked in', value: 1 }, { label: 'Loss if held', value: 0 }] } },
+              { id: 'b', label: 'Stay invested, decades is plenty of time to ride this out', outcome: { text: "Nothing is sold, nothing is locked in, and the long time horizon does exactly what it's meant to do.", delta: {}, compare: [{ label: 'Loss locked in', value: 0 }, { label: 'Loss if held', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'rh_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Short Time Horizon', definition: 'Money needed soon, generally calling for lower-risk investments.' },
+              { term: 'Long Time Horizon', definition: 'Money not needed for decades, generally able to ride out short-term drops.' },
+              { term: 'Panic Selling', definition: "Selling during a downturn out of fear, locking in a loss that might have recovered." }
+            ],
+            hintText: "One term is a SHORT timeline, one is a LONG timeline, and one is the MISTAKE that ignores whichever one actually applies.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'rh_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Selling investments during a market drop is generally the safest move, regardless of when the money is actually needed.",
+            isTrue: false,
+            explanation: "False. For a long time horizon, selling during a drop is often what turns a temporary paper dip into a permanent, locked-in loss.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'rh_myth1', type: 'mythcards', title: 'Risk & Time Horizon: True or False',
+            cards: [
+              { myth: "A 60-year-old about to retire should generally have a different investment mix than a 19-year-old investing for decades.", isTrue: true, explanation: "True, a shorter time horizon generally calls for less risk, since there's less time to recover from a downturn before the money is needed." },
+              { myth: "A market drop is only a real loss once the investment is actually sold at the lower price.", isTrue: true, explanation: "True, until it's sold, a drop is unrealized, just a number on paper that can still recover." },
+              { myth: "Every investor should react to a market drop the exact same way, regardless of age or goals.", isTrue: false, explanation: "The right response depends heavily on time horizon, a one-size-fits-all reaction ignores that entirely." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'rh_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [7, 11],
+            hintTexts: [
+              "Think about how a 19-year-old's investment timeline compares to someone retiring soon.",
+              "Think about what typically happens to the market over a long enough period of time."
+            ]
+          },
+          {
+            id: 'rh_t3', type: 'teach', title: 'Match the Response to the Timeline',
+            concepts: [
+              {
+                term: 'Checking the Timeline First',
+                plain: "Before reacting to any market drop, the first question isn't \"how bad does this feel,\" it's \"when do I actually need this money?\" That single question determines whether staying the course or adjusting course is the smart move.",
+                analogy: "It's like checking the actual weather forecast before deciding whether to cancel a trip planned for next year, over-reacting to today's storm.",
+                check: { statement: "The right response to a market drop starts with checking how soon the money is actually needed.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'rh_boss', type: 'bossbattle', title: 'The Second Dip',
+            scenario: "A year into investing, the market drops 20%, worse than the first dip. Hammy stayed the course last time and it worked out, but this drop feels bigger and scarier.",
+            hintText: "Remember Checking the Timeline First: has anything about Hammy's actual time horizon changed since the first dip?",
+            choices: [
+              { id: 'a', label: "Check the timeline again, it's unchanged, so stay invested exactly as before", consequence: { text: "The size of the drop feels different, but the timeline, the thing that actually matters, hasn't changed at all.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Sell this time, since the drop is bigger than the last one", consequence: { text: "A bigger-feeling drop doesn't change the math, this locks in a real loss right as the timeline still says stay invested.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Sell half to feel safer, keep the rest invested", consequence: { text: "A partial reaction to fear, not to any actual change in the timeline, still locks in a real loss on the half that's sold.", delta: {}, xpMultiplier: 0.8 } },
+              { id: 'd', label: "Use the dip as an opportunity to invest a bit more, since prices are temporarily lower", consequence: { text: "A more advanced move that fits a long time horizon well, buying at lower prices when the timeline supports staying in for the long haul.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -4896,10 +5267,129 @@ const MODULES = [
         topic: 'Getting Started With Very Little Money',
         character: { name: 'Hammy', tagline: 'Starting to invest with not much to spare' },
         initialState: {},
+        bossAchievementId: 'started_small',
         chapters: [
-          { id: 'start_small_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ss0', type: 'story', title: '"I\'ll Start Once I Have More"',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Getting Started With Very Little Money." }
+              { speaker: 'intro', text: "Hammy only has $25/month to spare and figures it's not even worth starting to invest until there's a bigger amount saved up." },
+              { speaker: 'Hammy', text: '"$25 a month seems too small to matter. I\'ll wait until I have like $2,000 to start with."' },
+              { speaker: 'narrator', text: "That wait has a real cost, and it's not the $25, it's the time itself." },
+              { speaker: 'Hammy', text: '"Time? I\'m not losing money by waiting, I\'m just... not starting yet."' }
+            ]
+          },
+          {
+            id: 'ss_t1', type: 'teach', title: 'Time in the Market Beats a Bigger Starting Amount',
+            concepts: [
+              {
+                term: 'Time Beats Timing the Amount',
+                plain: "Because of compounding, an extra 10 years invested tends to matter more than starting with a bigger initial amount. A smaller amount invested NOW has more years to grow than a bigger amount invested later.",
+                analogy: "It's like planting a small tree today versus a bigger one years from now, the small one has a head start on all that growing time.",
+                check: { statement: "Waiting to invest until a larger amount is saved up is generally the more effective strategy.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ss_t2', type: 'teach', title: 'Most Accounts Have No Minimum',
+            concepts: [
+              {
+                term: 'No Minimum Required',
+                plain: "Many brokerage and retirement accounts today have no minimum balance to open, and index funds can often be bought in small, even fractional, amounts. The \"need a big lump sum to start\" idea is largely outdated.",
+                analogy: "It's like assuming a gym requires an expensive membership when a free trial already exists, checking the actual requirement usually reveals a much lower bar.",
+                check: { statement: "Most modern investment accounts require a large minimum balance just to open one.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ss_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Time Beats Timing the Amount', definition: "Starting small now tends to outgrow starting bigger, but later." },
+              { term: 'No Minimum Required', definition: 'Most accounts today can be opened and funded with small amounts.' },
+              { term: 'Fractional Shares', definition: "Buying a small slice of a share instead of needing the full share price." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ss_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: many brokerages let you set up an automatic recurring investment, the same \"pay yourself first\" idea as automating savings, just applied to investing instead. $25/month on autopilot removes the need to remember, or decide, every single month.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ss_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why does starting with $25/month right now generally beat waiting until you've saved up $2,000 to start investing?",
+            keywords: ['time', 'compound', 'years', 'earlier', 'growth'],
+            fullDefinition: "Because the years spent waiting are years that can never be recovered. Compounding rewards time more than it rewards the size of the starting amount, a smaller amount invested now has more years to grow than a bigger amount invested years later, even if the later amount is much larger to start.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'ss_d1', type: 'decision',
+            title: "The Waiting Game",
+            prompt: "Hammy could start investing $25/month today, or wait 3 years to have a bigger $100/month to start with instead.",
+            hintText: "Think back to Time Beats Timing the Amount: which actually matters more, the monthly amount or the years invested?",
+            choices: [
+              { id: 'a', label: 'Wait 3 years, then start with the bigger $100/month', outcome: { text: "Three full years of potential growth are gone for good, never recoverable no matter how much gets invested later.", delta: {}, compare: [{ label: 'Years invested by 30', value: 7 }, { label: 'Years invested if started now', value: 10 }] } },
+              { id: 'b', label: 'Start with $25/month right now', outcome: { text: "Three extra years of compounding start working immediately, even at a smaller monthly amount.", delta: {}, compare: [{ label: 'Years invested by 30', value: 10 }, { label: 'Years invested if waited', value: 7 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ss_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Automatic Recurring Investment', definition: 'A scheduled, ongoing investment that happens without manual action.' },
+              { term: 'Lost Time', definition: 'Years spent waiting to start, which can never be made up later.' },
+              { term: 'Starting Small', definition: 'Beginning to invest with whatever amount is available now, not waiting for more.' }
+            ],
+            hintText: "One term is a HABIT, one is what\'s actually LOST by waiting, and one is the STRATEGY this quest is about.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ss_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A small monthly investment, like $25, is basically pointless compared to waiting to invest a much bigger amount.",
+            isTrue: false,
+            explanation: "False. Time invested matters enormously due to compounding, a small amount started early frequently outgrows a bigger amount started later.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ss_myth1', type: 'mythcards', title: 'Starting Small: True or False',
+            cards: [
+              { myth: "Most brokerage accounts require a large minimum deposit to open.", isTrue: false, explanation: "Many modern brokerages have no minimum at all, and support small, even fractional, investment amounts." },
+              { myth: "The years spent waiting to invest can be made up later by investing a larger amount.", isTrue: false, explanation: "A bigger later amount can add money, but it can't buy back the specific years of compounding growth that were skipped." },
+              { myth: "An automatic recurring investment can start at a small amount and increase later.", isTrue: true, explanation: "True, just like automating savings, the amount can be raised over time as it becomes comfortable." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ss_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [8, 10],
+            hintTexts: [
+              "Think about what's actually lost by waiting to start investing.",
+              "Think about the risk of only investing in whatever performed best last year."
+            ]
+          },
+          {
+            id: 'ss_t3', type: 'teach', title: 'Start Now, Adjust Later',
+            concepts: [
+              {
+                term: 'Imperfect but Started',
+                plain: "A small, imperfect investing plan that actually starts today beats a perfect plan that keeps getting postponed. The amount can always be adjusted later, the years already spent invested cannot be recovered once they're gone.",
+                analogy: "It's like starting a workout routine today at a beginner level, versus waiting for the \"perfect\" plan that never actually begins.",
+                check: { statement: "A small investing plan started today is generally better than a bigger plan that keeps getting delayed.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ss_boss', type: 'bossbattle', title: 'The First Paycheck Bump',
+            scenario: "Hammy gets a small raise and now has $60/month available instead of $25. A friend suggests waiting a few more months to \"see how the raise settles\" before starting to invest any of it.",
+            hintText: "Remember Imperfect but Started: does waiting a few more months actually improve the plan, or just delay it further?",
+            choices: [
+              { id: 'a', label: "Start investing the $60/month right away", consequence: { text: "The extra months of compounding start immediately, with no real downside to acting now.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Wait a few months to \"see how it settles\" before starting", consequence: { text: "A few more months of lost time, for no real benefit, the raise was already known and stable.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'c', label: "Start with $30/month now, and increase to $60 once comfortable", consequence: { text: "A reasonable phased approach that still starts the clock running immediately, just more conservatively.", delta: {}, xpMultiplier: 1.1 } },
+              { id: 'd', label: "Put the full $60 toward a sinking fund instead of investing any of it", consequence: { text: "Not a bad instinct for a near-term goal, but it skips the specific opportunity to grow long-term investments with the extra income.", delta: {}, xpMultiplier: 0.85 } }
             ]
           }
         ]
@@ -4909,10 +5399,129 @@ const MODULES = [
         topic: '401(k)s & Employer Matches: Free Money on the Table',
         character: { name: 'Hammy', tagline: 'Signing up for a workplace retirement plan' },
         initialState: {},
+        bossAchievementId: 'match_captured',
         chapters: [
-          { id: '401k_match_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'fm0', type: 'story', title: 'The Enrollment Form',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on 401(k)s & Employer Matches: Free Money on the Table." }
+              { speaker: 'intro', text: "Hammy's new job hands over a 401(k) enrollment form with a default contribution rate of 1%. The employer matches dollar-for-dollar up to 3%. Hammy almost signs the default without reading closely." },
+              { speaker: 'Hammy', text: '"1% seems fine, it\'s already something, right?"' },
+              { speaker: 'narrator', text: "It's something, but it's leaving real, guaranteed money sitting there unclaimed, on purpose, by accident." },
+              { speaker: 'Hammy', text: '"Wait, unclaimed how? I\'m still contributing."' }
+            ]
+          },
+          {
+            id: 'fm_t1', type: 'teach', title: 'The Default Isn\'t Always the Smart Number',
+            concepts: [
+              {
+                term: 'Default Contribution Rate',
+                plain: "Many employers set a low default contribution rate, often 1-3%, just to get new employees enrolled in something. That default has nothing to do with the actual match formula, checking the ACTUAL match percentage is what determines the smart contribution rate.",
+                analogy: "It's like a default tip amount on a receipt, convenient, but not necessarily the number that actually makes sense for the situation.",
+                check: { statement: "A 401(k)'s default contribution rate is always set to exactly match the full employer match.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'fm_t2', type: 'teach', title: 'What "Dollar-for-Dollar Up to 3%" Means',
+            concepts: [
+              {
+                term: 'Match Formula',
+                plain: "\"Dollar-for-dollar up to 3%\" means the employer adds $1 for every $1 Hammy contributes, up to 3% of pay. Contributing only 1% means only 1% gets matched, the other 2% of potential free money simply never gets triggered.",
+                analogy: "It's like a store matching every dollar spent, up to a limit, spending less than the limit means leaving part of the match unclaimed, not saving money.",
+                check: { statement: "Contributing 1% when the match goes up to 3% still captures the full match.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fm_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Default Contribution Rate', definition: 'A preset rate on enrollment, not necessarily tied to the actual match.' },
+              { term: 'Match Formula', definition: 'The exact rate an employer matches contributions, e.g. dollar-for-dollar up to 3%.' },
+              { term: 'Unclaimed Match', definition: "Free employer money left uncaptured by contributing below the match threshold." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'fm_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: check for a vesting schedule too, some employers require staying a certain number of years before the MATCHED portion (not your own contributions) is fully yours to keep if you leave. Worth knowing, though it doesn't change the case for capturing the match while employed.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'fm_price1', type: 'priceisright', title: 'The Price Is Right: A Year of Unclaimed Match',
+            prompt: "Hammy earns $18,000/year and contributes only 1% instead of the full 3% match. Guess how much free employer match money goes unclaimed over the year.",
+            hintText: "The gap is 2% of $18,000, the portion of the match Hammy never triggers.",
+            actualValue: 360, guessRange: { min: 0, max: 900, step: 30 },
+            explanation: "2% of $18,000 = $360 in free employer money left unclaimed for the year, simply by contributing below the match threshold. Over several years at a job, that unclaimed amount adds up fast.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'fm_d1', type: 'decision',
+            title: "Adjusting the Rate",
+            prompt: "Hammy realizes the default 1% leaves match money unclaimed. What's the smart next step?",
+            hintText: "Think back to Match Formula: what contribution rate actually captures the FULL 3% match?",
+            choices: [
+              { id: 'a', label: 'Leave it at the default 1% since the form is already submitted', outcome: { text: "The unclaimed 2% match keeps going unclaimed, every single pay period, for as long as the rate stays at 1%.", delta: {}, compare: [{ label: 'Match captured', value: 1 }, { label: 'Match available', value: 3 }] } },
+              { id: 'b', label: 'Log into the benefits portal and change the contribution rate to 3%', outcome: { text: "A five-minute change captures the full match going forward, no more free money left on the table.", delta: {}, compare: [{ label: 'Match captured', value: 3 }, { label: 'Match available', value: 3 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'fm_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Vesting Schedule', definition: 'A required time period before matched funds are fully owned if you leave.' },
+              { term: 'Benefits Portal', definition: 'Where a contribution rate can typically be checked and changed.' },
+              { term: 'Guaranteed Return', definition: 'What an employer match effectively is, immediate and certain, unlike market returns.' }
+            ],
+            hintText: "One term is about OWNERSHIP timing, one is WHERE to make a change, and one describes WHY the match matters so much.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'fm_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A 401(k)'s default contribution rate is generally set to automatically capture the full employer match.",
+            isTrue: false,
+            explanation: "False. Defaults are often set low just to get people enrolled in something, they rarely happen to line up with the actual match threshold.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'fm_myth1', type: 'mythcards', title: '401(k) Match: True or False',
+            cards: [
+              { myth: "Checking the exact match formula is the only way to know the contribution rate that captures the full match.", isTrue: true, explanation: "True, match formulas vary by employer, assuming a rate without checking risks leaving money unclaimed." },
+              { myth: "An employer match is riskier than a typical market investment.", isTrue: false, explanation: "The match itself is added immediately and guaranteed, unlike market returns which fluctuate, it's about as risk-free a return as exists." },
+              { myth: "A contribution rate, once set during enrollment, can never be changed later.", isTrue: false, explanation: "Contribution rates can almost always be adjusted anytime through the benefits portal, not locked in at enrollment." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'fm_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 9],
+            hintTexts: [
+              "Think about the current annual cap on Roth IRA contributions.",
+              "Think about which account offers a guaranteed, immediate return worth capturing first."
+            ]
+          },
+          {
+            id: 'fm_t3', type: 'teach', title: 'Check the Rate on Day One',
+            concepts: [
+              {
+                term: 'The Five-Minute Check',
+                plain: "Confirming the exact match formula and setting the contribution rate to capture it fully takes about five minutes, ideally done right at enrollment, not months or years later after leaving free money unclaimed the whole time.",
+                analogy: "It's like double-checking the destination is set correctly before starting a long drive, a small check that prevents a lot of wasted distance.",
+                check: { statement: "Checking and adjusting the contribution rate is generally worth doing right at enrollment, not put off indefinitely.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fm_boss', type: 'bossbattle', title: 'The New Job',
+            scenario: "Hammy starts a new job with a 401(k) that matches 50 cents per dollar up to 4% of pay, a different formula than the last job's dollar-for-dollar up to 3%.",
+            hintText: "Remember The Five-Minute Check: does assuming the same contribution rate as the last job actually capture this new match?",
+            choices: [
+              { id: 'a', label: "Check the new match formula and set the contribution rate to capture the full 4%", consequence: { text: "The new formula is confirmed and the contribution rate is set correctly, no free money left unclaimed at the new job either.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Assume the same 3% rate from the old job still applies here", consequence: { text: "The new match goes up to 4%, so sticking with the old 3% rate leaves part of this employer's match unclaimed too.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'c', label: "Set the contribution rate well above 4%, just to be safe", consequence: { text: "This does capture the full match, though contributing beyond 4% isn't matched further, worth knowing exactly where the match caps out.", delta: {}, xpMultiplier: 1.0 } },
+              { id: 'd', label: "Skip the 401(k) at the new job entirely to keep things simple", consequence: { text: "This avoids any confusion, but it also walks away from guaranteed matched money at the new employer too.", delta: {}, xpMultiplier: 0.5 } }
             ]
           }
         ]
@@ -4922,10 +5531,138 @@ const MODULES = [
         topic: 'Brokerage vs. Retirement Accounts: Where to Invest',
         character: { name: 'Hammy', tagline: 'Deciding which account to open first' },
         initialState: {},
+        bossAchievementId: 'account_matched_to_goal',
         chapters: [
-          { id: 'brokerage_vs_retirement_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'bvr0', type: 'story', title: 'Two Goals, Two Timelines',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Brokerage vs. Retirement Accounts: Where to Invest." }
+              { speaker: 'intro', text: "Hammy has $100/month to invest, split between two goals: retirement, decades away, and a house down payment, maybe in 8 years. Both accounts seem to just say \"invest here.\"" },
+              { speaker: 'Hammy', text: '"Can\'t I just put it all in the Roth IRA? It\'s the one I already know about."' },
+              { speaker: 'narrator', text: "The Roth is great for one of these goals. For the other, it could actually create a problem." },
+              { speaker: 'Hammy', text: '"Wait, a problem? I thought more investing was always the smart move."' }
+            ]
+          },
+          {
+            id: 'bvr_t1', type: 'teach', title: 'Retirement Accounts Come With Restrictions',
+            concepts: [
+              {
+                term: 'Retirement Account Access',
+                plain: "Roth IRAs and 401(k)s are built for retirement, and generally come with penalties for withdrawing earnings before age 59½. That's a fine tradeoff for money that won't be touched for decades, a real problem for money needed in 8 years.",
+                analogy: "It's like a fixed-term storage unit versus a regular closet, great for stuff you won't need for years, frustrating for something you need to grab next month.",
+                check: { statement: "Money in a Roth IRA can generally be withdrawn at any time with no restrictions, regardless of the reason.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'bvr_t2', type: 'teach', title: 'A Brokerage Account Is Built for Flexibility',
+            concepts: [
+              {
+                term: 'Taxable Brokerage Account',
+                plain: "A regular (taxable) brokerage account has no early withdrawal penalty and no age restriction, money can be accessed anytime. It doesn't get the same tax advantages as a retirement account, but that flexibility makes it a better fit for a mid-range goal like a house down payment.",
+                analogy: "It's like a regular closet, less specialized, but you can grab what you need whenever you actually need it.",
+                check: { statement: "A taxable brokerage account offers more flexible access to the money than a retirement account.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bvr_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Retirement Account Access', definition: 'Generally restricted before age 59½, with a penalty for early withdrawal.' },
+              { term: 'Taxable Brokerage Account', definition: 'No age restriction or early withdrawal penalty, more flexible access.' },
+              { term: 'Goal Timeline', definition: 'How soon money will actually be needed, decades away versus a few years.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bvr_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: a Roth IRA actually allows withdrawing your own CONTRIBUTIONS (not earnings) at any time, penalty-free. Still, most planners treat retirement accounts as \"don't touch it\" money, mixing a mid-range goal in risks accidentally derailing retirement savings later.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'bvr_ms1', type: 'microsim', title: "Matching Money to the Right Account",
+            prompt: "Hammy has $100/month to split between a Roth IRA (retirement, decades away) and a taxable brokerage account (house down payment, ~8 years away).",
+            hintText: "Money needed in 8 years is generally better matched to the flexible brokerage account, not locked-up retirement funds.",
+            income: 100,
+            fixedCosts: [],
+            sliders: [
+              { id: 'toRoth', label: 'To Roth IRA (retirement)', min: 0, max: 100, step: 10, default: 100 },
+              { id: 'toBrokerage', label: 'To brokerage (house goal)', min: 0, max: 100, step: 10, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That splits more than the $100 available. Try smaller amounts.", ok: false },
+              { maxLeftover: 99, text: "Double check: does this split leave the house-down-payment goal in an account it can actually be accessed from in 8 years?", ok: true },
+              { maxLeftover: Infinity, text: "A split that matches each goal to the account actually built for its timeline.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'bvr_d1', type: 'decision',
+            title: "The All-In Roth Plan",
+            prompt: "A friend suggests putting the full $100/month into the Roth IRA, since \"it's the best tax advantage available.\"",
+            hintText: "Think back to Retirement Account Access: what happens if the house down payment is needed in 8 years but the money is tied up in retirement earnings?",
+            choices: [
+              { id: 'a', label: 'Follow the advice, put it all in the Roth IRA', outcome: { text: "In 8 years, accessing the earnings for the house down payment risks a real penalty, the tax advantage doesn't offset that.", delta: {}, compare: [{ label: 'Accessible for house goal', value: 0 }, { label: 'Accessible if split correctly', value: 1 }] } },
+              { id: 'b', label: 'Split it between the Roth IRA and a taxable brokerage account', outcome: { text: "Each goal lands in an account actually built for its timeline, retirement money stays untouched, house money stays accessible.", delta: {}, compare: [{ label: 'Accessible for house goal', value: 1 }, { label: 'Accessible if split correctly', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bvr_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Tax Advantage', definition: 'Special tax treatment retirement accounts get, in exchange for restricted access.' },
+              { term: 'Contribution vs. Earnings', definition: "The distinction that lets Roth contributions (not earnings) be withdrawn penalty-free." },
+              { term: 'Mid-Range Goal', definition: 'A goal like a house down payment, sooner than retirement but not immediate.' }
+            ],
+            hintText: "One term is a BENEFIT tied to restriction, one is a KEY DISTINCTION within a Roth, and one describes a TIMELINE in between.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'bvr_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "The account with the best tax advantage is always the right choice, regardless of when the money will actually be needed.",
+            isTrue: false,
+            explanation: "False. A great tax advantage doesn't help if it comes with restricted access right when the money is actually needed, matching the account to the timeline matters just as much.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'bvr_myth1', type: 'mythcards', title: 'Brokerage vs. Retirement: True or False',
+            cards: [
+              { myth: "A taxable brokerage account can be accessed at any time, with no age restriction.", isTrue: true, explanation: "True, that flexibility is exactly why it fits mid-range goals better than a retirement account." },
+              { myth: "Mixing a house-down-payment goal into a Roth IRA has zero downside as long as the money is technically there.", isTrue: false, explanation: "Accessing retirement account earnings early generally triggers a real penalty, a genuine downside for a near-term goal." },
+              { myth: "A brokerage account offers the exact same tax advantages as a Roth IRA.", isTrue: false, explanation: "A taxable brokerage account doesn't get the same tax-advantaged treatment, that trade-off is exactly what buys its flexibility." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'bvr_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 6],
+            hintTexts: [
+              "Think about what actually determines Roth IRA eligibility.",
+              "Think about whose income counts toward Roth IRA eligibility."
+            ]
+          },
+          {
+            id: 'bvr_t3', type: 'teach', title: 'Match the Account to the Goal',
+            concepts: [
+              {
+                term: 'Account Selection by Timeline',
+                plain: "The right account isn't about which one sounds the most advanced or has the best tax perks in isolation, it's about which account's rules actually fit when the money will be needed. Retirement accounts for retirement, flexible accounts for everything sooner.",
+                analogy: "It's like choosing a container based on what's actually being stored, not just picking whichever one looks fanciest.",
+                check: { statement: "The best account choice depends on matching its access rules to when the money will actually be needed.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bvr_boss', type: 'bossbattle', title: 'The New Goal',
+            scenario: "Hammy adds a third goal: a $2,000 emergency fund top-up, needed potentially at any moment. The Roth IRA and brokerage account are both already being funded monthly.",
+            hintText: "Remember Account Selection by Timeline: does an emergency fund, needed possibly tomorrow, belong in an investment account at all?",
+            choices: [
+              { id: 'a', label: "Keep the emergency fund in a HYSA, separate from both investment accounts", consequence: { text: "Money needed at a moment's notice belongs somewhere stable and immediately accessible, not subject to market swings.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Add it to the brokerage account since that one's already flexible", consequence: { text: "Technically accessible, but market swings mean the balance could be down right when it's actually needed, a real risk for true emergency money.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'c', label: "Add it to the Roth IRA since contributions can be withdrawn penalty-free", consequence: { text: "Technically possible for contributions, but mixing emergency money into retirement savings risks accidentally derailing long-term goals.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'd', label: "Split the new goal between the HYSA and brokerage account", consequence: { text: "A partial fix, though splitting a true emergency fund reduces how much is actually stable and immediately accessible when needed.", delta: {}, xpMultiplier: 0.9 } }
             ]
           }
         ]
