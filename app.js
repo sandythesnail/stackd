@@ -10295,10 +10295,129 @@ const MODULES = [
         topic: 'Education Tax Credits & Your 1098-T',
         character: { name: 'Hammy', tagline: 'Trying to make sense of a 1098-T' },
         initialState: {},
+        bossAchievementId: 'credit_claimed',
         chapters: [
-          { id: 'education_credits_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ec0', type: 'story', title: 'A Form From School',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Education Tax Credits & Your 1098-T." }
+              { speaker: 'intro', text: "A Form 1098-T shows up from Hammy's school in January. At dinner, a parent mentions \"education credits\" like it's obvious what that means." },
+              { speaker: 'Hammy', text: '"I have no idea what either of those things actually means for anyone\'s tax bill."' },
+              { speaker: 'narrator', text: "The 1098-T is the key that unlocks a real tax credit, worth understanding before it gets tossed in a drawer unread." },
+              { speaker: 'Hammy', text: '"A real credit? Like, actual money off what\'s owed?"' }
+            ]
+          },
+          {
+            id: 'ec_t1', type: 'teach', title: 'What Form 1098-T Reports',
+            concepts: [
+              {
+                term: 'Form 1098-T',
+                plain: "Form 1098-T reports tuition paid and scholarships/grants received during the year. It's not itself a tax bill or refund, it's the documentation used to calculate whether an education credit can be claimed.",
+                analogy: "It's like a receipt used to fill out a rebate form, the receipt alone doesn't give you money, but you need it to claim the rebate.",
+                check: { statement: "Form 1098-T itself represents money owed to the IRS.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ec_t2', type: 'teach', title: 'Two Different Credits',
+            concepts: [
+              {
+                term: 'AOTC vs. LLC',
+                plain: "The American Opportunity Tax Credit (AOTC) covers up to $2,500/year, for the first four years of undergrad, and up to 40% is refundable. The Lifetime Learning Credit (LLC) covers up to $2,000/year, with no limit on the number of years, but isn't refundable. Only one can be claimed per student per year.",
+                analogy: "It's like two different discount programs, one bigger but time-limited, one smaller but usable indefinitely, not stackable together for the same student.",
+                check: { statement: "Both the AOTC and the Lifetime Learning Credit can be claimed for the same student in the same year.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ec_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Form 1098-T', definition: 'Reports tuition paid and scholarships received, used to calculate credits.' },
+              { term: 'AOTC', definition: 'Up to $2,500/year, first four years only, up to 40% refundable.' },
+              { term: 'LLC', definition: 'Up to $2,000/year, no year limit, not refundable.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ec_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: whoever claims the student as a dependent generally claims the education credit too, not the student. If a parent claims Hammy as a dependent, the parent typically claims the credit on their own return, even though Hammy is the one attending school.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ec_price1', type: 'priceisright', title: 'The Price Is Right: The AOTC Amount',
+            prompt: "Hammy's parents paid $3,200 in qualified tuition this year. The AOTC covers 100% of the first $2,000 in expenses, plus 25% of the next $2,000. Guess the total AOTC credit amount.",
+            hintText: "Split the $3,200 into the first $2,000 (100% credit) and the remaining $1,200 (25% credit), then add them together.",
+            actualValue: 2300, guessRange: { min: 0, max: 2500, step: 50 },
+            explanation: "$2,000 × 100% = $2,000, plus $1,200 × 25% = $300, for a total credit of $2,300. Even without spending the full $4,000 that would max out the credit, a meaningful credit is still available.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'ec_d1', type: 'decision',
+            title: "Reading the 1098-T",
+            prompt: "The 1098-T arrives in January. Hammy's first instinct is to set it aside since \"it's not a bill.\"",
+            hintText: "Think back to Form 1098-T: does ignoring it mean missing out on anything?",
+            choices: [
+              { id: 'a', label: 'Set the 1098-T aside since it doesn\'t look like a bill', outcome: { text: "Without the form's numbers, calculating and claiming an education credit at tax time becomes much harder, or gets missed entirely.", delta: {}, compare: [{ label: 'Credit claimed', value: 0 }, { label: 'Credit available', value: 2300 }] } },
+              { id: 'b', label: 'Bring the 1098-T to whoever is filing the return (self or parent)', outcome: { text: "The form's numbers get used to calculate and claim the actual credit, real money off the tax bill.", delta: {}, compare: [{ label: 'Credit claimed', value: 2300 }, { label: 'Credit available', value: 2300 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ec_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Refundable Credit', definition: 'A credit that can result in money back, even beyond taxes owed (part of AOTC).' },
+              { term: 'Non-Refundable Credit', definition: 'A credit that can reduce taxes owed to zero, but not beyond (LLC).' },
+              { term: 'Qualified Tuition', definition: 'Tuition and required fees that count toward calculating an education credit.' }
+            ],
+            hintText: "One term can generate a REFUND beyond taxes owed, one CANNOT, and one is the EXPENSE type that counts.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ec_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Whoever attends the classes is always the one who claims the education credit on their tax return.",
+            isTrue: false,
+            explanation: "False. Whoever claims the student as a dependent generally claims the credit, which is often a parent, not the student attending classes.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ec_myth1', type: 'mythcards', title: 'Education Credits: True or False',
+            cards: [
+              { myth: "The AOTC and LLC can both be claimed for the same student in the same tax year.", isTrue: false, explanation: "Only one can be claimed per student per year, not both." },
+              { myth: "The AOTC is limited to the first four years of undergraduate education.", isTrue: true, explanation: "True, unlike the LLC, which has no limit on the number of years it can be claimed." },
+              { myth: "Form 1098-T alone tells you the exact dollar credit you'll receive.", isTrue: false, explanation: "It provides the underlying numbers, tuition paid and scholarships received, but the actual credit still needs to be calculated using those figures." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ec_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 7],
+            hintTexts: [
+              "Think about the difference between the AOTC and the Lifetime Learning Credit.",
+              "Think about what a Form 1098-T is actually used for."
+            ]
+          },
+          {
+            id: 'ec_t3', type: 'teach', title: 'A Form Worth Keeping Track Of',
+            concepts: [
+              {
+                term: 'Don\'t Lose the Form',
+                plain: "The 1098-T is easy to overlook since it doesn't look like a bill or a refund check, but it's the direct link to a real tax credit worth up to $2,500. Filing it away safely each January is a small habit with a real payoff at tax time.",
+                analogy: "It's like a coupon that doesn't look valuable until you actually try to use it at checkout.",
+                check: { statement: "Form 1098-T is generally worth keeping track of since it can lead to a real tax credit.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ec_boss', type: 'bossbattle', title: 'The Missing Form',
+            scenario: "Tax season arrives, and Hammy can't find the 1098-T that came in the mail back in January, it's needed to calculate the education credit.",
+            hintText: "Remember Don't Lose the Form: is there a way to get the information again if the physical copy is lost?",
+            choices: [
+              { id: 'a', label: "Log into the school's student portal, where the 1098-T is often available electronically too", consequence: { text: "Most schools also post the 1098-T electronically, the information is recovered without needing the physical copy.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Skip claiming the education credit entirely since the form can't be found", consequence: { text: "A real credit worth up to $2,500 gets left unclaimed over a form that was likely recoverable with a quick portal login.", delta: {}, xpMultiplier: 0.5 } },
+              { id: 'c', label: "Estimate the tuition amount from memory instead of finding the actual form", consequence: { text: "An estimate risks an inaccurate credit claim, worth the extra few minutes to find the actual documented amount instead.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'd', label: "Call the school's bursar office to request a duplicate copy of the form", consequence: { text: "A reliable way to get the exact figures again, even if the student portal route might have been slightly faster.", delta: {}, xpMultiplier: 1.1 } }
             ]
           }
         ]
@@ -10308,10 +10427,129 @@ const MODULES = [
         topic: 'Dependency Status & Common Mistakes',
         character: { name: 'Hammy', tagline: 'Figuring out dependency status at tax time' },
         initialState: {},
+        bossAchievementId: 'dependency_clarified',
         chapters: [
-          { id: 'dependency_status_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ds0', type: 'story', title: '"I\'m Still a Dependent, So..."',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Dependency Status & Common Mistakes." }
+              { speaker: 'intro', text: "Hammy's parents still claim them as a dependent. A friend who got $600 back after filing insists Hammy should file too, \"even though you're just an intern.\"" },
+              { speaker: 'Hammy', text: '"If my parents already claim me, don\'t I just... not file anything?"' },
+              { speaker: 'narrator', text: "Being claimed as a dependent and needing to file your own return are two separate questions, easy to mix up." },
+              { speaker: 'Hammy', text: '"Wait, those are different questions? I thought it was one or the other."' }
+            ]
+          },
+          {
+            id: 'ds_t1', type: 'teach', title: 'Being Claimed Doesn\'t Cancel Your Own Filing',
+            concepts: [
+              {
+                term: 'Dependency Status',
+                plain: "A parent claiming you as a dependent affects THEIR return, it doesn't automatically mean you're exempt from filing your OWN return if you earned income. These are two separate returns, evaluated separately.",
+                analogy: "It's like being listed on a family phone plan, your parent's account and your own usage are still tracked separately.",
+                check: { statement: "Being claimed as a dependent on a parent's return means a student never needs to file their own return.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ds_t2', type: 'teach', title: 'When a Dependent Needs to File',
+            concepts: [
+              {
+                term: 'Filing Thresholds',
+                plain: "A dependent generally needs to file their own return once earned income exceeds a specific threshold (which changes yearly), or in some cases, to claim a REFUND of taxes that were withheld, even below the threshold. Filing isn't just for people who owe money.",
+                analogy: "It's like requesting a refund for an overpayment, filing can get YOU money back, not just take money away.",
+                check: { statement: "A student below the income filing threshold might still want to file in order to get withheld taxes refunded.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ds_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Dependency Status', definition: "Whether a parent claims you, affects THEIR return, not whether you must file." },
+              { term: 'Filing Thresholds', definition: 'Income levels above which a dependent generally must file their own return.' },
+              { term: 'Refund Filing', definition: 'Filing specifically to get back taxes that were withheld, even below the threshold.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ds_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: if any federal income tax was withheld from a paycheck (check Box 2 on a W-2), filing a return is often the only way to actually get that withheld money back, if it turns out you didn't owe as much as was withheld.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ds_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why does being claimed as a dependent on a parent's tax return NOT automatically mean a student doesn't need to file their own return?",
+            keywords: ['separate', 'income', 'own', 'return', 'threshold'],
+            fullDefinition: "Because dependency status and filing requirements are two separate questions, answered by two different sets of rules. A parent claiming a student as a dependent is about the PARENT's return, while whether the student needs to file their OWN return depends on the student's own earned income relative to the filing threshold, completely independent of the parent's choice.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'ds_d1', type: 'decision',
+            title: "The Summer Internship",
+            prompt: "Hammy's parents claim them as a dependent. Hammy also had a paid summer internship with federal taxes withheld from every paycheck.",
+            hintText: "Think back to Refund Filing: does having taxes withheld create an opportunity worth checking on?",
+            choices: [
+              { id: 'a', label: 'Skip filing since \"my parents already handle the tax stuff\"', outcome: { text: "Any federal tax withheld from the internship paychecks stays with the IRS, unclaimed, since nobody filed a return to request it back.", delta: {}, compare: [{ label: 'Refund claimed', value: 0 }, { label: 'Refund potentially available', value: 1 }] } },
+              { id: 'b', label: 'File a personal return to see if any withheld tax comes back as a refund', outcome: { text: "The filing checks whether the withheld amount exceeded what was actually owed, and any overpayment comes back as a refund.", delta: {}, compare: [{ label: 'Refund claimed', value: 1 }, { label: 'Refund potentially available', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ds_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Box 2 (W-2)', definition: 'The line showing federal income tax actually withheld from a paycheck.' },
+              { term: 'Two Separate Returns', definition: "A dependent's own filing decision, independent of a parent's return." },
+              { term: 'Common First-Filer Mistake', definition: 'Assuming dependency status means never needing to file personally.' }
+            ],
+            hintText: "One term is a SPECIFIC number to check, one is the KEY DISTINCTION this quest is about, and one is the MISTAKE it corrects.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ds_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A student claimed as a dependent has no reason to file their own tax return.",
+            isTrue: false,
+            explanation: "False. If federal tax was withheld from any income, filing is often the only way to get that money back, dependency status doesn't change that.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ds_myth1', type: 'mythcards', title: 'Dependency Status: True or False',
+            cards: [
+              { myth: "A dependent's filing requirement is determined by the same rules as an independent adult's.", isTrue: false, explanation: "Dependents generally have different, often lower, income thresholds for when filing becomes required." },
+              { myth: "Filing a return as a dependent can result in a refund, not just a bill.", isTrue: true, explanation: "True, if taxes were withheld and exceeded what was actually owed, filing is how that gets refunded." },
+              { myth: "A parent claiming a student as a dependent and the student filing their own return are mutually exclusive.", isTrue: false, explanation: "Both can happen in the same year, they're separate returns answering separate questions." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ds_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 5],
+            hintTexts: [
+              "Think about how a parent claiming you as a dependent affects your own tax return.",
+              "Think about a common mistake first-time student filers make."
+            ]
+          },
+          {
+            id: 'ds_t3', type: 'teach', title: 'Check, Don\'t Assume',
+            concepts: [
+              {
+                term: 'Checking Beats Assuming',
+                plain: "Assuming dependency status settles the whole tax question is exactly the kind of shortcut that leaves real refund money unclaimed. A quick check, was any tax withheld, does income cross the threshold, takes far less effort than the assumption costs.",
+                analogy: "It's like assuming a package was delivered without actually checking the porch, a quick look settles it either way.",
+                check: { statement: "Assuming a dependent never needs to file is a safe shortcut with no real downside.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ds_boss', type: 'bossbattle', title: 'The Friend\'s Advice',
+            scenario: "Hammy's friend, who got $600 back, keeps insisting Hammy should file too. Hammy had only a small $400 on-campus job with a little tax withheld, and isn't sure if it's worth the effort.",
+            hintText: "Remember Checking Beats Assuming: does a small income automatically mean there's nothing worth filing for?",
+            choices: [
+              { id: 'a', label: "Check the W-2's Box 2 for any withheld tax before deciding whether filing is worth it", consequence: { text: "A quick check reveals whether there's actually a refund on the table, informed instead of guessed.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Assume the income is too small to matter and skip filing entirely", consequence: { text: "Even a small amount of withheld tax, if any, stays unclaimed without ever checking.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'c', label: "File a return automatically without checking whether anything was even withheld first", consequence: { text: "Filing isn't harmful, but skipping the quick check first means possibly doing unnecessary paperwork for zero withheld tax.", delta: {}, xpMultiplier: 0.9 } },
+              { id: 'd', label: "Ask a parent to check the W-2 details and decide together", consequence: { text: "A reasonable collaborative approach, especially helpful for a first-time filer navigating this for the first time.", delta: {}, xpMultiplier: 1.1 } }
             ]
           }
         ]
@@ -10321,10 +10559,138 @@ const MODULES = [
         topic: 'Estimated Taxes for Freelance/Gig Income',
         character: { name: 'Hammy', tagline: 'Owing taxes nobody withheld' },
         initialState: {},
+        bossAchievementId: 'quarterly_planner',
         chapters: [
-          { id: 'estimated_taxes_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'et0', type: 'story', title: 'Four Deadlines, Not One',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Estimated Taxes for Freelance/Gig Income." }
+              { speaker: 'intro', text: "Hammy earns $8,000 freelancing this year, nothing withheld. \"April is the tax deadline, right? That's the only date I need to worry about?\"" },
+              { speaker: 'Hammy', text: '"One deadline, one filing, that\'s how taxes work, isn\'t it?"' },
+              { speaker: 'narrator', text: "For income with nothing withheld, the IRS actually expects payments spread across the YEAR, not just one lump sum in April." },
+              { speaker: 'Hammy', text: '"Wait, payments during the year? Nobody mentioned that part."' }
+            ]
+          },
+          {
+            id: 'et_t1', type: 'teach', title: 'Why Estimated Payments Exist',
+            concepts: [
+              {
+                term: 'Estimated Tax Payments',
+                plain: "Because freelance/1099 income has no automatic withholding, the IRS expects the taxpayer to send in estimated payments throughout the year, generally required if expecting to owe $1,000 or more for the year. This mimics the pay-as-you-go system a W-2 job automatically handles.",
+                analogy: "It's like paying a utility bill in monthly installments instead of one huge annual bill, spreading it out is the system's actual design.",
+                check: { statement: "Estimated tax payments exist so freelance income gets taxed on the same pay-as-you-go basis as W-2 income.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'et_t2', type: 'teach', title: 'Four Due Dates a Year',
+            concepts: [
+              {
+                term: 'Quarterly Due Dates',
+                plain: "Estimated payments are generally due four times a year, mid-April, mid-June, mid-September, and mid-January, not aligned to neat three-month quarters, but four specific dates set by the IRS. Missing them can trigger a penalty, even if the full amount gets paid by April of the following year.",
+                analogy: "It's like a payment plan with specific due dates, missing one has a consequence even if the total eventually gets paid.",
+                check: { statement: "Estimated tax payment due dates are evenly spaced exactly three months apart.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'et_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Estimated Tax Payments', definition: 'Payments made throughout the year for income with no automatic withholding.' },
+              { term: 'Quarterly Due Dates', definition: 'Four specific dates a year estimated payments are generally due.' },
+              { term: 'Underpayment Penalty', definition: 'A consequence for not paying enough throughout the year, even if paid eventually.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'et_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: this connects directly to the set-aside habit from the gig-income lessons, the same 20-30% set aside from each payment is exactly what funds these quarterly payments when the due dates arrive, no separate saving system needed.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'et_ms1', type: 'microsim', title: "Planning the June Payment",
+            prompt: "Hammy earned $2,400 in freelance income this quarter, with a June estimated tax payment coming up. Split it between the quarterly tax payment and everyday spending.",
+            hintText: "Aim for roughly 20-30% toward the tax payment, that's about $480-$720, before deciding what's left to spend.",
+            income: 2400,
+            fixedCosts: [],
+            sliders: [
+              { id: 'taxPayment', label: 'Quarterly tax payment', min: 0, max: 1200, step: 60, default: 0 },
+              { id: 'spendingMoney', label: 'Spending money', min: 0, max: 2400, step: 60, default: 2400 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That splits more than the $2,400 available. Try smaller amounts.", ok: false },
+              { maxLeftover: 239, text: "It fits, but double check the tax payment slider actually covers a reasonable estimated amount.", ok: true },
+              { maxLeftover: Infinity, text: "A split that keeps the quarterly payment funded with a comfortable buffer left over.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'et_d1', type: 'decision',
+            title: "The Missed April Date",
+            prompt: "Hammy realizes, after the fact, that the mid-April estimated payment deadline came and went with nothing paid, even though the full amount will get covered by the following April's tax return.",
+            hintText: "Think back to Underpayment Penalty: does paying the full amount eventually erase a missed quarterly deadline?",
+            choices: [
+              { id: 'a', label: 'Not worry about it, since the full amount will be paid by next April anyway', outcome: { text: "A missed quarterly deadline can trigger an underpayment penalty, even though the total amount does eventually get paid.", delta: {}, compare: [{ label: 'Deadlines missed', value: 1 }, { label: 'Penalty risk', value: 1 }] } },
+              { id: 'b', label: 'Make the missed payment as soon as possible and set reminders for the remaining dates', outcome: { text: "Catching up quickly minimizes any penalty, and reminders prevent the same mistake on the remaining quarterly dates.", delta: {}, compare: [{ label: 'Deadlines missed going forward', value: 0 }, { label: 'Penalty risk reduced', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'et_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Pay-As-You-Go System', definition: "The underlying design estimated payments mimic, same as W-2 withholding." },
+              { term: 'Set-Aside Habit', definition: 'The 20-30% saved from each gig payment, used to fund quarterly payments.' },
+              { term: 'Catching Up Quickly', definition: 'Making a missed estimated payment as soon as possible to limit penalty exposure.' }
+            ],
+            hintText: "One term is the SYSTEM being mimicked, one is the HABIT that funds it, and one is the FIX for a missed date.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'et_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Paying the full tax amount owed by the April filing deadline avoids any penalty, even if quarterly estimated payments were skipped.",
+            isTrue: false,
+            explanation: "False. An underpayment penalty can apply for missing the quarterly due dates throughout the year, even if the total is fully paid by the April deadline.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'et_myth1', type: 'mythcards', title: 'Estimated Taxes: True or False',
+            cards: [
+              { myth: "Estimated tax payments are only required for people who owe a very large amount.", isTrue: false, explanation: "They're generally required once you expect to owe $1,000 or more for the year, not just for large amounts." },
+              { myth: "The same 20-30% set-aside habit from gig income can directly fund quarterly estimated payments.", isTrue: true, explanation: "True, that's exactly what the set-aside money is for, once the due dates arrive, the funds are already there." },
+              { myth: "Quarterly due dates fall exactly three months apart, evenly spaced through the year.", isTrue: false, explanation: "They're four specific IRS-set dates, not evenly spaced three-month intervals." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'et_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [8, 9],
+            hintTexts: [
+              "Think about what a freelancer with no withholding might need to do differently than a W-2 employee.",
+              "Think about whether working in a different state than your permanent home affects taxes."
+            ]
+          },
+          {
+            id: 'et_t3', type: 'teach', title: 'Four Dates, One Habit',
+            concepts: [
+              {
+                term: 'One Habit Covers All Four',
+                plain: "The same set-aside habit that protects against an April surprise also naturally funds all four quarterly due dates, since the money is already set aside as it's earned. The only additional step is actually marking the four dates on a calendar and making the payments on time.",
+                analogy: "It's like a subscription already budgeted for, the only remaining task is remembering the actual due date to pay it.",
+                check: { statement: "A consistent set-aside habit throughout the year naturally supports making quarterly estimated payments on time.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'et_boss', type: 'bossbattle', title: 'The Big Freelance Month',
+            scenario: "Hammy has an unusually large freelance month, $3,500 in one month, right before the September quarterly deadline, on top of an already-funded set-aside from earlier in the year.",
+            hintText: "Remember One Habit Covers All Four: does an unusually large month change how much needs to go toward the upcoming payment?",
+            choices: [
+              { id: 'a', label: "Set aside the usual 20-30% from this month too, on top of what's already saved", consequence: { text: "The larger month gets the same consistent treatment, keeping the September payment fully funded without any extra scrambling.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Treat the large month as a one-time bonus and skip setting anything aside from it", consequence: { text: "A bigger month means a bigger tax obligation too, skipping the set-aside here creates a real gap right before the September deadline.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Set aside a smaller percentage than usual since there's already a cushion from earlier months", consequence: { text: "This works if the math is actually checked, but assuming the existing cushion covers a bigger month without recalculating is a risky shortcut.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'd', label: "Recalculate the full year's estimated tax obligation now that income is higher than originally expected", consequence: { text: "A thorough move that catches an underestimate early, giving the most accurate picture for the remaining quarterly payments.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -10334,10 +10700,134 @@ const MODULES = [
         topic: 'Getting Withholding Right & Filing for Free',
         character: { name: 'Hammy', tagline: 'Fixing a withholding mistake' },
         initialState: {},
+        bossAchievementId: 'filed_free',
         chapters: [
-          { id: 'withholding_free_file_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'wff0', type: 'story', title: 'The Surprise Bill',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Getting Withholding Right & Filing for Free." }
+              { speaker: 'intro', text: "Last year's tax bill caught Hammy off guard, too little was withheld from paychecks all year. This year, a friend mentions campus has a free clinic that'll actually file the return." },
+              { speaker: 'Hammy', text: '"A free clinic sounds too good to be true. And fixing withholding sounds complicated."' },
+              { speaker: 'narrator', text: "Neither one actually is, once you know exactly where to look and what to check." },
+              { speaker: 'Hammy', text: '"Okay, walk me through both. Withholding first, or filing first?"' }
+            ]
+          },
+          {
+            id: 'wff_t1', type: 'teach', title: 'Fixing Withholding After a Surprise Bill',
+            concepts: [
+              {
+                term: 'Adjusting Withholding',
+                plain: "A surprise tax bill from too little withholding is fixed with a new W-4 submitted to an employer, adjusting how much federal tax gets withheld from each future paycheck. It's not a one-time-only form, it can be updated anytime.",
+                analogy: "It's like adjusting a thermostat that's been running too cold, a quick setting change fixes it going forward.",
+                check: { statement: "Once a surprise tax bill happens, there's no way to adjust future withholding to prevent it from happening again.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'wff_t2', type: 'teach', title: 'Free Filing Actually Exists',
+            concepts: [
+              {
+                term: 'Free Filing Options',
+                plain: "For a simple return, free options genuinely exist: IRS Free File (for eligible incomes), and VITA (Volunteer Income Tax Assistance) clinics, often available on or near college campuses, staffed by IRS-certified volunteers. Paying a tax prep company isn't required for most student returns.",
+                analogy: "It's like a free legal aid clinic, real, legitimate help, just not as heavily advertised as the paid options.",
+                check: { statement: "A student with a simple tax return generally must pay a tax preparation company to file.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'wff_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Adjusting Withholding', definition: 'Submitting a new W-4 to change future paycheck withholding.' },
+              { term: 'IRS Free File', definition: 'A free filing option for eligible incomes, offered directly through the IRS.' },
+              { term: 'VITA Clinic', definition: 'Free, IRS-certified tax help, often available on or near college campuses.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'wff_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: some paid tax prep companies advertise \"free filing\" prominently, but only truly offer it for the simplest returns, upselling to a paid tier once anything slightly more complex, like a 1099 or education credit, gets added. Checking IRS Free File or a VITA clinic directly avoids this bait-and-switch.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'wff_spot1', type: 'spotcheck', title: 'Spot the True Free Option',
+            intro: "Here's a rundown of filing options Hammy is considering. Tap anything that's worth a second look before assuming it's actually free, then hit Continue to see what you caught.",
+            postingTitle: "Comparing Filing Options",
+            segments: [
+              { id: 's1', text: "IRS Free File — free federal filing for eligible incomes, directly through IRS-partnered software. ", isRedFlag: false, explanation: "A genuinely free, legitimate option with no hidden upsell for a simple return." },
+              { id: 's2', text: "Campus VITA clinic — free, in-person help from IRS-certified student volunteers. ", isRedFlag: false, explanation: "Another genuinely free option, well-suited to a simple student return." },
+              { id: 's3', text: "\"Free\" tax software ad — free to start, but charges extra once a 1099 or education credit form is added. ", isRedFlag: true, explanation: "This is the bait-and-switch pattern worth watching for, \"free\" only applies to the simplest possible return." },
+              { id: 's4', text: "A local tax prep storefront charging a flat $150 fee. ", isRedFlag: true, explanation: "Not necessarily a scam, but worth comparing against the free options first for a return this simple." },
+              { id: 's5', text: "A friend offering to \"just do it the same way\" they did theirs, without asking about Hammy's specific income sources. ", isRedFlag: true, explanation: "Every return is different, copying a friend's approach without checking Hammy's specific situation (like the 1099 income) risks errors." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'wff_d1', type: 'decision',
+            title: "Choosing Where to File",
+            prompt: "Hammy has a simple return this year: one W-2 and the education credit from Form 1098-T. A \"free\" tax software ad is calling.",
+            hintText: "Think back to Free Filing Options: does this specific situation actually need a paid tier, or does it qualify for genuinely free help?",
+            choices: [
+              { id: 'a', label: 'Start with the "free" software ad and see what it charges once everything is entered', outcome: { text: "The education credit form triggers an upsell to a paid tier, turning \"free\" filing into an unexpected charge.", delta: {}, compare: [{ label: 'Cost with the ad', value: 40 }, { label: 'Cost with a VITA clinic', value: 0 }] } },
+              { id: 'b', label: 'Check the campus VITA clinic first, given the simple return', outcome: { text: "A simple W-2-plus-education-credit return is exactly the kind of case VITA clinics are built to handle, for free.", delta: {}, compare: [{ label: 'Cost with VITA clinic', value: 0 }, { label: 'Cost with the ad', value: 40 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'wff_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Bait-and-Switch Upsell', definition: '"Free" filing that charges extra once a form beyond the simplest case is added.' },
+              { term: 'IRS-Certified Volunteer', definition: "A trained VITA clinic volunteer qualified to help prepare a return." },
+              { term: 'Simple Return', definition: "A W-2-only or similarly straightforward return, well-suited to free filing options." }
+            ],
+            hintText: "One term is a PRICING trap, one describes WHO helps at a free clinic, and one describes the TYPE of return that qualifies easily.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'wff_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A tax software ad that says \"free filing\" always means the entire filing process will be free.",
+            isTrue: false,
+            explanation: "False. Many \"free\" ads only cover the simplest possible return, adding a 1099 or education credit often triggers a paid tier.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'wff_myth1', type: 'mythcards', title: 'Withholding & Free Filing: True or False',
+            cards: [
+              { myth: "A W-4 can only be updated once, at the start of a job, never again afterward.", isTrue: false, explanation: "A new W-4 can be submitted anytime a situation changes, including specifically to fix a withholding problem." },
+              { myth: "VITA clinics are staffed by unpaid, untrained volunteers with no real qualification.", isTrue: false, explanation: "VITA volunteers are IRS-certified, trained specifically to prepare returns like a student's simple tax situation." },
+              { myth: "IRS Free File is a legitimate, IRS-endorsed option, not a third-party scam.", isTrue: true, explanation: "True, it's a real partnership between the IRS and tax software companies for eligible incomes." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'wff_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [10, 11],
+            hintTexts: [
+              "Think about what to do if too little was withheld from paychecks last year.",
+              "Think about a way for a student with a simple return to file without paying a tax prep company."
+            ]
+          },
+          {
+            id: 'wff_t3', type: 'teach', title: 'Fix It Forward, File It Free',
+            concepts: [
+              {
+                term: 'Two Separate Fixes',
+                plain: "A withholding problem gets fixed going forward with a new W-4, it doesn't retroactively change last year's bill. Filing for free is a completely separate decision, made fresh every tax season, based on how simple the return actually is that year.",
+                analogy: "It's like fixing a leak going forward while separately settling last month's water bill, two different problems, two different fixes.",
+                check: { statement: "Submitting a new W-4 retroactively reduces a tax bill that's already been calculated for a prior year.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'wff_boss', type: 'bossbattle', title: 'The New Job, New W-4',
+            scenario: "Hammy starts a new part-time job on top of the existing one and needs to fill out a new W-4, right as tax season approaches with last year's return still needing to be filed.",
+            hintText: "Remember Two Separate Fixes: does the new W-4 and this year's filing need to happen in a specific order, or can they be handled separately?",
+            choices: [
+              { id: 'a', label: "Fill out the new W-4 accurately for the new job, and separately check VITA clinic hours for filing", consequence: { text: "Both fixes get handled on their own track, accurate withholding going forward, and a free filing plan for the return that's actually due now.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Wait to fill out the new W-4 until after this year's return is filed, assuming they're connected", consequence: { text: "Delaying the W-4 means the new job under-withholds in the meantime, an avoidable version of last year's exact surprise bill problem.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Fill out the new W-4 using the same numbers as the first job's W-4", consequence: { text: "Without accounting for combined income across both jobs, this risks under-withholding again, similar to last year's surprise.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'd', label: "Use the IRS's multiple jobs worksheet when filling out the new W-4, then check VITA hours separately", consequence: { text: "This properly accounts for the combined income across both jobs, while still keeping the filing plan on its own separate track.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -10347,10 +10837,129 @@ const MODULES = [
         topic: 'How Tax Brackets Actually Work (Marginal vs. Effective Rate)',
         character: { name: 'Hammy', tagline: 'Trying to understand what tax bracket actually means' },
         initialState: {},
+        bossAchievementId: 'brackets_understood',
         chapters: [
-          { id: 'tax_brackets_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'tb0', type: 'story', title: '"I\'m Scared of the Next Bracket"',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on How Tax Brackets Actually Work (Marginal vs. Effective Rate)." }
+              { speaker: 'intro', text: "Hammy is offered extra hours at work but hesitates. \"If it pushes me into the next tax bracket, won't ALL my income get taxed at the higher rate? I might end up with less money.\"" },
+              { speaker: 'Hammy', text: '"That\'s how it works, right? Cross the line and everything gets taxed higher?"' },
+              { speaker: 'narrator', text: "That's one of the most common tax misconceptions out there, and it's costing Hammy extra hours of income for no real reason." },
+              { speaker: 'Hammy', text: '"Wait, that\'s NOT how it works? Then how does it actually work?"' }
+            ]
+          },
+          {
+            id: 'tb_t1', type: 'teach', title: 'Brackets Are Marginal, Not All-or-Nothing',
+            concepts: [
+              {
+                term: 'Marginal Tax Rate',
+                plain: "The tax system is progressive: each bracket's rate applies ONLY to the income within that specific range, not to all income once a bracket is reached. Moving into a higher bracket only means the portion of income ABOVE that threshold gets taxed at the higher rate.",
+                analogy: "It's like a water tank with different-priced sections, only the water that actually reaches the higher section is billed at the higher rate.",
+                check: { statement: "Moving into a higher tax bracket means all of your income gets taxed at that higher rate.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'tb_t2', type: 'teach', title: 'Effective Rate Is the Real Average',
+            concepts: [
+              {
+                term: 'Effective Tax Rate',
+                plain: "The effective rate is total tax owed divided by total income, the real, blended average rate actually paid. It's always LOWER than the marginal rate (the rate on the last dollar earned), since earlier portions of income were taxed at lower bracket rates first.",
+                analogy: "It's like an average grade across several tests of different difficulty, the hardest test's score doesn't become your grade on every test.",
+                check: { statement: "The effective tax rate is generally higher than the marginal tax rate.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'tb_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Marginal Tax Rate', definition: 'The rate applied to the last dollar earned, the highest bracket reached.' },
+              { term: 'Effective Tax Rate', definition: 'Total tax owed divided by total income, the real blended average.' },
+              { term: 'Progressive System', definition: 'Each bracket taxes only the income within its own range.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'tb_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: taking extra hours or a raise can NEVER result in less take-home pay overall under a marginal system, since only the NEW income above the old threshold is taxed at a higher rate, the rest keeps its original, lower rate. More gross income always means more net income too.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'tb_price1', type: 'priceisright', title: 'The Price Is Right: The Effective Rate',
+            prompt: "Using simplified brackets (10% on the first $12,000, 12% on income from $12,000 to $47,000), Hammy earns $18,000 in taxable income, landing in the 12% marginal bracket. Guess the effective tax rate.",
+            hintText: "Calculate the actual tax owed first ($12,000 × 10%, plus $6,000 × 12%), then divide by the full $18,000.",
+            actualValue: 11, guessRange: { min: 0, max: 20, step: 1 },
+            explanation: "$12,000 × 10% = $1,200, plus $6,000 × 12% = $720, for $1,920 total tax. $1,920 ÷ $18,000 ≈ 10.7%, rounding to about 11%, noticeably lower than the 12% marginal bracket Hammy is technically \"in.\"",
+            xpOnComplete: 5
+          },
+          {
+            id: 'tb_d1', type: 'decision',
+            title: "The Extra Hours",
+            prompt: "Hammy is offered extra hours that would push total income from $18,000 to $20,000, right at the edge of moving further into the 12% bracket.",
+            hintText: "Think back to Marginal Tax Rate: does earning more within, or even beyond, the current bracket ever result in LESS take-home pay?",
+            choices: [
+              { id: 'a', label: 'Turn down the extra hours out of fear of "jumping brackets"', outcome: { text: "The extra $2,000 in income, and the take-home pay that comes with it, gets left on the table over a misunderstanding of how brackets work.", delta: {}, compare: [{ label: 'Extra income taken', value: 0 }, { label: 'Extra income available', value: 2000 }] } },
+              { id: 'b', label: 'Take the extra hours, understanding only the new income is taxed at the marginal rate', outcome: { text: "The extra $2,000 arrives, taxed at 12% for that portion, still resulting in meaningfully more take-home pay overall.", delta: {}, compare: [{ label: 'Extra income taken', value: 2000 }, { label: 'Extra income available', value: 2000 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'tb_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Bracket Threshold', definition: 'The income level where a new, higher marginal rate begins to apply.' },
+              { term: 'Fear of Bracket Jumping', definition: 'The common misconception that a raise could result in less take-home pay.' },
+              { term: 'Blended Average', definition: 'Another way to describe the effective tax rate across all brackets touched.' }
+            ],
+            hintText: "One term is a LINE income crosses, one is a common MISCONCEPTION, and one describes the EFFECTIVE rate.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'tb_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Earning more money and moving into a higher tax bracket can sometimes result in less overall take-home pay.",
+            isTrue: false,
+            explanation: "False. Under a marginal system, only the new income above the previous threshold is taxed at the higher rate, more gross income always means more net income too.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'tb_myth1', type: 'mythcards', title: 'Tax Brackets: True or False',
+            cards: [
+              { myth: "A raise that pushes someone into a new tax bracket taxes their ENTIRE income at the new, higher rate.", isTrue: false, explanation: "Only the portion of income within the new bracket is taxed at that rate, earlier income keeps its original lower rates." },
+              { myth: "The effective tax rate is always equal to or lower than the marginal tax rate.", isTrue: true, explanation: "True, since earlier income was taxed at lower rates first, the blended average is always at or below the top marginal rate." },
+              { myth: "It's mathematically possible to take home less money overall by earning more gross income.", isTrue: false, explanation: "Under a marginal bracket system, more gross income always results in more net income, never less, despite the common fear." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'tb_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
+            hintTexts: [
+              "Think about the most important first step when filing a first tax return.",
+              "Think about why Box 1 wages on a W-2 might be lower than actual gross pay."
+            ]
+          },
+          {
+            id: 'tb_t3', type: 'teach', title: 'A Common Fear, Worth Correcting',
+            concepts: [
+              {
+                term: 'Correcting the Misconception',
+                plain: "The \"bracket jump\" fear is one of the most common tax misunderstandings, and it can genuinely lead people to turn down raises or extra work for no real financial benefit. Understanding marginal versus effective rate removes that fear entirely.",
+                analogy: "It's like realizing a rumored parking fine doesn't actually apply the way everyone assumes, once you check, the fear disappears.",
+                check: { statement: "Understanding how marginal tax brackets actually work can prevent turning down a raise for no real reason.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'tb_boss', type: 'bossbattle', title: 'The Job Offer',
+            scenario: "Hammy gets a job offer with a meaningful raise that would push well into a new, higher marginal bracket. A friend warns, \"careful, that bracket is way higher, you might end up worse off.\"",
+            hintText: "Remember Correcting the Misconception: does the friend's warning hold up under how marginal brackets actually work?",
+            choices: [
+              { id: 'a', label: "Calculate the actual effective rate on the new salary before deciding", consequence: { text: "The math confirms take-home pay increases meaningfully, the friend's warning doesn't hold up once the real numbers are checked.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Turn down the offer based on the friend's warning about the higher bracket", consequence: { text: "A genuinely better financial opportunity gets declined over a common misconception about how tax brackets work.", delta: {}, xpMultiplier: 0.5 } },
+              { id: 'c', label: "Take the offer without doing any math, assuming it'll probably work out fine", consequence: { text: "The right instinct, taking the offer, though not actually confirming the numbers means missing the chance to fully understand the new take-home pay.", delta: {}, xpMultiplier: 0.9 } },
+              { id: 'd', label: "Ask the new employer's HR department to explain how the raise affects take-home pay", consequence: { text: "A reasonable step, though HR may only provide general guidance, doing the actual bracket math independently gives the clearest picture.", delta: {}, xpMultiplier: 1.0 } }
             ]
           }
         ]
@@ -10360,10 +10969,129 @@ const MODULES = [
         topic: 'Tax Deadlines, Extensions & Refunds: What to Expect',
         character: { name: 'Hammy', tagline: 'Waiting on a tax refund' },
         initialState: {},
+        bossAchievementId: 'deadline_aware',
         chapters: [
-          { id: 'deadlines_refunds_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'dr0', type: 'story', title: 'The Extension Mix-Up',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Tax Deadlines, Extensions & Refunds: What to Expect." }
+              { speaker: 'intro', text: "It's April 14th, and Hammy hasn't filed yet. \"I'll just file an extension, that gives me more time, no big deal.\"" },
+              { speaker: 'Hammy', text: '"An extension buys me extra time either way, right?"' },
+              { speaker: 'narrator', text: "It buys extra time for one specific thing, and it's not the thing most people assume." },
+              { speaker: 'Hammy', text: '"Wait, it\'s NOT extra time for everything? What does it actually cover?"' }
+            ]
+          },
+          {
+            id: 'dr_t1', type: 'teach', title: 'What an Extension Actually Extends',
+            concepts: [
+              {
+                term: 'Filing Extension',
+                plain: "A tax filing extension gives extra time to FILE the paperwork, typically pushing the deadline back several months. It does NOT extend the deadline to PAY any taxes owed, that payment is still due on the original April deadline, with interest and penalties accruing on unpaid amounts after that date.",
+                analogy: "It's like an extension on a homework assignment that doesn't push back the exam date it was supposed to prepare you for.",
+                check: { statement: "A tax filing extension also extends the deadline to pay any taxes owed.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'dr_t2', type: 'teach', title: 'Refund Timing',
+            concepts: [
+              {
+                term: 'Refund Timing',
+                plain: "For an e-filed return with direct deposit, the IRS generally issues refunds in less than 21 days. Paper returns and mailed checks take considerably longer. Checking a refund's status is possible directly through the IRS's own tracking tool.",
+                analogy: "It's like tracking a package, the shipping method chosen at checkout directly affects how fast it actually arrives.",
+                check: { statement: "E-filing with direct deposit is generally the fastest way to receive a tax refund.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'dr_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Filing Extension', definition: 'Extra time to file paperwork, does NOT extend the payment deadline.' },
+              { term: 'Refund Timing', definition: 'Generally under 21 days for e-file plus direct deposit.' },
+              { term: 'Original April Deadline', definition: 'The date payment is still due, even with a filing extension.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'dr_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: even without knowing the exact amount owed, submitting an estimated payment by the original April deadline (alongside a filing extension) avoids most late-payment penalties, filing late and paying late are two separate problems with two separate costs.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'dr_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why doesn't a tax filing extension also give extra time to pay taxes owed?",
+            keywords: ['file', 'pay', 'separate', 'deadline', 'owed'],
+            fullDefinition: "Because filing and paying are treated as two separate obligations by the IRS. An extension only pushes back the paperwork deadline, the actual payment is still expected by the original April date, since the IRS wants any money owed on time regardless of when the full return gets completed and filed.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'dr_d1', type: 'decision',
+            title: "The Extension Decision",
+            prompt: "Hammy files an extension on April 14th but doesn't estimate or pay anything toward taxes likely owed, planning to \"figure out the amount later.\"",
+            hintText: "Think back to Filing Extension: does the extension protect against penalties on unpaid taxes?",
+            choices: [
+              { id: 'a', label: 'File the extension and pay nothing until the actual return is finished months later', outcome: { text: "Interest and a late-payment penalty accrue on the unpaid amount from April onward, even though the filing itself is technically not late.", delta: {}, compare: [{ label: 'Months of penalty exposure', value: 4 }, { label: 'Months if estimated payment made', value: 0 }] } },
+              { id: 'b', label: 'File the extension AND submit an estimated payment by the April deadline', outcome: { text: "The filing extension is used correctly, and the payment obligation is still met on time, avoiding the late-payment penalty entirely.", delta: {}, compare: [{ label: 'Months of penalty exposure', value: 0 }, { label: 'Months if unpaid', value: 4 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'dr_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Estimated Payment With Extension', definition: 'Paying an approximate amount owed by April, even while the full return is still pending.' },
+              { term: 'Late-Payment Penalty', definition: 'A charge for taxes not paid by the original deadline, extension or not.' },
+              { term: 'IRS Refund Tracking Tool', definition: 'The official way to check a filed return\'s refund status directly.' }
+            ],
+            hintText: "One term is a way to AVOID a penalty despite an extension, one is the PENALTY itself, and one is a TRACKING tool.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'dr_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Filing a tax extension protects against penalties on taxes owed but not yet paid.",
+            isTrue: false,
+            explanation: "False. An extension only covers the paperwork deadline, taxes owed are still due by the original April deadline regardless of the extension.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'dr_myth1', type: 'mythcards', title: 'Deadlines & Refunds: True or False',
+            cards: [
+              { myth: "A paper-filed return with a mailed check generally arrives faster than e-file with direct deposit.", isTrue: false, explanation: "E-file plus direct deposit is generally the fastest combination, paper filing and mailed checks take considerably longer." },
+              { myth: "An estimated payment can be submitted alongside a filing extension, even before the full return is complete.", isTrue: true, explanation: "True, this is exactly the recommended move to avoid late-payment penalties while still taking the extra time to file." },
+              { myth: "The IRS provides an official tool to check a refund's status.", isTrue: true, explanation: "True, checking directly through the IRS's own tool is more reliable than guessing based on typical timelines alone." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'dr_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [10, 11],
+            hintTexts: [
+              "Think about what can be done if too little was withheld from paychecks last year.",
+              "Think about a way for a student with a simple return to file without paying a tax prep company."
+            ]
+          },
+          {
+            id: 'dr_t3', type: 'teach', title: 'Two Deadlines, Not One',
+            concepts: [
+              {
+                term: 'Filing vs. Paying, Always Separate',
+                plain: "Every tax season really involves two separate obligations: filing the paperwork, and paying what's owed. An extension only ever addresses the first one. Keeping that distinction in mind prevents the exact mix-up that leads to an avoidable penalty.",
+                analogy: "It's like a rent extension that only delays the paperwork, not the actual rent payment itself.",
+                check: { statement: "Filing and paying taxes are functionally the same single deadline.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'dr_boss', type: 'bossbattle', title: 'The Complicated Return',
+            scenario: "Hammy's return this year is more complicated than usual, freelance income, an education credit, and a move to a new state, and it's clear it won't be finished by April 15th.",
+            hintText: "Remember Filing vs. Paying, Always Separate: does needing more time to file also mean more time to pay?",
+            choices: [
+              { id: 'a', label: "File an extension AND submit a careful estimated payment by April 15th based on the information available", consequence: { text: "The extra time to sort out the complicated return is used correctly, while the payment obligation is still met on schedule.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "File the extension and wait to pay anything until the full complicated return is finished", consequence: { text: "The complexity is a reasonable excuse to delay filing, but it doesn't delay the payment deadline, penalties start accruing regardless.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Rush to finish the complicated return by April 15th without an extension, risking errors", consequence: { text: "This avoids any payment penalty, but rushing a genuinely complicated return risks mistakes that a bit more careful time could have caught.", delta: {}, xpMultiplier: 0.8 } },
+              { id: 'd', label: "Get help from a VITA clinic or tax professional given the added complexity, and still submit an estimated payment on time", consequence: { text: "Getting help with the complicated parts while still meeting the payment deadline covers both halves of the obligation well.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
