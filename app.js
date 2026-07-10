@@ -11699,10 +11699,129 @@ const MODULES = [
         topic: 'Social Pressure & Comparison Spending',
         character: { name: 'Hammy', tagline: 'Feeling pressure to keep up with friends\' spending' },
         initialState: {},
+        bossAchievementId: 'pressure_named',
         chapters: [
-          { id: 'social_pressure_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'sp0', type: 'story', title: 'Everyone\'s Going',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Social Pressure & Comparison Spending." }
+              { speaker: 'intro', text: "Hammy's friend group is planning a spring break trip. It's genuinely not affordable right now, but it's all anyone talks about, and everyone else is already in." },
+              { speaker: 'Hammy', text: '"If I say I can\'t afford it, it\'s going to be so awkward. Maybe I should just figure it out somehow."' },
+              { speaker: 'narrator', text: "That awkwardness feels bigger in the moment than it usually turns out to be, and \"figuring it out somehow\" often just means debt with extra steps." },
+              { speaker: 'Hammy', text: '"Okay, but how do I even bring it up without it being weird?"' }
+            ]
+          },
+          {
+            id: 'sp_t1', type: 'teach', title: 'Naming the Pressure',
+            concepts: [
+              {
+                term: 'Comparison Spending',
+                plain: "Comparison spending is making a purchase decision based on what a friend group is doing, rather than on your own actual budget. It's not really about the trip or the item itself, it's about not wanting to feel left out.",
+                analogy: "It's like buying a coat because everyone else has one, not because you're actually cold.",
+                check: { statement: "Comparison spending is primarily driven by an item's actual usefulness.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'sp_t2', type: 'teach', title: 'The Awkwardness Is Usually Smaller Than It Feels',
+            concepts: [
+              {
+                term: 'Anticipated vs. Actual Awkwardness',
+                plain: "The imagined reaction to saying \"I can't afford that right now\" is almost always worse than what actually happens. Most friends respect a clear, confident answer far more than a vague excuse, and most genuinely don't care as much as it feels like they will.",
+                analogy: "It's like rehearsing a hard conversation for hours, only to have it go far more smoothly than the version playing in your head.",
+                check: { statement: "The anticipated social cost of declining a purchase is usually smaller than expected once it actually happens.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'sp_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Comparison Spending', definition: "Spending based on a friend group's choices, not your own actual budget." },
+              { term: 'Anticipated Awkwardness', definition: 'The imagined social cost of declining, usually bigger than the real one.' },
+              { term: 'FOMO', definition: "Fear of missing out, a common driver behind comparison spending." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sp_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: offering a specific alternative, \"I can't do the full trip, but I'd love to do a day trip closer to home\" tends to land far better than a flat no. It shows the friendship matters, just not at a price that isn't actually affordable.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'sp_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why does declining a purchase you can't afford usually protect a friendship more than quietly going into debt for it?",
+            keywords: ['debt', 'honest', 'resent', 'stress', 'later'],
+            fullDefinition: "Because debt taken on to keep up doesn't disappear once the trip is over, it turns into ongoing financial stress, sometimes even resentment toward the friends involved. An honest, upfront answer costs a moment of awkwardness now, while hidden debt costs stress for months afterward, often without the friend group ever even knowing the real cost behind the yes.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'sp_d1', type: 'decision',
+            title: "The Group Chat Reply",
+            prompt: "The group chat is asking for a final headcount on the spring break trip. Hammy still can't actually afford it.",
+            hintText: "Think back to Anticipated vs. Actual Awkwardness: is a vague maybe actually easier than a clear answer?",
+            choices: [
+              { id: 'a', label: 'Say yes anyway and figure out the money later', outcome: { text: "The trip gets booked on borrowed money, and \"figuring it out later\" becomes a real debt with real interest.", delta: {}, compare: [{ label: 'New debt taken on', value: 1 }, { label: 'New debt if declined', value: 0 }] } },
+              { id: 'b', label: 'Say clearly that it\'s not affordable right now, and suggest a cheaper alternative', outcome: { text: "A moment of awkwardness passes quickly, and no debt gets taken on to keep up with the group.", delta: {}, compare: [{ label: 'New debt taken on', value: 0 }, { label: 'New debt if said yes', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sp_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Specific Alternative', definition: 'A cheaper option offered instead of a flat no, keeps the connection intact.' },
+              { term: 'Hidden Cost of Yes', definition: 'The debt or stress that isn\'t visible to the friend group after saying yes.' },
+              { term: 'Clear Answer', definition: 'A direct, confident response, generally respected more than a vague excuse.' }
+            ],
+            hintText: "One term is an OFFER instead of a flat no, one is what STAYS HIDDEN after saying yes, and one is the STYLE of answer that lands best.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'sp_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Most friends respect a vague excuse more than a direct \"I can't afford that right now.\"",
+            isTrue: false,
+            explanation: "False. A direct, honest answer is generally respected more than a vague excuse, which can actually create more awkwardness by leaving things unclear.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'sp_myth1', type: 'mythcards', title: 'Social Pressure Spending: True or False',
+            cards: [
+              { myth: "Comparison spending is really about the specific item or trip itself.", isTrue: false, explanation: "It's more about not wanting to feel left out than the actual item, the same purchase feels far less urgent without the social context." },
+              { myth: "Offering a cheaper alternative usually lands better than a flat decline.", isTrue: true, explanation: "True, it signals the friendship still matters, just not at an unaffordable price." },
+              { myth: "The imagined social cost of declining a purchase is usually bigger than the real one.", isTrue: true, explanation: "True, most people overestimate how big a deal a clear, honest decline actually turns out to be." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'sp_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 6],
+            hintTexts: [
+              "Think about what it's called when spending creeps up to match a friend group, even without a change in income.",
+              "Think about the healthiest way to handle a trip you genuinely can't afford."
+            ]
+          },
+          {
+            id: 'sp_t3', type: 'teach', title: 'Budget First, Then Decide',
+            concepts: [
+              {
+                term: 'Deciding From the Budget, Not the Group',
+                plain: "The healthiest version of this decision starts with the actual budget, not with what everyone else is doing. If the budget genuinely allows it, great, join in. If it doesn't, that's the actual answer, regardless of social pressure.",
+                analogy: "It's like checking the weather before deciding what to wear, not just copying what everyone else has on.",
+                check: { statement: "A spending decision made primarily by matching a friend group is generally more reliable than one based on an actual budget.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'sp_boss', type: 'bossbattle', title: 'The Follow-Up Pressure',
+            scenario: "After Hammy declines the trip, a friend pushes back: \"come on, we'll cover part of it, you're really not coming?\" The offer is tempting, but the underlying budget hasn't actually changed.",
+            hintText: "Remember Deciding From the Budget, Not the Group: does a partial cover-up actually fix the real budget problem?",
+            choices: [
+              { id: 'a', label: "Thank them for the offer, but confirm the remaining cost still doesn't fit the budget", consequence: { text: "The generous offer is acknowledged without letting it override what the actual budget can support.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Accept the partial cover just to avoid further pushback", consequence: { text: "The remaining cost, even reduced, still doesn't fit the budget, the original problem just gets smaller instead of solved.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Get defensive and end the conversation abruptly", consequence: { text: "The decision itself might be right, but ending things abruptly risks more friction with the group than a calm explanation would have.", delta: {}, xpMultiplier: 0.75 } },
+              { id: 'd', label: "Ask specifically how much the partial cover would bring the cost down to, then check it against the budget", consequence: { text: "A genuinely useful next step, actually checking the new number against the real budget instead of deciding on feeling alone.", delta: {}, xpMultiplier: 1.15 } }
             ]
           }
         ]
@@ -11712,10 +11831,135 @@ const MODULES = [
         topic: 'Subscription Creep & Recurring Payments',
         character: { name: 'Hammy', tagline: 'Losing track of monthly subscriptions' },
         initialState: {},
+        bossAchievementId: 'creep_audited',
         chapters: [
-          { id: 'subscription_creep_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'sc0', type: 'story', title: 'Six Subscriptions, Two Remembered',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Subscription Creep & Recurring Payments." }
+              { speaker: 'intro', text: "Hammy scrolls through a bank statement and counts six recurring subscriptions. Only two of them ring a bell." },
+              { speaker: 'Hammy', text: '"When did I even sign up for four of these? I don\'t even use most of them."' },
+              { speaker: 'narrator', text: "That's exactly what subscription creep looks like, small charges that quietly stack up until a full audit reveals the total." },
+              { speaker: 'Hammy', text: '"Okay, how do I actually catch this before it gets to six?"' }
+            ]
+          },
+          {
+            id: 'sc_t1', type: 'teach', title: 'Why Subscriptions Creep',
+            concepts: [
+              {
+                term: 'Subscription Creep',
+                plain: "Subscription creep happens because each individual sign-up feels small and easy, a free trial, a $5 add-on, and none of them ever prompt a reminder to cancel. Over time, several small recurring charges add up to a real, often invisible, monthly total.",
+                analogy: "It's like a dozen small leaks in different pipes, no single one floods the house, but together they waste a lot of water.",
+                check: { statement: "Subscription creep is usually caused by one large purchase decision made all at once.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'sc_t2', type: 'teach', title: 'The Free Trial Trap',
+            concepts: [
+              {
+                term: 'Free Trial Trap',
+                plain: "Free trials often auto-convert to a paid subscription unless actively cancelled before the trial ends, and the exact end date is easy to lose track of. The trial itself isn't the problem, forgetting the conversion date is.",
+                analogy: "It's like a library book with no due-date reminder, easy to forget until the fine shows up.",
+                check: { statement: "Most free trials require an active decision to continue paying once the trial period ends.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'sc_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Subscription Creep', definition: 'Several small recurring charges quietly adding up over time.' },
+              { term: 'Free Trial Trap', definition: 'A trial that auto-converts to paid unless actively cancelled first.' },
+              { term: 'Statement Audit', definition: 'Reviewing a bank statement specifically to find recurring charges.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sc_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: some banking apps have a built-in feature that automatically flags recurring subscription charges, worth checking before manually combing through months of statements by hand.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'sc_spot1', type: 'spotcheck', title: 'Spot the Subscriptions Worth Cancelling',
+            intro: "Here's Hammy's list of recurring monthly charges. Tap anything worth cancelling or double-checking, then hit Continue to see what you caught.",
+            postingTitle: "Recurring Charges This Month",
+            segments: [
+              { id: 's1', text: "Streaming service #1, $15.99/month, watched almost daily. ", isRedFlag: false, explanation: "Genuinely used regularly, no real reason to flag this one." },
+              { id: 's2', text: "Streaming service #2, $9.99/month, can't remember the last time it was opened. ", isRedFlag: true, explanation: "Unused and forgotten, a textbook subscription creep candidate for cancellation." },
+              { id: 's3', text: "Cloud storage upgrade, $2.99/month, actively used for class files. ", isRedFlag: false, explanation: "Small but genuinely useful and actively in use, not a creep candidate." },
+              { id: 's4', text: "A \"premium\" app trial that converted to $6.99/month automatically last month. ", isRedFlag: true, explanation: "A classic free trial trap, converted without an active decision to keep paying." },
+              { id: 's5', text: "Gym membership, $34.99/month, used twice in the last two months. ", isRedFlag: true, explanation: "Barely used relative to its cost, worth a serious second look, even if it's not purely a \"forgotten\" charge." },
+              { id: 's6', text: "Phone plan, $45/month, actively used every day. ", isRedFlag: false, explanation: "A genuine, actively used necessity, not a candidate for this kind of audit." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'sc_d1', type: 'decision',
+            title: "After the Audit",
+            prompt: "The audit reveals about $20/month in genuinely forgotten or barely-used subscriptions Hammy could cancel.",
+            hintText: "Think back to Subscription Creep: does $20/month feel small enough to just leave alone?",
+            choices: [
+              { id: 'a', label: 'Leave them all as is, $20/month feels too small to bother with', outcome: { text: "That \"small\" $20/month adds up to $240 over a year, quietly spent on things barely, or never, used.", delta: {}, compare: [{ label: 'Monthly waste', value: 20 }, { label: 'Annual total', value: 240 }] } },
+              { id: 'b', label: 'Cancel the forgotten and barely-used subscriptions found in the audit', outcome: { text: "$240/year gets redirected toward something actually valuable instead of quietly draining away unnoticed.", delta: {}, compare: [{ label: 'Monthly waste eliminated', value: 20 }, { label: 'Annual savings', value: 240 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sc_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Small Individually, Large Together', definition: 'How several small subscriptions combine into a meaningful monthly total.' },
+              { term: 'Trial Conversion Date', definition: "The specific date a free trial turns into a paid charge if not cancelled." },
+              { term: 'Regular Audit Habit', definition: 'Periodically reviewing recurring charges, not just once.' }
+            ],
+            hintText: "One term describes the SCALE of the problem, one is a DATE worth tracking, and one is the HABIT that prevents it recurring.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'sc_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A few small $5-10/month subscriptions rarely add up to a meaningful amount over a year.",
+            isTrue: false,
+            explanation: "False. Several small subscriptions together can easily total hundreds of dollars a year, exactly why they're worth an occasional audit.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'sc_myth1', type: 'mythcards', title: 'Subscription Creep: True or False',
+            cards: [
+              { myth: "Free trials always require an active choice to continue paying once the trial ends.", isTrue: false, explanation: "Most auto-convert to paid unless actively cancelled first, the opposite of requiring an active choice to continue." },
+              { myth: "A one-time subscription audit is generally enough to prevent creep permanently.", isTrue: false, explanation: "New subscriptions and trials keep appearing over time, a periodic, repeated audit habit works better than a single one-time check." },
+              { myth: "Some banking apps can automatically flag recurring subscription charges.", isTrue: true, explanation: "True, many modern banking apps include this feature, worth checking before manually reviewing statements by hand." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'sc_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [3, 4],
+            hintTexts: [
+              "Think about the best way to prevent forgotten recurring subscriptions from piling up.",
+              "Think about the hidden risk in a \"Buy Now, Pay Later\" offer."
+            ]
+          },
+          {
+            id: 'sc_t3', type: 'teach', title: 'Audit on a Schedule',
+            concepts: [
+              {
+                term: 'Scheduled Reviews',
+                plain: "Rather than waiting for a moment of curiosity to trigger an audit, putting a recurring reminder on the calendar, say, every three months, catches new subscription creep before it has time to quietly build back up.",
+                analogy: "It's like a scheduled dentist checkup instead of only going when something already hurts.",
+                check: { statement: "A subscription audit is most effective as a one-time event rather than a recurring habit.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'sc_boss', type: 'bossbattle', title: 'Three Months Later',
+            scenario: "Three months after cancelling the forgotten subscriptions, Hammy notices two NEW small charges that appeared without much thought, another free trial and a small app add-on.",
+            hintText: "Remember Scheduled Reviews: does cancelling once mean the problem is permanently solved?",
+            choices: [
+              { id: 'a', label: "Do another quick audit now, and set a recurring quarterly reminder going forward", consequence: { text: "The new charges get caught early, and the recurring reminder means this doesn't quietly build back up again unnoticed.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Assume the first audit permanently fixed the problem and ignore the new charges", consequence: { text: "New subscriptions keep appearing over time, without a repeated habit, the exact same creep pattern starts rebuilding.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Cancel just the two new charges without setting up any ongoing reminder", consequence: { text: "This catches the immediate problem, but without a scheduled habit, the same drift is likely to happen again later.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'd', label: "Turn on the banking app's automatic subscription-flagging feature going forward", consequence: { text: "A smart, low-effort fix that catches future creep automatically, without needing to remember a manual audit at all.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -11725,10 +11969,129 @@ const MODULES = [
         topic: 'Buy Now, Pay Later: The Real Cost',
         character: { name: 'Hammy', tagline: 'Considering a BNPL plan at checkout' },
         initialState: {},
+        bossAchievementId: 'bnpl_stacked_seen',
         chapters: [
-          { id: 'bnpl_cost_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'bn0', type: 'story', title: '"No Interest, So It\'s Free"',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Buy Now, Pay Later: The Real Cost." }
+              { speaker: 'intro', text: "A checkout page offers Buy Now, Pay Later: split a $200 purchase into 4 payments of $50, no interest. Hammy has two other BNPL plans already running from recent purchases." },
+              { speaker: 'Hammy', text: '"No interest means it\'s basically free money, right? Why wouldn\'t I split it up?"' },
+              { speaker: 'narrator', text: "No interest doesn't mean no risk, especially once several of these plans are running at the same time." },
+              { speaker: 'Hammy', text: '"Wait, what\'s risky about a $50 payment? That sounds manageable."' }
+            ]
+          },
+          {
+            id: 'bn_t1', type: 'teach', title: 'One Plan Feels Small, Several Don\'t',
+            concepts: [
+              {
+                term: 'BNPL Stacking',
+                plain: "A single BNPL payment often feels genuinely small and manageable. The real risk shows up when several BNPL plans run at the same time, each individually small, but combined into a real recurring monthly obligation that's easy to lose track of.",
+                analogy: "It's like several small monthly bills that individually seem harmless, but together function exactly like one larger bill nobody actually budgeted for.",
+                check: { statement: "The main risk of BNPL comes from a single plan being too expensive on its own.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'bn_t2', type: 'teach', title: 'It\'s Still a Debt Obligation',
+            concepts: [
+              {
+                term: 'Still a Real Obligation',
+                plain: "Even without interest, a BNPL plan is still a legal payment obligation. Missing a payment can trigger late fees, and depending on the provider, can be reported to credit bureaus, affecting a credit score just like a missed credit card payment would.",
+                analogy: "It's like a phone bill with no interest attached, still a real bill with real consequences for missing it.",
+                check: { statement: "A missed Buy Now, Pay Later payment has no real consequence since there's no interest involved.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bn_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'BNPL Stacking', definition: 'Several small BNPL plans running simultaneously, adding up to a real total.' },
+              { term: 'Still a Real Obligation', definition: 'A legal payment commitment, despite having no interest.' },
+              { term: 'Missed Payment Consequence', definition: 'A late fee, and possibly a credit report impact, for a missed BNPL payment.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bn_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: before adding a new BNPL plan, it's worth mentally (or literally) adding up every ACTIVE plan's remaining payments first, not just evaluating the new purchase in isolation. That total, not any single $50 payment, is the number that actually matters.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'bn_price1', type: 'priceisright', title: 'The Price Is Right: The Combined Monthly Total',
+            prompt: "Hammy already has two active BNPL plans: $40/month and $35/month. A new $200 purchase would add a third plan at $50/month. Guess the total combined monthly BNPL obligation if Hammy goes through with the new purchase.",
+            hintText: "Add all three monthly payments together, not just the newest one.",
+            actualValue: 125, guessRange: { min: 0, max: 250, step: 5 },
+            explanation: "$40 + $35 + $50 = $125/month in combined BNPL payments, a real, recurring obligation that's easy to lose sight of when each individual plan is evaluated on its own.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'bn_d1', type: 'decision',
+            title: "The Third Plan",
+            prompt: "Hammy is at checkout considering the third BNPL plan, on top of the two already active.",
+            hintText: "Think back to BNPL Stacking: is the decision really just about this one $50 payment?",
+            choices: [
+              { id: 'a', label: 'Add the third plan, since $50/month alone seems manageable', outcome: { text: "The combined total climbs to $125/month across all three plans, a real recurring cost that was never evaluated as a whole.", delta: {}, compare: [{ label: 'Combined monthly BNPL', value: 125 }, { label: 'Combined without new plan', value: 75 }] } },
+              { id: 'b', label: 'Check the combined total across all active plans before deciding', outcome: { text: "Seeing the real $125/month total (versus the current $75/month) makes it possible to decide with the full picture, not just the newest piece.", delta: {}, compare: [{ label: 'Combined monthly BNPL if added', value: 125 }, { label: 'Combined monthly BNPL currently', value: 75 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bn_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Evaluating in Isolation', definition: "Judging a new BNPL plan only by its own payment, ignoring existing ones." },
+              { term: 'Combined Monthly Total', definition: 'The full obligation across every active BNPL plan added together.' },
+              { term: 'Credit Bureau Reporting', definition: 'A possible consequence of a missed BNPL payment, depending on the provider.' }
+            ],
+            hintText: "One term is a MISTAKE in how a new plan gets judged, one is the REAL total that matters, and one is a possible CONSEQUENCE.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'bn_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A \"no interest\" Buy Now, Pay Later plan carries no real financial risk.",
+            isTrue: false,
+            explanation: "False. It's still a real payment obligation, missed payments can trigger fees and credit impacts, and stacking several plans can add up to a meaningful, easy-to-lose-track-of monthly total.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'bn_myth1', type: 'mythcards', title: 'Buy Now, Pay Later: True or False',
+            cards: [
+              { myth: "Running several BNPL plans at once is riskier than the interest-free label on each one suggests.", isTrue: true, explanation: "True, the combined total across several plans is the real number to watch, not each individual payment." },
+              { myth: "A missed BNPL payment can never affect a credit score.", isTrue: false, explanation: "Depending on the provider, missed payments can be reported to credit bureaus, affecting a score just like other missed payments." },
+              { myth: "Checking the combined total of all active BNPL plans before adding a new one is a useful habit.", isTrue: true, explanation: "True, that's exactly the check that reveals the real obligation a single-plan view would miss." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'bn_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [3, 4],
+            hintTexts: [
+              "Think about the best way to prevent forgotten recurring subscriptions from piling up.",
+              "Think about the hidden risk in a \"Buy Now, Pay Later\" offer."
+            ]
+          },
+          {
+            id: 'bn_t3', type: 'teach', title: 'See the Whole Picture Before Adding to It',
+            concepts: [
+              {
+                term: 'The Whole Picture, Not Just the New Piece',
+                plain: "Every individual BNPL decision should be evaluated against the FULL current obligation, not judged alone. A purchase that seems fine in isolation can be the one that pushes a combined monthly total past what's actually manageable.",
+                analogy: "It's like adding one more item to an already-full suitcase, the new item alone seems small, but the suitcase is what actually has to close.",
+                check: { statement: "A new BNPL plan should generally be evaluated against the full combined total of all active plans, not just on its own.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bn_boss', type: 'bossbattle', title: 'The Fourth Offer',
+            scenario: "With the $125/month combined total already running across three plans, a fourth BNPL offer appears at checkout for a $150 item, split into $37.50/month payments.",
+            hintText: "Remember The Whole Picture, Not Just the New Piece: what would the new combined total actually be?",
+            choices: [
+              { id: 'a', label: "Calculate the new combined total ($162.50/month) before deciding anything", consequence: { text: "Seeing the real total first makes it possible to judge whether it's genuinely manageable, not just guess based on the newest payment alone.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Add the fourth plan since $37.50/month looks small on its own", consequence: { text: "The combined total quietly climbs to $162.50/month, evaluated the same way that got Hammy to $125/month in the first place.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Decline the fourth plan and pay for the item in full instead", consequence: { text: "This avoids adding to the stack entirely, a solid instinct once the combined total is already meaningful.", delta: {}, xpMultiplier: 1.15 } },
+              { id: 'd', label: "Wait until one of the existing three plans finishes before considering anything new", consequence: { text: "A reasonable, patient approach that naturally caps the combined total without needing to do the math on a new addition.", delta: {}, xpMultiplier: 1.1 } }
             ]
           }
         ]
@@ -11738,10 +12101,129 @@ const MODULES = [
         topic: 'Mental Accounting & Targeted Ads',
         character: { name: 'Hammy', tagline: 'Noticing how ads target their spending habits' },
         initialState: {},
+        bossAchievementId: 'accounting_noticed',
         chapters: [
-          { id: 'mental_accounting_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ma0', type: 'story', title: 'A $400 Refund, Gone Fast',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Mental Accounting & Targeted Ads." }
+              { speaker: 'intro', text: "Hammy gets a $400 tax refund and immediately spends it on something that would never make it into a regular paycheck's budget. Ten minutes later, a targeted Instagram ad leads to another impulse buy." },
+              { speaker: 'Hammy', text: '"It\'s weird, I\'d never spend $400 of my paycheck on that. But refund money just feels... different."' },
+              { speaker: 'narrator', text: "It IS treated differently, by the brain, even though a dollar is a dollar no matter where it came from." },
+              { speaker: 'Hammy', text: '"Wait, my brain actually treats the SAME dollar differently depending on where it came from?"' }
+            ]
+          },
+          {
+            id: 'ma_t1', type: 'teach', title: 'Mental Accounting',
+            concepts: [
+              {
+                term: 'Mental Accounting',
+                plain: "Mental accounting is the tendency to mentally sort money into different \"buckets\" based on its source, a paycheck, a refund, a gift, and treat each bucket differently, even though every dollar spends exactly the same. \"Windfall\" money like a refund often gets spent more loosely than earned income.",
+                analogy: "It's like treating found money on the sidewalk differently than money you carefully saved, even though both spend identically at a register.",
+                check: { statement: "Mental accounting means a person's brain values a dollar the same way regardless of where it came from.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ma_t2', type: 'teach', title: 'How Targeted Ads Exploit This',
+            concepts: [
+              {
+                term: 'Targeted Advertising',
+                plain: "Ads targeted based on recent searches or browsing history are designed to appear at exactly the moment interest is highest, often right when \"extra\" or windfall money is mentally available, making an impulse buy feel more justified than it would from a regular paycheck.",
+                analogy: "It's like a salesperson who happens to know exactly what you were just thinking about, timing matters as much as the pitch itself.",
+                check: { statement: "Targeted ads are timed randomly, with no relationship to recent search or browsing activity.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ma_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Mental Accounting', definition: "Treating money differently based on its source, even though a dollar is a dollar." },
+              { term: 'Windfall Money', definition: 'Unexpected income, like a refund or gift, often spent more loosely.' },
+              { term: 'Targeted Advertising', definition: 'Ads timed and personalized based on recent searches or browsing.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ma_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: treating windfall money with the same budget rules as a regular paycheck, even mentally renaming it \"extra income\" instead of \"free money\", measurably reduces impulsive spending on it. The label matters more than it seems like it should.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ma_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why does a $400 tax refund get spent differently than $400 from a regular paycheck, even though it's the exact same amount of money?",
+            keywords: ['source', 'mental', 'bucket', 'earned', 'windfall'],
+            fullDefinition: "Because the brain mentally sorts money into different \"buckets\" based on where it came from, not just its dollar value. Paycheck money is mentally labeled \"earned\" and tends to follow normal budget rules, while windfall money like a refund gets mentally labeled \"extra\" or \"free,\" making it feel safer to spend impulsively, even though both are worth exactly the same $400 at checkout.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'ma_d1', type: 'decision',
+            title: "The Next Refund",
+            prompt: "Hammy is expecting another $400 refund next year and wants to handle it differently this time.",
+            hintText: "Think back to Mental Accounting: does treating the refund like regular income change how it gets spent?",
+            choices: [
+              { id: 'a', label: 'Plan to spend it the same way as last time, whatever feels exciting in the moment', outcome: { text: "Without a plan, the refund likely disappears the same way it did last time, into an impulse purchase that wouldn\'t survive a normal budget check.", delta: {}, compare: [{ label: 'Refund saved', value: 0 }, { label: 'Refund spent on impulse', value: 400 }] } },
+              { id: 'b', label: 'Decide in advance to run it through the same budget rules as a paycheck', outcome: { text: "Treated like regular income, the refund gets allocated deliberately, savings, a planned purchase, instead of vanishing on impulse.", delta: {}, compare: [{ label: 'Refund saved or allocated', value: 400 }, { label: 'Refund spent on impulse', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ma_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Reframing the Label', definition: 'Mentally calling windfall money "income" instead of "free money."' },
+              { term: 'Impulse Justification', definition: "Feeling a purchase is more okay because the money felt like a bonus." },
+              { term: 'Same Budget Rules', definition: 'Applying normal spending decisions to windfall money, same as a paycheck.' }
+            ],
+            hintText: "One term is a MENTAL shift, one is a FEELING that enables overspending, and one is a HABIT that counters it.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ma_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Most people budget windfall money, like a tax refund, exactly the same way they budget a regular paycheck.",
+            isTrue: false,
+            explanation: "False. Mental accounting research consistently shows windfall money gets treated more loosely, spent more impulsively, than earned income of the same amount.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ma_myth1', type: 'mythcards', title: 'Mental Accounting: True or False',
+            cards: [
+              { myth: "Renaming windfall money as \"income\" instead of \"free money\" can actually reduce impulsive spending on it.", isTrue: true, explanation: "True, the mental label attached to money measurably affects how carefully it gets spent." },
+              { myth: "Targeted ads are purely random and unrelated to recent browsing or search activity.", isTrue: false, explanation: "Targeted ads are specifically timed and personalized based on recent online activity, not randomly served." },
+              { myth: "A dollar from a paycheck and a dollar from a tax refund have different actual purchasing power.", isTrue: false, explanation: "They spend identically, the only difference is how the brain mentally categorizes and treats each source." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ma_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [7, 8],
+            hintTexts: [
+              "Think about what's happening when a tax refund gets spent differently than a regular paycheck.",
+              "Think about a practical defense against impulse buying from targeted ads."
+            ]
+          },
+          {
+            id: 'ma_t3', type: 'teach', title: 'One Budget, Regardless of Source',
+            concepts: [
+              {
+                term: 'One Unified Budget',
+                plain: "The most effective defense against mental accounting is treating all money, paycheck, refund, gift, side income, as part of ONE unified budget, rather than several separately-labeled mental pots with different rules. Every dollar gets the same scrutiny, no matter where it came from.",
+                analogy: "It's like combining several bank accounts into one clear total, instead of mentally tracking each one with a different set of rules.",
+                check: { statement: "Treating all income sources as part of one unified budget, rather than separate mental categories, generally leads to more consistent spending decisions.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ma_boss', type: 'bossbattle', title: 'The Birthday Gift',
+            scenario: "A relative sends Hammy a $150 birthday gift, right as a targeted ad for a $140 item Hammy searched for last week shows up in the feed.",
+            hintText: "Remember One Unified Budget: does the birthday-gift label make this purchase decision any different than spending $140 from a paycheck?",
+            choices: [
+              { id: 'a', label: "Run the $140 purchase through the same budget check as any other spending decision", consequence: { text: "Treating the gift money like any other dollar leads to a genuinely considered decision, not an automatic yes because it \"felt like\" free money.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Buy the item immediately since it's gift money, not \"real\" budget money", consequence: { text: "The gift gets spent on the first thing a targeted ad suggested, exactly the mental accounting pattern this quest was about recognizing.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Save the entire gift without considering whether the item is something actually wanted", consequence: { text: "Saving isn't wrong, but skipping the actual budget check means the decision was still made by label (\"gift = save\") rather than genuine evaluation.", delta: {}, xpMultiplier: 0.9 } },
+              { id: 'd', label: "Wait 24 hours before deciding, applying the same impulse-purchase rule used for paycheck spending", consequence: { text: "Applying the same waiting-period rule regardless of the money's source is exactly the unified-budget habit this quest is building.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -11751,10 +12233,129 @@ const MODULES = [
         topic: 'Sunk Cost Fallacy & Breaking Spending Triggers',
         character: { name: 'Hammy', tagline: 'Stuck justifying a bad purchase' },
         initialState: {},
+        bossAchievementId: 'sunk_cost_released',
         chapters: [
-          { id: 'sunk_cost_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'suc0', type: 'story', title: 'Twice in Eight Months',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Sunk Cost Fallacy & Breaking Spending Triggers." }
+              { speaker: 'intro', text: "Hammy has paid for a gym membership for 8 months but only actually gone twice. \"I've already spent so much on it, I can't quit now.\"" },
+              { speaker: 'Hammy', text: '"If I cancel now, all that money I already spent was just wasted."' },
+              { speaker: 'narrator', text: "That money is already spent either way, cancelling or not doesn't bring it back, it only affects what happens from here forward." },
+              { speaker: 'Hammy', text: '"Wait, so continuing to pay doesn\'t actually get that money back either?"' }
+            ]
+          },
+          {
+            id: 'suc_t1', type: 'teach', title: 'The Sunk Cost Fallacy',
+            concepts: [
+              {
+                term: 'Sunk Cost Fallacy',
+                plain: "The sunk cost fallacy is continuing to invest in something specifically because of money already spent, even when that past spending has no actual bearing on whether continuing is a good decision going forward. Past spending is gone regardless of what happens next.",
+                analogy: "It's like finishing a bad meal because you already paid for it, the money's spent either way, only how much more discomfort you add is still up to you.",
+                check: { statement: "Money already spent on something should factor into whether it's worth continuing to spend more on it.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'suc_t2', type: 'teach', title: 'The Only Question That Matters Now',
+            concepts: [
+              {
+                term: 'The Forward-Looking Question',
+                plain: "The only decision that actually matters is: \"knowing what I know now, would I start this today?\" Past spending is irrelevant to that question, it only asks whether the choice makes sense going forward, from this exact moment.",
+                analogy: "It's like deciding whether to keep driving toward a destination that no longer makes sense, the miles already driven don't make continuing the right call.",
+                check: { statement: "The most useful question for a sunk cost decision is whether you'd choose to start it again today, knowing what you know now.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'suc_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Sunk Cost Fallacy', definition: 'Continuing to spend because of money already spent, not future value.' },
+              { term: 'The Forward-Looking Question', definition: 'Would you start this today, knowing what you know now?' },
+              { term: 'Sunk Cost', definition: 'Money already spent that cannot be recovered, regardless of future choices.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'suc_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: the sunk cost fallacy shows up far beyond gym memberships, an unused subscription, a bad investment held onto too long, even a class or major that no longer fits. The same forward-looking question applies in every one of those situations.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'suc_price1', type: 'priceisright', title: 'The Price Is Right: The Real Cost Per Visit',
+            prompt: "Hammy's gym membership costs $34.99/month and has been used twice in 8 months. Guess the actual cost per visit, based on total money spent divided by actual visits.",
+            hintText: "Total spent so far is $34.99 × 8 months, then divide that by the 2 actual visits.",
+            actualValue: 140, guessRange: { min: 0, max: 300, step: 10 },
+            explanation: "$34.99 × 8 ≈ $280 spent so far, divided by 2 actual visits = $140 per visit. A number like that makes the sunk cost fallacy's pull much easier to see clearly.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'suc_d1', type: 'decision',
+            title: "The Cancellation Decision",
+            prompt: "Hammy is deciding whether to cancel the gym membership or keep paying, still reasoning \"I've already spent so much, I can't quit now.\"",
+            hintText: "Think back to The Forward-Looking Question: does past spending change what happens to FUTURE money?",
+            choices: [
+              { id: 'a', label: 'Keep paying to avoid "wasting" the money already spent', outcome: { text: "The $280 already spent is gone either way, continuing just adds MORE unused monthly charges on top of it.", delta: {}, compare: [{ label: 'Already spent (unrecoverable)', value: 280 }, { label: 'Future spend if continued', value: 35 }] } },
+              { id: 'b', label: 'Cancel the membership and consider a pay-per-visit option instead', outcome: { text: "The past $280 stays spent regardless, but future money stops going toward something barely used, redirected to something that actually fits.", delta: {}, compare: [{ label: 'Already spent (unrecoverable)', value: 280 }, { label: 'Future spend avoided', value: 35 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'suc_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Cost Per Use', definition: 'Total money spent divided by actual times something was used.' },
+              { term: 'Unrecoverable Past Spending', definition: 'Money already spent that no future decision can bring back.' },
+              { term: 'Pay-Per-Visit Alternative', definition: 'A lower-commitment option that avoids a recurring charge for infrequent use.' }
+            ],
+            hintText: "One term REVEALS the fallacy with a number, one describes what CAN\'T be undone, and one is an ALTERNATIVE worth considering.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'suc_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Cancelling a barely-used subscription after months of payments means the earlier money was wasted either way.",
+            isTrue: true,
+            explanation: "True, and that's exactly the point, the earlier money is spent regardless of the decision, so it shouldn't be the reason to keep paying more.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'suc_myth1', type: 'mythcards', title: 'Sunk Cost Fallacy: True or False',
+            cards: [
+              { myth: "Calculating a \"cost per use\" number can make a sunk cost decision easier to see clearly.", isTrue: true, explanation: "True, a concrete number like $140/visit cuts through the abstract feeling of \"I've already spent so much\" more effectively than the feeling alone." },
+              { myth: "The sunk cost fallacy only applies to money, never to time or effort already invested.", isTrue: false, explanation: "The same fallacy applies to time and effort too, staying in a bad situation because of time already invested follows the identical pattern." },
+              { myth: "Continuing to pay for something already barely used will eventually recover the money already spent.", isTrue: false, explanation: "Past spending is gone regardless, continuing to pay only adds new spending on top of it, it never recovers what's already spent." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'suc_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [9, 10],
+            hintTexts: [
+              "Think about what it's called when past spending keeps you paying for something you don't use.",
+              "Think about what's driving the feeling that your wardrobe is suddenly inadequate."
+            ]
+          },
+          {
+            id: 'suc_t3', type: 'teach', title: 'Decide Forward, Not Backward',
+            concepts: [
+              {
+                term: 'Forward-Looking Decisions',
+                plain: "Every sunk cost situation resolves the same way: separate the backward-looking feeling (\"I already spent so much\") from the forward-looking question (\"is this worth continuing to fund, starting today\"). Only the second question should actually drive the decision.",
+                analogy: "It's like reading a map from where you currently stand, not from where the trip originally started.",
+                check: { statement: "A sunk cost decision should primarily be driven by how much has already been spent.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'suc_boss', type: 'bossbattle', title: 'The Textbook Bundle',
+            scenario: "Hammy pre-paid for a $120 textbook bundle for a class, then switched majors and no longer needs most of the books, but has already \"invested\" in the bundle.",
+            hintText: "Remember Forward-Looking Decisions: does the $120 already spent change what's actually useful going forward?",
+            choices: [
+              { id: 'a', label: "Sell or return whatever's actually unusable now, keep only what's still relevant to the new major", consequence: { text: "The $120 stays spent either way, but this recovers some value and stops carrying unnecessary items forward.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Keep the entire bundle since it was already paid for, even though most of it isn't needed anymore", consequence: { text: "The unused books provide zero value going forward, kept purely because of the sunk cost, not because they're actually useful now.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Buy new books for the new major on top of keeping the old bundle", consequence: { text: "This solves the immediate need but adds new spending without addressing the sunk-cost instinct that's keeping the unused bundle around.", delta: {}, xpMultiplier: 0.75 } },
+              { id: 'd', label: "Check the school's buyback program for the unused books before deciding what to do with them", consequence: { text: "A practical first step that could recover some value from the unused books before making a final call.", delta: {}, xpMultiplier: 1.15 } }
             ]
           }
         ]
