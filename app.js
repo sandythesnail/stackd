@@ -8959,10 +8959,134 @@ const MODULES = [
         topic: 'FAFSA Eligibility & Loan Paperwork',
         character: { name: 'Hammy', tagline: 'Wading through loan paperwork' },
         initialState: {},
+        bossAchievementId: 'paperwork_cleared',
         chapters: [
-          { id: 'loan_paperwork_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'lp0', type: 'story', title: 'The Dropped Class',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on FAFSA Eligibility & Loan Paperwork." }
+              { speaker: 'intro', text: "Hammy is considering dropping one class this semester, and the loan money hasn't disbursed yet. \"Wait, does dropping this affect whether I even GET the loan?\"" },
+              { speaker: 'Hammy', text: '"I filled out the FAFSA already. Isn\'t that the only paperwork I need?"' },
+              { speaker: 'narrator', text: "The FAFSA determines aid eligibility, but there's more paperwork specifically for federal LOANS, and enrollment status matters too." },
+              { speaker: 'Hammy', text: '"More paperwork? What else is there?"' }
+            ]
+          },
+          {
+            id: 'lp_t1', type: 'teach', title: 'The Master Promissory Note',
+            concepts: [
+              {
+                term: 'Master Promissory Note (MPN)',
+                plain: "The MPN is a legal agreement to repay federal loans, completed once at studentaid.gov, and it generally covers multiple years of borrowing at the same school, not just one loan.",
+                analogy: "It's like signing a lease once that covers the whole time you live somewhere, not a new signature every single month.",
+                check: { statement: "A Master Promissory Note typically needs to be signed fresh for every single loan disbursement.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'lp_t2', type: 'teach', title: 'Entrance Counseling & Enrollment Status',
+            concepts: [
+              {
+                term: 'Entrance Counseling',
+                plain: "Entrance Counseling is a one-time online session explaining loan terms and responsibilities, required before a first federal loan disburses. Beyond that, staying enrolled at least half-time is an ongoing requirement, dropping below it, even mid-semester, can affect disbursement.",
+                analogy: "It's like a required orientation before the first payment lands, plus an ongoing membership requirement to keep receiving future ones.",
+                check: { statement: "Enrollment status only matters at the start of the semester and has no effect once loan money has been requested.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'lp_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Master Promissory Note', definition: 'A one-time legal agreement to repay loans, usually covers multiple years.' },
+              { term: 'Entrance Counseling', definition: 'A required one-time session on loan terms, before the first disbursement.' },
+              { term: 'Half-Time Enrollment', definition: 'An ongoing requirement to keep receiving federal loan funds.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'lp_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: an MPN completed at one school generally doesn't transfer to a NEW school, transferring or starting somewhere new usually requires a new one. Worth checking on studentaid.gov whenever enrollment changes schools.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'lp_spot1', type: 'spotcheck', title: 'Spot What Still Needs Doing',
+            intro: "Here's Hammy's current loan paperwork status. Tap anything that still needs to be completed before the loan can safely disburse, then hit Continue to see what you caught.",
+            postingTitle: "Hammy's studentaid.gov Checklist",
+            segments: [
+              { id: 's1', text: "FAFSA submitted and processed for this academic year. ", isRedFlag: false, explanation: "Already done, this step is complete." },
+              { id: 's2', text: "Master Promissory Note: signed two years ago at this same school. ", isRedFlag: false, explanation: "The MPN generally covers multiple years at the same school, this is already satisfied." },
+              { id: 's3', text: "Entrance Counseling: never completed, this is Hammy's first federal loan. ", isRedFlag: true, explanation: "As a first-time borrower, Entrance Counseling is required before this loan can disburse, and it hasn't been done yet." },
+              { id: 's4', text: "Currently enrolled in 15 credits this semester. ", isRedFlag: false, explanation: "Comfortably above the half-time threshold, no eligibility concern here." },
+              { id: 's5', text: "Considering dropping one 3-credit class, which would leave 12 credits. ", isRedFlag: false, explanation: "12 credits still generally clears the half-time bar for most schools, though it's worth confirming the school's specific threshold." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'lp_d1', type: 'decision',
+            title: "Before the Drop",
+            prompt: "Hammy is about to drop a class, which would bring credits down closer to the half-time line, and Entrance Counseling still isn't done.",
+            hintText: "Think back to Half-Time Enrollment and Entrance Counseling: which two things need checking before this loan disburses safely?",
+            choices: [
+              { id: 'a', label: 'Drop the class first, deal with the paperwork whenever', outcome: { text: "If dropping actually pushes Hammy below half-time, the loan disbursement itself could be at risk, on top of Entrance Counseling still being unfinished.", delta: {}, compare: [{ label: 'Requirements confirmed', value: 0 }, { label: 'Requirements needed', value: 2 }] } },
+              { id: 'b', label: 'Check the school\'s half-time credit threshold and finish Entrance Counseling before dropping anything', outcome: { text: "Both requirements get confirmed BEFORE any change is made, avoiding any surprise disruption to the loan.", delta: {}, compare: [{ label: 'Requirements confirmed', value: 2 }, { label: 'Requirements needed', value: 2 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'lp_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'First-Time Borrower', definition: "A student who's never taken federal loans before, Entrance Counseling required." },
+              { term: 'New School MPN', definition: "A fresh Master Promissory Note generally needed when transferring schools." },
+              { term: 'Disbursement Risk', definition: 'The chance a loan payment is delayed or affected by an unmet requirement.' }
+            ],
+            hintText: "One term describes someone NEW to federal loans, one is about SWITCHING schools, and one is a possible CONSEQUENCE of unmet requirements.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'lp_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Once Entrance Counseling is completed for a first loan, it never needs to be done again at that school.",
+            isTrue: true,
+            explanation: "True. Entrance Counseling is generally a one-time requirement per school, unlike enrollment status, which is checked every term.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'lp_myth1', type: 'mythcards', title: 'Loan Paperwork: True or False',
+            cards: [
+              { myth: "Submitting the FAFSA automatically completes the Master Promissory Note too.", isTrue: false, explanation: "They're separate steps, the FAFSA determines aid eligibility, the MPN is a separate loan agreement completed at studentaid.gov." },
+              { myth: "Dropping a class mid-semester can affect loan eligibility if it drops enrollment below half-time.", isTrue: true, explanation: "True, ongoing half-time enrollment is generally required to keep receiving federal loan funds." },
+              { myth: "A Master Promissory Note needs to be resigned every single semester.", isTrue: false, explanation: "It generally covers multiple years at the same school, not a fresh signature every term." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'lp_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 3],
+            hintTexts: [
+              "Think about how enrollment credits affect ongoing federal loan eligibility.",
+              "Think about what a first-time borrower must complete before receiving any loan funds."
+            ]
+          },
+          {
+            id: 'lp_t3', type: 'teach', title: 'Confirm Before You Change Anything',
+            concepts: [
+              {
+                term: 'Check First, Then Act',
+                plain: "Any change to enrollment, dropping a class, switching schools, taking a semester off, is worth checking against loan requirements BEFORE making it, not after. A quick check on studentaid.gov or with the financial aid office prevents an avoidable disruption.",
+                analogy: "It's like checking a flight's cancellation policy before changing plans, not after you've already made the change.",
+                check: { statement: "It's generally safer to check loan requirements after making an enrollment change, rather than before.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'lp_boss', type: 'bossbattle', title: 'The Late Add',
+            scenario: "Hammy adds a late class right before the drop/add deadline, bringing enrollment back up to 15 credits, but isn't sure if the financial aid office was notified of the change.",
+            hintText: "Remember Check First, Then Act: does the financial aid office automatically know about every enrollment change?",
+            choices: [
+              { id: 'a', label: "Contact the financial aid office directly to confirm the updated enrollment is reflected", consequence: { text: "A direct confirmation ensures the loan disbursement reflects the correct, current enrollment status.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Assume the registrar and financial aid office are automatically in sync", consequence: { text: "These offices don't always update in real time together, an assumption here risks a mismatch affecting the loan.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Wait for the next billing statement to check if anything looks off", consequence: { text: "This eventually catches an issue, but waiting risks a delay that a quick proactive check could have avoided entirely.", delta: {}, xpMultiplier: 0.8 } },
+              { id: 'd', label: "Check the studentaid.gov account directly for the updated enrollment status", consequence: { text: "A reasonable self-check that can confirm the status, though contacting the office directly is often the more definitive move.", delta: {}, xpMultiplier: 1.05 } }
             ]
           }
         ]
@@ -8972,10 +9096,138 @@ const MODULES = [
         topic: 'Borrowing Only What You Need',
         character: { name: 'Hammy', tagline: 'Deciding how much to actually borrow' },
         initialState: {},
+        bossAchievementId: 'borrowed_wisely',
         chapters: [
-          { id: 'borrow_only_need_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'bon0', type: 'story', title: 'The Extra $2,300',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Borrowing Only What You Need." }
+              { speaker: 'intro', text: "Hammy's aid offer includes $5,500 in federal loans for the year. After grants and savings, the actual gap to cover is only $3,200." },
+              { speaker: 'Hammy', text: '"It\'s already offered, though. Why not just take the full amount as a cushion?"' },
+              { speaker: 'narrator', text: "A loan isn't free money sitting there, whatever gets accepted has to be repaid, with interest, whether or not it actually gets spent on real costs." },
+              { speaker: 'Hammy', text: '"Right, but extra cash on hand still sounds useful."' }
+            ]
+          },
+          {
+            id: 'bon_t1', type: 'teach', title: 'Loans Can Be Accepted Partially',
+            concepts: [
+              {
+                term: 'Partial Acceptance',
+                plain: "A federal loan offer doesn't have to be accepted in full, most schools let you accept, reduce, or decline any portion through the aid portal. Accepting only what's actually needed keeps the balance, and the interest owed on it, as small as possible.",
+                analogy: "It's like a store credit line, having access to a limit doesn't mean using all of it makes sense.",
+                check: { statement: "A federal loan offer must be accepted in full or declined entirely, no partial amount allowed.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'bon_t2', type: 'teach', title: 'Extra Loan Money Still Accrues Interest',
+            concepts: [
+              {
+                term: 'Borrowed Cushion',
+                plain: "Extra loan money taken \"just in case\" still accrues interest (if unsubsidized) and still has to be repaid in full, whether it ends up covering a real cost or just sitting in a checking account. A cash cushion built from loan money is a cushion that costs interest.",
+                analogy: "It's like renting extra storage space for stuff you don't actually have yet, paying an ongoing cost for capacity that isn't being used for anything real.",
+                check: { statement: "Extra loan money that isn't spent on actual costs is free to hold onto with no downside.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bon_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Partial Acceptance', definition: 'Accepting only part of an offered loan amount, not all-or-nothing.' },
+              { term: 'Borrowed Cushion', definition: 'Extra loan money held as a buffer, which still accrues interest.' },
+              { term: 'Actual Gap', definition: 'The real dollar amount needed after grants, scholarships, and savings.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bon_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: if a real need comes up later in the year that wasn't anticipated, it's often still possible to request additional loan funds up to the original offer amount. Declining the extra now doesn't necessarily close the door on it forever.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'bon_ms1', type: 'microsim', title: "Deciding How Much to Accept",
+            prompt: "Hammy's aid offer includes $5,500 in loans, but the actual gap after grants and savings is $3,200. Decide how much of the loan to actually accept versus decline.",
+            hintText: "Accepting close to the actual $3,200 gap, rather than the full $5,500, keeps the borrowed amount, and the interest owed on it, as small as possible.",
+            income: 5500,
+            fixedCosts: [],
+            sliders: [
+              { id: 'accepted', label: 'Loan amount accepted', min: 0, max: 5500, step: 250, default: 5500 },
+              { id: 'declined', label: 'Loan amount declined', min: 0, max: 5500, step: 250, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That splits more than the $5,500 offered. Try smaller amounts.", ok: false },
+              { maxLeftover: 5499, text: "Double check: does the accepted amount roughly match the actual $3,200 gap, or is it borrowing more than needed?", ok: true },
+              { maxLeftover: Infinity, text: "A split that closely matches the real gap, exactly the habit that minimizes unnecessary interest.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'bon_d1', type: 'decision',
+            title: "The Portal Decision",
+            prompt: "Hammy is on the aid portal, ready to finalize the loan amount for the year.",
+            hintText: "Think back to Borrowed Cushion: does the extra $2,300 correspond to any real, known cost?",
+            choices: [
+              { id: 'a', label: 'Accept the full $5,500 as a safety cushion', outcome: { text: "The extra $2,300 accrues interest for the full year, whether or not it ever covers an actual cost.", delta: {}, compare: [{ label: 'Amount borrowed', value: 5500 }, { label: 'Actual gap', value: 3200 }] } },
+              { id: 'b', label: 'Accept close to the $3,200 actual gap, decline the rest', outcome: { text: "The borrowed amount matches the real need, keeping the total interest owed as low as it can be.", delta: {}, compare: [{ label: 'Amount borrowed', value: 3200 }, { label: 'Actual gap', value: 3200 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bon_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Requesting Additional Funds', definition: 'Asking for more loan money later in the year, up to the original offer.' },
+              { term: 'Unnecessary Interest', definition: 'Interest accrued on borrowed money beyond what was actually needed.' },
+              { term: 'Aid Portal', definition: 'Where a student typically accepts, reduces, or declines loan amounts.' }
+            ],
+            hintText: "One term is a way to get MORE later if needed, one is a COST of over-borrowing, and one is WHERE the decision gets made.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'bon_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Accepting the maximum loan amount offered is generally the safest approach, since it's better to have extra just in case.",
+            isTrue: false,
+            explanation: "False. Extra loan money still accrues interest and still has to be repaid, borrowing only what's actually needed generally minimizes the total cost.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'bon_myth1', type: 'mythcards', title: 'Borrowing Only What You Need: True or False',
+            cards: [
+              { myth: "Declining part of a loan offer now permanently forfeits access to that money for the rest of the year.", isTrue: false, explanation: "Additional funds can often still be requested later, up to the original offer, if a real need comes up." },
+              { myth: "A loan offer must be accepted in the exact dollar amount listed, with no adjustment allowed.", isTrue: false, explanation: "Most schools allow accepting a reduced amount, not just all-or-nothing." },
+              { myth: "Extra loan money held as a cushion, rather than spent on real costs, still accrues interest.", isTrue: true, explanation: "True, interest doesn't care whether the money is actually being used for something, it accrues on the balance regardless." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'bon_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 5],
+            hintTexts: [
+              "Think about what to do when an aid offer includes more in loans than the actual remaining gap.",
+              "Think about what's required each year for a returning borrower who already completed the MPN and Entrance Counseling."
+            ]
+          },
+          {
+            id: 'bon_t3', type: 'teach', title: 'Borrow for the Gap, Not the Ceiling',
+            concepts: [
+              {
+                term: 'The Actual Gap, Not the Offer Ceiling',
+                plain: "An aid offer's loan amount is a MAXIMUM available, not a target to hit. The smart number to borrow is whatever the real, calculated gap actually is, after every other resource is accounted for, not simply whatever the offer letter lists as available.",
+                analogy: "It's like a credit limit versus an actual bill, using the limit as a spending target is exactly how debt grows faster than necessary.",
+                check: { statement: "The loan amount listed on an aid offer represents the amount a student should generally aim to borrow.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bon_boss', type: 'bossbattle', title: 'The Sophomore Year Offer',
+            scenario: "The following year, Hammy's aid offer again includes $5,500 in loans. This time, after a scholarship renewal and a part-time job, the actual gap is only $1,000.",
+            hintText: "Remember The Actual Gap: does last year's borrowing habit still apply here, even with a much smaller gap?",
+            choices: [
+              { id: 'a', label: "Recalculate the actual gap and accept close to $1,000, same habit as before", consequence: { text: "The habit of matching borrowing to the real gap holds up again, keeping unnecessary interest to a minimum for a second year running.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Accept the full $5,500 again since that's what was done last year", consequence: { text: "With a much smaller actual gap this year, accepting the same large amount as before means borrowing far more than necessary.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Accept a middle amount, around $3,000, without recalculating the actual gap", consequence: { text: "Better than the full amount, but still more than the real $1,000 gap, some avoidable interest still gets taken on.", delta: {}, xpMultiplier: 0.8 } },
+              { id: 'd', label: "Decline the loan entirely and cover the $1,000 gap through part-time work instead", consequence: { text: "A reasonable option if the extra work hours are actually available, avoiding debt entirely for a gap this small.", delta: {}, xpMultiplier: 1.15 } }
             ]
           }
         ]
@@ -8985,10 +9237,129 @@ const MODULES = [
         topic: 'Loan Repayment Plans Explained',
         character: { name: 'Hammy', tagline: 'Picking a repayment plan after graduation' },
         initialState: {},
+        bossAchievementId: 'plan_selected',
         chapters: [
-          { id: 'repayment_plans_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'rpl0', type: 'story', title: 'One Fixed Payment?',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Loan Repayment Plans Explained." }
+              { speaker: 'intro', text: "Hammy graduates with $28,000 in federal loans and a modest starting salary. \"Am I just stuck with whatever fixed payment they tell me?\"" },
+              { speaker: 'Hammy', text: '"I assumed there was just one number I had to pay every month, no choice in it."' },
+              { speaker: 'narrator', text: "There's a default, but federal loans actually come with several repayment plan options, not just one fixed path." },
+              { speaker: 'Hammy', text: '"Wait, I get to pick? Nobody mentioned that."' }
+            ]
+          },
+          {
+            id: 'rpl_t1', type: 'teach', title: 'The Standard Plan',
+            concepts: [
+              {
+                term: 'Standard Repayment Plan',
+                plain: "The Standard Plan is the default: a fixed monthly payment over 10 years. It generally results in the LEAST total interest paid over the life of the loan, since it pays it off fastest, but the monthly payment is also the highest of the common options.",
+                analogy: "It's like the default setting on a subscription, works fine for most people, but not automatically the best fit for every budget.",
+                check: { statement: "The Standard Repayment Plan spreads federal loan payments over 10 years by default.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'rpl_t2', type: 'teach', title: 'Income-Driven Plans',
+            concepts: [
+              {
+                term: 'Income-Driven Repayment',
+                plain: "Income-driven plans set the monthly payment as a percentage of income, generally lower than the Standard Plan's fixed amount, especially on a modest starting salary. The tradeoff: the loan is typically paid off over a longer period, meaning more total interest over time.",
+                analogy: "It's like a subscription that scales with what you can actually afford right now, easier monthly, but often costs more in total over a longer stretch.",
+                check: { statement: "Income-driven repayment plans generally result in lower total interest paid than the Standard Plan.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'rpl_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Standard Repayment Plan', definition: 'Fixed payment over 10 years, generally the lowest total interest.' },
+              { term: 'Income-Driven Repayment', definition: "Payment based on income, generally lower monthly, more total interest over time." },
+              { term: 'Repayment Plan Choice', definition: "The option to select a plan that fits your situation, not one fixed path." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'rpl_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: repayment plans can generally be switched later if a financial situation changes, a plan chosen right after graduation isn't a permanent, unchangeable decision for the rest of the loan's life.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'rpl_price1', type: 'priceisright', title: 'The Price Is Right: The Standard Monthly Payment',
+            prompt: "A $20,000 federal loan balance at a 5% interest rate on the Standard 10-year Plan. Guess the approximate fixed monthly payment.",
+            hintText: "Spread across 120 months with interest included, this lands a bit above simply dividing $20,000 by 120.",
+            actualValue: 212, guessRange: { min: 100, max: 350, step: 10 },
+            explanation: "Approximately $212/month on the Standard Plan for a $20,000 balance at 5% over 10 years, a bit more than the roughly $167/month simple division would suggest, since interest is included throughout the term.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'rpl_d1', type: 'decision',
+            title: "Choosing a Plan",
+            prompt: "Hammy's Standard Plan payment would be around $290/month, tight on a modest starting salary. An income-driven option would lower it to roughly $140/month.",
+            hintText: "Think back to Income-Driven Repayment: what's the tradeoff for that lower monthly amount?",
+            choices: [
+              { id: 'a', label: 'Stick with the Standard Plan even though it\'s a tight monthly squeeze', outcome: { text: "The budget stays genuinely tight every month, even though the total interest paid over the loan\'s life will end up lower.", delta: {}, compare: [{ label: 'Monthly payment', value: 290 }, { label: 'Income-driven monthly payment', value: 140 }] } },
+              { id: 'b', label: 'Switch to an income-driven plan to ease the monthly budget, knowing it extends the timeline', outcome: { text: "The monthly budget breathes immediately, with the known tradeoff of more total interest paid over a longer repayment period.", delta: {}, compare: [{ label: 'Monthly payment', value: 140 }, { label: 'Standard monthly payment', value: 290 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'rpl_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Total Interest Tradeoff', definition: 'A lower monthly payment on income-driven plans generally means more interest overall.' },
+              { term: 'Switching Plans Later', definition: 'The ability to change repayment plans if circumstances change.' },
+              { term: 'Modest Starting Salary', definition: "A common reason a graduate might choose income-driven over Standard." }
+            ],
+            hintText: "One term is the COST tradeoff, one is a FLEXIBILITY option, and one is a common REASON for choosing income-driven.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'rpl_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Once a repayment plan is selected after graduation, it's locked in for the entire life of the loan.",
+            isTrue: false,
+            explanation: "False. Repayment plans can generally be changed later if a financial situation changes, it's not a one-time, permanent decision.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'rpl_myth1', type: 'mythcards', title: 'Repayment Plans: True or False',
+            cards: [
+              { myth: "The Standard 10-year Plan generally results in the lowest total interest paid among common repayment options.", isTrue: true, explanation: "True, paying off the loan fastest generally means paying the least total interest over its life." },
+              { myth: "Income-driven repayment plans always set the monthly payment at the exact same fixed dollar amount as the Standard Plan.", isTrue: false, explanation: "Income-driven payments are calculated as a percentage of income, and can be quite different from, and generally lower than, the Standard Plan's fixed payment." },
+              { myth: "A graduate with no income yet still has repayment plan options available.", isTrue: true, explanation: "True, income-driven plans specifically account for low or no current income when calculating the payment." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'rpl_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [8, 9],
+            hintTexts: [
+              "Think about whether a $28,000 balance locks a graduate into one single fixed payment.",
+              "Think about what happens to unpaid interest once a deferment period ends."
+            ]
+          },
+          {
+            id: 'rpl_t3', type: 'teach', title: 'Match the Plan to the Budget',
+            concepts: [
+              {
+                term: 'Choosing Based on the Real Budget',
+                plain: "The right repayment plan depends on the actual monthly budget after graduation, not just picking the default or the lowest payment automatically. A payment that's genuinely unaffordable risks missed payments, while overpaying for lower interest when it's not truly needed isn't optimal either.",
+                analogy: "It's like choosing a phone plan based on your actual usage, not just picking whichever one sounds standard.",
+                check: { statement: "The best repayment plan is always whichever one has the lowest possible monthly payment.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'rpl_boss', type: 'bossbattle', title: 'The Raise',
+            scenario: "Two years into an income-driven repayment plan, Hammy gets a significant raise. The lower monthly payment no longer feels necessary for the budget.",
+            hintText: "Remember Total Interest Tradeoff: does a raise change whether switching plans now could reduce total interest paid?",
+            choices: [
+              { id: 'a', label: "Look into switching to the Standard Plan now that the budget can support it", consequence: { text: "With the raise, the higher fixed payment is now affordable, and switching reduces the total interest paid over the remaining loan life.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Stay on the income-driven plan regardless, since it's already set up", consequence: { text: "The budget could now support a faster payoff with less total interest, but staying on the old plan leaves that option unused.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'c', label: "Keep the same required payment but make extra voluntary payments toward the principal", consequence: { text: "A flexible middle ground that reduces total interest without formally switching plans, a solid alternative approach.", delta: {}, xpMultiplier: 1.1 } },
+              { id: 'd', label: "Increase spending to match the raise instead of reconsidering the loan strategy", consequence: { text: "This skips an opportunity to meaningfully reduce total interest paid on the loan now that the budget has genuinely improved.", delta: {}, xpMultiplier: 0.6 } }
             ]
           }
         ]
@@ -8998,10 +9369,129 @@ const MODULES = [
         topic: 'Interest Capitalization: The True Cost of Waiting',
         character: { name: 'Hammy', tagline: 'Learning what happens to unpaid interest' },
         initialState: {},
+        bossAchievementId: 'capitalization_understood',
         chapters: [
-          { id: 'capitalization_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'cap0', type: 'story', title: 'A Year Off From Payments',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Interest Capitalization: The True Cost of Waiting." }
+              { speaker: 'intro', text: "Hammy puts an unsubsidized loan into deferment for a year while between jobs. Interest keeps accruing the whole time, unpaid, quietly building up." },
+              { speaker: 'Hammy', text: '"It\'s just interest sitting there, right? I\'ll deal with it eventually."' },
+              { speaker: 'narrator', text: "What happens the moment deferment ends is the part most people don't see coming." },
+              { speaker: 'Hammy', text: '"What happens? Does it just... get added to what I owe?"' }
+            ]
+          },
+          {
+            id: 'cap_t1', type: 'teach', title: 'What Capitalization Actually Means',
+            concepts: [
+              {
+                term: 'Interest Capitalization',
+                plain: "When deferment or forbearance ends, any unpaid interest that built up gets added to the loan's principal balance, capitalized. From that point on, interest is calculated on the NEW, larger principal, meaning interest starts accruing on what used to be just interest.",
+                analogy: "It's like an unpaid tab getting folded into a new, bigger tab, and the new tab itself starts collecting its own charges.",
+                check: { statement: "Capitalized interest simply disappears once deferment ends.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'cap_t2', type: 'teach', title: 'Why It Compounds the Cost',
+            concepts: [
+              {
+                term: 'Interest on Interest',
+                plain: "Once unpaid interest capitalizes into the principal, future interest is calculated on that larger amount, meaning the borrower ends up paying interest on interest that was never actually paid. This is exactly why waiting to pay it costs more than the original unpaid amount would suggest.",
+                analogy: "It's like a snowball rolling downhill, picking up more snow, and now the added snow itself starts picking up MORE snow too.",
+                check: { statement: "After capitalization, future interest is calculated only on the original loan amount, not including the capitalized interest.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cap_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Interest Capitalization', definition: 'Unpaid interest getting added to the loan\'s principal balance.' },
+              { term: 'Interest on Interest', definition: "Future interest calculated on the new, larger principal after capitalization." },
+              { term: 'Deferment', definition: "A pause on required payments, during which interest may still accrue." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cap_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: paying at least the accruing interest during a deferment or forbearance period, even without making full payments, prevents that interest from ever capitalizing in the first place. It's often a small enough amount to be worth paying even while payments are paused.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'cap_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why does letting interest capitalize actually cost more than just the unpaid interest amount itself?",
+            keywords: ['principal', 'interest', 'future', 'compound', 'larger'],
+            fullDefinition: "Because once unpaid interest gets added to the principal, it stops being just \"interest owed\" and becomes part of the base amount future interest is calculated on. That means the borrower ends up paying NEW interest on what used to be old interest, a compounding effect that makes the true cost bigger than the original unpaid amount alone.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'cap_d1', type: 'decision',
+            title: "The Deferment Choice",
+            prompt: "Hammy is going into a 12-month deferment. The unsubsidized loan accrues about $50/month in interest during that time.",
+            hintText: "Think back to Interest on Interest: what's the cost difference between paying that $50/month versus letting it all capitalize at the end?",
+            choices: [
+              { id: 'a', label: 'Let all $600 of accrued interest capitalize at the end of deferment', outcome: { text: "The $600 gets added to the principal, and from then on, interest accrues on that larger amount too, a compounding cost on top of the original $600.", delta: {}, compare: [{ label: 'Interest capitalized', value: 600 }, { label: 'Interest capitalized if paid monthly', value: 0 }] } },
+              { id: 'b', label: 'Pay the roughly $50/month in accruing interest during deferment, even though full payments are paused', outcome: { text: "None of the interest capitalizes, the principal stays exactly where it started, no compounding cost added.", delta: {}, compare: [{ label: 'Interest capitalized', value: 0 }, { label: 'Interest paid as it accrued', value: 600 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cap_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Forbearance', definition: 'A temporary pause on payments, similar to deferment, interest still accrues.' },
+              { term: 'Paying Interest-Only', definition: "Covering just the accruing interest during a pause, to prevent capitalization." },
+              { term: 'New Principal', definition: 'The loan balance after capitalization, larger than the original amount borrowed.' }
+            ],
+            hintText: "One term is a TYPE of payment pause, one is a STRATEGY to avoid capitalization, and one is the RESULT once it happens.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'cap_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Unpaid interest that accrues during a deferment period simply gets forgiven once payments resume.",
+            isTrue: false,
+            explanation: "False. Unpaid interest generally gets capitalized, added to the principal, rather than forgiven, meaning it increases the total balance owed.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'cap_myth1', type: 'mythcards', title: 'Interest Capitalization: True or False',
+            cards: [
+              { myth: "Paying just the interest during a deferment period can prevent it from capitalizing.", isTrue: true, explanation: "True, if the accruing interest is paid as it builds up, there's nothing left unpaid to capitalize when the deferment ends." },
+              { myth: "Interest capitalization only happens with unsubsidized loans, never subsidized ones.", isTrue: false, explanation: "Subsidized loans don't accrue interest during deferment at all (the government covers it), but unpaid interest on OTHER loan types, or after subsidized status ends, can still capitalize." },
+              { myth: "Capitalized interest increases the amount future interest is calculated on.", isTrue: true, explanation: "True, that's the entire mechanism, the capitalized amount becomes part of the new principal." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'cap_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [8, 9],
+            hintTexts: [
+              "Think about whether a large loan balance locks a graduate into one single fixed payment.",
+              "Think about what happens to unpaid interest once a deferment period ends."
+            ]
+          },
+          {
+            id: 'cap_t3', type: 'teach', title: 'Small Payments Now Prevent Bigger Costs Later',
+            concepts: [
+              {
+                term: 'The Interest-Only Habit',
+                plain: "Paying just the accruing interest during any pause in required payments, deferment, forbearance, even a grace period, is a small, manageable habit that prevents the bigger compounding cost capitalization creates. It's often the single highest-leverage move available during a payment pause.",
+                analogy: "It's like bailing a small amount of water out of a boat regularly, instead of letting it accumulate into a much bigger problem.",
+                check: { statement: "Paying the accruing interest during a payment pause is generally a low-effort way to avoid a larger compounding cost later.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cap_boss', type: 'bossbattle', title: 'The Second Deferment',
+            scenario: "A few years later, Hammy needs another deferment period, this time for financial hardship. The old $600 capitalization mistake from years ago is still a fresh memory.",
+            hintText: "Remember The Interest-Only Habit: does the lesson from the first deferment apply again here?",
+            choices: [
+              { id: 'a', label: "Pay the accruing interest during this deferment too, applying the same lesson", consequence: { text: "The habit that worked before prevents another round of capitalization, keeping the balance from growing unnecessarily again.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Let the interest capitalize again since deferment payments aren't required anyway", consequence: { text: "The exact same costly pattern repeats, compounding on top of a balance that already grew once before from this same mistake.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Pay only half of the accruing interest to ease the immediate budget", consequence: { text: "Half the interest still capitalizes, a partial improvement over doing nothing, but still adds some avoidable compounding cost.", delta: {}, xpMultiplier: 0.9 } },
+              { id: 'd', label: "Look into whether an income-driven repayment plan might avoid the need for deferment entirely", consequence: { text: "A smart alternative to explore, an income-driven plan might handle the hardship without triggering any capitalization at all.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -9011,10 +9501,129 @@ const MODULES = [
         topic: 'Grace Periods & Planning Ahead',
         character: { name: 'Hammy', tagline: 'Planning for the day payments start' },
         initialState: {},
+        bossAchievementId: 'grace_period_planned',
         chapters: [
-          { id: 'grace_periods_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'gp0', type: 'story', title: 'Graduation Is the Easy Part',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Grace Periods & Planning Ahead." }
+              { speaker: 'intro', text: "Hammy graduates in May with $28,000 in federal loans and a job offer that starts in July. \"So... when do payments actually start?\"" },
+              { speaker: 'Hammy', text: '"Is it the day I graduate? The day I get my diploma? I genuinely don\'t know."' },
+              { speaker: 'narrator', text: "Neither, there's a specific window built in, and knowing exactly when it ends is what makes the first payment a plan instead of a surprise." },
+              { speaker: 'Hammy', text: '"Okay, so how long do I actually have?"' }
+            ]
+          },
+          {
+            id: 'gp_t1', type: 'teach', title: 'The 6-Month Grace Period',
+            concepts: [
+              {
+                term: 'Grace Period',
+                plain: "Federal student loans generally include a 6-month grace period after graduating, or dropping below half-time enrollment, before payments are required to begin. It's a built-in buffer to find a job and get finances in order.",
+                analogy: "It's like a subscription's free trial before billing starts, a defined window to get ready, not indefinite.",
+                check: { statement: "Federal loan payments generally begin immediately on the day of graduation.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'gp_t2', type: 'teach', title: 'Interest During the Grace Period',
+            concepts: [
+              {
+                term: 'Interest Treatment Varies',
+                plain: "During the grace period, subsidized loans don't accrue interest (the government covers it), while unsubsidized loans DO accrue interest the whole time, which can capitalize once the grace period ends if left unpaid.",
+                analogy: "It's like two different bills during the same waiting period, one paused completely, one quietly still running.",
+                check: { statement: "Both subsidized and unsubsidized loans accrue interest identically during the grace period.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gp_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Grace Period', definition: 'A roughly 6-month window after graduation before payments are required.' },
+              { term: 'Subsidized Loan Interest', definition: "Doesn't accrue during the grace period, government covers it." },
+              { term: 'Unsubsidized Loan Interest', definition: 'Accrues throughout the grace period, can capitalize afterward.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'gp_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: the grace period is a great time to explore repayment plan options and set up autopay (which sometimes comes with a small interest rate discount), before the first payment is actually due, not after.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'gp_price1', type: 'priceisright', title: 'The Price Is Right: The First Paycheck Budget',
+            prompt: "Hammy starts a job in July paying $2,800/month after taxes. Rent, groceries, and other fixed costs run $2,100/month. The first loan payment (around $290) is due in November, once the grace period ends. Guess how much monthly cushion is left after covering both.",
+            hintText: "Take the monthly take-home pay, subtract fixed costs, then subtract the eventual loan payment.",
+            actualValue: 410, guessRange: { min: 0, max: 800, step: 25 },
+            explanation: "$2,800 - $2,100 in fixed costs - $290 loan payment = about $410/month left over once payments begin in November. Planning around that eventual payment, before it's actually due, prevents a November budget shock.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'gp_d1', type: 'decision',
+            title: "Using the Grace Period",
+            prompt: "Hammy's grace period runs May through October, with the job starting in July. What's the smartest use of those months?",
+            hintText: "Think back to Grace Period: is this window better spent ignoring the loan, or getting ready for it?",
+            choices: [
+              { id: 'a', label: 'Ignore the loan entirely until the first bill actually arrives in November', outcome: { text: "November arrives with a $290 payment and zero prior planning around the budget, a genuine scramble right as it starts.", delta: {}, compare: [{ label: 'Months spent preparing', value: 0 }, { label: 'Grace period length', value: 6 }] } },
+              { id: 'b', label: 'Use a couple months of the grace period to research repayment plans and set aside a small budget cushion', outcome: { text: "November arrives with a repayment plan already chosen and a budget that already accounts for the payment, no scramble.", delta: {}, compare: [{ label: 'Months spent preparing', value: 3 }, { label: 'Grace period length', value: 6 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'gp_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Autopay Discount', definition: 'A small interest rate reduction some servicers offer for automatic payments.' },
+              { term: 'First Bill Shock', definition: "The scramble of an unplanned-for payment showing up with no prior budgeting." },
+              { term: 'Grace Period Planning', definition: 'Using the buffer window to choose a plan and prepare the budget in advance.' }
+            ],
+            hintText: "One term is a small PERK worth knowing, one is a PROBLEM worth avoiding, and one is the HABIT that avoids it.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'gp_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Subsidized and unsubsidized loans are treated identically during the grace period.",
+            isTrue: false,
+            explanation: "False. Subsidized loans don't accrue interest during the grace period, unsubsidized loans do, an important difference for anyone with both types.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'gp_myth1', type: 'mythcards', title: 'Grace Periods: True or False',
+            cards: [
+              { myth: "The grace period is a good window to research and select a repayment plan before the first payment is due.", isTrue: true, explanation: "True, choosing a plan during the grace period means it's already in place when payments actually start." },
+              { myth: "A grace period only applies once, the very first time a borrower graduates, never again afterward.", isTrue: false, explanation: "Dropping below half-time enrollment again later, like for graduate school, can trigger a new grace period." },
+              { myth: "The first loan payment is generally due the same month a grace period ends.", isTrue: true, explanation: "True, the first required payment is generally due right after the roughly 6-month grace period concludes." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'gp_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [7, 11],
+            hintTexts: [
+              "Think about how many months typically pass after graduation before federal loan payments begin.",
+              "Think about how borrowing today should be weighed against life after graduation."
+            ]
+          },
+          {
+            id: 'gp_t3', type: 'teach', title: 'Plan Backward From the End Date',
+            concepts: [
+              {
+                term: 'Working Backward From the Due Date',
+                plain: "Knowing the exact date the grace period ends makes it possible to plan backward: when to choose a repayment plan, when to build the payment into a budget, when to set up autopay. A known deadline turns an abstract future cost into a concrete plan.",
+                analogy: "It's like planning backward from a flight departure time, working out exactly when everything else needs to happen before it.",
+                check: { statement: "Knowing the exact grace period end date makes it possible to plan the budget and repayment choice in advance.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gp_boss', type: 'bossbattle', title: 'The Delayed Job Start',
+            scenario: "Hammy's job offer gets pushed back two months, now starting in September instead of July, right as the grace period is winding toward its November end date.",
+            hintText: "Remember Working Backward From the End Date: does a delayed job start change when the loan payment is actually due?",
+            choices: [
+              { id: 'a', label: "Contact the loan servicer proactively to discuss options given the shorter income runway before November", consequence: { text: "Getting ahead of it, income-driven repayment or a short additional deferment can be arranged before the payment is actually due.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Assume it'll work out and wait to see what happens in November", consequence: { text: "With only two months of income before the first payment is due, waiting until November risks missing the very first payment entirely.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Take on a temporary side gig to cover the gap before the new job starts", consequence: { text: "A proactive way to build some income runway, though it doesn't address the loan servicer conversation that's also worth having.", delta: {}, xpMultiplier: 1.0 } },
+              { id: 'd', label: "Request a general forbearance without exploring other options first", consequence: { text: "This buys time, but forbearance means interest still accrues and could capitalize, worth comparing against other options first.", delta: {}, xpMultiplier: 0.85 } }
             ]
           }
         ]
@@ -9024,10 +9633,134 @@ const MODULES = [
         topic: 'Private Loans: When to Consider Them',
         character: { name: 'Hammy', tagline: 'Weighing a private loan against federal options' },
         initialState: {},
+        bossAchievementId: 'private_loan_evaluated',
         chapters: [
-          { id: 'private_loans_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'pl0', type: 'story', title: 'The Bank Ad',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Private Loans: When to Consider Them." }
+              { speaker: 'intro', text: "Hammy sees an ad for a private student loan with a rate that looks lower than the federal loan already offered. \"Wait, shouldn't I just take the cheaper one?\"" },
+              { speaker: 'Hammy', text: '"Lower rate is lower rate, right? Why would federal loans even matter then?"' },
+              { speaker: 'narrator', text: "Rate is only one piece of the comparison, federal loans come with protections a private loan generally doesn't." },
+              { speaker: 'Hammy', text: '"Protections? What kind of protections am I actually giving up?"' }
+            ]
+          },
+          {
+            id: 'prl_t1', type: 'teach', title: 'What Federal Loans Guarantee',
+            concepts: [
+              {
+                term: 'Federal Loan Protections',
+                plain: "Federal loans come with standardized protections: income-driven repayment plans, deferment and forbearance options, and various forgiveness programs for qualifying careers. These terms are set by law and apply the same way to every borrower.",
+                analogy: "It's like a standardized warranty that applies the same way no matter which federal loan or which year it was borrowed.",
+                check: { statement: "Federal loan protections like income-driven repayment vary significantly by which federal loan servicer a borrower has.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'prl_t2', type: 'teach', title: 'Private Loans Vary by Lender',
+            concepts: [
+              {
+                term: 'Private Loan Terms',
+                plain: "Private loans are set by individual banks or lenders, terms, rates (fixed or variable), and available hardship options vary widely between lenders, and are generally far less flexible than federal protections. Private loans also typically require a credit check, and often a cosigner for a student with limited credit history.",
+                analogy: "It's like comparing store-brand warranties, each one is different, and the fine print matters a lot more than with a standardized federal program.",
+                check: { statement: "Private student loan terms are standardized by law, similar to federal loans.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'prl_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Federal Loan Protections', definition: 'Standardized income-driven repayment, deferment, and forgiveness options.' },
+              { term: 'Private Loan Terms', definition: 'Vary by lender, generally fewer flexible hardship options.' },
+              { term: 'Cosigner', definition: "Often required for a private loan when a student has limited credit history." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'prl_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: exhausting federal loan options (Direct Subsidized, Unsubsidized, even Parent PLUS) before considering any private loan is the generally recommended order. Private loans are best thought of as a last resort for a genuine remaining gap, not a first comparison purely on rate.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'prl_spot1', type: 'spotcheck', title: 'Spot What\'s Different About the Private Offer',
+            intro: "Here's the private loan offer Hammy is comparing against the federal loan already available. Tap anything that represents a real tradeoff worth weighing, then hit Continue to see what you caught.",
+            postingTitle: "Private Student Loan Offer",
+            segments: [
+              { id: 's1', text: "Fixed rate: 5.5%, slightly lower than the federal unsubsidized rate. ", isRedFlag: false, explanation: "A genuinely lower rate on its own, though it's only one part of the full comparison." },
+              { id: 's2', text: "No income-driven repayment options available. ", isRedFlag: true, explanation: "This removes a major federal protection, a real tradeoff for the lower rate." },
+              { id: 's3', text: "Requires a creditworthy cosigner, given limited credit history. ", isRedFlag: true, explanation: "This adds a cosigner's credit and relationship into the picture, a real commitment beyond just Hammy's own loan." },
+              { id: 's4', text: "Repayment begins immediately, no grace period after graduation. ", isRedFlag: true, explanation: "Unlike the federal loan's roughly 6-month grace period, this requires payments to start right away." },
+              { id: 's5', text: "No loan forgiveness programs available under this loan. ", isRedFlag: true, explanation: "This forfeits eligibility for federal forgiveness programs some careers might otherwise qualify for down the line." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'prl_d1', type: 'decision',
+            title: "The Comparison",
+            prompt: "Hammy has federal loan room still available and is deciding whether to take the private loan for its slightly lower rate instead.",
+            hintText: "Think back to Federal Loan Protections: is the small rate difference worth giving up income-driven repayment, the grace period, and forgiveness eligibility?",
+            choices: [
+              { id: 'a', label: 'Take the private loan for the lower rate', outcome: { text: "The rate is slightly better, but income-driven repayment, the grace period, and forgiveness eligibility are all gone if a real hardship comes up later.", delta: {}, compare: [{ label: 'Rate advantage', value: 1 }, { label: 'Protections given up', value: 4 }] } },
+              { id: 'b', label: 'Use the remaining federal loan room first, before considering any private loan', outcome: { text: "The full set of federal protections stays intact, and a private loan remains an option later if a genuine gap still exists.", delta: {}, compare: [{ label: 'Rate advantage forfeited', value: 1 }, { label: 'Protections kept', value: 4 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'prl_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Rate Isn\'t the Whole Picture', definition: 'The idea that a lower rate alone doesn\'t capture the full tradeoff.' },
+              { term: 'Last Resort Order', definition: 'Using federal loan room first, private loans only for a remaining gap.' },
+              { term: 'Forgiveness Eligibility', definition: 'A federal-loan-only benefit some careers can qualify for over time.' }
+            ],
+            hintText: "One term is about looking BEYOND the rate, one is an ORDER of operations, and one is a FEDERAL-only benefit.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'prl_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A lower interest rate on a private loan generally means it's the better overall deal compared to a federal loan.",
+            isTrue: false,
+            explanation: "False. Rate is only one factor, federal loans include protections, like income-driven repayment and forgiveness eligibility, that a lower-rate private loan often doesn't offer.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'prl_myth1', type: 'mythcards', title: 'Private Loans: True or False',
+            cards: [
+              { myth: "Private student loans always require a credit check, unlike most federal student loans.", isTrue: true, explanation: "True, federal Direct Loans for students generally don't require a credit check, private loans typically do." },
+              { myth: "Federal loan forgiveness programs also apply to private student loans.", isTrue: false, explanation: "Forgiveness programs are federal-loan specific, private loans generally aren't eligible." },
+              { myth: "A private loan can make sense once federal loan options are fully used and a genuine gap remains.", isTrue: true, explanation: "True, that's the generally recommended order, federal first, private only for what's still needed after." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'prl_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 6],
+            hintTexts: [
+              "Think about the key difference between a Direct Subsidized and Direct Unsubsidized federal loan.",
+              "Think about what generally separates federal loans from private ones."
+            ]
+          },
+          {
+            id: 'prl_t3', type: 'teach', title: 'Compare the Whole Package, Not Just the Rate',
+            concepts: [
+              {
+                term: 'Full Comparison',
+                plain: "A genuine loan comparison weighs rate alongside repayment flexibility, hardship protections, grace periods, and forgiveness eligibility, not rate in isolation. A private loan can occasionally be the right call, but only after that full comparison, not before it.",
+                analogy: "It's like comparing job offers by salary alone, missing benefits, flexibility, and growth that might matter just as much.",
+                check: { statement: "A thorough loan comparison should weigh more than just the interest rate alone.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'prl_boss', type: 'bossbattle', title: 'The Final Gap',
+            scenario: "After maxing out federal Direct Loans and grants, Hammy still has a genuine $1,500 gap for the year. A private loan and a Parent PLUS loan are the two remaining options.",
+            hintText: "Remember Full Comparison: does this situation call for the same all-or-nothing thinking as the earlier private loan decision?",
+            choices: [
+              { id: 'a', label: "Compare the private loan and Parent PLUS terms carefully for this specific remaining gap", consequence: { text: "With federal Direct Loan room already exhausted, this is exactly the situation where comparing the remaining options carefully makes sense.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Automatically rule out any private loan on principle, regardless of the terms", consequence: { text: "Federal Direct Loan room is genuinely used up here, refusing to even compare the remaining options isn't necessarily the most informed move for this specific gap.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'c', label: "Take whichever option processes fastest, without comparing terms", consequence: { text: "Speed alone skips exactly the comparison that matters most for a decision this size.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'd', label: "Ask the financial aid office for guidance on the remaining gap before choosing either option", consequence: { text: "A smart step, the financial aid office can often flag additional aid or context Hammy might not know to consider.", delta: {}, xpMultiplier: 1.15 } }
             ]
           }
         ]
