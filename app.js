@@ -2145,10 +2145,10 @@ const MODULES = [
         exp: 'Index funds let you invest in hundreds of companies at once with minimal fees. Historically, they outperform most actively managed funds over long time horizons.'
       },
       {
-        q: 'What is the 2024 annual contribution limit for a Roth IRA (for individuals with earned income)?',
-        opts: ['$3,000', '$5,500', '$7,000', '$15,000'],
+        q: 'What is the 2026 annual contribution limit for a Roth IRA (for individuals with earned income)?',
+        opts: ['$3,000', '$5,500', '$7,500', '$15,000'],
         correct: 2,
-        exp: 'You can contribute up to $7,000/year (2024). Even $50/month starting at 18 builds a remarkable foundation. The earlier you start, the less you need to contribute overall.'
+        exp: 'You can contribute up to $7,500/year (2026). Even $50/month starting at 18 builds a remarkable foundation. The earlier you start, the less you need to contribute overall.'
       },
       {
         q: 'You have $500 and a friend suggests putting it all into one company\'s stock because "it\'s going to blow up." What\'s the risk with this approach?',
@@ -2196,7 +2196,7 @@ const MODULES = [
     lessons: [
       { title: 'Compound Interest & Time', hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Sam starts at 28. At 65, Alex has $21,000. Sam has $10,700. Same amount invested. What made the difference?', qIndices: [1, 2] },
       { title: 'Roth IRA Basics', hook: 'You have $50/month to invest and someone says "open a Roth IRA." You\'ve heard the words but don\'t know if you even qualify — do you need a big salary, a certain age, or a special account first?', qIndices: [0, 6] },
-      { title: 'Contribution Limits & Where to Save First', hook: 'Your job offers a 403(b) with a match, and you\'re also eligible for a Roth IRA with a $7,000 annual limit. You can\'t max out both right now — which comes first?', qIndices: [4, 9] },
+      { title: 'Contribution Limits & Where to Save First', hook: 'Your job offers a 403(b) with a match, and you\'re also eligible for a Roth IRA with a $7,500 annual limit. You can\'t max out both right now — which comes first?', qIndices: [4, 9] },
       { title: 'Index Funds & Diversification', hook: 'A friend tells you to put your $500 savings into one stock they\'re sure will "blow up." Another friend says index funds are the smarter move. What\'s actually different about spreading your money across hundreds of companies?', qIndices: [3, 5] },
       { title: 'Risk, Time Horizon & Staying the Course', hook: 'The market drops 15% the same month you started investing, right as your 60-year-old parent\'s retirement account also takes a hit. Should you both be reacting the same way?', qIndices: [7, 11] },
       { title: 'Getting Started Small', hook: 'You only have $25/month to invest and figure it\'s not worth starting until you\'ve saved up more. Meanwhile a friend jumps into whatever fund had the best return last year. Is either of you making the smart move?', qIndices: [8, 10] }
@@ -2458,7 +2458,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Annual Contribution Limit',
-                plain: "The IRS sets a yearly cap on Roth IRA contributions, $7,000 for 2024. You can contribute up to that limit or your total earned income for the year, whichever is lower. Most students are nowhere near the cap, the limit exists to prevent very high earners from sheltering huge amounts.",
+                plain: "The IRS sets a yearly cap on Roth IRA contributions, $7,500 for 2026. You can contribute up to that limit or your total earned income for the year, whichever is lower. Most students are nowhere near the cap, the limit exists to prevent very high earners from sheltering huge amounts.",
                 analogy: "It's like a speed limit that's far above what a beginner driver is going anyway, it matters eventually, just not on day one.",
                 check: { statement: "Most students contributing to a Roth IRA are limited by their earned income, not by the IRS annual cap.", isTrue: true }
               }
