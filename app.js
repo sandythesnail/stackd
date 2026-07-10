@@ -6260,10 +6260,129 @@ const MODULES = [
         topic: 'Building Credit From Scratch',
         character: { name: 'Hammy', tagline: 'Starting with no credit history at all' },
         initialState: {},
+        bossAchievementId: 'zero_to_score',
         chapters: [
-          { id: 'credit_from_scratch_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'cfs0', type: 'story', title: 'The Blank Slate',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Building Credit From Scratch." }
+              { speaker: 'intro', text: "Hammy has never had a credit card, loan, or any credit history at all. A blank slate, which sounds simple, but nobody explained how to actually start." },
+              { speaker: 'Hammy', text: '"Doesn\'t checking my own score just make things worse, though? Shouldn\'t I leave it alone?"' },
+              { speaker: 'narrator', text: "Checking your own score and applying for five cards at once are two very different things, one is harmless, the other genuinely isn't." },
+              { speaker: 'Hammy', text: '"Okay, so what\'s actually safe, and what\'s not?"' }
+            ]
+          },
+          {
+            id: 'cfs_t1', type: 'teach', title: 'Checking Your Own Score Is Safe',
+            concepts: [
+              {
+                term: 'Soft Inquiry',
+                plain: "Checking your own credit score, through a bank app or a free credit monitoring service, is a soft inquiry. It has zero effect on your score, no matter how often it's done.",
+                analogy: "It's like looking in a mirror, checking doesn't change what's there.",
+                check: { statement: "Checking your own credit score through a bank app lowers your credit score.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'cfs_t2', type: 'teach', title: 'Applying for Credit Is Different',
+            concepts: [
+              {
+                term: 'Hard Inquiry',
+                plain: "Applying for a new credit card or loan triggers a hard inquiry, which can cause a small, temporary dip in your score. Applying for several cards in a short window stacks multiple hard inquiries, a bigger red flag to lenders than a single application.",
+                analogy: "It's like multiple people asking to borrow your car in one week, versus one person asking once, the pattern itself raises questions.",
+                check: { statement: "Applying for five credit cards in one week has the same effect on your score as applying for one.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cfs_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Soft Inquiry', definition: "Checking your own score, no effect on the credit score at all." },
+              { term: 'Hard Inquiry', definition: "Applying for new credit, can cause a small, temporary dip." },
+              { term: 'Blank Slate', definition: 'Having no credit history at all, a common starting point.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cfs_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: a secured card, a student credit card, or becoming an authorized user on a parent's well-managed card are all common, safe ways to start building credit from zero. The Secured Cards quest covers these options in more depth.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'cfs_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why does checking your own credit score not hurt it, while applying for several credit cards at once actually can?",
+            keywords: ['soft', 'hard', 'inquiry', 'apply', 'checking'],
+            fullDefinition: "Because they're two different actions with two different effects. Checking your own score is a soft inquiry, purely informational, with zero impact. Applying for new credit is a hard inquiry, which can cause a small dip, and several hard inquiries close together look riskier to lenders than a single one.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'cfs_d1', type: 'decision',
+            title: "Getting Started",
+            prompt: "Hammy wants to start building credit and is deciding between applying to five different cards to \"see which one approves\" versus researching one beginner-friendly option first.",
+            hintText: "Think back to Hard Inquiry: what happens when several applications stack up in a short window?",
+            choices: [
+              { id: 'a', label: 'Apply to five cards at once to maximize the odds of approval', outcome: { text: "Five hard inquiries stack up at once, a pattern that looks risky to lenders right as Hammy is trying to build a first impression.", delta: {}, compare: [{ label: 'Hard inquiries', value: 5 }, { label: 'Hard inquiries if researched first', value: 1 }] } },
+              { id: 'b', label: 'Research one beginner-friendly option, like a secured or student card, and apply to just that one', outcome: { text: "One thoughtful application, one hard inquiry, and a much stronger first impression on a thin credit file.", delta: {}, compare: [{ label: 'Hard inquiries', value: 1 }, { label: 'Hard inquiries if applied to five', value: 5 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cfs_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Beginner-Friendly Card', definition: 'A secured or student card, designed for someone with no credit history.' },
+              { term: 'Stacked Inquiries', definition: 'Multiple hard inquiries close together, a bigger flag than a single one.' },
+              { term: 'Thin File', definition: 'A credit history with very little information in it yet.' }
+            ],
+            hintText: "One term is a good STARTING option, one is a RISKY pattern, and one describes a NEW credit history.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'cfs_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Checking your own credit score through a bank's app or a free monitoring tool can lower your score.",
+            isTrue: false,
+            explanation: "False. Checking your own score is always a soft inquiry, it has zero effect, no matter how frequently it's done.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'cfs_myth1', type: 'mythcards', title: 'Building Credit From Scratch: True or False',
+            cards: [
+              { myth: "A pre-qualification check from a lender always counts as a hard inquiry.", isTrue: false, explanation: "Pre-qualification checks are typically soft inquiries, they don't affect the score, unlike a full application." },
+              { myth: "It's impossible to get approved for any credit card with zero credit history.", isTrue: false, explanation: "Secured cards and student cards are specifically designed for exactly this situation, no history required to start." },
+              { myth: "Becoming an authorized user on someone else's well-managed card can help build credit history.", isTrue: true, explanation: "True, that account's positive history can appear on the authorized user's credit report too." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'cfs_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [5, 11],
+            hintTexts: [
+              "Think about a common, safe way for a student with no credit history to start.",
+              "Think about the difference between a pre-qualification check and an actual credit application."
+            ]
+          },
+          {
+            id: 'cfs_t3', type: 'teach', title: 'Start Small, Start Safe',
+            concepts: [
+              {
+                term: 'One Deliberate Step',
+                plain: "Building credit from zero doesn't require several applications or a big, complicated plan. One researched, beginner-friendly account, used responsibly, is enough to start a credit history moving in the right direction.",
+                analogy: "It's like planting one seed and tending it well, rather than scattering several seeds and hoping one survives.",
+                check: { statement: "Building credit from scratch generally requires applying for multiple cards to find the best one.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cfs_boss', type: 'bossbattle', title: 'The Denied Application',
+            scenario: "Hammy's first credit card application gets denied due to no credit history. A friend suggests immediately applying to three more cards to try again right away.",
+            hintText: "Remember Stacked Inquiries: does applying again immediately actually fix the problem that caused the denial?",
+            choices: [
+              { id: 'a', label: "Research a secured card specifically designed for no credit history before applying again", consequence: { text: "A secured card is built for exactly this situation, a far stronger next move than repeating the same approach.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Apply to three more cards right away to try again", consequence: { text: "More denials stack more hard inquiries, on a file that still has the same root problem: no credit history yet.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Ask a parent about becoming an authorized user on their card instead", consequence: { text: "A reasonable alternate path that can add positive history without a new hard inquiry at all.", delta: {}, xpMultiplier: 1.1 } },
+              { id: 'd', label: "Wait six months and reapply to the exact same card with no changes", consequence: { text: "Waiting helps somewhat, but reapplying with nothing changed risks the same outcome without addressing the root cause.", delta: {}, xpMultiplier: 0.8 } }
             ]
           }
         ]
@@ -6273,10 +6392,129 @@ const MODULES = [
         topic: 'The FICO Scale',
         character: { name: 'Hammy', tagline: 'Trying to understand what actually makes up a credit score' },
         initialState: {},
+        bossAchievementId: 'fico_literate',
         chapters: [
-          { id: 'fico_scale_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'fs0', type: 'story', title: 'Same Time, Different Score',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on The FICO Scale." }
+              { speaker: 'intro', text: "Hammy's roommate just got an apartment at a better rate, their credit score is 720. Hammy's is 610, despite having a card open for the exact same length of time." },
+              { speaker: 'Hammy', text: '"How is that even possible? We\'ve had our cards the same amount of time."' },
+              { speaker: 'narrator', text: "Account age is just one of five factors, and it's not even the biggest one." },
+              { speaker: 'Hammy', text: '"Okay, so what actually makes up this number?"' }
+            ]
+          },
+          {
+            id: 'fs_t1', type: 'teach', title: 'The Score Range',
+            concepts: [
+              {
+                term: 'FICO Score Range',
+                plain: "FICO scores range from 300 to 850. Roughly: 670+ is \"Good,\" 740+ is \"Very Good,\" 800+ is \"Exceptional.\" Higher scores generally unlock better rates and easier approvals.",
+                analogy: "It's like a grading scale where the passing bar is 670, but the highest honors start much higher.",
+                check: { statement: "A FICO score of 610 falls within the \"Good\" range.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'fs_t2', type: 'teach', title: 'The Five Weighted Factors',
+            concepts: [
+              {
+                term: 'The Five Factors',
+                plain: "Payment history (35%), amounts owed/utilization (30%), length of credit history (15%), new credit (10%), and credit mix (10%). Payment history is the single largest factor, but account age alone, at only 15%, explains why two people with the same tenure can still land at very different scores.",
+                analogy: "It's like a final grade made of five different assignments, each worth a different percentage, one strong or weak category shifts the total.",
+                check: { statement: "Length of credit history alone determines the majority of a FICO score.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fs_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Payment History (35%)', definition: 'The single largest factor, whether bills are paid on time.' },
+              { term: 'Amounts Owed (30%)', definition: 'Utilization, how much of available credit is currently being used.' },
+              { term: 'Length of History (15%)', definition: 'How long accounts have been open, a smaller factor than it feels like.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'fs_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: the remaining two factors, new credit (10%) and credit mix (10%), matter too, applying for lots of new credit at once, or having only one type of account (just a credit card, no other loan history), can each hold a score back a bit.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'fs_price1', type: 'priceisright', title: 'The Price Is Right: Utilization Percentage',
+            prompt: "Hammy has a $1,000 credit limit and currently carries a $450 balance. Guess the utilization percentage, the number that feeds into 30% of the FICO score.",
+            hintText: "Utilization is simply balance divided by limit, expressed as a percentage.",
+            actualValue: 45, guessRange: { min: 0, max: 100, step: 5 },
+            explanation: "$450 ÷ $1,000 = 45% utilization, well above the commonly recommended under-30% target. Paying that balance down is one of the fastest ways to improve the amounts-owed portion of a score.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'fs_d1', type: 'decision',
+            title: "The Score Boost Priority",
+            prompt: "Hammy has some extra money this month and wants to improve their score. Options: pay down a maxed-out card's balance, or open a new store card for a small mix bonus.",
+            hintText: "Think back to The Five Factors: which factor is worth 30% versus which is worth 10%?",
+            choices: [
+              { id: 'a', label: 'Open a new store card for the credit mix bonus', outcome: { text: "Credit mix is only 10% of the score, and a new hard inquiry plus a new low-age account can actually hurt more than it helps short-term.", delta: {}, compare: [{ label: 'Factor weight targeted', value: 10 }, { label: 'Factor weight available', value: 30 }] } },
+              { id: 'b', label: "Pay down the maxed-out card's balance", outcome: { text: "Amounts owed is 30% of the score, directly and immediately improved by lowering utilization, the highest-leverage move available.", delta: {}, compare: [{ label: 'Factor weight targeted', value: 30 }, { label: 'Factor weight available', value: 30 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'fs_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'New Credit (10%)', definition: 'Recent applications and new accounts, a smaller factor.' },
+              { term: 'Credit Mix (10%)', definition: 'Having different types of credit, like a card and a loan.' },
+              { term: 'Highest-Leverage Factor', definition: 'Payment history or utilization, the two biggest levers to improve a score.' }
+            ],
+            hintText: "One term is about RECENT applications, one is about VARIETY of accounts, and one describes the BIGGEST levers.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'fs_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Opening a new credit card for a small credit-mix boost is generally a faster way to raise a score than paying down a high balance.",
+            isTrue: false,
+            explanation: "False. Credit mix is only 10% of the score, while amounts owed is 30%, paying down a high balance is almost always the faster, higher-leverage move.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'fs_myth1', type: 'mythcards', title: 'The FICO Scale: True or False',
+            cards: [
+              { myth: "Two people with identical payment histories but different account ages will always have identical scores.", isTrue: false, explanation: "Length of history is a separate 15% factor, so different account ages alone can create a real score difference." },
+              { myth: "A score of 740 or above is generally considered \"Very Good.\"", isTrue: true, explanation: "True, that's the commonly used FICO tier threshold." },
+              { myth: "Utilization is calculated once a year, not something that updates regularly.", isTrue: false, explanation: "Utilization is generally based on the most recent reported balance, it can shift with nearly every statement." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'fs_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 10],
+            hintTexts: [
+              "Think about the FICO range and where \"Good\" starts on it.",
+              "Think about which of the five factors covers how long accounts have been open."
+            ]
+          },
+          {
+            id: 'fs_t3', type: 'teach', title: 'Know Where the Leverage Is',
+            concepts: [
+              {
+                term: 'Targeting the Biggest Factors',
+                plain: "Understanding the five weighted factors isn't just trivia, it tells you exactly where to focus effort. Paying on time (35%) and keeping utilization low (30%) together make up nearly two-thirds of the score, far more impactful than chasing smaller factors like credit mix.",
+                analogy: "It's like studying the topics worth the most points on an exam first, not spreading effort evenly across everything.",
+                check: { statement: "Payment history and amounts owed together make up the majority of a FICO score's weighting.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'fs_boss', type: 'bossbattle', title: 'The Score Plateau',
+            scenario: "Hammy has paid every bill on time for a year, but the score has barely moved. Utilization is still sitting at 60% on a nearly-maxed card.",
+            hintText: "Remember Targeting the Biggest Factors: is payment history alone enough if the other big factor is still working against it?",
+            choices: [
+              { id: 'a', label: "Focus on paying down the balance to lower utilization, alongside the on-time payments", consequence: { text: "Addressing BOTH of the two biggest factors together is what actually moves the score meaningfully.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Keep doing exactly the same thing, since on-time payments should eventually be enough alone", consequence: { text: "Payment history alone can't fully offset a high utilization sitting at 60%, the plateau continues.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Open a new card to spread the balance and lower utilization on the original card", consequence: { text: "This can work, though it adds a new hard inquiry and a lower-age account, a more complicated path than simply paying down the balance directly.", delta: {}, xpMultiplier: 0.9 } },
+              { id: 'd', label: "Request a credit limit increase on the existing card to lower the utilization ratio", consequence: { text: "A reasonable move that can lower utilization without taking on new debt, worth trying alongside paying the balance down.", delta: {}, xpMultiplier: 1.1 } }
             ]
           }
         ]
@@ -6286,10 +6524,129 @@ const MODULES = [
         topic: 'Balance Transfers: When They Actually Help',
         character: { name: 'Hammy', tagline: 'Considering a 0% APR balance transfer offer' },
         initialState: {},
+        bossAchievementId: 'transfer_evaluated',
         chapters: [
-          { id: 'balance_transfers_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'bt0', type: 'story', title: 'The 0% Offer',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Balance Transfers: When They Actually Help." }
+              { speaker: 'intro', text: "Hammy carries a $600 balance at 24% APR. A new card arrives in the mail: \"0% APR on balance transfers for 12 months!\"" },
+              { speaker: 'Hammy', text: '"Free money? I should just move the balance over immediately, right?"' },
+              { speaker: 'narrator', text: "It can genuinely help, but only after accounting for a detail most people skip reading: the transfer fee." },
+              { speaker: 'Hammy', text: '"Wait, there\'s a FEE to move my own debt somewhere else?"' }
+            ]
+          },
+          {
+            id: 'bt_t1', type: 'teach', title: 'What a Balance Transfer Does',
+            concepts: [
+              {
+                term: 'Balance Transfer',
+                plain: "A balance transfer moves debt from one card to another, usually to take advantage of a lower, sometimes 0%, promotional APR for a limited time. It doesn't erase the debt, it just changes where it lives, and temporarily how much interest it accrues.",
+                analogy: "It's like moving a leaky faucet to a room with a bucket underneath, the leak isn't fixed, but it's much less costly while the bucket's there.",
+                check: { statement: "A balance transfer eliminates the underlying debt rather than just moving it.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'bt_t2', type: 'teach', title: 'The Transfer Fee',
+            concepts: [
+              {
+                term: 'Transfer Fee',
+                plain: "Most balance transfers charge a fee, commonly 3-5% of the amount transferred, charged upfront. That fee has to be weighed against the interest actually saved, a transfer can still be worth it, but the fee is real money, not fine print to skip past.",
+                analogy: "It's like a moving company's fee, worth paying if the new place is genuinely better, but a real cost to factor into the decision.",
+                check: { statement: "Balance transfers are typically completely free, with no fee attached.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bt_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Balance Transfer', definition: 'Moving debt from one card to another, usually for a lower promotional rate.' },
+              { term: 'Transfer Fee', definition: 'A commonly 3-5% upfront charge on the amount being transferred.' },
+              { term: 'Promotional APR', definition: 'A temporary, often 0%, interest rate that expires after a set period.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bt_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: check the exact promotional period end date and set a reminder before it expires. Many balance transfer cards revert to a high standard APR, sometimes higher than the original card, once the promotional window ends, catching people off guard.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'bt_price1', type: 'priceisright', title: 'The Price Is Right: Interest Saved',
+            prompt: "Hammy's $600 balance at 24% APR would cost roughly $144 in interest over a year if left alone. Transferring it to a 0% APR card for 12 months costs a 3% transfer fee ($18) upfront. Guess the net amount Hammy actually saves.",
+            hintText: "Take the interest avoided, then subtract the transfer fee actually paid.",
+            actualValue: 126, guessRange: { min: 0, max: 150, step: 6 },
+            explanation: "$144 in avoided interest minus the $18 transfer fee = $126 in real net savings. The fee is a real cost, but it's still far smaller than the interest it avoids in this case, that gap is what makes the transfer worth it.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'bt_d1', type: 'decision',
+            title: "The Decision",
+            prompt: "Hammy is deciding whether to actually go through with the 0% APR balance transfer offer for the $600 balance.",
+            hintText: "Think back to Transfer Fee: does the math work out in Hammy's favor here?",
+            choices: [
+              { id: 'a', label: 'Skip the transfer, it seems like a hassle for a small card balance', outcome: { text: "The balance keeps accruing interest at the full 24% APR, roughly $126 more than it needed to over the year.", delta: {}, compare: [{ label: 'Interest paid', value: 144 }, { label: 'Interest avoided if transferred', value: 126 }] } },
+              { id: 'b', label: 'Go through with the transfer and pay off the balance during the 0% window', outcome: { text: "The $18 fee is paid upfront, but $126 more stays in Hammy\'s pocket compared to leaving the balance at 24% APR.", delta: {}, compare: [{ label: 'Fee paid', value: 18 }, { label: 'Interest avoided', value: 144 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bt_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Net Savings', definition: 'Interest avoided minus the transfer fee actually paid.' },
+              { term: 'Promotional Period End Date', definition: 'When the low promotional rate expires and a higher APR takes over.' },
+              { term: 'Moving, Not Erasing', definition: "What a balance transfer does to debt, relocates it, doesn't cancel it." }
+            ],
+            hintText: "One term is the REAL benefit after fees, one is a DEADLINE to track, and one is what a transfer does NOT do.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'bt_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A 0% balance transfer offer means the debt is completely paid off with no further action needed.",
+            isTrue: false,
+            explanation: "False. The debt still has to actually be paid off, the 0% offer just removes interest for a limited window, it's an opportunity to pay it down cheaper, not an automatic payoff.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'bt_myth1', type: 'mythcards', title: 'Balance Transfers: True or False',
+            cards: [
+              { myth: "A balance transfer is only worth it if the transfer fee is smaller than the interest it avoids.", isTrue: true, explanation: "True, that comparison is exactly what determines whether a transfer actually saves money." },
+              { myth: "Once transferred, a balance no longer needs to be paid off during the promotional period.", isTrue: false, explanation: "The goal is to pay it off, or as much as possible, before the promotional rate expires and a higher APR kicks back in." },
+              { myth: "Missing a payment during a promotional 0% period can sometimes cancel the promotional rate early.", isTrue: true, explanation: "True, many balance transfer offers include terms that revoke the promotional rate if a payment is missed." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'bt_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 2],
+            hintTexts: [
+              "Think about what APR actually measures on a credit card.",
+              "Think about what happens if only the minimum payment gets made each month."
+            ]
+          },
+          {
+            id: 'bt_t3', type: 'teach', title: 'Do the Math Before Transferring',
+            concepts: [
+              {
+                term: 'Run the Numbers First',
+                plain: "A balance transfer isn't automatically good or bad, it depends entirely on the specific numbers: the fee, the interest rate being escaped, the promotional window, and whether the balance can realistically be paid off before it expires.",
+                analogy: "It's like comparing two loan offers side by side, the right answer depends on the actual numbers, not just which one sounds better.",
+                check: { statement: "Whether a balance transfer is worth it depends on comparing the specific fee against the specific interest it avoids.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bt_boss', type: 'bossbattle', title: 'The Second Balance',
+            scenario: "Hammy successfully transferred and paid off the first $600 balance during the promo window. A new $900 balance builds up on a different card at 22% APR, with a new balance transfer offer requiring a 5% fee this time.",
+            hintText: "Remember Run the Numbers First: does a bigger fee percentage automatically mean it's not worth it?",
+            choices: [
+              { id: 'a', label: "Calculate the actual interest avoided versus the 5% fee before deciding", consequence: { text: "The math still favors transferring, even a 5% fee ($45) is well below the roughly $198 in interest it would avoid over a year.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Skip it automatically since the fee percentage is higher than last time", consequence: { text: "Reacting to the fee percentage alone, without running the actual numbers, misses that this transfer would have saved real money too.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Transfer it without checking the promotional period length this time", consequence: { text: "The transfer itself is likely still worth it, but skipping the promotional period check risks missing the deadline to pay it off before the rate reverts.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'd', label: "Call the card issuer to ask if the fee can be negotiated down before deciding", consequence: { text: "Not a bad instinct, though transfer fees are rarely negotiable, running the math on the current terms is the more reliable next step.", delta: {}, xpMultiplier: 0.95 } }
             ]
           }
         ]
@@ -6299,10 +6656,134 @@ const MODULES = [
         topic: 'Credit Reports & Disputing Errors',
         character: { name: 'Hammy', tagline: 'Spotting something wrong on a credit report' },
         initialState: {},
+        bossAchievementId: 'error_disputed',
         chapters: [
-          { id: 'disputing_errors_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'de0', type: 'story', title: 'An Account Hammy Never Opened',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Credit Reports & Disputing Errors." }
+              { speaker: 'intro', text: "Hammy pulls up a free credit report and spots a credit card account listed that was never actually opened." },
+              { speaker: 'Hammy', text: '"Is this... normal? Do I just ignore it?"' },
+              { speaker: 'narrator', text: "It's not normal, and ignoring it risks a real, ongoing hit to the score, or worse, a sign of identity theft." },
+              { speaker: 'Hammy', text: '"Okay, that\'s alarming. What do I actually do about it?"' }
+            ]
+          },
+          {
+            id: 'de_t1', type: 'teach', title: 'What Lives on a Credit Report',
+            concepts: [
+              {
+                term: 'Credit Report Contents',
+                plain: "Beyond the three-digit score, a credit report lists every account, credit cards, loans, their balances and limits, payment history, hard inquiries, and public records like bankruptcies. The score is a summary, the report is the full underlying detail.",
+                analogy: "It's like a report card versus the actual transcript, the grade is a summary, the transcript shows every class behind it.",
+                check: { statement: "A credit report only shows the three-digit score, with no other detail behind it.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'de_t2', type: 'teach', title: 'The Right to Dispute',
+            concepts: [
+              {
+                term: 'Disputing an Error',
+                plain: "By law, you can dispute inaccurate information directly with the credit bureau reporting it. The bureau is required to investigate, typically within 30 days, and correct or remove anything that can't be verified as accurate.",
+                analogy: "It's like disputing a wrong charge on a bill, there's a formal process, and the burden is on the reporter to verify it's accurate.",
+                check: { statement: "Consumers have no formal right to dispute inaccurate information on their own credit report.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'de_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Credit Report', definition: 'The full detail behind the score: accounts, balances, payment history, inquiries.' },
+              { term: 'Disputing an Error', definition: 'The formal process of challenging inaccurate information with a bureau.' },
+              { term: '30-Day Investigation', definition: 'The typical window a bureau has to investigate a filed dispute.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'de_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: pull your free credit report from all three bureaus, Equifax, Experian, and TransUnion, at AnnualCreditReport.com, not just one. An error, or a sign of identity theft, might show up on one bureau's report and not the others.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'de_spot1', type: 'spotcheck', title: 'Spot What Needs a Dispute',
+            intro: "Here's an excerpt from Hammy's credit report. Tap anything that looks worth disputing or double-checking, then hit Continue to see what you caught.",
+            postingTitle: "Credit Report Excerpt",
+            segments: [
+              { id: 's1', text: "Student Credit Card — opened 14 months ago, current balance $210, all payments on time. ", isRedFlag: false, explanation: "This matches Hammy's actual account, nothing to dispute here." },
+              { id: 's2', text: "Retail Credit Card — opened 3 weeks ago, current balance $890, never applied for by Hammy. ", isRedFlag: true, explanation: "An account Hammy never opened is exactly the kind of entry worth disputing immediately, and possibly a sign of identity theft." },
+              { id: 's3', text: "Hard inquiry from a car dealership — 2 months ago, related to a loan Hammy did apply for. ", isRedFlag: false, explanation: "A hard inquiry tied to an application Hammy actually made, expected and not an error." },
+              { id: 's4', text: "Personal loan — reported as 45 days late last month, though Hammy has bank records showing the payment was made on time. ", isRedFlag: true, explanation: "A payment reported late that Hammy has proof was made on time is a factual inaccuracy worth disputing." },
+              { id: 's5', text: "Address on file lists a apartment Hammy moved out of two years ago. ", isRedFlag: false, explanation: "Outdated but harmless address info generally isn't worth a formal dispute, it doesn't affect the score." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'de_d1', type: 'decision',
+            title: "The Unrecognized Account",
+            prompt: "Hammy confirms the retail credit card was never actually opened. What's the smartest next step?",
+            hintText: "Think back to Disputing an Error: is there a formal process built for exactly this situation?",
+            choices: [
+              { id: 'a', label: 'Ignore it since the balance isn\'t Hammy\'s responsibility anyway', outcome: { text: "Left unresolved, the account keeps hurting the score and utilization, and any identity theft behind it keeps going unaddressed.", delta: {}, compare: [{ label: 'Account still on report', value: 1 }, { label: 'Account removed after dispute', value: 0 }] } },
+              { id: 'b', label: 'File a formal dispute with the credit bureau right away', outcome: { text: "The bureau investigates, and an account that was never actually opened by Hammy gets corrected or removed.", delta: {}, compare: [{ label: 'Account still on report', value: 0 }, { label: 'Dispute filed', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'de_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Identity Theft Sign', definition: 'An unrecognized account, one possible indicator worth investigating immediately.' },
+              { term: 'Three Bureaus', definition: 'Equifax, Experian, and TransUnion, each worth checking separately.' },
+              { term: 'Non-Issue', definition: 'Something outdated but harmless, like an old address, not worth a formal dispute.' }
+            ],
+            hintText: "One term is a serious WARNING sign, one is about checking ALL THREE sources, and one is something that\'s SAFE to ignore.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'de_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Only one of the three credit bureaus needs to be checked, since they all report identical information.",
+            isTrue: false,
+            explanation: "False. The three bureaus don't always have identical information, an error or fraudulent account can appear on one report and not the others.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'de_myth1', type: 'mythcards', title: 'Disputing Errors: True or False',
+            cards: [
+              { myth: "Filing a dispute on an inaccurate item requires paying a fee to the credit bureau.", isTrue: false, explanation: "Disputing an error is free, there's no cost to file a dispute with a credit bureau." },
+              { myth: "A dispute automatically removes the disputed item, regardless of whether it's actually accurate.", isTrue: false, explanation: "The bureau investigates and only corrects or removes items that can't be verified as accurate, not automatically every disputed item." },
+              { myth: "An unrecognized account on a credit report can be an early sign of identity theft.", isTrue: true, explanation: "True, that's exactly why an unfamiliar account is worth investigating and disputing right away, not dismissing." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'de_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [8, 9],
+            hintTexts: [
+              "Think about everything that lives on a credit report beyond just the score.",
+              "Think about what to do the moment an unrecognized account shows up."
+            ]
+          },
+          {
+            id: 'de_t3', type: 'teach', title: 'Check It Before It Becomes a Problem',
+            concepts: [
+              {
+                term: 'Regular Review',
+                plain: "Checking a credit report periodically, not just when something feels wrong, catches errors and potential fraud earlier, before they've had months to quietly affect the score or spiral further.",
+                analogy: "It's like a routine checkup instead of only seeing a doctor once something already hurts, catching issues early is easier to fix.",
+                check: { statement: "Credit reports are only worth checking after something already feels wrong.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'de_boss', type: 'bossbattle', title: 'The Second Error',
+            scenario: "A month after successfully disputing the retail card, Hammy notices the personal loan's \"45 days late\" entry, the one with bank proof of on-time payment, still hasn't been corrected.",
+            hintText: "Remember Disputing an Error: is one dispute the end of the process if it isn't resolved correctly?",
+            choices: [
+              { id: 'a', label: "File a follow-up dispute with the bank records attached as documentation", consequence: { text: "Providing clear documentation strengthens the case and gets the inaccurate late payment corrected.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Assume nothing more can be done since one dispute was already filed", consequence: { text: "The inaccurate late payment keeps hurting the score, even though real proof exists that it was on time.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Dispute it again without attaching any new documentation", consequence: { text: "A repeat attempt with no new evidence is less likely to resolve any faster than the first one did.", delta: {}, xpMultiplier: 0.8 } },
+              { id: 'd', label: "Contact the lender directly, in addition to the bureau, with the payment proof", consequence: { text: "Going straight to the source of the report with clear proof often resolves it even faster than the bureau dispute alone.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -6312,10 +6793,134 @@ const MODULES = [
         topic: 'Secured Cards & Authorized-User Status',
         character: { name: 'Hammy', tagline: 'Looking for a way to build credit from zero' },
         initialState: {},
+        bossAchievementId: 'secured_start',
         chapters: [
-          { id: 'secured_cards_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'sc0', type: 'story', title: 'Two Doors In',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Secured Cards & Authorized-User Status." }
+              { speaker: 'intro', text: "With no credit history, Hammy finds two common starting points: a secured credit card, or becoming an authorized user on a parent's card." },
+              { speaker: 'Hammy', text: '"A \"secured\" card sounds like it comes with strings attached."' },
+              { speaker: 'narrator', text: "It does, literally, a deposit. But that deposit is exactly what makes it accessible with no credit history at all." },
+              { speaker: 'Hammy', text: '"Okay, so how does putting down a deposit actually help build credit?"' }
+            ]
+          },
+          {
+            id: 'sc_t1', type: 'teach', title: 'How a Secured Card Works',
+            concepts: [
+              {
+                term: 'Secured Credit Card',
+                plain: "A secured card requires a refundable cash deposit, often $200-$500, which typically becomes the credit limit. It functions like a normal credit card otherwise, activity gets reported to the credit bureaus, building real credit history over time.",
+                analogy: "It's like a security deposit on an apartment, refundable, and it's exactly what makes the lender comfortable extending credit with no history to go on.",
+                check: { statement: "A secured card's deposit is generally non-refundable, similar to a fee.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'sc_t2', type: 'teach', title: 'Becoming an Authorized User',
+            concepts: [
+              {
+                term: 'Authorized User',
+                plain: "Being added as an authorized user on someone else's well-managed card, often a parent's, can let that account's positive payment history appear on the authorized user's credit report too, without needing an approval of your own.",
+                analogy: "It's like riding along on a trusted friend's good reputation, the positive history transfers over just by being added.",
+                check: { statement: "Becoming an authorized user requires a separate credit approval process of your own.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'sc_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Secured Card', definition: 'A card backed by a refundable deposit, common credit limit is the deposit amount.' },
+              { term: 'Authorized User', definition: "Added to someone else's card, inheriting that account's positive history." },
+              { term: 'Refundable Deposit', definition: 'The security deposit behind a secured card, returned when the account closes in good standing.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sc_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: not all secured cards report to all three credit bureaus, and some charge ongoing annual fees. Before opening one, confirm it reports activity to the bureaus, that's the entire point, and compare fees across a few options first.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'sc_spot1', type: 'spotcheck', title: 'Spot the Terms Worth Checking',
+            intro: "Here's a secured card offer Hammy is considering. Tap anything worth double-checking before applying, then hit Continue to see what you caught.",
+            postingTitle: "Secured Card Offer",
+            segments: [
+              { id: 's1', text: "Refundable security deposit: $300, becomes your credit limit. ", isRedFlag: false, explanation: "A standard, expected secured card structure, nothing concerning here." },
+              { id: 's2', text: "Reports to all three major credit bureaus. ", isRedFlag: false, explanation: "This is exactly what you want to confirm, and this offer states it clearly." },
+              { id: 's3', text: "Annual fee: $39, charged regardless of card usage. ", isRedFlag: true, explanation: "A real ongoing cost worth comparing against fee-free secured card alternatives before committing." },
+              { id: 's4', text: "APR: 27.99% on any carried balance. ", isRedFlag: true, explanation: "A high APR, worth noting, though manageable if the balance is paid in full every month as intended." },
+              { id: 's5', text: "Deposit refunded within 60 days of account closure, in good standing. ", isRedFlag: false, explanation: "A standard, reasonable refund timeline, worth knowing but not a red flag." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'sc_d1', type: 'decision',
+            title: "Which Path First",
+            prompt: "Hammy has $300 available for a secured card deposit AND a parent willing to add Hammy as an authorized user on their long-standing, well-managed card.",
+            hintText: "Think back to Authorized User: does this option require tying up any money at all?",
+            choices: [
+              { id: 'a', label: 'Only open the secured card, skip the authorized user option', outcome: { text: "It works, but ties up $300 in a deposit when a no-cost option was also available alongside it.", delta: {}, compare: [{ label: 'Money tied up', value: 300 }, { label: 'Money tied up with both options', value: 300 }] } },
+              { id: 'b', label: 'Do both: become an authorized user now, and open the secured card too', outcome: { text: "The authorized user status starts building history immediately at no cost, while the secured card builds independent history in Hammy\'s own name too.", delta: {}, compare: [{ label: 'Accounts building history', value: 2 }, { label: 'Accounts building history with only one', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sc_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Reports to All Three Bureaus', definition: 'A key feature to confirm, since it\'s the entire point of a secured card.' },
+              { term: 'Annual Fee', definition: 'An ongoing cost worth comparing across different secured card options.' },
+              { term: 'Independent History', definition: "Credit history built in your own name, separate from an authorized-user account." }
+            ],
+            hintText: "One term is a MUST-HAVE feature, one is an ONGOING cost, and one describes history built on YOUR OWN account.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'sc_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Becoming an authorized user on someone else's card requires going through your own credit approval process.",
+            isTrue: false,
+            explanation: "False. Being added as an authorized user typically requires no separate approval or credit check of your own, it rides on the primary cardholder's account.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'sc_myth1', type: 'mythcards', title: 'Secured Cards: True or False',
+            cards: [
+              { myth: "All secured cards automatically report activity to all three credit bureaus.", isTrue: false, explanation: "This varies by issuer, it's worth confirming directly before opening one, since it's the entire reason to get a secured card." },
+              { myth: "A secured card's deposit is generally returned once the account closes in good standing.", isTrue: true, explanation: "True, that's the \"secured\" part, it's a refundable deposit, not a fee." },
+              { myth: "Becoming an authorized user on a poorly-managed card can hurt, not help, your credit.", isTrue: true, explanation: "True, the account's history, good or bad, can appear on the authorized user's report too, so the primary card matters." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'sc_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [5, 11],
+            hintTexts: [
+              "Think about a common, safe way for a student with no credit history to start.",
+              "Think about the difference between a pre-qualification check and an actual credit application."
+            ]
+          },
+          {
+            id: 'sc_t3', type: 'teach', title: 'Either Path Works, Together Works Better',
+            concepts: [
+              {
+                term: 'Combining Both Paths',
+                plain: "A secured card and authorized-user status aren't mutually exclusive, using both at once builds history on two fronts simultaneously, often faster than relying on just one path alone.",
+                analogy: "It's like studying with both practice problems and flashcards instead of picking just one method.",
+                check: { statement: "A secured card and authorized-user status can generally be used together at the same time.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'sc_boss', type: 'bossbattle', title: 'The Fee-Free Alternative',
+            scenario: "After using the $39/year secured card for six months, Hammy finds a similar secured card with no annual fee and the same bureau reporting.",
+            hintText: "Remember Annual Fee: does switching actually make sense once real credit history has already started building?",
+            choices: [
+              { id: 'a', label: "Research the switch carefully, checking whether closing the old card affects the history built so far", consequence: { text: "A careful check avoids accidentally shortening the average account age while still saving the annual fee going forward.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Close the old card immediately and open the new fee-free one", consequence: { text: "It saves the fee, but closing the account outright can shorten credit history length right as it was starting to build.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'c', label: "Keep the fee-paying card exactly as is, to avoid any risk of disrupting the credit history", consequence: { text: "A safe choice for the credit history, though it means continuing to pay an avoidable annual fee indefinitely.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'd', label: "Open the new fee-free card as a second account, and keep the old one open too", consequence: { text: "This avoids closing anything, keeping the original history intact while adding a second account, though it means managing two cards.", delta: {}, xpMultiplier: 1.1 } }
             ]
           }
         ]
@@ -6325,10 +6930,129 @@ const MODULES = [
         topic: 'Paying Off Debt: Avalanche vs. Snowball',
         character: { name: 'Hammy', tagline: 'Deciding how to tackle multiple balances' },
         initialState: {},
+        bossAchievementId: 'debt_strategy_picked',
         chapters: [
-          { id: 'avalanche_snowball_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'avs0', type: 'story', title: 'Two Balances, One Extra Payment',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Paying Off Debt: Avalanche vs. Snowball." }
+              { speaker: 'intro', text: "Hammy has two balances: $200 on a card at 24% APR, and $80 on another card at 15% APR. There's $50 extra this month to put toward one of them." },
+              { speaker: 'Hammy', text: '"I\'ll just knock out the smaller one, $80 feels closer to done."' },
+              { speaker: 'narrator', text: "That instinct has a name, and it's not necessarily wrong, but it's worth knowing there's a mathematically faster option too." },
+              { speaker: 'Hammy', text: '"There\'s an actual strategy for this? I thought it was just... pay off debt."' }
+            ]
+          },
+          {
+            id: 'avs_t1', type: 'teach', title: 'The Avalanche Method',
+            concepts: [
+              {
+                term: 'Avalanche Method',
+                plain: "The avalanche method puts extra payments toward the HIGHEST-interest debt first, while paying minimums on everything else. Mathematically, this saves the most money overall, since the most expensive debt gets paid down fastest.",
+                analogy: "It's like patching the leak that's losing water the fastest, not the leak that's closest to being empty.",
+                check: { statement: "The avalanche method prioritizes extra payments toward the debt with the highest interest rate.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'avs_t2', type: 'teach', title: 'The Snowball Method',
+            concepts: [
+              {
+                term: 'Snowball Method',
+                plain: "The snowball method puts extra payments toward the SMALLEST balance first, regardless of interest rate. It usually costs a bit more in total interest than avalanche, but the quick wins of fully closing out a balance can build motivation to keep going.",
+                analogy: "It's like clearing the shortest items off a to-do list first, not the most urgent one, the momentum itself has real value.",
+                check: { statement: "The snowball method generally saves more total interest than the avalanche method.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'avs_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Avalanche Method', definition: 'Extra payments toward the highest-interest debt first, saves the most money.' },
+              { term: 'Snowball Method', definition: 'Extra payments toward the smallest balance first, builds motivation faster.' },
+              { term: 'Minimum Payment', definition: 'The smallest amount still paid on every OTHER debt while focusing extra payments.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'avs_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: neither method works unless minimum payments still get made on every OTHER balance. Both strategies are about where the EXTRA money goes, missing minimums elsewhere causes late fees and score damage regardless of which method is chosen.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'avs_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why does the avalanche method (highest interest first) generally save more money than the snowball method (smallest balance first), even though snowball can feel more motivating?",
+            keywords: ['interest', 'highest', 'rate', 'save', 'expensive'],
+            fullDefinition: "Because interest keeps accruing on whatever balance is left, the longer a high-interest balance sits, the more it costs. Paying it down first, avalanche, cuts off the most expensive interest sooner, mathematically minimizing total interest paid, even though snowball's quick wins can feel more rewarding along the way.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'avs_d1', type: 'decision',
+            title: "The $50 Decision",
+            prompt: "Hammy has $50 extra to put toward either the $200 balance at 24% APR or the $80 balance at 15% APR, with minimums still covered on both either way.",
+            hintText: "Think back to Avalanche Method: which balance is actually costing the most in interest right now?",
+            choices: [
+              { id: 'a', label: 'Put the $50 toward the smaller $80 balance (snowball)', outcome: { text: "The smaller balance shrinks satisfyingly fast, but the pricier 24% APR balance keeps accruing interest at the higher rate a bit longer.", delta: {}, compare: [{ label: 'APR of balance targeted', value: 15 }, { label: 'APR of most expensive balance', value: 24 }] } },
+              { id: 'b', label: 'Put the $50 toward the larger $200 balance at 24% APR (avalanche)', outcome: { text: "The most expensive debt shrinks first, minimizing total interest paid across both balances over time.", delta: {}, compare: [{ label: 'APR of balance targeted', value: 24 }, { label: 'APR of most expensive balance', value: 24 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'avs_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Total Interest Paid', definition: 'The full cost across all debts, minimized by the avalanche method.' },
+              { term: 'Motivational Momentum', definition: 'The psychological boost from fully closing out a balance quickly, snowball\'s strength.' },
+              { term: 'Extra Payment', definition: 'Money beyond the minimum, the amount either strategy actually directs.' }
+            ],
+            hintText: "One term is the MATH outcome avalanche optimizes for, one is the PSYCHOLOGY snowball leans on, and one is what BOTH strategies redirect.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'avs_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "There's one objectively correct debt payoff strategy that works best for everyone, regardless of personality.",
+            isTrue: false,
+            explanation: "False. Avalanche saves more money mathematically, but for some people, snowball's early wins are what actually keep them consistent, the \"best\" strategy is partly personal.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'avs_myth1', type: 'mythcards', title: 'Avalanche vs. Snowball: True or False',
+            cards: [
+              { myth: "The snowball method is mathematically guaranteed to cost more total interest than avalanche.", isTrue: true, explanation: "True, in virtually all cases, since it doesn't prioritize the highest-interest balance first." },
+              { myth: "Either method requires skipping minimum payments on other balances to work.", isTrue: false, explanation: "Both methods still require minimums on every other balance, they only differ in where the EXTRA payment goes." },
+              { myth: "A person who struggles to stay motivated might genuinely pay off debt faster overall using snowball.", isTrue: true, explanation: "True, if avalanche's slower early progress causes someone to give up, snowball's quick wins might lead to more total debt actually paid off." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'avs_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [3, 6],
+            hintTexts: [
+              "Think about which single action has the biggest positive effect on a credit score.",
+              "Think about a common credit mistake students make."
+            ]
+          },
+          {
+            id: 'avs_t3', type: 'teach', title: 'Pick the One You\'ll Actually Stick With',
+            concepts: [
+              {
+                term: 'Consistency Over Optimization',
+                plain: "The mathematically best strategy only works if it's actually followed consistently. A slightly less optimal method that someone sticks with beats a perfect method abandoned after two months.",
+                analogy: "It's like a workout plan, the best plan on paper means nothing if it's the one you quit.",
+                check: { statement: "The strategy that's actually followed consistently matters more than picking the theoretically perfect one and abandoning it.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'avs_boss', type: 'bossbattle', title: 'Three Balances Now',
+            scenario: "Hammy now has three balances: $150 at 22% APR, $60 at 18% APR, and $300 at 12% APR. There's $80 extra this month, and Hammy has stuck with avalanche consistently so far.",
+            hintText: "Remember Avalanche Method: which of the three balances is actually the most expensive per dollar owed?",
+            choices: [
+              { id: 'a', label: "Put the $80 toward the $150 balance at 22% APR, the highest rate", consequence: { text: "Consistent with avalanche, the highest-rate balance keeps shrinking first, minimizing total interest across all three.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Switch to snowball now and target the smallest $60 balance instead", consequence: { text: "Switching strategies mid-way costs some of the interest savings avalanche was already building toward.", delta: {}, xpMultiplier: 0.75 } },
+              { id: 'c', label: "Split the $80 evenly across all three balances", consequence: { text: "An even split doesn't target the highest-interest debt specifically, leaving some avoidable interest on the table.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'd', label: "Put the $80 toward the $300 balance since it's the largest total amount", consequence: { text: "Size alone isn't the deciding factor, this balance actually carries the lowest interest rate of the three.", delta: {}, xpMultiplier: 0.6 } }
             ]
           }
         ]
