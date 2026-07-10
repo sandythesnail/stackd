@@ -3499,11 +3499,145 @@ const MODULES = [
         id: 'checking_vs_savings',
         topic: 'Checking vs. Savings: Avoiding Fees',
         character: { name: 'Hammy', tagline: 'Untangling checking and savings accounts' },
-        initialState: {},
+        initialState: { checking: 40, savings: 0 },
+        bossAchievementId: 'zero_overdraft',
         chapters: [
-          { id: 'checking_vs_savings_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'cvs0', type: 'story', title: 'Living at $0',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Checking vs. Savings: Avoiding Fees." }
+              { speaker: 'intro', text: "Hammy's checking account hovers right around $0 between paychecks, no savings account linked, nothing set up as backup." },
+              { speaker: 'Hammy', text: '"It always works out. I just don\'t spend anything the last couple days before payday."' },
+              { speaker: 'narrator', text: "That works, until one auto-renewing subscription or one bounced Venmo request lands on exactly the wrong day." },
+              { speaker: 'Hammy', text: '"Okay, that\'s oddly specific. Has that actually happened to someone?"' }
+            ]
+          },
+          {
+            id: 'cvs_t1', type: 'teach', title: 'Two Accounts, Two Jobs',
+            concepts: [
+              {
+                term: 'Checking',
+                plain: "Checking is for everyday transactions, rent, groceries, card swipes. It's built for movement, money in, money out, constantly.",
+                analogy: "It's like a kitchen counter, things pass through it constantly, it's not meant for long-term storage.",
+                check: { statement: "Checking accounts are designed to hold money long-term without much activity.", isTrue: false }
+              },
+              {
+                term: 'Savings',
+                plain: "Savings is for holding money toward a goal, an emergency fund, a big purchase, and it usually earns interest. Keeping it separate from checking means it's not sitting right next to your everyday spending money, tempting to dip into.",
+                analogy: "It's like a pantry versus the kitchen counter, food headed somewhere specific, not grabbed at random.",
+                check: { statement: "Keeping savings in a separate account from checking makes it less likely to get spent by accident.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'cvs_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Checking', definition: 'Built for constant movement — everyday spending and bill payments.' },
+              { term: 'Savings', definition: 'Built for holding money toward a goal, usually earning interest.' },
+              { term: 'Living at $0', definition: 'Keeping a checking balance right at zero with no buffer.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cvs_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: many banks let you link a savings account as free automatic overdraft backup. If checking hits $0 and a small charge comes through, the bank pulls the shortfall from linked savings instead of charging a $30+ overdraft fee.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'cvs_t2', type: 'teach', title: 'The Overdraft Fee Trap',
+            concepts: [
+              {
+                term: 'Overdraft Fee',
+                plain: "An overdraft fee hits when a charge goes through on an account that doesn't have enough to cover it, often $30 or more, PER incident. A $6 subscription renewal on an empty account can trigger a $30+ fee, turning a $6 charge into $36.",
+                analogy: "It's like a $30 penalty for a $6 parking meter running out, wildly out of proportion to the actual shortfall.",
+                check: { statement: "An overdraft fee is typically proportional to how small the shortfall was.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cvs_ms1', type: 'microsim', title: "Splitting the Extra $40",
+            prompt: "Hammy has an extra $40 this week after bills. Decide how much stays in checking as a buffer versus moving to savings, so checking doesn't sit at exactly $0 again.",
+            hintText: "Even a small checking buffer, $10-15, is often enough to absorb a small surprise charge without an overdraft.",
+            income: 40,
+            fixedCosts: [],
+            sliders: [
+              { id: 'checkingBuffer', label: 'Keep as checking buffer', min: 0, max: 40, step: 5, default: 0 },
+              { id: 'toSavings', label: 'Move to savings', min: 0, max: 40, step: 5, default: 40 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That splits more than the $40 available. Try smaller amounts.", ok: false },
+              { maxLeftover: 4, text: "It fits, though with little checking buffer, a small surprise charge could still trigger a fee.", ok: true },
+              { maxLeftover: Infinity, text: "Solid, a real checking buffer plus savings growth, exactly the balance this quest is about.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'cvs_d1', type: 'decision',
+            title: "The Subscription Renewal",
+            prompt: "A $12 subscription is about to auto-renew, and Hammy's checking balance is $8. No savings account is linked as backup.",
+            hintText: "Think back to The Overdraft Fee Trap: what's the real cost if this charge goes through as-is?",
+            choices: [
+              { id: 'a', label: 'Do nothing and hope it somehow works out', outcome: { text: "The charge bounces, triggering a $34 overdraft fee, turning a $12 subscription into a $46 problem.", delta: { checking: -34 }, compare: [{ label: 'Subscription cost', value: 12 }, { label: 'Actual cost with fee', value: 46 }] } },
+              { id: 'b', label: 'Transfer $10 from savings to checking right away', outcome: { text: "A two-minute transfer avoids the fee entirely, the subscription renews normally.", delta: { checking: 10 }, compare: [{ label: 'Subscription cost', value: 12 }, { label: 'Actual cost avoided', value: 34 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'cvs_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Overdraft Fee', definition: 'A charge, often $30+, for a transaction exceeding the account balance.' },
+              { term: 'Overdraft Protection', definition: 'A linked savings account that covers small shortfalls automatically.' },
+              { term: 'Checking Buffer', definition: 'A small cushion kept in checking so it never sits at exactly $0.' }
+            ],
+            hintText: "One term is the COST of a shortfall, one PREVENTS it automatically, and one is a manual habit that helps too.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'cvs_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Linking a savings account as overdraft backup usually costs extra money to set up.",
+            isTrue: false,
+            explanation: "False. Most banks offer this linking for free, it's simply a setting in the account, not a paid feature.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'cvs_myth1', type: 'mythcards', title: 'Checking vs. Savings: True or False',
+            cards: [
+              { myth: "A checking account earns roughly the same interest as a savings account.", isTrue: false, explanation: "Checking accounts typically earn little to no interest, that's exactly what savings accounts are built for." },
+              { myth: "An overdraft fee can be triggered by a charge as small as a few dollars.", isTrue: true, explanation: "True, the fee doesn't scale with the size of the shortfall, even a tiny gap can trigger the full fee." },
+              { myth: "Keeping checking and savings at the same bank is required to link them for overdraft protection.", isTrue: true, explanation: "True, overdraft protection linking generally only works between accounts at the same bank." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'cvs_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 6],
+            hintTexts: [
+              "Think about which account is for everyday spending, and which is for holding toward a goal.",
+              "Think about what a linked savings account can automatically prevent."
+            ]
+          },
+          {
+            id: 'cvs_t3', type: 'teach', title: 'A Small Setup Prevents a Real Cost',
+            concepts: [
+              {
+                term: 'Prevention Over Reaction',
+                plain: "Linking accounts and keeping a small checking buffer takes minutes to set up, once. Reacting to an overdraft after the fact costs real money and doesn't undo the fee already charged.",
+                analogy: "It's like a smoke detector versus calling the fire department, one prevents the problem, the other just responds to it.",
+                check: { statement: "Setting up overdraft protection in advance is more effective than dealing with a fee after it happens.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'cvs_boss', type: 'bossbattle', title: 'The Zero-Dollar Week',
+            scenario: "Hammy's checking balance is $3 with two days until payday. A friend's Venmo request for $15 for a shared Uber is about to be auto-charged.",
+            hintText: "Remember Overdraft Protection: is there a way to cover this without a fee, even at $3?",
+            choices: [
+              { id: 'a', label: "Transfer the difference from linked savings before the charge hits", consequence: { text: "A quick transfer covers the gap completely, no fee, no drama.", delta: { checking: 12 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Let it go through and hope for the best", consequence: { text: "The charge bounces, and a $34 overdraft fee lands on top of the $15 already owed.", delta: { checking: -34 }, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Ask the friend for a short extension until payday", consequence: { text: "A reasonable ask that avoids the fee entirely, though it depends on the friend being flexible.", delta: {}, xpMultiplier: 1.1 } },
+              { id: 'd', label: "Decline the Venmo request and sort it out after payday", consequence: { text: "It avoids an overdraft, but leaves the shared expense unresolved in the meantime.", delta: {}, xpMultiplier: 0.85 } }
             ]
           }
         ]
@@ -3513,10 +3647,129 @@ const MODULES = [
         topic: 'How Interest & Consistency Compound Over Time',
         character: { name: 'Hammy', tagline: 'Setting up a recurring transfer and forgetting about it' },
         initialState: {},
+        bossAchievementId: 'consistency_compounds',
         chapters: [
-          { id: 'interest_consistency_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ic0', type: 'story', title: "Don't Recognize the Number",
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on How Interest & Consistency Compound Over Time." }
+              { speaker: 'intro', text: "A year ago, Hammy set up a boring $50/month automatic transfer to savings and mostly forgot about it. Checking the balance today, the number doesn't look right." },
+              { speaker: 'Hammy', text: '"Wait, that can\'t be right. I didn\'t do anything different this whole year."' },
+              { speaker: 'narrator', text: "That's exactly the point, doing basically nothing, consistently, for a year, adds up to more than it feels like it should." },
+              { speaker: 'Hammy', text: '"Okay, walk me through the actual math, because this feels like it shouldn\'t work this well."' }
+            ]
+          },
+          {
+            id: 'ic_t1', type: 'teach', title: 'Consistency Beats Size',
+            concepts: [
+              {
+                term: 'The Power of Consistency',
+                plain: "$50/month for 12 months is $600, simple math, no interest needed to see the result. The habit of NEVER SKIPPING a month is what actually builds the balance, not the size of any single deposit.",
+                analogy: "It's like a daily workout, one session barely matters, showing up every day for a year changes everything.",
+                check: { statement: "The size of each individual deposit matters more than doing it consistently every month.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ic_t2', type: 'teach', title: 'Interest Adds a Little More, Automatically',
+            concepts: [
+              {
+                term: 'Interest on Top',
+                plain: "Put that same $600 in a HYSA earning around 4.5% APY instead of a 0.01% account, and the balance grows a bit faster than the deposits alone, since each dollar sitting in the account earns a little more over time, on top of what's already being added.",
+                analogy: "It's like a plant that grows a little on its own, even between waterings, the growth stacks on top of what's already there.",
+                check: { statement: "Money sitting in a high-yield savings account grows a little even without adding new deposits.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ic_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'The Power of Consistency', definition: 'Never skipping a deposit, the habit that actually builds the balance.' },
+              { term: 'Interest on Top', definition: 'Extra growth from a HYSA, on top of what was directly deposited.' },
+              { term: 'Automatic Transfer', definition: 'A recurring deposit that happens without needing to remember it.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ic_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: schedule the automatic transfer for the SAME day as payday, not a few days later. The faster money moves out of checking, the less chance it has to quietly get spent on something else first.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ic_price1', type: 'priceisright', title: 'The Price Is Right: A Year of $50/Month',
+            prompt: "Hammy transfers $50/month automatically into a HYSA earning 4.5% APY for 12 months. Guess the balance at the end of the year (deposits plus interest).",
+            hintText: "Start with the simple part: $50 × 12 months. Interest on a growing balance adds a bit more on top of that.",
+            actualValue: 614, guessRange: { min: 550, max: 700, step: 5 },
+            explanation: "$50 × 12 = $600 from deposits alone, plus roughly $14 in interest from the HYSA as the balance grows through the year, landing around $614. Consistency did almost all of the work, interest just added a little extra on top.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'ic_d1', type: 'decision',
+            title: "The Skipped Month",
+            prompt: "Hammy's card gets declined for the automatic transfer one month, insufficient funds in checking. What should Hammy do?",
+            hintText: "Think back to The Power of Consistency: does one missed month mean giving up on the habit?",
+            choices: [
+              { id: 'a', label: 'Cancel the automatic transfer entirely since it clearly didn\'t work this time', outcome: { text: "One missed month becomes an abandoned habit, the exact thing consistency was protecting against.", delta: {}, compare: [{ label: 'Months contributing after the miss', value: 0 }, { label: 'Year-end total if abandoned', value: 250 }] } },
+              { id: 'b', label: 'Let the transfer resume automatically next month, no changes needed', outcome: { text: "One skipped month barely dents the year-end total, the habit itself stays intact.", delta: {}, compare: [{ label: 'Months contributing after the miss', value: 11 }, { label: 'Year-end total if resumed', value: 564 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ic_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'APY', definition: 'Annual Percentage Yield, the rate a savings account grows at over a year.' },
+              { term: 'A Skipped Month', definition: 'A single missed deposit, minor if the habit itself continues.' },
+              { term: 'Growing Balance', definition: 'A total that increases both from new deposits and from interest earned.' }
+            ],
+            hintText: "One term is a RATE, one is a MINOR setback, and one is the RESULT of both deposits and interest.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ic_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A single missed automatic transfer effectively ruins a year of consistent saving.",
+            isTrue: false,
+            explanation: "False. One skipped month barely changes the year-end total, the actual risk is treating one miss as a reason to cancel the habit entirely.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ic_myth1', type: 'mythcards', title: 'Interest & Consistency: True or False',
+            cards: [
+              { myth: "A small, automatic $50/month deposit is basically pointless compared to saving a big lump sum once.", isTrue: false, explanation: "Twelve consistent $50 deposits add up to real money, $600 before interest, without ever requiring a big lump sum at all." },
+              { myth: "Interest earned on a savings balance requires any extra effort once the account is open.", isTrue: false, explanation: "Interest accrues automatically on whatever balance is sitting in the account, no extra action needed." },
+              { myth: "Automating a transfer removes the temptation to skip saving in a busy or stressful month.", isTrue: true, explanation: "True, that's exactly why automation works, it happens whether or not saving crosses your mind that month." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ic_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [3, 11],
+            hintTexts: [
+              "Think about the simple math: a percentage rate applied to a dollar amount.",
+              "Think about a fixed monthly amount, multiplied by twelve months."
+            ]
+          },
+          {
+            id: 'ic_t3', type: 'teach', title: 'Set It Once, Let It Run',
+            concepts: [
+              {
+                term: 'The One Setup That Matters',
+                plain: "The entire result of this quest traces back to one five-minute setup: an automatic transfer, on payday, into an account earning real interest. Everything after that just requires NOT turning it off.",
+                analogy: "It's like planting a tree, most of the effort is in the planting, growth happens on its own after that.",
+                check: { statement: "Building meaningful savings this way requires ongoing daily effort after the initial setup.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ic_boss', type: 'bossbattle', title: 'The Tempting Pause',
+            scenario: "Six months into the automatic transfer, Hammy is short on cash for a fun weekend trip and considers pausing the transfer for two months to free up extra spending money.",
+            hintText: "Remember The Power of Consistency: what does pausing, even briefly, actually cost long-term?",
+            choices: [
+              { id: 'a', label: "Keep the transfer running and find a cheaper way to enjoy the weekend", consequence: { text: "The habit stays fully intact, and the balance keeps climbing right on schedule.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Pause the transfer for two months to free up spending money", consequence: { text: "Two skipped months mean $100 less saved, plus a bit less interest, for a weekend that\'s over in two days.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Reduce the transfer amount temporarily instead of pausing it completely", consequence: { text: "A middle-ground option, the habit continues, just at a smaller scale for a couple months.", delta: {}, xpMultiplier: 1.0 } },
+              { id: 'd', label: "Pull the trip money from the savings balance instead of pausing the transfer", consequence: { text: "The automatic habit stays intact, though it does undo some of the progress already banked.", delta: {}, xpMultiplier: 0.85 } }
             ]
           }
         ]
@@ -3526,10 +3779,129 @@ const MODULES = [
         topic: 'Automating Your Savings Habits',
         character: { name: 'Hammy', tagline: 'Trying to make saving automatic' },
         initialState: {},
+        bossAchievementId: 'auto_saver',
         chapters: [
-          { id: 'automate_savings_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'as0', type: 'story', title: '"I\'ll Save Whatever\'s Left"',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Automating Your Savings Habits." }
+              { speaker: 'intro', text: "Hammy keeps saying \"I'll save whatever's left at the end of the month.\" Every month, there's never anything left." },
+              { speaker: 'Hammy', text: '"I keep meaning to move money over. It just... never happens."' },
+              { speaker: 'narrator', text: "That's not a willpower problem, it's an ordering problem. The plan just has saving happening at the wrong point in the month." },
+              { speaker: 'Hammy', text: '"Wrong point? I save AFTER spending, that seems like the normal order."' }
+            ]
+          },
+          {
+            id: 'as_t1', type: 'teach', title: 'Pay Yourself First',
+            concepts: [
+              {
+                term: 'Pay Yourself First',
+                plain: "Instead of spending first and saving whatever's left, an automatic transfer moves money to savings the DAY it's paid, before it has a chance to get spent on anything else. The rest becomes the actual spending budget.",
+                analogy: "It's like a tax withheld before a paycheck even arrives, the money is gone from view before it can be missed.",
+                check: { statement: "\"Pay yourself first\" means saving whatever happens to be left over at the end of the month.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'as_t2', type: 'teach', title: 'You Can\'t Spend Money You Don\'t See',
+            concepts: [
+              {
+                term: 'Out of Sight, Out of Mind',
+                plain: "Money still sitting in checking feels available, even if it's mentally earmarked for savings. Money already moved to a separate account isn't part of the day-to-day spending picture anymore, it's simply not there to spend.",
+                analogy: "It's like putting leftovers in an opaque container instead of a clear one, out of sight really does change behavior.",
+                check: { statement: "Money that's been automatically transferred to savings is less likely to get spent than money mentally set aside in checking.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'as_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Pay Yourself First', definition: 'Moving money to savings before spending, not after.' },
+              { term: 'Out of Sight, Out of Mind', definition: 'Money already moved out of checking is less likely to get spent.' },
+              { term: 'Round-Up Savings', definition: "Rounding purchases up and saving the small difference automatically." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'as_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: round-up apps that save the spare change from every purchase won't replace a real savings plan on their own, but they build momentum with zero ongoing effort, a good add-on to an automatic transfer, not a replacement for one.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'as_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why does automating a transfer on payday work better than planning to save whatever's left at the end of the month?",
+            keywords: ['before', 'spend', 'automatic', 'never', 'see'],
+            fullDefinition: "Because \"save what's left\" puts saving last, competing against every purchase decision made all month, and there's rarely anything left by the time it's saving's turn. Automating the transfer on payday puts saving FIRST, before the money is ever available to spend on anything else, removing the competition entirely.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'as_d1', type: 'decision',
+            title: "Setting the Amount",
+            prompt: "Hammy is setting up an automatic transfer for the first time and isn't sure whether to start with an ambitious $150/month or a smaller $30/month.",
+            hintText: "Which amount is more likely to actually stay running for a full year without getting turned off?",
+            choices: [
+              { id: 'a', label: 'Start at $150/month to save as much as possible', outcome: { text: "The ambitious amount causes an overdraft within the first month, and Hammy turns the whole transfer off in frustration.", delta: {}, compare: [{ label: 'Months the transfer survives', value: 1 }, { label: 'Total saved this year', value: 30 }] } },
+              { id: 'b', label: 'Start at $30/month, a comfortable amount, and increase it later if it feels easy', outcome: { text: "The smaller amount runs all year without ever feeling like a strain, and Hammy raises it to $50 after a few months once it's proven easy.", delta: {}, compare: [{ label: 'Months the transfer survives', value: 12 }, { label: 'Total saved this year', value: 450 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'as_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Sustainable Amount', definition: 'A transfer size comfortable enough to actually keep running long-term.' },
+              { term: 'Payday Timing', definition: 'Scheduling the transfer for the same day money arrives, not days later.' },
+              { term: 'Save What\'s Left', definition: 'The unreliable approach of saving only after all spending happens first.' }
+            ],
+            hintText: "One term is about the RIGHT SIZE, one is about TIMING, and one is the approach being replaced.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'as_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Starting an automatic savings transfer at the highest amount you can technically afford is the fastest way to build savings.",
+            isTrue: false,
+            explanation: "False. An amount that's too aggressive often causes an overdraft or gets turned off entirely, a smaller, sustainable amount that actually keeps running usually saves more over a full year.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'as_myth1', type: 'mythcards', title: 'Automating Savings: True or False',
+            cards: [
+              { myth: "An automatic transfer has to be a large amount to actually make a difference.", isTrue: false, explanation: "Even a small, consistent automatic transfer beats an inconsistent large one, since consistency is what actually builds the balance." },
+              { myth: "Round-up savings apps can fully replace a real, planned automatic transfer.", isTrue: false, explanation: "Round-ups add small amounts passively, a nice bonus, but not a substitute for an intentional, sized savings plan." },
+              { myth: "An automatic transfer amount can be increased later once it's proven comfortable.", isTrue: true, explanation: "True, starting conservative and raising the amount over time is a normal, effective way to build the habit without it feeling like a strain." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'as_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 8],
+            hintTexts: [
+              "Think about when, exactly, the smartest time to save is: before or after spending.",
+              "Think about a passive way to build a saving habit with very little ongoing effort."
+            ]
+          },
+          {
+            id: 'as_t3', type: 'teach', title: 'Automation Removes the Decision',
+            concepts: [
+              {
+                term: 'Removing the Daily Decision',
+                plain: "Every manual savings plan relies on remembering, and deciding, to move money over, again and again, forever. Automation removes that decision entirely, it happens whether or not saving crosses your mind that day.",
+                analogy: "It's like a scheduled bill payment instead of remembering to write a check every month, same result, zero ongoing mental effort.",
+                check: { statement: "An automated savings transfer still requires actively deciding to save each month.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'as_boss', type: 'bossbattle', title: 'The Six-Month Check-In',
+            scenario: "Six months into an automatic $30/month transfer, Hammy notices the balance is smaller than expected, since one card decline caused a missed transfer, and Hammy never noticed or fixed it.",
+            hintText: "Remember Removing the Daily Decision: automation still needs an occasional check-in to make sure it's actually running.",
+            choices: [
+              { id: 'a', label: "Check the transfer is active, fix the card issue, and let it resume automatically", consequence: { text: "A quick fix gets the habit back on track, with only one missed month in six.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Assume it's fine without actually checking", consequence: { text: "The transfer stays broken for months longer, quietly costing far more than the one missed month.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Set up a recurring quarterly reminder to verify the transfer is still active going forward", consequence: { text: "A smart long-term fix, occasional check-ins catch silent failures before they compound.", delta: {}, xpMultiplier: 1.2 } },
+              { id: 'd', label: "Manually transfer a lump sum to make up for the gap, without fixing the automation", consequence: { text: "It covers this gap, but the same silent failure could easily happen again next month.", delta: {}, xpMultiplier: 0.8 } }
             ]
           }
         ]
@@ -3539,10 +3911,138 @@ const MODULES = [
         topic: 'Sinking Funds for Predictable Costs',
         character: { name: 'Hammy', tagline: 'Planning ahead for a cost they know is coming' },
         initialState: {},
+        bossAchievementId: 'sinking_fund_planner',
         chapters: [
-          { id: 'sinking_funds_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'sf0', type: 'story', title: 'Not Actually a Surprise',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Sinking Funds for Predictable Costs." }
+              { speaker: 'intro', text: "Every December, Hammy scrambles to afford a flight home. Every January, $400 in textbooks catches Hammy off guard. Every single year." },
+              { speaker: 'Hammy', text: '"It just always sneaks up on me somehow."' },
+              { speaker: 'narrator', text: "A cost that happens every single year, on a predictable schedule, isn't actually a surprise, it's just an unplanned expense." },
+              { speaker: 'Hammy', text: '"Okay, fair. So how do I stop being surprised by something that literally happens every year?"' }
+            ]
+          },
+          {
+            id: 'sf_t1', type: 'teach', title: 'Sinking Fund vs. Emergency Fund',
+            concepts: [
+              {
+                term: 'Sinking Fund',
+                plain: "A sinking fund is money set aside gradually for a KNOWN, predictable expense, textbooks, a flight home, spring break. It's different from an emergency fund, which covers surprises, a sinking fund covers costs you already know are coming.",
+                analogy: "It's like a gift fund building up all year before a birthday you already know the date of, not a surprise at all.",
+                check: { statement: "A sinking fund and an emergency fund are meant to cover the exact same kind of expense.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'sf_t2', type: 'teach', title: 'Small Amounts, Spread Out',
+            concepts: [
+              {
+                term: 'Spreading the Cost',
+                plain: "A $400 textbook bill feels brutal appearing all at once in January. The same $400, saved as roughly $33/month starting in September, barely registers each month, and the full amount is simply ready when the bill arrives.",
+                analogy: "It's like paying for a big trip in small installments beforehand instead of one shock to the wallet on departure day.",
+                check: { statement: "Spreading a known cost across several months usually feels much less painful than paying it all at once.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'sf_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Sinking Fund', definition: 'Money saved gradually for a known, predictable future expense.' },
+              { term: 'Spreading the Cost', definition: 'Breaking a big known bill into small monthly amounts ahead of time.' },
+              { term: 'Predictable Expense', definition: 'A cost that recurs on a known schedule, not a random surprise.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sf_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: many online banks let you create multiple named savings \"buckets\" under one account, label one \"Textbooks,\" one \"Flight Home,\" one \"Spring Break.\" Seeing each goal by name makes it far easier to actually track progress toward each one.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'sf_ms1', type: 'microsim', title: "Planning Three Sinking Funds",
+            prompt: "Hammy has $90/month available to split across three known upcoming costs: a $400 textbook bill (due in 4 months), a $240 flight home (due in 4 months), and everyday spending. Use the sliders to plan the split.",
+            hintText: "$400 over 4 months needs $100/month, and $240 over 4 months needs $60/month, more than the $90 available for both combined, so this is about prioritizing, not fully funding everything at once.",
+            income: 90,
+            fixedCosts: [],
+            sliders: [
+              { id: 'textbookFund', label: 'Textbook sinking fund', min: 0, max: 90, step: 10, default: 0 },
+              { id: 'flightFund', label: 'Flight home sinking fund', min: 0, max: 90, step: 10, default: 0 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That assigns more than the $90 available between the two funds. Try smaller amounts.", ok: false },
+              { maxLeftover: 9, text: "A reasonable split, though at this pace one or both funds may fall a little short by their due date.", ok: true },
+              { maxLeftover: Infinity, text: "A thoughtful plan that leaves room to adjust, exactly the kind of tradeoff sinking funds require when money is limited.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'sf_d1', type: 'decision',
+            title: "The December Squeeze",
+            prompt: "It's October. Hammy hasn't started either sinking fund yet, and both the flight home and textbooks are due in January.",
+            hintText: "Think back to Spreading the Cost: does starting now versus starting in December change how painful this gets?",
+            choices: [
+              { id: 'a', label: 'Wait until December to start saving for both', outcome: { text: "Two months isn't enough time to spread $640 comfortably, December becomes a genuine scramble.", delta: {}, compare: [{ label: 'Monthly amount needed starting in Dec', value: 320 }, { label: 'Monthly amount needed starting now', value: 213 }] } },
+              { id: 'b', label: 'Start small sinking fund transfers this month, even if it\'s not much', outcome: { text: "Starting now, even modestly, means December arrives with real progress instead of nothing.", delta: {}, compare: [{ label: 'Monthly amount needed starting in Dec', value: 320 }, { label: 'Monthly amount needed starting now', value: 213 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sf_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Named Buckets', definition: 'Labeled sub-accounts that track progress toward each specific goal.' },
+              { term: 'Starting Early', definition: 'Beginning a sinking fund with more months left to spread the cost.' },
+              { term: 'Bill Due Date', definition: 'The known date a sinking fund needs to be fully funded by.' }
+            ],
+            hintText: "One term is about ORGANIZING funds, one is about TIMING, and one is the DEADLINE each fund works toward.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'sf_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A recurring yearly expense, like a flight home for the holidays, generally counts as an emergency.",
+            isTrue: false,
+            explanation: "False. Something that happens on a known, predictable schedule isn't really an emergency, it's exactly what a sinking fund is designed to plan for ahead of time.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'sf_myth1', type: 'mythcards', title: 'Sinking Funds: True or False',
+            cards: [
+              { myth: "A sinking fund and an emergency fund should always be kept as the exact same pool of money.", isTrue: false, explanation: "Keeping them separate avoids one goal secretly draining another, an emergency fund is for surprises, a sinking fund is for planned costs." },
+              { myth: "Only large expenses, like tuition, are worth setting up a sinking fund for.", isTrue: false, explanation: "Smaller recurring costs, textbooks, holiday flights, even birthday gifts, are just as good candidates for a small sinking fund." },
+              { myth: "Starting a sinking fund with fewer months before the due date means larger monthly contributions are needed.", isTrue: true, explanation: "True, the same total cost spread across fewer months always requires bigger monthly pieces." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'sf_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [7, 1],
+            hintTexts: [
+              "Think about what kind of expense a sinking fund is actually built for.",
+              "Think about the very first, smallest step toward any savings goal."
+            ]
+          },
+          {
+            id: 'sf_t3', type: 'teach', title: 'Name It, Then Fund It',
+            concepts: [
+              {
+                term: 'From Vague to Specific',
+                plain: "\"I should probably save more\" rarely turns into action. \"I need $400 for textbooks by January, so that's $67/month starting now\" is specific enough to actually set up and track. Naming the exact cost and deadline is what turns a good intention into a real plan.",
+                analogy: "It's like the difference between \"get in shape\" and a specific training plan with a date, one is a wish, the other is a plan.",
+                check: { statement: "A vague intention to save more is generally just as effective as a sinking fund with a specific target and deadline.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'sf_boss', type: 'bossbattle', title: 'The New Predictable Cost',
+            scenario: "Hammy just found out about a required $150 program fee due every spring semester, something that's apparently always been there but never planned for. It's due in 5 months.",
+            hintText: "Remember From Vague to Specific: what exact monthly number turns this into a real plan instead of a future scramble?",
+            choices: [
+              { id: 'a', label: "Set up a specific $30/month sinking fund for it starting now", consequence: { text: "$30 × 5 months covers the $150 fee exactly, right on schedule, no scramble in the spring.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Make a mental note to \"save more\" without a specific plan", consequence: { text: "Without a specific number or account, the fee arrives in the spring exactly the way past surprises did.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Plan to cover it with a credit card when the bill arrives", consequence: { text: "It solves the immediate cash problem, but adds interest for a cost that was actually fully predictable and avoidable.", delta: {}, xpMultiplier: 0.7 } },
+              { id: 'd', label: "Set up the sinking fund, but at a smaller $15/month to ease into it", consequence: { text: "A reasonable start, though at half the needed pace, part of the fee will still need to come from somewhere else in the spring.", delta: {}, xpMultiplier: 0.95 } }
             ]
           }
         ]
@@ -3552,10 +4052,135 @@ const MODULES = [
         topic: 'Setting & Prioritizing Savings Goals',
         character: { name: 'Hammy', tagline: 'Juggling three savings goals at once' },
         initialState: {},
+        bossAchievementId: 'goals_prioritized',
         chapters: [
-          { id: 'savings_goals_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'sg0', type: 'story', title: 'Three Goals, $60',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Setting & Prioritizing Savings Goals." }
+              { speaker: 'intro', text: "Hammy is saving for an emergency fund, a new laptop, and a spring break trip, all at once, with only $60 free this month." },
+              { speaker: 'Hammy', text: '"I guess I just split it evenly? $20 to each?"' },
+              { speaker: 'narrator', text: "Even math is easy, but not every goal actually carries the same weight if it goes unfunded." },
+              { speaker: 'Hammy', text: '"Wait, they\'re not all equally important? They\'re all things I want."' }
+            ]
+          },
+          {
+            id: 'sg_t1', type: 'teach', title: 'Not All Goals Carry the Same Risk',
+            concepts: [
+              {
+                term: 'Risk If Unfunded',
+                plain: "An unfunded emergency fund means going into debt the next time something breaks. An unfunded spring break trip means... a smaller, or delayed, trip. Same dollar amount, very different consequences if it doesn't get funded.",
+                analogy: "It's like insurance versus a wish-list item, one protects against something going wrong, the other is just a nice-to-have.",
+                check: { statement: "An emergency fund and a discretionary goal like a trip carry the exact same consequence if left unfunded.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'sg_t2', type: 'teach', title: 'Named Buckets Keep Goals Honest',
+            concepts: [
+              {
+                term: 'Savings Buckets',
+                plain: "Keeping all savings in one unlabeled account makes it easy to lose track of which portion is for what, and easy to accidentally spend a goal's progress on something else. Named sub-accounts or buckets keep each goal visible and separate.",
+                analogy: "It's like labeled jars instead of one big coin jar, you always know exactly how close each goal actually is.",
+                check: { statement: "Keeping multiple savings goals in one unlabeled account makes it easier to track progress on each one.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'sg_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Risk If Unfunded', definition: 'How serious the consequence is if a goal never gets funded.' },
+              { term: 'Savings Buckets', definition: 'Named sub-accounts that keep each goal visible and separate.' },
+              { term: 'Discretionary Goal', definition: 'A want-based goal, like a trip, with a lower-stakes consequence if unmet.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sg_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: give every goal a real name and a target number, \"Laptop Fund: $800\" instead of just \"savings.\" A specific name and number makes it far easier to notice progress, and far harder to accidentally treat as one big pool of spendable cash.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'sg_spot1', type: 'spotcheck', title: 'Spot the Safety-Net Priorities',
+            intro: "Here's Hammy's list of savings goals for the semester. Tap any goal that should be treated as a higher, safety-net priority, ahead of the purely discretionary ones, then hit Continue to see what you caught.",
+            postingTitle: "Hammy's Savings Goals This Semester",
+            segments: [
+              { id: 's1', text: "Emergency fund starter cushion, $500 target, currently $80. ", isRedFlag: true, explanation: "A safety-net priority, protects against going into debt for any unexpected cost." },
+              { id: 's2', text: "Spring break trip, $300 target, currently $150. ", isRedFlag: false, explanation: "A discretionary goal, lower stakes if it ends up smaller or delayed." },
+              { id: 's3', text: "Replacement laptop fund, since the current one is already showing signs of failing, $700 target, currently $100. ", isRedFlag: true, explanation: "This one leans safety-net too, a failing laptop that isn't replaced in time can turn into a real emergency mid-semester." },
+              { id: 's4', text: "New headphones, $180 target, currently $40. ", isRedFlag: false, explanation: "A discretionary want, nice to have, no real risk if it takes longer to fund." },
+              { id: 's5', text: "Textbook sinking fund for next semester, $250 target, currently $0. ", isRedFlag: true, explanation: "A predictable, required cost, worth prioritizing over purely discretionary goals." },
+              { id: 's6', text: "Concert tickets for a show next month, $90 target, currently $20. ", isRedFlag: false, explanation: "A discretionary goal, fun, but not a safety-net priority." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'sg_d1', type: 'decision',
+            title: "Splitting the $60",
+            prompt: "Hammy has $60 to split this month across the emergency fund (starter cushion still not reached), the laptop fund, and the spring break trip fund.",
+            hintText: "Think back to Risk If Unfunded: which of these three actually protects against going into debt?",
+            choices: [
+              { id: 'a', label: 'Split it evenly, $20 to each goal', outcome: { text: "All three goals inch forward, but the emergency fund, the one actually protecting against debt, grows the slowest.", delta: {}, compare: [{ label: 'To emergency fund', value: 20 }, { label: 'To discretionary goals', value: 40 }] } },
+              { id: 'b', label: 'Put $40 toward the emergency fund cushion, split the rest between the other two', outcome: { text: "The safety-net goal gets funded faster, while the discretionary goals still make some progress too.", delta: {}, compare: [{ label: 'To emergency fund', value: 40 }, { label: 'To discretionary goals', value: 20 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sg_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Target Number', definition: 'The specific dollar amount a savings goal is aiming for.' },
+              { term: 'Progress Visibility', definition: 'Being able to see exactly how close each named goal is to its target.' },
+              { term: 'Even Split', definition: 'Dividing available savings equally, regardless of which goal is higher-stakes.' }
+            ],
+            hintText: "One term is a specific NUMBER, one is about SEEING progress, and one is a splitting STRATEGY, not always the best one.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'sg_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Splitting limited savings evenly across every goal is always the smartest approach.",
+            isTrue: false,
+            explanation: "False. Goals with a bigger consequence if left unfunded, like an emergency fund, are generally worth prioritizing over purely discretionary goals, even if splitting evenly feels fairer.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'sg_myth1', type: 'mythcards', title: 'Savings Goals: True or False',
+            cards: [
+              { myth: "Every savings goal deserves an exactly equal share of available money.", isTrue: false, explanation: "Goals differ in how serious the consequence is if unfunded, an even split ignores that difference entirely." },
+              { myth: "Named savings buckets can usually be set up within the same banking app, no new account needed.", isTrue: true, explanation: "True, most online banks let you create sub-accounts or buckets under one main savings account." },
+              { myth: "A discretionary goal, like a trip, should never be funded until every safety-net goal is completely finished.", isTrue: false, explanation: "Prioritizing doesn't mean ignoring discretionary goals entirely, just giving safety-net goals a bigger share when money is limited." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'sg_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [9, 10],
+            hintTexts: [
+              "Think about how to organize progress toward several different savings goals at once.",
+              "Think about which goal protects against actually going into debt."
+            ]
+          },
+          {
+            id: 'sg_t3', type: 'teach', title: 'Prioritize, Don\'t Just Divide',
+            concepts: [
+              {
+                term: 'Weighted, Not Equal',
+                plain: "The smartest way to split limited savings isn't always an equal division, it's a weighted one, more toward goals that protect against real financial risk, less toward purely discretionary wants, without abandoning either category.",
+                analogy: "It's like a to-do list ranked by actual urgency, not just tackled in the order tasks were written down.",
+                check: { statement: "Weighting savings toward safety-net goals means completely ignoring discretionary goals.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'sg_boss', type: 'bossbattle', title: 'The Unexpected Windfall',
+            scenario: "Hammy gets an unexpected $200 refund. The emergency fund cushion still isn't complete, the laptop is genuinely close to failing, and the spring break trip fund is also behind.",
+            hintText: "Remember Weighted, Not Equal: which of these actually protects against a real financial setback if left unfunded?",
+            choices: [
+              { id: 'a', label: "Put the majority toward the emergency fund and failing-laptop fund, a smaller amount toward the trip", consequence: { text: "The two safety-net goals get meaningfully closer to done, while the trip fund still gets something.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Split the $200 evenly across all three goals", consequence: { text: "A fair-feeling split, but the two riskier gaps, the emergency fund and the failing laptop, close more slowly than they could have.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'c', label: "Put the entire $200 toward the spring break trip since it's the most exciting", consequence: { text: "The trip fund finishes early, but the emergency fund and failing laptop, the actual financial risks, stay exactly where they were.", delta: {}, xpMultiplier: 0.5 } },
+              { id: 'd', label: "Put the entire $200 toward the failing laptop fund alone", consequence: { text: "A reasonable focused move on the most urgent single risk, though the emergency fund cushion still lags behind.", delta: {}, xpMultiplier: 1.0 } }
             ]
           }
         ]
@@ -3565,10 +4190,129 @@ const MODULES = [
         topic: 'Saving for a Big Purchase (Study Abroad, Car, Moving Out)',
         character: { name: 'Hammy', tagline: 'Saving up for one big goal' },
         initialState: {},
+        bossAchievementId: 'big_goal_funded',
         chapters: [
-          { id: 'big_purchase_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'bp0', type: 'story', title: 'One Big Number',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Saving for a Big Purchase (Study Abroad, Car, Moving Out)." }
+              { speaker: 'intro', text: "Hammy wants to study abroad next year. The program costs $3,000 beyond what aid covers. Right now, there's $0 saved and 10 months until the deposit is due." },
+              { speaker: 'Hammy', text: '"$3,000 feels impossible. I don\'t even know where to start."' },
+              { speaker: 'narrator', text: "A number that big only feels impossible as one lump sum. Broken into a monthly target, it's just a plan." },
+              { speaker: 'Hammy', text: '"Okay, so what does that actually look like broken down?"' }
+            ]
+          },
+          {
+            id: 'bp_t1', type: 'teach', title: 'Break the Goal Into a Monthly Target',
+            concepts: [
+              {
+                term: 'Monthly Target',
+                plain: "Take the total goal, subtract anything already saved, and divide by the number of months until it's needed. A $3,000 goal over 10 months is $300/month, a concrete, plannable number instead of one overwhelming total.",
+                analogy: "It's like training for a big race by breaking it into weekly mileage targets, instead of just staring at the total distance.",
+                check: { statement: "Breaking a large savings goal into a monthly target makes the same total amount feel more manageable.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'bp_t2', type: 'teach', title: 'A Dedicated Account Keeps It Separate',
+            concepts: [
+              {
+                term: 'A Goal-Specific Account',
+                plain: "Keeping big-purchase savings in its own named account, separate from everyday checking and other goals, makes progress visible and much less likely to get spent on something unrelated along the way.",
+                analogy: "It's like a labeled savings jar sitting on a shelf, versus loose change mixed into a junk drawer.",
+                check: { statement: "Keeping a big-purchase fund mixed into everyday checking makes it easier to track progress.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bp_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Monthly Target', definition: 'The total goal divided by months remaining, a concrete number to hit.' },
+              { term: 'A Goal-Specific Account', definition: 'A dedicated account that keeps big-purchase savings visible and separate.' },
+              { term: 'Deposit Deadline', definition: 'The date a program or purchase actually requires the money by.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bp_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: recalculate the monthly target any time the timeline or the total changes, a scholarship that covers part of the cost, or a deadline that moves up, should immediately update the monthly number, not just get mentally noted and ignored.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'bp_price1', type: 'priceisright', title: 'The Price Is Right: The Monthly Target',
+            prompt: "Hammy needs $3,000 for the study abroad program, with $0 saved so far and 10 months until the deposit is due. Guess the monthly savings target.",
+            hintText: "This is straightforward division: total goal divided by months remaining.",
+            actualValue: 300, guessRange: { min: 0, max: 600, step: 25 },
+            explanation: "$3,000 ÷ 10 months = $300/month. A specific, trackable target instead of one intimidating total, and if a scholarship later covers $600 of it, the target immediately drops to $240/month for the remaining months.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'bp_d1', type: 'decision',
+            title: "The Partial Scholarship",
+            prompt: "Three months in, saving $300/month as planned, Hammy is awarded a $600 scholarship toward the study abroad program.",
+            hintText: "Think back to Monthly Target: does the scholarship change the number needed for the remaining months?",
+            choices: [
+              { id: 'a', label: 'Keep saving $300/month as originally planned', outcome: { text: "Hammy ends up saving $600 more than actually needed, money that could have gone toward other goals instead.", delta: {}, compare: [{ label: 'Extra saved beyond the goal', value: 600 }, { label: 'Extra saved if recalculated', value: 0 }] } },
+              { id: 'b', label: 'Recalculate the monthly target with the scholarship factored in', outcome: { text: "The remaining goal drops to $1,500 over 7 months, about $214/month, freeing up real money for other priorities.", delta: {}, compare: [{ label: 'Extra saved beyond the goal', value: 0 }, { label: 'Freed up per month', value: 86 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'bp_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Recalculating the Target', definition: 'Updating the monthly number whenever the goal or timeline changes.' },
+              { term: 'Windfall Toward a Goal', definition: 'Extra money, like a scholarship or refund, applied directly to a big-purchase target.' },
+              { term: 'Overshooting a Goal', definition: 'Continuing to save at the old rate after the target has already changed.' }
+            ],
+            hintText: "One term is about UPDATING the plan, one is a BOOST toward it, and one is a MISTAKE from not updating.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'bp_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Once a monthly savings target is set for a big goal, it should stay fixed no matter what changes.",
+            isTrue: false,
+            explanation: "False. A scholarship, a price change, or a shifted deadline should all trigger recalculating the monthly target, sticking to an outdated number wastes either money or time.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'bp_myth1', type: 'mythcards', title: 'Big Purchase Saving: True or False',
+            cards: [
+              { myth: "A $3,000 goal is only really achievable through one large windfall, like a big scholarship.", isTrue: false, explanation: "Broken into a monthly target over enough time, a large goal is very achievable through steady saving alone." },
+              { myth: "Big-purchase goals like a car or moving-out deposit benefit from the same monthly-target approach as study abroad.", isTrue: true, explanation: "True, any large, known-cost goal with a rough timeline works with the exact same total-divided-by-months approach." },
+              { myth: "A big-purchase fund should always be the very first savings priority, ahead of an emergency fund.", isTrue: false, explanation: "A starter emergency fund cushion is generally worth prioritizing first, it protects against debt in a way a discretionary big-purchase goal doesn't." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'bp_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [9, 10],
+            hintTexts: [
+              "Think about organizing progress toward more than one savings goal at once.",
+              "Think about which goal protects against actually going into debt."
+            ]
+          },
+          {
+            id: 'bp_t3', type: 'teach', title: 'The Math Makes It Manageable',
+            concepts: [
+              {
+                term: 'From Overwhelming to Ordinary',
+                plain: "The entire difference between \"$3,000 feels impossible\" and \"$300/month is doable\" is just doing the division once. The goal doesn't get smaller, but it stops feeling like one impossible number and starts feeling like a normal monthly line item.",
+                analogy: "It's like a mortgage, an enormous total number that becomes completely routine once it's broken into a monthly payment.",
+                check: { statement: "Breaking a large goal into a monthly number changes how manageable it feels, even though the total cost stays the same.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'bp_boss', type: 'bossbattle', title: 'The Tight Month',
+            scenario: "Eight months into the plan, Hammy is $50 short of this month's $300 target after an unexpected car repair, with two months left before the deposit is due.",
+            hintText: "Remember Recalculating the Target: does a single tight month mean the whole plan has failed?",
+            choices: [
+              { id: 'a', label: "Save what's possible this month, and slightly increase the next two months to catch up", consequence: { text: "A small adjustment over the remaining months absorbs the shortfall without derailing the goal.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Give up on hitting the full goal since this month didn't go as planned", consequence: { text: "One tight month, treated as a total failure, costs far more progress than the actual $50 shortfall.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Pull the $50 from the emergency fund to stay exactly on the original schedule", consequence: { text: "It keeps this month's number exact, but trades progress on one safety-net goal for another, worth weighing carefully.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'd', label: "Recalculate the full remaining plan based on the new total saved so far", consequence: { text: "A clear-eyed reset that shows exactly what's still needed, keeping the plan realistic instead of just hoping it works out.", delta: {}, xpMultiplier: 1.15 } }
             ]
           }
         ]
