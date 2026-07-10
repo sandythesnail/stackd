@@ -2971,7 +2971,7 @@ const MODULES = [
         q: 'What does compound interest mean?',
         opts: ['Interest earned only on your original deposit', 'Earning interest on both your principal AND on the interest you\'ve already earned', 'A penalty charged for early withdrawal', 'A type of interest only offered by the government'],
         correct: 1,
-        exp: 'Compounding is when your money makes money - and then that money makes more money. Einstein reportedly called it the eighth wonder of the world.'
+        exp: 'Compounding is when your money makes money - and then that money makes more money. The earlier it starts, the more time it has to snowball.'
       },
       {
         q: 'What is an index fund, and why is it recommended for beginner investors?',
@@ -3853,7 +3853,7 @@ const MODULES = [
           concepts: [
             {
               term: 'The Five Factors of Your Score',
-              plain: "Your credit score is built from five weighted factors: payment history (35%), amounts owed (30%), length of credit history (15%), new credit (10%), and credit mix (10%). Payment history alone is worth more than the other four combined.",
+              plain: "Your credit score is built from five weighted factors: payment history (35%), amounts owed (30%), length of credit history (15%), new credit (10%), and credit mix (10%). Payment history alone is the single largest factor, worth more than any other one factor by itself.",
               analogy: "Think of it like a report card where one class — showing up on time, every time — counts for over a third of your grade.",
               check: { statement: 'New credit inquiries and credit mix matter more to your score than payment history.', isTrue: false }
             },
@@ -4863,7 +4863,7 @@ const MODULES = [
         q: 'How does the number of credits you\'re enrolled in affect your federal loan eligibility?',
         opts: ['It has no effect — loan amounts are fixed no matter what', 'You generally need to be enrolled at least half-time to qualify for federal student loans, and your eligible amount can be reduced if you drop credits', 'Only full-time students can borrow any federal loans at all', 'Enrollment status only affects scholarships, never loans'],
         correct: 1,
-        exp: 'Federal loan eligibility is tied to enrollment status — usually at least half-time (commonly 6+ credits per semester). Drop below that threshold mid-semester and your aid, including loans already disbursed, can be adjusted or even reversed. Always check with your financial aid office before dropping a class.'
+        exp: 'Federal loan eligibility is tied to enrollment status — usually at least half-time, commonly around 6 credits per semester for undergrads, though each school sets its own exact credit threshold. Drop below that threshold mid-semester and your aid, including loans already disbursed, can be adjusted or even reversed. Always check with your financial aid office before dropping a class.'
       },
       {
         q: 'Before a first-time borrower can receive any federal Direct Loan funds, what must they complete?',
@@ -5047,7 +5047,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Enrollment Status & Loan Eligibility',
-                plain: "Federal loan eligibility is tied to enrollment status, usually requiring at least half-time (commonly 6+ credits per semester). Drop below that threshold mid-semester and aid, including loans already disbursed, can be reduced or reversed.",
+                plain: "Federal loan eligibility is tied to enrollment status, usually requiring at least half-time, commonly around 6 credits per semester for undergrads, though each school sets its own exact credit threshold. Drop below that threshold mid-semester and aid, including loans already disbursed, can be reduced or reversed.",
                 analogy: "It's like a membership tier that changes if you drop below a usage minimum, the terms aren't fixed regardless of what you do afterward.",
                 check: { statement: "Dropping below half-time enrollment mid-semester can affect federal loans already disbursed.", isTrue: true }
               }
@@ -6029,7 +6029,7 @@ const MODULES = [
             id: 'ff2', type: 'teach', title: 'Step 3 & 4: Enter & Submit',
             concepts: [
               { term: 'Step 3: Enter Info & Review', plain: "Most free tools walk through entering each form step by step, then flag likely credits — like education credits from a 1098-T — automatically. Review the summary before submitting; a small typo in a number can delay everything.", analogy: "It's a guided interview, not a blank form.", check: {} },
-              { term: 'Step 4: Submit & Track the Refund', plain: "E-filing is faster than mailing a paper return, and most refunds arrive within 1-3 weeks. The IRS's own tracking tool shows exactly where a return stands.", analogy: "Like tracking a package instead of wondering when it'll show up.", check: { statement: 'E-filing a tax return is typically faster than mailing a paper return.', isTrue: true } }
+              { term: 'Step 4: Submit & Track the Refund', plain: "E-filing is faster than mailing a paper return, and combined with direct deposit, the IRS issues most refunds in less than 21 days. The IRS's own tracking tool shows exactly where a return stands.", analogy: "Like tracking a package instead of wondering when it'll show up.", check: { statement: 'E-filing a tax return is typically faster than mailing a paper return.', isTrue: true } }
             ],
             xpOnComplete: 3
           },
@@ -6847,7 +6847,7 @@ const MODULES = [
         q: 'Your typical annual raise at your current job is 3%, but a competing offer from another company would pay you 15% more for a similar role. What does this suggest about growing your income early in your career?',
         opts: ['You should never leave a job for more money elsewhere', 'Internal raises are often smaller than what you can gain by changing employers, so evaluating outside offers periodically is a normal part of growing income early in your career', 'Changing jobs always resets your salary to zero', 'Loyalty to one employer always pays more over a lifetime'],
         correct: 1,
-        exp: 'Internal raises are frequently capped around a few percent, while switching employers can bring a much larger jump since a new employer isn\'t anchored to your current pay. This doesn\'t mean job-hop constantly, but periodically knowing your market value keeps you from leaving money on the table.'
+        exp: 'Internal raises are frequently capped around a few percent, since they\'re anchored to your current pay, while an outside offer isn\'t. How much bigger a jump switching brings varies with the job market and shifts over time, sometimes it\'s a large gap, sometimes barely any. This doesn\'t mean job-hop constantly, but periodically knowing your market value keeps you from leaving money on the table either way.'
       },
       {
         q: 'An offer letter lists $70,000 "total target compensation," made up of a $60,000 base salary and a $10,000 target bonus. What\'s important to understand about this number?',
