@@ -847,7 +847,7 @@ const MODULES = [
               },
               {
                 term: '1099 Income',
-                plain: "1099 income comes from working as an independent contractor, gig apps, freelance tutoring, dog walking. Nobody withholds anything, the full payment lands in your account, and if one payer sends you $600+ in a year, they'll send you a 1099-NEC form summarizing it for tax season.",
+                plain: "1099 income comes from working as an independent contractor, gig apps, freelance tutoring, dog walking. Nobody withholds anything, the full payment lands in your account, and if one payer sends you $2,000+ in a year, they'll send you a 1099-NEC form summarizing it for tax season.",
                 analogy: "It's like getting paid in cash with no automatic deductions, the full amount is yours to manage, deductions and all.",
                 check: { statement: "1099 income arrives with taxes already taken out, the same as a W-2 paycheck.", isTrue: false }
               }
@@ -855,13 +855,13 @@ const MODULES = [
             xpOnComplete: 2
           },
           {
-            id: 'gi_t2', type: 'teach', title: 'The $600 Form Threshold Isn\'t the Same as the Tax Threshold',
+            id: 'gi_t2', type: 'teach', title: 'The $2,000 Form Threshold Isn\'t the Same as the Tax Threshold',
             concepts: [
               {
-                term: 'The $600 Form Threshold',
-                plain: "A payer only has to SEND you a 1099-NEC form if they paid you $600 or more in a year. But that's just a paperwork trigger, it does NOT mean income under $600 is tax-free. Every dollar of gig income is still reportable, form or no form.",
-                analogy: "It's like a store only mailing a receipt for purchases over $600, smaller purchases still happened and still count, they just don't come with a mailed reminder.",
-                check: { statement: "Gig income under $600 from a single payer doesn't need to be reported since no form gets sent.", isTrue: false }
+                term: 'The $2,000 Form Threshold',
+                plain: "A payer only has to SEND you a 1099-NEC form if they paid you $2,000 or more in a year. But that's just a paperwork trigger, it does NOT mean income under $2,000 is tax-free. Every dollar of gig income is still reportable, form or no form.",
+                analogy: "It's like a store only mailing a receipt for purchases over $2,000, smaller purchases still happened and still count, they just don't come with a mailed reminder.",
+                check: { statement: "Gig income under $2,000 from a single payer doesn't need to be reported since no form gets sent.", isTrue: false }
               }
             ],
             xpOnComplete: 3
@@ -871,7 +871,7 @@ const MODULES = [
             pairs: [
               { term: 'W-2 Income', definition: 'Employee pay with taxes automatically withheld by the employer.' },
               { term: '1099 Income', definition: 'Independent contractor pay with nothing withheld upfront.' },
-              { term: '$600 Form Threshold', definition: 'The trigger for a payer to send a 1099-NEC, not a tax-free minimum.' }
+              { term: '$2,000 Form Threshold', definition: 'The trigger for a payer to send a 1099-NEC, not a tax-free minimum.' }
             ],
             xpOnComplete: 4
           },
@@ -904,7 +904,7 @@ const MODULES = [
             id: 'gi_d1', type: 'decision',
             title: "The Untracked Venmo Payment",
             prompt: "A neighbor Venmos Hammy $40 for a one-time dog walk, with just a paw emoji as the note, no other record. What should Hammy do?",
-            hintText: "Think back to the $600 Form Threshold: this payment won't generate any form at all, so who's actually responsible for keeping a record of it?",
+            hintText: "Think back to the $2,000 Form Threshold: this payment won't generate any form at all, so who's actually responsible for keeping a record of it?",
             choices: [
               { id: 'a', label: "Nothing, it's a small one-time payment with no form coming", outcome: { text: "Small, untracked payments like this one quietly add up over a year, and reconstructing them later from memory is far harder than logging them as they happen.", delta: {}, compare: [{ label: 'Payments logged', value: 0 }, { label: 'Payments actually received', value: 1 }] } },
               { id: 'b', label: "Add it to a running gig-income log with the date and amount", outcome: { text: "Thirty seconds now means an accurate, complete record whenever it's actually needed, no scrambling through old app notifications later.", delta: {}, compare: [{ label: 'Payments logged', value: 1 }, { label: 'Payments actually received', value: 1 }] } }
@@ -915,7 +915,7 @@ const MODULES = [
             id: 'gi_m2', type: 'matching', title: 'Match It! Round 2',
             pairs: [
               { term: 'Self-Employment Tax', definition: 'Both halves of FICA, owed by gig workers since no employer covers half.' },
-              { term: '1099-NEC', definition: 'The form a payer sends after paying a contractor $600+ in a year.' },
+              { term: '1099-NEC', definition: 'The form a payer sends after paying a contractor $2,000+ in a year.' },
               { term: 'Income Log', definition: 'A running record of every gig payment, used for accurate tax reporting.' }
             ],
             hintText: "One is a TAX owed, one is a FORM that sometimes arrives, and one is a HABIT worth keeping regardless.",
@@ -926,7 +926,7 @@ const MODULES = [
             intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
             statement: "Gig income only needs to be reported to the IRS if a 1099-NEC form was actually sent for it.",
             isTrue: false,
-            explanation: "It's a myth. Every dollar of gig income is reportable, whether or not a specific payer crossed the $600 threshold that triggers a form.",
+            explanation: "It's a myth. Every dollar of gig income is reportable, whether or not a specific payer crossed the $2,000 threshold that triggers a form.",
             xpOnComplete: 2
           },
           {
