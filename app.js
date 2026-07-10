@@ -2075,12 +2075,36 @@ const MODULES = [
         topic: 'Day-to-Day Money Management on Campus',
         character: { name: 'Hammy', tagline: 'Managing meal swipes, cash, and cards day to day' },
         initialState: { checking: 150 },
+        bossAchievementId: 'cushion_protected',
         chapters: [
           {
             id: 'cm0', type: 'story', title: 'The Last Week',
             beats: [
-              { speaker: 'intro', text: "Hammy has $150 in checking and a full week of decisions before their financial aid refund posts. Every choice either protects that cushion or eats into it." }
+              { speaker: 'intro', text: "Hammy has $150 in checking and a full week of decisions before their financial aid refund posts. Every choice either protects that cushion or eats into it." },
+              { speaker: 'Hammy', text: '"A week doesn\'t sound long, but $150 can disappear fast if I\'m not paying attention."' },
+              { speaker: 'narrator', text: "Nothing this week is one big mistake, it's a string of small ones, or a string of small saves." }
             ]
+          },
+          {
+            id: 'cm_t1', type: 'teach', title: 'Money Already Spent Doesn\'t Need Spending Again',
+            concepts: [
+              {
+                term: 'Sunk Costs You Already Paid For',
+                plain: "An unlimited meal plan, a bus pass, a subscription already billed this month, these are costs already paid, whether or not they get used. Paying AGAIN for something already covered (like DoorDash instead of using meal swipes) is spending twice for one thing.",
+                analogy: "It's like buying a movie ticket, then paying for a second one at a different theater to watch the same film.",
+                check: { statement: "Using a meal swipe that's already paid for costs nothing extra.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'cm_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Already-Paid-For Money', definition: 'A cost like a meal plan or bus pass, paid whether or not it gets used.' },
+              { term: 'Double-Spending', definition: 'Paying again for something already covered, like DoorDash instead of a meal swipe.' },
+              { term: 'Cushion', definition: 'The buffer left in checking before the next paycheck or refund lands.' }
+            ],
+            xpOnComplete: 4
           },
           {
             id: 'cm1', type: 'decision', title: 'Monday: Meal Swipes',
@@ -2093,6 +2117,11 @@ const MODULES = [
             xpOnComplete: 4
           },
           {
+            id: 'cm_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: check the checking balance BEFORE deciding on a purchase, not after. Deciding with the real number in view catches a lot of \"wait, is that actually a good idea this week\" moments that deciding from memory misses.",
+            xpOnComplete: 1
+          },
+          {
             id: 'cm2', type: 'decision', title: 'Wednesday: The Surprise Show',
             prompt: "A favorite band just announced a surprise $45 show this weekend. Tickets are going fast.",
             hintText: "Rent is due in 2 days — how much cushion is left after that?",
@@ -2103,6 +2132,37 @@ const MODULES = [
             xpOnComplete: 4
           },
           {
+            id: 'cm_ms1', type: 'microsim', title: "Pacing the Last $150",
+            prompt: "Hammy has $150 in checking and 5 days until the refund posts. Rent auto-pays $110 out of this on Friday. Decide how much of what's left goes to food/extras versus staying as cushion.",
+            hintText: "Rent already takes $110 off the top — that leaves $40 to split between the two sliders before going negative.",
+            income: 150,
+            fixedCosts: [
+              { label: 'Rent (auto-pay Friday)', amount: 110 }
+            ],
+            sliders: [
+              { id: 'extras', label: 'Food & extras this week', min: 0, max: 40, step: 5, default: 0 },
+              { id: 'cushion', label: 'Kept as cushion', min: 0, max: 40, step: 5, default: 40 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That's more than the $40 left after rent — the week's plan doesn't actually fit. Try smaller amounts.", ok: false },
+              { maxLeftover: 4, text: "It fits, but almost nothing is left over if anything unexpected comes up before the refund lands.", ok: true },
+              { maxLeftover: Infinity, text: "Solid. Hammy's protecting real cushion instead of spending right up to the edge.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'cm_t2', type: 'teach', title: 'Small Leaks Sink the Cushion',
+            concepts: [
+              {
+                term: 'Small, Repeated Spending',
+                plain: "No single small purchase this week broke the budget on its own, it's the accumulation. $54 in delivery fees, $45 for a show, $22 for brunch, none of those look dramatic alone, but together they're more than the entire remaining cushion.",
+                analogy: "It's like a slow leak in a tire, no single drop of air matters, but ignoring all of them together goes flat.",
+                check: { statement: "A budget is usually broken by one big purchase, not several small ones.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
             id: 'cm3', type: 'decision', title: 'Saturday: Brunch',
             prompt: "A group of friends invites Hammy to brunch, about $22, with two days left until the refund posts.",
             hintText: "Is there a free version of the same time together?",
@@ -2111,6 +2171,52 @@ const MODULES = [
               { id: 'b', label: 'Suggest a free hangout instead — coffee and a study session at home', outcome: { text: 'Same friends, same time together, $22 still in checking.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 22 }] } }
             ],
             xpOnComplete: 4
+          },
+          {
+            id: 'cm_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Small Leaks', definition: "Several small purchases that add up to more damage than one big one." },
+              { term: 'Deciding From the Real Number', definition: 'Checking the actual balance before a purchase, not deciding from memory.' },
+              { term: 'Refund Gap', definition: 'The stretch of days between now and when the next deposit actually lands.' }
+            ],
+            hintText: "One term is about SEVERAL small costs, one is a HABIT before buying, and one is a TIME WINDOW to plan around.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'cm_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A single big purchase is usually what wrecks a tight week's budget.",
+            isTrue: false,
+            explanation: "False. It's usually several smaller purchases, easy to justify one at a time, that add up to more than any single big-ticket item would have.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'cm_myth1', type: 'mythcards', title: 'Campus Money: True or False',
+            cards: [
+              { myth: "Using meal swipes instead of delivery apps costs nothing extra since the meal plan is already paid for.", isTrue: true, explanation: "True, that's exactly why it's free in the moment, the cost already happened when the meal plan was purchased." },
+              { myth: "Putting a rent payment on a credit card instead of paying it directly is a good way to \"save cash.\"", isTrue: false, explanation: "It just delays the payment while adding interest on top, the cash isn't saved, it's borrowed at a cost." },
+              { myth: "A single skipped hangout has no real effect on a tight week's cushion.", isTrue: true, explanation: "True on its own, one skip is small, but it's exactly these small decisions, repeated, that determine whether the cushion survives the week." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'cm_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 8],
+            hintTexts: [
+              "Think about the recommended size of a cushion for unexpected costs.",
+              "Think about dividing a semester total by the weeks it needs to last."
+            ]
+          },
+          {
+            id: 'cm_t3', type: 'teach', title: 'Check the Balance, Then Decide',
+            concepts: [
+              {
+                term: 'The One Habit for a Tight Week',
+                plain: "Every decision this week comes down to the same habit: check the real balance, subtract what's already committed (like rent), and decide from what's actually left, not from a rough guess.",
+                analogy: "It's like checking the gas gauge before a road trip instead of guessing how far the tank will go.",
+                check: { statement: "Deciding whether to spend based on a rough guess is just as reliable as checking the real balance first.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
           },
           {
             id: 'cm4', type: 'bossbattle', title: 'Friday: Rent Day',
@@ -2128,10 +2234,141 @@ const MODULES = [
         topic: 'The FAFSA & Financial Aid Timeline',
         character: { name: 'Hammy', tagline: 'Racing a FAFSA deadline' },
         initialState: {},
+        bossAchievementId: 'fafsa_ready',
         chapters: [
-          { id: 'fafsa_timeline_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ft0', type: 'story', title: 'The October Reminder',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on The FAFSA & Financial Aid Timeline." }
+              { speaker: 'intro', text: "It's October 1st, and Hammy's phone buzzes with a reminder: \"FAFSA is open.\" Hammy swipes it away, planning to deal with it \"sometime before the deadline.\"" },
+              { speaker: 'Hammy', text: '"The deadline isn\'t for months. What\'s the rush?"' },
+              { speaker: 'narrator', text: "The FAFSA deadline and the BEST time to submit the FAFSA are two very different dates, and the gap between them can cost real money." },
+              { speaker: 'Hammy', text: '"Wait, cost money? How does submitting the same form later change anything?"' }
+            ]
+          },
+          {
+            id: 'ft_t1', type: 'teach', title: 'FAFSA Opens Every October 1st',
+            concepts: [
+              {
+                term: 'The Annual Reset',
+                plain: "The FAFSA isn't a one-time form, it opens fresh every October 1st for the following academic year, and it must be resubmitted every single year to keep receiving aid, even if nothing about your situation changed.",
+                analogy: "It's like a annual membership renewal, being approved once doesn't carry forward automatically.",
+                check: { statement: "Submitting the FAFSA once during your first year covers every year of college automatically.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ft_t2', type: 'teach', title: 'Why "First-Come, First-Served" Matters',
+            concepts: [
+              {
+                term: 'Limited Aid Pools',
+                plain: "Federal grants like the Pell Grant are guaranteed if you qualify, but many STATE and SCHOOL aid programs work on a fixed, limited pool of money each year, awarded first-come, first-served until it runs out. Submitting in October, versus March, can be the difference between getting that aid and missing it entirely, even with an identical application.",
+                analogy: "It's like a limited-quantity sale, showing up on day one versus month three can mean the difference between getting it and finding it sold out.",
+                check: { statement: "All financial aid programs have unlimited funding, so submission timing never affects the outcome.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ft_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'The Annual Reset', definition: 'The FAFSA must be resubmitted every year, it never carries forward.' },
+              { term: 'Limited Aid Pools', definition: 'State/school aid awarded first-come, first-served from a fixed yearly amount.' },
+              { term: 'October 1st', definition: 'The date the FAFSA opens each year for the following academic year.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ft_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: set a recurring calendar reminder for October 1st every year, not just this one. Since the FAFSA has to be resubmitted annually anyway, building the habit now means it's never a scramble in future years either.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ft_t3', type: 'teach', title: 'What to Gather Beforehand',
+            concepts: [
+              {
+                term: 'Documents to Have Ready',
+                plain: "Before starting, gather Social Security numbers (yours, and your parents' if you're a dependent), prior-prior year tax information (often importable directly from the IRS), and a list of the schools you're applying to. Having these ready turns a stressful form into roughly a 30-minute task.",
+                analogy: "It's like packing for a trip the night before instead of scrambling at the airport, same trip, far less stress.",
+                check: { statement: "The FAFSA uses your most recent tax return from this year, not an older one.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ft_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why does submitting the FAFSA in October actually matter more than submitting the identical form in March, even though both are before the deadline?",
+            keywords: ['first-come', 'limited', 'runs out', 'earlier', 'pool'],
+            fullDefinition: "Because some aid, especially state and school-specific aid, comes from a limited pool that gets awarded first-come, first-served. The deadline is just the last possible date, not a safe target, by March, a meaningful amount of that limited pool may already be awarded to students who applied in October, even though both applications would otherwise qualify equally.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'ft_d1', type: 'decision',
+            title: "October 1st, Again",
+            prompt: "Hammy's reminder just went off. The deadline for their state's aid isn't until March, and finals are this week. What should Hammy do?",
+            hintText: "Think back to Limited Aid Pools: does waiting until a quieter week cost anything real?",
+            choices: [
+              { id: 'a', label: 'Wait until after finals, the deadline is months away', outcome: { text: "By the time Hammy applies weeks later, some of the state's limited aid pool has already gone to earlier applicants.", delta: {}, compare: [{ label: 'Submitted in', value: 1 }, { label: 'Weeks after October 1st', value: 6 }] } },
+              { id: 'b', label: 'Spend 30 minutes now with documents already gathered, finals can wait a bit', outcome: { text: "A short time investment during a busy week locks in Hammy's spot near the front of the pool.", delta: {}, compare: [{ label: 'Submitted in', value: 1 }, { label: 'Weeks after October 1st', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ft_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Prior-Prior Year Taxes', definition: "The tax year the FAFSA actually uses, often importable directly from the IRS." },
+              { term: 'Dependent Student', definition: "A student whose FAFSA also requires a parent's financial information." },
+              { term: 'Aid Offer', definition: 'The follow-up letter from a school showing what aid was actually awarded.' }
+            ],
+            hintText: "One term is about which TAX YEAR is used, one is about WHOSE information is required, and one is the RESULT that comes after applying.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ft_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "As long as the FAFSA is submitted before the deadline, the exact date doesn't affect how much aid a student receives.",
+            isTrue: false,
+            explanation: "False. The deadline is the last possible date, not a safe target. Limited state and school aid pools are often awarded first-come, first-served well before the deadline arrives.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ft_myth1', type: 'mythcards', title: 'FAFSA Timeline: True or False',
+            cards: [
+              { myth: "A student needs to be accepted to a school before submitting the FAFSA there.", isTrue: false, explanation: "The FAFSA can list schools you're still applying to or considering, acceptance isn't required first." },
+              { myth: "The federal Pell Grant is guaranteed for every eligible student, regardless of submission date, unlike some state/school aid.", isTrue: true, explanation: "True, unlike limited state or school pools, federal Pell Grant funding isn't first-come, first-served for eligible students." },
+              { myth: "A returning student who received aid last year doesn't need to resubmit the FAFSA this year.", isTrue: false, explanation: "The FAFSA must be resubmitted every single year, regardless of past aid history." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ft_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [5, 9],
+            hintTexts: [
+              "Think about when the form opens each year, and why that date matters.",
+              "Think about what needs to be gathered before starting the form."
+            ]
+          },
+          {
+            id: 'ft_t4', type: 'teach', title: 'Early Beats Perfect',
+            concepts: [
+              {
+                term: 'Submit Early, Correct Later',
+                plain: "A FAFSA submitted early with a small correctable error is generally a better position than a perfect FAFSA submitted three months late. Corrections can be made after submission, but a missed spot in a limited aid pool often can't be recovered.",
+                analogy: "It's like getting in line early for limited tickets, you can fix a typo on your ticket after buying it, but you can't un-sell-out the show.",
+                check: { statement: "Waiting to submit a flawless FAFSA is generally safer than submitting an early one with a minor error.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ft_boss', type: 'bossbattle', title: 'The Missing Document',
+            scenario: "It's October 3rd. Hammy has everything ready except one parent's Social Security number, which is proving hard to track down quickly.",
+            hintText: "Remember Submit Early, Correct Later: does a single missing detail mean the whole form has to wait?",
+            choices: [
+              { id: 'a', label: "Start the FAFSA now with what's available, and follow up on the missing number separately", consequence: { text: "Hammy secures an early spot in the queue and resolves the missing detail without losing any priority.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Wait to start until every single document is in hand", consequence: { text: "The wait drags into November while the missing number gets sorted, costing real priority in limited aid pools.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Ask the school's financial aid office for guidance on submitting with a temporary placeholder", consequence: { text: "A smart move, financial aid offices often have guidance for exactly this situation.", delta: {}, xpMultiplier: 1.15 } },
+              { id: 'd', label: "Skip the FAFSA this cycle and plan to catch up next year", consequence: { text: "An entire year of eligible aid goes unclaimed over one recoverable missing document.", delta: {}, xpMultiplier: 0.5 } }
             ]
           }
         ]
@@ -2141,10 +2378,153 @@ const MODULES = [
         topic: 'Grants & Scholarships: Your Aid Offer',
         character: { name: 'Hammy', tagline: 'Reading a financial aid offer letter' },
         initialState: {},
+        bossAchievementId: 'aid_offer_reader',
         chapters: [
-          { id: 'aid_offer_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ao0', type: 'story', title: 'One Envelope, Four Decisions',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Grants & Scholarships: Your Aid Offer." }
+              { speaker: 'intro', text: "Hammy's aid offer arrives: a grant, a scholarship, a work-study award, and a loan, all listed on one page under one total dollar amount." },
+              { speaker: 'Hammy', text: '"So I just... accept the whole thing, right? It\'s all just \'my aid.\'"' },
+              { speaker: 'narrator', text: "It looks like one number, but it's actually four very different offers bundled onto one page, each worth its own decision." },
+              { speaker: 'Hammy', text: '"Wait, they\'re not all the same kind of \'free money\'?"' }
+            ]
+          },
+          {
+            id: 'ao_t1', type: 'teach', title: 'Gift Aid vs. Self-Help Aid',
+            concepts: [
+              {
+                term: 'Gift Aid',
+                plain: "Grants and scholarships are gift aid, money you never pay back. It should almost always be accepted, there's no real downside to free money with no repayment attached.",
+                analogy: "It's like a genuine, no-strings-attached gift, there's rarely a reason to turn it down.",
+                check: { statement: "Grants and scholarships generally need to be repaid after graduation.", isTrue: false }
+              },
+              {
+                term: 'Self-Help Aid',
+                plain: "Work-study and loans are self-help aid, they come with a cost attached. Work-study requires actually working the hours to earn it. Loans must be repaid, with interest, regardless of how the money was spent.",
+                analogy: "It's like a paid opportunity versus a credit line, one requires effort, the other requires repayment.",
+                check: { statement: "Work-study and loans require something in return, either work or repayment.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ao_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Gift Aid', definition: 'Grants and scholarships — money that never needs to be repaid.' },
+              { term: 'Self-Help Aid', definition: 'Work-study and loans — aid that requires work or repayment.' },
+              { term: 'Aid Offer', definition: 'The letter listing every type of aid a school is offering, bundled together.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ao_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: check whether the offer covers a full year or just one semester before assuming it's the total for the year. Some schools list per-semester figures, doubling isn't always the right math, but it's always worth confirming.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ao_t2', type: 'teach', title: 'Every Line Is Its Own Decision',
+            concepts: [
+              {
+                term: 'Line-by-Line Acceptance',
+                plain: "An aid offer isn't one bundled yes-or-no. Most schools let you accept, reduce, or decline each line individually, accept the grant and scholarship, but decline or reduce a loan you don't need, all on the same offer.",
+                analogy: "It's like a restaurant tab split by item, not one lump charge, each item gets its own decision.",
+                check: { statement: "A student is required to accept an entire aid offer as one bundled package, loans included.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ao_spot1', type: 'spotcheck', title: 'Spot What Needs an Active Decision',
+            intro: "Here's Hammy's aid offer letter. Tap any line that requires Hammy to actually make a choice, rather than something that's automatic, then hit Continue to see what you caught.",
+            postingTitle: "Financial Aid Offer — Academic Year",
+            segments: [
+              { id: 's1', text: "Federal Pell Grant: $3,500 — automatically applied to your account, no action needed. ", isRedFlag: false, explanation: "Gift aid like this is typically applied automatically, no decision required." },
+              { id: 's2', text: "University Merit Scholarship: $2,000 — automatically renewed as long as a 3.0 GPA is maintained. ", isRedFlag: false, explanation: "Also automatic, though worth noting the GPA requirement to keep it renewing." },
+              { id: 's3', text: "Federal Work-Study: $2,800 — must be actively applied for and earned through an approved campus job. ", isRedFlag: true, explanation: "This requires action: finding and working an approved job to actually earn any of this amount." },
+              { id: 's4', text: "Direct Subsidized Loan: $3,500 — accept, reduce, or decline any amount using the portal before the deadline. ", isRedFlag: true, explanation: "Loans are never automatic and never required, this needs an active accept/reduce/decline decision." },
+              { id: 's5', text: "Direct Unsubsidized Loan: $2,000 — accept, reduce, or decline any amount using the portal before the deadline. ", isRedFlag: true, explanation: "Same as the subsidized loan line, an active decision, not an automatic acceptance." },
+              { id: 's6', text: "Estimated Cost of Attendance: $22,000 for the year, listed for reference only. ", isRedFlag: false, explanation: "Informational only, not something requiring a decision on its own." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'ao_d1', type: 'decision',
+            title: "The Loan Lines",
+            prompt: "Hammy's offer includes $5,500 in loans. After grants and scholarships, Hammy's actual remaining gap is closer to $2,000. What should Hammy do?",
+            hintText: "Think back to Line-by-Line Acceptance: does accepting a loan line require taking the FULL amount offered?",
+            choices: [
+              { id: 'a', label: 'Accept the full $5,500 since it was offered, just in case', outcome: { text: "Hammy now owes $3,500 more than actually needed, plus interest, for money that just sits unused.", delta: {}, compare: [{ label: 'Actual gap', value: 2000 }, { label: 'Loan accepted', value: 5500 }] } },
+              { id: 'b', label: 'Reduce the loan amount to match the actual $2,000 gap', outcome: { text: "Hammy borrows exactly what's needed, no more interest than necessary.", delta: {}, compare: [{ label: 'Actual gap', value: 2000 }, { label: 'Loan accepted', value: 2000 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ao_t3', type: 'teach', title: 'Scholarships Can Have Renewal Requirements',
+            concepts: [
+              {
+                term: 'Renewal Criteria',
+                plain: "Some scholarships and grants aren't guaranteed every year automatically, they require maintaining a minimum GPA, full-time enrollment, or a specific major. Missing the requirement can mean losing the aid the following year, even without reapplying for anything new.",
+                analogy: "It's like a warranty with conditions, the coverage is real, but only as long as the terms are actually met.",
+                check: { statement: "All scholarships listed on an aid offer are guaranteed to renew every year with no conditions.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ao_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Line-by-Line Acceptance', definition: 'Accepting, reducing, or declining each aid line individually.' },
+              { term: 'Renewal Criteria', definition: 'Conditions, like a GPA minimum, required to keep a scholarship next year.' },
+              { term: 'Cost of Attendance', definition: "The school's estimated total yearly cost, listed for reference." }
+            ],
+            hintText: "One term is about PER-LINE decisions, one is about KEEPING aid next year, and one is a REFERENCE number.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ao_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Accepting a loan offered as part of a financial aid package is mandatory.",
+            isTrue: false,
+            explanation: "False. Loans can always be accepted, reduced, or declined individually, unlike gift aid, nothing requires taking a loan just because it's listed on the offer.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ao_myth1', type: 'mythcards', title: 'Aid Offer: True or False',
+            cards: [
+              { myth: "Work-study money is deposited automatically like a grant, without needing to work a job.", isTrue: false, explanation: "Work-study must actually be earned through an approved job, it's not a guaranteed deposit like gift aid." },
+              { myth: "A student can accept a smaller loan amount than what's listed on the offer.", isTrue: true, explanation: "True, loan amounts can be reduced to match actual need instead of accepting the full offered amount." },
+              { myth: "An aid offer that looks the same total dollar amount as another school's is automatically an equal deal.", isTrue: false, explanation: "The MIX matters, an offer that's mostly gift aid is a much better deal than one of the same total that's mostly loans." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ao_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 10],
+            hintTexts: [
+              "Think about whether an aid offer is one bundled decision or several separate ones.",
+              "Think about which types of aid get repaid, and which don't."
+            ]
+          },
+          {
+            id: 'ao_t4', type: 'teach', title: 'Read the Mix, Not Just the Total',
+            concepts: [
+              {
+                term: 'The Total Isn\'t the Whole Story',
+                plain: "Two aid offers with the identical total dollar amount can be wildly different deals, depending on the mix of gift aid versus loans. The number that matters most isn't the total, it's how much of that total is actually free.",
+                analogy: "It's like comparing two paychecks with the same gross number, but very different amounts of actual take-home pay.",
+                check: { statement: "Two aid offers with the same total dollar amount are always equally good deals.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ao_boss', type: 'bossbattle', title: 'Comparing Two Offers',
+            scenario: "Hammy got into two schools. School A offers $18,000 total aid, $6,000 of it loans. School B offers $16,000 total aid, $2,000 of it loans. Which offer is actually the better deal?",
+            hintText: "Remember The Total Isn't the Whole Story: subtract the loan portion from each total to see the real gift aid.",
+            choices: [
+              { id: 'a', label: "Pick School A, it has the higher total aid number", consequence: { text: "School A's total looks bigger, but $12,000 of it is gift aid, versus School B's $14,000, School B is actually the better deal.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'b', label: "Subtract the loan portion from each total first, then compare the real gift aid", consequence: { text: "School B has $14,000 in real gift aid versus School A's $12,000, the smaller total is actually the stronger offer.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'c', label: "Ask each school's financial aid office to clarify the mix before deciding", consequence: { text: "A reasonable step that would confirm the same answer, though the offer letters already had enough detail to compare directly.", delta: {}, xpMultiplier: 1.0 } },
+              { id: 'd', label: "Flip a coin since both numbers are close enough", consequence: { text: "The numbers aren't actually close once the loan portions are separated out, this leaves real money on the table.", delta: {}, xpMultiplier: 0.5 } }
             ]
           }
         ]
@@ -2154,10 +2534,141 @@ const MODULES = [
         topic: 'Payment Plans & Closing the Tuition Gap',
         character: { name: 'Hammy', tagline: 'Figuring out how to cover the rest of tuition' },
         initialState: {},
+        bossAchievementId: 'plan_paced',
         chapters: [
-          { id: 'payment_plans_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'pp0', type: 'story', title: 'Still $1,800 Short',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Payment Plans & Closing the Tuition Gap." }
+              { speaker: 'intro', text: "After grants, scholarships, and work-study, Hammy is still $1,800 short for the semester. The first instinct is to take out a bigger loan to cover it." },
+              { speaker: 'Hammy', text: '"I guess a loan is just... the only option left at this point?"' },
+              { speaker: 'narrator', text: "It's an option, but not the only one, and not even the first one worth checking." },
+              { speaker: 'Hammy', text: '"Okay, what else is actually out there?"' }
+            ]
+          },
+          {
+            id: 'pp_t1', type: 'teach', title: 'Tuition Payment Plans',
+            concepts: [
+              {
+                term: 'Payment Plan',
+                plain: "Most schools offer a payment plan through the bursar's office, splitting the remaining balance into smaller monthly installments instead of one lump sum, often for just a small flat enrollment fee instead of interest.",
+                analogy: "It's like splitting a big bill into a few smaller ones instead of paying it all at once, same total, easier to manage.",
+                check: { statement: "A tuition payment plan typically charges ongoing interest, similar to a loan.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'pp_t2', type: 'teach', title: 'It Eases Cash Flow, Not the Total Owed',
+            concepts: [
+              {
+                term: 'What a Payment Plan Doesn\'t Do',
+                plain: "A payment plan doesn't lower what's actually owed, it just spreads the SAME total across smaller, more manageable payments. It solves a cash-flow problem, not a total-cost problem.",
+                analogy: "It's like a smaller monthly gym payment instead of one annual fee, the total membership cost is the same either way.",
+                check: { statement: "A payment plan reduces the total amount owed compared to paying it all at once.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'pp_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Payment Plan', definition: 'Splits a balance into monthly installments, often for a small flat fee.' },
+              { term: 'Bursar\'s Office', definition: "The school office that typically manages tuition billing and payment plans." },
+              { term: 'Cash-Flow Problem', definition: 'Having the total ability to pay, just not all at once — what a payment plan solves.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'pp_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: check the payment plan's due dates against actual paycheck or refund timing before signing up. A plan that's technically interest-free can still trigger a late fee if a payment date lands right before money actually arrives.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'pp_price1', type: 'priceisright', title: 'The Price Is Right: Splitting the Gap',
+            prompt: "Hammy's remaining gap is $1,800, split evenly across a 4-month interest-free payment plan. Guess the monthly payment.",
+            hintText: "This is straightforward division: total gap divided by number of months.",
+            actualValue: 450, guessRange: { min: 0, max: 900, step: 25 },
+            explanation: "$1,800 ÷ 4 months = $450/month. Same total owed as paying it all at once, just spread into payments that fit around a part-time paycheck instead of one lump sum.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'pp_t3', type: 'teach', title: 'Outside Scholarships Don\'t Show Up Automatically',
+            concepts: [
+              {
+                term: 'Outside Scholarships',
+                plain: "Local businesses, community foundations, cultural organizations, and even a parent's employer often offer scholarships that never appear on a school's aid offer automatically, they have to be searched for and applied to separately. Some part-time employers also offer tuition assistance for enrolled students, worth asking about directly.",
+                analogy: "It's like money sitting in a drawer nobody thought to check, it's real, but only found by actually looking.",
+                check: { statement: "Every scholarship a student is eligible for automatically appears on their school's financial aid offer.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'pp_d1', type: 'decision',
+            title: "Closing the Gap",
+            prompt: "Hammy needs to close the $1,800 gap before the semester starts in three weeks. What's the smartest first move?",
+            hintText: "Think back to Outside Scholarships and Payment Plan: is a bigger loan really the only, or the first, option?",
+            choices: [
+              { id: 'a', label: 'Take out an $1,800 loan immediately, it\'s the fastest fix', outcome: { text: "The gap closes today, but now it's debt with interest, without ever checking cheaper options first.", delta: {}, compare: [{ label: 'New debt taken on', value: 1800 }, { label: 'New debt if plan explored first', value: 0 }] } },
+              { id: 'b', label: 'Spend an hour searching outside scholarships and set up a payment plan for whatever\'s left', outcome: { text: "A small outside scholarship covers $400, and a payment plan handles the remaining $1,400 with no interest at all.", delta: {}, compare: [{ label: 'New debt taken on', value: 0 }, { label: 'Gap fully covered', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'pp_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Outside Scholarships', definition: "Aid from local orgs or employers that doesn't show up on a school's offer automatically." },
+              { term: 'Employer Tuition Assistance', definition: 'Help paying for school offered by some part-time employers, if you ask.' },
+              { term: 'Loan as Last Resort', definition: 'Checking free/cheaper options before taking on new debt to close a gap.' }
+            ],
+            hintText: "One term is about aid you have to SEARCH for, one is from your JOB, and one is an ORDER of operations.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'pp_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "Once a school's aid offer is finalized, a bigger loan is the only remaining way to cover a leftover gap.",
+            isTrue: false,
+            explanation: "False. Payment plans ease the cash-flow problem without interest, and outside scholarships or employer tuition assistance can shrink or close the gap entirely, both worth checking before borrowing more.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'pp_myth1', type: 'mythcards', title: 'Payment Plans: True or False',
+            cards: [
+              { myth: "A payment plan enrollment fee is typically much smaller than the interest a loan would charge on the same amount.", isTrue: true, explanation: "True, payment plan fees are usually a small flat amount, versus ongoing interest that accrues on a loan over time." },
+              { myth: "Outside scholarships are only worth searching for if the amounts are large.", isTrue: false, explanation: "Even a few hundred dollars from a small local scholarship can meaningfully shrink a gap, or avoid a chunk of loan debt entirely." },
+              { myth: "A payment plan and a loan solve the exact same problem in the exact same way.", isTrue: false, explanation: "A payment plan solves a timing problem with no interest, a loan solves the same timing problem but adds a real, ongoing cost." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'pp_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [7, 11],
+            hintTexts: [
+              "Think about what a school's bursar office offers for splitting up a balance.",
+              "Think about where else, besides the school's own aid offer, money might be found."
+            ]
+          },
+          {
+            id: 'pp_t4', type: 'teach', title: 'Cheaper Options First, Loans Last',
+            concepts: [
+              {
+                term: 'The Order That Saves Money',
+                plain: "When a gap shows up after financial aid, the cheapest options should get checked first: outside scholarships (free), employer assistance (free), a payment plan (small fee, no interest), and only then, if still needed, a loan (interest, repaid over years).",
+                analogy: "It's like checking a cheaper flight before booking whatever pops up first, the destination's the same, the cost isn't.",
+                check: { statement: "Checking free or interest-free options before taking out a loan can meaningfully reduce what ends up owed.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'pp_boss', type: 'bossbattle', title: 'Three Weeks Out',
+            scenario: "With three weeks until the semester starts, Hammy still has an $1,800 gap and hasn't started looking into any options yet. A friend says \"just take the loan, it's easiest.\"",
+            hintText: "Remember The Order That Saves Money: what's the actual cost difference between the easiest option and the cheapest one?",
+            choices: [
+              { id: 'a', label: "Spend this week checking outside scholarships and setting up a payment plan for the rest", consequence: { text: "Even with three weeks to work with, this order closes the gap with little to no new interest owed.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Take the friend's advice and get the full loan today", consequence: { text: "It's genuinely the fastest fix, but it locks in interest on the full $1,800 that free or cheaper options might have avoided.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Set up the payment plan immediately, skip searching for outside scholarships to save time", consequence: { text: "A solid, interest-free move, though skipping the scholarship search means potentially leaving free money unclaimed.", delta: {}, xpMultiplier: 1.05 } },
+              { id: 'd', label: "Do nothing this week and decide once the semester actually starts", consequence: { text: "Waiting doesn't shrink the gap, it just shrinks the time left to find a cheaper way to close it.", delta: {}, xpMultiplier: 0.5 } }
             ]
           }
         ]
@@ -2167,11 +2678,14 @@ const MODULES = [
         topic: 'Opportunity Cost of Spending Decisions',
         character: { name: 'Hammy', tagline: 'Weighing one purchase against another' },
         initialState: { checking: 150, savings: 65 },
+        bossAchievementId: 'cost_aware',
         chapters: [
           {
             id: 'oc0', type: 'story', title: 'Every Dollar Has a Job',
             beats: [
-              { speaker: 'intro', text: "Hammy just spent $80 on a concert ticket without a second thought. But that $80 didn't just disappear — it was a choice. Today, you'll help Hammy see exactly what three spending decisions this week actually cost beyond the price tag." }
+              { speaker: 'intro', text: "Hammy just spent $80 on a concert ticket without a second thought. But that $80 didn't just disappear — it was a choice. Today, you'll help Hammy see exactly what three spending decisions this week actually cost beyond the price tag." },
+              { speaker: 'Hammy', text: '"It\'s just $80, though. It\'s not like I can\'t afford it."' },
+              { speaker: 'narrator', text: "Affording it and it being free are two different things. Every dollar spent is a dollar that stops being available for anything else." }
             ]
           },
           {
@@ -2180,6 +2694,15 @@ const MODULES = [
               { term: 'Opportunity Cost', plain: "Every dollar you spend is a dollar that could have gone somewhere else. Opportunity cost is the value of the next-best thing you gave up to make that purchase.", analogy: "It's not just what you bought — it's everything else that money could have been instead.", check: { statement: 'Opportunity cost only applies to big purchases, not everyday spending.', isTrue: false } }
             ],
             xpOnComplete: 2
+          },
+          {
+            id: 'oc_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Opportunity Cost', definition: 'The value of the next-best thing given up by a purchase.' },
+              { term: 'Next-Best Alternative', definition: 'What the same money could have gone toward instead.' },
+              { term: 'Sticker Price', definition: "The price tag alone, before considering what else that money could have done." }
+            ],
+            xpOnComplete: 4
           },
           {
             id: 'oc2', type: 'decision', title: 'Monday: The Concert',
@@ -2192,6 +2715,11 @@ const MODULES = [
             xpOnComplete: 4
           },
           {
+            id: 'oc_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: before buying something not already planned for, try asking \"what else would I do with this money?\" out loud. Naming the actual alternative, not just a vague sense of frugality, makes the tradeoff real instead of abstract.",
+            xpOnComplete: 1
+          },
+          {
             id: 'oc3', type: 'decision', title: 'Wednesday: The Textbook',
             prompt: "Next semester's textbook is $110 new, or $70 used online with 3–5 day shipping. Hammy needs it by Friday for an assignment preview.",
             hintText: "Is guaranteed speed worth the extra $40?",
@@ -2202,6 +2730,26 @@ const MODULES = [
             xpOnComplete: 4
           },
           {
+            id: 'oc_t2', type: 'teach', title: 'The Cost That Keeps Growing',
+            concepts: [
+              {
+                term: 'Opportunity Cost Over Time',
+                plain: "Spending $80 today doesn't just cost $80, if that $80 could have been invested instead, the real cost is whatever it would have grown into. The longer the money would have had to grow, the bigger the real opportunity cost gets.",
+                analogy: "It's like the cost of an unplanted seed, not just the seed itself, but every plant it never grew into.",
+                check: { statement: "The opportunity cost of spending money today can be bigger than the sticker price, once lost growth is factored in.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'oc_price1', type: 'priceisright', title: 'The Price Is Right: The Real Cost of $80',
+            prompt: "If Hammy skips the concert and instead invests that $80 for 5 years at a 7% average annual return, guess what it grows to.",
+            hintText: "This is compound growth, the number ends up a bit higher than just adding 7% once.",
+            actualValue: 112, guessRange: { min: 80, max: 200, step: 5 },
+            explanation: "$80 growing at 7%/year for 5 years compounds to about $112. That's the real opportunity cost of the concert ticket, not just $80 today, but $112 of missed future growth.",
+            xpOnComplete: 5
+          },
+          {
             id: 'oc4', type: 'decision', title: 'Saturday: The Hoodie',
             prompt: "A promo email offers 40% off a $60 hoodie — $36 for the next 2 hours. Hammy wasn't planning to buy anything.",
             hintText: "Was this already on the list, or is the countdown doing the deciding?",
@@ -2210,6 +2758,52 @@ const MODULES = [
               { id: 'b', label: 'Close the email and think it over for 24 hours', outcome: { text: 'If it\'s still wanted tomorrow, it\'ll likely still be there — the urgency wasn\'t real.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 36 }] } }
             ],
             xpOnComplete: 4
+          },
+          {
+            id: 'oc_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Opportunity Cost Over Time', definition: 'How the real cost of spending grows when the money could have been invested.' },
+              { term: 'Manufactured Urgency', definition: 'A countdown or limited-time framing designed to skip the "is this worth it" question.' },
+              { term: 'Planned vs. Unplanned Purchase', definition: "Whether something was already on the list, or a purchase decided in the moment." }
+            ],
+            hintText: "One term is about GROWTH lost, one is a PRESSURE tactic, and one is about whether it was PLANNED.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'oc_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "The opportunity cost of a purchase is always exactly equal to its price tag.",
+            isTrue: false,
+            explanation: "False. If that money could have grown instead, whether invested or saved, the real opportunity cost is the price tag PLUS whatever growth was given up.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'oc_myth1', type: 'mythcards', title: 'Opportunity Cost: True or False',
+            cards: [
+              { myth: "A \"limited-time\" discount email is designed to make you skip weighing the actual tradeoff.", isTrue: true, explanation: "True, manufactured urgency exists specifically to shortcut the opportunity-cost question before it gets asked." },
+              { myth: "Opportunity cost only matters for purchases over $100.", isTrue: false, explanation: "It applies at any size, a $6 coffee has an opportunity cost too, it's just smaller in absolute terms." },
+              { myth: "Choosing the slightly more expensive, faster option is always the wrong choice.", isTrue: false, explanation: "Not always, sometimes speed or certainty is genuinely worth the extra cost, the point is making that tradeoff on purpose, not automatically." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'oc_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 3],
+            hintTexts: [
+              "Think about which everyday expense is genuinely essential.",
+              "Think about what it means when spending outpaces income."
+            ]
+          },
+          {
+            id: 'oc_t3', type: 'teach', title: 'Name the Alternative',
+            concepts: [
+              {
+                term: 'The One Question That Matters',
+                plain: "Every decision this quest covered comes down to one question: what else would this money do? Naming the specific alternative, not just feeling vaguely guilty, is what turns opportunity cost from an abstract idea into an actual decision-making tool.",
+                analogy: "It's like comparing two job offers side by side instead of just picking whichever one arrived first.",
+                check: { statement: "Naming the specific alternative use of money makes opportunity cost easier to actually weigh.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
           },
           {
             id: 'oc5', type: 'bossbattle', title: 'The Week in Review',
@@ -2227,11 +2821,14 @@ const MODULES = [
         topic: 'The Gray Zone: When Needs and Wants Overlap',
         character: { name: 'Hammy', tagline: "Arguing with themself over a \"need\"" },
         initialState: {},
+        bossAchievementId: 'gray_zone_sorted',
         chapters: [
           {
             id: 'gz0', type: 'story', title: 'Sorting It Out',
             beats: [
-              { speaker: 'intro', text: "Marketing is designed to make wants feel like needs. Before Hammy's next purchase, can they actually tell the difference — and does it matter?" }
+              { speaker: 'intro', text: "Marketing is designed to make wants feel like needs. Before Hammy's next purchase, can they actually tell the difference — and does it matter?" },
+              { speaker: 'Hammy', text: '"Everything I buy feels necessary in the moment. That can\'t all be true, right?"' },
+              { speaker: 'narrator', text: "It's not, and the gap between \"feels necessary\" and \"actually is\" is exactly what's worth sorting out." }
             ]
           },
           {
@@ -2243,6 +2840,11 @@ const MODULES = [
             xpOnComplete: 2
           },
           {
+            id: 'gz_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: a quick test for the gray zone: ask \"would I buy this again today, at full price, on purpose?\" A subscription or membership that fails that test is usually a want quietly wearing a need's disguise.",
+            xpOnComplete: 1
+          },
+          {
             id: 'gz2', type: 'matching', title: 'Match It! Need, Want, or Depends',
             pairs: [
               { term: 'Rent', definition: 'Need — a real problem if skipped' },
@@ -2250,6 +2852,32 @@ const MODULES = [
               { term: 'A gym membership used 3x/week', definition: 'Depends — a want that supports health, if actually used' }
             ],
             xpOnComplete: 4
+          },
+          {
+            id: 'gz_t2', type: 'teach', title: 'Wants Marketed as Needs',
+            concepts: [
+              {
+                term: 'Manufactured Necessity',
+                plain: "Advertising often frames wants using need-shaped language, \"essential,\" \"must-have,\" \"can't live without.\" The language doesn't change the actual category, a product being marketed as essential doesn't make it one.",
+                analogy: "It's like a store calling everything on the clearance rack a \"deal,\" the label doesn't make it true.",
+                check: { statement: "A product marketed as \"essential\" is automatically a genuine need.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gz_spot1', type: 'spotcheck', title: 'Spot the Wants Dressed as Needs',
+            intro: "Here's a readout of Hammy's monthly budget. Tap any line that's really a want, even if it doesn't feel that way at first glance, then hit Continue to see what you caught.",
+            postingTitle: "Hammy's Monthly Budget",
+            segments: [
+              { id: 's1', text: "Rent: $650. ", isRedFlag: false, explanation: "A genuine need, a real problem if skipped." },
+              { id: 's2', text: "Premium meal-kit delivery subscription: $85, marketed as \"essential fuel for a busy student.\" ", isRedFlag: true, explanation: "The marketing language calls it essential, but groceries already cover the actual need, this is a want wearing need-shaped language." },
+              { id: 's3', text: "Phone plan (basic): $35. ", isRedFlag: false, explanation: "A genuine need for most students, staying reachable and connected for class and work." },
+              { id: 's4', text: "\"Premium\" streaming tier upgrade, $6/month more than the basic tier, for a slightly higher video resolution. ", isRedFlag: true, explanation: "The base tier already covers the want, this extra $6 is an upgrade to an already-optional expense." },
+              { id: 's5', text: "Required lab fee for a science course: $40. ", isRedFlag: false, explanation: "A genuine need, tied directly to a required class." },
+              { id: 's6', text: "A \"limited membership\" to a study-snacks box, arriving whether or not it's requested that month. ", isRedFlag: true, explanation: "Auto-renewing boxes that show up regardless of actual demand are a classic want dressed up as a recurring necessity." }
+            ],
+            xpOnComplete: 5
           },
           {
             id: 'gz3', type: 'decision', title: 'The Streaming Stack',
@@ -2260,6 +2888,71 @@ const MODULES = [
               { id: 'b', label: 'Cancel the three unused ones', outcome: { text: 'A monthly reminder to check for creep pays off immediately.', delta: {}, compare: [{ label: 'Monthly cost kept', value: 18 }, { label: 'Saved', value: 27 }] } }
             ],
             xpOnComplete: 5
+          },
+          {
+            id: 'gz_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: think of one expense in YOUR life that lands in the gray zone. What would make it a \"need\" in some situations and a \"want\" in others?",
+            keywords: ['context', 'depends', 'situation', 'use', 'actually'],
+            fullDefinition: "The gray zone is defined by context, not the item itself. The same gym membership, streaming plan, or delivery app can be a genuine need-adjacent tool when actually used consistently, or pure recurring waste when it's not. The category depends on the actual situation, not the label on the expense.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'gz_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Manufactured Necessity', definition: 'Marketing language that frames a want using need-shaped words.' },
+              { term: 'Subscription Creep', definition: 'Recurring charges for things no longer, or never really, being used.' },
+              { term: 'The Repurchase Test', definition: 'Asking whether you\'d buy something again today, on purpose, at full price.' }
+            ],
+            hintText: "One term is about LANGUAGE, one is about UNUSED recurring charges, and one is a TEST to apply before buying.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'gz_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "If a product is advertised as \"essential,\" it's safe to assume it actually is one.",
+            isTrue: false,
+            explanation: "False. Marketing language is chosen to persuade, not to accurately categorize. Whether something is a genuine need still comes down to what happens if it's skipped.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'gz_myth1', type: 'mythcards', title: 'Gray Zone: True or False',
+            cards: [
+              { myth: "The same type of expense, like a gym membership, can be a need-adjacent tool for one person and pure waste for another.", isTrue: true, explanation: "True, actual use is what determines the category, not the type of expense itself." },
+              { myth: "Once something is correctly sorted as a \"want,\" it should never be purchased.", isTrue: false, explanation: "Wants aren't forbidden, budgets (like 50/30/20) intentionally make room for them, the point is knowing which category a purchase falls into, not banning one entirely." },
+              { myth: "A recurring subscription nobody remembers using is still technically providing value just by existing.", isTrue: false, explanation: "An unused subscription provides zero real value, it's a cost with nothing on the other side of the ledger." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'gz_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 3],
+            hintTexts: [
+              "Think about which everyday expense is genuinely essential.",
+              "Think about what it means when spending outpaces income."
+            ]
+          },
+          {
+            id: 'gz_t3', type: 'teach', title: 'Context Decides the Category',
+            concepts: [
+              {
+                term: 'The Real Question',
+                plain: "The gray zone isn't a flaw in the need/want system, it's the honest, accurate part of it. The real question for any ambiguous expense isn't \"what category does this belong to in general,\" it's \"what is this actually doing in MY life, right now.\"",
+                analogy: "It's like a tool that's essential for one job and useless for another, the tool doesn't change, the job does.",
+                check: { statement: "An expense's need-or-want category can genuinely change depending on how it's actually used.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gz_boss', type: 'bossbattle', title: 'The Annual Renewal',
+            scenario: "A yearly membership Hammy barely used last year is about to auto-renew for $120, charged in one lump sum in three days. Hammy hasn't decided whether to keep it.",
+            hintText: "Remember The Repurchase Test: would Hammy sign up for this again today, on purpose, at full price?",
+            choices: [
+              { id: 'a', label: "Apply the repurchase test honestly, and cancel before the renewal if it fails", consequence: { text: "An honest look at actual usage settles it clearly, and the $120 doesn't quietly renew unnoticed.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Let it auto-renew since cancelling feels like a hassle", consequence: { text: "Another year of a want quietly billing as if it were locked in, exactly the pattern this quest was about catching.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Set a calendar reminder to actually use it more this year instead of cancelling", consequence: { text: "A fair compromise, though it only pays off if the renewed intention actually turns into real use.", delta: {}, xpMultiplier: 0.95 } },
+              { id: 'd', label: "Cancel it immediately without checking what it actually included", consequence: { text: "Probably the right call given the pattern, but skipping the actual check means the decision was a guess, not a review.", delta: {}, xpMultiplier: 1.05 } }
+            ]
           }
         ]
       },
