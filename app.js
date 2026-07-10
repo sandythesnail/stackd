@@ -14282,6 +14282,20 @@ const MODULES = [
             xpOnComplete: 2
           },
           {
+            id: 'af_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Domain', definition: 'The actual site a URL points to, the part that matters most for trust.' },
+              { term: 'Subdomain Trick', definition: "A fake label placed before a domain to imitate a trusted name, like \"studentaid-gov.\"" },
+              { term: 'Processing Fee Scam', definition: 'A fake upfront charge required before a promised scholarship or aid is "released."' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'af_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: hovering over a link (without clicking) on a computer usually shows the actual destination URL at the bottom of the screen, a fast way to check before ever tapping through on a suspicious email.",
+            xpOnComplete: 1
+          },
+          {
             id: 'af2', type: 'urlinspect', title: 'Real URL or Fake?',
             intro: "Here's a link claiming to be from the FAFSA / Federal Student Aid office. Tap the part of the URL you think is suspicious, then hit Continue to see the full breakdown.",
             url: 'https://studentaid-gov.verify-account.net/login',
@@ -14293,6 +14307,47 @@ const MODULES = [
             ],
             correctAnswerNote: 'The real Federal Student Aid site is exactly studentaid.gov — no extra words before or after the domain. Anything else, no matter how official-looking, is not the government.',
             xpOnComplete: 4
+          },
+          {
+            id: 'af_t2', type: 'teach', title: 'The One-Sentence Rule',
+            concepts: [
+              {
+                term: 'Real Aid Pays You',
+                plain: "Real scholarships, grants, and financial aid are money flowing TO you, never money you pay to unlock. Any request for a fee, deposit, or \"processing charge\" before an award is released is the single clearest signal of a scam, no exceptions.",
+                analogy: "It's like a prize that requires buying a ticket to claim it, a real prize was never conditional on paying first.",
+                check: { statement: "A legitimate scholarship can sometimes require a small fee to actually release the funds.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'af_d1', type: 'decision',
+            title: "The Verification Link",
+            prompt: "Hammy is about to click the \"verify your account\" link from the suspicious FAFSA email, phone already unlocked to type in the Social Security number.",
+            hintText: "Think back to Anatomy of a URL: is there a faster way to check this than clicking through first?",
+            choices: [
+              { id: 'a', label: 'Click the link and enter the information, since the email looked official', outcome: { text: "The information goes straight to a scam site posing as studentaid.gov, exactly the kind of data a real FAFSA site would never need re-verified this way.", delta: { savings: 0 }, compare: [{ label: 'Personal info exposed', value: 1 }, { label: 'Personal info exposed if checked first', value: 0 }] } },
+              { id: 'b', label: 'Go directly to studentaid.gov by typing it manually instead of clicking the email link', outcome: { text: "Logging in directly confirms there's no actual \"urgent verification\" needed, the account is fine.", delta: { savings: 0 }, compare: [{ label: 'Personal info exposed', value: 0 }, { label: 'Personal info exposed if clicked', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'af_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Typing the URL Directly', definition: 'Manually navigating to a known site instead of clicking an email link.' },
+              { term: '.gov Restriction', definition: 'A domain type scammers cannot simply purchase, unlike .com or .net.' },
+              { term: 'Personalized Phishing', definition: 'A scam email using a real name or school to seem more trustworthy.' }
+            ],
+            hintText: "One term is a SAFER habit, one is a domain-level PROTECTION, and one is a TACTIC scammers use to seem legitimate.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'af_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A financial aid email that correctly uses your name and school is a reliable sign that it's legitimate.",
+            isTrue: false,
+            explanation: "False. Scammers can find a name and school through social media, public directories, or a prior data breach, personalization alone doesn't confirm legitimacy.",
+            xpOnComplete: 2
           },
           {
             id: 'af3', type: 'mythcards', title: 'Financial Aid: True or False',
@@ -14308,6 +14363,18 @@ const MODULES = [
               "Look at the actual domain, not just how official the surrounding email looks.",
               "Remember the one-sentence rule: real scholarships pay you, not the other way around."
             ]
+          },
+          {
+            id: 'af_t3', type: 'teach', title: 'Pause, Then Check the Source',
+            concepts: [
+              {
+                term: 'Two Habits Cover Most of This',
+                plain: "Almost every financial aid scam is caught by two simple habits: check the actual domain a link points to, and remember that real aid never requires payment to receive it. Together, they catch the phishing link AND the processing-fee scam in one pass.",
+                analogy: "It's like checking both the lock and the ID before letting someone in, one habit alone leaves a gap the other one closes.",
+                check: { statement: "Checking the real domain and remembering that aid never requires payment together catch most financial aid scams.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
           },
           {
             id: 'af5', type: 'bossbattle', title: 'The Scholarship "Processing Fee"',
@@ -14354,12 +14421,50 @@ const MODULES = [
             xpOnComplete: 3
           },
           {
+            id: 'ph_spot', type: 'spotcheck', title: 'Spot the Red Flags',
+            intro: "Here's the actual text Hammy received. Tap every phrase you think is a red flag, then hit Continue to see what you caught.",
+            postingTitle: 'Text Message',
+            segments: [
+              { id: 'phs1', text: 'Your account has been locked for suspicious activity.', isRedFlag: false, explanation: "Scary-sounding on its own, but real banks do send fraud alerts — this phrase alone isn't proof of a scam." },
+              { id: 'phs2', text: 'Verify now or funds may be restricted.', isRedFlag: true, explanation: "Vague urgency plus a threat of consequences is a classic pressure tactic designed to stop you from thinking it through." },
+              { id: 'phs3', text: 'Countdown: 10:00 remaining.', isRedFlag: true, explanation: "A ticking clock exists to make you act before you check whether the message is even real." },
+              { id: 'phs4', text: 'Tap this link to confirm your identity.', isRedFlag: true, explanation: "The link is the actual payload — it leads to a fake login page built to steal whatever you type into it." },
+              { id: 'phs5', text: 'Sent from a random 10-digit number, not a bank short code.', isRedFlag: true, explanation: "Real banks typically text from a consistent short code, not a number that changes every time." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ph_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Spoofed Sender', definition: 'A message made to look like it comes from a trusted source when it does not.' },
+              { term: 'Urgency Language', definition: 'Words or countdowns designed to make you act before you think.' },
+              { term: 'Fake Login Page', definition: "A page built to look identical to a real one in order to steal your credentials." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ph_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "On most phones, holding down a link before tapping it shows a preview of the actual destination URL, a quick way to check before it's too late.",
+            xpOnComplete: 1
+          },
+          {
             id: 'ph2', type: 'poll', title: 'What Do Most People Think?',
             intro: "Take a guess before we move on. Tap True or False, then see the answer.",
             statement: 'If someone\'s email and password are exposed in a data breach, changing the password on that one site is enough to stay safe.',
             isTrue: false,
             explanation: "False. Credential stuffing means attackers try that same email/password combo across many other sites automatically — reused passwords are the real risk, not just the one breached site.",
             xpOnComplete: 2
+          },
+          {
+            id: 'ph_d1', type: 'decision',
+            title: 'The Breach Notification',
+            prompt: "A real notification email arrives: a site Hammy has an old account on was breached, and the same password has been reused on three other accounts, including email.",
+            hintText: "Credential stuffing means attackers try the SAME password everywhere it was reused, not just on the breached site.",
+            choices: [
+              { id: 'a', label: 'Change the password only on the breached site', outcome: { text: "Weeks later, Hammy's email gets logged into from an unfamiliar location, attackers tried the same old password there too.", delta: { savings: 0 }, compare: [{ label: 'Accounts still exposed', value: 3 }, { label: 'Accounts still exposed if all changed', value: 0 }] } },
+              { id: 'b', label: 'Change the password everywhere it was reused, using a different password on each', outcome: { text: "The stuffing attempts on the other accounts all fail, the reused password is gone everywhere it mattered.", delta: { savings: 0 }, compare: [{ label: 'Accounts still exposed', value: 0 }, { label: 'Accounts still exposed if only one changed', value: 3 }] } }
+            ],
+            xpOnComplete: 5
           },
           {
             id: 'ph3', type: 'teach', title: 'If Your Identity Is Stolen',
@@ -14380,6 +14485,15 @@ const MODULES = [
             xpOnComplete: 3
           },
           {
+            id: 'ph_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Credential Stuffing', definition: 'Trying a leaked email/password combo across many other sites automatically.' },
+              { term: 'Credit Freeze', definition: 'A free lock on your credit report that stops new accounts from being opened in your name.' },
+              { term: 'IdentityTheft.gov', definition: 'The FTC site for reporting identity theft and getting a recovery plan.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
             id: 'ph4', type: 'poll', title: 'What Do Most People Think?',
             intro: "One more before the quick check. Tap True or False, then see the answer.",
             statement: 'Financial aid offices will sometimes email students asking them to confirm their bank account details.',
@@ -14392,6 +14506,18 @@ const MODULES = [
               "Focus on what's designed to make you feel rushed, not on how official the message looks.",
               "Think about what actually protects you: your own habits, not how much time has passed."
             ]
+          },
+          {
+            id: 'ph_t2', type: 'teach', title: 'Slow Down, Then Verify Independently',
+            concepts: [
+              {
+                term: 'Verify Through a Channel You Chose',
+                plain: "The fix for every scenario in this quest is the same move: don't use the phone number, link, or reply option the message gave you. Instead, go find the real contact info yourself, from the back of a card, the official app, or a search you trust, and check there.",
+                analogy: "It's the difference between trusting a stranger's directions versus pulling up your own map.",
+                check: { statement: "The safest way to verify a suspicious message is to use the contact info or link the message itself provides.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
           },
           {
             id: 'ph6', type: 'bossbattle', title: 'The Locked Account Text',
@@ -14438,12 +14564,33 @@ const MODULES = [
             xpOnComplete: 3
           },
           {
+            id: 'p2p_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'P2P Payment App', definition: 'A tool like Venmo, Cash App, or Zelle built for paying people you already trust.' },
+              { term: 'No Dispute Process', definition: 'The lack of a formal way to reverse a P2P payment once it is sent.' },
+              { term: 'Overpayment-Then-Refund Trap', definition: 'A scam where the original payment reverses right after a refund is sent.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'p2p_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Most P2P apps have a \"Friends & Family\" vs. \"Goods & Services\" style distinction hiding somewhere in settings — using the option meant for strangers, when available, adds a layer of protection a casual payment doesn't have.",
+            xpOnComplete: 1
+          },
+          {
             id: 'p2p2', type: 'poll', title: 'What Do Most People Think?',
             intro: "Take a guess before we go further. Tap True or False, then see the answer.",
             statement: 'If a buyer overpays and asks for the difference back, sending the refund quickly is the safest way to resolve it.',
             isTrue: false,
             explanation: "False. The safest move is to cancel or reverse the ORIGINAL payment through the app first — sending a fresh refund on top of a payment that might not be real just doubles the loss.",
             xpOnComplete: 2
+          },
+          {
+            id: 'p2p_explain', type: 'explainback', title: 'In Your Own Words',
+            prompt: "Explain why sending money to a stranger through Venmo, Cash App, or Zelle is riskier than paying with a credit card.",
+            keywords: ['reverse', 'refund', 'dispute', 'protection', 'irreversible', 'stranger', 'chargeback'],
+            fullDefinition: "P2P apps are built for paying people you already trust, so once a payment is sent, there's generally no formal way to dispute or reverse it. A credit card gives you a built-in path to challenge a charge if something goes wrong; a P2P payment to a stranger usually doesn't.",
+            xpOnComplete: 4
           },
           {
             id: 'p2p3', type: 'decision', title: 'The Refund Request',
@@ -14455,11 +14602,52 @@ const MODULES = [
             ],
             xpOnComplete: 5
           },
+          {
+            id: 'p2p_t2', type: 'teach', title: 'Who You Send To Matters',
+            concepts: [
+              {
+                term: 'Strangers vs. People You Know',
+                plain: "P2P apps work great for splitting a bill with a roommate or paying back a friend, someone whose identity and honesty you already have real-world context for. The risk climbs fast the moment the other side is a stranger from an online listing, especially one who's rushing you or paid more than agreed.",
+                analogy: "Handing cash to your roommate for pizza is nothing like handing cash to someone you just met online.",
+                check: { statement: "The risk level of a P2P payment mostly depends on how much money is involved, not who the other person is.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'p2p_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Goods & Services Option', definition: 'A payment setting for strangers that can add dispute protection, when available.' },
+              { term: 'Canceling the Original Payment', definition: 'The safer move instead of sending a fresh refund on a suspicious payment.' },
+              { term: 'Rushed, Overpaying Buyer', definition: 'A pattern worth treating as a warning sign, not generosity.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'p2p_poll2', type: 'poll', title: 'What Do Most People Think?',
+            intro: "One more before the quick check. Tap True or False, then see the answer.",
+            statement: "A buyer offering to pay well above the asking price with no negotiation is usually just an eager, generous buyer.",
+            isTrue: false,
+            explanation: "False. An unusually generous, no-questions-asked offer is a common opening move in P2P scams, it's designed to seem too good to question.",
+            xpOnComplete: 2
+          },
           { id: 'p2p4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [8, 9],
             hintTexts: [
               "Think about what happens to the FIRST payment after the refund is sent.",
               "Compare what a credit card can do that Venmo, Cash App, and Zelle can't."
             ]
+          },
+          {
+            id: 'p2p_t3', type: 'teach', title: 'Two Habits Cover Most of This',
+            concepts: [
+              {
+                term: 'Cancel First, Confirm In Person',
+                plain: "Almost every P2P scam is caught by two habits: cancel or reverse a suspicious payment through the app itself rather than sending a new one back, and treat unusually generous, rushed, no-questions offers as a warning sign rather than good luck.",
+                analogy: "It's the same instinct as checking both the lock and the visitor's ID before letting someone in.",
+                check: { statement: "Canceling a suspicious original payment and treating overly generous offers as a warning sign together catch most P2P scams.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
           },
           {
             id: 'p2p5', type: 'bossbattle', title: 'The Too-Fast Textbook Buyer',
@@ -14506,6 +14694,28 @@ const MODULES = [
             xpOnComplete: 2
           },
           {
+            id: 'sh_price', type: 'priceisright', title: 'The Price Is Right: The Real Value',
+            prompt: "The clearance site lists a laptop stand for $8. Guess what a laptop stand like this normally sells for at a real retailer.",
+            hintText: "Think about a typical mid-range laptop stand price, not the cheapest possible option.",
+            actualValue: 35, guessRange: { min: 5, max: 70, step: 5 },
+            explanation: "A normal laptop stand runs around $35. The gap between that and the site's $8 price isn't a lucky clearance find, an 80%+ discount on nearly everything in a store is far outside a normal sale and is exactly the kind of markdown worth treating as a red flag.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'sh_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Reviewless Storefront', definition: 'A brand-new site with no verifiable track record or contact info.' },
+              { term: 'Checkout Red Flag', definition: 'Being pushed toward a payment method with no buyer protection.' },
+              { term: 'Manufactured Urgency', definition: 'A countdown or "today only" claim designed to rush a purchase decision.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'sh_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Searching a store's exact name plus the word \"scam\" or \"reviews\" before checking out takes ten seconds and often surfaces other buyers' experiences immediately.",
+            xpOnComplete: 1
+          },
+          {
             id: 'sh2', type: 'spotcheck', title: 'Spot the Red Flags',
             intro: "Below is a real-looking product page. Tap every phrase you think is a red flag, then hit Continue to see what you caught.",
             postingTitle: 'MEGA CLEARANCE — Everything 80% Off, Today Only!',
@@ -14520,6 +14730,14 @@ const MODULES = [
             xpOnComplete: 4
           },
           {
+            id: 'sh_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess before checkout. Tap True or False, then see the answer.",
+            statement: "A store offering a discount specifically for paying with a gift card or wire transfer instead of a credit card is just a nice perk.",
+            isTrue: false,
+            explanation: "False. Legitimate stores have no reason to prefer payment methods that can't be disputed, that incentive exists specifically because it protects the seller, not the buyer.",
+            xpOnComplete: 2
+          },
+          {
             id: 'sh3', type: 'decision', title: 'Checkout Time',
             prompt: "At checkout, the site offers 10% off for paying with a gift card instead of a credit card. What does Hammy do?",
             hintText: "Which payment method actually lets you dispute a charge if the order never shows up?",
@@ -14529,11 +14747,44 @@ const MODULES = [
             ],
             xpOnComplete: 5
           },
+          {
+            id: 'sh_t2', type: 'teach', title: 'Payment Method Is Your Safety Net',
+            concepts: [
+              {
+                term: 'Chargebacks Exist For This',
+                plain: "A credit card chargeback lets you dispute a charge with your card issuer if an order never arrives or isn't as described, the issuer can pull the money back from the merchant. Gift cards, wire transfers, and crypto have no equivalent, once sent, that payment is essentially final.",
+                analogy: "Paying by credit card is like handing over a check you can still stop, paying by gift card is like handing over cash to a stranger who's already walking away.",
+                check: { statement: "A credit card chargeback and a gift card payment offer roughly the same level of protection if an order never shows up.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'sh_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Chargeback', definition: 'A credit card dispute that can pull money back from a merchant.' },
+              { term: 'Gift Card Payment', definition: 'A payment method with essentially no way to reverse it once sent.' },
+              { term: 'Fake Uniform Reviews', definition: 'A wall of brand-new, suspiciously similar five-star ratings.' }
+            ],
+            xpOnComplete: 4
+          },
           { id: 'sh4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [10, 11],
             hintTexts: [
               "Think about which payment methods actually let you dispute a charge versus which ones are final the moment you pay.",
               "A brand-new store with no way to contact a real person is a pattern worth remembering."
             ]
+          },
+          {
+            id: 'sh_t3', type: 'teach', title: 'Two Habits Cover Most of This',
+            concepts: [
+              {
+                term: 'Check the Store, Then Pay by Card',
+                plain: "Almost every online shopping scam is caught by two habits: quickly check whether a store has a real track record before buying, and pay by credit card so there's a way to dispute the charge if something goes wrong.",
+                analogy: "It's like checking a restaurant's health rating AND keeping the receipt, one habit catches the problem before it happens, the other protects you if it still does.",
+                check: { statement: "Checking a store's track record and paying by credit card together cover most of the risk in online shopping scams.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
           },
           {
             id: 'sh5', type: 'bossbattle', title: 'The Viral Gadget Ad',
@@ -14551,11 +14802,135 @@ const MODULES = [
         id: 'romance_scams',
         topic: 'Romance & Social Media Scams',
         character: { name: 'Hammy', tagline: 'Talking to someone online who seems a little too perfect' },
-        initialState: {},
+        initialState: { savings: 450 },
         chapters: [
-          { id: 'romance_scams_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'r0', type: 'story', title: 'The Perfect Match',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Romance & Social Media Scams." }
+              { speaker: 'intro', text: "A few weeks ago, someone matched with Hammy on a dating app. They're attentive, say all the right things, and the conversation moved fast, daily good-morning texts, long calls, talk of \"finally finding someone real.\"" },
+              { speaker: 'Hammy', text: '"They said they love me after like two weeks. Also we\'ve never actually video called, they said their camera is broken. Is that weird?"' },
+              { speaker: 'narrator', text: "Fast intensity and a reason to avoid seeing their face, together, are worth slowing down for. Let's look at the pattern." }
+            ]
+          },
+          {
+            id: 'r1', type: 'teach', title: 'How Romance Scams Work',
+            concepts: [
+              {
+                term: 'Love Bombing',
+                plain: "Romance scammers move emotionally fast on purpose, intense affection, future plans, \"I've never felt this way before,\" all within days or weeks. The speed isn't romance, it's designed to build trust and attachment before you've had time to notice inconsistencies.",
+                analogy: "It's like a salesperson who rushes you to sign before you've had a chance to read the contract.",
+                check: { statement: "Someone expressing intense love very early in an online relationship is generally a sign the connection is unusually strong.", isTrue: false }
+              },
+              {
+                term: 'Avoiding Verification',
+                plain: "A recurring excuse to avoid video calls, phone calls, or meeting in person, broken camera, bad connection, working overseas, is one of the most consistent patterns in romance scams. It's not proof by itself, but stacked with other signs, it matters a lot.",
+                analogy: "It's a landlord who always has a reason you can't see the apartment in person before signing the lease.",
+                check: { statement: "A consistent, recurring excuse to avoid ever video calling or meeting in person is worth taking seriously as a red flag.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'r_spot', type: 'spotcheck', title: 'Spot the Red Flags',
+            intro: "Here's part of Hammy's actual conversation with this match. Tap every phrase you think is a red flag, then hit Continue to see what you caught.",
+            postingTitle: 'Chat History',
+            segments: [
+              { id: 'rs1', text: '"I feel like I\'ve known you my whole life already."', isRedFlag: true, explanation: "Intense emotional language this early is a classic love-bombing tactic to build fast attachment." },
+              { id: 'rs2', text: '"My camera\'s been broken for weeks, sorry, we\'ll figure out a call soon."', isRedFlag: true, explanation: "A recurring excuse to avoid video verification is one of the most consistent romance scam patterns." },
+              { id: 'rs3', text: '"What did you do this weekend?"', isRedFlag: false, explanation: "A completely normal question — most of a real conversation looks just like this." },
+              { id: 'rs4', text: '"I\'m stuck on a work contract overseas, it\'s a whole story."', isRedFlag: true, explanation: "A vague overseas or work-related reason for being unavailable is a common setup that later justifies both no video calls and future money requests." },
+              { id: 'rs5', text: '"Can I ask you something? This is embarrassing, but I need help with an emergency."', isRedFlag: true, explanation: "This is the pivot point almost every romance scam eventually reaches, an emotional appeal that leads directly to a money request." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'r_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Love Bombing', definition: 'Intense, fast-moving affection used to build trust before red flags are noticed.' },
+              { term: 'Verification Avoidance', definition: 'A recurring excuse to never video call or meet in person.' },
+              { term: 'Emotional Pivot', definition: 'The moment a relationship conversation turns into a request for money.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'r_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "A reverse image search of a match's profile photo takes about ten seconds and sometimes turns up the same picture attached to a completely different name, a strong sign the profile isn't real.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'r_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "If someone's dating profile photos look professional and attractive, that alone makes the profile more trustworthy.",
+            isTrue: false,
+            explanation: "False. Scammers often use stolen photos of attractive people specifically because they draw more matches, polish is not proof of authenticity.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'r_d1', type: 'decision',
+            title: 'Moving Off the App',
+            prompt: "Two weeks in, the match asks to move the conversation from the dating app to a personal messaging app, \"so we're not limited by this app's message limits.\"",
+            hintText: "Dating apps have safety and reporting tools, personal messaging apps generally don't.",
+            choices: [
+              { id: 'a', label: 'Switch right away since it seems like a normal next step', outcome: { text: "Off the dating app, there's no report button and no platform safety team watching for scam patterns, exactly where this kind of scam prefers to operate.", delta: { savings: 0 }, compare: [{ label: 'Platform protection', value: 0 }, { label: 'Platform protection if stayed', value: 1 }] } },
+              { id: 'b', label: "Stay on the dating app a while longer before considering it", outcome: { text: "Staying on-platform keeps reporting tools and message history available if something goes wrong later.", delta: { savings: 0 }, compare: [{ label: 'Platform protection', value: 1 }, { label: 'Platform protection if switched early', value: 0 }] } }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'r_t2', type: 'teach', title: 'Where the Money Request Goes',
+            concepts: [
+              {
+                term: 'Untraceable Payment Methods',
+                plain: "When a romance scam finally asks for money, it almost never asks for a normal bank transfer to a named account. It asks for gift cards, wire transfers, or cryptocurrency, the same hard-to-reverse, hard-to-trace payment types that show up across every scam category in this module.",
+                analogy: "It's the same getaway car every time, just a different driver.",
+                check: { statement: 'Remember from Peer-to-Peer Payment Scams: wire transfers and gift cards are generally just as reversible as a credit card charge.', isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'r_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Reverse Image Search', definition: "A quick check that can reveal a profile photo is stolen from someone else." },
+              { term: 'On-Platform Messaging', definition: 'Staying within a dating app so reporting and safety tools remain available.' },
+              { term: 'Emergency Money Request', definition: 'The eventual ask that romance scams are built around.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'r_poll2', type: 'poll', title: 'What Do Most People Think?',
+            intro: "One more before the quick check. Tap True or False, then see the answer.",
+            statement: "Someone who has been talking to you daily for weeks and clearly cares about you wouldn't ask you for money unless it were a real emergency.",
+            isTrue: false,
+            explanation: "False. The weeks of daily attention are often the setup, not proof of sincerity, building trust is exactly what makes the eventual money request feel believable.",
+            xpOnComplete: 2
+          },
+          { id: 'r4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [8, 9],
+            hintTexts: [
+              "Think about how reversible a gift card or wire transfer payment really is once it's sent.",
+              "Compare this to what makes P2P payments risky when sending money to someone you've never actually met."
+            ]
+          },
+          {
+            id: 'r_t3', type: 'teach', title: 'Two Habits Cover Most of This',
+            concepts: [
+              {
+                term: 'Verify the Person, Then Never Wire Money',
+                plain: "Almost every romance scam is caught by two habits: insist on a real video call early and treat repeated excuses to avoid one as a serious red flag, and never send money, gift cards, or crypto to someone you haven't verified is who they say they are.",
+                analogy: "It's like checking someone's ID and never handing over your wallet to a stranger, either one alone helps, together they cover nearly every version of this scam.",
+                check: { statement: "Insisting on video verification and never sending money to someone unverified together catch most romance scams.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'r5', type: 'bossbattle', title: 'The Overseas Emergency',
+            scenario: "The match calls, sounding panicked: stuck at an airport overseas, needs $800 wired immediately for an emergency flight home, promises to pay it back the moment they land, and still has never done a video call.",
+            hintText: "Count how many patterns from this quest are stacked in one moment, urgency, no verification, and an untraceable payment method.",
+            choices: [
+              { id: 'a', label: 'Wire the $800 right away to help', consequence: { text: "The money is gone within the hour. The account goes silent days later, there was no flight, no emergency, and no real person behind the profile photo.", delta: { savings: -800 }, xpMultiplier: 0.5 } },
+              { id: 'b', label: "Say no to wiring money and ask for a video call before doing anything", consequence: { text: "The excuses pile up instead of a call ever happening. The truth becomes obvious without losing a cent.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'c', label: 'Suggest contacting a real airline or embassy for emergency travel assistance instead', consequence: { text: "The match deflects and stops responding almost immediately, a real emergency wouldn't avoid every legitimate option offered.", delta: { savings: 0 }, xpMultiplier: 1.1 } }
             ]
           }
         ]
@@ -14564,11 +14939,134 @@ const MODULES = [
         id: 'tech_support_scams',
         topic: 'Tech Support & Impersonation Scams',
         character: { name: 'Hammy', tagline: 'Getting a call claiming to be tech support' },
-        initialState: {},
+        initialState: { savings: 450 },
         chapters: [
-          { id: 'tech_support_scams_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 't0', type: 'story', title: 'The Screaming Pop-Up',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Tech Support & Impersonation Scams." }
+              { speaker: 'intro', text: "Hammy's laptop suddenly locks up: a full-screen red warning blares an alarm sound and says \"YOUR COMPUTER IS INFECTED — CALL MICROSOFT SUPPORT IMMEDIATELY\" with a phone number and a countdown before \"all files will be deleted.\"" },
+              { speaker: 'Hammy', text: '"It looks exactly like a Windows warning, and it\'s really loud. Should I call the number before it deletes everything?"' },
+              { speaker: 'narrator', text: "Real security warnings don't work like this. Let's break down what's actually happening on that screen." }
+            ]
+          },
+          {
+            id: 't1', type: 'teach', title: 'How Tech Support Scams Work',
+            concepts: [
+              {
+                term: 'Fake Pop-Ups & Cold Calls',
+                plain: "Tech support scams usually start one of two ways: a browser pop-up designed to look like a system warning, or an unsolicited phone call claiming to be from Microsoft, Apple, or your internet provider. Real companies do not proactively call or pop up a warning telling you to call them, they don't monitor your device that way.",
+                analogy: "It's a fire alarm that goes off and also happens to hand you a business card for a fire-repair company, real alarms don't work like that.",
+                check: { statement: "Microsoft or Apple will sometimes call you directly if they detect a virus on your computer.", isTrue: false }
+              },
+              {
+                term: 'Remote Access Risk',
+                plain: "The scam's real goal is getting you to install remote-access software so a stranger can control your screen. Once connected, they can \"find\" fake viruses, move files around to look alarming, and access anything else visible on the device, banking tabs, saved passwords, personal files.",
+                analogy: "Installing remote access for a stranger is like handing them your house keys and stepping outside while they walk around alone.",
+                check: { statement: "Once someone has remote access to your screen, they can only see what's in the specific program they're helping with.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 't_url', type: 'urlinspect', title: 'Real Alert or Fake?',
+            intro: "The pop-up includes a \"security center\" link for more details. Tap the part of the URL you think is suspicious, then hit Continue to see the full breakdown.",
+            url: 'https://apple-security-alert.com/warning',
+            parts: [
+              { id: 'tp1', segment: 'https://', isSuspicious: false, note: "Encryption doesn't confirm who actually owns the site, scam pages can have this too." },
+              { id: 'tp2', segment: 'apple-security-alert.com', isSuspicious: true, note: 'This is not an Apple-owned domain, it just contains the word "apple" to look official. Real Apple support lives at apple.com, not a lookalike domain that merely mentions the name.' },
+              { id: 'tp3', segment: '/warning', isSuspicious: false, note: "The page path isn't the problem, the domain itself is the entire scam." }
+            ],
+            correctAnswerNote: "A domain that merely contains a company's name isn't the same as being owned by that company. Apple's real domain is exactly apple.com, nothing added before or after.",
+            xpOnComplete: 4
+          },
+          {
+            id: 't_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Fake Pop-Up Warning', definition: 'A browser message designed to look like a real system security alert.' },
+              { term: 'Remote Access Software', definition: "A tool that, once installed, lets a stranger control your screen." },
+              { term: 'Lookalike Domain', definition: "A web address that mentions a real company's name but isn't owned by them." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 't_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Force-closing the browser (or restarting the device if it's frozen) almost always clears a fake virus pop-up completely, no phone call needed, since the \"infection\" was never real to begin with.",
+            xpOnComplete: 1
+          },
+          {
+            id: 't_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Take a guess. Tap True or False, then see the answer.",
+            statement: "A security warning that fills the entire screen and plays a loud alarm sound is how real operating systems typically alert you to a virus.",
+            isTrue: false,
+            explanation: "False. Real OS-level security alerts are typically quiet notifications, not full-screen takeovers with sound designed to panic you into calling a number.",
+            xpOnComplete: 2
+          },
+          {
+            id: 't_d1', type: 'decision',
+            title: 'The Remote Access Request',
+            prompt: "Hammy called the number out of panic. The person on the line, calm and professional-sounding, asks Hammy to install a remote-access app \"so I can see what's wrong and fix it for you.\"",
+            hintText: "What does installing remote-access software actually hand over to a stranger on the phone?",
+            choices: [
+              { id: 'a', label: 'Install it, since they sound professional and just want to help', outcome: { text: "The moment it connects, the caller has full control of the screen, exactly the access needed to move files, install malware, or open banking tabs.", delta: { savings: 0 }, compare: [{ label: 'Device exposed', value: 1 }, { label: 'Device exposed if declined', value: 0 }] } },
+              { id: 'b', label: 'Hang up and call the company back using the number on its official website instead', outcome: { text: "The real support line confirms there's no case open and no reason for concern, the whole call was fake from the start.", delta: { savings: 0 }, compare: [{ label: 'Device exposed', value: 0 }, { label: 'Device exposed if installed', value: 1 }] } }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 't_t2', type: 'teach', title: 'The Payment Demand',
+            concepts: [
+              {
+                term: 'Gift Cards for a "Removal Fee"',
+                plain: "If a tech support call gets far enough, it usually ends with a payment demand, often gift cards, for a \"virus removal fee\" or \"protection plan.\" No legitimate tech company asks to be paid in gift cards, that request alone confirms it's a scam regardless of anything else about the call.",
+                analogy: "It's the same tell as the scholarship processing fee or the marketplace overpayment scam, a request for an unusual, irreversible form of payment.",
+                check: { statement: 'Remember from Financial Aid & Scholarship Fraud: unusual payment requests, like gift cards, are a consistent giveaway across many different types of scams.', isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 't_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Force-Close / Restart', definition: 'The simple fix for a fake virus pop-up, no phone call required.' },
+              { term: 'Officially Listed Number', definition: "A safer way to reach real support than a number shown in a pop-up or unsolicited call." },
+              { term: 'Removal Fee', definition: 'A fake charge, often demanded in gift cards, to "fix" a nonexistent problem.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 't_poll2', type: 'poll', title: 'What Do Most People Think?',
+            intro: "One more before the quick check. Tap True or False, then see the answer.",
+            statement: "If someone remotely accessing your computer sounds calm, professional, and knowledgeable, that's a reliable sign they're legitimate.",
+            isTrue: false,
+            explanation: "False. Sounding professional is easy to fake and tells you nothing about whether the call itself was ever legitimate in the first place.",
+            xpOnComplete: 2
+          },
+          { id: 't4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 7],
+            hintTexts: [
+              "Think about what a fake urgent alert is designed to make you do before you've had time to think.",
+              "Consider what actually protects your accounts once a stranger has remote access to your screen."
+            ]
+          },
+          {
+            id: 't_t3', type: 'teach', title: 'Two Habits Cover Most of This',
+            concepts: [
+              {
+                term: 'Never Call the Pop-Up, Never Install for a Stranger',
+                plain: "Almost every tech support scam is caught by two habits: never call a phone number that appears in a scary pop-up or unsolicited call, look up the company's real support line yourself, and never install remote-access software for someone who contacted you first.",
+                analogy: "It's like never opening the door for someone who knocked claiming to be a locksmith you never called.",
+                check: { statement: "Looking up a company's real support number yourself and never installing remote access for an unsolicited caller together catch most tech support scams.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 't5', type: 'bossbattle', title: 'The Gift Card Removal Fee',
+            scenario: "Still on the call, the \"technician\" says they've found three viruses and need a $300 \"removal and protection fee,\" payable right now in gift cards from any nearby store, or the computer will be permanently locked.",
+            hintText: "Count every red flag stacked into this one moment, the payment method most of all.",
+            choices: [
+              { id: 'a', label: 'Go buy the gift cards and read the codes over the phone', consequence: { text: "The codes are redeemed within minutes of being read aloud. The money is gone, and the \"technician\" stops answering.", delta: { savings: -300 }, xpMultiplier: 0.6 } },
+              { id: 'b', label: 'Hang up immediately and restart the computer', consequence: { text: "The pop-up is gone after restarting, there was never a virus to remove in the first place.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'c', label: 'Say no to the fee and report the call to the FTC afterward', consequence: { text: "The report adds to a pattern investigators are already tracking on that same phone number.", delta: { savings: 0 }, xpMultiplier: 1.1 } }
             ]
           }
         ]
