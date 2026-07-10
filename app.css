@@ -569,12 +569,6 @@ body { background: var(--bg); min-height: 100vh; }
   background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
   padding: 0.6rem 0.85rem;
 }
-.referral-stats-row { display: flex; gap: 1.5rem; margin-top: 1.25rem; }
-.referral-stat-num {
-  font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; color: var(--green-dark);
-  letter-spacing: -0.5px;
-}
-.referral-stat-label { font-size: 0.78rem; color: var(--text-soft); font-weight: 600; }
 @media (max-width: 480px) {
   .referral-link-row { flex-direction: column; }
 }

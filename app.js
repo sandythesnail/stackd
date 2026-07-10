@@ -8678,8 +8678,31 @@ function showToast(message, icon) {
 // The actual reward only ever pays out through the claim_referral_activation() Postgres
 // function (SECURITY DEFINER) so a client can never credit itself or someone else directly.
 // This call just asks the server "did I just do the thing that activates my referral, if any".
-const REFERRAL_REWARD_DIAMONDS = 25;
 const REFERRAL_ACTIVATION_COINS = 15;
+
+// Diamonds for the *referrer* are claimed the same local way, but by the referrer's own
+// client rather than the SQL function writing into their user_progress row directly. A
+// direct write from the referred user's session used to race the referrer's own autosave:
+// if the referrer's tab was already open with a stale cached diamond count, its next
+// saveState() upsert would clobber the whole state blob (including the fresh diamonds)
+// right back down. Claiming locally on the referrer's own client, the same way every other
+// reward in this file works, avoids that entirely.
+async function maybeClaimReferrerRewards() {
+  if (!window.stackdSupabase || !window.Clerk?.user) return;
+  try {
+    const { data, error } = await window.stackdSupabase.rpc('claim_referrer_rewards');
+    if (error) { console.error('Referrer reward check failed:', error); return; }
+    const earned = data && data.diamonds;
+    if (earned > 0) {
+      state.diamonds = (state.diamonds || 0) + earned;
+      showToast(`+${earned} diamonds, a friend joined through your referral link!`, '💎');
+      updateSidebarStats();
+      saveState();
+    }
+  } catch (e) {
+    console.error('Referrer reward check failed:', e);
+  }
+}
 
 async function maybeClaimReferralActivation() {
   if (state.referralClaimAttempted) return;
@@ -10090,22 +10113,6 @@ function renderSettingsPage() {
       }).catch(() => {});
     };
   }
-  refreshReferralStats();
-}
-
-async function refreshReferralStats() {
-  const countEl = document.getElementById('referral-stat-count');
-  const diamondsEl = document.getElementById('referral-stat-diamonds');
-  if (!countEl || !diamondsEl) return;
-  if (!window.stackdSupabase || !window.Clerk?.user) return;
-  const { data, error } = await window.stackdSupabase
-    .from('referrals')
-    .select('status')
-    .eq('referrer_id', Clerk.user.id);
-  if (error) { console.error('Failed to load referral stats:', error); return; }
-  const activated = (data || []).filter(r => r.status === 'activated').length;
-  countEl.textContent = activated;
-  diamondsEl.textContent = activated * REFERRAL_REWARD_DIAMONDS;
 }
 
 // ── TOOLS PAGE (Budget Calculator + Compound Interest Simulator) ──────────────
@@ -12855,6 +12862,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderHome();
 
   window.maybeShowFirstTimeExperience = runFirstLoadSequence;
+  window.maybeClaimReferrerRewards = maybeClaimReferrerRewards;
 
   document.getElementById('birth-ok').addEventListener('click', () => {
     document.getElementById('birth-overlay').classList.remove('visible');

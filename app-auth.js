@@ -51,6 +51,12 @@ window.addEventListener('load', async function () {
   if (typeof window.maybeShowFirstTimeExperience === 'function') {
     window.maybeShowFirstTimeExperience();
   }
+  // Picks up diamonds for any friend referrals that activated since this account's last
+  // load. Safe to call every load: the server only ever pays out newly-activated,
+  // not-yet-credited rows, so it's a cheap no-op once there's nothing pending.
+  if (typeof window.maybeClaimReferrerRewards === 'function') {
+    window.maybeClaimReferrerRewards();
+  }
 
   const nameEl = document.getElementById('settings-account-name');
   if (nameEl) {
