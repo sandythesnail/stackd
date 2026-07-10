@@ -9738,8 +9738,7 @@ function renderModuleList(containerId) {
       ? `<span class="card-badge badge-done">✓ Complete</span>`
       : isRecommended
         ? `<span class="card-badge badge-recommend">★ Recommended</span>`
-        : `<span class="card-badge badge-xp">+${m.xpReward} XP</span>`;
-    const totalXpHtml = `<div class="mrh-total-xp">Total XP: ${moduleTotalXP(m).toLocaleString()}</div>`;
+        : `<span class="card-badge badge-xp">+${moduleTotalXP(m).toLocaleString()} XP</span>`;
 
     let bodyHtml;
     if (quest) {
@@ -9752,9 +9751,9 @@ function renderModuleList(containerId) {
         const subHtml = sub ? `<div class="lt-subquest${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">${subDone ? '✓' : '🎯'} Real-life sub-quest: ${sub.topic} →</div>` : '';
         return `<div class="lesson-tile quest-tile${done ? ' done' : ''}" data-module="${m.id}" data-quest="${q.id}">
           <div class="lt-body">
-            <div class="lt-num">Lesson ${idx + 1}</div>
+            <div class="lt-num">Lesson ${idx + 1} <span class="card-badge badge-xp">+${questMaxXP(q, m)} XP</span></div>
             <div class="lt-title">${q.topic || q.character.name}</div>
-            <div class="lt-meta">${q.character.tagline} · ${q.chapters.length} chapters · ${questMaxXP(q, m)} XP</div>
+            <div class="lt-meta">${q.character.tagline}</div>
             ${subHtml}
           </div>
           <span class="lt-cta">${cta}</span>
@@ -9766,13 +9765,11 @@ function renderModuleList(containerId) {
         const lessonData = state.completedLessons[key];
         const done = !!lessonData;
         const isActivity = !!lesson.type;
-        const meta = done
-          ? `Score: ${lessonData.score}/${lessonData.total} · ${lessonData.xpEarned} XP`
-          : isActivity ? `Interactive · ${lessonMaxXP(lesson, m)} XP` : `${lesson.qIndices.length} questions · ${lessonMaxXP(lesson, m)} XP`;
+        const meta = done ? `Score: ${lessonData.score}/${lessonData.total}` : (isActivity ? 'Interactive' : '');
         const cta = done ? '↻ Replay' : 'Start →';
         return `<div class="lesson-tile${done ? ' done' : ''}${isActivity ? ' activity-tile' : ''}" data-module="${m.id}" data-lesson="${idx}">
           <div class="lt-body">
-            <div class="lt-num">Lesson ${idx + 1}</div>
+            <div class="lt-num">Lesson ${idx + 1} <span class="card-badge badge-xp">+${lessonMaxXP(lesson, m)} XP</span></div>
             <div class="lt-title">${lesson.title}${isActivity ? ' <span class="quest-tag">Interactive</span>' : ''}</div>
             <div class="lt-meta">${meta}</div>
           </div>
@@ -9790,7 +9787,7 @@ function renderModuleList(containerId) {
             <div class="mrh-desc">${m.desc}</div>
           </div>
         </div>
-        <div class="mrh-right">${badge}${totalXpHtml}</div>
+        <div class="mrh-right">${badge}</div>
         <svg class="mrh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       ${bodyHtml}`;
