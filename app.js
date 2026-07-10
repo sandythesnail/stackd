@@ -9295,11 +9295,24 @@ function showLifeEvent(event, onContinue) {
 function maybeShowPostCompletionOverlays(mod, leveled) {
   const lifeEvent = checkModuleUnlockLifeEvent(mod);
   if (leveled) {
-    pendingLifeEvent = lifeEvent;
-    setTimeout(() => {
-      document.getElementById('new-tier').textContent = getTier(Object.keys(state.completedModules).length).name;
-      document.getElementById('levelup-overlay').classList.add('visible');
-    }, 700);
+    // The big full-screen overlay is reserved for an actual TIER change (Broke Freshman →
+    // Budget Apprentice, etc.) — a single module's XP can cross several numeric levels at
+    // once without the tier changing, since tier tracks modules completed, not level. That
+    // used to mean seeing the same "You're a Broke Freshman!" overlay repeatedly. A level-up
+    // that doesn't change tier now gets a quick toast instead of re-showing the big banner.
+    const tier = getTier(Object.keys(state.completedModules).length);
+    if (tier.name !== state.lastSeenTier) {
+      state.lastSeenTier = tier.name;
+      saveState();
+      pendingLifeEvent = lifeEvent;
+      setTimeout(() => {
+        document.getElementById('new-tier').textContent = tier.name;
+        document.getElementById('levelup-overlay').classList.add('visible');
+      }, 700);
+    } else {
+      showToast(`Level up! You're now Level ${state.level}.`, '⭐');
+      if (lifeEvent) setTimeout(() => showLifeEvent(lifeEvent), 700);
+    }
   } else if (lifeEvent) {
     setTimeout(() => showLifeEvent(lifeEvent), 700);
   }
@@ -9307,7 +9320,7 @@ function maybeShowPostCompletionOverlays(mod, leveled) {
 
 // ── State ──────────────────────────────────────
 let state = {
-  level: 1, xp: 0, streak: 0, lastPlayedDate: null,
+  level: 1, xp: 0, streak: 0, lastPlayedDate: null, lastSeenTier: null,
   completedModules: {}, completedLessons: {}, unlockedAchievements: [], hadPerfect: false,
   activeModuleId: null, activeLessonIdx: 0, activeQuestId: null, sessionQuestions: [],
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
@@ -9346,8 +9359,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
-  const snapshot = { level, xp, streak, lastPlayedDate, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
+  const { level, xp, streak, lastPlayedDate, lastSeenTier, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
+  const snapshot = { level, xp, streak, lastPlayedDate, lastSeenTier, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
   localStorage.setItem('stackd_v2', JSON.stringify(snapshot));
   scheduleSupabaseSync(snapshot);
 }
