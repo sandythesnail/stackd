@@ -518,10 +518,160 @@ const MODULES = [
         topic: 'Reading Your Pay Stub Line by Line',
         character: { name: 'Hammy', tagline: 'Trying to decode a pay stub for the first time' },
         initialState: {},
+        bossAchievementId: 'stub_reader',
         chapters: [
-          { id: 'pay_stub_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ps1', type: 'story', title: 'A Wall of Numbers',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Reading Your Pay Stub Line by Line." }
+              { speaker: 'intro', text: "Hammy pulls up their pay stub for the first time, gross pay, a dozen deduction lines with names like \"FICA-SS\" and \"YTD Net,\" and a net pay number at the bottom." },
+              { speaker: 'Hammy', text: '"I know my net pay is right there at the bottom... so do I even need to read the rest of this?"' },
+              { speaker: 'narrator', text: "Skipping straight to the bottom line means missing the one time you'd actually catch a payroll mistake, before it repeats for months." },
+              { speaker: 'Hammy', text: '"Okay, fine. Walk me through what all of this actually means."' }
+            ]
+          },
+          {
+            id: 'ps_t1', type: 'teach', title: 'Pay Period vs. Pay Date',
+            concepts: [
+              {
+                term: 'Pay Period',
+                plain: "The pay period is the stretch of time the paycheck actually covers, for example, the two weeks Hammy worked. It's listed at the top of every stub.",
+                analogy: "It's like the date range on a phone bill, the charges cover a specific window of time, not just \"today.\"",
+                check: { statement: "The pay period is the same thing as the date the money actually lands in your account.", isTrue: false }
+              },
+              {
+                term: 'Pay Date',
+                plain: "The pay date is when the money actually deposits, usually several days after the pay period ends, since payroll needs time to process everything.",
+                analogy: "It's like a package's ship date versus its delivery date, work happens during the period, the deposit follows a bit later.",
+                check: { statement: "The pay date always falls before the pay period it covers even begins.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ps_t2', type: 'teach', title: 'YTD: Year-to-Date',
+            concepts: [
+              {
+                term: 'YTD (Year-to-Date)',
+                plain: "YTD totals show the running sum of gross pay, each deduction, and net pay since January 1st, not just this one check. It's how you sanity-check things like \"did that raise actually show up\" or gather numbers for a loan application.",
+                analogy: "It's like an odometer versus a single trip's mileage, one check shows this trip, YTD shows the whole year so far.",
+                check: { statement: "YTD figures reset back to zero on every single paycheck.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ps_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Pay Period', definition: 'The specific stretch of time a paycheck covers.' },
+              { term: 'Pay Date', definition: 'The day the money actually deposits, after the period ends.' },
+              { term: 'YTD', definition: 'The running total of pay and deductions since January 1st.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ps_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: download or save a PDF of every pay stub as it arrives. Landlords, loan applications, and even some scholarship renewals often ask for recent proof of income, and digging one up from a payroll portal months later is way more annoying than saving it now.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ps_t3', type: 'teach', title: 'Pre-Tax vs. Post-Tax Deductions',
+            concepts: [
+              {
+                term: 'Pre-Tax Deduction',
+                plain: "Some deductions, like a 401(k)/403(b) contribution or a health insurance premium, come out BEFORE income tax is calculated. That actually lowers the income you're taxed on, a real, if small, tax advantage.",
+                analogy: "It's like a coupon applied before the register calculates sales tax, the tax itself shrinks along with the price.",
+                check: { statement: "A pre-tax deduction can reduce the amount of income you're actually taxed on.", isTrue: true }
+              },
+              {
+                term: 'Post-Tax Deduction',
+                plain: "Other deductions, like a Roth retirement contribution or a wage garnishment, come out AFTER taxes are already calculated. They don't lower your taxable income, they just reduce what's left to take home.",
+                analogy: "It's like a coupon applied after the tax is already added to the receipt, the tax itself doesn't change.",
+                check: { statement: "Post-tax and pre-tax deductions always affect your taxable income the exact same way.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ps_spot1', type: 'spotcheck', title: 'Spot What Deserves a Second Look',
+            intro: "Here's a plain-text readout of Hammy's pay stub. Tap any line that's worth double-checking before assuming it's correct, then hit Continue to see what you caught.",
+            postingTitle: "Pay Stub — Pay Period 6/2–6/15",
+            segments: [
+              { id: 's1', text: "Gross Pay: $450.00 (30.0 regular hrs @ $15.00/hr). ", isRedFlag: false, explanation: "This math checks out (30 × $15 = $450), a normal line, but still worth a quick multiply every time." },
+              { id: 's2', text: "Overtime: 0.0 hrs, $0.00 — ", isRedFlag: true, explanation: "Hammy actually worked 6 hours of overtime this period. A $0.00 overtime line when hours were logged is exactly the kind of error that's easy to miss if you only glance at net pay." },
+              { id: 's3', text: "FICA-SS: -$27.90, FICA-Med: -$6.53 — ", isRedFlag: false, explanation: "6.2% and 1.45% of $450 gross, matches the expected FICA rate, nothing unusual here." },
+              { id: 's4', text: "Federal Income Tax: -$22.00 — ", isRedFlag: false, explanation: "A normal withholding line based on Hammy's W-4, no red flag on its own." },
+              { id: 's5', text: "Health Insurance (pre-tax): -$15.00 — ", isRedFlag: false, explanation: "A standard pre-tax deduction if Hammy is enrolled in a plan, expected and fine." },
+              { id: 's6', text: "YTD Net Pay: $1,120.15, despite this being the 4th pay period of the year — ", isRedFlag: true, explanation: "Four periods at roughly this net pay should total closer to $1,500+. A YTD figure that looks too low compared to the math is worth flagging and asking payroll about." },
+              { id: 's7', text: "Net Pay: $378.57.", isRedFlag: false, explanation: "Once the missing overtime is added back in, this line will need correcting too, but the line itself is just doing the subtraction it was given." }
+            ],
+            xpOnComplete: 5
+          },
+          {
+            id: 'ps_d1', type: 'decision',
+            title: "The Missing Overtime",
+            prompt: "Hammy's stub shows 0.0 overtime hours, but Hammy's own tracked hours show 6 hours of overtime that week. What should Hammy do?",
+            hintText: "Think back to Pay Period: this stub only reflects what payroll recorded, not necessarily what actually happened.",
+            choices: [
+              { id: 'a', label: "Assume payroll knows best and let it go", outcome: { text: "The missing overtime pay never gets corrected, and the same mistake could easily repeat next period too.", delta: {}, compare: [{ label: 'Hours logged by Hammy', value: 6 }, { label: 'Overtime hours paid', value: 0 }] } },
+              { id: 'b', label: "Compare it to a personal hours log and email HR or payroll right away", outcome: { text: "Payroll confirms the error and issues a correction on the next check, caught early because Hammy actually checked the stub.", delta: {}, compare: [{ label: 'Hours logged by Hammy', value: 6 }, { label: 'Overtime hours paid (after fix)', value: 6 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ps_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Pre-Tax Deduction', definition: 'Taken out before income tax is calculated, like a 401(k)/403(b) or health premium.' },
+              { term: 'Post-Tax Deduction', definition: "Taken out after tax is already calculated, doesn't lower taxable income." },
+              { term: 'Pay Stub', definition: 'The document listing gross pay, every deduction, and net pay for a period.' }
+            ],
+            hintText: "One term reduces what's TAXED, one doesn't, and one is the DOCUMENT showing all of it.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ps_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "If your net pay looks about right, there's no real need to check the rest of the pay stub.",
+            isTrue: false,
+            explanation: "It's a myth. A right-looking net pay can still hide a missing overtime line, a wrong deduction, or a benefits error that quietly compounds over months if nobody catches it.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ps_myth1', type: 'mythcards', title: 'Pay Stub Myths',
+            cards: [
+              { myth: "Every pay stub deduction lowers the income you're taxed on.", isTrue: false, explanation: "Only pre-tax deductions do that. Post-tax deductions, like a Roth contribution, come out after taxes are already calculated." },
+              { myth: "YTD totals are useful for more than just curiosity, like loan applications or catching a raise that didn't take effect.", isTrue: true, explanation: "True, YTD figures are often exactly what a lender, landlord, or scholarship office asks to see as proof of income." },
+              { myth: "A payroll error, once caught and corrected, can't happen again on a future check.", isTrue: false, explanation: "Payroll systems don't self-correct forever, the same type of error (like a hours mismatch) can recur, which is why checking every stub, not just the first one, matters." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ps_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [8, 9],
+            hintTexts: [
+              "Think about what to do the moment a pay stub looks off.",
+              "Think about the actual math: hourly rate × hours × pay periods."
+            ]
+          },
+          {
+            id: 'ps_t4', type: 'teach', title: 'Read Every Stub, Every Time',
+            concepts: [
+              {
+                term: 'The Habit That Catches Errors',
+                plain: "A pay stub only takes thirty seconds to scan once you know what each line means: gross, key deductions, YTD, net. That thirty seconds is the only real chance to catch an error before it quietly repeats for months.",
+                analogy: "It's like glancing at a receipt before walking away from the register, most of the time nothing's wrong, but the one time something is, catching it there saves a much bigger headache later.",
+                check: { statement: "Once you understand a pay stub's layout once, there's no more value in actually looking at future ones.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ps_boss', type: 'bossbattle', title: 'The New Deduction Line',
+            scenario: "Hammy's latest stub has a new deduction line that wasn't there before, \"Misc Adj: -$18.00\", with no explanation. Hammy doesn't remember signing up for anything new. What does Hammy do?",
+            hintText: "Remember The Habit That Catches Errors: an unexplained new line is exactly the kind of thing a thirty-second scan is meant to catch.",
+            choices: [
+              { id: 'a', label: "Ask HR or payroll directly what the new line is before assuming anything", consequence: { text: "It turns out to be a processing mistake, unrelated to Hammy's account, and payroll reverses it on the next check.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Ignore it since it's a small amount", consequence: { text: "The unexplained deduction quietly continues on every future check, small amounts add up fast over a year.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Compare it against the YTD totals and old stubs first, then ask payroll with specifics in hand", consequence: { text: "Coming prepared with exact numbers gets it resolved in one email instead of a back-and-forth.", delta: {}, xpMultiplier: 1.2 } },
+              { id: 'd', label: "Assume it's a new mandatory fee and just accept it", consequence: { text: "It wasn't mandatory at all, just an error, and Hammy paid it for months before finally asking.", delta: {}, xpMultiplier: 0.7 } }
             ]
           }
         ]
@@ -531,10 +681,141 @@ const MODULES = [
         topic: 'Work-Study & Campus Jobs',
         character: { name: 'Hammy', tagline: 'Weighing a work-study offer on campus' },
         initialState: {},
+        bossAchievementId: 'award_paced',
         chapters: [
-          { id: 'work_study_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'ws1', type: 'story', title: 'A New Term on the Aid Offer',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Work-Study & Campus Jobs." }
+              { speaker: 'intro', text: "Hammy's financial aid offer lists \"$3,000 Federal Work-Study\" right next to the grants and loans, with zero explanation of what that actually means." },
+              { speaker: 'Hammy', text: '"Is this a job? A loan? Free money? It\'s just sitting there as a number."' },
+              { speaker: 'narrator', text: "Work-Study is its own category, not quite a normal job, not a loan, worth understanding before Hammy either ignores it or misunderstands how it works." },
+              { speaker: 'Hammy', text: '"Okay, so what actually makes this different from just applying to a regular campus job?"' }
+            ]
+          },
+          {
+            id: 'ws_t1', type: 'teach', title: 'What Federal Work-Study Actually Is',
+            concepts: [
+              {
+                term: 'Federal Work-Study',
+                plain: "Federal Work-Study is a need-based federal program awarded as part of your financial aid package, based on your FAFSA. It's not a loan, you never repay it, and it's not free cash either, you have to actually work a part-time job to earn it.",
+                analogy: "Think of it less like a grant and more like a job opportunity that comes pre-approved through financial aid, the earning still has to happen.",
+                check: { statement: "Federal Work-Study is a loan that gets added to your balance and repaid after graduation.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ws_t2', type: 'teach', title: 'The Award Is a Cap, Not a Guarantee',
+            concepts: [
+              {
+                term: 'Award Amount',
+                plain: "That $3,000 is a MAXIMUM you can earn through work-study jobs for the year, not a guaranteed paycheck and not extra money on top of your regular wages. Once you've earned the full amount, work-study pay simply stops, even if the semester isn't over.",
+                analogy: "It's like a gift card with a spending limit, once the balance hits zero, the card stops working, no matter how much you still want to buy.",
+                check: { statement: "Once a student earns their full Work-Study award, the job keeps paying at the same rate for the rest of the year.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'ws_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Federal Work-Study', definition: 'A need-based aid program that funds part-time campus jobs, not a loan.' },
+              { term: 'Award Amount', definition: 'The maximum a student can earn through Work-Study jobs for the year.' },
+              { term: 'FAFSA', definition: 'The application that determines Work-Study eligibility, along with other aid.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ws_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: many Work-Study earnings are exempt from FICA tax while you're enrolled at least half-time, since the IRS treats enrolled students working at their own school differently from typical employees. That's a small but real bonus most students never notice on top of the job itself.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'ws_t3', type: 'teach', title: 'Why Work-Study Jobs Are Easier to Land',
+            concepts: [
+              {
+                term: 'Employer Subsidy',
+                plain: "The federal government covers a big chunk of a Work-Study student's wages, the campus department only pays the rest. That's exactly why departments are often eager to hire Work-Study students over other applicants, it costs them less.",
+                analogy: "It's like a coupon the employer gets for hiring you specifically, making you a cheaper hire than someone without the award.",
+                check: { statement: "A department pays the full wage out of its own budget for every Work-Study student it hires.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ws_price1', type: 'priceisright', title: 'The Price Is Right: Pacing the Award',
+            prompt: "Hammy has a $3,000 Work-Study award and 15 weeks left in the semester, paid $15/hour. Guess roughly how many hours per week Hammy needs to work to use the full award exactly by the end of the semester (no more, no less).",
+            hintText: "$3,000 ÷ 15 weeks gives the weekly dollar target first, then divide that by the hourly rate.",
+            actualValue: 13, guessRange: { min: 0, max: 25, step: 1 },
+            explanation: "$3,000 ÷ 15 weeks ≈ $200/week, and $200 ÷ $15/hour ≈ 13 hours/week. Working noticeably more than that risks hitting the award cap with weeks still left in the semester and no more Work-Study pay coming.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'ws_d1', type: 'decision',
+            title: "Extra Hours Offered",
+            prompt: "Hammy is already paced to use the full $3,000 award evenly across the semester. Their supervisor offers extra shifts for the next three weeks. What should Hammy do?",
+            hintText: "Think back to Award Amount: extra hours now don't create extra pay once the award runs out, they just spend it faster.",
+            choices: [
+              { id: 'a', label: "Take all the extra shifts without checking the remaining award balance", outcome: { text: "Hammy earns the full $3,000 five weeks early, then has no Work-Study pay for the rest of the semester, even though hours were still available to work.", delta: {}, compare: [{ label: 'Weeks of Work-Study pay used', value: 10 }, { label: 'Weeks of semester remaining after award runs out', value: 5 }] } },
+              { id: 'b', label: "Check the remaining award balance first, then decide how many extra shifts actually fit", outcome: { text: "Hammy takes a couple of the extra shifts, still lands right at the award limit by the final week of the semester, steady pay the whole way through.", delta: {}, compare: [{ label: 'Weeks of Work-Study pay used', value: 15 }, { label: 'Weeks of semester remaining after award runs out', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'ws_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Award Balance', definition: 'How much of the total award is still unearned and available to work toward.' },
+              { term: 'Pacing', definition: 'Spreading hours across the term so the award lasts the whole semester.' },
+              { term: 'Non-Work-Study Job', definition: "A regular campus or off-campus job that doesn't draw from a Work-Study award at all." }
+            ],
+            hintText: "One term is the REMAINING amount, one is the STRATEGY for spreading it out, and one is a job OUTSIDE the program entirely.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'ws_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "A Work-Study award guarantees a fixed number of work hours every week of the semester.",
+            isTrue: false,
+            explanation: "It's a myth. The award guarantees a maximum DOLLAR amount, not a set number of hours, actual hours depend on the job, the schedule, and how the student paces their own earning.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'ws_myth1', type: 'mythcards', title: 'Work-Study Myths',
+            cards: [
+              { myth: "Work-Study jobs are only available in the campus library or dining hall.", isTrue: false, explanation: "Work-Study jobs span research assistant roles, offices, labs, tutoring centers, and more, wherever a department has funded positions available." },
+              { myth: "A student who doesn't use their entire Work-Study award simply loses access to the unused portion once the year ends.", isTrue: true, explanation: "True, an unused award amount doesn't roll over or convert to cash, it's only available by actually working during that award year." },
+              { myth: "Turning down a Work-Study award has no effect on other financial aid, like grants or scholarships.", isTrue: true, explanation: "True, declining Work-Study doesn't reduce other gift aid, it just means missing out on that job-based earning option specifically." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'ws_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 5],
+            hintTexts: [
+              "Think about whether Work-Study is a loan, gift aid, or something you actually work for.",
+              "Think about what happens the moment the full award amount has been earned."
+            ]
+          },
+          {
+            id: 'ws_t4', type: 'teach', title: 'Track the Balance, Not Just the Hours',
+            concepts: [
+              {
+                term: 'Checking Your Award Balance',
+                plain: "Most schools show remaining Work-Study balance through the financial aid portal or payroll system. Checking it periodically, not just tracking hours worked, is what actually prevents an unwanted mid-semester surprise when the pay suddenly stops.",
+                analogy: "It's like watching a gift card balance instead of just counting purchases, the balance is the number that actually tells you when it runs out.",
+                check: { statement: "Tracking hours worked alone is just as reliable as checking the actual remaining award balance.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'ws_boss', type: 'bossbattle', title: 'The Scheduling Request',
+            scenario: "With three weeks left in the semester, Hammy's supervisor asks them to pick up a heavier schedule to help cover a busy period, right around where Hammy's award balance is getting close to zero. What does Hammy do?",
+            hintText: "Remember Checking Your Award Balance: the actual remaining dollar amount, not just how many weeks are left, determines how many more hours make sense.",
+            choices: [
+              { id: 'a', label: "Check the exact remaining balance first, then offer to cover as many hours as that balance actually supports", consequence: { text: "Hammy helps out right up to the exact limit, no surprise cutoff, and the supervisor appreciates the heads-up about the cap.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Agree to the full heavier schedule without checking the balance first", consequence: { text: "Hammy runs out of award partway through the busy period, leaving the supervisor short-staffed anyway, right when it mattered most.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Decline the extra hours entirely without explaining why", consequence: { text: "Hammy avoids the risk, but the supervisor never learns about the award cap and may ask again without knowing the real constraint.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'd', label: "Accept the extra hours and plan to ask for a non-Work-Study position once the award runs out", consequence: { text: "A reasonable backup plan, though it depends entirely on a non-Work-Study role actually being available and approved in time.", delta: {}, xpMultiplier: 1.0 } }
             ]
           }
         ]
@@ -544,10 +825,147 @@ const MODULES = [
         topic: 'Gig Work & 1099 Income',
         character: { name: 'Hammy', tagline: 'Picking up gig work between classes' },
         initialState: {},
+        bossAchievementId: 'gig_literate',
         chapters: [
-          { id: 'gig_income_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'gi1', type: 'story', title: 'Money With No Paperwork',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Gig Work & 1099 Income." }
+              { speaker: 'intro', text: "Hammy starts walking dogs and tutoring between classes, paid straight through an app to their Venmo. No W-4, no pay stub, no taxes taken out, just money landing in the account." },
+              { speaker: 'Hammy', text: '"This is so much simpler than my campus job. Just... money, whenever someone pays me."' },
+              { speaker: 'narrator', text: "Simpler on the surface, but that missing paperwork means a responsibility that used to be automatic just quietly shifted onto Hammy." },
+              { speaker: 'Hammy', text: '"Wait, shifted how? Nobody said anything about that when I signed up for the app."' }
+            ]
+          },
+          {
+            id: 'gi_t1', type: 'teach', title: '1099 Income vs. W-2 Income',
+            concepts: [
+              {
+                term: 'W-2 Income',
+                plain: "W-2 income comes from being someone's employee. Your employer automatically withholds federal tax, state tax, and FICA from every paycheck, and reports it all to the IRS on a W-2 form each January.",
+                analogy: "It's like a subscription that bills itself automatically, the deductions happen without you doing anything.",
+                check: { statement: "W-2 income has taxes automatically withheld by the employer before you ever see the money.", isTrue: true }
+              },
+              {
+                term: '1099 Income',
+                plain: "1099 income comes from working as an independent contractor, gig apps, freelance tutoring, dog walking. Nobody withholds anything, the full payment lands in your account, and if one payer sends you $600+ in a year, they'll send you a 1099-NEC form summarizing it for tax season.",
+                analogy: "It's like getting paid in cash with no automatic deductions, the full amount is yours to manage, deductions and all.",
+                check: { statement: "1099 income arrives with taxes already taken out, the same as a W-2 paycheck.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'gi_t2', type: 'teach', title: 'The $600 Form Threshold Isn\'t the Same as the Tax Threshold',
+            concepts: [
+              {
+                term: 'The $600 Form Threshold',
+                plain: "A payer only has to SEND you a 1099-NEC form if they paid you $600 or more in a year. But that's just a paperwork trigger, it does NOT mean income under $600 is tax-free. Every dollar of gig income is still reportable, form or no form.",
+                analogy: "It's like a store only mailing a receipt for purchases over $600, smaller purchases still happened and still count, they just don't come with a mailed reminder.",
+                check: { statement: "Gig income under $600 from a single payer doesn't need to be reported since no form gets sent.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gi_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'W-2 Income', definition: 'Employee pay with taxes automatically withheld by the employer.' },
+              { term: '1099 Income', definition: 'Independent contractor pay with nothing withheld upfront.' },
+              { term: '$600 Form Threshold', definition: 'The trigger for a payer to send a 1099-NEC, not a tax-free minimum.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'gi_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: keep a simple running log, date, who paid, how much, for every gig payment, even the small ones paid through an app. Come tax season, reconstructing six months of Venmo payments from memory is way harder than checking one spreadsheet.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'gi_t3', type: 'teach', title: 'Why Gig Income Owes a Bit More',
+            concepts: [
+              {
+                term: 'Self-Employment Tax',
+                plain: "On a W-2 job, your employer pays HALF of your FICA tax automatically. As a gig worker, there's no employer splitting that cost, so you owe both halves yourself, called self-employment tax. The Taxes module covers exactly how to calculate and file this, for now, just know it exists and it's part of why gig income needs extra planning.",
+                analogy: "It's like splitting a bill with a friend versus covering the whole thing solo, the total owed is simply bigger when nobody else is chipping in their half.",
+                check: { statement: "Gig workers only owe income tax on their earnings, with no additional tax beyond what a W-2 employee owes.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gi_explain1', type: 'explainback',
+            title: 'In Your Own Words',
+            prompt: "In your own words: why does gig income need to be tracked and handled differently than a W-2 paycheck, even if the total amount earned is similar?",
+            keywords: ['withhold', 'nothing', 'track', 'self-employment', 'responsible', 'report'],
+            fullDefinition: "Because nothing gets withheld automatically. A W-2 paycheck already has taxes taken out before it ever reaches your account, gig income arrives as the full amount, with the entire responsibility, tracking every payment, setting aside taxes, and reporting it accurately, shifted onto the person earning it.",
+            xpOnComplete: 3
+          },
+          {
+            id: 'gi_d1', type: 'decision',
+            title: "The Untracked Venmo Payment",
+            prompt: "A neighbor Venmos Hammy $40 for a one-time dog walk, with just a paw emoji as the note, no other record. What should Hammy do?",
+            hintText: "Think back to the $600 Form Threshold: this payment won't generate any form at all, so who's actually responsible for keeping a record of it?",
+            choices: [
+              { id: 'a', label: "Nothing, it's a small one-time payment with no form coming", outcome: { text: "Small, untracked payments like this one quietly add up over a year, and reconstructing them later from memory is far harder than logging them as they happen.", delta: {}, compare: [{ label: 'Payments logged', value: 0 }, { label: 'Payments actually received', value: 1 }] } },
+              { id: 'b', label: "Add it to a running gig-income log with the date and amount", outcome: { text: "Thirty seconds now means an accurate, complete record whenever it's actually needed, no scrambling through old app notifications later.", delta: {}, compare: [{ label: 'Payments logged', value: 1 }, { label: 'Payments actually received', value: 1 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'gi_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Self-Employment Tax', definition: 'Both halves of FICA, owed by gig workers since no employer covers half.' },
+              { term: '1099-NEC', definition: 'The form a payer sends after paying a contractor $600+ in a year.' },
+              { term: 'Income Log', definition: 'A running record of every gig payment, used for accurate tax reporting.' }
+            ],
+            hintText: "One is a TAX owed, one is a FORM that sometimes arrives, and one is a HABIT worth keeping regardless.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'gi_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "Gig income only needs to be reported to the IRS if a 1099-NEC form was actually sent for it.",
+            isTrue: false,
+            explanation: "It's a myth. Every dollar of gig income is reportable, whether or not a specific payer crossed the $600 threshold that triggers a form.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'gi_myth1', type: 'mythcards', title: 'Gig Income Myths',
+            cards: [
+              { myth: "Cash or Venmo payments for gig work are harder for the IRS to ever find out about, so they're lower priority to report.", isTrue: false, explanation: "Payment method doesn't change the legal requirement to report income, and payment apps above certain thresholds report transaction data to the IRS as well." },
+              { myth: "A student with only gig income, no W-2 job at all, still might owe self-employment tax.", isTrue: true, explanation: "True, self-employment tax applies once net self-employment earnings reach a fairly low threshold, regardless of whether any W-2 income exists alongside it." },
+              { myth: "Tips or bonus payments from gig customers count as reportable income too.", isTrue: true, explanation: "True, any payment received for the work, whether it's the base rate or an extra tip, is part of reportable gig income." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'gi_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 7],
+            hintTexts: [
+              "Think about what's automatically different about a payment with no W-4 involved.",
+              "Think about the smart habit for money that arrives with nothing withheld."
+            ]
+          },
+          {
+            id: 'gi_t4', type: 'teach', title: 'The Log Is the Whole System',
+            concepts: [
+              {
+                term: 'One Habit Covers Most of This',
+                plain: "Nearly everything about handling gig income well traces back to one habit: log every payment as it arrives. That log is what makes tax time accurate, what makes setting aside the right amount possible, and what turns a pile of scattered app notifications into an actual financial picture.",
+                analogy: "It's like keeping a single running receipt for a shared group expense, instead of trying to reconstruct who paid what from memory weeks later.",
+                check: { statement: "Waiting until tax season to reconstruct a year of gig payments is just as reliable as logging them as they happen.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gi_boss', type: 'bossbattle', title: 'The Busy Month',
+            scenario: "Hammy picks up an unusually busy month of gig work, tutoring, dog walking, and a one-off freelance flyer design, paid across three different apps. Tracking it all feels like a hassle. What does Hammy do?",
+            hintText: "Remember One Habit Covers Most of This: the log doesn't need to be fancy, it just needs to happen consistently, no matter how many different apps the money comes from.",
+            choices: [
+              { id: 'a', label: "Log each payment right after it arrives, regardless of which app it came through", consequence: { text: "By month's end, Hammy has a complete, accurate picture across all three apps, no scrambling later.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Skip logging this month since it's unusually busy, and plan to catch up later", consequence: { text: "\"Catching up later\" turns into guessing, and a chunk of the busiest month's income ends up under-reported by accident.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Log only the largest payments and skip the smaller ones to save time", consequence: { text: "The big payments are covered, but the small ones still add up to real, unreported income by the end of the month.", delta: {}, xpMultiplier: 0.8 } },
+              { id: 'd', label: "Set a recurring reminder to log all payments once a week instead of after each one", consequence: { text: "Not quite as precise as logging immediately, but still a consistent system that stays far more accurate than relying on memory.", delta: {}, xpMultiplier: 1.05 } }
             ]
           }
         ]
@@ -557,10 +975,150 @@ const MODULES = [
         topic: 'Setting Aside Taxes as a Gig Worker',
         character: { name: 'Hammy', tagline: 'Realizing gig income doesn\'t come with taxes withheld' },
         initialState: {},
+        bossAchievementId: 'tax_setter',
         chapters: [
-          { id: 'gig_taxes_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'gt1', type: 'story', title: 'Where Did It All Go?',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Setting Aside Taxes as a Gig Worker." }
+              { speaker: 'intro', text: "Hammy earned $400 in gig money this month, tutoring and dog walking, and spent it about as freely as it came in. No taxes were ever taken out." },
+              { speaker: 'Hammy', text: '"Wait... is some of this supposed to go toward taxes? Nobody withheld anything."' },
+              { speaker: 'narrator', text: "Exactly the gap gig income leaves open, and exactly the kind of surprise that catches new gig workers off guard the first time tax season actually arrives." },
+              { speaker: 'Hammy', text: '"Okay, before I spend the next payment too, tell me how to actually handle this."' }
+            ]
+          },
+          {
+            id: 'gt_t1', type: 'teach', title: 'The 20-30% Rule of Thumb',
+            concepts: [
+              {
+                term: 'The Set-Aside Percentage',
+                plain: "Since nothing gets withheld from gig income, a simple rule of thumb is to set aside roughly 20-30% of every payment the moment it arrives, before it has a chance to get spent. The exact number depends on total income and other factors, but this range gives new gig workers a safe starting buffer.",
+                analogy: "It's like the withholding an employer would normally do automatically, except now Hammy has to be their own payroll department.",
+                check: { statement: "Setting aside a percentage of each gig payment as it arrives is safer than trying to figure it all out at tax time.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'gt_t2', type: 'teach', title: 'A Separate Account Makes It Automatic',
+            concepts: [
+              {
+                term: 'A Dedicated Tax Account',
+                plain: "Opening a separate savings account just for the set-aside tax portion, and moving that percentage over immediately after every gig payment, removes the temptation to spend it later. It doesn't need to earn a great interest rate, it just needs to stay separate from everyday spending money.",
+                analogy: "It's like a lockbox for money that already has a job, keeping it visually and physically separate makes it far less likely to get spent by accident.",
+                check: { statement: "The tax set-aside money needs to stay mixed with regular spending money to be useful.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gt_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'The Set-Aside Percentage', definition: 'Roughly 20-30% of each gig payment, moved aside before it can be spent.' },
+              { term: 'A Dedicated Tax Account', definition: 'A separate account that keeps set-aside money out of everyday spending.' },
+              { term: 'Self-Employment Tax', definition: "Both halves of FICA, owed since there's no employer covering half." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'gt_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: set up the transfer to the tax account as a habit tied to getting paid, not a monthly task. Moving the percentage over the same day a gig payment lands means it never has the chance to blend into regular spending money in the first place.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'gt_t3', type: 'teach', title: 'Quarterly Estimated Taxes, Briefly',
+            concepts: [
+              {
+                term: 'Quarterly Estimated Taxes',
+                plain: "If you expect to owe $1,000 or more for the year from gig income, the IRS generally expects estimated payments spread across four due dates during the year, not one lump sum the following April. The Taxes module covers exactly how to calculate and file these, for now, just know the set-aside money is what makes those payments possible when they come due.",
+                analogy: "It's like paying a big tuition bill in installments instead of all at once, spread out, but still due on a schedule.",
+                check: { statement: "Gig workers who expect to owe a meaningful amount in taxes may need to make payments during the year, not just in April.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gt_ms1', type: 'microsim', title: "Splitting a Month of Gig Income",
+            prompt: "Hammy earned $400 in gig income this month, tutoring and dog walking, with nothing withheld. Split it between a tax set-aside and spending money, aiming for roughly 20-30% ($80-120) set aside before deciding what's left to spend.",
+            hintText: "Start with the tax set-aside slider around $80-120 (20-30% of $400), then see how much of the remaining $400 is left for the spending slider.",
+            income: 400,
+            fixedCosts: [],
+            sliders: [
+              { id: 'taxSetAside', label: 'Set aside for taxes', min: 0, max: 200, step: 10, default: 0 },
+              { id: 'spendingMoney', label: 'Spending money', min: 0, max: 400, step: 10, default: 400 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That splits more than the full $400 between the two, gig income can't cover both amounts at once. Try smaller numbers.", ok: false },
+              { maxLeftover: 39, text: "It fits, but there's very little cushion if next month's gig income dips or a tax bill runs higher than expected.", ok: true },
+              { maxLeftover: Infinity, text: "Solid. Hammy set aside a real chunk for taxes AND kept a comfortable buffer besides.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'gt_d1', type: 'decision',
+            title: "The Big One-Off Payment",
+            prompt: "A family friend pays Hammy $600 for a one-time freelance flyer design, way more than a typical week of gigs. What should Hammy do with it?",
+            hintText: "Think back to The Set-Aside Percentage: a bigger payment doesn't change the percentage that should get set aside, it just makes the dollar amount bigger too.",
+            choices: [
+              { id: 'a', label: "Treat it as pure bonus money and spend it freely", outcome: { text: "It feels great for a week, but comes tax season, this $600 has zero cushion set aside, right when the tax bill actually reflects it.", delta: {}, compare: [{ label: 'Set aside for taxes', value: 0 }, { label: 'Owed later on this payment', value: 150 }] } },
+              { id: 'b', label: "Set aside 25% for taxes immediately, same as any other gig payment", outcome: { text: "The larger size doesn't change the habit, $150 moves straight to the tax account, and the rest is genuinely free to enjoy.", delta: {}, compare: [{ label: 'Set aside for taxes', value: 150 }, { label: 'Owed later on this payment', value: 150 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'gt_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Quarterly Estimated Taxes', definition: 'Payments spread across the year, due if you expect to owe $1,000+.' },
+              { term: 'Underpayment Penalty', definition: 'An extra charge for not setting aside or paying enough tax during the year.' },
+              { term: 'Net Gig Earnings', definition: 'What a gig worker actually keeps after their own expenses and taxes.' }
+            ],
+            hintText: "One term is a SCHEDULE of payments, one is a CONSEQUENCE of skipping them, and one is what's left AFTER everything.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'gt_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "It's safe to wait until April to figure out gig taxes, as long as the money is somewhere in a bank account.",
+            isTrue: false,
+            explanation: "It's a myth. If it's mixed in with regular spending money, or if a meaningful amount is owed, waiting until April risks both an accidental overspend and a possible underpayment penalty for not paying enough during the year.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'gt_myth1', type: 'mythcards', title: 'Gig Tax Myths',
+            cards: [
+              { myth: "Setting aside exactly 20-30% guarantees the precise amount owed down to the dollar.", isTrue: false, explanation: "It's a safe rule-of-thumb buffer, not an exact calculation, actual tax owed depends on total income, deductions, and other factors covered in the Taxes module." },
+              { myth: "A separate tax savings account needs to be a special \"tax-only\" product from the bank.", isTrue: false, explanation: "Any regular savings account works, what matters is that it's kept separate from everyday spending, not any special account type." },
+              { myth: "Money set aside for taxes and not ultimately owed can just be kept or used for something else.", isTrue: true, explanation: "True, if the set-aside amount turns out to be more than what's actually owed, the extra is simply Hammy's own money, free to save or spend once taxes are filed." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'gt_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 7],
+            hintTexts: [
+              "Think about what's different about a payment with no W-4 or automatic withholding involved.",
+              "Think about the smart percentage-based habit for gig money as soon as it's paid."
+            ]
+          },
+          {
+            id: 'gt_t4', type: 'teach', title: 'The Habit Beats the Math',
+            concepts: [
+              {
+                term: 'Consistency Over Precision',
+                plain: "A consistent 20-30% set-aside habit, applied to every payment without exception, beats trying to calculate an exact number occasionally. The goal isn't perfect math today, it's never being caught without a cushion when the tax bill actually comes due.",
+                analogy: "It's like a workout routine that's done consistently at a moderate level, beating an occasional all-out effort that only happens once in a while.",
+                check: { statement: "An occasional, precise tax calculation is more valuable than a consistent set-aside habit applied to every payment.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'gt_boss', type: 'bossbattle', title: 'The Slow Month',
+            scenario: "Gig work dries up for a month, barely $50 comes in, right as Hammy notices the tax savings account has grown to a decent amount. A friend suggests borrowing from it to cover a slow month. What does Hammy do?",
+            hintText: "Remember A Dedicated Tax Account: the money already has a job. Borrowing from it doesn't cancel the taxes that will eventually be owed.",
+            choices: [
+              { id: 'a', label: "Keep the tax account untouched and adjust spending to fit the slower month", consequence: { text: "The set-aside stays intact, and when a bigger tax bill eventually comes due, the money is exactly where it needs to be.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Borrow from the tax account this month, planning to pay it back later", consequence: { text: "\"Pay it back later\" often doesn't happen exactly as planned, and the account comes up short right when taxes are actually due.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Pick up extra hours at the campus job instead of touching the tax account", consequence: { text: "More effort, but it covers the slow month without putting the tax cushion at risk at all.", delta: {}, xpMultiplier: 1.2 } },
+              { id: 'd', label: "Borrow just a small amount from the tax account and reduce future spending money to rebuild it", consequence: { text: "Not the cleanest approach, but the plan to rebuild it does eventually restore the buffer, just with some added risk in between.", delta: {}, xpMultiplier: 0.9 } }
             ]
           }
         ]
@@ -570,10 +1128,156 @@ const MODULES = [
         topic: 'Negotiating Raises & Growing Your Income',
         character: { name: 'Hammy', tagline: 'Asking for a raise for the first time' },
         initialState: {},
+        bossAchievementId: 'raise_negotiator',
         chapters: [
-          { id: 'negotiating_raises_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'nr1', type: 'story', title: 'Eight Months In, Still $15/Hour',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Negotiating Raises & Growing Your Income." }
+              { speaker: 'intro', text: "Hammy's been at their campus job for eight months, taken on extra responsibilities, and just found out a newer hire doing similar work started at a higher rate." },
+              { speaker: 'Hammy', text: '"I could just... ask for a raise, right? Except I have no idea how to actually do that without it being awkward."' },
+              { speaker: 'narrator', text: "Asking for a raise isn't rude or pushy, done well, it's a normal, expected part of a working relationship, when it's built on an actual case, not just a hopeful guess." },
+              { speaker: 'Hammy', text: '"Okay, so what actually makes a raise conversation go well instead of badly?"' }
+            ]
+          },
+          {
+            id: 'nr_t1', type: 'teach', title: 'Build the Case First',
+            concepts: [
+              {
+                term: 'Doing the Research',
+                plain: "Before asking, gather the actual case: how long you've been there, specific responsibilities you've taken on since starting, and, if possible, what similar campus roles typically pay. Walking in with specifics is far stronger than walking in with just a feeling that you deserve more.",
+                analogy: "It's like showing up to a debate with evidence instead of just an opinion, the specifics are what actually move the conversation.",
+                check: { statement: "A raise conversation goes just as well with a general feeling of deserving more as it does with specific supporting details.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'nr_t2', type: 'teach', title: 'Timing and Framing',
+            concepts: [
+              {
+                term: 'Good Timing',
+                plain: "Timing matters. After a positive review, after successfully finishing a big project, or during a scheduled check-in are all strong moments to ask. Right after a mistake, or during your supervisor's busiest, most stressful week, are not.",
+                analogy: "It's like picking the right moment to ask a favor, the same request lands very differently depending on when it's brought up.",
+                check: { statement: "The timing of a raise conversation has no real effect on how it's likely to land.", isTrue: false }
+              },
+              {
+                term: 'Framing Around Value',
+                plain: "Frame the ask around the value you've added, extra responsibilities taken on, problems solved, reliability, rather than personal financial need. A supervisor can act on \"here's what I've contributed\" far more easily than on \"I really need more money.\"",
+                analogy: "It's like a sales pitch focused on what the product actually does, not on how much the seller personally wants to make from it.",
+                check: { statement: "Framing a raise request around the value you've delivered tends to land better than framing it around personal financial need.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'nr_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Doing the Research', definition: 'Gathering specifics on tenure, added responsibilities, and comparable pay before asking.' },
+              { term: 'Good Timing', definition: 'Asking after a strong review or finished project, not during a stressful moment.' },
+              { term: 'Framing Around Value', definition: "Centering the ask on contributions made, not personal financial need." }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'nr_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: ask for a specific number, not a vague \"can I get a raise?\" A concrete target, backed by the research, gives your supervisor something exact to say yes to, or negotiate from, instead of an open-ended question that's easy to defer indefinitely.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'nr_t3', type: 'teach', title: 'Deciding Where the Raise Goes, Before It Arrives',
+            concepts: [
+              {
+                term: 'Deciding Early',
+                plain: "The moment a raise actually lands, spending has a way of quietly rising to meet it, lifestyle inflation. Deciding in advance how much of a raise goes to savings or debt versus everyday spending keeps that extra income actually building your financial position, not just disappearing into slightly nicer routines.",
+                analogy: "It's like assigning a new employee's first task before their first day, instead of leaving them to wander in and pick something on their own.",
+                check: { statement: "Deciding how to use a raise ahead of time is more effective than waiting to see what happens after it arrives.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'nr_ms1', type: 'microsim', title: "Putting the Raise to Work",
+            prompt: "Hammy's raise request succeeded, adding about $150/month in extra take-home pay. Decide in advance how to split it between building savings and everyday spending, before it has a chance to just blend into routine spending.",
+            hintText: "There's no single right split, the point is deciding on purpose instead of letting it happen automatically. Try putting at least half toward savings first.",
+            income: 150,
+            fixedCosts: [],
+            sliders: [
+              { id: 'savingsBoost', label: 'Extra savings', min: 0, max: 150, step: 10, default: 0 },
+              { id: 'lifestyleSpend', label: 'Extra spending', min: 0, max: 150, step: 10, default: 150 }
+            ],
+            feedbackTiers: [
+              { maxLeftover: -1, text: "That assigns more than the full $150 raise between the two, the extra income can't cover both amounts at once. Try smaller numbers.", ok: false },
+              { maxLeftover: 19, text: "A deliberate split either way, though almost the entire raise is already assigned, worth double-checking it's really where Hammy wants it.", ok: true },
+              { maxLeftover: Infinity, text: "A clear, intentional plan for the raise, exactly the habit that keeps lifestyle inflation from quietly taking over.", ok: true }
+            ],
+            xpOnComplete: 6
+          },
+          {
+            id: 'nr_d1', type: 'decision',
+            title: "The Counteroffer",
+            prompt: "Hammy asked for $17.50/hour. Their supervisor counters with $16.75/hour, plus a bit more flexibility in scheduling. What should Hammy do?",
+            hintText: "Think back to Doing the Research: does the counteroffer, combined with the added flexibility, still land reasonably close to what the research supported?",
+            choices: [
+              { id: 'a', label: "Accept immediately without really considering the counteroffer", outcome: { text: "It resolves quickly, but Hammy never actually compares the offer against the research done beforehand, possibly leaving value on the table.", delta: {}, compare: [{ label: 'Original ask', value: 17.5 }, { label: 'Rate accepted', value: 16.75 }] } },
+              { id: 'b', label: "Weigh the counteroffer against the original research, then respond with a clear yes or a final ask", outcome: { text: "Hammy compares the counter to the research, decides the flexibility genuinely adds value, and accepts with confidence instead of just settling.", delta: {}, compare: [{ label: 'Original ask', value: 17.5 }, { label: 'Rate accepted (informed decision)', value: 16.75 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'nr_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'Deciding Early', definition: "Planning where a raise's extra income goes before it actually arrives." },
+              { term: 'Lifestyle Inflation', definition: 'Spending quietly rising to meet new income, leaving little actually saved.' },
+              { term: 'Counteroffer', definition: 'A different number or terms offered back in response to an initial ask.' }
+            ],
+            hintText: "One term is a PLANNING habit, one is the RISK it protects against, and one is a RESPONSE that might come back.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'nr_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "Asking for a raise at a part-time campus job is unusual and risks looking pushy.",
+            isTrue: false,
+            explanation: "It's a myth. Asking, especially with real research and reasonable timing behind it, is a completely normal part of any job, campus jobs included, not an unusual overstep.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'nr_myth1', type: 'mythcards', title: 'Raise Myths',
+            cards: [
+              { myth: "Bringing up a specific dollar number makes a raise conversation feel more aggressive than a vague request.", isTrue: false, explanation: "A specific number, backed by research, actually reads as more prepared and reasonable than an open-ended, vague ask." },
+              { myth: "A raise conversation that doesn't succeed the first time can never be revisited later.", isTrue: false, explanation: "A reasonable, well-timed follow-up after building more of a track record is a normal next step, not a dead end." },
+              { myth: "A raise is the only way to meaningfully grow income at a part-time job.", isTrue: false, explanation: "Additional hours, picking up a second role, or moving to a higher-paying position entirely are all other ways income can grow beyond a straight raise." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'nr_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [10, 11],
+            hintTexts: [
+              "Think about what happens the moment extra income lands, without a plan in place first.",
+              "Think about employer matching and what it means to leave it uncaptured."
+            ]
+          },
+          {
+            id: 'nr_t4', type: 'teach', title: 'A Raise Is a Decision, Not Just an Event',
+            concepts: [
+              {
+                term: 'Two Decisions, Not One',
+                plain: "Getting a raise is actually two separate decisions: whether and how to ask for it, and what to do with it once it lands. Skipping the second decision is exactly how a hard-won raise quietly disappears into routine spending within a few months.",
+                analogy: "It's like winning a negotiation on price, then forgetting to actually use the savings for anything, the win only counts if it's followed through on.",
+                check: { statement: "Successfully negotiating a raise automatically means the extra income gets used well.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'nr_boss', type: 'bossbattle', title: 'The Review Meeting',
+            scenario: "Hammy's supervisor schedules a performance review and mentions it's a good time to \"discuss anything else\" too. Hammy has the research ready but feels nervous in the moment. What does Hammy do?",
+            hintText: "Remember Framing Around Value: the strongest version of this ask centers on what Hammy has actually contributed, said clearly and specifically.",
+            choices: [
+              { id: 'a', label: "Bring up the raise clearly, with the specific number and the contributions backing it", consequence: { text: "The clear, prepared ask lands well, the supervisor already has the context to say yes on the spot.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Stay quiet about it, hoping the supervisor brings up a raise unprompted", consequence: { text: "The meeting ends with no raise discussed at all, the perfect opening passes by unused.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Bring it up vaguely, hinting at wanting more without a specific number", consequence: { text: "The supervisor isn't quite sure what's actually being asked, and the conversation ends without a clear resolution either way.", delta: {}, xpMultiplier: 0.8 } },
+              { id: 'd', label: "Ask for feedback first, then bring up the raise clearly once the review discussion wraps up", consequence: { text: "A natural, well-sequenced approach, the review context actually strengthens the case Hammy brings to the raise ask.", delta: {}, xpMultiplier: 1.2 } }
             ]
           }
         ]
@@ -583,10 +1287,141 @@ const MODULES = [
         topic: 'Multiple Income Streams: Job + Side Gigs',
         character: { name: 'Hammy', tagline: 'Juggling a part-time job and a side hustle' },
         initialState: {},
+        bossAchievementId: 'income_juggler',
         chapters: [
-          { id: 'multiple_incomes_0', type: 'story', title: 'Coming Soon',
+          {
+            id: 'mi1', type: 'story', title: 'Two Kinds of Money, One Budget',
             beats: [
-              { speaker: 'narrator', text: "This lesson quest is still in the works — check back soon for the full interactive experience on Multiple Income Streams: Job + Side Gigs." }
+              { speaker: 'intro', text: "Hammy now has both the campus job and a steady stream of gig work running at the same time, a W-2 paycheck and 1099 gig payments landing in the same account." },
+              { speaker: 'Hammy', text: '"More money coming in feels great, but now I genuinely don\'t know how to think about my budget anymore."' },
+              { speaker: 'narrator', text: "Two income types with two different tax treatments, but for actual budgeting, they don't stay neatly separate, they blend into one real financial picture." },
+              { speaker: 'Hammy', text: '"Okay, so how do I actually combine these two without losing track of what\'s what?"' }
+            ]
+          },
+          {
+            id: 'mi_t1', type: 'teach', title: 'One Total, Two Tax Treatments',
+            concepts: [
+              {
+                term: 'Combining for Budgeting',
+                plain: "For spending and saving purposes, W-2 and 1099 income combine into one total available to work with. But behind the scenes, they're taxed differently, W-2 income already has taxes withheld, 1099 income doesn't, which matters a lot once tax season rolls around.",
+                analogy: "It's like two different currencies that both spend the same at checkout, but need to be converted differently when it's time to reconcile the books.",
+                check: { statement: "W-2 and 1099 income are taxed the exact same way, just from two different sources.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 2
+          },
+          {
+            id: 'mi_t2', type: 'teach', title: 'Predictable Income vs. Variable Income',
+            concepts: [
+              {
+                term: 'Baseline vs. Bonus Income',
+                plain: "The W-2 job is usually the more predictable, steady baseline, good for covering real needs like rent and groceries. Gig income tends to swing week to week, better treated as a bonus that accelerates savings or goals, not something baseline bills depend on.",
+                analogy: "It's like a salary versus a tip jar, one you can plan a budget around confidently, the other is great when it's generous, but risky to count on for fixed bills.",
+                check: { statement: "Variable gig income is generally safer to build fixed monthly bills around than steady W-2 income.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'mi_m1', type: 'matching', title: 'Match It! Round 1',
+            pairs: [
+              { term: 'Combining for Budgeting', definition: 'Treating total income as one number for spending and saving decisions.' },
+              { term: 'Baseline Income', definition: 'The predictable income (usually W-2) that fixed bills should be built around.' },
+              { term: 'Bonus Income', definition: 'Variable gig income, better used for goals than relied on for fixed bills.' }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'mi_h1', type: 'hint', tag: "🎉 Hammy's Tip",
+            text: "Fun fact: avoid spending gig income before it's actually landed in the account. Because it varies so much week to week, a projected gig payment that falls through can leave a budget short in a way a steady W-2 paycheck almost never does.",
+            xpOnComplete: 1
+          },
+          {
+            id: 'mi_t3', type: 'teach', title: 'When Combined Withholding Comes Up Short',
+            concepts: [
+              {
+                term: 'The Withholding Gap',
+                plain: "A W-4 at a campus job only accounts for THAT job's pay, it has no idea gig income exists on top of it. Once gig income is added in, the W-2 job's withholding alone often isn't enough to cover the full combined tax bill, the gig portion still needs its own set-aside or estimated payments.",
+                analogy: "It's like one faucet filling a tub to exactly the right level on its own, add a second faucet nobody accounted for, and the tub overflows unless someone adjusts for both.",
+                check: { statement: "A campus job's W-4 automatically adjusts its withholding once outside gig income is added to the picture.", isTrue: false }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'mi_price1', type: 'priceisright', title: 'The Price Is Right: The Real Set-Aside',
+            prompt: "Hammy earns $600/month from their campus job (W-2, taxes already withheld) and picked up $300 in gig income this month (1099, nothing withheld). Guess how much of the combined $900 realistically needs to be set aside specifically for taxes.",
+            hintText: "The W-2 portion already had taxes withheld. Only the untouched gig portion needs the set-aside treatment, think back to the 20-30% rule.",
+            actualValue: 75, guessRange: { min: 0, max: 300, step: 15 },
+            explanation: "The $600 W-2 portion already has taxes withheld, no extra set-aside needed there. Only the $300 gig portion needs it, at roughly 25%, that's about $75. Combining two income types doesn't mean setting aside a percentage of everything, just the part that wasn't already withheld.",
+            xpOnComplete: 5
+          },
+          {
+            id: 'mi_d1', type: 'decision',
+            title: "The Slow Gig Month",
+            prompt: "Gig work dries up for a few weeks, but Hammy's campus job income alone still comfortably covers rent, groceries, and the phone bill. How should Hammy think about this month?",
+            hintText: "Think back to Baseline vs. Bonus Income: which of Hammy's two income sources was actually built to carry the fixed bills in the first place?",
+            choices: [
+              { id: 'a', label: "Panic and assume the whole budget is falling apart", outcome: { text: "The stress isn't really warranted, the baseline job income was never dependent on gig income to cover the fixed bills in the first place.", delta: {}, compare: [{ label: 'Fixed bills covered by job income', value: 1 }, { label: 'Fixed bills actually at risk', value: 0 }] } },
+              { id: 'b', label: "Recognize that baseline bills are still fully covered by the job, and treat the slow month as normal variability", outcome: { text: "Hammy correctly reads the situation: the job income was doing exactly its job, the slow gig month just means less extra for goals this month, nothing more.", delta: {}, compare: [{ label: 'Fixed bills covered by job income', value: 1 }, { label: 'Fixed bills actually at risk', value: 0 }] } }
+            ],
+            xpOnComplete: 4
+          },
+          {
+            id: 'mi_m2', type: 'matching', title: 'Match It! Round 2',
+            pairs: [
+              { term: 'The Withholding Gap', definition: "The shortfall left when a W-4 doesn't account for outside gig income." },
+              { term: 'Combined Tax Liability', definition: 'The total tax owed across both W-2 and 1099 income sources together.' },
+              { term: 'Income Log', definition: 'A running record that keeps both income types straight for accurate reporting.' }
+            ],
+            hintText: "One term is a SHORTFALL, one is a TOTAL owed, and one is a HABIT that keeps both incomes straight.",
+            xpOnComplete: 4
+          },
+          {
+            id: 'mi_poll1', type: 'poll', title: 'What Do Most People Think?',
+            intro: "Before we bust some myths, take a guess. Tap True or False, then see the answer.",
+            statement: "If a campus job already withholds taxes, that automatically covers any gig income earned on the side too.",
+            isTrue: false,
+            explanation: "It's a myth. A job's withholding only accounts for that job's pay, gig income earned alongside it still needs its own set-aside or estimated payments.",
+            xpOnComplete: 2
+          },
+          {
+            id: 'mi_myth1', type: 'mythcards', title: 'Multiple Income Myths',
+            cards: [
+              { myth: "Having both a W-2 job and gig income means filing two completely separate tax returns.", isTrue: false, explanation: "Both income types are reported together on the same personal tax return, just on different sections/forms within it." },
+              { myth: "It's smarter to build a budget's fixed bills around whichever income source is more predictable, not whichever is currently largest.", isTrue: true, explanation: "True, predictability matters more than size for fixed bills, a smaller but steady income is safer to build a baseline around than a larger but unpredictable one." },
+              { myth: "Combining a W-2 job with gig income is uncommon and rarely worth planning around carefully.", isTrue: false, explanation: "Combining a steady part-time job with gig work is extremely common for students, and the combined tax and budgeting picture is exactly why it deserves its own plan." }
+            ],
+            xpPerCorrect: 2
+          },
+          {
+            id: 'mi_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [4, 5],
+            hintTexts: [
+              "Think about whether this income source is a loan, gift aid, or something earned through work.",
+              "Think about what happens once the full award or income cap for a source is reached."
+            ]
+          },
+          {
+            id: 'mi_t4', type: 'teach', title: 'Two Incomes, One Plan',
+            concepts: [
+              {
+                term: 'Bringing It All Together',
+                plain: "Multiple income streams aren't automatically more complicated, they just need one habit: know which income is your steady baseline, know which portion of the variable income still needs a tax set-aside, and let the two work together instead of guessing at the combined picture.",
+                analogy: "It's like running two projects at once, the moment each one has its own clear role, juggling them stops feeling chaotic.",
+                check: { statement: "Once the roles of baseline income and variable income are clearly understood, managing both together becomes much more manageable.", isTrue: true }
+              }
+            ],
+            xpOnComplete: 3
+          },
+          {
+            id: 'mi_boss', type: 'bossbattle', title: 'The Big Semester',
+            scenario: "Hammy's campus job hours increase AND gig demand spikes at the same time, way more combined income than any previous month. What does Hammy do to stay on top of it?",
+            hintText: "Remember The Withholding Gap: a bigger combined income month makes the untouched gig portion's set-aside even more important, not less.",
+            choices: [
+              { id: 'a', label: "Log the gig portion carefully, set aside its usual percentage, and let the job's withholding keep covering its own share", consequence: { text: "Both income types get exactly the treatment they need, even at a much bigger combined scale, nothing catches Hammy off guard later.", delta: {}, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Assume the job's withholding is generous enough to cover everything this month", consequence: { text: "The bigger gig income this month means a bigger untouched tax gap too, exactly the kind of shortfall that grows unnoticed until it's due.", delta: {}, xpMultiplier: 0.6 } },
+              { id: 'c', label: "Set aside a rough guess for taxes without actually logging or calculating the gig portion specifically", consequence: { text: "A guess in the right direction, but without the actual numbers, it's just as likely to be short as it is to be enough.", delta: {}, xpMultiplier: 0.85 } },
+              { id: 'd', label: "Increase W-4 withholding at the campus job to help cover the extra gig income too", consequence: { text: "A legitimate strategy, adjusting the job's withholding higher can absorb some of the gig tax gap, as long as the increase is enough to actually cover it.", delta: {}, xpMultiplier: 1.1 } }
             ]
           }
         ]
