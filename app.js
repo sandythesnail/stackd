@@ -10097,6 +10097,21 @@ function addXP(amount) {
   return leveled;
 }
 
+// Every quest chapter that awards XP should call this instead of addXP() directly. It does
+// the same account-wide XP/level update, but also accumulates onto qp.xpEarned — a running
+// total for THIS quest attempt. finishQuest() shows that total on the results screen instead
+// of just the boss battle chapter's own slice, which used to make the results screen show a
+// much smaller number (e.g. "+44 XP") than the full amount the "Lesson N" tile promised
+// (e.g. "+82 XP") — the rest had already been silently awarded chapter by chapter earlier in
+// the same run, just never summed up and shown back to the player.
+function awardQuestXP(mod, amount) {
+  if (!amount) return false;
+  const leveled = addXP(amount);
+  const qp = getQP(mod);
+  if (qp) qp.xpEarned = (qp.xpEarned || 0) + amount;
+  return leveled;
+}
+
 // Every 3rd consecutive day played (3, 6, 9, ...) earns a diamond bonus — a slower, rarer
 // currency than coins, meant for the small run of "super exclusive" shop items.
 const STREAK_DIAMOND_INTERVAL = 3;
@@ -12836,12 +12851,14 @@ function startQuest(moduleId, questId) {
       done: false,
       learnedTerms: [],
       hintsUsed: 0,
+      xpEarned: 0,
       analytics: { knowledgeCheck: [], mythCards: [], polls: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null },
     };
   } else {
     // Defensive backfill in case this progress was saved before these fields existed.
     existing.learnedTerms = existing.learnedTerms || [];
     existing.hintsUsed = existing.hintsUsed || 0;
+    existing.xpEarned = existing.xpEarned || 0;
     existing.analytics = existing.analytics || { knowledgeCheck: [], mythCards: [], polls: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null };
     existing.analytics.polls = existing.analytics.polls || [];
   }
@@ -13324,7 +13341,7 @@ function renderTeachChapter(chapter, mod, onDone) {
       pushLearnedTerm(mod, c.term, c.plain, chapter.title);
       setQuestContinue(isLast ? 'Got it →' : 'Next Word →', () => {
         if (isLast) {
-          if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+          if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
           onDone();
         } else {
           const advance = () => { idx++; renderConcept(); };
@@ -13355,7 +13372,7 @@ function renderHintChapter(chapter, mod, onDone) {
     hammySide.classList.remove('hammy-tappable');
     hammySide.removeEventListener('click', revealTip);
     setQuestContinue('Cool, got it →', () => {
-      if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+      if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
       onDone();
     }, true);
   });
@@ -13420,7 +13437,7 @@ function renderMatchingChapter(chapter, mod, onDone) {
         selectedPairIdx = null;
         document.getElementById('match-progress').textContent = `${matchedCount} of ${pairs.length} matched`;
         if (matchedCount === pairs.length) {
-          if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+          if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
           setQuestContinue('Continue →', onDone, true);
         }
       } else {
@@ -13473,7 +13490,7 @@ function renderExplainbackChapter(chapter, mod, onDone) {
       <p class="explainback-definition">${chapter.fullDefinition}</p>`;
     main.appendChild(resultBlock);
     setQuestContinue('Continue →', () => {
-      if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+      if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
       onDone();
     }, true);
   });
@@ -13585,7 +13602,7 @@ function renderDecisionOutcome(chapter, outcome, mod, wasGoodChoice, onDone) {
   main.appendChild(outcomeBlock);
   showHammyReaction(mod, wasGoodChoice);
   setQuestContinue('Continue →', () => {
-    if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+    if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
     onDone();
   }, true);
 }
@@ -13651,7 +13668,7 @@ function renderMicrosimChapter(chapter, mod, onDone) {
       </div>`;
     if (tier.ok) {
       setQuestContinue('Continue →', () => {
-        if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+        if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
         onDone();
       }, true);
     } else {
@@ -13711,7 +13728,7 @@ function renderPollChapter(chapter, mod, onDone) {
       revealEl.classList.add('show');
 
       setQuestContinue('Continue →', () => {
-        if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+        if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
         onDone();
       }, true);
     });
@@ -13785,7 +13802,7 @@ function renderSpotcheckChapter(chapter, mod, onDone) {
       });
       showHammyReaction(mod, caughtCount === flags.length);
       setQuestContinue('Continue →', () => {
-        if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+        if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
         onDone();
       }, true);
     }
@@ -13852,7 +13869,7 @@ function renderUrlInspectChapter(chapter, mod, onDone) {
       });
       showHammyReaction(mod, caughtCount === suspicious.length);
       setQuestContinue('Continue →', () => {
-        if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+        if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
         onDone();
       }, true);
     }
@@ -13882,7 +13899,7 @@ function renderMythCardsChapter(chapter, mod, onDone) {
     if (progressEl) progressEl.textContent = `Card ${Math.min(result.cardIndex + 2, chapter.cards.length)} of ${chapter.cards.length}`;
   }, () => {
     // Last card resolved — finish immediately, no extra recap screen or second Continue tap.
-    if (chapter.xpPerCorrect) { addXP(correctCount * chapter.xpPerCorrect); saveState(); }
+    if (chapter.xpPerCorrect) { awardQuestXP(mod, correctCount * chapter.xpPerCorrect); saveState(); }
     onDone();
   });
 }
@@ -14019,7 +14036,7 @@ const SIMULATORS = {
             btn.disabled = true;
             if (usedIds.size === chapter.decisions.length) {
               setQuestContinue('Continue →', () => {
-                if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+                if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
                 onDone();
               }, true);
             }
@@ -14071,7 +14088,7 @@ function renderPriceIsRightChapter(chapter, mod, onDone) {
     main.appendChild(revealBlock);
     showHammyReaction(mod, wasClose);
     setQuestContinue('Continue →', () => {
-      if (chapter.xpOnComplete) { addXP(chapter.xpOnComplete); saveState(); }
+      if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
       onDone();
     }, true);
   });
@@ -14179,19 +14196,24 @@ function finishQuest(mod, chosenConsequence) {
   const coinsEarned = qp.chapterTotal > 0 ? qp.chapterScore * 8 : 8;
   state.coins = (state.coins || 0) + coinsEarned;
 
+  const diamondsEarned = updateStreak();
+  // awardQuestXP folds the boss battle's own share into qp.xpEarned on top of everything
+  // already earned chapter by chapter earlier in this run, so it reflects the FULL quest
+  // total, matching what the "Lesson N" tile on the module list promised going in.
+  const leveled = awardQuestXP(mod, bossXP);
+  const totalXpThisRun = qp.xpEarned;
+
   const prev = state.completedModules[mod.id];
-  if (!prev || bossXP > (prev.xpEarned || 0)) {
-    state.completedModules[mod.id] = { score, total, xpEarned: bossXP };
+  if (!prev || totalXpThisRun > (prev.xpEarned || 0)) {
+    state.completedModules[mod.id] = { score, total, xpEarned: totalXpThisRun };
   }
   if (!state.questBossesWon.includes(mod.id)) state.questBossesWon.push(mod.id);
 
-  const diamondsEarned = updateStreak();
-  const leveled = addXP(bossXP);
   const newAchs = checkAchievements();
   saveState();
 
   showScreen('screen-results');
-  renderQuestResults(mod, bossXP, coinsEarned, newAchs, chosenConsequence.text, qp, diamondsEarned);
+  renderQuestResults(mod, totalXpThisRun, coinsEarned, newAchs, chosenConsequence.text, qp, diamondsEarned);
 
   maybeShowPostCompletionOverlays(mod, leveled);
 }
