@@ -8624,14 +8624,22 @@ function getDailyLoginModal() {
 }
 
 // A popup on login, so the daily coin drip is hard to miss instead of a toast that
-// could get lost in the corner.
+// could get lost in the corner. Titled off state.streak (floored to 1 for display, since
+// a brand-new player claiming their very first bonus hasn't completed a lesson yet and
+// state.streak is still technically 0 at that point) so day one reads as a congrats
+// moment rather than a generic "welcome back."
 function showDailyLoginModal(coins) {
   const modal = getDailyLoginModal();
+  const displayStreak = Math.max(1, state.streak);
+  const title = displayStreak === 1 ? '1 Day Streak! 🎉' : `${displayStreak} Day Streak!`;
+  const desc = displayStreak === 1
+    ? `Congrats, you started a streak! You earned <strong>+${coins} coins</strong> — come back tomorrow to keep it going.`
+    : `You earned <strong>+${coins} coins</strong> for logging in today.`;
   modal.innerHTML = `
     <div class="daily-login-modal-card">
       <div class="daily-login-modal-icon">🪙</div>
-      <h2 class="daily-login-modal-title">Welcome back!</h2>
-      <p class="daily-login-modal-desc">You earned <strong>+${coins} coins</strong> for logging in today.</p>
+      <h2 class="daily-login-modal-title">${title}</h2>
+      <p class="daily-login-modal-desc">${desc}</p>
       <button class="btn-primary" id="daily-login-modal-close">Nice!</button>
     </div>`;
   modal.classList.add('show');
