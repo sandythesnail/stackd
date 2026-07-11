@@ -219,9 +219,16 @@ if (ccTrack) {
     requestAnimationFrame(ccAutoScroll);
   }
 
-  ccTrack.addEventListener('mouseenter', () => { ccPaused = true; });
-  ccTrack.addEventListener('mouseleave', () => { ccPaused = false; });
-  ccTrack.addEventListener('touchstart', () => { ccPaused = true; }, { passive: true });
+  // Only wire up hover-to-pause on devices with a real mouse. iOS Safari
+  // synthesizes a "ghost" mouseenter after the first tap on a scrollable
+  // element (with no matching mouseleave, since there's no real pointer to
+  // leave from), which permanently stuck ccPaused=true on touch devices.
+  const hasRealHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (hasRealHover) {
+    ccTrack.addEventListener('mouseenter', () => { ccPaused = true; });
+    ccTrack.addEventListener('mouseleave', () => { ccPaused = false; });
+  }
+  ccTrack.addEventListener('touchstart', ccPauseThenResume, { passive: true });
   ccTrack.addEventListener('touchend', ccPauseThenResume, { passive: true });
 
   const ccStep = () => (ccTrack.querySelector('.cc-card')?.offsetWidth || 260) + 20;
