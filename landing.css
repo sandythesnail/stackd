@@ -1004,11 +1004,23 @@ body { background-color: var(--bg); }
   margin-top: 1.25rem; padding: 0 0 0.5rem;
 }
 .cc-track {
-  display: flex; gap: 1.25rem; overflow-x: auto;
+  overflow-x: auto;
   scrollbar-width: none;
   padding: 1.25rem 5.5rem;
 }
 .cc-track::-webkit-scrollbar { display: none; }
+
+.cc-track-inner {
+  display: flex; gap: 1.25rem; width: max-content;
+  animation: cc-marquee 72s linear infinite;
+}
+@keyframes cc-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cc-track-inner { animation: none; }
+}
 
 .cc-arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
