@@ -1005,7 +1005,7 @@ body { background-color: var(--bg); }
 }
 .cc-track {
   display: flex; gap: 1.25rem; overflow-x: auto;
-  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   padding: 1.25rem 5.5rem;
 }
 .cc-track::-webkit-scrollbar { display: none; }

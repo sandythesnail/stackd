@@ -207,9 +207,12 @@ if (ccTrack) {
       ccLastTs = ts;
       if (!ccPaused && ccTrack.scrollWidth > ccTrack.clientWidth) {
         const halfWidth = ccTrack.scrollWidth / 2;
-        let next = ccTrack.scrollLeft + (CC_SPEED_PX_PER_SEC * dt) / 1000;
-        if (next >= halfWidth) next -= halfWidth;
-        ccTrack.scrollLeft = next;
+        const delta = (CC_SPEED_PX_PER_SEC * dt) / 1000;
+        if (ccTrack.scrollLeft + delta >= halfWidth) {
+          ccTrack.scrollTo({ left: ccTrack.scrollLeft + delta - halfWidth, behavior: 'auto' });
+        } else {
+          ccTrack.scrollBy({ left: delta, behavior: 'auto' });
+        }
       }
       requestAnimationFrame(ccAutoScroll);
     }
