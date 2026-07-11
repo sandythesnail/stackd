@@ -1421,22 +1421,24 @@ body { background-color: var(--bg); }
   }
   .compare-table thead { display: none; }
   .compare-table tr {
-    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
-    box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 1.1rem;
+    background: #fff; border: 1px solid var(--border); border-top: 3px solid var(--green);
+    border-radius: var(--radius); box-shadow: var(--shadow-sm);
+    margin-bottom: 1.1rem; padding: 1.15rem 1.3rem;
   }
   .compare-table tr:last-child { margin-bottom: 0; }
   .compare-table td {
-    padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border);
+    display: block; padding: 0; border: none; background: none;
   }
-  .compare-table td:last-child { border-bottom: none; }
+  .compare-table td + td { margin-top: 0.85rem; }
   .compare-table td::before {
     content: attr(data-label);
-    display: block; font-family: var(--font-display); font-size: 0.7rem; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-soft); margin-bottom: 0.35rem;
+    display: block; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-soft); margin-bottom: 0.3rem;
   }
-  .compare-table td:first-child { font-size: 1rem; }
-  .compare-table td:nth-child(2) { background: var(--red-pale); }
-  .compare-table td:last-child { background: var(--green-pale); }
+  .compare-table td:first-child {
+    font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--text);
+  }
+  .compare-table td:first-child::before { display: none; }
   .footer-grid { grid-template-columns: 1fr; gap: 2.75rem; }
   .footer-brand { max-width: 100%; }
   .footer-links { gap: 2.5rem; }
