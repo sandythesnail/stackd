@@ -1005,7 +1005,7 @@ body { background-color: var(--bg); }
 }
 .cc-track {
   display: flex; gap: 1.25rem; overflow-x: auto;
-  scroll-behavior: smooth; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
   padding: 1.25rem 5.5rem;
 }
 .cc-track::-webkit-scrollbar { display: none; }
@@ -1374,7 +1374,7 @@ body { background-color: var(--bg); }
 @media (max-width: 900px) {
   .hero-split { grid-template-columns: 1fr; }
   .hero-left { margin-left: 0; margin-top: 0; padding-right: 0; min-width: 0; }
-  .hero-stats { flex-wrap: wrap; row-gap: 1rem; }
+  .hero-stats { flex-wrap: wrap; row-gap: 1rem; justify-content: center; width: 100%; }
   .stats-grid { grid-template-columns: 1fr; }
   .about-layout { grid-template-columns: 1fr; }
   .founder-layout { grid-template-columns: 1fr; }
@@ -1415,8 +1415,28 @@ body { background-color: var(--bg); }
   .btn-outline-sm { font-size: 0.78rem !important; padding: 0.42rem 0.8rem; }
   .footer-cta { align-items: center; text-align: center; }
   .cta-h2 { max-width: 100%; }
-  .compare-table-wrap { overflow-x: auto; }
-  .compare-table { min-width: 640px; }
+  .compare-table-wrap { overflow-x: visible; border: none; background: none; }
+  .compare-table, .compare-table thead, .compare-table tbody, .compare-table tr, .compare-table td {
+    display: block; width: 100%;
+  }
+  .compare-table thead { display: none; }
+  .compare-table tr {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 1.1rem;
+  }
+  .compare-table tr:last-child { margin-bottom: 0; }
+  .compare-table td {
+    padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border);
+  }
+  .compare-table td:last-child { border-bottom: none; }
+  .compare-table td::before {
+    content: attr(data-label);
+    display: block; font-family: var(--font-display); font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-soft); margin-bottom: 0.35rem;
+  }
+  .compare-table td:first-child { font-size: 1rem; }
+  .compare-table td:nth-child(2) { background: var(--red-pale); }
+  .compare-table td:last-child { background: var(--green-pale); }
   .footer-grid { grid-template-columns: 1fr; gap: 2.75rem; }
   .footer-brand { max-width: 100%; }
   .footer-links { gap: 2.5rem; }
