@@ -348,18 +348,14 @@ const burger = document.getElementById('nav-burger');
 const navLinks = document.getElementById('nav-links');
 if (burger && navLinks) {
   burger.addEventListener('click', () => {
-    const open = navLinks.style.display === 'flex';
-    navLinks.style.display = open ? '' : 'flex';
-    navLinks.style.flexDirection = 'column';
-    navLinks.style.position = 'absolute';
-    navLinks.style.top = '60px';
-    navLinks.style.right = '1.5rem';
-    navLinks.style.background = 'white';
-    navLinks.style.padding = '1rem';
-    navLinks.style.borderRadius = '12px';
-    navLinks.style.boxShadow = '0 6px 24px rgba(0,0,0,0.1)';
-    navLinks.style.border = '1.5px solid #D8EEE4';
-    navLinks.style.gap = '0.75rem';
-    if (open) navLinks.removeAttribute('style');
+    navLinks.classList.toggle('nav-open');
+  });
+  navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => navLinks.classList.remove('nav-open'));
+  });
+  document.addEventListener('click', (e) => {
+    if (navLinks.classList.contains('nav-open') && !navLinks.contains(e.target) && e.target !== burger && !burger.contains(e.target)) {
+      navLinks.classList.remove('nav-open');
+    }
   });
 }
