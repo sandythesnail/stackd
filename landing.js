@@ -183,62 +183,21 @@ if (adminBars) {
   barObserver.observe(adminBars);
 }
 
-// Curriculum carousel: auto-scrolls right continuously, arrows nudge it,
-// hover/touch/manual use pauses it briefly so it doesn't fight the reader.
+// Curriculum carousel: the continuous rightward auto-scroll is a pure CSS
+// animation on .cc-track-inner (see landing.css) driven by the compositor,
+// not JS on a timer — so it can't get stuck by touch-event or scroll-API
+// quirks. The outer #cc-track stays a normal scrollable container, so
+// native swipe and the arrow buttons both just nudge it as usual.
 const ccTrack = document.getElementById('cc-track');
 const ccPrev = document.getElementById('cc-prev');
 const ccNext = document.getElementById('cc-next');
-let ccPaused = false;
-let ccResumeTimer = null;
-function ccPauseThenResume() {
-  ccPaused = true;
-  clearTimeout(ccResumeTimer);
-  ccResumeTimer = setTimeout(() => { ccPaused = false; }, 2600);
-}
 if (ccTrack) {
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (!reduceMotion) {
-    const CC_SPEED_PX_PER_SEC = 36; // matches the old 0.6px/frame @ 60fps
-    let ccLastTs = null;
-    function ccAutoScroll(ts) {
-      if (ccLastTs === null) ccLastTs = ts;
-      const dt = ts - ccLastTs;
-      ccLastTs = ts;
-      if (!ccPaused && ccTrack.scrollWidth > ccTrack.clientWidth) {
-        const halfWidth = ccTrack.scrollWidth / 2;
-        const delta = (CC_SPEED_PX_PER_SEC * dt) / 1000;
-        if (ccTrack.scrollLeft + delta >= halfWidth) {
-          ccTrack.scrollTo({ left: ccTrack.scrollLeft + delta - halfWidth, behavior: 'auto' });
-        } else {
-          ccTrack.scrollBy({ left: delta, behavior: 'auto' });
-        }
-      }
-      requestAnimationFrame(ccAutoScroll);
-    }
-    requestAnimationFrame(ccAutoScroll);
-  }
-
-  // Only wire up hover-to-pause on devices with a real mouse. iOS Safari
-  // synthesizes a "ghost" mouseenter after the first tap on a scrollable
-  // element (with no matching mouseleave, since there's no real pointer to
-  // leave from), which permanently stuck ccPaused=true on touch devices.
-  const hasRealHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  if (hasRealHover) {
-    ccTrack.addEventListener('mouseenter', () => { ccPaused = true; });
-    ccTrack.addEventListener('mouseleave', () => { ccPaused = false; });
-  }
-  ccTrack.addEventListener('touchstart', ccPauseThenResume, { passive: true });
-  ccTrack.addEventListener('touchend', ccPauseThenResume, { passive: true });
-
   const ccStep = () => (ccTrack.querySelector('.cc-card')?.offsetWidth || 260) + 20;
   if (ccPrev) ccPrev.addEventListener('click', () => {
     ccTrack.scrollBy({ left: -ccStep(), behavior: 'smooth' });
-    ccPauseThenResume();
   });
   if (ccNext) ccNext.addEventListener('click', () => {
     ccTrack.scrollBy({ left: ccStep(), behavior: 'smooth' });
-    ccPauseThenResume();
   });
 }
 
