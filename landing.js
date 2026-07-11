@@ -199,11 +199,17 @@ if (ccTrack) {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   if (!reduceMotion) {
-    function ccAutoScroll() {
-      if (!ccPaused) {
+    const CC_SPEED_PX_PER_SEC = 36; // matches the old 0.6px/frame @ 60fps
+    let ccLastTs = null;
+    function ccAutoScroll(ts) {
+      if (ccLastTs === null) ccLastTs = ts;
+      const dt = ts - ccLastTs;
+      ccLastTs = ts;
+      if (!ccPaused && ccTrack.scrollWidth > ccTrack.clientWidth) {
         const halfWidth = ccTrack.scrollWidth / 2;
-        ccTrack.scrollLeft += 0.6;
-        if (ccTrack.scrollLeft >= halfWidth) ccTrack.scrollLeft -= halfWidth;
+        let next = ccTrack.scrollLeft + (CC_SPEED_PX_PER_SEC * dt) / 1000;
+        if (next >= halfWidth) next -= halfWidth;
+        ccTrack.scrollLeft = next;
       }
       requestAnimationFrame(ccAutoScroll);
     }
