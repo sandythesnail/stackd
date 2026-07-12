@@ -17329,8 +17329,11 @@ let roomActiveTab = 'room';
 let badgesFilterTier = 'all';
 let badgesFilterStatus = 'all';
 
+const ICON_COIN = '<svg class="icon-coin" viewBox="0 0 24 24" width="1em" height="1em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="url(#coin-face)" stroke="#B8860B" stroke-width="1.2"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#FFF6DC" stroke-width="1" opacity="0.55"/><text x="12" y="16.2" text-anchor="middle" font-family="Georgia, serif" font-size="10" font-weight="700" fill="#8A6206">$</text></svg>';
+const ICON_DIAMOND = '<svg class="icon-diamond" viewBox="0 0 24 24" width="1em" height="1em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="12,3 19,9 12,21 5,9" fill="url(#diamond-face)" stroke="#1C8CA8" stroke-width="1.1" stroke-linejoin="round"/><polygon points="5,9 19,9 12,3" fill="#ffffff" opacity="0.4"/><polygon points="9,9 12,21 12,9" fill="#0F8DB0" opacity="0.12"/><line x1="5" y1="9" x2="19" y2="9" stroke="#1C8CA8" stroke-width="0.7" opacity="0.5"/></svg>';
+
 const SHOP_CATEGORIES = [
-  { key: 'exclusive', label: 'Diamond Exclusives', icon: '💎', tab: 'boutique' },
+  { key: 'exclusive', label: 'Diamond Exclusives', icon: ICON_DIAMOND, tab: 'boutique' },
   { key: 'hat',     label: 'Hats',    icon: '🎩', tab: 'boutique' },
   { key: 'accessory', label: 'Accessories', icon: '🕶️', tab: 'boutique' },
   { key: 'reward',  label: 'Rewards', icon: '🏆', tab: 'boutique' },
@@ -17343,7 +17346,7 @@ const CAT_VIEWBOX = {
 };
 
 function shopBalanceFor(item) { return item.currency === 'diamond' ? (state.diamonds || 0) : (state.coins || 0); }
-function shopPriceLabel(item) { return item.currency === 'diamond' ? `💎 ${item.price}` : `🪙 ${item.price}`; }
+function shopPriceLabel(item) { return item.currency === 'diamond' ? `${ICON_DIAMOND} ${item.price}` : `${ICON_COIN} ${item.price}`; }
 
 function renderShopPage() {
   updateSidebarStats();
@@ -17429,7 +17432,7 @@ function renderShopPage() {
           <div class="shop-storefront-text">
             <div class="shop-storefront-sign">The Furniture Farm</div>
             <div class="shop-storefront-sub">${filledRoomSlots ? `${filledRoomSlots} piece${filledRoomSlots === 1 ? '' : 's'} furnished so far` : 'Furnish Hammy\'s room — every cozy upgrade compounds!'}</div>
-            <div class="shop-earn-tip">Earn 🪙 coins by completing lessons · 💎 diamonds every 3-day streak</div>
+            <div class="shop-earn-tip">Earn ${ICON_COIN} coins by completing lessons · ${ICON_DIAMOND} diamonds every 3-day streak</div>
           </div>
         </div>
       </div>`
@@ -17442,7 +17445,7 @@ function renderShopPage() {
           <div class="shop-storefront-text">
             <div class="shop-storefront-sign">Porky's Boutique</div>
             <div class="shop-storefront-sub">${wornItems.length ? `Currently wearing: <strong>${wornItems.map(i => i.name).join(', ')}</strong>` : 'Pick something cute for your pig!'}</div>
-            <div class="shop-earn-tip">Earn 🪙 coins by completing lessons · 💎 diamonds every 3-day streak</div>
+            <div class="shop-earn-tip">Earn ${ICON_COIN} coins by completing lessons · ${ICON_DIAMOND} diamonds every 3-day streak</div>
           </div>
         </div>
       </div>`;
@@ -17593,7 +17596,7 @@ function renderRoomPage() {
       ${slotBlock('desk', 'Desk')}
       <div class="room-floor">
         ${slotBlock('rug', 'Rug')}
-        <div class="room-pig">${getPigWithItemMarkup(window.innerWidth <= 768 ? 0.24 : 0.75, equippedOutfit)}</div>
+        <div class="room-pig">${getPigWithItemMarkup(window.innerWidth <= 768 ? 0.4 : 0.75, equippedOutfit)}</div>
       </div>
     </div>`;
 
