@@ -2276,6 +2276,7 @@ select.budget-input { cursor: pointer; }
 
 /* Shop card */
 .shop-card {
+  position: relative;
   background: #fff; border: 1.5px solid var(--border);
   border-radius: var(--radius); overflow: hidden;
   display: flex; flex-direction: column;
@@ -2301,7 +2302,7 @@ select.budget-input { cursor: pointer; }
   border-color: var(--green); box-shadow: 0 0 0 3px var(--green-pale);
 }
 .shop-exclusive-ribbon {
-  position: absolute; top: 0.6rem; right: 0; z-index: 1;
+  position: absolute; top: 0.55rem; right: -1.9rem; z-index: 1;
   background: linear-gradient(90deg, #2AA8C4, #8FE3F5); color: #fff;
   font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
   padding: 0.25rem 2.2rem; transform: rotate(38deg);
@@ -2316,7 +2317,7 @@ select.budget-input { cursor: pointer; }
 }
 .shop-card.shop-reward-card .shop-preview { filter: grayscale(0.6); opacity: 0.75; }
 .shop-reward-ribbon {
-  position: absolute; top: 0.6rem; right: 0; z-index: 1;
+  position: absolute; top: 0.55rem; right: -1.9rem; z-index: 1;
   background: linear-gradient(90deg, #B8860B, #E8C468); color: #fff;
   font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
   padding: 0.25rem 2.2rem; transform: rotate(38deg);
