@@ -16281,20 +16281,57 @@ function saveState() {
 }
 
 let supabaseSyncTimeout = null;
+let pendingSyncSnapshot = null;
+function pushSupabaseSync(snapshot) {
+  window.stackdSupabase
+    .from('user_progress')
+    .upsert({ clerk_user_id: Clerk.user.id, state: snapshot })
+    .then(({ error }) => { if (error) console.error('Supabase sync failed:', error); });
+}
+
+// A mobile tab backgrounding (switching apps, locking the phone) right after a fresh
+// state change — e.g. finishing a lesson that bumped the streak — can suspend the
+// debounce timeout below before it ever fires, so that sync never reaches Supabase.
+// That leaves a stale remote row which applyRemoteState reads back on the next load,
+// silently reverting the streak. Flush any pending sync immediately once the page is
+// about to go away or hide, instead of waiting out the debounce. Registered once.
+function flushPendingSupabaseSync() {
+  if (supabaseSyncTimeout && pendingSyncSnapshot) {
+    clearTimeout(supabaseSyncTimeout);
+    supabaseSyncTimeout = null;
+    pushSupabaseSync(pendingSyncSnapshot);
+    pendingSyncSnapshot = null;
+  }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushPendingSupabaseSync(); });
+window.addEventListener('pagehide', flushPendingSupabaseSync);
+
 function scheduleSupabaseSync(snapshot) {
   if (!window.stackdSupabase || !window.Clerk?.user) return;
   clearTimeout(supabaseSyncTimeout);
+  pendingSyncSnapshot = snapshot;
   supabaseSyncTimeout = setTimeout(() => {
-    window.stackdSupabase
-      .from('user_progress')
-      .upsert({ clerk_user_id: Clerk.user.id, state: snapshot })
-      .then(({ error }) => { if (error) console.error('Supabase sync failed:', error); });
+    supabaseSyncTimeout = null;
+    pendingSyncSnapshot = null;
+    pushSupabaseSync(snapshot);
   }, 2000);
 }
 
 function applyRemoteState(remote) {
   if (!remote) return;
+  // The debounced Supabase sync (see scheduleSupabaseSync) can lose the race against a
+  // page reload — e.g. the user finishes a lesson and backgrounds the tab within the
+  // 2s debounce window, so the remote row never picks up that day's streak bump. If we
+  // blindly overwrote local state with that stale remote snapshot here, the streak the
+  // user already earned on this device would silently revert. Keep whichever side has
+  // the more recent lastPlayedDate instead of always trusting remote.
+  const localStreak = state.streak;
+  const localLastPlayed = state.lastPlayedDate;
   Object.assign(state, remote);
+  if (localLastPlayed && new Date(localLastPlayed) >= new Date(state.lastPlayedDate || 0)) {
+    state.streak = Math.max(state.streak || 0, localStreak || 0);
+    state.lastPlayedDate = localLastPlayed;
+  }
   saveState();
   renderHome();
 }
@@ -17329,8 +17366,8 @@ let roomActiveTab = 'room';
 let badgesFilterTier = 'all';
 let badgesFilterStatus = 'all';
 
-const ICON_COIN = '<svg class="icon-coin" viewBox="0 0 24 24" width="1em" height="1em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="url(#coin-face)" stroke="#B8860B" stroke-width="1.2"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#FFF6DC" stroke-width="1" opacity="0.55"/><text x="12" y="16.2" text-anchor="middle" font-family="Georgia, serif" font-size="10" font-weight="700" fill="#8A6206">$</text></svg>';
-const ICON_DIAMOND = '<svg class="icon-diamond" viewBox="0 0 24 24" width="1em" height="1em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="12,3 19,9 12,21 5,9" fill="url(#diamond-face)" stroke="#1C8CA8" stroke-width="1.1" stroke-linejoin="round"/><polygon points="5,9 19,9 12,3" fill="#ffffff" opacity="0.4"/><polygon points="9,9 12,21 12,9" fill="#0F8DB0" opacity="0.12"/><line x1="5" y1="9" x2="19" y2="9" stroke="#1C8CA8" stroke-width="0.7" opacity="0.5"/></svg>';
+const ICON_COIN = '<svg class="icon-coin" viewBox="0 0 24 24" width="1em" height="1em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="url(#coin-face)" stroke="#A6690A" stroke-width="1.2"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#FFEEB0" stroke-width="1" opacity="0.6"/><text x="12" y="16.2" text-anchor="middle" font-family="Georgia, serif" font-size="10" font-weight="700" fill="#7A4E04">$</text></svg>';
+const ICON_DIAMOND = '<svg class="icon-diamond" viewBox="0 0 24 24" width="1em" height="1em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="12,3 19,9 12,21 5,9" fill="url(#diamond-face)" stroke="#0E5D85" stroke-width="1.1" stroke-linejoin="round"/><polygon points="5,9 19,9 12,3" fill="#ffffff" opacity="0.22"/><polygon points="9,9 12,21 12,9" fill="#0B4A6B" opacity="0.18"/><line x1="5" y1="9" x2="19" y2="9" stroke="#0E5D85" stroke-width="0.7" opacity="0.5"/></svg>';
 
 const SHOP_CATEGORIES = [
   { key: 'exclusive', label: 'Diamond Exclusives', icon: ICON_DIAMOND, tab: 'boutique' },
