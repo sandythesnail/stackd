@@ -17289,7 +17289,7 @@ function refreshShopModal(itemId) {
     if (!remaining) {
       btn = `<button class="shop-btn shop-btn-broke" disabled>✓ All items collected!</button>`;
     } else {
-      btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>🎁 Open Box · ${shopPriceLabel(item)}</button>`;
+      btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>${ICON_GIFT} Open Box · ${shopPriceLabel(item)}</button>`;
     }
   } else if (equipped) {
     btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'} · Remove</button>`;
@@ -17298,7 +17298,7 @@ function refreshShopModal(itemId) {
   } else if (owned) {
     btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">${isWallpaper ? 'Apply' : isRoom ? 'Place in room' : 'Equip'}</button>`;
   } else if (item.mysteryOnly) {
-    btn = `<button class="shop-btn shop-btn-broke" disabled>🎁 Only from the ${mysteryBoxNameFor(item.mysteryPool)}</button>`;
+    btn = `<button class="shop-btn shop-btn-broke" disabled>${ICON_GIFT} Only from the ${mysteryBoxNameFor(item.mysteryPool)}</button>`;
   } else if (item.reward) {
     btn = `<button class="shop-btn shop-btn-broke" disabled>🎓 ${item.rewardHint || 'Complete all 10 modules to earn this'}</button>`;
   } else {
@@ -17332,7 +17332,7 @@ function playMysteryBoxSpin(item) {
   document.getElementById('shop-modal-name').textContent = 'Opening...';
   document.getElementById('shop-modal-desc').textContent = '';
   document.getElementById('shop-modal-btn-wrap').innerHTML = '';
-  document.getElementById('shop-modal-pig').innerHTML = `<div class="mystery-spin-icon">🎁</div>`;
+  document.getElementById('shop-modal-pig').innerHTML = `<div class="mystery-spin-icon">${ICON_GIFT}</div>`;
   setTimeout(() => showMysteryReveal(item), 1800);
 }
 
@@ -17368,6 +17368,7 @@ let badgesFilterStatus = 'all';
 
 const ICON_COIN = '<svg class="icon-coin" viewBox="0 0 24 24" width="1.15em" height="1.15em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#FFC400" stroke="#8A5A00" stroke-width="1.6"/><circle cx="12" cy="12" r="7.3" fill="none" stroke="#8A5A00" stroke-width="1" opacity="0.55"/><text x="12" y="16.2" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="800" fill="#8A5A00">$</text></svg>';
 const ICON_DIAMOND = '<svg class="icon-diamond" viewBox="0 0 24 24" width="1.15em" height="1.15em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="8,6 16,6 20,10.5 12,19 4,10.5" fill="#159CDE" stroke="#0A4A6E" stroke-width="1.2" stroke-linejoin="round"/><polygon points="4,10.5 12,19 12,10.5" fill="#0A4A6E" opacity="0.18"/><polygon points="8,6 16,6 20,10.5 4,10.5" fill="#ffffff" opacity="0.3"/><polygon points="9.2,7.4 14.8,7.4 17,10.5 7,10.5" fill="#ffffff" opacity="0.18"/><line x1="4" y1="10.5" x2="20" y2="10.5" stroke="#0A4A6E" stroke-width="0.6" opacity="0.6"/><line x1="12" y1="6" x2="12" y2="19" stroke="#0A4A6E" stroke-width="0.6" opacity="0.55"/><line x1="8" y1="6" x2="9.2" y2="10.5" stroke="#0A4A6E" stroke-width="0.5" opacity="0.4"/><line x1="16" y1="6" x2="14.8" y2="10.5" stroke="#0A4A6E" stroke-width="0.5" opacity="0.4"/><path d="M18.5 4.5l0.6 1.5 1.5 0.6-1.5 0.6-0.6 1.5-0.6-1.5-1.5-0.6 1.5-0.6z" fill="#ffffff" opacity="0.85"/></svg>';
+const ICON_GIFT = '<svg class="icon-gift" viewBox="0 0 24 24" width="1em" height="1em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="4" y="11" width="16" height="8.5" rx="1" fill="#FF6FA0" stroke="#8A2646" stroke-width="1.4"/><rect x="3" y="8" width="18" height="3.4" rx="0.9" fill="#FF4F8A" stroke="#8A2646" stroke-width="1.4"/><rect x="10.7" y="8" width="2.6" height="11.5" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8"/><path d="M12 8c-1.6-3.2-5.4-3.2-5.4-0.2 0 1.7 2.5 1 5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8" stroke-linejoin="round"/><path d="M12 8c1.6-3.2 5.4-3.2 5.4-0.2 0 1.7-2.5 1-5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8" stroke-linejoin="round"/><rect x="4" y="11" width="16" height="1.6" fill="#ffffff" opacity="0.25"/></svg>';
 
 const SHOP_CATEGORIES = [
   { key: 'exclusive', label: 'Diamond Exclusives', icon: ICON_DIAMOND, tab: 'boutique' },
@@ -17419,11 +17420,11 @@ function renderShopPage() {
       const boxRemaining = isBox ? mysteryPoolUnowned(item.mysteryPool).length : 0;
       const canAfford = isReward ? false : isLocked ? false : (isBox && !boxRemaining) ? false : shopBalanceFor(item) >= item.price;
       const statusLabel = isBox
-        ? (boxRemaining ? `🎁 ${shopPriceLabel(item)}` : '✓ All collected!')
+        ? (boxRemaining ? `${ICON_GIFT} ${shopPriceLabel(item)}` : '✓ All collected!')
         : equipped
         ? (item.slot === 'wallpaper' ? '✓ Applied' : isRoom ? '✓ Placed' : '✓ Equipped')
         : owned ? 'Owned'
-        : isLocked ? `🎁 ${mysteryBoxNameFor(item.mysteryPool)}`
+        : isLocked ? `${ICON_GIFT} ${mysteryBoxNameFor(item.mysteryPool)}`
         : isReward ? '🎓 Locked'
         : shopPriceLabel(item);
       const oddsLabel = isPoolItem ? `<div class="shop-item-odds">${mysteryOddsLabel(item)}</div>` : '';
