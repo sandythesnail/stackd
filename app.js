@@ -17366,8 +17366,8 @@ let roomActiveTab = 'room';
 let badgesFilterTier = 'all';
 let badgesFilterStatus = 'all';
 
-const ICON_COIN = '<svg class="icon-coin" viewBox="0 0 24 24" width="1em" height="1em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="url(#coin-face)" stroke="#A6690A" stroke-width="1.2"/><circle cx="12" cy="12" r="7.2" fill="none" stroke="#FFEEB0" stroke-width="1" opacity="0.6"/><text x="12" y="16.2" text-anchor="middle" font-family="Georgia, serif" font-size="10" font-weight="700" fill="#7A4E04">$</text></svg>';
-const ICON_DIAMOND = '<svg class="icon-diamond" viewBox="0 0 24 24" width="1em" height="1em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="12,3 19,9 12,21 5,9" fill="url(#diamond-face)" stroke="#0E5D85" stroke-width="1.1" stroke-linejoin="round"/><polygon points="5,9 19,9 12,3" fill="#ffffff" opacity="0.22"/><polygon points="9,9 12,21 12,9" fill="#0B4A6B" opacity="0.18"/><line x1="5" y1="9" x2="19" y2="9" stroke="#0E5D85" stroke-width="0.7" opacity="0.5"/></svg>';
+const ICON_COIN = '<svg class="icon-coin" viewBox="0 0 24 24" width="1.15em" height="1.15em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="9.6" fill="url(#coin-face)" stroke="#5C3800" stroke-width="2"/><circle cx="12" cy="12" r="7.1" fill="none" stroke="#FFE9A0" stroke-width="1.2" opacity="0.85"/><text x="12" y="16.3" text-anchor="middle" font-family="Georgia, serif" font-size="10.5" font-weight="900" fill="#5C3800">$</text></svg>';
+const ICON_DIAMOND = '<svg class="icon-diamond" viewBox="0 0 24 24" width="1.15em" height="1.15em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="12,2.5 19.5,9 12,21.5 4.5,9" fill="url(#diamond-face)" stroke="#042E45" stroke-width="1.9" stroke-linejoin="round"/><polygon points="4.5,9 19.5,9 12,2.5" fill="#ffffff" opacity="0.32"/><line x1="4.5" y1="9" x2="19.5" y2="9" stroke="#042E45" stroke-width="1" opacity="0.6"/></svg>';
 
 const SHOP_CATEGORIES = [
   { key: 'exclusive', label: 'Diamond Exclusives', icon: ICON_DIAMOND, tab: 'boutique' },
