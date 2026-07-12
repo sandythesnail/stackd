@@ -16281,20 +16281,57 @@ function saveState() {
 }
 
 let supabaseSyncTimeout = null;
+let pendingSyncSnapshot = null;
+function pushSupabaseSync(snapshot) {
+  window.stackdSupabase
+    .from('user_progress')
+    .upsert({ clerk_user_id: Clerk.user.id, state: snapshot })
+    .then(({ error }) => { if (error) console.error('Supabase sync failed:', error); });
+}
+
+// A mobile tab backgrounding (switching apps, locking the phone) right after a fresh
+// state change — e.g. finishing a lesson that bumped the streak — can suspend the
+// debounce timeout below before it ever fires, so that sync never reaches Supabase.
+// That leaves a stale remote row which applyRemoteState reads back on the next load,
+// silently reverting the streak. Flush any pending sync immediately once the page is
+// about to go away or hide, instead of waiting out the debounce. Registered once.
+function flushPendingSupabaseSync() {
+  if (supabaseSyncTimeout && pendingSyncSnapshot) {
+    clearTimeout(supabaseSyncTimeout);
+    supabaseSyncTimeout = null;
+    pushSupabaseSync(pendingSyncSnapshot);
+    pendingSyncSnapshot = null;
+  }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushPendingSupabaseSync(); });
+window.addEventListener('pagehide', flushPendingSupabaseSync);
+
 function scheduleSupabaseSync(snapshot) {
   if (!window.stackdSupabase || !window.Clerk?.user) return;
   clearTimeout(supabaseSyncTimeout);
+  pendingSyncSnapshot = snapshot;
   supabaseSyncTimeout = setTimeout(() => {
-    window.stackdSupabase
-      .from('user_progress')
-      .upsert({ clerk_user_id: Clerk.user.id, state: snapshot })
-      .then(({ error }) => { if (error) console.error('Supabase sync failed:', error); });
+    supabaseSyncTimeout = null;
+    pendingSyncSnapshot = null;
+    pushSupabaseSync(snapshot);
   }, 2000);
 }
 
 function applyRemoteState(remote) {
   if (!remote) return;
+  // The debounced Supabase sync (see scheduleSupabaseSync) can lose the race against a
+  // page reload — e.g. the user finishes a lesson and backgrounds the tab within the
+  // 2s debounce window, so the remote row never picks up that day's streak bump. If we
+  // blindly overwrote local state with that stale remote snapshot here, the streak the
+  // user already earned on this device would silently revert. Keep whichever side has
+  // the more recent lastPlayedDate instead of always trusting remote.
+  const localStreak = state.streak;
+  const localLastPlayed = state.lastPlayedDate;
   Object.assign(state, remote);
+  if (localLastPlayed && new Date(localLastPlayed) >= new Date(state.lastPlayedDate || 0)) {
+    state.streak = Math.max(state.streak || 0, localStreak || 0);
+    state.lastPlayedDate = localLastPlayed;
+  }
   saveState();
   renderHome();
 }
@@ -16681,7 +16718,7 @@ function renderModuleList(containerId) {
         const subHtml = sub ? `<div class="lt-subquest${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">${subDone ? '✓' : '🎯'} Real-life sub-quest: ${sub.topic} →</div>` : '';
         return `<div class="lesson-tile quest-tile${done ? ' done' : ''}" data-module="${m.id}" data-quest="${q.id}">
           <div class="lt-body">
-            <div class="lt-num">Lesson ${idx + 1} <span class="card-badge badge-xp">Up to ${questMaxXP(q, m)} XP</span></div>
+            <div class="lt-num"><span class="lt-num-label">Lesson ${idx + 1}</span> <span class="card-badge badge-xp">Up to ${questMaxXP(q, m)} XP</span></div>
             <div class="lt-title">${q.topic || q.character.name}</div>
             <div class="lt-meta">${q.character.tagline}</div>
             ${subHtml}
@@ -16699,7 +16736,7 @@ function renderModuleList(containerId) {
         const cta = done ? '↻ Replay' : 'Start →';
         return `<div class="lesson-tile${done ? ' done' : ''}${isActivity ? ' activity-tile' : ''}" data-module="${m.id}" data-lesson="${idx}">
           <div class="lt-body">
-            <div class="lt-num">Lesson ${idx + 1} <span class="card-badge badge-xp">Up to ${lessonMaxXP(lesson, m)} XP</span></div>
+            <div class="lt-num"><span class="lt-num-label">Lesson ${idx + 1}</span> <span class="card-badge badge-xp">Up to ${lessonMaxXP(lesson, m)} XP</span></div>
             <div class="lt-title">${lesson.title}${isActivity ? ' <span class="quest-tag">Interactive</span>' : ''}</div>
             <div class="lt-meta">${meta}</div>
           </div>
@@ -17252,7 +17289,7 @@ function refreshShopModal(itemId) {
     if (!remaining) {
       btn = `<button class="shop-btn shop-btn-broke" disabled>✓ All items collected!</button>`;
     } else {
-      btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>🎁 Open Box · ${shopPriceLabel(item)}</button>`;
+      btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>${ICON_GIFT} Open Box · ${shopPriceLabel(item)}</button>`;
     }
   } else if (equipped) {
     btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'} · Remove</button>`;
@@ -17261,7 +17298,7 @@ function refreshShopModal(itemId) {
   } else if (owned) {
     btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">${isWallpaper ? 'Apply' : isRoom ? 'Place in room' : 'Equip'}</button>`;
   } else if (item.mysteryOnly) {
-    btn = `<button class="shop-btn shop-btn-broke" disabled>🎁 Only from the ${mysteryBoxNameFor(item.mysteryPool)}</button>`;
+    btn = `<button class="shop-btn shop-btn-broke" disabled>${ICON_GIFT} Only from the ${mysteryBoxNameFor(item.mysteryPool)}</button>`;
   } else if (item.reward) {
     btn = `<button class="shop-btn shop-btn-broke" disabled>🎓 ${item.rewardHint || 'Complete all 10 modules to earn this'}</button>`;
   } else {
@@ -17295,7 +17332,7 @@ function playMysteryBoxSpin(item) {
   document.getElementById('shop-modal-name').textContent = 'Opening...';
   document.getElementById('shop-modal-desc').textContent = '';
   document.getElementById('shop-modal-btn-wrap').innerHTML = '';
-  document.getElementById('shop-modal-pig').innerHTML = `<div class="mystery-spin-icon">🎁</div>`;
+  document.getElementById('shop-modal-pig').innerHTML = `<div class="mystery-spin-icon">${ICON_GIFT}</div>`;
   setTimeout(() => showMysteryReveal(item), 1800);
 }
 
@@ -17329,8 +17366,12 @@ let roomActiveTab = 'room';
 let badgesFilterTier = 'all';
 let badgesFilterStatus = 'all';
 
+const ICON_COIN = '<svg class="icon-coin" viewBox="0 0 24 24" width="1.15em" height="1.15em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#FFC400" stroke="#8A5A00" stroke-width="1.6"/><circle cx="12" cy="12" r="7.3" fill="none" stroke="#8A5A00" stroke-width="1" opacity="0.55"/><text x="12" y="16.2" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="800" fill="#8A5A00">$</text></svg>';
+const ICON_DIAMOND = '<svg class="icon-diamond" viewBox="0 0 24 24" width="1.15em" height="1.15em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="8,6 16,6 20,10.5 12,19 4,10.5" fill="#159CDE" stroke="#0A4A6E" stroke-width="1.2" stroke-linejoin="round"/><polygon points="4,10.5 12,19 12,10.5" fill="#0A4A6E" opacity="0.18"/><polygon points="8,6 16,6 20,10.5 4,10.5" fill="#ffffff" opacity="0.3"/><polygon points="9.2,7.4 14.8,7.4 17,10.5 7,10.5" fill="#ffffff" opacity="0.18"/><line x1="4" y1="10.5" x2="20" y2="10.5" stroke="#0A4A6E" stroke-width="0.6" opacity="0.6"/><line x1="12" y1="6" x2="12" y2="19" stroke="#0A4A6E" stroke-width="0.6" opacity="0.55"/><line x1="8" y1="6" x2="9.2" y2="10.5" stroke="#0A4A6E" stroke-width="0.5" opacity="0.4"/><line x1="16" y1="6" x2="14.8" y2="10.5" stroke="#0A4A6E" stroke-width="0.5" opacity="0.4"/><path d="M18.5 4.5l0.6 1.5 1.5 0.6-1.5 0.6-0.6 1.5-0.6-1.5-1.5-0.6 1.5-0.6z" fill="#ffffff" opacity="0.85"/></svg>';
+const ICON_GIFT = '<svg class="icon-gift" viewBox="0 0 24 24" width="1em" height="1em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="4" y="11" width="16" height="8.5" rx="1" fill="#FF6FA0" stroke="#8A2646" stroke-width="1.4"/><rect x="3" y="8" width="18" height="3.4" rx="0.9" fill="#FF4F8A" stroke="#8A2646" stroke-width="1.4"/><rect x="10.7" y="8" width="2.6" height="11.5" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8"/><path d="M12 8c-1.6-3.2-5.4-3.2-5.4-0.2 0 1.7 2.5 1 5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8" stroke-linejoin="round"/><path d="M12 8c1.6-3.2 5.4-3.2 5.4-0.2 0 1.7-2.5 1-5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8" stroke-linejoin="round"/><rect x="4" y="11" width="16" height="1.6" fill="#ffffff" opacity="0.25"/></svg>';
+
 const SHOP_CATEGORIES = [
-  { key: 'exclusive', label: 'Diamond Exclusives', icon: '💎', tab: 'boutique' },
+  { key: 'exclusive', label: 'Diamond Exclusives', icon: ICON_DIAMOND, tab: 'boutique' },
   { key: 'hat',     label: 'Hats',    icon: '🎩', tab: 'boutique' },
   { key: 'accessory', label: 'Accessories', icon: '🕶️', tab: 'boutique' },
   { key: 'reward',  label: 'Rewards', icon: '🏆', tab: 'boutique' },
@@ -17343,7 +17384,7 @@ const CAT_VIEWBOX = {
 };
 
 function shopBalanceFor(item) { return item.currency === 'diamond' ? (state.diamonds || 0) : (state.coins || 0); }
-function shopPriceLabel(item) { return item.currency === 'diamond' ? `💎 ${item.price}` : `🪙 ${item.price}`; }
+function shopPriceLabel(item) { return item.currency === 'diamond' ? `${ICON_DIAMOND} ${item.price}` : `${ICON_COIN} ${item.price}`; }
 
 function renderShopPage() {
   updateSidebarStats();
@@ -17379,11 +17420,11 @@ function renderShopPage() {
       const boxRemaining = isBox ? mysteryPoolUnowned(item.mysteryPool).length : 0;
       const canAfford = isReward ? false : isLocked ? false : (isBox && !boxRemaining) ? false : shopBalanceFor(item) >= item.price;
       const statusLabel = isBox
-        ? (boxRemaining ? `🎁 ${shopPriceLabel(item)}` : '✓ All collected!')
+        ? (boxRemaining ? `${ICON_GIFT} ${shopPriceLabel(item)}` : '✓ All collected!')
         : equipped
         ? (item.slot === 'wallpaper' ? '✓ Applied' : isRoom ? '✓ Placed' : '✓ Equipped')
         : owned ? 'Owned'
-        : isLocked ? `🎁 ${mysteryBoxNameFor(item.mysteryPool)}`
+        : isLocked ? `${ICON_GIFT} ${mysteryBoxNameFor(item.mysteryPool)}`
         : isReward ? '🎓 Locked'
         : shopPriceLabel(item);
       const oddsLabel = isPoolItem ? `<div class="shop-item-odds">${mysteryOddsLabel(item)}</div>` : '';
@@ -17429,7 +17470,7 @@ function renderShopPage() {
           <div class="shop-storefront-text">
             <div class="shop-storefront-sign">The Furniture Farm</div>
             <div class="shop-storefront-sub">${filledRoomSlots ? `${filledRoomSlots} piece${filledRoomSlots === 1 ? '' : 's'} furnished so far` : 'Furnish Hammy\'s room — every cozy upgrade compounds!'}</div>
-            <div class="shop-earn-tip">Earn 🪙 coins by completing lessons · 💎 diamonds every 3-day streak</div>
+            <div class="shop-earn-tip">Earn ${ICON_COIN} coins by completing lessons · ${ICON_DIAMOND} diamonds every 3-day streak</div>
           </div>
         </div>
       </div>`
@@ -17442,7 +17483,7 @@ function renderShopPage() {
           <div class="shop-storefront-text">
             <div class="shop-storefront-sign">Porky's Boutique</div>
             <div class="shop-storefront-sub">${wornItems.length ? `Currently wearing: <strong>${wornItems.map(i => i.name).join(', ')}</strong>` : 'Pick something cute for your pig!'}</div>
-            <div class="shop-earn-tip">Earn 🪙 coins by completing lessons · 💎 diamonds every 3-day streak</div>
+            <div class="shop-earn-tip">Earn ${ICON_COIN} coins by completing lessons · ${ICON_DIAMOND} diamonds every 3-day streak</div>
           </div>
         </div>
       </div>`;
@@ -17593,7 +17634,7 @@ function renderRoomPage() {
       ${slotBlock('desk', 'Desk')}
       <div class="room-floor">
         ${slotBlock('rug', 'Rug')}
-        <div class="room-pig">${getPigWithItemMarkup(0.75, equippedOutfit)}</div>
+        <div class="room-pig">${getPigWithItemMarkup(window.innerWidth <= 768 ? 0.4 : 0.75, equippedOutfit)}</div>
       </div>
     </div>`;
 
@@ -17647,7 +17688,7 @@ function renderWardrobeScene() {
       </div>
       <div class="wardrobe-pig-side">
         <div class="wardrobe-pig-backdrop"></div>
-        <div class="wardrobe-pig-stage">${getPigWithItemMarkup(1, getEquippedItems())}</div>
+        <div class="wardrobe-pig-stage">${getPigWithItemMarkup(window.innerWidth <= 768 ? 0.4 : 1, getEquippedItems())}</div>
       </div>
     </div>`;
 
@@ -17839,21 +17880,23 @@ function renderProgressPage() {
     <!-- XP by module column chart -->
     <div class="pg-chart-card">
       <div class="pg-chart-title">XP Earned by Module</div>
-      <div class="pg-column-chart">
-        ${MODULES.map((m, i) => {
-          const xp = xpVals[i];
-          const hPct = Math.round((xp / maxXP) * 100);
-          const isPink = pinkMods.has(m.id);
-          return `<div class="pg-col">
-            <span class="pg-col-val">${xp > 0 ? xp : ''}</span>
-            <div class="pg-col-bar-wrap">
-              <div class="pg-col-bar${isPink ? ' pg-col-pink' : ''}" style="height:${hPct}%"></div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div class="pg-col-labels">
-        ${MODULES.map(m => `<span>${m.title.split(' ')[0]}</span>`).join('')}
+      <div class="pg-col-scroll">
+        <div class="pg-column-chart">
+          ${MODULES.map((m, i) => {
+            const xp = xpVals[i];
+            const hPct = Math.round((xp / maxXP) * 100);
+            const isPink = pinkMods.has(m.id);
+            return `<div class="pg-col">
+              <span class="pg-col-val">${xp > 0 ? xp : ''}</span>
+              <div class="pg-col-bar-wrap">
+                <div class="pg-col-bar${isPink ? ' pg-col-pink' : ''}" style="height:${hPct}%"></div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="pg-col-labels">
+          ${MODULES.map(m => `<span>${m.title.split(' ')[0]}</span>`).join('')}
+        </div>
       </div>
     </div>
 
@@ -18278,7 +18321,7 @@ function renderCompoundInterestPanel() {
     ${returnBtnHtml}
     <div class="budget-grid">
       <div class="budget-col">
-        <div class="budget-card">
+        <div class="budget-card ci-inputs-card">
           <div class="budget-card-title">Your Numbers</div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Starting amount</span><span class="microsim-slider-val" id="ci-start-val">$${sim.startingAmount}</span></div>
@@ -20561,6 +20604,24 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
 
 // ── Event listeners ────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // On mobile, the sidebar is a hamburger-triggered dropdown rather than a
+  // permanent bar, so it should close itself once the user has picked
+  // somewhere to go. Guarded to mobile widths only — reusing the "collapsed"
+  // class here must never touch desktop's icon-only sidebar mode.
+  const sidebarEl = document.getElementById('sidebar');
+  function closeMobileNav() {
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      sidebarEl.classList.remove('collapsed');
+    }
+  }
+  document.addEventListener('click', (e) => {
+    if (window.matchMedia('(max-width: 768px)').matches
+      && sidebarEl.classList.contains('collapsed')
+      && !sidebarEl.contains(e.target)) {
+      sidebarEl.classList.remove('collapsed');
+    }
+  });
+
   // Sidebar navigation
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -20574,6 +20635,10 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (page === 'room')     renderRoomPage();
       else if (page === 'shop')     renderShopPage();
       else if (page === 'settings') renderSettingsPage();
+      // Room/Shop are expandable: tapping them reveals a subnav rather than
+      // being a final destination, so don't close the dropdown out from
+      // under the user before they can pick Room/Wardrobe or Boutique/Farm.
+      if (!btn.classList.contains('nav-item-expandable')) closeMobileNav();
     });
   });
 
@@ -20590,6 +20655,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('nav-shop-btn').classList.remove('collapsed');
       showPage('shop');
       renderShopPage();
+      closeMobileNav();
     });
   });
 
@@ -20606,6 +20672,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('nav-room-btn').classList.remove('collapsed');
       showPage('room');
       renderRoomPage();
+      closeMobileNav();
     });
   });
 

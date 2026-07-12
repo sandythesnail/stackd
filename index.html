@@ -6,8 +6,8 @@
   <title>Stacked | Financial Literacy for Students</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="landing.css">
+  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="landing.css?v=6">
   <style>html { visibility: hidden; }</style>
   <script
     defer
@@ -217,24 +217,24 @@
           </thead>
           <tbody>
             <tr>
-              <td>NGPF / Banzai</td>
-              <td>Content stops at high school. Nothing for loans, credit cards, or campus jobs</td>
-              <td><span class="check">&#10003;</span> Lessons built around real college scenarios: first paychecks, meal plans, FAFSA</td>
+              <td data-label="Existing Tools">NGPF / Banzai</td>
+              <td data-label="The Gap">Content stops at high school. Nothing for loans, credit cards, or campus jobs</td>
+              <td data-label="What Stacked Offers"><span class="check">&#10003;</span> Lessons built around real college scenarios: first paychecks, meal plans, FAFSA</td>
             </tr>
             <tr>
-              <td>NerdWallet / Investopedia</td>
-              <td>Walls of text aimed at 30-year-olds with no interactivity or engagement</td>
-              <td><span class="check">&#10003;</span> Interactive modules with quizzes, assessments, XP, and decision simulations</td>
+              <td data-label="Existing Tools">NerdWallet / Investopedia</td>
+              <td data-label="The Gap">Walls of text aimed at 30-year-olds with no interactivity or engagement</td>
+              <td data-label="What Stacked Offers"><span class="check">&#10003;</span> Interactive modules with quizzes, assessments, XP, and decision simulations</td>
             </tr>
             <tr>
-              <td>University workshops</td>
-              <td>Low attendance, no follow-up, impossible to measure outcomes</td>
-              <td><span class="check">&#10003;</span> Always-on platform with admin dashboard tracking completion and performance</td>
+              <td data-label="Existing Tools">University workshops</td>
+              <td data-label="The Gap">Low attendance, no follow-up, impossible to measure outcomes</td>
+              <td data-label="What Stacked Offers"><span class="check">&#10003;</span> Always-on platform with admin dashboard tracking completion and performance</td>
             </tr>
             <tr>
-              <td>Banking apps</td>
-              <td>Track spending but don't teach why or how to improve</td>
-              <td><span class="check">&#10003;</span> Teaches the concepts first, then lets students apply them in simulated scenarios</td>
+              <td data-label="Existing Tools">Banking apps</td>
+              <td data-label="The Gap">Track spending but don't teach why or how to improve</td>
+              <td data-label="What Stacked Offers"><span class="check">&#10003;</span> Teaches the concepts first, then lets students apply them in simulated scenarios</td>
             </tr>
           </tbody>
         </table>
@@ -255,6 +255,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <div class="cc-track" id="cc-track">
+       <div class="cc-track-inner" id="cc-track-inner">
         <div class="cc-card cc-green">
           <div class="cc-num green-num-bg">01</div>
           <h3>Earning</h3>
@@ -388,6 +389,7 @@
           <div class="mp-hook">Got a text saying your account is locked? Here's how to tell what's real.</div>
           <div class="mp-tags"><span>Phishing</span><span>Identity Theft</span><span>Fake Job Scams</span></div>
         </div>
+       </div>
       </div>
       <button class="cc-arrow cc-next" id="cc-next" type="button" aria-label="Next module">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg>
@@ -686,6 +688,6 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
   </button>
 
-  <script src="landing.js"></script>
+  <script src="landing.js?v=6"></script>
 </body>
 </html>

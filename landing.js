@@ -183,46 +183,21 @@ if (adminBars) {
   barObserver.observe(adminBars);
 }
 
-// Curriculum carousel: auto-scrolls right continuously, arrows nudge it,
-// hover/touch/manual use pauses it briefly so it doesn't fight the reader.
+// Curriculum carousel: the continuous rightward auto-scroll is a pure CSS
+// animation on .cc-track-inner (see landing.css) driven by the compositor,
+// not JS on a timer — so it can't get stuck by touch-event or scroll-API
+// quirks. The outer #cc-track stays a normal scrollable container, so
+// native swipe and the arrow buttons both just nudge it as usual.
 const ccTrack = document.getElementById('cc-track');
 const ccPrev = document.getElementById('cc-prev');
 const ccNext = document.getElementById('cc-next');
-let ccPaused = false;
-let ccResumeTimer = null;
-function ccPauseThenResume() {
-  ccPaused = true;
-  clearTimeout(ccResumeTimer);
-  ccResumeTimer = setTimeout(() => { ccPaused = false; }, 2600);
-}
 if (ccTrack) {
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (!reduceMotion) {
-    function ccAutoScroll() {
-      if (!ccPaused) {
-        const halfWidth = ccTrack.scrollWidth / 2;
-        ccTrack.scrollLeft += 0.6;
-        if (ccTrack.scrollLeft >= halfWidth) ccTrack.scrollLeft -= halfWidth;
-      }
-      requestAnimationFrame(ccAutoScroll);
-    }
-    requestAnimationFrame(ccAutoScroll);
-  }
-
-  ccTrack.addEventListener('mouseenter', () => { ccPaused = true; });
-  ccTrack.addEventListener('mouseleave', () => { ccPaused = false; });
-  ccTrack.addEventListener('touchstart', () => { ccPaused = true; }, { passive: true });
-  ccTrack.addEventListener('touchend', ccPauseThenResume, { passive: true });
-
   const ccStep = () => (ccTrack.querySelector('.cc-card')?.offsetWidth || 260) + 20;
   if (ccPrev) ccPrev.addEventListener('click', () => {
     ccTrack.scrollBy({ left: -ccStep(), behavior: 'smooth' });
-    ccPauseThenResume();
   });
   if (ccNext) ccNext.addEventListener('click', () => {
     ccTrack.scrollBy({ left: ccStep(), behavior: 'smooth' });
-    ccPauseThenResume();
   });
 }
 
@@ -348,18 +323,14 @@ const burger = document.getElementById('nav-burger');
 const navLinks = document.getElementById('nav-links');
 if (burger && navLinks) {
   burger.addEventListener('click', () => {
-    const open = navLinks.style.display === 'flex';
-    navLinks.style.display = open ? '' : 'flex';
-    navLinks.style.flexDirection = 'column';
-    navLinks.style.position = 'absolute';
-    navLinks.style.top = '60px';
-    navLinks.style.right = '1.5rem';
-    navLinks.style.background = 'white';
-    navLinks.style.padding = '1rem';
-    navLinks.style.borderRadius = '12px';
-    navLinks.style.boxShadow = '0 6px 24px rgba(0,0,0,0.1)';
-    navLinks.style.border = '1.5px solid #D8EEE4';
-    navLinks.style.gap = '0.75rem';
-    if (open) navLinks.removeAttribute('style');
+    navLinks.classList.toggle('nav-open');
+  });
+  navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => navLinks.classList.remove('nav-open'));
+  });
+  document.addEventListener('click', (e) => {
+    if (navLinks.classList.contains('nav-open') && !navLinks.contains(e.target) && e.target !== burger && !burger.contains(e.target)) {
+      navLinks.classList.remove('nav-open');
+    }
   });
 }
