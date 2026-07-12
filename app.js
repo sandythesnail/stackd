@@ -4335,7 +4335,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Step 1: Compare a Few Options',
-                plain: "Look for the highest APY with no monthly fees and no minimum balance requirement — many online banks (Ally, Marcus, SoFi, Discover) offer 4%+ with none of those catches. FDIC insurance up to $250,000 is standard on real banks and non-negotiable — never open an account without it.",
+                plain: "Look for the highest APY with no monthly fees and no minimum balance requirement — several online banks typically compete for the top rates with none of those catches, though the exact leaders and numbers shift with the market, so it's worth checking current rates rather than trusting any one number for long. FDIC insurance up to $250,000 is standard on real banks and non-negotiable — never open an account without it.",
                 analogy: "Shopping for a savings account is like comparing phone plans — same basic service, but the fine print on fees and rates varies a lot.",
                 check: { statement: 'FDIC insurance is an optional extra that most savings accounts don\'t include.', isTrue: false }
               },
@@ -8210,10 +8210,10 @@ const MODULES = [
           },
           {
             id: 'uc_price1', type: 'priceisright', title: 'The Price Is Right: The Cost of Extra Protection',
-            prompt: "A $1,000,000 umbrella policy, on top of an existing auto policy, commonly costs around $150-$300/year. Guess the typical annual cost.",
+            prompt: "A $1,000,000 umbrella policy, on top of an existing auto policy, commonly costs around $200-$400/year. Guess the typical annual cost.",
             hintText: "Umbrella coverage is known for being relatively cheap per dollar of protection compared to underlying policies.",
-            actualValue: 200, guessRange: { min: 0, max: 1000, step: 50 },
-            explanation: "Roughly $200/year is a commonly cited typical cost for $1,000,000 in umbrella coverage, a small price for a large amount of extra liability protection, though actual cost varies by provider and personal risk factors.",
+            actualValue: 380, guessRange: { min: 0, max: 1000, step: 50 },
+            explanation: "Roughly $380/year is a commonly cited average cost for $1,000,000-$2,000,000 in umbrella coverage, a small price for a large amount of extra liability protection, though actual cost varies by provider and personal risk factors.",
             xpOnComplete: 5
           },
           {
@@ -8488,7 +8488,7 @@ const MODULES = [
         q: 'Who is a Direct PLUS Loan designed for?',
         opts: ['Undergraduate students who have exhausted their Subsidized and Unsubsidized loan limits', 'Graduate/professional students, or parents of dependent undergrads, who need to cover costs beyond other financial aid', 'First-year students only', 'Students with excellent credit who want a lower interest rate than other federal loans'],
         correct: 1,
-        exp: 'PLUS Loans — Grad PLUS or Parent PLUS — fill the gap after other aid is applied. Unlike Direct Subsidized/Unsubsidized loans, they require a credit check and typically carry a higher interest rate, so they should be a last resort, not a first option.'
+        exp: 'PLUS Loans fill the gap after other aid is applied, and require a credit check, typically carrying a higher interest rate than Direct Subsidized/Unsubsidized loans. Parent PLUS is still available to parents of dependent undergrads. Grad PLUS, however, was discontinued for new graduate/professional borrowers starting July 1, 2026 — those students now borrow through higher Direct Unsubsidized Loan limits instead.'
       },
       {
         q: 'How does the number of credits you\'re enrolled in affect your federal loan eligibility?',
@@ -8816,9 +8816,9 @@ const MODULES = [
             concepts: [
               {
                 term: 'Grad PLUS Loan',
-                plain: "A related but different loan, taken out by GRADUATE or professional students themselves (not a parent), also to cover costs beyond other aid. Both PLUS loan types require a credit check and typically carry a higher interest rate than Direct loans, making them a last resort, not a first option.",
-                analogy: "Same family of loan, different borrower, a Parent PLUS loan is the parent's name on it, a Grad PLUS loan is the graduate student's own name.",
-                check: { statement: "PLUS loans, whether Parent or Grad, typically require a credit check.", isTrue: true }
+                plain: "A related but different loan, historically taken out by GRADUATE or professional students themselves (not a parent), also to cover costs beyond other aid, requiring a credit check like Parent PLUS. As of July 1, 2026, Grad PLUS was discontinued for new borrowers, graduate students now borrow through higher Direct Unsubsidized Loan limits instead ($20,500/year, $100,000 lifetime; professional-degree students like law or medicine get $50,000/year, $200,000 lifetime). Students who already had a loan for their current program before that date keep access to the old rules for up to three more years under a legacy provision.",
+                analogy: "Same family of loan, different borrower, a Parent PLUS loan is the parent's name on it, a Grad PLUS loan was the graduate student's own name, until it was phased out for new borrowers.",
+                check: { statement: "As of the 2026-27 school year, a brand-new graduate student can still take out a Grad PLUS loan the same way parents can take out a Parent PLUS loan.", isTrue: false }
               }
             ],
             xpOnComplete: 3
@@ -8885,7 +8885,7 @@ const MODULES = [
           {
             id: 'pl_m2', type: 'matching', title: 'Match It! Round 2',
             pairs: [
-              { term: 'Grad PLUS Loan', definition: "A PLUS loan taken out by graduate students themselves, not a parent." },
+              { term: 'Grad PLUS Loan', definition: "A PLUS loan graduate students used to take out themselves, discontinued for new borrowers starting July 2026." },
               { term: 'Planning the Conversation Early', definition: 'Discussing repayment responsibility with family before the first payment is due.' },
               { term: 'Parent PLUS Loan', definition: "A federal loan taken out by a parent to help cover a dependent student's costs." }
             ],
@@ -9253,9 +9253,9 @@ const MODULES = [
             concepts: [
               {
                 term: 'Standard Repayment Plan',
-                plain: "The Standard Plan is the default: a fixed monthly payment over 10 years. It generally results in the LEAST total interest paid over the life of the loan, since it pays it off fastest, but the monthly payment is also the highest of the common options.",
-                analogy: "It's like the default setting on a subscription, works fine for most people, but not automatically the best fit for every budget.",
-                check: { statement: "The Standard Repayment Plan spreads federal loan payments over 10 years by default.", isTrue: true }
+                plain: "The Standard Plan is the default. For loans first disbursed before July 1, 2026, that means a fixed payment over a flat 10 years. Starting July 1, 2026, the default became the Tiered Standard Plan instead: the term now scales with how much is owed, under $25,000 still gets 10 years, $25,000-$49,999 gets 15 years, $50,000-$99,999 gets 20 years, and $100,000+ stretches to 25 years. Either way, the Standard Plan generally results in the LEAST total interest paid for a given balance, since it pays it off on the shortest available timeline, but the monthly payment is also the highest of the common options.",
+                analogy: "It's like the default setting on a subscription, works fine for most people, but not automatically the best fit for every budget, and the exact default terms depend on when the loan started.",
+                check: { statement: "Every federal Direct Loan borrower is on the exact same fixed 10-year default schedule, no matter how large the balance or when the loan was taken out.", isTrue: false }
               }
             ],
             xpOnComplete: 2
@@ -9265,7 +9265,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Income-Driven Repayment',
-                plain: "Income-driven plans set the monthly payment as a percentage of income, generally lower than the Standard Plan's fixed amount, especially on a modest starting salary. The tradeoff: the loan is typically paid off over a longer period, meaning more total interest over time.",
+                plain: "Income-driven plans set the monthly payment as a percentage of income, generally lower than the Standard Plan's fixed amount, especially on a modest starting salary. The tradeoff: the loan is typically paid off over a longer period, meaning more total interest over time. For loans first disbursed on or after July 1, 2026, the older lineup of income-driven plans is being replaced by a single new option, the Repayment Assistance Plan (RAP), so new borrowers should check studentaid.gov for exactly which plans they qualify for.",
                 analogy: "It's like a subscription that scales with what you can actually afford right now, easier monthly, but often costs more in total over a longer stretch.",
                 check: { statement: "Income-driven repayment plans generally result in lower total interest paid than the Standard Plan.", isTrue: false }
               }
@@ -9275,7 +9275,7 @@ const MODULES = [
           {
             id: 'rpl_m1', type: 'matching', title: 'Match It! Round 1',
             pairs: [
-              { term: 'Standard Repayment Plan', definition: 'Fixed payment over 10 years, generally the lowest total interest.' },
+              { term: 'Standard Repayment Plan', definition: 'Fixed payment over the shortest available term (10-25 years depending on balance and loan date), generally the lowest total interest.' },
               { term: 'Income-Driven Repayment', definition: "Payment based on income, generally lower monthly, more total interest over time." },
               { term: 'Repayment Plan Choice', definition: "The option to select a plan that fits your situation, not one fixed path." }
             ],
@@ -13408,11 +13408,11 @@ const MODULES = [
             xpOnComplete: 1
           },
           {
-            id: 'bnw_price1', type: 'priceisright', title: 'The Price Is Right: Jobs Filled Through Networking',
-            prompt: "Various studies and career-center estimates suggest a large share of jobs are filled through networking and referrals rather than public job postings alone. Guess the commonly cited estimate.",
-            hintText: "It's a notably large majority, not a small minority, this is one of the most-cited stats in career advice for exactly this reason.",
-            actualValue: 70, guessRange: { min: 0, max: 100, step: 5 },
-            explanation: "Commonly cited estimates suggest roughly 70-80% of jobs are filled through networking and referrals rather than purely public applications, a big part of why building connections early, long before actively job hunting, matters so much.",
+            id: 'bnw_price1', type: 'priceisright', title: 'The Price Is Right: Jobs Found Through Contacts',
+            prompt: "Labor economics research going back decades has tracked how workers actually found their jobs. Guess roughly what share report finding their job through a personal contact rather than a public posting or cold application.",
+            hintText: "It's a substantial share, but not the sky-high 80-90% numbers sometimes thrown around in career advice, those specific figures don't hold up to scrutiny.",
+            actualValue: 50, guessRange: { min: 0, max: 100, step: 5 },
+            explanation: "Research tracing back to sociologist Mark Granovetter's landmark studies, and echoed in later labor economics research, puts the figure at roughly 30-60%, averaging around half of workers finding their job through a personal contact. That's a real, meaningful share, but notably lower than the 70-80%+ numbers sometimes repeated in career advice, which trace back to informal surveys rather than rigorous research.",
             xpOnComplete: 5
           },
           {
@@ -13439,9 +13439,9 @@ const MODULES = [
           {
             id: 'bnw_poll1', type: 'poll', title: 'What Do Most People Think?',
             intro: "Take a guess. Tap True or False, then see the answer.",
-            statement: "Most jobs are filled primarily through public job postings that anyone can apply to.",
-            isTrue: false,
-            explanation: "False. A large share of jobs are commonly estimated to be filled through networking and referrals, not purely public postings, a big reason building connections early matters.",
+            statement: "Research suggests personal contacts play a meaningful role in how people find jobs, not just public postings and cold applications.",
+            isTrue: true,
+            explanation: "True. Labor economics research puts the share of workers who found their job through a personal contact at roughly 30-60%, a real and substantial factor, which is a big reason building connections early matters, even without an inflated headline number.",
             xpOnComplete: 2
           },
           {
@@ -14574,7 +14574,7 @@ const MODULES = [
           },
           {
             id: 'p2p_h1', type: 'hint', tag: "🎉 Hammy's Tip",
-            text: "Most P2P apps have a \"Friends & Family\" vs. \"Goods & Services\" style distinction hiding somewhere in settings — using the option meant for strangers, when available, adds a layer of protection a casual payment doesn't have.",
+            text: "Venmo lets you mark a payment as \"Goods & Services\" for a bit of added buyer protection when paying a stranger. Cash App and Zelle don't offer an equivalent option, so with those two, treat every payment to someone you don't know as final the moment it's sent.",
             xpOnComplete: 1
           },
           {
