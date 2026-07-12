@@ -513,6 +513,14 @@ body { background: var(--bg); min-height: 100vh; }
 .pg-xp-sub { font-size: 0.7rem; color: var(--text-soft); margin-top: 0.4rem; }
 
 /* Column / bar chart (XP by module) */
+/* 11 modules' worth of column + label never fit a phone-width screen without
+   either truncating a module name or squeezing every column unreadably thin.
+   Scrolling the chart horizontally as one unit (bars and labels share this
+   wrapper so they can't drift out of sync) keeps every label fully readable
+   instead of forcing the whole page wider than the viewport. */
+.pg-col-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.pg-col-scroll .pg-column-chart,
+.pg-col-scroll .pg-col-labels { min-width: 660px; }
 .pg-column-chart {
   display: flex; align-items: flex-end; gap: 0.6rem; height: 165px;
   padding-bottom: 0.5rem; border-bottom: 2px solid var(--border);
@@ -1858,17 +1866,20 @@ select.budget-input { cursor: pointer; }
     padding: 0.65rem 1rem;
   }
   .sidebar-footer { display: none; }
+  /* Full-screen takeover panel, not a small floating card — starts right
+     below the fixed top bar and fills the rest of the viewport. */
   .sidebar-nav {
-    display: none; flex-direction: column; width: calc(100% - 2rem); max-width: 340px;
-    margin: 0.6rem auto 0; gap: 0.15rem;
-    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
-    box-shadow: 0 10px 30px rgba(44,62,45,0.18);
-    padding: 0.6rem; max-height: calc(100vh - 5rem); overflow-y: auto;
+    display: none; flex-direction: column; width: 100%; max-width: none;
+    margin: 0; gap: 0.2rem;
+    position: fixed; top: 3.4rem; left: 0; right: 0; bottom: 0;
+    background: #fff; border: none; border-radius: 0;
+    box-shadow: none;
+    padding: 0.75rem 1rem; max-height: none; overflow-y: auto;
   }
   .sidebar.collapsed .sidebar-nav { display: flex; }
   .nav-item {
-    flex-direction: row; justify-content: flex-start; gap: 0.75rem;
-    font-size: 0.92rem; padding: 0.7rem 0.85rem; width: 100%;
+    flex-direction: row; justify-content: flex-start; gap: 0.85rem;
+    font-size: 1rem; padding: 0.9rem 0.85rem; width: 100%;
   }
   .nav-subnav {
     display: none; position: static; margin: 0.1rem 0 0.15rem 2.5rem;

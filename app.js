@@ -17839,21 +17839,23 @@ function renderProgressPage() {
     <!-- XP by module column chart -->
     <div class="pg-chart-card">
       <div class="pg-chart-title">XP Earned by Module</div>
-      <div class="pg-column-chart">
-        ${MODULES.map((m, i) => {
-          const xp = xpVals[i];
-          const hPct = Math.round((xp / maxXP) * 100);
-          const isPink = pinkMods.has(m.id);
-          return `<div class="pg-col">
-            <span class="pg-col-val">${xp > 0 ? xp : ''}</span>
-            <div class="pg-col-bar-wrap">
-              <div class="pg-col-bar${isPink ? ' pg-col-pink' : ''}" style="height:${hPct}%"></div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div class="pg-col-labels">
-        ${MODULES.map(m => `<span>${m.title.split(' ')[0]}</span>`).join('')}
+      <div class="pg-col-scroll">
+        <div class="pg-column-chart">
+          ${MODULES.map((m, i) => {
+            const xp = xpVals[i];
+            const hPct = Math.round((xp / maxXP) * 100);
+            const isPink = pinkMods.has(m.id);
+            return `<div class="pg-col">
+              <span class="pg-col-val">${xp > 0 ? xp : ''}</span>
+              <div class="pg-col-bar-wrap">
+                <div class="pg-col-bar${isPink ? ' pg-col-pink' : ''}" style="height:${hPct}%"></div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="pg-col-labels">
+          ${MODULES.map(m => `<span>${m.title.split(' ')[0]}</span>`).join('')}
+        </div>
       </div>
     </div>
 
