@@ -2182,7 +2182,7 @@ select.budget-input { cursor: pointer; }
   .lesson-tile:last-child { border-bottom: none; }
 }
 
-.icon-coin, .icon-diamond { vertical-align: -0.15em; flex-shrink: 0; }
+.icon-coin, .icon-diamond, .icon-gift { vertical-align: -0.15em; flex-shrink: 0; }
 
 /* ─── SIDEBAR COINS ─── */
 .sf-coins {
