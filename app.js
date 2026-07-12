@@ -16681,7 +16681,7 @@ function renderModuleList(containerId) {
         const subHtml = sub ? `<div class="lt-subquest${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">${subDone ? '✓' : '🎯'} Real-life sub-quest: ${sub.topic} →</div>` : '';
         return `<div class="lesson-tile quest-tile${done ? ' done' : ''}" data-module="${m.id}" data-quest="${q.id}">
           <div class="lt-body">
-            <div class="lt-num">Lesson ${idx + 1} <span class="card-badge badge-xp">Up to ${questMaxXP(q, m)} XP</span></div>
+            <div class="lt-num"><span class="lt-num-label">Lesson ${idx + 1}</span> <span class="card-badge badge-xp">Up to ${questMaxXP(q, m)} XP</span></div>
             <div class="lt-title">${q.topic || q.character.name}</div>
             <div class="lt-meta">${q.character.tagline}</div>
             ${subHtml}
@@ -16699,7 +16699,7 @@ function renderModuleList(containerId) {
         const cta = done ? '↻ Replay' : 'Start →';
         return `<div class="lesson-tile${done ? ' done' : ''}${isActivity ? ' activity-tile' : ''}" data-module="${m.id}" data-lesson="${idx}">
           <div class="lt-body">
-            <div class="lt-num">Lesson ${idx + 1} <span class="card-badge badge-xp">Up to ${lessonMaxXP(lesson, m)} XP</span></div>
+            <div class="lt-num"><span class="lt-num-label">Lesson ${idx + 1}</span> <span class="card-badge badge-xp">Up to ${lessonMaxXP(lesson, m)} XP</span></div>
             <div class="lt-title">${lesson.title}${isActivity ? ' <span class="quest-tag">Interactive</span>' : ''}</div>
             <div class="lt-meta">${meta}</div>
           </div>
@@ -18278,7 +18278,7 @@ function renderCompoundInterestPanel() {
     ${returnBtnHtml}
     <div class="budget-grid">
       <div class="budget-col">
-        <div class="budget-card">
+        <div class="budget-card ci-inputs-card">
           <div class="budget-card-title">Your Numbers</div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Starting amount</span><span class="microsim-slider-val" id="ci-start-val">$${sim.startingAmount}</span></div>
