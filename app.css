@@ -1,6 +1,14 @@
 /* ── App layout ── */
 html { font-size: 18px; scrollbar-width: none; -ms-overflow-style: none; }
 html::-webkit-scrollbar { display: none; width: 0; height: 0; }
+/* Safety net: we've repeatedly found individual elements (a badge row, a
+   rotated ribbon banner, a chart's labels) that overflow their own container
+   by a few px and drag the *entire page* wider than the viewport as a result
+   — on mobile that's also compounded by any position:fixed;width:100% element
+   (like the nav) recalculating against the wider, overflowed document instead
+   of the true viewport. Clamping horizontal overflow here stops any single
+   future instance of that bug class from cascading into a page-wide shift. */
+html, body { overflow-x: hidden; }
 body { background: var(--bg); min-height: 100vh; }
 
 #app { display: flex; min-height: 100vh; }
@@ -125,7 +133,13 @@ body { background: var(--bg); min-height: 100vh; }
   padding: 2rem 2.5rem 1.5rem; border-bottom: 1px solid var(--border);
   background: #fff; position: sticky; top: 0; z-index: 10;
   display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
+  flex-wrap: wrap;
 }
+/* Same fix as the Settings sign-out row: without min-width:0 the title/subtitle
+   block refuses to shrink, so on any page whose header also carries a badge or
+   button (Shop's coin/diamond counts, etc.) the row overflows the viewport
+   instead of wrapping. */
+.page-header > div:first-child { min-width: 0; }
 .page-title {
   font-family: var(--font-display);
   font-size: 1.55rem; font-weight: 700; letter-spacing: -0.5px;
@@ -1847,7 +1861,12 @@ select.budget-input { cursor: pointer; }
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
   .wardrobe-backdrop { flex-direction: column; overflow-y: auto; }
-  .wardrobe-panel { max-width: none; }
+  /* flex: 1 1 340px was written for the desktop side-by-side layout, where
+     340px is a comfortable panel *width*. In the mobile column layout the
+     same flex-basis governs *height* instead, which forced the panel far
+     taller than its content and squeezed/overlapped the pig below it. */
+  .wardrobe-panel { max-width: none; flex: 0 0 auto; }
+  .wardrobe-pig-side { flex: 0 0 auto; min-height: 260px; padding: 1.5rem 0; }
   /* Sidebar becomes a fixed top bar (brand + hamburger) plus a vertical
      dropdown menu that only appears while the hamburger is toggled open —
      not a permanently-visible bottom bar. Note: ".collapsed" is the same
@@ -1895,7 +1914,12 @@ select.budget-input { cursor: pointer; }
      you scroll. Let it scroll away normally instead. */
   .page-header { padding: 1.25rem 1rem 1rem; position: static; }
   .page-body { padding: 1.25rem 1rem 3rem; }
-  #page-room.active { height: calc(100vh - 68px); }
+  /* #page-room is a non-scrolling, exactly-100vh experience by design (see the
+     base rule), but on mobile .app-main now reserves 3.4rem at the top for the
+     fixed top bar — claiming a full 100vh here pushed that much of the room
+     off the bottom of the screen. This used to subtract 68px for the old
+     bottom nav bar, which no longer exists. */
+  #page-room.active { height: calc(100vh - 3.4rem); }
   .quiz-body { padding: 1.5rem 1rem 140px; }
   .feedback-panel { max-width: 100%; }
   .pg-stats-row { grid-template-columns: 1fr 1fr; }
@@ -2253,7 +2277,7 @@ select.budget-input { cursor: pointer; }
   border-color: var(--green); box-shadow: 0 0 0 3px var(--green-pale);
 }
 .shop-exclusive-ribbon {
-  position: absolute; top: 0.6rem; right: -1.9rem; z-index: 1;
+  position: absolute; top: 0.6rem; right: 0; z-index: 1;
   background: linear-gradient(90deg, #2AA8C4, #8FE3F5); color: #fff;
   font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
   padding: 0.25rem 2.2rem; transform: rotate(38deg);
@@ -2268,7 +2292,7 @@ select.budget-input { cursor: pointer; }
 }
 .shop-card.shop-reward-card .shop-preview { filter: grayscale(0.6); opacity: 0.75; }
 .shop-reward-ribbon {
-  position: absolute; top: 0.6rem; right: -1.9rem; z-index: 1;
+  position: absolute; top: 0.6rem; right: 0; z-index: 1;
   background: linear-gradient(90deg, #B8860B, #E8C468); color: #fff;
   font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
   padding: 0.25rem 2.2rem; transform: rotate(38deg);
@@ -2419,6 +2443,9 @@ select.budget-input { cursor: pointer; }
   .shop-items-grid { grid-template-columns: repeat(2, 1fr); }
   .shop-storefront-inner { flex-direction: column; text-align: center; gap: 1rem; }
   .results-rewards-row { flex-direction: column; }
+  /* Shop and Furniture Farm both list a lot of items; a shorter preview image
+     keeps each card from taking more vertical space than it needs on phones. */
+  .shop-preview { height: 120px; }
 }
 
 /* ─── TOASTS ─── */

@@ -17593,7 +17593,7 @@ function renderRoomPage() {
       ${slotBlock('desk', 'Desk')}
       <div class="room-floor">
         ${slotBlock('rug', 'Rug')}
-        <div class="room-pig">${getPigWithItemMarkup(0.75, equippedOutfit)}</div>
+        <div class="room-pig">${getPigWithItemMarkup(window.innerWidth <= 768 ? 0.24 : 0.75, equippedOutfit)}</div>
       </div>
     </div>`;
 
@@ -17647,7 +17647,7 @@ function renderWardrobeScene() {
       </div>
       <div class="wardrobe-pig-side">
         <div class="wardrobe-pig-backdrop"></div>
-        <div class="wardrobe-pig-stage">${getPigWithItemMarkup(1, getEquippedItems())}</div>
+        <div class="wardrobe-pig-stage">${getPigWithItemMarkup(window.innerWidth <= 768 ? 0.4 : 1, getEquippedItems())}</div>
       </div>
     </div>`;
 
