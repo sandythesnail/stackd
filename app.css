@@ -549,10 +549,16 @@ body { background: var(--bg); min-height: 100vh; }
 .settings-item {
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
   padding: 1.5rem 1.85rem; border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 .settings-item:last-child { border-bottom: none; }
+.settings-item > div:first-child { flex: 1; min-width: 0; }
+.settings-item > button { flex-shrink: 0; }
 .settings-label { font-weight: 600; font-size: 1rem; color: var(--text); margin-bottom: 0.2rem; }
-.settings-val { font-size: 0.88rem; color: var(--text-mid); }
+/* overflow-wrap: anywhere so a long unbroken string (e.g. an email address in
+   "Signed in as") can wrap instead of forcing the row wider than the screen and
+   pushing the button next to it off-screen. */
+.settings-val { font-size: 0.88rem; color: var(--text-mid); overflow-wrap: anywhere; }
 
 .referral-card {
   border: 1px solid var(--border); border-radius: var(--radius);
@@ -663,6 +669,14 @@ select.budget-input { cursor: pointer; }
 
 @media (max-width: 700px) {
   .budget-grid { grid-template-columns: 1fr; }
+  /* Compound Interest panel only: flatten the column wrapper so each card can be
+     individually reordered — the credit card debt graph otherwise lands above the
+     main growth graph on mobile purely because it's earlier in the left column. */
+  .budget-col { display: contents; }
+  .ci-inputs-card { order: 1; }
+  .ci-result-card { order: 2; }
+  .ci-warning-card { order: 3; }
+  #ci-compare-card { order: 4; }
 }
 
 /* Compound interest simulator — reuses microsim-slider-row/microsim-range from the quest
@@ -1832,7 +1846,17 @@ select.budget-input { cursor: pointer; }
     border-top: 1px solid var(--border);
     flex-direction: row; padding: 0.4rem 0.5rem;
   }
-  .sidebar-brand-row, .sidebar-footer { display: none; }
+  .sidebar-footer { display: none; }
+  /* Brand row becomes a fixed top bar on mobile, carrying the hamburger toggle
+     that collapses the bottom nav out of the way — same collapse mechanism
+     the desktop sidebar already uses, just repurposed for vertical space here
+     instead of horizontal. */
+  .sidebar-brand-row {
+    display: flex; margin-bottom: 0;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 90;
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: 0.65rem 1rem;
+  }
   .sidebar-nav { flex-direction: row; justify-content: space-around; width: 100%; gap: 0; }
   .nav-item { flex-direction: column; gap: 0.18rem; padding: 0.4rem 0.6rem; font-size: 0.6rem; }
   .nav-subnav {
@@ -1843,7 +1867,10 @@ select.budget-input { cursor: pointer; }
   }
   .nav-subnav.mobile-open { display: flex; }
   .nav-subitem { white-space: nowrap; }
-  .app-main { margin-left: 0; padding-bottom: 68px; }
+  .app-main { margin-left: 0; padding-top: 3.4rem; padding-bottom: 68px; }
+  .sidebar.collapsed .sidebar-nav { display: none; }
+  .sidebar.collapsed { padding-top: 0; padding-bottom: 0; border-top: none; }
+  .sidebar.collapsed + .app-main { padding-bottom: 1.25rem; }
   .page-header { padding: 1.25rem 1rem 1rem; }
   .page-body { padding: 1.25rem 1rem 3rem; }
   #page-room.active { height: calc(100vh - 68px); }
@@ -2040,8 +2067,11 @@ select.budget-input { cursor: pointer; }
 .lt-num {
   font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.08em; color: var(--text-soft); margin-bottom: 0.2rem;
-  display: flex; align-items: center; gap: 0.5rem;
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; row-gap: 0.3rem;
 }
+/* Keep "Lesson N" on one line — without this it can word-wrap between the
+   label and the number when the XP badge next to it leaves little room. */
+.lt-num-label { white-space: nowrap; }
 .lt-num .badge-xp { text-transform: none; letter-spacing: normal; }
 .lt-title {
   font-family: var(--font-display);
