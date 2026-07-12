@@ -20561,6 +20561,24 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
 
 // ── Event listeners ────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // On mobile, the sidebar is a hamburger-triggered dropdown rather than a
+  // permanent bar, so it should close itself once the user has picked
+  // somewhere to go. Guarded to mobile widths only — reusing the "collapsed"
+  // class here must never touch desktop's icon-only sidebar mode.
+  const sidebarEl = document.getElementById('sidebar');
+  function closeMobileNav() {
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      sidebarEl.classList.remove('collapsed');
+    }
+  }
+  document.addEventListener('click', (e) => {
+    if (window.matchMedia('(max-width: 768px)').matches
+      && sidebarEl.classList.contains('collapsed')
+      && !sidebarEl.contains(e.target)) {
+      sidebarEl.classList.remove('collapsed');
+    }
+  });
+
   // Sidebar navigation
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -20574,6 +20592,10 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (page === 'room')     renderRoomPage();
       else if (page === 'shop')     renderShopPage();
       else if (page === 'settings') renderSettingsPage();
+      // Room/Shop are expandable: tapping them reveals a subnav rather than
+      // being a final destination, so don't close the dropdown out from
+      // under the user before they can pick Room/Wardrobe or Boutique/Farm.
+      if (!btn.classList.contains('nav-item-expandable')) closeMobileNav();
     });
   });
 
@@ -20590,6 +20612,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('nav-shop-btn').classList.remove('collapsed');
       showPage('shop');
       renderShopPage();
+      closeMobileNav();
     });
   });
 
@@ -20606,6 +20629,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('nav-room-btn').classList.remove('collapsed');
       showPage('room');
       renderRoomPage();
+      closeMobileNav();
     });
   });
 

@@ -1840,38 +1840,49 @@ select.budget-input { cursor: pointer; }
 @media (max-width: 768px) {
   .wardrobe-backdrop { flex-direction: column; overflow-y: auto; }
   .wardrobe-panel { max-width: none; }
+  /* Sidebar becomes a fixed top bar (brand + hamburger) plus a vertical
+     dropdown menu that only appears while the hamburger is toggled open —
+     not a permanently-visible bottom bar. Note: ".collapsed" is the same
+     class desktop uses for its icon-only mode (same button, same click
+     handler, shared across breakpoints) but its meaning is flipped here:
+     on mobile, .collapsed means the dropdown is OPEN. */
   .sidebar {
-    top: auto; bottom: 0; left: 0; right: 0;
-    width: 100%; height: auto; border-right: none;
-    border-top: 1px solid var(--border);
-    flex-direction: row; padding: 0.4rem 0.5rem;
+    position: fixed; top: 0; left: 0; right: 0; bottom: auto;
+    width: 100%; height: auto; border-right: none; border-top: none;
+    flex-direction: column; padding: 0;
+    background: transparent; z-index: 90;
   }
-  .sidebar-footer { display: none; }
-  /* Brand row becomes a fixed top bar on mobile, carrying the hamburger toggle
-     that collapses the bottom nav out of the way — same collapse mechanism
-     the desktop sidebar already uses, just repurposed for vertical space here
-     instead of horizontal. */
   .sidebar-brand-row {
     display: flex; margin-bottom: 0;
-    position: fixed; top: 0; left: 0; right: 0; z-index: 90;
     background: #fff; border-bottom: 1px solid var(--border);
     padding: 0.65rem 1rem;
   }
-  .sidebar-nav { flex-direction: row; justify-content: space-around; width: 100%; gap: 0; }
-  .nav-item { flex-direction: column; gap: 0.18rem; padding: 0.4rem 0.6rem; font-size: 0.6rem; }
-  .nav-subnav {
-    display: none; margin: 0;
-    position: fixed; left: 50%; bottom: 64px; transform: translateX(-50%);
-    background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm);
-    padding: 0.3rem; box-shadow: 0 -2px 10px rgba(0,0,0,0.08); z-index: 60;
+  .sidebar-footer { display: none; }
+  .sidebar-nav {
+    display: none; flex-direction: column; width: calc(100% - 2rem); max-width: 340px;
+    margin: 0.6rem auto 0; gap: 0.15rem;
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: 0 10px 30px rgba(44,62,45,0.18);
+    padding: 0.6rem; max-height: calc(100vh - 5rem); overflow-y: auto;
   }
-  .nav-subnav.mobile-open { display: flex; }
+  .sidebar.collapsed .sidebar-nav { display: flex; }
+  .nav-item {
+    flex-direction: row; justify-content: flex-start; gap: 0.75rem;
+    font-size: 0.92rem; padding: 0.7rem 0.85rem; width: 100%;
+  }
+  .nav-subnav {
+    display: none; position: static; margin: 0.1rem 0 0.15rem 2.5rem;
+    background: none; border: none; box-shadow: none; padding: 0;
+    flex-direction: column;
+  }
+  .nav-subnav.open { display: flex; }
   .nav-subitem { white-space: nowrap; }
-  .app-main { margin-left: 0; padding-top: 3.4rem; padding-bottom: 68px; }
-  .sidebar.collapsed .sidebar-nav { display: none; }
-  .sidebar.collapsed { padding-top: 0; padding-bottom: 0; border-top: none; }
-  .sidebar.collapsed + .app-main { padding-bottom: 1.25rem; }
-  .page-header { padding: 1.25rem 1rem 1rem; }
+  .app-main { margin-left: 0; padding-top: 3.4rem; padding-bottom: 0; }
+  /* Sticky page headers made sense when the sidebar lived on the side, but now
+     that mobile has its own fixed top bar, a sticky header collides with it —
+     the heading text visibly sticks and peeks out from behind the top bar as
+     you scroll. Let it scroll away normally instead. */
+  .page-header { padding: 1.25rem 1rem 1rem; position: static; }
   .page-body { padding: 1.25rem 1rem 3rem; }
   #page-room.active { height: calc(100vh - 68px); }
   .quiz-body { padding: 1.5rem 1rem 140px; }
@@ -1931,6 +1942,12 @@ select.budget-input { cursor: pointer; }
   .header-stats-col { display: none; }
   .pg-stats-row { grid-template-columns: 1fr 1fr; }
   .home-stats-row { grid-template-columns: 1fr 1fr; }
+  /* On the narrowest phones (iPhone SE etc.) the "Begin Quest →" / "Start →"
+     button's fixed width plus the lesson text's minimum wrap width together
+     exceed the tile's available space by a few px, clipping the button.
+     Letting it drop to its own full-width row removes the squeeze entirely. */
+  .lesson-tile { flex-wrap: wrap; }
+  .lt-cta { flex: 1 1 100%; text-align: center; margin-top: 0.6rem; }
 }
 
 /* ── Module detail / lesson picker ── */
