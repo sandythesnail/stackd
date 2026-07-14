@@ -16691,6 +16691,48 @@ function moduleTotalXP(mod) {
   return mod.lessons.reduce((sum, lesson) => sum + lessonMaxXP(lesson, mod), 0);
 }
 
+// Purely presentational reading aid: breaks a module's flat 8-lesson grid into a couple of
+// short, labeled clusters (matching the narrative arc the lessons already follow in order)
+// instead of one undifferentiated wall of tiles. Never reorders or gates lessons — a module
+// left out of this map (or whose counts don't add up to its actual lesson count) just falls
+// back to the old ungrouped grid.
+const MODULE_LESSON_SECTIONS = {
+  earning:    [{ label: 'Your Paycheck, Explained', count: 3 }, { label: 'Campus & Gig Income', count: 3 }, { label: 'Growing What You Earn', count: 2 }],
+  spending:   [{ label: 'Budgeting Basics', count: 3 }, { label: 'Paying for College', count: 3 }, { label: 'Smarter Spending Decisions', count: 2 }],
+  saving:     [{ label: 'Where to Keep Your Money', count: 3 }, { label: 'Making Saving Automatic', count: 3 }, { label: 'Saving With a Goal in Mind', count: 2 }],
+  investing:  [{ label: 'Investing Fundamentals', count: 3 }, { label: 'Getting Started', count: 3 }, { label: 'Retirement & Account Types', count: 2 }],
+  credit:     [{ label: 'Building Credit From Zero', count: 3 }, { label: 'Understanding Your Score & Reports', count: 3 }, { label: 'Leveling Up & Paying It Down', count: 2 }],
+  risk:       [{ label: 'Health Coverage', count: 2 }, { label: 'Everyday Insurance: Renters & Auto', count: 2 }, { label: 'Life, Liability & the Fine Print', count: 4 }],
+  loans:      [{ label: 'Federal Loan Basics', count: 3 }, { label: 'Repayment & Interest', count: 3 }, { label: 'Planning Ahead', count: 2 }],
+  taxes:      [{ label: 'Filing Basics', count: 3 }, { label: 'Getting It Right', count: 3 }, { label: 'The Bigger Picture', count: 2 }],
+  psychology: [{ label: 'Why We Overspend', count: 3 }, { label: 'Modern Spending Traps', count: 3 }, { label: 'Breaking the Pattern', count: 2 }],
+  career:     [{ label: 'Evaluating & Negotiating an Offer', count: 4 }, { label: 'Thinking Long-Term & Starting Strong', count: 4 }],
+  scams:      [{ label: 'Scams Targeting Students', count: 3 }, { label: 'Digital & Payment Scams', count: 3 }, { label: 'Social Engineering', count: 2 }],
+};
+
+// Wraps a flat array of already-rendered `.lesson-tile` HTML strings into labeled section
+// groups for modules configured in MODULE_LESSON_SECTIONS above. Each section gets its own
+// nested 2-col grid (rather than interleaving header divs into one shared grid) so the
+// existing nth-child left/right-column and last-row border rules keep working unmodified —
+// they just apply per section instead of across the whole list. Falls back to the original
+// flat single-grid markup for any module not in the map (or a mismatched lesson count).
+function groupLessonTiles(moduleId, tileHtmls) {
+  const sections = MODULE_LESSON_SECTIONS[moduleId];
+  if (!sections || sections.reduce((sum, s) => sum + s.count, 0) !== tileHtmls.length) {
+    return `<div class="module-row-lessons">${tileHtmls.join('')}</div>`;
+  }
+  let cursor = 0;
+  const sectionsHtml = sections.map(section => {
+    const tiles = tileHtmls.slice(cursor, cursor + section.count);
+    cursor += section.count;
+    return `<div class="lesson-section">
+      <div class="lesson-section-header">${section.label}</div>
+      <div class="lesson-section-tiles">${tiles.join('')}</div>
+    </div>`;
+  }).join('');
+  return `<div class="module-row-lessons module-row-lessons-grouped">${sectionsHtml}</div>`;
+}
+
 function renderModuleList(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -16725,7 +16767,8 @@ function renderModuleList(containerId) {
 
     let bodyHtml;
     if (quest) {
-      bodyHtml = `<div class="module-row-lessons">${mainQuests(m).map((q, idx) => {
+      const quests = mainQuests(m);
+      const tileHtmls = quests.map((q, idx) => {
         const qp = state.questProgress[questKey(m.id, q.id)];
         const done = !!(qp && qp.done);
         const cta = done ? '↻ Replay Quest' : (qp && qp.chapterIdx > 0 ? `Resume — ${questLabel(m, q)} →` : 'Begin Quest →');
@@ -16741,9 +16784,10 @@ function renderModuleList(containerId) {
           </div>
           <span class="lt-cta">${cta}</span>
         </div>`;
-      }).join('')}</div>`;
+      });
+      bodyHtml = groupLessonTiles(m.id, tileHtmls);
     } else {
-      bodyHtml = `<div class="module-row-lessons">${m.lessons.map((lesson, idx) => {
+      const tileHtmls = m.lessons.map((lesson, idx) => {
         const key = `${m.id}_${idx}`;
         const lessonData = state.completedLessons[key];
         const done = !!lessonData;
@@ -16758,7 +16802,8 @@ function renderModuleList(containerId) {
           </div>
           <span class="lt-cta">${cta}</span>
         </div>`;
-      }).join('')}</div>`;
+      });
+      bodyHtml = groupLessonTiles(m.id, tileHtmls);
     }
 
     row.innerHTML = `

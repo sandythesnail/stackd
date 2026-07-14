@@ -2152,8 +2152,21 @@ select.budget-input { cursor: pointer; }
   transition: max-height 0.3s ease;
 }
 .module-row.expanded .module-row-lessons {
-  max-height: 1600px;
+  max-height: 2200px;
 }
+
+/* Clusters a module's lessons under a short label (see MODULE_LESSON_SECTIONS in app.js)
+   instead of one long undifferentiated grid. Each section gets its own nested 2-col grid so
+   the .lesson-tile border rules below (which lean on nth-child parity) keep working per
+   section rather than needing to account for header divs breaking up the count. */
+.module-row-lessons.module-row-lessons-grouped { display: block; }
+.lesson-section + .lesson-section { border-top: 1px solid var(--border); }
+.lesson-section-header {
+  padding: 0.9rem 1.4rem 0.4rem;
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-soft);
+}
+.lesson-section-tiles { display: grid; grid-template-columns: 1fr 1fr; }
 
 .lesson-tile {
   padding: 1rem 1.4rem; cursor: pointer;
@@ -2162,6 +2175,9 @@ select.budget-input { cursor: pointer; }
   border-bottom: 1px solid var(--border);
 }
 .lesson-tile:nth-child(odd) { border-right: 1px solid var(--border); }
+/* A lone tile left over at the end of an odd-sized row (e.g. a 3-lesson section) spans the
+   full width instead of leaving an empty cell beside it. */
+.lesson-tile:last-child:nth-child(odd) { grid-column: 1 / -1; border-right: none; }
 .lesson-tile:nth-last-child(-n+2):nth-child(odd),
 .lesson-tile:nth-last-child(-n+2):nth-child(odd) ~ .lesson-tile {
   border-bottom: none;
@@ -2214,6 +2230,7 @@ select.budget-input { cursor: pointer; }
 
 @media (max-width: 600px) {
   .module-row-lessons { grid-template-columns: 1fr; }
+  .lesson-section-tiles { grid-template-columns: 1fr; }
   .lesson-tile:nth-child(odd) { border-right: none; }
   .lesson-tile:nth-last-child(-n+2):nth-child(odd),
   .lesson-tile:nth-last-child(-n+2):nth-child(odd) ~ .lesson-tile {
