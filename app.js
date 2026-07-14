@@ -16327,10 +16327,17 @@ function applyRemoteState(remote) {
   // the more recent lastPlayedDate instead of always trusting remote.
   const localStreak = state.streak;
   const localLastPlayed = state.lastPlayedDate;
+  const localLastSeenTier = state.lastSeenTier;
   Object.assign(state, remote);
   if (localLastPlayed && new Date(localLastPlayed) >= new Date(state.lastPlayedDate || 0)) {
     state.streak = Math.max(state.streak || 0, localStreak || 0);
     state.lastPlayedDate = localLastPlayed;
+  }
+  // Same race as above: a stale remote row can carry an older (or null) lastSeenTier,
+  // which would make the big tier-change overlay re-announce a rank the player has
+  // already seen. A tier once seen locally should never be un-seen.
+  if (localLastSeenTier && TIERS.findIndex(t => t.name === localLastSeenTier) >= TIERS.findIndex(t => t.name === state.lastSeenTier)) {
+    state.lastSeenTier = localLastSeenTier;
   }
   saveState();
   renderHome();
@@ -16371,12 +16378,18 @@ function awardQuestXP(mod, amount) {
   return leveled;
 }
 
-// Every 3rd consecutive day played (3, 6, 9, ...) earns a diamond bonus — a slower, rarer
+// Every 3rd consecutive day logged in (3, 6, 9, ...) earns a diamond bonus — a slower, rarer
 // currency than coins, meant for the small run of "super exclusive" shop items.
 const STREAK_DIAMOND_INTERVAL = 3;
 const STREAK_DIAMOND_REWARD = 5;
 
-// Returns the number of diamonds earned this call (0 most days) so callers can show a banner.
+// Diamonds earned by the boot-time updateStreak() call, held here until the streak card
+// is clicked so the reward can be shown alongside the daily login modal instead of silently.
+let pendingStreakDiamonds = 0;
+
+// A login streak, not a lesson-completion streak: called once at app boot so simply
+// opening the app on a new calendar day advances it. Returns the number of diamonds
+// earned this call (0 most days) so callers can show a banner.
 function updateStreak() {
   const today = new Date().toDateString();
   if (state.lastPlayedDate === today) return 0;
@@ -16443,16 +16456,19 @@ function getDailyLoginModal() {
 // a brand-new player claiming their very first bonus hasn't completed a lesson yet and
 // state.streak is still technically 0 at that point) so day one reads as a congrats
 // moment rather than a generic "welcome back."
-function showDailyLoginModal(coins) {
+function showDailyLoginModal(coins, diamonds = 0) {
   const modal = getDailyLoginModal();
   const displayStreak = Math.max(1, state.streak);
   const title = displayStreak === 1 ? '1 Day Streak! 🎉' : `${displayStreak} Day Streak!`;
+  const rewardText = diamonds > 0
+    ? `<strong>+${coins} coins</strong> and <strong>+${diamonds} diamonds</strong>`
+    : `<strong>+${coins} coins</strong>`;
   const desc = displayStreak === 1
-    ? `Congrats, you started a streak! You earned <strong>+${coins} coins</strong> — come back tomorrow to keep it going.`
-    : `You earned <strong>+${coins} coins</strong> for logging in today.`;
+    ? `Congrats, you started a streak! You earned ${rewardText} — come back tomorrow to keep it going.`
+    : `You earned ${rewardText} for logging in today.`;
   modal.innerHTML = `
     <div class="daily-login-modal-card">
-      <div class="daily-login-modal-icon">🪙</div>
+      <div class="daily-login-modal-icon">${diamonds > 0 ? '💎' : '🪙'}</div>
       <h2 class="daily-login-modal-title">${title}</h2>
       <p class="daily-login-modal-desc">${desc}</p>
       <button class="btn-primary" id="daily-login-modal-close">Nice!</button>
@@ -17063,40 +17079,6 @@ function showAchievementDetail(a, isUnlocked) {
 }
 
 // ── PIG MASCOT ────────────────────────────────
-function getPigAccessory(level) {
-  if (level >= 9) return `
-    <ellipse cx="60" cy="21" rx="30" ry="7" fill="#2C3E2D"/>
-    <rect x="38" y="13" width="44" height="8" rx="2" fill="#2C3E2D"/>
-    <line x1="78" y1="13" x2="87" y2="30" stroke="#D4899E" stroke-width="2.5"/>
-    <line x1="87" y1="30" x2="84" y2="39" stroke="#D4899E" stroke-width="2"/>
-    <line x1="87" y1="30" x2="87" y2="40" stroke="#D4899E" stroke-width="2"/>
-    <line x1="87" y1="30" x2="90" y2="39" stroke="#D4899E" stroke-width="2"/>
-    <circle cx="87" cy="41" r="2.5" fill="#D4899E"/>`;
-  if (level >= 7) return `
-    <ellipse cx="60" cy="21" rx="30" ry="7" fill="#2C3E2D"/>
-    <rect x="38" y="13" width="44" height="8" rx="2" fill="#2C3E2D"/>
-    <line x1="78" y1="13" x2="87" y2="28" stroke="#D4899E" stroke-width="2.5"/>
-    <circle cx="87" cy="30" r="3.5" fill="#D4899E"/>`;
-  if (level >= 5) return `
-    <circle cx="46" cy="58" r="11.5" fill="none" stroke="#2C3E2D" stroke-width="2.5" opacity="0.75"/>
-    <circle cx="74" cy="58" r="11.5" fill="none" stroke="#2C3E2D" stroke-width="2.5" opacity="0.75"/>
-    <line x1="57.5" y1="57" x2="62.5" y2="57" stroke="#2C3E2D" stroke-width="2" opacity="0.75"/>
-    <line x1="21" y1="54" x2="34.5" y2="57" stroke="#2C3E2D" stroke-width="2" opacity="0.75"/>
-    <line x1="85.5" y1="57" x2="99" y2="54" stroke="#2C3E2D" stroke-width="2" opacity="0.75"/>`;
-  if (level >= 3) return `
-    <ellipse cx="45" cy="20" rx="12" ry="7.5" fill="#D4899E" transform="rotate(-18 45 20)"/>
-    <ellipse cx="67" cy="20" rx="12" ry="7.5" fill="#D4899E" transform="rotate(18 67 20)"/>
-    <circle cx="56" cy="21" r="5.5" fill="#B5607A"/>`;
-  return '';
-}
-
-function getPigAccessoryDesc(level) {
-  if (level >= 9)  return 'Every pig accessory unlocked — bow, glasses, and cap.';
-  if (level >= 7)  return 'Graduation cap unlocked · Reach Level 9 to unlock every accessory';
-  if (level >= 5)  return 'Glasses unlocked · Reach Level 7 to unlock the graduation cap';
-  if (level >= 3)  return 'Bow unlocked · Reach Level 5 to unlock glasses';
-  return 'Complete modules to unlock accessories for your pig!';
-}
 
 function getPigMarkup(scale) {
   return `<div class="pig-stage" style="--pig-scale:${scale}">
@@ -17733,10 +17715,9 @@ function renderHome() {
     <div class="mascot-pig-wrap">${getPigWithItemMarkup(0.25, getEquippedItems())}</div>
     <div class="mascot-info">
       <div class="mascot-tier-name">${tier.name}</div>
-      <div class="mascot-unlock">${getPigAccessoryDesc(state.level)}</div>
     </div>`;
 
-  const loginBonusPending = dailyLoginBonusPending();
+  const loginBonusPending = dailyLoginBonusPending() || pendingStreakDiamonds > 0;
   document.getElementById('home-stats-row').innerHTML = `
     <div class="hs-card">
       <div class="hs-num">${state.xp.toLocaleString()}</div>
@@ -17749,7 +17730,7 @@ function renderHome() {
     <button type="button" class="hs-card hs-card-streak${loginBonusPending ? ' hs-card-reward' : ''}" id="hs-streak-card">
       <div class="hs-num">${state.streak}</div>
       <div class="hs-label">Day Streak</div>
-      ${loginBonusPending ? '<span class="hs-reward-dot" title="A coin bonus is waiting"></span>' : ''}
+      ${loginBonusPending ? '<span class="hs-reward-dot" title="A bonus is waiting"></span>' : ''}
     </button>
     <div class="hs-card">
       <div class="hs-num">${done}<span style="font-size:1rem;letter-spacing:0;color:var(--text-soft)">/${MODULES.length}</span></div>
@@ -17758,8 +17739,10 @@ function renderHome() {
 
   document.getElementById('hs-streak-card').addEventListener('click', () => {
     const coins = claimDailyLoginBonus();
-    if (coins > 0) {
-      showDailyLoginModal(coins);
+    const diamonds = pendingStreakDiamonds;
+    if (coins > 0 || diamonds > 0) {
+      pendingStreakDiamonds = 0;
+      showDailyLoginModal(coins, diamonds);
       updateSidebarStats();
       renderHome();
     }
@@ -18578,7 +18561,8 @@ function finishBonusActivity(mod, lesson, lessonIdx, bonusXp = 0) {
   const prev = state.completedModules[mod.id];
   if (!prev) state.completedModules[mod.id] = { score: 1, total: 1, xpEarned };
 
-  const diamondsEarned = updateStreak();
+  // Streak/diamonds are earned by opening the app (see boot sequence), not by finishing a lesson.
+  const diamondsEarned = 0;
   const leveled = addXP(xpEarned);
   const newAchs = checkAchievements();
   saveState();
@@ -19016,7 +19000,8 @@ function finishQuiz() {
     state.completedModules[mod.id] = { score, total, xpEarned };
   }
 
-  const diamondsEarned = updateStreak();
+  // Streak/diamonds are earned by opening the app (see boot sequence), not by finishing a lesson.
+  const diamondsEarned = 0;
   const leveled = addXP(xpEarned);
   const newAchs = checkAchievements();
   saveState();
@@ -20473,7 +20458,8 @@ function finishQuest(mod, chosenConsequence) {
   const coinsEarned = qp.chapterTotal > 0 ? qp.chapterScore * 8 : 8;
   state.coins = (state.coins || 0) + coinsEarned;
 
-  const diamondsEarned = updateStreak();
+  // Streak/diamonds are earned by opening the app (see boot sequence), not by finishing a lesson.
+  const diamondsEarned = 0;
   // awardQuestXP folds the boss battle's own share into qp.xpEarned on top of everything
   // already earned chapter by chapter earlier in this run, so it reflects the FULL quest
   // total, matching what the "Lesson N" tile on the module list promised going in.
@@ -20756,6 +20742,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadState();
   state.lifeEvents.sessionCount++;
+  pendingStreakDiamonds = updateStreak();
   saveState();
   renderHome();
 
