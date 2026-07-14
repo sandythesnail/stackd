@@ -1056,6 +1056,47 @@ select.budget-input { cursor: pointer; }
 .hammy-side-avatar.happy::before, .hammy-side-avatar.streak::before { top: 0; left: -8px; animation: sparklePop 0.8s ease forwards; }
 .hammy-side-avatar.happy::after, .hammy-side-avatar.streak::after { top: 8px; right: -6px; animation: sparklePop 0.8s ease 0.15s forwards; }
 
+/* Illustrated face, swapped in only on the persistent quiz-companion Hammy (see
+   withFaceOverlay() in app.js). Sits in the same unscaled 440x460 coordinate frame as the
+   rest of the CSS pig, right over the eyes/snout. Invisible at rest, so idle Hammy (and every
+   other pig instance on the site, which never gets this element at all) is unchanged. */
+.hammy-face-overlay {
+  top: 145px; left: 90px; width: 260px; height: 155px;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  z-index: 3; pointer-events: none; opacity: 0; transition: opacity 0.15s ease;
+}
+.hammy-side-avatar.happy .hammy-face-overlay { opacity: 1; background-image: url('faces/hammy-streak.png?v=17'); }
+.hammy-side-avatar.gentle .hammy-face-overlay { opacity: 1; background-image: url('faces/hammy-gentle.png?v=18'); top: 98px; left: 90px; width: 260px; height: 200px; }
+.hammy-side-avatar.streak .hammy-face-overlay { opacity: 1; background-image: url('faces/hammy-happy.png?v=17'); }
+/* The illustrated face's own eyes replace these, and its edges fade to transparent (so they
+   blend into the pig's skin instead of a hard rectangle) — leaving the original CSS eyes at
+   full opacity underneath would show through that fade and double up as ghosting. */
+.pig-eye, .pig-cheek { transition: opacity 0.15s ease; }
+.hammy-side-avatar.happy .pig-eye,
+.hammy-side-avatar.gentle .pig-eye,
+.hammy-side-avatar.streak .pig-eye,
+.hammy-side-avatar.happy .pig-cheek,
+.hammy-side-avatar.gentle .pig-cheek,
+.hammy-side-avatar.streak .pig-cheek { opacity: 0; }
+/* The illustration has its own shading baked in on the side it covers — drop just the
+   bottom-right inset shadow (the part that would otherwise fall right behind the art) but
+   keep the top-left highlight, so the head keeps its dimensional look on the left. */
+.hammy-side-avatar.happy .pig-head,
+.hammy-side-avatar.gentle .pig-head,
+.hammy-side-avatar.streak .pig-head { box-shadow: inset 16px 16px 30px rgba(255,255,255,.35); }
+/* The body's own shading peeks up behind the chin/lower-face area where it overlaps the
+   head — flatten it too while a mood is active, same reasoning as the head. */
+.hammy-side-avatar.happy .pig-body,
+.hammy-side-avatar.gentle .pig-body,
+.hammy-side-avatar.streak .pig-body { box-shadow: none; }
+/* The illustration draws its own nose — the CSS snout is a distinctly different pink oval
+   sitting on top of the head gradient, so it reads as a hard outline behind the art. Hide it
+   entirely rather than just dropping its shadow. */
+.pig-snout { transition: opacity 0.15s ease; }
+.hammy-side-avatar.happy .pig-snout,
+.hammy-side-avatar.gentle .pig-snout,
+.hammy-side-avatar.streak .pig-snout { opacity: 0; }
+
 /* Centers vertically within whatever height the row ends up (quest-layout's min-height is set
    in JS from the real available space), so short content isn't squished against the top with
    Hammy floating awkwardly beside empty space below. */

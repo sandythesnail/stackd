@@ -17181,6 +17181,18 @@ function getPigWithItemMarkup(scale, itemOrItems) {
 </div>`;
 }
 
+// Splices an extra, invisible-by-default face layer as the last child of `.pig`, positioned
+// over the eyes/snout in the same unscaled 440x460 coordinate frame as the rest of the CSS
+// pig — so it inherits the pig-stage's --pig-scale transform automatically. Only used for the
+// persistent quiz-companion Hammy (#hammy-side-avatar): the mood classes it already gets
+// (happy/gentle/streak, toggled by showHammyReaction/showHammyMessage) fade a matching
+// illustrated expression in on top via CSS. Every other pig on the site (logo, login,
+// wardrobe, shop) calls getPigMarkup/getPigWithItemMarkup directly without this, so they're
+// completely unaffected.
+function withFaceOverlay(pigMarkup) {
+  return pigMarkup.replace(/(<\/div>\s*<\/div>\s*<\/div>\s*)$/, '<div class="hammy-face-overlay"></div>$1');
+}
+
 // The player's own equipped cosmetic (bought and worn from the Shop) — used everywhere
 // "their" Hammy appears (Home, Progress, quest/activity companion, quest story portraits,
 // results) so a purchase visibly shows up across the whole app, not just on the Room page.
@@ -18535,7 +18547,7 @@ function startBonusActivity(moduleId, lessonIdx) {
   document.getElementById('glossary-tray').classList.remove('show');
   document.getElementById('hint-budget').innerHTML = '';
   document.getElementById('quest-side').style.display = 'flex';
-  document.getElementById('hammy-side-avatar').innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItems());
+  document.getElementById('hammy-side-avatar').innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItems()));
   document.getElementById('hammy-side-avatar').className = 'hammy-side-avatar';
   document.getElementById('hammy-side-msg').textContent = '';
   document.getElementById('hammy-side-msg').className = 'hammy-side-msg';
@@ -19207,7 +19219,7 @@ function renderChapter(mod, idx) {
   const hammyMsg = document.getElementById('hammy-side-msg');
   questSide.style.display = HAMMY_SIDE_HIDDEN_TYPES.includes(chapter.type) ? 'none' : 'flex';
   hammySide.className = 'hammy-side-avatar';
-  hammySide.innerHTML = getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItems());
+  hammySide.innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItems()));
   hammyMsg.className = 'hammy-side-msg';
   hammyMsg.textContent = '';
 
@@ -19280,7 +19292,7 @@ function renderSubQuestResults(mod, qp, newAchs) {
   const achHtml = newAchs.map(buildNewAchBanner).join('');
 
   document.getElementById('results-wrap').innerHTML = `
-    <div class="subquest-celebrate-hammy hammy-side-avatar streak">${getPigWithItemMarkup(0.55, getEquippedItems())}</div>
+    <div class="subquest-celebrate-hammy hammy-side-avatar streak">${withFaceOverlay(getPigWithItemMarkup(0.55, getEquippedItems()))}</div>
     <div class="results-grade">Sub-Quest Complete</div>
     <h2 class="results-title">${quest.topic}</h2>
     <p class="results-score">Hammy just walked through this one step by step, for real — here's what stuck.</p>
