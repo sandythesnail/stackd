@@ -19509,11 +19509,13 @@ function showHammyReaction(mod, isCorrect, context = 'answer') {
   avatar.classList.add(isCorrect ? 'happy' : 'gentle');
   msgEl.classList.add('show', isCorrect ? 'happy' : 'gentle');
   if (isStreak) { avatar.classList.add('streak'); msgEl.classList.add('streak'); }
-  setTimeout(() => avatar.classList.remove('happy', 'gentle', 'streak'), 1300);
+  // Face and message hide together (previously the face reverted to blank at 1300ms while
+  // the bubble stayed up until 2400ms, leaving Hammy blank-faced under a still-visible message).
+  setTimeout(() => avatar.classList.remove('happy', 'gentle', 'streak'), 1400);
   msgEl._hideTimer = setTimeout(() => {
     msgEl.classList.remove('show');
     setTimeout(() => { if (!msgEl.classList.contains('show')) msgEl.textContent = ''; }, 320);
-  }, 2400);
+  }, 1400);
 }
 
 // Puts specific, given text (rather than a random pick) in Hammy's speech bubble — used where
@@ -19530,11 +19532,13 @@ function showHammyMessage(text, isGood) {
   void avatar.offsetWidth;
   avatar.classList.add(isGood ? 'happy' : 'gentle');
   msgEl.classList.add('show', isGood ? 'happy' : 'gentle');
-  setTimeout(() => avatar.classList.remove('happy', 'gentle'), 1300);
+  // Face and message hide together (previously the face reverted to blank at 1300ms while
+  // this longer narration text stayed up until 4500ms, leaving Hammy blank-faced for ~3s).
+  setTimeout(() => avatar.classList.remove('happy', 'gentle'), 2800);
   msgEl._hideTimer = setTimeout(() => {
     msgEl.classList.remove('show');
     setTimeout(() => { if (!msgEl.classList.contains('show')) msgEl.textContent = ''; }, 320);
-  }, 4500);
+  }, 2800);
 }
 
 // ── Chapter type: teach (plain-English concept explainer) ──
