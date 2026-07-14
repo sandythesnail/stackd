@@ -18102,11 +18102,13 @@ function renderToolsPage() {
       document.querySelectorAll('.tools-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       if (tab.dataset.tab === 'budget') renderBudgetCalculatorPanel();
+      else if (tab.dataset.tab === 'loan') renderLoanPayoffPanel();
       else renderCompoundInterestPanel();
     };
   });
   const activeTab = document.querySelector('.tools-tab.active');
   if (activeTab && activeTab.dataset.tab === 'compound') renderCompoundInterestPanel();
+  else if (activeTab && activeTab.dataset.tab === 'loan') renderLoanPayoffPanel();
   else renderBudgetCalculatorPanel();
 }
 
@@ -18392,6 +18394,35 @@ function computeMinPaymentDebt({ startingBalance, annualRatePct, months = 120 })
   return points;
 }
 
+// Standard fixed-payment loan amortization formula — the same math a federal/private student
+// loan servicer uses to set your required monthly payment over a given term.
+function computeLoanMinPayment({ principal, annualRatePct, termYears }) {
+  const monthlyRate = annualRatePct / 100 / 12;
+  const n = Math.round(termYears * 12);
+  if (monthlyRate === 0) return principal / n;
+  return principal * monthlyRate * Math.pow(1 + monthlyRate, n) / (Math.pow(1 + monthlyRate, n) - 1);
+}
+
+// Amortizes `principal` at a fixed `monthlyPayment` — which may exceed the loan's own required
+// minimum, paying it off faster than its stated term. A payment that doesn't even cover the
+// first (highest) month's interest would never pay down the balance at all, so that case is
+// short-circuited rather than looping to maxMonths for nothing.
+function computeLoanPayoff({ principal, annualRatePct, monthlyPayment, maxMonths = 600 }) {
+  const monthlyRate = annualRatePct / 100 / 12;
+  if (monthlyPayment <= principal * monthlyRate) return null;
+  let balance = principal;
+  let totalInterest = 0;
+  const points = [{ month: 0, balance, totalInterest: 0 }];
+  for (let m = 1; m <= maxMonths && balance > 0.5; m++) {
+    const interest = balance * monthlyRate;
+    const principalPaid = Math.min(balance, monthlyPayment - interest);
+    balance = Math.max(0, balance - principalPaid);
+    totalInterest += interest;
+    points.push({ month: m, balance, totalInterest });
+  }
+  return points;
+}
+
 // Generic stacked-area chart builder — the one genuinely new chart type in this app (the
 // existing donut/bar/column components have no time-series/line chart equivalent). Two
 // series stack: a base value (e.g. contributed) and a delta on top (e.g. interest earned),
@@ -18581,6 +18612,228 @@ function renderCompoundInterestPanel() {
 
   renderMainChart();
   renderDebtChart();
+}
+
+// Post-college loan payoff, grounded in an actual monthly budget (take-home pay minus rent,
+// food, and other living costs) rather than the loan in isolation — the same "here's what's
+// actually left over" framing as the Budget Calculator, applied to a loan payoff timeline.
+function renderLoanPayoffPanel() {
+  const panel = document.getElementById('tools-panel');
+  const sim = {
+    loanBalance: 27000, annualRatePct: 5.5, rateMode: 'subsidized', termYears: 10,
+    monthlyIncome: 3200, rent: 1100, food: 400, otherExpenses: 300, extraPayment: 0,
+  };
+
+  panel.innerHTML = `
+    <div class="budget-grid">
+      <div class="budget-col">
+        <div class="budget-card ci-inputs-card">
+          <div class="budget-card-title">Your Loan</div>
+          <div class="microsim-slider-row">
+            <div class="microsim-slider-label"><span>Loan balance</span><span class="microsim-slider-val" id="lp-balance-val">$${sim.loanBalance.toLocaleString()}</span></div>
+            <input type="range" class="microsim-range" id="lp-balance" min="1000" max="100000" step="500" value="${sim.loanBalance}">
+          </div>
+          <div class="ci-rate-presets" id="lp-rate-presets">
+            <button class="ci-preset-btn active" data-mode="subsidized" type="button">Fed. Subsidized<span>~5.5%</span></button>
+            <button class="ci-preset-btn" data-mode="unsubsidized" type="button">Fed. Unsubsidized<span>~7%</span></button>
+            <button class="ci-preset-btn" data-mode="private" type="button">Private<span>~9%</span></button>
+          </div>
+          <div class="microsim-slider-row">
+            <div class="microsim-slider-label"><span>Interest rate</span><span class="microsim-slider-val" id="lp-rate-val">${sim.annualRatePct}%</span></div>
+            <input type="range" class="microsim-range" id="lp-rate" min="1" max="14" step="0.25" value="${sim.annualRatePct}">
+          </div>
+          <div class="ci-rate-presets">
+            <button class="ci-preset-btn active" data-term="10" type="button">Standard<span>10yr</span></button>
+            <button class="ci-preset-btn" data-term="20" type="button">Extended<span>20yr</span></button>
+            <button class="ci-preset-btn" data-term="25" type="button">Income-Driven<span>25yr</span></button>
+          </div>
+        </div>
+        <div class="budget-card">
+          <div class="budget-card-title">Monthly Take-Home Pay & Living Costs</div>
+          <div class="budget-note">Uses take-home (net) pay, not gross salary — see the Earning module for the difference.</div>
+          <div class="microsim-slider-row">
+            <div class="microsim-slider-label"><span>Monthly take-home pay</span><span class="microsim-slider-val" id="lp-income-val">$${sim.monthlyIncome.toLocaleString()}</span></div>
+            <input type="range" class="microsim-range" id="lp-income" min="1500" max="7000" step="50" value="${sim.monthlyIncome}">
+          </div>
+          <div class="microsim-slider-row">
+            <div class="microsim-slider-label"><span>Rent</span><span class="microsim-slider-val" id="lp-rent-val">$${sim.rent.toLocaleString()}</span></div>
+            <input type="range" class="microsim-range" id="lp-rent" min="0" max="3000" step="25" value="${sim.rent}">
+          </div>
+          <div class="microsim-slider-row">
+            <div class="microsim-slider-label"><span>Food</span><span class="microsim-slider-val" id="lp-food-val">$${sim.food.toLocaleString()}</span></div>
+            <input type="range" class="microsim-range" id="lp-food" min="0" max="1000" step="10" value="${sim.food}">
+          </div>
+          <div class="microsim-slider-row">
+            <div class="microsim-slider-label"><span>Other (utilities, transport, etc.)</span><span class="microsim-slider-val" id="lp-other-val">$${sim.otherExpenses.toLocaleString()}</span></div>
+            <input type="range" class="microsim-range" id="lp-other" min="0" max="1500" step="10" value="${sim.otherExpenses}">
+          </div>
+        </div>
+      </div>
+      <div class="budget-col">
+        <div class="budget-card ci-result-card">
+          <div class="budget-card-title">Where You'll Land</div>
+          <div class="ci-headline" id="lp-headline"></div>
+          <div class="ci-chart-wrap" id="lp-chart"></div>
+          <div class="ci-milestones" id="lp-milestones"></div>
+        </div>
+        <div class="budget-card" id="lp-reality-card"></div>
+        <div class="budget-card" id="lp-extra-card"></div>
+      </div>
+    </div>`;
+
+  function computeMinPayment() {
+    return computeLoanMinPayment({ principal: sim.loanBalance, annualRatePct: sim.annualRatePct, termYears: sim.termYears });
+  }
+
+  function renderRealityCheck(minPayment) {
+    const essential = sim.rent + sim.food + sim.otherExpenses;
+    const availableForLoan = sim.monthlyIncome - essential;
+    const shortfall = minPayment - availableForLoan;
+    const card = document.getElementById('lp-reality-card');
+    card.classList.toggle('ci-warning-card', shortfall > 0);
+    if (shortfall > 0) {
+      card.innerHTML = `
+        <div class="budget-card-title">⚠ Budget Reality Check</div>
+        <p class="budget-goal-msg bad">After rent, food, and other expenses, you have <strong>$${Math.max(0, availableForLoan).toFixed(0)}</strong>/month left, but the minimum payment on this loan is <strong>$${minPayment.toFixed(0)}</strong>/month — you're <strong>$${shortfall.toFixed(0)}</strong> short. This isn't sustainable without cutting expenses, increasing income, or choosing a longer loan term.</p>`;
+    } else {
+      card.innerHTML = `
+        <div class="budget-card-title">Budget Reality Check</div>
+        <p class="budget-goal-msg ok">After rent, food, other expenses, and the minimum loan payment, you have <strong>$${(availableForLoan - minPayment).toFixed(0)}</strong>/month left over.</p>`;
+    }
+    return { availableForLoan, canAffordMinimum: shortfall <= 0 };
+  }
+
+  function renderExtraPaymentCard(minPayment, availableForLoan, canAffordMinimum) {
+    const card = document.getElementById('lp-extra-card');
+    const maxExtra = Math.max(0, Math.floor(availableForLoan - minPayment));
+    if (!canAffordMinimum) {
+      card.innerHTML = `<div class="budget-card-title">Extra Payments</div><p class="budget-note">Cover the minimum payment above before there's room to pay extra.</p>`;
+      return;
+    }
+    if (maxExtra <= 0) {
+      card.innerHTML = `<div class="budget-card-title">Extra Payments</div><p class="budget-note">No spare room in this budget beyond the minimum payment — every dollar of take-home pay is already spoken for.</p>`;
+      return;
+    }
+    sim.extraPayment = Math.min(sim.extraPayment, maxExtra);
+    card.innerHTML = `
+      <div class="budget-card-title">Pay Extra With What's Left Over</div>
+      <div class="microsim-slider-row">
+        <div class="microsim-slider-label"><span>Extra toward the loan</span><span class="microsim-slider-val" id="lp-extra-val">$${sim.extraPayment}</span></div>
+        <input type="range" class="microsim-range" id="lp-extra" min="0" max="${maxExtra}" step="5" value="${sim.extraPayment}">
+      </div>
+      <div id="lp-compare"></div>`;
+    document.getElementById('lp-extra').addEventListener('input', (e) => {
+      sim.extraPayment = Number(e.target.value);
+      document.getElementById('lp-extra-val').textContent = '$' + sim.extraPayment;
+      renderChart(minPayment);
+      renderComparison(minPayment);
+    });
+    renderComparison(minPayment);
+  }
+
+  function renderComparison(minPayment) {
+    const target = document.getElementById('lp-compare');
+    if (!target) return;
+    if (sim.extraPayment <= 0) { target.innerHTML = ''; return; }
+    const minOnly = computeLoanPayoff({ principal: sim.loanBalance, annualRatePct: sim.annualRatePct, monthlyPayment: minPayment });
+    const withExtra = computeLoanPayoff({ principal: sim.loanBalance, annualRatePct: sim.annualRatePct, monthlyPayment: minPayment + sim.extraPayment });
+    if (!minOnly || !withExtra) { target.innerHTML = ''; return; }
+    const minYears = (minOnly.length - 1) / 12;
+    const extraYears = (withExtra.length - 1) / 12;
+    const minInterest = minOnly[minOnly.length - 1].totalInterest;
+    const extraInterest = withExtra[withExtra.length - 1].totalInterest;
+    target.innerHTML = `
+      <div class="ci-compare-row"><span>Minimum payments only</span><strong>${minYears.toFixed(1)} yrs · $${Math.round(minInterest).toLocaleString()} interest</strong></div>
+      <div class="ci-compare-row"><span>With $${sim.extraPayment} extra/month</span><strong>${extraYears.toFixed(1)} yrs · $${Math.round(extraInterest).toLocaleString()} interest</strong></div>
+      <div class="ci-compare-gap">That extra $${sim.extraPayment}/month pays this off <strong>${(minYears - extraYears).toFixed(1)} years sooner</strong> and saves <strong>$${Math.round(minInterest - extraInterest).toLocaleString()}</strong> in interest.</div>`;
+  }
+
+  function renderChart(minPayment) {
+    const totalPayment = minPayment + sim.extraPayment;
+    const points = computeLoanPayoff({ principal: sim.loanBalance, annualRatePct: sim.annualRatePct, monthlyPayment: totalPayment });
+    const headline = document.getElementById('lp-headline');
+    const chartEl = document.getElementById('lp-chart');
+    const milestones = document.getElementById('lp-milestones');
+    if (!points) {
+      headline.innerHTML = `<span class="ci-headline-sub">A $${totalPayment.toFixed(0)}/month payment doesn't even cover this loan's interest — the balance would only grow. Raise the payment to see a payoff timeline.</span>`;
+      chartEl.innerHTML = '';
+      milestones.innerHTML = '';
+      return;
+    }
+    const final = points[points.length - 1];
+    const years = (points.length - 1) / 12;
+    headline.innerHTML = `
+      <span class="ci-headline-num">${years.toFixed(1)} yrs</span>
+      <span class="ci-headline-sub">paid off — total interest paid: $${Math.round(final.totalInterest).toLocaleString()}, total paid: $${Math.round(sim.loanBalance + final.totalInterest).toLocaleString()}</span>`;
+    const chart = buildStackedAreaChart(points.map(p => ({ ...p, zero: 0 })), 'zero', 'balance');
+    chartEl.innerHTML = `
+      <svg viewBox="0 0 ${chart.width} ${chart.height}" class="ci-svg">
+        <path d="${chart.deltaArea}" class="ci-area-debt"></path>
+        <path d="${chart.totalLine}" class="ci-line-debt" pathLength="1000"></path>
+      </svg>`;
+    requestAnimationFrame(() => chartEl.querySelector('.ci-line-debt').classList.add('drawn'));
+    milestones.innerHTML = `<div class="ci-milestone-item">💳 A $${totalPayment.toFixed(0)}/month payment clears a $${sim.loanBalance.toLocaleString()} balance at ${sim.annualRatePct}% in <strong>${years.toFixed(1)} years</strong>.</div>`;
+  }
+
+  function renderAll() {
+    const minPayment = computeMinPayment();
+    const { availableForLoan, canAffordMinimum } = renderRealityCheck(minPayment);
+    renderChart(minPayment);
+    renderExtraPaymentCard(minPayment, availableForLoan, canAffordMinimum);
+  }
+
+  document.querySelectorAll('#lp-rate-presets .ci-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#lp-rate-presets .ci-preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      sim.rateMode = btn.dataset.mode;
+      sim.annualRatePct = btn.dataset.mode === 'subsidized' ? 5.5 : btn.dataset.mode === 'unsubsidized' ? 7 : 9;
+      document.getElementById('lp-rate').value = sim.annualRatePct;
+      document.getElementById('lp-rate-val').textContent = sim.annualRatePct + '%';
+      renderAll();
+    });
+  });
+  document.querySelectorAll('.ci-rate-presets .ci-preset-btn[data-term]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ci-rate-presets .ci-preset-btn[data-term]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      sim.termYears = Number(btn.dataset.term);
+      renderAll();
+    });
+  });
+  document.getElementById('lp-balance').addEventListener('input', (e) => {
+    sim.loanBalance = Number(e.target.value);
+    document.getElementById('lp-balance-val').textContent = '$' + sim.loanBalance.toLocaleString();
+    renderAll();
+  });
+  document.getElementById('lp-rate').addEventListener('input', (e) => {
+    sim.annualRatePct = Number(e.target.value);
+    document.querySelectorAll('#lp-rate-presets .ci-preset-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('lp-rate-val').textContent = sim.annualRatePct + '%';
+    renderAll();
+  });
+  document.getElementById('lp-income').addEventListener('input', (e) => {
+    sim.monthlyIncome = Number(e.target.value);
+    document.getElementById('lp-income-val').textContent = '$' + sim.monthlyIncome.toLocaleString();
+    renderAll();
+  });
+  document.getElementById('lp-rent').addEventListener('input', (e) => {
+    sim.rent = Number(e.target.value);
+    document.getElementById('lp-rent-val').textContent = '$' + sim.rent.toLocaleString();
+    renderAll();
+  });
+  document.getElementById('lp-food').addEventListener('input', (e) => {
+    sim.food = Number(e.target.value);
+    document.getElementById('lp-food-val').textContent = '$' + sim.food.toLocaleString();
+    renderAll();
+  });
+  document.getElementById('lp-other').addEventListener('input', (e) => {
+    sim.otherExpenses = Number(e.target.value);
+    document.getElementById('lp-other-val').textContent = '$' + sim.otherExpenses.toLocaleString();
+    renderAll();
+  });
+
+  renderAll();
 }
 
 // ── MODULE DETAIL ──────────────────────────────
