@@ -16710,24 +16710,35 @@ const MODULE_LESSON_SECTIONS = {
   scams:      [{ label: 'Scams Targeting Students', count: 3 }, { label: 'Digital & Payment Scams', count: 3 }, { label: 'Social Engineering', count: 2 }],
 };
 
-// Wraps a flat array of already-rendered `.lesson-tile` HTML strings into labeled section
-// groups for modules configured in MODULE_LESSON_SECTIONS above. Each section gets its own
-// nested 2-col grid (rather than interleaving header divs into one shared grid) so the
-// existing nth-child left/right-column and last-row border rules keep working unmodified —
-// they just apply per section instead of across the whole list. Falls back to the original
-// flat single-grid markup for any module not in the map (or a mismatched lesson count).
-function groupLessonTiles(moduleId, tileHtmls) {
+// Wraps a flat array of {html, done} lesson tiles into a labeled accordion for modules
+// configured in MODULE_LESSON_SECTIONS above: each section is its own collapsible sub-group,
+// collapsed by default except the one holding the next not-yet-done lesson (so opening a
+// module lands on "what to do next" instead of a wall of 8 tiles, or a wall of empty headers).
+// Never reorders or gates lessons — a module left out of the map (or whose counts don't add
+// up to its actual lesson count) just falls back to the old flat, always-visible grid.
+function groupLessonTiles(moduleId, tiles) {
   const sections = MODULE_LESSON_SECTIONS[moduleId];
-  if (!sections || sections.reduce((sum, s) => sum + s.count, 0) !== tileHtmls.length) {
-    return `<div class="module-row-lessons">${tileHtmls.join('')}</div>`;
+  if (!sections || sections.reduce((sum, s) => sum + s.count, 0) !== tiles.length) {
+    return `<div class="module-row-lessons">${tiles.map(t => t.html).join('')}</div>`;
   }
+  const firstIncompleteIdx = tiles.findIndex(t => !t.done);
   let cursor = 0;
-  const sectionsHtml = sections.map(section => {
-    const tiles = tileHtmls.slice(cursor, cursor + section.count);
+  const sectionsHtml = sections.map((section, sIdx) => {
+    const startIdx = cursor;
+    const group = tiles.slice(startIdx, startIdx + section.count);
     cursor += section.count;
-    return `<div class="lesson-section">
-      <div class="lesson-section-header">${section.label}</div>
-      <div class="lesson-section-tiles">${tiles.join('')}</div>
+    const doneCount = group.filter(t => t.done).length;
+    const isCurrent = firstIncompleteIdx === -1
+      ? sIdx === 0
+      : (firstIncompleteIdx >= startIdx && firstIncompleteIdx < cursor);
+    const metaText = doneCount === section.count ? 'All done' : `${doneCount}/${section.count} done`;
+    return `<div class="lesson-section${isCurrent ? ' expanded' : ''}">
+      <div class="lesson-section-header" role="button" tabindex="0" aria-expanded="${isCurrent}">
+        <span class="lsh-label">${section.label}</span>
+        <span class="lsh-meta">${metaText}</span>
+        <svg class="lsh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="lesson-section-tiles">${group.map(t => t.html).join('')}</div>
     </div>`;
   }).join('');
   return `<div class="module-row-lessons module-row-lessons-grouped">${sectionsHtml}</div>`;
@@ -16768,14 +16779,14 @@ function renderModuleList(containerId) {
     let bodyHtml;
     if (quest) {
       const quests = mainQuests(m);
-      const tileHtmls = quests.map((q, idx) => {
+      const tiles = quests.map((q, idx) => {
         const qp = state.questProgress[questKey(m.id, q.id)];
         const done = !!(qp && qp.done);
         const cta = done ? '↻ Replay Quest' : (qp && qp.chapterIdx > 0 ? `Resume — ${questLabel(m, q)} →` : 'Begin Quest →');
         const sub = subQuestFor(m, q.id);
         const subDone = sub && !!state.questProgress[questKey(m.id, sub.id)]?.done;
         const subHtml = sub ? `<div class="lt-subquest${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">${subDone ? '✓' : '🎯'} Real-life sub-quest: ${sub.topic} →</div>` : '';
-        return `<div class="lesson-tile quest-tile${done ? ' done' : ''}" data-module="${m.id}" data-quest="${q.id}">
+        const html = `<div class="lesson-tile quest-tile${done ? ' done' : ''}" data-module="${m.id}" data-quest="${q.id}">
           <div class="lt-body">
             <div class="lt-num"><span class="lt-num-label">Lesson ${idx + 1}</span> <span class="card-badge badge-xp">Up to ${questMaxXP(q, m)} XP</span></div>
             <div class="lt-title">${q.topic || q.character.name}</div>
@@ -16784,17 +16795,18 @@ function renderModuleList(containerId) {
           </div>
           <span class="lt-cta">${cta}</span>
         </div>`;
+        return { html, done };
       });
-      bodyHtml = groupLessonTiles(m.id, tileHtmls);
+      bodyHtml = groupLessonTiles(m.id, tiles);
     } else {
-      const tileHtmls = m.lessons.map((lesson, idx) => {
+      const tiles = m.lessons.map((lesson, idx) => {
         const key = `${m.id}_${idx}`;
         const lessonData = state.completedLessons[key];
         const done = !!lessonData;
         const isActivity = !!lesson.type;
         const meta = done ? `Score: ${lessonData.score}/${lessonData.total}` : (isActivity ? 'Interactive' : '');
         const cta = done ? '↻ Replay' : 'Start →';
-        return `<div class="lesson-tile${done ? ' done' : ''}${isActivity ? ' activity-tile' : ''}" data-module="${m.id}" data-lesson="${idx}">
+        const html = `<div class="lesson-tile${done ? ' done' : ''}${isActivity ? ' activity-tile' : ''}" data-module="${m.id}" data-lesson="${idx}">
           <div class="lt-body">
             <div class="lt-num"><span class="lt-num-label">Lesson ${idx + 1}</span> <span class="card-badge badge-xp">Up to ${lessonMaxXP(lesson, m)} XP</span></div>
             <div class="lt-title">${lesson.title}${isActivity ? ' <span class="quest-tag">Interactive</span>' : ''}</div>
@@ -16802,8 +16814,9 @@ function renderModuleList(containerId) {
           </div>
           <span class="lt-cta">${cta}</span>
         </div>`;
+        return { html, done };
       });
-      bodyHtml = groupLessonTiles(m.id, tileHtmls);
+      bodyHtml = groupLessonTiles(m.id, tiles);
     }
 
     row.innerHTML = `
@@ -16828,6 +16841,17 @@ function renderModuleList(containerId) {
     header.addEventListener('click', toggleExpanded);
     header.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpanded(); }
+    });
+
+    row.querySelectorAll('.lesson-section-header').forEach(sectionHeader => {
+      const toggleSection = () => {
+        const expanded = sectionHeader.parentElement.classList.toggle('expanded');
+        sectionHeader.setAttribute('aria-expanded', String(expanded));
+      };
+      sectionHeader.addEventListener('click', toggleSection);
+      sectionHeader.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSection(); }
+      });
     });
 
     if (quest) {
@@ -17210,14 +17234,52 @@ function getPigWithItemMarkup(scale, itemOrItems) {
 
 // Splices an extra, invisible-by-default face layer as the last child of `.pig`, positioned
 // over the eyes/snout in the same unscaled 440x460 coordinate frame as the rest of the CSS
-// pig — so it inherits the pig-stage's --pig-scale transform automatically. Only used for the
-// persistent quiz-companion Hammy (#hammy-side-avatar): the mood classes it already gets
-// (happy/gentle/streak, toggled by showHammyReaction/showHammyMessage) fade a matching
-// illustrated expression in on top via CSS. Every other pig on the site (logo, login,
-// wardrobe, shop) calls getPigMarkup/getPigWithItemMarkup directly without this, so they're
-// completely unaffected.
+// pig — so it inherits the pig-stage's --pig-scale transform automatically. Used by the
+// persistent quiz-companion Hammy (#hammy-side-avatar, mood classes toggled by
+// showHammyReaction/showHammyMessage) and the big Home page mascot (mood-* classes from
+// todaysHammyMood(), see renderHome()). Every other pig on the site (logo, login, wardrobe,
+// shop) calls getPigMarkup/getPigWithItemMarkup directly without this, so they're unaffected.
 function withFaceOverlay(pigMarkup) {
   return pigMarkup.replace(/(<\/div>\s*<\/div>\s*<\/div>\s*)$/, '<div class="hammy-face-overlay"></div>$1');
+}
+
+// ── HOME MASCOT DAILY MOOD ──────────────────────
+// One mood per calendar day, deterministic from the date string (same day boundary as the
+// login streak in updateStreak()) so it holds steady across renders/refreshes and only
+// changes once players come back on a new day — not a random reroll on every page visit.
+const HAMMY_MOODS = [
+  { id: 'star', label: 'starstruck', msg: "Hammy's feeling starstruck today. Give them something to be proud of — finish a module!" },
+  { id: 'sleepy', label: 'sleepy', msg: "Hammy's a little sleepy today. Wake them up with a quick module!" },
+  { id: 'curious', label: 'curious', msg: "Hammy's feeling curious today. Satisfy their curiosity — start a module!" },
+  { id: 'excited', label: 'excited', msg: "Hammy's buzzing with excitement! Match their energy — jump into a module." },
+  { id: 'frustrated', label: 'frustrated', msg: "Hammy's a little frustrated today. Help them work through it — complete a module together." },
+  { id: 'angry', label: 'grumpy', msg: "Hammy woke up grumpy today. Turn their mood around with a module!" },
+  { id: 'confused', label: 'confused', msg: "Hammy's feeling confused today. Clear things up — learn something new in a module." },
+  { id: 'love', label: 'smitten', msg: "Hammy's feeling the love today! Show them some back — finish a module." },
+  { id: 'nervy', label: 'nervous', msg: "Hammy's a bit nervous today. Ease their nerves — complete a module." },
+  { id: 'relieved', label: 'relieved', msg: "Hammy's feeling relieved today. Keep the good vibes going with a module." },
+  { id: 'sad', label: 'a little blue', msg: "Hammy's feeling a little blue today. Cheer them up — finish a module!" },
+  { id: 'shockhappy', label: 'overjoyed', msg: "Hammy is overjoyed today! Keep it going — complete a module." },
+  { id: 'sick', label: 'under the weather', msg: "Hammy's feeling a little under the weather. A module might be just the pick-me-up they need!" },
+  { id: 'surprise', label: 'surprised', msg: "Hammy's totally surprised today. See what's in store — start a module!" },
+  { id: 'wink', label: 'playful', msg: "Hammy's feeling playful today. Play along — finish a module!" },
+];
+
+function todaysHammyMood() {
+  const dateStr = new Date().toDateString();
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) hash = (hash * 31 + dateStr.charCodeAt(i)) | 0;
+  return HAMMY_MOODS[Math.abs(hash) % HAMMY_MOODS.length];
+}
+
+// Whether the player has already worked on a module today — flips Home's Hammy to a
+// satisfied/happy face for the rest of the day instead of the daily mood.
+function hasModuleActivityToday() {
+  return state.lastModuleActivityDate === new Date().toDateString();
+}
+
+function markModuleActivityToday() {
+  state.lastModuleActivityDate = new Date().toDateString();
 }
 
 // The player's own equipped cosmetic (bought and worn from the Shop) — used everywhere
@@ -17756,11 +17818,13 @@ function renderHome() {
   document.getElementById('h-tier').textContent = tier.name;
   document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
 
+  const satisfiedToday = hasModuleActivityToday();
+  const mood = todaysHammyMood();
+  const moodClass = satisfiedToday ? 'mood-satisfied' : `mood-${mood.id}`;
   document.getElementById('home-mascot-card').innerHTML = `
-    <div class="mascot-pig-wrap">${getPigWithItemMarkup(0.25, getEquippedItems())}</div>
-    <div class="mascot-info">
-      <div class="mascot-tier-name">${tier.name}</div>
-    </div>`;
+    <div class="mascot-pig-wrap has-face-overlay ${moodClass}">${withFaceOverlay(getPigWithItemMarkup(0.34, getEquippedItems()))}</div>
+    <div class="mascot-mood-label">Hammy is feeling <strong>${satisfiedToday ? 'happy' : mood.label}</strong> today</div>
+    <div class="mascot-mood-msg">${satisfiedToday ? "Thanks for working on a module today — Hammy's mood is lifted! Come back tomorrow for more." : mood.msg}</div>`;
 
   const loginBonusPending = dailyLoginBonusPending() || pendingStreakDiamonds > 0;
   document.getElementById('home-stats-row').innerHTML = `
@@ -18605,6 +18669,7 @@ function finishBonusActivity(mod, lesson, lessonIdx, bonusXp = 0) {
   state.completedLessons[`${mod.id}_${lessonIdx}`] = { score: 1, total: 1, xpEarned };
   const prev = state.completedModules[mod.id];
   if (!prev) state.completedModules[mod.id] = { score: 1, total: 1, xpEarned };
+  markModuleActivityToday();
 
   // Streak/diamonds are earned by opening the app (see boot sequence), not by finishing a lesson.
   const diamondsEarned = 0;
@@ -19044,6 +19109,7 @@ function finishQuiz() {
   if (!prev || score > prev.score) {
     state.completedModules[mod.id] = { score, total, xpEarned };
   }
+  markModuleActivityToday();
 
   // Streak/diamonds are earned by opening the app (see boot sequence), not by finishing a lesson.
   const diamondsEarned = 0;
@@ -20519,6 +20585,7 @@ function finishQuest(mod, chosenConsequence) {
   if (!prev || totalXpThisRun > (prev.xpEarned || 0)) {
     state.completedModules[mod.id] = { score, total, xpEarned: totalXpThisRun };
   }
+  markModuleActivityToday();
   if (!state.questBossesWon.includes(mod.id)) state.questBossesWon.push(mod.id);
 
   const newAchs = checkAchievements();

@@ -209,14 +209,42 @@ body { background: var(--bg); min-height: 100vh; }
 /* ─── MASCOT CARD ─── */
 .mascot-card {
   background: #fff; border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 1.6rem 2rem;
-  display: flex; align-items: center; gap: 2rem;
+  border-radius: var(--radius); padding: 2rem 2rem 1.8rem;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.9rem;
 }
 .mascot-pig-wrap { flex-shrink: 0; }
-.mascot-tier-name {
+.mascot-mood-label {
   font-family: var(--font-display);
-  font-size: 1.3rem; font-weight: 700; color: var(--text);
+  font-size: 1.15rem; font-weight: 700; color: var(--text);
 }
+.mascot-mood-label strong { color: var(--pink-dark); text-transform: capitalize; }
+.mascot-mood-msg { font-size: 0.92rem; color: var(--text-mid); max-width: 440px; line-height: 1.5; }
+
+/* Daily mood face swapped onto the big Home mascot (see todaysHammyMood()/renderHome() in
+   app.js) — reuses the same .hammy-face-overlay layer as the quest-companion Hammy, just with
+   its own set of illustrated moods from faces/ so idle Home Hammy is never blank-faced. Unlike
+   the quest-side avatar (which toggles the overlay on/off per reaction), Home's Hammy always
+   has one of these active, so opacity/eye-hiding is unconditional here rather than per-class. */
+.has-face-overlay .hammy-face-overlay { opacity: 1; }
+.has-face-overlay .pig-eye, .has-face-overlay .pig-cheek, .has-face-overlay .pig-snout { opacity: 0; }
+.has-face-overlay .pig-head { box-shadow: inset 16px 16px 30px rgba(255,255,255,.35); }
+.has-face-overlay .pig-body { box-shadow: none; }
+.mood-star .hammy-face-overlay { background-image: url('faces/star.png'); }
+.mood-sleepy .hammy-face-overlay { background-image: url('faces/sleepy.png'); }
+.mood-curious .hammy-face-overlay { background-image: url('faces/curious.png'); }
+.mood-excited .hammy-face-overlay { background-image: url('faces/excited.png'); }
+.mood-frustrated .hammy-face-overlay { background-image: url('faces/frustrated.png'); }
+.mood-angry .hammy-face-overlay { background-image: url('faces/angry.png'); }
+.mood-confused .hammy-face-overlay { background-image: url('faces/confused.png'); }
+.mood-love .hammy-face-overlay { background-image: url('faces/love.png'); }
+.mood-nervy .hammy-face-overlay { background-image: url('faces/nervy.png'); }
+.mood-relieved .hammy-face-overlay { background-image: url('faces/relieved.png'); }
+.mood-sad .hammy-face-overlay { background-image: url('faces/sad.png'); }
+.mood-shockhappy .hammy-face-overlay { background-image: url('faces/shockhappy.png'); }
+.mood-sick .hammy-face-overlay { background-image: url('faces/sick.png'); }
+.mood-surprise .hammy-face-overlay { background-image: url('faces/surprise.png'); }
+.mood-wink .hammy-face-overlay { background-image: url('faces/wink.png'); }
+.mood-satisfied .hammy-face-overlay { background-image: url('faces/hammy-happy.png'); }
 
 /* ─── HOME SECTIONS ─── */
 .home-section { display: flex; flex-direction: column; gap: 1rem; }
@@ -2155,18 +2183,35 @@ select.budget-input { cursor: pointer; }
   max-height: 2200px;
 }
 
-/* Clusters a module's lessons under a short label (see MODULE_LESSON_SECTIONS in app.js)
-   instead of one long undifferentiated grid. Each section gets its own nested 2-col grid so
-   the .lesson-tile border rules below (which lean on nth-child parity) keep working per
-   section rather than needing to account for header divs breaking up the count. */
+/* Clusters a module's lessons into a labeled accordion (see MODULE_LESSON_SECTIONS in
+   app.js) instead of one long undifferentiated grid: each section is its own collapsible
+   sub-group, so opening a module reveals 2-3 short header rows rather than 8 tiles at once.
+   Each section's tiles sit in their own nested 2-col grid so the .lesson-tile border rules
+   below (which lean on nth-child parity) keep working per section unmodified. */
 .module-row-lessons.module-row-lessons-grouped { display: block; }
 .lesson-section + .lesson-section { border-top: 1px solid var(--border); }
 .lesson-section-header {
-  padding: 0.9rem 1.4rem 0.4rem;
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.9rem 1.4rem; cursor: pointer;
+  transition: background 0.15s;
+}
+.lesson-section-header:hover { background: var(--green-pale); }
+.lsh-label {
   font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--text-soft);
 }
-.lesson-section-tiles { display: grid; grid-template-columns: 1fr 1fr; }
+.lsh-meta {
+  flex: 1; text-align: right;
+  font-size: 0.72rem; font-weight: 600; color: var(--text-mid);
+}
+.lsh-chevron { flex-shrink: 0; color: var(--text-soft); transition: transform 0.2s ease; }
+.lesson-section.expanded .lsh-chevron { transform: rotate(180deg); }
+.lesson-section-tiles {
+  display: grid; grid-template-columns: 1fr 1fr;
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.lesson-section.expanded .lesson-section-tiles { max-height: 900px; }
 
 .lesson-tile {
   padding: 1rem 1.4rem; cursor: pointer;
