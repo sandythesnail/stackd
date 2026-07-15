@@ -274,9 +274,17 @@ export function Hammy({
             <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.28} />
             <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-cheek" cx="50%" cy="50%" r="70%">
+          {/* CSS: radial-gradient(circle, #ff9bbe, transparent 70%) on the 56x40 cheek box —
+              same true-circle-on-a-non-square-box issue as the tummy (see hm-tummy above).
+              Centered (no "at" offset), so r is just the half-diagonal: sqrt(28²+20²)≈34.4.
+              Two copies since the left/right cheeks sit at different absolute centers. */}
+          <RadialGradient id="hm-cheek-l" cx={134} cy={222} r={34.4} gradientUnits="userSpaceOnUse">
             <Stop offset="0%" stopColor="#FF9BBE" />
-            <Stop offset="100%" stopColor="#FF9BBE" stopOpacity={0} />
+            <Stop offset="70%" stopColor="#FF9BBE" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-cheek-r" cx={306} cy={222} r={34.4} gradientUnits="userSpaceOnUse">
+            <Stop offset="0%" stopColor="#FF9BBE" />
+            <Stop offset="70%" stopColor="#FF9BBE" stopOpacity={0} />
           </RadialGradient>
 
           <ClipPath id="hm-clip-body"><Ellipse cx={220} cy={287} rx={150} ry={125} /></ClipPath>
@@ -350,8 +358,8 @@ export function Hammy({
             matching the website's .has-face-overlay { .pig-eye/.pig-cheek/.pig-snout { opacity: 0 } } */}
         {!face && (
           <>
-            <Ellipse cx={134} cy={222} rx={28} ry={20} fill="url(#hm-cheek)" />
-            <Ellipse cx={306} cy={222} rx={28} ry={20} fill="url(#hm-cheek)" />
+            <Ellipse cx={134} cy={222} rx={28} ry={20} fill="url(#hm-cheek-l)" />
+            <Ellipse cx={306} cy={222} rx={28} ry={20} fill="url(#hm-cheek-r)" />
 
             <Ellipse cx={141} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
             <Ellipse cx={299} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
