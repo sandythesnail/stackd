@@ -42,9 +42,15 @@ const EAR_PATH = 'M 32,0 A 32,49.8 0 0 1 64,49.8 A 29.44,24.2 0 0 1 34.56,74 L 2
 
 /** CSS border-radius shorthand (top-left top-right bottom-right bottom-left) on a w×h box,
  * converted to an SVG path of 4 independent-radius corner arcs — same technique as EAR_PATH,
- * generalized. Used for the feet/arms, which (unlike the ears) use plain circular corners. */
+ * generalized. Used for the feet/arms, which (unlike the ears) use plain circular corners.
+ * Applies the same overlap correction real browsers do: if adjacent radii on an edge sum to
+ * more than that edge's length (e.g. the arms' left edge: 30+28=58 on a 48px-tall box), every
+ * radius is scaled down by the smallest factor needed so no edge overlaps — skipping this
+ * step is what made the arms render as a malformed/self-intersecting blob. */
 function roundedRectPath(w: number, h: number, tl: number, tr: number, br: number, bl: number): string {
-  return `M ${tl},0 L ${w - tr},0 A ${tr},${tr} 0 0 1 ${w},${tr} L ${w},${h - br} A ${br},${br} 0 0 1 ${w - br},${h} L ${bl},${h} A ${bl},${bl} 0 0 1 0,${h - bl} L 0,${tl} A ${tl},${tl} 0 0 1 ${tl},0 Z`;
+  const f = Math.min(1, w / (tl + tr), w / (bl + br), h / (tl + bl), h / (tr + br));
+  const [TL, TR, BR, BL] = [tl, tr, br, bl].map((r) => r * f);
+  return `M ${TL},0 L ${w - TR},0 A ${TR},${TR} 0 0 1 ${w},${TR} L ${w},${h - BR} A ${BR},${BR} 0 0 1 ${w - BR},${h} L ${BL},${h} A ${BL},${BL} 0 0 1 0,${h - BL} L 0,${TL} A ${TL},${TL} 0 0 1 ${TL},0 Z`;
 }
 
 // Feet/hands are rounded rectangles with a DIFFERENT radius per corner (styles.css
