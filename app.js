@@ -17057,7 +17057,7 @@ function renderSurveyStep() {
       <div class="survey-slider-wrap">
         <input type="range" class="survey-slider" id="survey-slider" min="0" max="100" step="1" value="${current}">
         <div class="survey-slider-ticks">
-          <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+          <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
         </div>
         <div class="survey-slider-labels">
           <span class="survey-slider-left">${lowLabel}</span>
