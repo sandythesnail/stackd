@@ -14,8 +14,8 @@ import { useStore, xpProgressPct, LESSON_COMPLETE_COINS, LESSON_COMPLETE_DIAMOND
  * records XP/coins/module progress into the store (not just decorative numbers). */
 export default function Results() {
   const router = useRouter();
-  const { moduleId, lessonIndex, correctCount, total } = useLocalSearchParams<{
-    moduleId: string; lessonIndex: string; correctCount: string; total: string;
+  const { moduleId, lessonIndex, correctCount, total, xpEarned } = useLocalSearchParams<{
+    moduleId: string; lessonIndex: string; correctCount: string; total: string; xpEarned?: string;
   }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
@@ -24,6 +24,9 @@ export default function Results() {
   const correct = Number(correctCount ?? 0);
   const totalQ = Number(total ?? 0);
   const allCorrect = totalQ > 0 && correct === totalQ;
+  // The quest player (learn/quest.tsx) accumulates real XP across its chapters; the flat
+  // quiz path falls back to the module's flat per-lesson reward.
+  const xpForLesson = xpEarned !== undefined ? Number(xpEarned) : (content?.xpReward ?? 0);
 
   const { state, level, tierName, completeLesson, equippedMascotItems } = useStore();
   const tierBefore = useRef(tierName).current;
@@ -31,7 +34,7 @@ export default function Results() {
   useEffect(() => {
     if (recorded.current) return;
     recorded.current = true;
-    completeLesson(mod.id, li, content?.xpReward ?? 0);
+    completeLesson(mod.id, li, xpForLesson);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -55,10 +58,10 @@ export default function Results() {
           <Hammy size={150} ring equipped={equippedMascotItems()} style={{ marginTop: 6 }} />
           <Tag textColor={colors.greenDark} style={styles.tag}>🎉 LESSON COMPLETE</Tag>
           <Txt style={styles.title}>{lesson?.title ?? mod.name} —{'\n'}{allCorrect ? 'nailed it!' : 'done!'}</Txt>
-          <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt>
+          {totalQ > 0 ? <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt> : null}
 
           <View style={styles.rewards}>
-            <Reward value={`+${content?.xpReward ?? 0}`} label="XP" />
+            <Reward value={`+${xpForLesson}`} label="XP" />
             <Reward value={<Coin size={22} />} label="Coins" big={`+${LESSON_COMPLETE_COINS}`} />
             <Reward value={<Diamond size={19} />} label="Diamond" big={`+${LESSON_COMPLETE_DIAMONDS}`} />
           </View>

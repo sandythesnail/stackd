@@ -37,7 +37,7 @@ export default function Hook() {
         <Button
           label="Start quest →"
           variant="pink"
-          onPress={() => router.push({ pathname: '/learn/quiz', params: { moduleId: mod.id, lessonIndex: String(i) } })}
+          onPress={() => router.push({ pathname: '/learn/quest', params: { moduleId: mod.id, lessonIndex: String(i) } })}
           style={{ marginTop: 22 }}
         />
         <Txt style={styles.foot}>LESSON {i + 1} · {mod.name.toUpperCase()}</Txt>

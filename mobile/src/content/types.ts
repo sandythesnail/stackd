@@ -27,7 +27,13 @@ export type StoryChapter = {
 
 export type TeachChapter = {
   id: string; type: 'teach'; title: string;
-  concepts: { term: string; plain: string; analogy: string; check: { statement: string; isTrue: boolean } }[];
+  // Every concept has either `check` (sometimes `{}` — informational only, no quiz) or,
+  // rarely, `linkOut` (deep-link to a Tools simulator) instead.
+  concepts: {
+    term: string; plain: string; analogy: string;
+    check?: { statement?: string; isTrue?: boolean };
+    linkOut?: { label: string; action: string };
+  }[];
   xpOnComplete?: number;
 };
 
@@ -52,7 +58,8 @@ export type MicrosimChapter = {
   income: number;
   fixedCosts: { label: string; amount: number }[];
   sliders: { id: string; label: string; min: number; max: number; step: number; default: number }[];
-  feedbackTiers: { maxLeftover: number; text: string; ok: boolean }[];
+  // maxLeftover is null on the last (catch-all) tier — no upper bound, always matches.
+  feedbackTiers: { maxLeftover: number | null; text: string; ok: boolean }[];
   xpOnComplete?: number;
 };
 
@@ -74,7 +81,8 @@ export type KnowledgecheckChapter = {
 
 export type SimulatorChapter = {
   id: string; type: 'simulator'; title: string; simulatorId: string;
-  meterKey: string; meterMin: number; meterMax: number; intro: string; hintText?: string;
+  // Missing on 2/22 real chapters — renderer falls back to a plain 0-100 "score" meter.
+  meterKey?: string; meterMin?: number; meterMax?: number; intro: string; hintText?: string;
   decisions: { id: string; label: string; scoreDelta: number; note: string }[];
   xpOnComplete?: number;
 };
