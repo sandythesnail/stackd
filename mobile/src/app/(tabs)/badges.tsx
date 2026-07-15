@@ -2,25 +2,27 @@ import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Screen, Header, Txt, BadgeMedal, MEDAL_GRAD } from '@/components';
 import { colors, font } from '@/theme';
-import { badges, user } from '@/data';
 import { useStore } from '@/store';
 
 const FILTERS = ['All', 'Bronze', 'Silver', 'Gold', 'Diamond'] as const;
 
-/** Screen 11 — Badges (filter by tier & status). */
+/** Screen 11 — Badges (filter by tier & status). Real 23-achievement list ported from the
+ * website's ACHIEVEMENTS, with earned status computed from real app state where available. */
 export default function Badges() {
-  const { state } = useStore();
+  const { level, tierName, state, achievements } = useStore();
   const [filter, setFilter] = useState(0);
   const active = FILTERS[filter];
-  const shown = active === 'All' ? badges : badges.filter((b) => b.tier === active.toLowerCase());
+  const all = achievements();
+  const shown = active === 'All' ? all : all.filter((b) => b.tier === active.toLowerCase());
+  const earnedCount = all.filter((b) => b.earned).length;
 
   return (
     <Screen edges={['top']}>
-      <Header level={state.level} name={user.tier} coins={state.coins} diamonds={state.diamonds} />
+      <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.head}>
           <Txt variant="disp" style={{ fontSize: 23 }}>Badges</Txt>
-          <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.green }}>9 / 32 earned</Txt>
+          <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.green }}>{earnedCount} / {all.length} earned</Txt>
         </View>
 
         <View style={styles.filters}>
@@ -36,9 +38,9 @@ export default function Badges() {
 
         <View style={styles.grid}>
           {shown.map((b) => (
-            <View key={b.name} style={styles.cell}>
+            <View key={b.id} style={styles.cell}>
               <BadgeMedal char={b.char} grad={MEDAL_GRAD[b.tier]} size={64} fontSize={20} locked={!b.earned} />
-              <Txt style={[styles.lbl, !b.earned && { color: '#A8A296' }]}>{b.name}</Txt>
+              <Txt style={[styles.lbl, !b.earned && { color: '#A8A296' }]}>{b.label}</Txt>
             </View>
           ))}
         </View>

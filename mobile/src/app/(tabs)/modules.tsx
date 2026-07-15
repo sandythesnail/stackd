@@ -2,18 +2,19 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleTile } from '@/components';
 import { colors, font } from '@/theme';
-import { modules, user } from '@/data';
+import { modules } from '@/data';
 import { useStore } from '@/store';
 
-/** Screen 9 — Modules (all 11, locked/unlocked). */
+/** Screen 9 — Modules (all 11, locked/unlocked). Done/total/status derived live from the
+ * store + real lesson content, not static mock fields. */
 export default function Modules() {
   const router = useRouter();
-  const { state } = useStore();
-  const doneCount = modules.filter((m) => m.status === 'done').length;
+  const { state, level, tierName, moduleDone, moduleTotal, moduleStatus } = useStore();
+  const doneCount = modules.filter((m) => moduleStatus(m.id, m.unlockLevel) === 'done').length;
 
   return (
     <Screen edges={['top']}>
-      <Header level={state.level} name={user.tier} coins={state.coins} diamonds={state.diamonds} />
+      <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.head}>
           <Txt variant="disp" style={{ fontSize: 23 }}>All modules</Txt>
@@ -22,8 +23,11 @@ export default function Modules() {
 
         <View style={styles.grid}>
           {modules.map((m) => {
-            const pct = m.quests ? m.done / m.quests : 0;
-            const locked = m.status === 'locked';
+            const done = moduleDone(m.id);
+            const total = moduleTotal(m.id);
+            const pct = total ? done / total : 0;
+            const status = moduleStatus(m.id, m.unlockLevel);
+            const locked = status === 'locked';
             return (
               <ModuleTile
                 key={m.id}
@@ -33,20 +37,20 @@ export default function Modules() {
               >
                 <View style={styles.top}>
                   <MIcon abbr={m.abbr} color={m.color} />
-                  {m.status === 'done' ? (
+                  {status === 'done' ? (
                     <Tag tone="green" style={styles.tag}>✓</Tag>
-                  ) : m.status === 'active' ? (
+                  ) : status === 'active' ? (
                     <Tag tone="pink" style={styles.tag}>{Math.round(pct * 100)}%</Tag>
                   ) : (
                     <Tag tone="lock" style={styles.tag}>🔒{m.unlockLevel}</Tag>
                   )}
                 </View>
                 <Txt style={[styles.name, locked && { color: colors.lockText }]}>{m.name}</Txt>
-                {m.status === 'active' ? (
+                {status === 'active' ? (
                   <ProgressBar value={pct} tone="pink" height={7} />
                 ) : (
                   <Txt style={styles.sub}>
-                    {m.status === 'done' ? `${m.done}/${m.quests} quests` : `Unlock at Lvl ${m.unlockLevel}`}
+                    {status === 'done' ? `${done}/${total} quests` : `Unlock at Lvl ${m.unlockLevel}`}
                   </Txt>
                 )}
               </ModuleTile>

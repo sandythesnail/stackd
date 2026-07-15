@@ -3,8 +3,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Txt, Button, Tag, Hammy, Coin } from '@/components';
+import { Txt, Button, Tag, Hammy } from '@/components';
 import { colors, font } from '@/theme';
+import { useStore } from '@/store';
 
 const SPOTS = [
   { size: 12, bg: '#FF96B8', top: 120, left: 50 },
@@ -14,9 +15,12 @@ const SPOTS = [
   { size: 7, bg: '#FF96B8', top: 280, right: 56 },
 ];
 
-/** Screen 20 — Level-up celebration overlay. */
+/** Screen 20 — Level-up celebration overlay. Only shown on an actual TIER change (mirrors
+ * the website's maybeShowPostCompletionOverlays — tier tracks modules mastered, not raw
+ * level, so this is reserved for "Broke Freshman -> Budget Apprentice" moments). */
 export default function LevelUp() {
   const router = useRouter();
+  const { level, tierName, equippedMascotItems } = useStore();
   const done = () => {
     router.dismissAll();
     router.replace('/(tabs)/home');
@@ -33,37 +37,20 @@ export default function LevelUp() {
       <SafeAreaView style={styles.wrap}>
         <View style={styles.center}>
           <Tag tone="pink" textColor={colors.white} style={{ backgroundColor: '#FF96B8' }}>⬆ LEVEL UP</Tag>
-          <Hammy size={184} ring bob style={styles.hammy} />
-          <Txt style={styles.big}>Level 5!</Txt>
+          <Hammy size={184} ring bob equipped={equippedMascotItems()} style={styles.hammy} />
+          <Txt style={styles.big}>Level {level}!</Txt>
           <Txt style={styles.body}>Hammy grew up — and so did you. You&apos;re now a</Txt>
 
           <View style={styles.tierChip}>
             <LinearGradient colors={[colors.pinkBorder, colors.pink]} start={{ x: 0.2, y: 0.1 }} end={{ x: 0.9, y: 1 }} style={styles.tierIc}>
-              <Txt style={styles.tierIcTxt}>5</Txt>
+              <Txt style={styles.tierIcTxt}>{level}</Txt>
             </LinearGradient>
-            <Txt style={styles.tierName}>Budget Builder</Txt>
-          </View>
-
-          <View style={styles.rewards}>
-            <Reward icon={<Coin size={22} />} big="50" label="Bonus coins" />
-            <Reward emoji="🎓" label="Grad cap unlocked" />
+            <Txt style={styles.tierName}>{tierName}</Txt>
           </View>
         </View>
         <Button label="Continue" variant="pink" onPress={done} />
       </SafeAreaView>
     </LinearGradient>
-  );
-}
-
-function Reward({ icon, emoji, big, label }: { icon?: React.ReactNode; emoji?: string; big?: string; label: string }) {
-  return (
-    <View style={styles.reward}>
-      <View style={styles.rewardTop}>
-        {emoji ? <Txt style={{ fontSize: 22 }}>{emoji}</Txt> : icon}
-        {big ? <Txt style={styles.rewardB}>{big}</Txt> : null}
-      </View>
-      <Txt style={styles.rewardEm}>{label}</Txt>
-    </View>
   );
 }
 
@@ -96,19 +83,4 @@ const styles = StyleSheet.create({
   tierIc: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   tierIcTxt: { fontFamily: font.display, fontSize: 15, color: colors.white },
   tierName: { fontFamily: font.display, fontSize: 19, color: colors.white },
-  rewards: { flexDirection: 'row', gap: 10, width: '100%', marginTop: 20 },
-  reward: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.34)',
-    borderRadius: 18,
-    paddingVertical: 15,
-    paddingHorizontal: 8,
-  },
-  rewardTop: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 26 },
-  rewardB: { fontFamily: font.display, fontSize: 22, color: colors.white },
-  rewardEm: { fontFamily: font.extra, fontSize: 10, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' },
 });

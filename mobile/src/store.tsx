@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { shopItemsReal } from '@/content';
+import { shopItemsReal, moduleContentById } from '@/content';
 import type { RoomSlot, ShopItemReal } from '@/content';
+import { ACHIEVEMENTS, BADGE_TIER_REWARD, MODULE_MASTERY_ACHIEVEMENT, type Achievement } from '@/achievements';
 
 const STORAGE_KEY = 'stackd_state_v1';
 
@@ -11,8 +12,48 @@ const STORAGE_KEY = 'stackd_state_v1';
 export const MAX_EQUIPPED_ITEMS = 3;
 const MYSTERY_OWNED_WEIGHT_FACTOR = 0.35;
 const MYSTERY_DUPLICATE_REFUND_RATE = 0.5;
+/** Flat per-lesson currency bonus (mobile-specific — the website doesn't have a mobile-style
+ * coin-per-lesson reward; this is what funds the Shop economy here). Matches the numbers
+ * the results screen has always promised. */
+export const LESSON_COMPLETE_COINS = 40;
+export const LESSON_COMPLETE_DIAMONDS = 1;
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
 const RARITY_WEIGHT: Record<string, number> = { common: 8, rare: 4, epic: 2, legendary: 1 };
+
+/** LEVEL_THRESHOLDS ported verbatim from app.js — xp needed to REACH each level (index = level). */
+const LEVEL_THRESHOLDS = [0, 90, 200, 330, 480, 660, 880, 1150, 1450, 1800, 2200];
+
+function xpForLevel(l: number) {
+  return LEVEL_THRESHOLDS[Math.min(l, LEVEL_THRESHOLDS.length - 1)];
+}
+
+/** Ported from app.js's addXP loop, but computed fresh from total xp each time (no
+ * incremental state.level field to drift out of sync). */
+function levelForXp(xp: number) {
+  let level = 1;
+  while (level < LEVEL_THRESHOLDS.length && xp >= xpForLevel(level)) level++;
+  return level;
+}
+
+export function xpProgressPct(xp: number, level: number) {
+  const base = xpForLevel(level - 1);
+  const ceil = xpForLevel(level);
+  if (ceil === base) return 100;
+  return Math.min(100, ((xp - base) / (ceil - base)) * 100);
+}
+
+/** TIERS ported verbatim from app.js — keyed by count of MASTERED modules (0-11), not level. */
+const TIERS = [
+  { min: 0, max: 2, name: 'Broke Freshman' },
+  { min: 3, max: 4, name: 'Budget Apprentice' },
+  { min: 5, max: 7, name: 'Money-Aware Sophomore' },
+  { min: 8, max: 10, name: 'Money Manager' },
+  { min: 11, max: 11, name: 'Financially Literate Graduate' },
+];
+
+function tierForMasteredCount(count: number) {
+  return (TIERS.find((t) => count >= t.min && count <= t.max) ?? TIERS[TIERS.length - 1]).name;
+}
 
 export function itemRarity(item: Pick<ShopItemReal, 'rarity'>) {
   return item.rarity && RARITY_ORDER.includes(item.rarity) ? item.rarity : 'common';
@@ -24,24 +65,32 @@ export type AppState = {
   coins: number;
   diamonds: number;
   xp: number;
-  level: number;
   streak: number;
   ownedItems: string[];
   ownedRoomItems: string[];
   equippedItems: string[];
   equippedRoom: Record<RoomSlot, string | null>;
+  /** Lessons completed per module id — the real source of truth for module progress,
+   * replacing the old static mock done/quests fields. */
+  moduleProgress: Record<string, number>;
+  unlockedAchievementIds: string[];
 };
 
 const DEFAULT_STATE: AppState = {
   coins: 340,
   diamonds: 8,
   xp: 1240,
-  level: 4,
   streak: 12,
   ownedItems: ['crown', 'sunglasses'],
   ownedRoomItems: [],
   equippedItems: ['crown', 'sunglasses'],
   equippedRoom: { wallpaper: null, wall: null, rug: null, plant: null, bed: null, desk: null, lamp: null, window: null },
+  // Seeded to match Maya's original mock story (some modules done, some in progress).
+  moduleProgress: {
+    earning: 6, spending: 5, saving: 2, investing: 0, credit: 1, risk: 0,
+    loans: 0, taxes: 6, psychology: 0, career: 7, scams: 0,
+  },
+  unlockedAchievementIds: [],
 };
 
 export type MysteryResult = {
@@ -81,12 +130,55 @@ export function mysteryDropChance(item: ShopItemReal): number {
   return (RARITY_WEIGHT[itemRarity(item)] / total) * 100;
 }
 
+const ALL_MODULE_IDS = Object.keys(MODULE_MASTERY_ACHIEVEMENT);
+
+function moduleTotal(moduleId: string) {
+  return moduleContentById(moduleId)?.lessons.length ?? 0;
+}
+
+function isModuleMastered(moduleProgress: Record<string, number>, moduleId: string) {
+  const total = moduleTotal(moduleId);
+  return total > 0 && (moduleProgress[moduleId] ?? 0) >= total;
+}
+
+function masteredCount(moduleProgress: Record<string, number>) {
+  return ALL_MODULE_IDS.filter((id) => isModuleMastered(moduleProgress, id)).length;
+}
+
+/** Which achievements are met right now, given the subset of app.js's ACHIEVEMENTS checks
+ * that the mobile app can actually evaluate today (see Achievement.available). */
+function computeMetAchievementIds(s: AppState): string[] {
+  const met = new Set<string>();
+  for (const [moduleId, achievementId] of Object.entries(MODULE_MASTERY_ACHIEVEMENT)) {
+    if (isModuleMastered(s.moduleProgress, moduleId)) met.add(achievementId);
+  }
+  if (s.streak >= 7) met.add('on_fire');
+  if (s.streak >= 30) met.add('marathoner');
+  const roomFull = ROOM_SLOTS.every((slot) => !!s.equippedRoom[slot]);
+  if (roomFull) met.add('homebody');
+  if (masteredCount(s.moduleProgress) === ALL_MODULE_IDS.length) met.add('stackd_star');
+  const otherIds = ACHIEVEMENTS.filter((a) => a.id !== 'grandmaster').map((a) => a.id);
+  if (otherIds.every((id) => met.has(id))) met.add('grandmaster');
+  return [...met];
+}
+
+export type AchievementView = Achievement & { earned: boolean };
+
 type Ctx = {
   state: AppState;
+  level: number;
+  tierName: string;
   isOwned: (id: string) => boolean;
   isEquipped: (id: string) => boolean;
   equippedRoomItems: () => ShopItemReal[];
   equippedMascotItems: () => ShopItemReal[];
+  moduleDone: (moduleId: string) => number;
+  moduleTotal: (moduleId: string) => number;
+  moduleMastered: (moduleId: string) => boolean;
+  /** 'locked' if below unlockLevel (mobile's own level-gating), else 'done' once every
+   * lesson is complete, else 'active'. */
+  moduleStatus: (moduleId: string, unlockLevel?: number) => 'done' | 'active' | 'locked';
+  achievements: () => AchievementView[];
   /** Buy/equip/unequip toggle for non-room items (hats, accessories, exclusives). Mirrors
    * the website's handleShopAction non-slot branch. No-ops (returns false) if unaffordable. */
   buyOrEquipItem: (itemId: string) => boolean;
@@ -96,9 +188,28 @@ type Ctx = {
   /** Opens a mystery box: deducts price, rolls a weighted-random prize, partially refunds
    * duplicates. Returns null if unaffordable or the pool has nothing left to give. */
   openMysteryBox: (itemId: string) => MysteryResult | null;
+  /** Records a finished lesson: advances moduleProgress (if this lesson is new progress,
+   * not a replay), awards its XP, and checks for newly-unlocked achievements. */
+  completeLesson: (moduleId: string, lessonIndex: number, xpEarned: number) => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
+
+/** Applies BADGE_TIER_REWARD for any newly-met achievement and records it as unlocked. */
+function applyAchievementUnlocks(s: AppState): AppState {
+  const met = computeMetAchievementIds(s);
+  const newly = met.filter((id) => !s.unlockedAchievementIds.includes(id));
+  if (!newly.length) return s;
+  let coins = s.coins;
+  let diamonds = s.diamonds;
+  for (const id of newly) {
+    const achievement = ACHIEVEMENTS.find((a) => a.id === id);
+    if (!achievement) continue;
+    const reward = BADGE_TIER_REWARD[achievement.tier];
+    if (reward.type === 'coins') coins += reward.amount; else diamonds += reward.amount;
+  }
+  return { ...s, coins, diamonds, unlockedAchievementIds: [...s.unlockedAchievementIds, ...newly] };
+}
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
@@ -126,9 +237,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const isOwned = (id: string) => state.ownedItems.includes(id) || state.ownedRoomItems.includes(id);
     const isEquipped = (id: string) =>
       state.equippedItems.includes(id) || Object.values(state.equippedRoom).includes(id);
+    const level = levelForXp(state.xp);
+    const tierName = tierForMasteredCount(masteredCount(state.moduleProgress));
 
     return {
       state,
+      level,
+      tierName,
       isOwned,
       isEquipped,
       equippedRoomItems: () =>
@@ -137,6 +252,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           .filter((i): i is ShopItemReal => !!i),
       equippedMascotItems: () =>
         state.equippedItems.map((id) => shopItemsReal.find((i) => i.id === id)).filter((i): i is ShopItemReal => !!i),
+      moduleDone: (moduleId) => Math.min(state.moduleProgress[moduleId] ?? 0, moduleTotal(moduleId)),
+      moduleTotal,
+      moduleMastered: (moduleId) => isModuleMastered(state.moduleProgress, moduleId),
+      moduleStatus: (moduleId, unlockLevel) => {
+        if (unlockLevel && level < unlockLevel) return 'locked';
+        return isModuleMastered(state.moduleProgress, moduleId) ? 'done' : 'active';
+      },
+      achievements: () => {
+        const met = new Set(computeMetAchievementIds(state));
+        return ACHIEVEMENTS.map((a) => ({ ...a, earned: met.has(a.id) }));
+      },
 
       buyOrEquipItem: (itemId) => {
         const item = shopItemsReal.find((i) => i.id === itemId);
@@ -178,16 +304,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const isDiamond = item.currency === 'diamond';
 
         if (equippedHere) {
-          setState((s) => ({ ...s, equippedRoom: { ...s.equippedRoom, [slot]: null } }));
+          setState((s) => applyAchievementUnlocks({ ...s, equippedRoom: { ...s.equippedRoom, [slot]: null } }));
           return true;
         }
         if (owned) {
-          setState((s) => ({ ...s, equippedRoom: { ...s.equippedRoom, [slot]: itemId } }));
+          setState((s) => applyAchievementUnlocks({ ...s, equippedRoom: { ...s.equippedRoom, [slot]: itemId } }));
           return true;
         }
         const balance = isDiamond ? state.diamonds : state.coins;
         if (balance < item.price) return false;
-        setState((s) => ({
+        setState((s) => applyAchievementUnlocks({
           ...s,
           coins: isDiamond ? s.coins : s.coins - item.price,
           diamonds: isDiamond ? s.diamonds - item.price : s.diamonds,
@@ -223,6 +349,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         });
 
         return { item: won, isDuplicate, refundAmount, refundCurrency };
+      },
+
+      completeLesson: (moduleId, lessonIndex, xpEarned) => {
+        setState((s) => {
+          const current = s.moduleProgress[moduleId] ?? 0;
+          const total = moduleTotal(moduleId);
+          const advanced = lessonIndex + 1 > current;
+          const nextProgress = advanced
+            ? { ...s.moduleProgress, [moduleId]: Math.min(lessonIndex + 1, total) }
+            : s.moduleProgress;
+          const next = {
+            ...s,
+            xp: s.xp + xpEarned,
+            coins: s.coins + (advanced ? LESSON_COMPLETE_COINS : 0),
+            diamonds: s.diamonds + (advanced ? LESSON_COMPLETE_DIAMONDS : 0),
+            moduleProgress: nextProgress,
+          };
+          return applyAchievementUnlocks(next);
+        });
       },
     };
   }, [state]);

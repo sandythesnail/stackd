@@ -2,26 +2,32 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Screen, Header, Txt, Card, Stat, ProgressBar, MIcon } from '@/components';
 import { colors, font } from '@/theme';
-import { modules, user } from '@/data';
+import { modules } from '@/data';
 import { useStore } from '@/store';
 
 const ROWS = ['earning', 'career', 'spending', 'saving', 'investing'];
 
-/** Screen 8 — Progress (overall + per-module). */
+/** Screen 8 — Progress (overall + per-module). Real totals derived from the store + content. */
 export default function Progress() {
-  const { state } = useStore();
+  const { state, level, tierName, moduleDone, moduleTotal, moduleStatus } = useStore();
+
+  const totalDone = modules.reduce((sum, m) => sum + moduleDone(m.id), 0);
+  const totalQuests = modules.reduce((sum, m) => sum + moduleTotal(m.id), 0);
+  const masteredCount = modules.filter((m) => moduleStatus(m.id, m.unlockLevel) === 'done').length;
+  const overallPct = totalQuests ? totalDone / totalQuests : 0;
+
   return (
     <Screen edges={['top']}>
-      <Header level={state.level} name={user.tier} coins={state.coins} diamonds={state.diamonds} />
+      <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Txt variant="disp" style={{ fontSize: 23 }}>Your progress</Txt>
 
         <Card style={styles.ringCard}>
-          <Ring pct={0.42} />
+          <Ring pct={overallPct} />
           <View style={styles.statRow}>
-            <Stat value="3/11" label="Modules" style={styles.softStat} />
-            <Stat value="24" label="Quests" style={styles.softStat} />
-            <Stat value="1,240" label="Total XP" style={styles.softStat} />
+            <Stat value={`${masteredCount}/${modules.length}`} label="Modules" style={styles.softStat} />
+            <Stat value={String(totalDone)} label="Quests" style={styles.softStat} />
+            <Stat value={state.xp.toLocaleString()} label="Total XP" style={styles.softStat} />
           </View>
         </Card>
 
@@ -29,9 +35,12 @@ export default function Progress() {
         <View style={{ gap: 8 }}>
           {ROWS.map((id) => {
             const m = modules.find((x) => x.id === id)!;
-            const locked = m.status === 'locked';
-            const pct = m.quests ? m.done / m.quests : 0;
-            const complete = m.status === 'done';
+            const status = moduleStatus(m.id, m.unlockLevel);
+            const locked = status === 'locked';
+            const done = moduleDone(m.id);
+            const total = moduleTotal(m.id);
+            const pct = total ? done / total : 0;
+            const complete = status === 'done';
             return (
               <View key={id} style={[styles.row, locked && styles.rowLock]}>
                 <MIcon abbr={m.abbr} color={m.color} size={34} r={10} fontSize={13} />
@@ -39,7 +48,7 @@ export default function Progress() {
                   <View style={styles.rowTop}>
                     <Txt style={styles.rowName}>{m.name}</Txt>
                     <Txt style={[styles.rowCount, complete && { color: colors.green }]}>
-                      {locked ? '🔒 Locked' : `${m.done} / ${m.quests}`}
+                      {locked ? '🔒 Locked' : `${done} / ${total}`}
                     </Txt>
                   </View>
                   <ProgressBar

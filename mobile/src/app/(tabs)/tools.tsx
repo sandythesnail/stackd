@@ -21,11 +21,11 @@ const BUDGET = [
 
 /** Screen 10 — Tools (Budget / Compound Interest). */
 export default function Tools() {
-  const { state } = useStore();
+  const { state, level, tierName } = useStore();
   const [tab, setTab] = useState(1);
   return (
     <Screen edges={['top']}>
-      <Header level={state.level} name={user.tier} coins={state.coins} diamonds={state.diamonds} />
+      <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Txt variant="disp" style={{ fontSize: 23 }}>Tools</Txt>
         <Segmented options={['Budget', 'Compound Interest']} value={tab} onChange={setTab} />

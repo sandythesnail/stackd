@@ -11,10 +11,10 @@ import { useStore } from '@/store';
 /** Screen 14 — Settings (invite, account, sources). */
 export default function Settings() {
   const router = useRouter();
-  const { state } = useStore();
+  const { state, level, tierName } = useStore();
   return (
     <Screen edges={['top']}>
-      <Header level={state.level} name={user.tier} coins={state.coins} diamonds={state.diamonds} />
+      <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Txt variant="disp" style={{ fontSize: 23 }}>Settings</Txt>
 

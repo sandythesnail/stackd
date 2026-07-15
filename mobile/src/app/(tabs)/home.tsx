@@ -1,35 +1,38 @@
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
   Screen, Header, Txt, Card, Button, ProgressBar, Tag, Stat, Speech, Hammy,
   SectionHead, MIcon, ModuleTile, BadgeMedal, MEDAL_GRAD, Flame, Coin, Diamond,
 } from '@/components';
 import { colors, font } from '@/theme';
-import { user } from '@/data';
+import { user, modules } from '@/data';
 import { useStore } from '@/store';
 
-const HOME_MODULES = [
-  { id: 'earning', abbr: 'Er', color: colors.green, name: 'Earning', pct: 1, tag: '✓ Done', tone: 'green' as const },
-  { id: 'spending', abbr: 'Sp', color: colors.pink, name: 'Spending', pct: 0.6, tag: '60%', tone: 'pink' as const },
-  { id: 'saving', abbr: 'Sv', color: '#4FA3B8', name: 'Saving', pct: 0.44, tag: '44%', tone: 'pink' as const },
-  { id: 'investing', abbr: 'Iv', color: colors.lockIcon, name: 'Investing', pct: 0, tag: '🔒 Lvl 6', tone: 'lock' as const, locked: true },
-];
-
-const RECENT_BADGES = [
-  { name: 'First Dollar', char: '$', tier: 'gold' },
-  { name: '7-Day Streak', char: '🔥', tier: 'orange' },
-  { name: 'Budget Boss', char: '✓', tier: 'silver' },
-  { name: 'Rainy Day', char: '◆', tier: 'diamond' },
-] as const;
-
-/** Screen 7 — Home / Dashboard. */
+/** Screen 7 — Home / Dashboard. Real module progress, badges, and next-quest card. */
 export default function Home() {
   const router = useRouter();
-  const { state } = useStore();
+  const { state, level, tierName, moduleDone, moduleTotal, moduleStatus, achievements, equippedMascotItems } = useStore();
+
+  const homeModules = modules.slice(0, 4).map((m) => {
+    const status = moduleStatus(m.id, m.unlockLevel);
+    const total = moduleTotal(m.id);
+    const done = moduleDone(m.id);
+    const pct = total ? done / total : 0;
+    const tone = status === 'done' ? ('green' as const) : status === 'locked' ? ('lock' as const) : ('pink' as const);
+    const tag = status === 'done' ? '✓ Done' : status === 'locked' ? `🔒 Lvl ${m.unlockLevel}` : `${Math.round(pct * 100)}%`;
+    return { ...m, status, total, done, pct, tone, tag, locked: status === 'locked' };
+  });
+
+  const earnedBadges = achievements().filter((b) => b.earned).slice(0, 4);
+
+  const nextModule = modules.find((m) => moduleStatus(m.id, m.unlockLevel) === 'active');
+  const nextDone = nextModule ? moduleDone(nextModule.id) : 0;
+  const nextTotal = nextModule ? moduleTotal(nextModule.id) : 0;
+  const nextPct = nextTotal ? nextDone / nextTotal : 0;
+
   return (
     <Screen edges={['top']}>
-      <Header level={state.level} name={user.tier} coins={state.coins} diamonds={state.diamonds} onGear={() => router.push('/(tabs)/settings')} />
+      <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} onGear={() => router.push('/(tabs)/settings')} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Txt variant="disp" style={{ fontSize: 23 }}>Good afternoon, {user.name}</Txt>
 
@@ -41,26 +44,34 @@ export default function Home() {
         </Pressable>
 
         {/* Continue quest */}
-        <Card style={styles.questCard}>
-          <View style={styles.questTop}>
-            <Pressable onPress={() => router.push('/modal/life-event')}>
-              <Hammy size={76} bob style={styles.questHammy} />
-            </Pressable>
-            <Speech>Ready for today&apos;s quest? You&apos;re just 2 lessons from Level 5!</Speech>
-          </View>
-          <View style={{ marginTop: 14 }}>
-            <View style={styles.questMeta}>
-              <Txt style={{ fontFamily: font.displayMed, fontSize: 14, color: colors.ink }}>Saving · Emergency Fund</Txt>
-              <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.pinkDark }}>Quest 3 / 6</Txt>
+        {nextModule ? (
+          <Card style={styles.questCard}>
+            <View style={styles.questTop}>
+              <Pressable onPress={() => router.push('/modal/life-event')}>
+                <Hammy size={76} bob equipped={equippedMascotItems()} style={styles.questHammy} />
+              </Pressable>
+              <Speech>Ready for today&apos;s quest? Keep the streak going!</Speech>
             </View>
-            <ProgressBar value={0.44} tone="pink" />
-          </View>
-          <Button label="Continue quest" variant="pink" size="sm" onPress={() => router.push('/learn/hook')} style={{ marginTop: 13 }} />
-        </Card>
+            <View style={{ marginTop: 14 }}>
+              <View style={styles.questMeta}>
+                <Txt style={{ fontFamily: font.displayMed, fontSize: 14, color: colors.ink }}>{nextModule.name}</Txt>
+                <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.pinkDark }}>Lesson {nextDone + 1} / {nextTotal}</Txt>
+              </View>
+              <ProgressBar value={nextPct} tone="pink" />
+            </View>
+            <Button
+              label="Continue quest"
+              variant="pink"
+              size="sm"
+              onPress={() => router.push({ pathname: '/learn/hook', params: { moduleId: nextModule.id, lessonIndex: String(nextDone) } })}
+              style={{ marginTop: 13 }}
+            />
+          </Card>
+        ) : null}
 
         <SectionHead title="Keep learning" action="See all →" onAction={() => router.push('/(tabs)/modules')} />
         <View style={styles.grid}>
-          {HOME_MODULES.map((m) => (
+          {homeModules.map((m) => (
             <ModuleTile key={m.id} locked={m.locked} onPress={() => router.push(`/learn/module/${m.id}`)} style={styles.gridItem}>
               <View style={styles.tileTop}>
                 <MIcon abbr={m.abbr} color={m.color} />
@@ -72,14 +83,16 @@ export default function Home() {
           ))}
         </View>
 
-        <SectionHead title="Recent badges" action="All 9 →" onAction={() => router.push('/(tabs)/badges')} style={{ marginTop: 2 }} />
+        <SectionHead title="Recent badges" action={`All ${achievements().length} →`} onAction={() => router.push('/(tabs)/badges')} style={{ marginTop: 2 }} />
         <View style={styles.badgeRow}>
-          {RECENT_BADGES.map((b) => (
-            <View key={b.name} style={styles.badgeCell}>
+          {earnedBadges.length ? earnedBadges.map((b) => (
+            <View key={b.id} style={styles.badgeCell}>
               <BadgeMedal char={b.char} grad={MEDAL_GRAD[b.tier]} size={54} fontSize={20} />
-              <Txt style={styles.badgeLbl}>{b.name}</Txt>
+              <Txt style={styles.badgeLbl}>{b.label}</Txt>
             </View>
-          ))}
+          )) : (
+            <Txt variant="lead" style={{ fontSize: 13 }}>No badges yet — finish a lesson to earn your first one!</Txt>
+          )}
         </View>
       </ScrollView>
     </Screen>

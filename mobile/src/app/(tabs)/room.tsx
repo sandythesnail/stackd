@@ -30,7 +30,7 @@ const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'lamp', 'plant', 'be
  * Room page: wallpaper on the wall zone, 7 furniture slots, Hammy on the floor. */
 export default function Room() {
   const router = useRouter();
-  const { state, equippedMascotItems, equippedRoomItems } = useStore();
+  const { state, level, equippedMascotItems, equippedRoomItems } = useStore();
   const equipped = equippedMascotItems();
   const wearingLabel = equipped.length ? equipped.map((i) => i.name).join(' + ') : 'Nothing yet';
   const roomItems = equippedRoomItems();
@@ -41,7 +41,7 @@ export default function Room() {
 
   return (
     <Screen edges={['top']}>
-      <Header level={state.level} name="Hammy's Room" coins={state.coins} diamonds={state.diamonds} />
+      <Header level={level} name="Hammy's Room" coins={state.coins} diamonds={state.diamonds} />
       <View style={styles.wrap}>
         <View style={styles.scene}>
           <View style={styles.wallZone}>

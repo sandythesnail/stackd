@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -7,8 +8,10 @@ import { Txt, Button, Tag, Hammy, Flame, Coin, Diamond } from '@/components';
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
+import { useStore, xpProgressPct, LESSON_COMPLETE_COINS, LESSON_COMPLETE_DIAMONDS } from '@/store';
 
-/** Screen 19 — Results (rewards & streak). Reflects the lesson just finished. */
+/** Screen 19 — Results (rewards & streak). Reflects the lesson just finished — actually
+ * records XP/coins/module progress into the store (not just decorative numbers). */
 export default function Results() {
   const router = useRouter();
   const { moduleId, lessonIndex, correctCount, total } = useLocalSearchParams<{
@@ -22,40 +25,59 @@ export default function Results() {
   const totalQ = Number(total ?? 0);
   const allCorrect = totalQ > 0 && correct === totalQ;
 
+  const { state, level, tierName, completeLesson, equippedMascotItems } = useStore();
+  const tierBefore = useRef(tierName).current;
+  const recorded = useRef(false);
+  useEffect(() => {
+    if (recorded.current) return;
+    recorded.current = true;
+    completeLesson(mod.id, li, content?.xpReward ?? 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pct = xpProgressPct(state.xp, level);
+  // The big level-up overlay is reserved for an actual TIER change (mirrors the website's
+  // maybeShowPostCompletionOverlays) — a numeric level-up alone doesn't get a full screen.
+  const tieredUp = tierName !== tierBefore;
+  const continuePress = () => {
+    if (tieredUp) { router.push('/modal/levelup'); return; }
+    router.dismissAll();
+    router.replace('/(tabs)/home');
+  };
+
   return (
     <LinearGradient colors={[colors.green, colors.greenDark]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1 }}>
       <StatusBar style="light" />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Hammy size={150} ring style={{ marginTop: 6 }} />
+          <Hammy size={150} ring equipped={equippedMascotItems()} style={{ marginTop: 6 }} />
           <Tag textColor={colors.greenDark} style={styles.tag}>🎉 LESSON COMPLETE</Tag>
           <Txt style={styles.title}>{lesson?.title ?? mod.name} —{'\n'}{allCorrect ? 'nailed it!' : 'done!'}</Txt>
           <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt>
 
           <View style={styles.rewards}>
             <Reward value={`+${content?.xpReward ?? 0}`} label="XP" />
-            <Reward value={<Coin size={22} />} label="Coins" big="40" />
-            <Reward value={<Diamond size={19} />} label="Diamond" big="1" />
+            <Reward value={<Coin size={22} />} label="Coins" big={`+${LESSON_COMPLETE_COINS}`} />
+            <Reward value={<Diamond size={19} />} label="Diamond" big={`+${LESSON_COMPLETE_DIAMONDS}`} />
           </View>
 
           <View style={styles.streakCard}>
             <Flame size={22} />
-            <Txt style={styles.streakTxt}>13-day streak!</Txt>
-            <Tag textColor={colors.tagWarmText} style={{ backgroundColor: 'rgba(255,255,255,0.9)' }}>+1</Tag>
+            <Txt style={styles.streakTxt}>{state.streak}-day streak!</Txt>
           </View>
 
           <View style={styles.levelWrap}>
             <View style={styles.levelRow}>
-              <Txt style={styles.levelTiny}>LEVEL 4</Txt>
-              <Txt style={styles.levelTiny}>80% to Level 5</Txt>
+              <Txt style={styles.levelTiny}>LEVEL {level}</Txt>
+              <Txt style={styles.levelTiny}>{Math.round(pct)}% to Level {level + 1}</Txt>
             </View>
             <View style={styles.levelTrack}>
-              <View style={styles.levelFill} />
+              <View style={[styles.levelFill, { width: `${pct}%` }]} />
             </View>
           </View>
         </ScrollView>
         <View style={styles.footer}>
-          <Button label="Continue" variant="pink" onPress={() => router.push('/modal/levelup')} />
+          <Button label="Continue" variant="pink" onPress={continuePress} />
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -116,6 +138,6 @@ const styles = StyleSheet.create({
   levelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   levelTiny: { fontFamily: font.extra, fontSize: 12, color: 'rgba(255,255,255,0.85)' },
   levelTrack: { height: 11, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
-  levelFill: { height: '100%', width: '80%', borderRadius: 8, backgroundColor: colors.pinkBright },
+  levelFill: { height: '100%', borderRadius: 8, backgroundColor: colors.pinkBright },
   footer: { paddingHorizontal: 22, paddingTop: 12, paddingBottom: 8 },
 });

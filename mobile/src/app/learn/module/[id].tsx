@@ -5,6 +5,7 @@ import { Screen, Txt, IconButton, ProgressBar, ListRow, MIcon, Button } from '@/
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
+import { useStore } from '@/store';
 
 const QNODE: Record<string, { bg: string }> = {
   done: { bg: colors.green },
@@ -12,14 +13,17 @@ const QNODE: Record<string, { bg: string }> = {
   locked: { bg: colors.lockIcon },
 };
 
-/** Screen 15 — Module detail (real lessons, locked/done from the module's mock progress). */
+/** Screen 15 — Module detail (real lessons, locked/done from the store's real progress). */
 export default function ModuleDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { moduleDone, moduleStatus } = useStore();
   const mod = moduleById(id ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
   const lessons = content?.lessons ?? [];
-  const pct = lessons.length ? mod.done / lessons.length : 0;
+  const done = moduleDone(mod.id);
+  const status = moduleStatus(mod.id, mod.unlockLevel);
+  const pct = lessons.length ? done / lessons.length : 0;
 
   return (
     <Screen edges={['top']}>
@@ -35,7 +39,7 @@ export default function ModuleDetail() {
           <View style={{ flex: 1 }}>
             <Txt variant="h2">{content?.desc ?? mod.name}</Txt>
             <View style={styles.heroMeta}>
-              <Txt style={styles.heroTiny}>{mod.done} of {lessons.length} lessons</Txt>
+              <Txt style={styles.heroTiny}>{done} of {lessons.length} lessons</Txt>
               <Txt style={styles.heroTiny}>{content?.xpReward ?? 0} XP each</Txt>
             </View>
             <ProgressBar value={pct} height={9} fillColors={['#68B7C9', '#4FA3B8']} style={{ marginTop: 6 }} />
@@ -44,10 +48,10 @@ export default function ModuleDetail() {
 
         <View style={{ gap: 10 }}>
           {lessons.map((lesson, i) => {
-            const status = mod.status === 'locked' ? 'locked' : mod.status === 'done' ? 'done' : i < mod.done ? 'done' : i === mod.done ? 'active' : 'locked';
-            const node = QNODE[status];
-            const isActive = status === 'active';
-            const locked = status === 'locked';
+            const rowStatus = status === 'locked' ? 'locked' : status === 'done' ? 'done' : i < done ? 'done' : i === done ? 'active' : 'locked';
+            const node = QNODE[rowStatus];
+            const isActive = rowStatus === 'active';
+            const locked = rowStatus === 'locked';
             const goToLesson = () => router.push({ pathname: '/learn/hook', params: { moduleId: mod.id, lessonIndex: String(i) } });
             return (
               <ListRow
@@ -57,7 +61,7 @@ export default function ModuleDetail() {
                 style={isActive ? [{ borderWidth: 2, borderColor: colors.green, backgroundColor: '#F1F6EF' }] : undefined}
               >
                 <View style={[styles.qnode, { backgroundColor: node.bg }]}>
-                  <Txt style={styles.qnodeTxt}>{status === 'done' ? '✓' : status === 'locked' ? '🔒' : String(i + 1)}</Txt>
+                  <Txt style={styles.qnodeTxt}>{rowStatus === 'done' ? '✓' : rowStatus === 'locked' ? '🔒' : String(i + 1)}</Txt>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Txt style={[styles.qTitle, locked && { color: colors.lockText }]}>{lesson.title}</Txt>
