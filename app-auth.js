@@ -9,8 +9,8 @@ window.addEventListener('load', async function () {
   }
 
   window.stackdSupabase = window.supabase.createClient(
-    'https://fapuxciloeyonxfvtgix.supabase.co',
-    'sb_publishable_8i-NzWyy1fOlR5iER4k1dQ_gGN0HtkL',
+    '__SUPABASE_URL__',
+    '__SUPABASE_ANON_KEY__',
     { accessToken: () => Clerk.session.getToken() }
   );
 

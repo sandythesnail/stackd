@@ -4,6 +4,7 @@
   "private": true,
   "description": "Stacked — financial literacy web app (static HTML/CSS/JS) with a self-contained local security scanner.",
   "scripts": {
-    "security-check": "node SecurityAgent/runner.js"
+    "security-check": "node SecurityAgent/runner.js",
+    "build": "node scripts/build.js"
   }
 }
