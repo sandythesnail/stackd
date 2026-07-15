@@ -3,18 +3,20 @@ import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { Screen, Header, Txt, BadgeMedal, MEDAL_GRAD } from '@/components';
 import { colors, font } from '@/theme';
 import { badges, user } from '@/data';
+import { useStore } from '@/store';
 
 const FILTERS = ['All', 'Bronze', 'Silver', 'Gold', 'Diamond'] as const;
 
 /** Screen 11 — Badges (filter by tier & status). */
 export default function Badges() {
+  const { state } = useStore();
   const [filter, setFilter] = useState(0);
   const active = FILTERS[filter];
   const shown = active === 'All' ? badges : badges.filter((b) => b.tier === active.toLowerCase());
 
   return (
     <Screen edges={['top']}>
-      <Header level={user.level} name={user.tier} coins={user.coins} diamonds={user.diamonds} />
+      <Header level={state.level} name={user.tier} coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.head}>
           <Txt variant="disp" style={{ fontSize: 23 }}>Badges</Txt>

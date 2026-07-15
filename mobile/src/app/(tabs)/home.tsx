@@ -7,6 +7,7 @@ import {
 } from '@/components';
 import { colors, font } from '@/theme';
 import { user } from '@/data';
+import { useStore } from '@/store';
 
 const HOME_MODULES = [
   { id: 'earning', abbr: 'Er', color: colors.green, name: 'Earning', pct: 1, tag: '✓ Done', tone: 'green' as const },
@@ -25,17 +26,18 @@ const RECENT_BADGES = [
 /** Screen 7 — Home / Dashboard. */
 export default function Home() {
   const router = useRouter();
+  const { state } = useStore();
   return (
     <Screen edges={['top']}>
-      <Header level={user.level} name={user.tier} coins={user.coins} diamonds={user.diamonds} onGear={() => router.push('/(tabs)/settings')} />
+      <Header level={state.level} name={user.tier} coins={state.coins} diamonds={state.diamonds} onGear={() => router.push('/(tabs)/settings')} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Txt variant="disp" style={{ fontSize: 23 }}>Good afternoon, {user.name}</Txt>
 
         <Pressable style={styles.statRow} onPress={() => router.push('/(tabs)/progress')}>
-          <Stat value={user.xp.toLocaleString()} label="XP" />
-          <Stat value={<Row><Flame size={13} /><Num>{user.streak}</Num></Row>} label="Streak" />
-          <Stat value={<Row><Coin /><Num>{user.coins}</Num></Row>} label="Coins" />
-          <Stat value={<Row><Diamond /><Num>{user.diamonds}</Num></Row>} label="Diamonds" />
+          <Stat value={state.xp.toLocaleString()} label="XP" />
+          <Stat value={<Row><Flame size={13} /><Num>{state.streak}</Num></Row>} label="Streak" />
+          <Stat value={<Row><Coin /><Num>{state.coins}</Num></Row>} label="Coins" />
+          <Stat value={<Row><Diamond /><Num>{state.diamonds}</Num></Row>} label="Diamonds" />
         </Pressable>
 
         {/* Continue quest */}

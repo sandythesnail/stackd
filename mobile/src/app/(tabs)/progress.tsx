@@ -3,14 +3,16 @@ import Svg, { Circle } from 'react-native-svg';
 import { Screen, Header, Txt, Card, Stat, ProgressBar, MIcon } from '@/components';
 import { colors, font } from '@/theme';
 import { modules, user } from '@/data';
+import { useStore } from '@/store';
 
 const ROWS = ['earning', 'career', 'spending', 'saving', 'investing'];
 
 /** Screen 8 — Progress (overall + per-module). */
 export default function Progress() {
+  const { state } = useStore();
   return (
     <Screen edges={['top']}>
-      <Header level={user.level} name={user.tier} coins={user.coins} diamonds={user.diamonds} />
+      <Header level={state.level} name={user.tier} coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Txt variant="disp" style={{ fontSize: 23 }}>Your progress</Txt>
 

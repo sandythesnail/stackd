@@ -3,15 +3,17 @@ import { useRouter } from 'expo-router';
 import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleTile } from '@/components';
 import { colors, font } from '@/theme';
 import { modules, user } from '@/data';
+import { useStore } from '@/store';
 
 /** Screen 9 — Modules (all 11, locked/unlocked). */
 export default function Modules() {
   const router = useRouter();
+  const { state } = useStore();
   const doneCount = modules.filter((m) => m.status === 'done').length;
 
   return (
     <Screen edges={['top']}>
-      <Header level={user.level} name={user.tier} coins={user.coins} diamonds={user.diamonds} />
+      <Header level={state.level} name={user.tier} coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.head}>
           <Txt variant="disp" style={{ fontSize: 23 }}>All modules</Txt>

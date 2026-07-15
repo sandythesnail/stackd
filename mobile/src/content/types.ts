@@ -134,6 +134,8 @@ export type ModuleContent = {
   quests: Quest[];
 };
 
+export type RoomSlot = 'wallpaper' | 'wall' | 'rug' | 'plant' | 'bed' | 'desk' | 'lamp' | 'window';
+
 export type ShopItemReal = {
   id: string;
   name: string;
@@ -149,4 +151,10 @@ export type ShopItemReal = {
   svg: string;
   fit?: { a: number; b: number; c: number; d: number; e: number; f: number };
   layer?: 'front' | 'back';
+  /** Room-category items only: which room slot they occupy, and (for wallpaper) its CSS background. */
+  slot?: RoomSlot;
+  wallCss?: string;
+  /** Achievement-only rewards — never purchasable, auto-equipped when earned (Phase 5). */
+  reward?: boolean;
+  rewardHint?: string;
 };

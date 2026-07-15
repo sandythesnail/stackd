@@ -4,9 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Screen, Header, Txt, Coin, Diamond, ItemArt } from '@/components';
 import { colors, font } from '@/theme';
-import { user } from '@/data';
 import { shopItemsReal } from '@/content';
 import type { ShopItemReal } from '@/content';
+import { useStore } from '@/store';
 
 const CATEGORIES: { key: ShopItemReal['category']; label: string }[] = [
   { key: 'hat', label: 'Hats' },
@@ -26,13 +26,14 @@ const RARITY_COLOR: Record<string, string> = {
 /** Screen 13 — Shop (coins & diamonds). Real catalog ported from the website's SHOP_ITEMS. */
 export default function Shop() {
   const router = useRouter();
+  const { state, isOwned, isEquipped } = useStore();
   const [filter, setFilter] = useState(0);
   const cat = CATEGORIES[filter];
   const items = shopItemsReal.filter((i) => i.category === cat.key);
 
   return (
     <Screen edges={['top']}>
-      <Header title="Shop" coins={user.coins} diamonds={user.diamonds} />
+      <Header title="Shop" coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.filters}>
           {CATEGORIES.map((c, i) => {
@@ -53,6 +54,8 @@ export default function Shop() {
               <ItemTile
                 key={item.id}
                 item={item}
+                owned={isOwned(item.id)}
+                equipped={isEquipped(item.id)}
                 onPress={() => router.push({ pathname: '/modal/shop-item', params: { id: item.id } })}
               />
             ))}
@@ -63,7 +66,11 @@ export default function Shop() {
   );
 }
 
-function ItemTile({ item, onPress }: { item: ShopItemReal; onPress: () => void }) {
+function ItemTile({
+  item, owned, equipped, onPress,
+}: {
+  item: ShopItemReal; owned: boolean; equipped: boolean; onPress: () => void;
+}) {
   const currency = item.currency ?? 'coin';
   return (
     <Pressable style={styles.itile} onPress={onPress}>
@@ -74,10 +81,25 @@ function ItemTile({ item, onPress }: { item: ShopItemReal; onPress: () => void }
             <Txt style={styles.rarityTxt}>{item.rarity}</Txt>
           </View>
         ) : null}
+        {item.isMysteryBox ? (
+          <View style={styles.mysteryTag}><Txt style={styles.mysteryTagTxt}>🎁</Txt></View>
+        ) : null}
       </LinearGradient>
       <View style={styles.itileFoot}>
         <Txt style={styles.iname} numberOfLines={1}>{item.name}</Txt>
-        {currency === 'diamond' ? (
+        {equipped ? (
+          <View style={[styles.price, { backgroundColor: colors.tagGreenBg }]}>
+            <Txt style={[styles.priceTxt, { color: colors.tagGreenText }]}>✓ Worn</Txt>
+          </View>
+        ) : owned ? (
+          <View style={[styles.price, { backgroundColor: colors.tagGreenBg }]}>
+            <Txt style={[styles.priceTxt, { color: colors.tagGreenText }]}>Owned</Txt>
+          </View>
+        ) : item.reward ? (
+          <View style={[styles.price, { backgroundColor: colors.tagLockBg }]}>
+            <Txt style={[styles.priceTxt, { color: colors.tagLockText }]}>🎓 Earned</Txt>
+          </View>
+        ) : currency === 'diamond' ? (
           <View style={[styles.price, { backgroundColor: '#EAF6FB' }]}>
             <Diamond size={13} />
             <Txt style={[styles.priceTxt, { color: '#2E7FA3' }]}>{item.price}</Txt>
@@ -120,6 +142,8 @@ const styles = StyleSheet.create({
   iprev: { borderRadius: 13, height: 92, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   rarity: { position: 'absolute', top: 6, left: 6, borderRadius: 10, paddingVertical: 2, paddingHorizontal: 7 },
   rarityTxt: { fontFamily: font.extra, fontSize: 9, color: colors.white, textTransform: 'uppercase' },
+  mysteryTag: { position: 'absolute', top: 6, right: 6, borderRadius: 10, backgroundColor: colors.white, paddingVertical: 2, paddingHorizontal: 6 },
+  mysteryTagTxt: { fontSize: 12 },
   itileFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   iname: { fontFamily: font.extra, fontSize: 13.5, color: colors.ink, flexShrink: 1 },
   price: {

@@ -6,13 +6,15 @@ import { Feather } from '@expo/vector-icons';
 import { Screen, Header, Txt, Field, Button } from '@/components';
 import { colors, font } from '@/theme';
 import { user } from '@/data';
+import { useStore } from '@/store';
 
 /** Screen 14 — Settings (invite, account, sources). */
 export default function Settings() {
   const router = useRouter();
+  const { state } = useStore();
   return (
     <Screen edges={['top']}>
-      <Header level={user.level} name={user.tier} coins={user.coins} diamonds={user.diamonds} />
+      <Header level={state.level} name={user.tier} coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Txt variant="disp" style={{ fontSize: 23 }}>Settings</Txt>
 

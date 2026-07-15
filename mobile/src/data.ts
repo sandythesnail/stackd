@@ -5,19 +5,14 @@
  */
 import { moduleColor } from '@/theme';
 
+// Mutable game state (coins, diamonds, xp, level, streak, inventory, equipped) lives in
+// the store (@/store) so it can persist and update live — this is just the static profile.
 export const user = {
   name: 'Maya',
   fullName: 'Maya Rodriguez',
   email: 'maya.rodriguez@uconn.edu',
-  level: 4,
   tier: 'Sophomore Saver',
-  xp: 1240,
-  streak: 12,
-  coins: 340,
-  diamonds: 8,
   referral: 'stackd.app/r/MAYA-UC',
-  // Ids into content/shopItems.json — up to MAX_EQUIPPED_ITEMS (3) on the website.
-  equippedItemIds: ['crown', 'sunglasses'],
 };
 
 export type Module = {

@@ -1,25 +1,36 @@
 import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Screen, Header, Txt, Button, Hammy, Slot } from '@/components';
+import { Screen, Header, Txt, Button, Hammy, Slot, ItemArt } from '@/components';
 import { colors, font } from '@/theme';
-import { user } from '@/data';
-import { shopItemById } from '@/content';
+import { useStore } from '@/store';
 
 /** Screen 12 — Room (Hammy's scene & outfit). */
 export default function Room() {
   const router = useRouter();
-  const equipped = user.equippedItemIds.map(shopItemById).filter((i) => i !== undefined);
+  const { state, equippedMascotItems, equippedRoomItems } = useStore();
+  const equipped = equippedMascotItems();
   const wearingLabel = equipped.length ? equipped.map((i) => i.name).join(' + ') : 'Nothing yet';
+  const roomItems = equippedRoomItems();
+  const wall = roomItems.find((i) => i.slot === 'wall');
+  const plant = roomItems.find((i) => i.slot === 'plant');
 
   return (
     <Screen edges={['top']}>
-      <Header level={user.level} name="Hammy's Room" coins={user.coins} diamonds={user.diamonds} />
+      <Header level={state.level} name="Hammy's Room" coins={state.coins} diamonds={state.diamonds} />
       <View style={styles.wrap}>
         <View style={styles.scene}>
           <LinearGradient colors={['#FBEFF3', '#FBEFF3', '#EADFC8']} locations={[0, 0.62, 0.62]} style={StyleSheet.absoluteFill} />
-          <Slot width={66} height={86} radius={12} style={styles.poster} colors={['#F4E9DC', '#E7D4BE']} />
-          <Slot width={64} height={64} radius={14} style={styles.plant} colors={['#DFF0DA', '#BFE0B6']} />
+          {wall ? (
+            <View style={[styles.poster, styles.slotFrame]}><ItemArt item={wall} size={48} /></View>
+          ) : (
+            <Slot width={66} height={86} radius={12} style={styles.poster} colors={['#F4E9DC', '#E7D4BE']} />
+          )}
+          {plant ? (
+            <View style={[styles.plant, styles.slotFrame]}><ItemArt item={plant} size={46} /></View>
+          ) : (
+            <Slot width={64} height={64} radius={14} style={styles.plant} colors={['#DFF0DA', '#BFE0B6']} />
+          )}
 
           <View style={styles.shadow} />
           <Hammy size={218} ring equipped={equipped} style={styles.hammy} />
@@ -30,7 +41,7 @@ export default function Room() {
         </View>
 
         <View style={styles.actions}>
-          <Button label="Change outfit" variant="ghost" size="sm" style={{ flex: 1 }} />
+          <Button label="Change outfit" variant="ghost" size="sm" onPress={() => router.push('/(tabs)/shop')} style={{ flex: 1 }} />
           <Button label="Visit shop →" variant="pink" size="sm" onPress={() => router.push('/(tabs)/shop')} style={{ flex: 1 }} />
         </View>
       </View>
@@ -49,6 +60,15 @@ const styles = StyleSheet.create({
   },
   poster: { position: 'absolute', top: 18, left: 18 },
   plant: { position: 'absolute', top: 20, right: 18 },
+  slotFrame: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    padding: 8,
+  },
   shadow: {
     position: 'absolute',
     bottom: 38,

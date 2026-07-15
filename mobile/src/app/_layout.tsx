@@ -19,6 +19,7 @@ import {
   Nunito_800ExtraBold,
 } from '@expo-google-fonts/nunito';
 import { colors } from '@/theme';
+import { StoreProvider } from '@/store';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -44,31 +45,33 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.screen },
-            animation: 'slide_from_right',
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(onboarding)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="learn" />
-          <Stack.Screen
-            name="modal/levelup"
-            options={{ presentation: 'transparentModal', animation: 'fade' }}
-          />
-          <Stack.Screen
-            name="modal/life-event"
-            options={{ presentation: 'transparentModal', animation: 'fade' }}
-          />
-          <Stack.Screen
-            name="modal/shop-item"
-            options={{ presentation: 'transparentModal', animation: 'fade' }}
-          />
-        </Stack>
+        <StoreProvider>
+          <StatusBar style="dark" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.screen },
+              animation: 'slide_from_right',
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(onboarding)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="learn" />
+            <Stack.Screen
+              name="modal/levelup"
+              options={{ presentation: 'transparentModal', animation: 'fade' }}
+            />
+            <Stack.Screen
+              name="modal/life-event"
+              options={{ presentation: 'transparentModal', animation: 'fade' }}
+            />
+            <Stack.Screen
+              name="modal/shop-item"
+              options={{ presentation: 'transparentModal', animation: 'fade' }}
+            />
+          </Stack>
+        </StoreProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
