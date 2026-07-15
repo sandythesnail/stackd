@@ -7,6 +7,7 @@ import {
 import { colors, font } from '@/theme';
 import { user, modules } from '@/data';
 import { useStore } from '@/store';
+import { todaysHammyMood, hasModuleActivityToday } from '@/hammyMood';
 
 /** Screen 7 — Home / Dashboard. Real module progress, badges, and next-quest card. */
 export default function Home() {
@@ -33,6 +34,12 @@ export default function Home() {
   const nextTotal = nextModule ? moduleTotal(nextModule.id) : 0;
   const nextPct = nextTotal ? nextDone / nextTotal : 0;
 
+  // One mood per calendar day (todaysHammyMood), unless a lesson's already been finished
+  // today — then Hammy's just happy about that instead.
+  const speechMsg = hasModuleActivityToday(state.lastModuleActivityDate)
+    ? "Hammy's had a great day — you already finished a module! Come back tomorrow for more."
+    : todaysHammyMood().msg;
+
   return (
     <Screen edges={['top']}>
       <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} onGear={() => router.push('/(tabs)/settings')} />
@@ -53,7 +60,7 @@ export default function Home() {
               <Pressable onPress={() => router.push('/modal/life-event')}>
                 <Hammy size={76} bob equipped={equippedMascotItems()} style={styles.questHammy} />
               </Pressable>
-              <Speech>Ready for today&apos;s quest? Keep the streak going!</Speech>
+              <Speech>{speechMsg}</Speech>
             </View>
             <View style={{ marginTop: 14 }}>
               <View style={styles.questMeta}>

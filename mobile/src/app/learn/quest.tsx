@@ -19,6 +19,13 @@ import type {
  * work on the website). */
 type Complete = (xpDelta: number, graded?: boolean) => void;
 
+/** Ported verbatim from app.js — a limited "Ask Hammy for a hint" budget available during
+ * interactive chapters only, so getting stuck doesn't leave the student with nowhere to turn. */
+const HINT_BUDGET = 3;
+const HINT_FREE_CHAPTER_TYPES = new Set(['story', 'teach', 'hint']);
+
+type HintProps = { hintsRemaining: number; onUseHint: () => void };
+
 /** Screen 17 (extended) — Quest player. Renders the website's full multi-chapter quest
  * content (story/teach/matching/decision/microsim/etc — all 15 chapter types) instead of
  * the flat single-quiz flow, one chapter at a time. */
@@ -34,6 +41,9 @@ export default function QuestPlayer() {
   const [xpEarned, setXpEarned] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [gradedTotal, setGradedTotal] = useState(0);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [terms, setTerms] = useState<string[]>([]);
+  const [bossWon, setBossWon] = useState(false);
 
   if (!quest || !content) {
     return (
@@ -47,17 +57,28 @@ export default function QuestPlayer() {
   }
 
   const chapter = quest.chapters[chapterIdx];
+  const hintsRemaining = Math.max(0, HINT_BUDGET - hintsUsed);
+  const onUseHint = () => setHintsUsed((h) => h + 1);
 
   const onComplete: Complete = (xpDelta, graded) => {
     const nextXp = xpEarned + xpDelta;
     const nextCorrect = correctCount + (graded ? 1 : 0);
     const nextGraded = gradedTotal + (graded !== undefined ? 1 : 0);
+    const nextTerms = chapter.type === 'matching'
+      ? [...new Set([...terms, ...chapter.pairs.map((p) => p.term)])]
+      : chapter.type === 'teach'
+        ? [...new Set([...terms, ...chapter.concepts.map((c) => c.term)])]
+        : terms;
+    const nextBossWon = bossWon || chapter.type === 'bossbattle';
+
     if (chapterIdx + 1 >= quest.chapters.length) {
       router.replace({
         pathname: '/learn/results',
         params: {
           moduleId: mod.id, lessonIndex: String(li),
           correctCount: String(nextCorrect), total: String(nextGraded), xpEarned: String(nextXp),
+          questId: quest.id, hintsUsed: String(hintsUsed), bossWon: nextBossWon ? '1' : '0',
+          newTerms: nextTerms.join('|'),
         },
       });
       return;
@@ -65,6 +86,8 @@ export default function QuestPlayer() {
     setXpEarned(nextXp);
     setCorrectCount(nextCorrect);
     setGradedTotal(nextGraded);
+    setTerms(nextTerms);
+    setBossWon(nextBossWon);
     setChapterIdx(chapterIdx + 1);
   };
 
@@ -76,31 +99,67 @@ export default function QuestPlayer() {
         <Txt style={styles.step}>{chapterIdx + 1} / {quest.chapters.length}</Txt>
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ChapterView key={chapter.id} chapter={chapter} questions={content.questions} onComplete={onComplete} />
+        <ChapterView
+          key={chapter.id}
+          chapter={chapter}
+          questions={content.questions}
+          moduleXpReward={content.xpReward}
+          onComplete={onComplete}
+          hintsRemaining={hintsRemaining}
+          onUseHint={onUseHint}
+        />
       </ScrollView>
     </Screen>
   );
 }
 
-function ChapterView({ chapter, questions, onComplete }: { chapter: Chapter; questions: Question[]; onComplete: Complete }) {
+function ChapterView({
+  chapter, questions, moduleXpReward, onComplete, hintsRemaining, onUseHint,
+}: { chapter: Chapter; questions: Question[]; moduleXpReward: number; onComplete: Complete } & HintProps) {
+  const hintProps: HintProps = { hintsRemaining, onUseHint };
   switch (chapter.type) {
     case 'story': return <StoryView chapter={chapter} onComplete={onComplete} />;
     case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} />;
-    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} />;
+    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...hintProps} />;
     case 'hint': return <HintView chapter={chapter} onComplete={onComplete} />;
-    case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} />;
-    case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} />;
+    case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} {...hintProps} />;
+    case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} {...hintProps} />;
     case 'poll': return <PollView chapter={chapter} onComplete={onComplete} />;
     case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} />;
     case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} />;
-    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} />;
-    case 'bossbattle': return <BossbattleView chapter={chapter} onComplete={onComplete} />;
+    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} {...hintProps} />;
+    case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} />;
     case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} />;
-    case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} />;
+    case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} {...hintProps} />;
     case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} />;
     case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} />;
     default: return null;
   }
+}
+
+/** "💡 Hint (N left)" — ported from renderHintBudget. Only rendered for chapters that have
+ * hintText and aren't in HINT_FREE_CHAPTER_TYPES (story/teach/hint, which don't spend budget). */
+function HintButton({ hintText, hintsRemaining, onUseHint }: { hintText?: string } & HintProps) {
+  const [revealed, setRevealed] = useState(false);
+  if (!hintText) return null;
+  return (
+    <View style={{ gap: 8 }}>
+      {revealed ? (
+        <Card style={{ backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder }}>
+          <Tag tone="pink">🐷 HAMMY'S HINT</Tag>
+          <Txt variant="lead" style={{ fontSize: 13, marginTop: 6 }}>{hintText}</Txt>
+        </Card>
+      ) : (
+        <Button
+          label={`💡 Hint (${hintsRemaining} left)`}
+          variant="ghost"
+          size="sm"
+          disabled={hintsRemaining <= 0}
+          onPress={() => { onUseHint(); setRevealed(true); }}
+        />
+      )}
+    </View>
+  );
 }
 
 /* ───────────────────────── story ───────────────────────── */
@@ -173,7 +232,7 @@ function shuffle<T>(arr: T[]): T[] {
   return [...arr].map((v) => [Math.random(), v] as const).sort((a, b) => a[0] - b[0]).map(([, v]) => v);
 }
 
-function MatchingView({ chapter, onComplete }: { chapter: MatchingChapter; onComplete: Complete }) {
+function MatchingView({ chapter, onComplete, hintsRemaining, onUseHint }: { chapter: MatchingChapter; onComplete: Complete } & HintProps) {
   const [terms] = useState(() => shuffle(chapter.pairs.map((p) => p.term)));
   const [defs] = useState(() => shuffle(chapter.pairs.map((p) => p.definition)));
   const [matched, setMatched] = useState<Set<string>>(new Set());
@@ -197,7 +256,7 @@ function MatchingView({ chapter, onComplete }: { chapter: MatchingChapter; onCom
   return (
     <View style={{ gap: 14 }}>
       <Txt variant="h2">{chapter.title}</Txt>
-      {chapter.hintText ? <Txt variant="lead" style={{ fontSize: 13 }}>{chapter.hintText}</Txt> : null}
+      <HintButton hintText={chapter.hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1, gap: 8 }}>
           {terms.map((t) => (
@@ -245,7 +304,7 @@ function HintView({ chapter, onComplete }: { chapter: HintChapter; onComplete: C
 }
 
 /* ───────────────────────── decision ───────────────────────── */
-function DecisionView({ chapter, onComplete }: { chapter: DecisionChapter; onComplete: Complete }) {
+function DecisionView({ chapter, onComplete, hintsRemaining, onUseHint }: { chapter: DecisionChapter; onComplete: Complete } & HintProps) {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const picked = chapter.choices.find((c) => c.id === pickedId);
   return (
@@ -253,11 +312,14 @@ function DecisionView({ chapter, onComplete }: { chapter: DecisionChapter; onCom
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       {!picked ? (
-        <View style={{ gap: 10 }}>
-          {chapter.choices.map((c) => (
-            <Option key={c.id} label={c.label} onPress={() => setPickedId(c.id)} />
-          ))}
-        </View>
+        <>
+          <HintButton hintText={chapter.hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
+          <View style={{ gap: 10 }}>
+            {chapter.choices.map((c) => (
+              <Option key={c.id} label={c.label} onPress={() => setPickedId(c.id)} />
+            ))}
+          </View>
+        </>
       ) : (
         <>
           <Card><Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.outcome.text}</Txt></Card>
@@ -269,7 +331,7 @@ function DecisionView({ chapter, onComplete }: { chapter: DecisionChapter; onCom
 }
 
 /* ───────────────────────── microsim ───────────────────────── */
-function MicrosimView({ chapter, onComplete }: { chapter: MicrosimChapter; onComplete: Complete }) {
+function MicrosimView({ chapter, onComplete, hintsRemaining, onUseHint }: { chapter: MicrosimChapter; onComplete: Complete } & HintProps) {
   const [values, setValues] = useState<Record<string, number>>(
     () => Object.fromEntries(chapter.sliders.map((s) => [s.id, s.default])),
   );
@@ -286,6 +348,7 @@ function MicrosimView({ chapter, onComplete }: { chapter: MicrosimChapter; onCom
     <View style={{ gap: 14 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
+      <HintButton hintText={chapter.hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       <Card style={{ gap: 4 }}>
         <Txt style={styles.term}>Income: ${chapter.income}</Txt>
         {chapter.fixedCosts.map((f) => (
@@ -448,7 +511,7 @@ function KnowledgecheckView({ chapter, questions, onComplete }: { chapter: Knowl
 }
 
 /* ───────────────────────── simulator ───────────────────────── */
-function SimulatorView({ chapter, onComplete }: { chapter: SimulatorChapter; onComplete: Complete }) {
+function SimulatorView({ chapter, onComplete, hintsRemaining, onUseHint }: { chapter: SimulatorChapter; onComplete: Complete } & HintProps) {
   // meterKey/meterMin/meterMax are missing on 2/22 real chapters — fall back to a plain 0-100 score.
   const meterKey = chapter.meterKey ?? 'score';
   const meterMin = chapter.meterMin ?? 0;
@@ -468,6 +531,7 @@ function SimulatorView({ chapter, onComplete }: { chapter: SimulatorChapter; onC
     <View style={{ gap: 14 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
+      <HintButton hintText={chapter.hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       <Card style={{ gap: 6 }}>
         <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.muted5, textTransform: 'uppercase' }}>{meterKey}</Txt>
         <Txt style={{ fontFamily: font.display, fontSize: 28, color: colors.greenDark }}>{Math.round(meter)}</Txt>
@@ -489,9 +553,7 @@ function SimulatorView({ chapter, onComplete }: { chapter: SimulatorChapter; onC
 }
 
 /* ───────────────────────── bossbattle ───────────────────────── */
-const BOSS_BASE_XP = 20;
-
-function BossbattleView({ chapter, onComplete }: { chapter: BossbattleChapter; onComplete: Complete }) {
+function BossbattleView({ chapter, moduleXpReward, onComplete }: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete }) {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const picked = chapter.choices.find((c) => c.id === pickedId);
   return (
@@ -508,7 +570,8 @@ function BossbattleView({ chapter, onComplete }: { chapter: BossbattleChapter; o
       ) : (
         <>
           <Card><Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.consequence.text}</Txt></Card>
-          <Button label="Finish quest →" onPress={() => onComplete(Math.round(BOSS_BASE_XP * picked.consequence.xpMultiplier))} />
+          {/* Ported verbatim from finishQuest: bossXP = Math.round(module.xpReward * xpMultiplier). */}
+          <Button label="Finish quest →" onPress={() => onComplete(Math.round(moduleXpReward * picked.consequence.xpMultiplier))} />
         </>
       )}
     </View>
@@ -557,7 +620,7 @@ function SpotcheckView({ chapter, onComplete }: { chapter: SpotcheckChapter; onC
 }
 
 /* ───────────────────────── priceisright ───────────────────────── */
-function PriceisrightView({ chapter, onComplete }: { chapter: PriceisrightChapter; onComplete: Complete }) {
+function PriceisrightView({ chapter, onComplete, hintsRemaining, onUseHint }: { chapter: PriceisrightChapter; onComplete: Complete } & HintProps) {
   const { min, max, step } = chapter.guessRange;
   const [guess, setGuess] = useState(Math.round((min + max) / 2 / step) * step);
   const [submitted, setSubmitted] = useState(false);
@@ -568,6 +631,7 @@ function PriceisrightView({ chapter, onComplete }: { chapter: PriceisrightChapte
     <View style={{ gap: 14 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
+      <HintButton hintText={chapter.hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       <Card style={{ gap: 8, alignItems: 'center' }}>
         <Txt style={{ fontFamily: font.display, fontSize: 32, color: colors.ink }}>${guess}</Txt>
         <RNSlider

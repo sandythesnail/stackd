@@ -1,21 +1,24 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Txt, Button, Tag, Hammy, Flame, Coin, Diamond } from '@/components';
+import { Txt, Button, Tag, Hammy, Flame, Coin } from '@/components';
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
-import { useStore, xpProgressPct, LESSON_COMPLETE_COINS, LESSON_COMPLETE_DIAMONDS } from '@/store';
+import { useStore, xpProgressPct } from '@/store';
 
 /** Screen 19 — Results (rewards & streak). Reflects the lesson just finished — actually
  * records XP/coins/module progress into the store (not just decorative numbers). */
 export default function Results() {
   const router = useRouter();
-  const { moduleId, lessonIndex, correctCount, total, xpEarned } = useLocalSearchParams<{
+  const {
+    moduleId, lessonIndex, correctCount, total, xpEarned, questId, hintsUsed, bossWon, newTerms,
+  } = useLocalSearchParams<{
     moduleId: string; lessonIndex: string; correctCount: string; total: string; xpEarned?: string;
+    questId?: string; hintsUsed?: string; bossWon?: string; newTerms?: string;
   }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
@@ -31,10 +34,19 @@ export default function Results() {
   const { state, level, tierName, completeLesson, equippedMascotItems } = useStore();
   const tierBefore = useRef(tierName).current;
   const recorded = useRef(false);
+  const [coinsEarned, setCoinsEarned] = useState(0);
   useEffect(() => {
     if (recorded.current) return;
     recorded.current = true;
-    completeLesson(mod.id, li, xpForLesson);
+    const earned = completeLesson(mod.id, li, xpForLesson, {
+      correctCount: correct,
+      gradedTotal: totalQ,
+      questId,
+      bossWon: bossWon === '1',
+      hintsUsed: hintsUsed !== undefined ? Number(hintsUsed) : undefined,
+      newTerms: newTerms ? newTerms.split('|').filter(Boolean) : undefined,
+    });
+    setCoinsEarned(earned);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -62,8 +74,7 @@ export default function Results() {
 
           <View style={styles.rewards}>
             <Reward value={`+${xpForLesson}`} label="XP" />
-            <Reward value={<Coin size={22} />} label="Coins" big={`+${LESSON_COMPLETE_COINS}`} />
-            <Reward value={<Diamond size={19} />} label="Diamond" big={`+${LESSON_COMPLETE_DIAMONDS}`} />
+            <Reward value={<Coin size={22} />} label="Coins" big={`+${coinsEarned}`} />
           </View>
 
           <View style={styles.streakCard}>

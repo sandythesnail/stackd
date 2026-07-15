@@ -13,11 +13,11 @@ const STORAGE_KEY = 'stackd_state_v1';
 export const MAX_EQUIPPED_ITEMS = 3;
 const MYSTERY_OWNED_WEIGHT_FACTOR = 0.35;
 const MYSTERY_DUPLICATE_REFUND_RATE = 0.5;
-/** Flat per-lesson currency bonus (mobile-specific — the website doesn't have a mobile-style
- * coin-per-lesson reward; this is what funds the Shop economy here). Matches the numbers
- * the results screen has always promised. */
-export const LESSON_COMPLETE_COINS = 40;
-export const LESSON_COMPLETE_DIAMONDS = 1;
+/** Ported verbatim from finishQuest (app.js): coinsEarned = chapterScore*8 if the quest had
+ * any graded chapters, else a flat 8 — and diamondsEarned is always 0 (diamonds only come
+ * from streaks/daily-login/achievements, never a quest finish). */
+export const QUEST_COIN_PER_CORRECT = 8;
+export const QUEST_COIN_FLAT_FALLBACK = 8;
 
 /** STREAK_DIAMOND_INTERVAL/REWARD and DAILY_LOGIN_BASE/STEP/CAP_COINS ported verbatim from
  * app.js (updateStreak / claimDailyLoginBonus) — a once-per-calendar-day streak+diamond
@@ -97,6 +97,17 @@ export type AppState = {
   /** Track chosen at the end of the onboarding survey (getRecommendedTrack, or a manual
    * switch) — see @/survey. */
   onboardingTrackId: string | null;
+  /** Module ids where a bossbattle-ending quest has been finished at least once — powers
+   * the crisis_averted/fraud_fighter achievements. */
+  questBossesWon: string[];
+  /** `${moduleId}::${questId}` -> hints used, recorded when that quest finishes — powers
+   * the no_hints achievement (credit::maya finished with 0). */
+  questHintsUsed: Record<string, number>;
+  /** Unique vocab terms encountered across matching/teach chapters — powers word_nerd. */
+  termsLearned: string[];
+  /** toDateString() of the last day a lesson was finished — Home's mascot shows a "happy
+   * today" face once this is today instead of the deterministic daily mood. */
+  lastModuleActivityDate: string | null;
 };
 
 const DEFAULT_STATE: AppState = {
@@ -122,6 +133,10 @@ const DEFAULT_STATE: AppState = {
   lastPlayedDate: new Date().toDateString(),
   dailyLoginLog: {},
   onboardingTrackId: null,
+  questBossesWon: [],
+  questHintsUsed: {},
+  termsLearned: [],
+  lastModuleActivityDate: null,
 };
 
 export type MysteryResult = {
@@ -188,6 +203,10 @@ function computeMetAchievementIds(s: AppState): string[] {
   const roomFull = ROOM_SLOTS.every((slot) => !!s.equippedRoom[slot]);
   if (roomFull) met.add('homebody');
   if (masteredCount(s.moduleProgress) === ALL_MODULE_IDS.length) met.add('stackd_star');
+  if (s.questBossesWon.includes('credit')) met.add('crisis_averted');
+  if (s.questBossesWon.includes('scams')) met.add('fraud_fighter');
+  if (s.questHintsUsed['credit::maya'] === 0) met.add('no_hints');
+  if (s.termsLearned.length >= 15) met.add('word_nerd');
   const otherIds = ACHIEVEMENTS.filter((a) => a.id !== 'grandmaster').map((a) => a.id);
   if (otherIds.every((id) => met.has(id))) met.add('grandmaster');
   return [...met];
@@ -225,9 +244,13 @@ type Ctx = {
    * duplicates. Returns null if unaffordable or the pool has nothing left to give. */
   openMysteryBox: (itemId: string) => MysteryResult | null;
   /** Records a finished lesson: advances moduleProgress (if this lesson is new progress,
-   * not a replay), awards its XP, checks for newly-unlocked achievements, and may queue a
+   * not a replay), awards its XP + the real coin formula (chapterScore*8, or flat 8 — never
+   * diamonds, mirrors finishQuest), checks for newly-unlocked achievements, and may queue a
    * life event (guaranteed module-unlock event, or an ambient random roll). */
-  completeLesson: (moduleId: string, lessonIndex: number, xpEarned: number) => void;
+  completeLesson: (moduleId: string, lessonIndex: number, xpEarned: number, opts?: {
+    correctCount?: number; gradedTotal?: number;
+    questId?: string; bossWon?: boolean; hintsUsed?: number; newTerms?: string[];
+  }) => number;
   pendingLifeEvent: () => LifeEvent | null;
   /** Applies a choice's coinDelta (if any), records the event as shown, and clears pending. */
   resolveLifeEvent: (choiceId: string) => void;
@@ -427,7 +450,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return { item: won, isDuplicate, refundAmount, refundCurrency };
       },
 
-      completeLesson: (moduleId, lessonIndex, xpEarned) => {
+      completeLesson: (moduleId, lessonIndex, xpEarned, opts) => {
+        const { correctCount = 0, gradedTotal = 0, questId, bossWon, hintsUsed, newTerms } = opts ?? {};
+        // Ported verbatim from finishQuest: coins = correct answers * 8 (or a flat 8 if
+        // nothing in the quest was gradeable) — diamonds never come from a lesson finish.
+        const coinsEarned = gradedTotal > 0 ? correctCount * QUEST_COIN_PER_CORRECT : QUEST_COIN_FLAT_FALLBACK;
+
         setState((s) => {
           const wasMastered = isModuleMastered(s.moduleProgress, moduleId);
           const current = s.moduleProgress[moduleId] ?? 0;
@@ -436,12 +464,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const nextProgress = advanced
             ? { ...s.moduleProgress, [moduleId]: Math.min(lessonIndex + 1, total) }
             : s.moduleProgress;
-          let next = {
+          let next: AppState = {
             ...s,
             xp: s.xp + xpEarned,
-            coins: s.coins + (advanced ? LESSON_COMPLETE_COINS : 0),
-            diamonds: s.diamonds + (advanced ? LESSON_COMPLETE_DIAMONDS : 0),
+            coins: s.coins + (advanced ? coinsEarned : 0),
             moduleProgress: nextProgress,
+            lastModuleActivityDate: new Date().toDateString(),
+            questBossesWon: bossWon && !s.questBossesWon.includes(moduleId)
+              ? [...s.questBossesWon, moduleId] : s.questBossesWon,
+            questHintsUsed: advanced && questId && hintsUsed !== undefined
+              ? { ...s.questHintsUsed, [`${moduleId}::${questId}`]: hintsUsed } : s.questHintsUsed,
+            termsLearned: newTerms?.length
+              ? [...new Set([...s.termsLearned, ...newTerms])] : s.termsLearned,
           };
           next = applyAchievementUnlocks(next);
 
@@ -458,6 +492,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           }
           return next;
         });
+        return coinsEarned;
       },
 
       pendingLifeEvent: () => findLifeEvent(state.pendingLifeEventId),
