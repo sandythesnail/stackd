@@ -1,36 +1,66 @@
-import { View, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Screen, Header, Txt, Button, Hammy, Slot, ItemArt } from '@/components';
+import { Screen, Header, Txt, Button, Hammy, ItemArt, Wallpaper } from '@/components';
 import { colors, font } from '@/theme';
 import { useStore } from '@/store';
+import type { RoomSlot, ShopItemReal } from '@/content';
 
-/** Screen 12 — Room (Hammy's scene & outfit). */
+type SlotLayout = { label: string } & ViewStyle;
+
+type FurnitureSlot = Exclude<RoomSlot, 'wallpaper'>;
+
+/** Ported from the website's room-slot-* CSS rules (app.css) — percentages of the full
+ * scene box, not just the wall/floor sub-zone, which is why window/wall/lamp (top-anchored)
+ * and plant/bed/rug/desk (bottom-anchored) both work out to land in the right zone.
+ * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
+const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
+  window: { label: 'Window', top: '17%', left: '35%', width: '30%', height: '24%' },
+  wall: { label: 'Wall art', top: '6%', left: '6%', width: '15%', height: '40%' },
+  lamp: { label: 'Lamp', top: '5%', right: '6%', width: '9%', height: '38%' },
+  plant: { label: 'Plant', bottom: '6%', left: '31%', width: '6%', height: '14%' },
+  bed: { label: 'Bed', bottom: '6%', right: '4%', width: '24%', height: '26%' },
+  rug: { label: 'Rug', bottom: '3%', left: '33%', width: '34%', height: '16%' },
+  desk: { label: 'Desk', bottom: '5%', left: '6%', width: '18%', height: '24%' },
+};
+
+const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'lamp', 'plant', 'bed', 'rug', 'desk'];
+
+/** Screen 12 — Room (Hammy's scene & outfit). Full 8-slot scene ported from the website's
+ * Room page: wallpaper on the wall zone, 7 furniture slots, Hammy on the floor. */
 export default function Room() {
   const router = useRouter();
   const { state, equippedMascotItems, equippedRoomItems } = useStore();
   const equipped = equippedMascotItems();
   const wearingLabel = equipped.length ? equipped.map((i) => i.name).join(' + ') : 'Nothing yet';
   const roomItems = equippedRoomItems();
-  const wall = roomItems.find((i) => i.slot === 'wall');
-  const plant = roomItems.find((i) => i.slot === 'plant');
+  const wallpaperItem = roomItems.find((i) => i.slot === 'wallpaper');
+  const bySlot = (slot: RoomSlot) => roomItems.find((i) => i.slot === slot);
+
+  const goToRoomShop = () => router.push({ pathname: '/(tabs)/shop', params: { category: 'room' } });
 
   return (
     <Screen edges={['top']}>
       <Header level={state.level} name="Hammy's Room" coins={state.coins} diamonds={state.diamonds} />
       <View style={styles.wrap}>
         <View style={styles.scene}>
-          <LinearGradient colors={['#FBEFF3', '#FBEFF3', '#EADFC8']} locations={[0, 0.62, 0.62]} style={StyleSheet.absoluteFill} />
-          {wall ? (
-            <View style={[styles.poster, styles.slotFrame]}><ItemArt item={wall} size={48} /></View>
-          ) : (
-            <Slot width={66} height={86} radius={12} style={styles.poster} colors={['#F4E9DC', '#E7D4BE']} />
-          )}
-          {plant ? (
-            <View style={[styles.plant, styles.slotFrame]}><ItemArt item={plant} size={46} /></View>
-          ) : (
-            <Slot width={64} height={64} radius={14} style={styles.plant} colors={['#DFF0DA', '#BFE0B6']} />
-          )}
+          <View style={styles.wallZone}>
+            <Wallpaper item={wallpaperItem} style={StyleSheet.absoluteFill} />
+          </View>
+          <LinearGradient colors={['#D7A968', '#B9834C']} style={styles.floorZone} />
+
+          {FURNITURE_SLOTS.map((slot) => {
+            const item = bySlot(slot);
+            const layout = SLOT_LAYOUT[slot];
+            return (
+              <RoomSlotBox
+                key={slot}
+                layout={layout}
+                item={item}
+                onPress={goToRoomShop}
+              />
+            );
+          })}
 
           <View style={styles.shadow} />
           <Hammy size={218} ring equipped={equipped} style={styles.hammy} />
@@ -41,11 +71,35 @@ export default function Room() {
         </View>
 
         <View style={styles.actions}>
-          <Button label="Change outfit" variant="ghost" size="sm" onPress={() => router.push('/(tabs)/shop')} style={{ flex: 1 }} />
+          <Button label="Decorate room" variant="ghost" size="sm" onPress={goToRoomShop} style={{ flex: 1 }} />
           <Button label="Visit shop →" variant="pink" size="sm" onPress={() => router.push('/(tabs)/shop')} style={{ flex: 1 }} />
         </View>
       </View>
     </Screen>
+  );
+}
+
+function RoomSlotBox({
+  layout, item, onPress,
+}: {
+  layout: SlotLayout;
+  item?: ShopItemReal;
+  onPress: () => void;
+}) {
+  const { label, ...position } = layout;
+  return (
+    <View style={[styles.slot, position]}>
+      {item ? (
+        <Pressable style={styles.slotFilled} onPress={onPress}>
+          <ItemArt item={item} size={60} />
+        </Pressable>
+      ) : (
+        <Pressable style={styles.slotEmpty} onPress={onPress}>
+          <Txt style={styles.slotPlus}>+</Txt>
+          <Txt style={styles.slotLabel}>{label}</Txt>
+        </Pressable>
+      )}
+    </View>
   );
 }
 
@@ -58,27 +112,52 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#EFE4D6',
   },
-  poster: { position: 'absolute', top: 18, left: 18 },
-  plant: { position: 'absolute', top: 20, right: 18 },
-  slotFrame: {
+  wallZone: { position: 'absolute', top: 0, left: 0, right: 0, height: '48%' },
+  floorZone: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '52%' },
+  slot: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  slotFilled: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  slotEmpty: {
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.white,
-    borderRadius: 14,
+    gap: 3,
+  },
+  slotPlus: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.92)',
     borderWidth: 1.5,
-    borderColor: colors.border,
-    padding: 8,
+    borderColor: 'rgba(44,62,45,0.16)',
+    textAlign: 'center',
+    lineHeight: 24,
+    fontFamily: font.extra,
+    fontSize: 14,
+    color: colors.muted3,
+    overflow: 'hidden',
+  },
+  slotLabel: {
+    fontFamily: font.extra,
+    fontSize: 8,
+    color: colors.muted1,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 8,
   },
   shadow: {
     position: 'absolute',
-    bottom: 38,
+    bottom: '10%',
     alignSelf: 'center',
     width: 210,
     height: 46,
     borderRadius: 23,
     backgroundColor: 'rgba(107,143,101,0.22)',
   },
-  hammy: { position: 'absolute', bottom: 44, alignSelf: 'center' },
+  hammy: { position: 'absolute', bottom: '12%', alignSelf: 'center' },
   wearing: {
     position: 'absolute',
     top: 14,

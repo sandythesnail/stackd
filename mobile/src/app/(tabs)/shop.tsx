@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Header, Txt, Coin, Diamond, ItemArt } from '@/components';
 import { colors, font } from '@/theme';
 import { shopItemsReal } from '@/content';
@@ -26,8 +26,10 @@ const RARITY_COLOR: Record<string, string> = {
 /** Screen 13 — Shop (coins & diamonds). Real catalog ported from the website's SHOP_ITEMS. */
 export default function Shop() {
   const router = useRouter();
+  const { category } = useLocalSearchParams<{ category?: string }>();
   const { state, isOwned, isEquipped } = useStore();
-  const [filter, setFilter] = useState(0);
+  const initialFilter = Math.max(0, CATEGORIES.findIndex((c) => c.key === category));
+  const [filter, setFilter] = useState(initialFilter);
   const cat = CATEGORIES[filter];
   const items = shopItemsReal.filter((i) => i.category === cat.key);
 
