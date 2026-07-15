@@ -20,8 +20,9 @@ const SPOTS = [
  * level, so this is reserved for "Broke Freshman -> Budget Apprentice" moments). */
 export default function LevelUp() {
   const router = useRouter();
-  const { level, tierName, equippedMascotItems } = useStore();
+  const { state, level, tierName, equippedMascotItems } = useStore();
   const done = () => {
+    if (state.pendingLifeEventId) { router.replace('/modal/life-event'); return; }
     router.dismissAll();
     router.replace('/(tabs)/home');
   };

@@ -38,9 +38,11 @@ export default function Results() {
   const pct = xpProgressPct(state.xp, level);
   // The big level-up overlay is reserved for an actual TIER change (mirrors the website's
   // maybeShowPostCompletionOverlays) — a numeric level-up alone doesn't get a full screen.
+  // A life event (if one triggered) is deferred until after that overlay, same as the website.
   const tieredUp = tierName !== tierBefore;
   const continuePress = () => {
     if (tieredUp) { router.push('/modal/levelup'); return; }
+    if (state.pendingLifeEventId) { router.push('/modal/life-event'); return; }
     router.dismissAll();
     router.replace('/(tabs)/home');
   };

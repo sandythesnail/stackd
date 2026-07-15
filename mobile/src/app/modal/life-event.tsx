@@ -4,14 +4,46 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Txt, Button, Tag, Option } from '@/components';
 import { colors, font } from '@/theme';
+import { useStore } from '@/store';
 
-/** Screen 21 — "Life happens…" life-event card. */
+/** Screen 21 — "Life happens…" life-event card. Real scenarios ported from the website's
+ * LIFE_EVENTS/LIFE_EVENT_UNLOCKS, triggered by the store after a lesson completes. */
 export default function LifeEvent() {
   const router = useRouter();
-  const [sel, setSel] = useState(0);
+  const { pendingLifeEvent, resolveLifeEvent } = useStore();
+  const [event] = useState(() => pendingLifeEvent());
+  const [answeredId, setAnsweredId] = useState<string | null>(null);
+  const answeredChoice = event?.choices.find((c) => c.id === answeredId);
+
+  const done = () => {
+    router.dismissAll();
+    router.replace('/(tabs)/home');
+  };
+
+  const pick = (choiceId: string) => {
+    setAnsweredId(choiceId);
+    resolveLifeEvent(choiceId);
+  };
+
+  if (!event) {
+    return (
+      <View style={styles.root}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={done}>
+          <View style={styles.scrim} />
+        </Pressable>
+        <SafeAreaView edges={['bottom']} style={styles.anchor}>
+          <View style={styles.sheet}>
+            <Txt variant="h1">All quiet for now</Txt>
+            <Button label="Close" onPress={done} style={{ marginTop: 16 }} />
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.root}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={() => router.back()}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={answeredChoice ? done : undefined}>
         <View style={styles.scrim} />
       </Pressable>
       <SafeAreaView edges={['bottom']} style={styles.anchor}>
@@ -19,31 +51,30 @@ export default function LifeEvent() {
           <View style={styles.handle} />
           <View style={{ alignItems: 'center', gap: 6 }}>
             <View style={styles.emoji}>
-              <Txt style={{ fontSize: 38 }}>🧥</Txt>
+              <Txt style={{ fontSize: 38 }}>{answeredChoice ? (answeredChoice.coinDelta ? '🎉' : '😬') : '⚠️'}</Txt>
             </View>
-            <Tag tone="warm" style={{ marginTop: 6 }}>✨ LIFE HAPPENS…</Tag>
-            <Txt variant="disp" style={{ marginTop: 4 }}>You found $40!</Txt>
+            <Tag tone="warm" style={{ marginTop: 6 }}>✨ {event.tag.toUpperCase()}</Tag>
+            <Txt variant="disp" style={{ marginTop: 4, textAlign: 'center' }}>{event.title}</Txt>
             <Txt variant="lead" style={{ textAlign: 'center' }}>
-              Digging through your winter coat, you find a crumpled $40 you forgot about. Nice. What&apos;s the move?
+              {answeredChoice ? answeredChoice.result : event.scenario}
             </Txt>
           </View>
 
-          <View style={{ gap: 10, marginTop: 18 }}>
-            <Option
-              label="Move it to savings"
-              state={sel === 0 ? 'on' : 'default'}
-              onPress={() => setSel(0)}
-              right={<Tag tone="green">+30 XP</Tag>}
-            />
-            <Option
-              label="Treat yourself tonight"
-              state={sel === 1 ? 'on' : 'default'}
-              onPress={() => setSel(1)}
-              right={<Tag tone="pink">+5 XP</Tag>}
-            />
-          </View>
-
-          <Button label="Confirm choice" onPress={() => router.back()} style={{ marginTop: 16 }} />
+          {!answeredChoice ? (
+            <View style={{ gap: 10, marginTop: 18 }}>
+              {event.choices.map((c) => (
+                <Option
+                  key={c.id}
+                  label={c.label}
+                  state="default"
+                  onPress={() => pick(c.id)}
+                  right={c.coinDelta ? <Tag tone="green">🪙 +{c.coinDelta}</Tag> : undefined}
+                />
+              ))}
+            </View>
+          ) : (
+            <Button label="Continue" onPress={done} style={{ marginTop: 16 }} />
+          )}
         </View>
       </SafeAreaView>
     </View>

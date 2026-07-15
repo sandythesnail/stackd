@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { shopItemsReal, moduleContentById } from '@/content';
 import type { RoomSlot, ShopItemReal } from '@/content';
 import { ACHIEVEMENTS, BADGE_TIER_REWARD, MODULE_MASTERY_ACHIEVEMENT, type Achievement } from '@/achievements';
+import { LIFE_EVENTS, LIFE_EVENT_UNLOCKS, LIFE_EVENT_CHANCE, LIFE_EVENT_COOLDOWN_SESSIONS, type LifeEvent } from '@/lifeEvents';
 
 const STORAGE_KEY = 'stackd_state_v1';
 
@@ -74,6 +75,12 @@ export type AppState = {
    * replacing the old static mock done/quests fields. */
   moduleProgress: Record<string, number>;
   unlockedAchievementIds: string[];
+  /** Guaranteed-unlock life events (LIFE_EVENT_UNLOCKS) already shown, so each fires once. */
+  shownLifeEventIds: string[];
+  /** Set when a life event should be shown next; cleared once the player dismisses it. */
+  pendingLifeEventId: string | null;
+  /** Sessions remaining before an ambient life event can roll again (LIFE_EVENT_COOLDOWN_SESSIONS). */
+  lifeEventCooldown: number;
 };
 
 const DEFAULT_STATE: AppState = {
@@ -91,6 +98,9 @@ const DEFAULT_STATE: AppState = {
     loans: 0, taxes: 6, psychology: 0, career: 7, scams: 0,
   },
   unlockedAchievementIds: [],
+  shownLifeEventIds: [],
+  pendingLifeEventId: null,
+  lifeEventCooldown: 0,
 };
 
 export type MysteryResult = {
@@ -164,6 +174,11 @@ function computeMetAchievementIds(s: AppState): string[] {
 
 export type AchievementView = Achievement & { earned: boolean };
 
+const ALL_LIFE_EVENTS: LifeEvent[] = [...LIFE_EVENTS, ...Object.values(LIFE_EVENT_UNLOCKS)];
+function findLifeEvent(id: string | null) {
+  return id ? ALL_LIFE_EVENTS.find((e) => e.id === id) ?? null : null;
+}
+
 type Ctx = {
   state: AppState;
   level: number;
@@ -189,8 +204,12 @@ type Ctx = {
    * duplicates. Returns null if unaffordable or the pool has nothing left to give. */
   openMysteryBox: (itemId: string) => MysteryResult | null;
   /** Records a finished lesson: advances moduleProgress (if this lesson is new progress,
-   * not a replay), awards its XP, and checks for newly-unlocked achievements. */
+   * not a replay), awards its XP, checks for newly-unlocked achievements, and may queue a
+   * life event (guaranteed module-unlock event, or an ambient random roll). */
   completeLesson: (moduleId: string, lessonIndex: number, xpEarned: number) => void;
+  pendingLifeEvent: () => LifeEvent | null;
+  /** Applies a choice's coinDelta (if any), records the event as shown, and clears pending. */
+  resolveLifeEvent: (choiceId: string) => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
@@ -353,21 +372,47 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       completeLesson: (moduleId, lessonIndex, xpEarned) => {
         setState((s) => {
+          const wasMastered = isModuleMastered(s.moduleProgress, moduleId);
           const current = s.moduleProgress[moduleId] ?? 0;
           const total = moduleTotal(moduleId);
           const advanced = lessonIndex + 1 > current;
           const nextProgress = advanced
             ? { ...s.moduleProgress, [moduleId]: Math.min(lessonIndex + 1, total) }
             : s.moduleProgress;
-          const next = {
+          let next = {
             ...s,
             xp: s.xp + xpEarned,
             coins: s.coins + (advanced ? LESSON_COMPLETE_COINS : 0),
             diamonds: s.diamonds + (advanced ? LESSON_COMPLETE_DIAMONDS : 0),
             moduleProgress: nextProgress,
           };
-          return applyAchievementUnlocks(next);
+          next = applyAchievementUnlocks(next);
+
+          // Life events: a guaranteed module-unlock event takes priority over an ambient roll.
+          const justMastered = !wasMastered && isModuleMastered(next.moduleProgress, moduleId);
+          const unlockEvent = justMastered ? LIFE_EVENT_UNLOCKS[moduleId] : undefined;
+          if (unlockEvent && !next.shownLifeEventIds.includes(unlockEvent.id)) {
+            next = { ...next, pendingLifeEventId: unlockEvent.id, shownLifeEventIds: [...next.shownLifeEventIds, unlockEvent.id] };
+          } else if (next.lifeEventCooldown > 0) {
+            next = { ...next, lifeEventCooldown: next.lifeEventCooldown - 1 };
+          } else if (Math.random() < LIFE_EVENT_CHANCE) {
+            const pick = LIFE_EVENTS[Math.floor(Math.random() * LIFE_EVENTS.length)];
+            next = { ...next, pendingLifeEventId: pick.id, lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS };
+          }
+          return next;
         });
+      },
+
+      pendingLifeEvent: () => findLifeEvent(state.pendingLifeEventId),
+
+      resolveLifeEvent: (choiceId) => {
+        const event = findLifeEvent(state.pendingLifeEventId);
+        const choice = event?.choices.find((c) => c.id === choiceId);
+        setState((s) => ({
+          ...s,
+          coins: s.coins + (choice?.coinDelta ?? 0),
+          pendingLifeEventId: null,
+        }));
       },
     };
   }, [state]);
