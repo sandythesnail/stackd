@@ -1,18 +1,37 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, ViewStyle, View } from 'react-native';
 import Svg, {
-  Defs, LinearGradient, RadialGradient, Stop, Ellipse, Circle, Path, G, ClipPath,
+  Defs, LinearGradient, RadialGradient, Stop, Ellipse, Circle, Path, G, ClipPath, SvgXml,
 } from 'react-native-svg';
 import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
-const AnimatedG = Animated.createAnimatedComponent(G);
-const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
+import type { ShopItemReal } from '@/content';
 
 // Full-stage geometry ported from the website's CSS pig (styles.css .pig-* rules), a
 // 440×460 frame. Kept in the same coordinate space so proportions match the web mascot.
 const STAGE_W = 440;
 const STAGE_H = 460;
+
+// Default transform for equipped items without their own custom `fit` — ported verbatim
+// from the website's DEFAULT_ITEM_FIT (app.js). `fit` is a CSS/SVG matrix(a,b,c,d,e,f)
+// that maps an item's own local SVG coordinates onto this same 440x460 stage.
+const DEFAULT_ITEM_FIT = { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 };
+
+/** One equipped cosmetic, matrix-transformed onto Hammy's 440x460 stage — mirrors the
+ * website's getPigWithItemMarkup. Namespaced by item id so multiple equipped items (or the
+ * same item rendered elsewhere on screen) don't collide over shared <defs> ids. */
+function EquippedItem({ item }: { item: ShopItemReal }) {
+  const fit = item.fit ?? DEFAULT_ITEM_FIT;
+  const matrix = `matrix(${fit.a},${fit.b},${fit.c},${fit.d},${fit.e},${fit.f})`;
+  const namespaced = item.svg
+    .replace(/id="([^"]+)"/g, (_, id) => `id="${id}-${item.id}"`)
+    .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${id}-${item.id})`);
+  return (
+    <G transform={matrix}>
+      <SvgXml xml={`<svg xmlns="http://www.w3.org/2000/svg" width="${STAGE_W}" height="${STAGE_H}">${namespaced}</svg>`} width={STAGE_W} height={STAGE_H} />
+    </G>
+  );
+}
 
 // Ear silhouette: the website draws ears with CSS border-radius "54% 54% 46% 46% / 70% 70%
 // 34% 34%" on a 64×74 box — a much rounder top than bottom, i.e. a teardrop/petal, not a
@@ -31,14 +50,19 @@ export function Hammy({
   ring = false,
   bob = true,
   pig: _pig = '#E27EA0',
+  equipped = [],
   style,
 }: {
   size?: number;
   ring?: boolean;
   bob?: boolean;
   pig?: string;
+  /** Currently-worn shop items, matrix-transformed onto the mascot (see EquippedItem). */
+  equipped?: ShopItemReal[];
   style?: ViewStyle;
 }) {
+  const backItems = equipped.filter((i) => i.layer === 'back');
+  const frontItems = equipped.filter((i) => i.layer !== 'back');
   const floatY = useRef(new Animated.Value(0)).current;
   const blink = useRef(new Animated.Value(1)).current; // 1 = open, ~0.08 = closed
   const earL = useRef(new Animated.Value(0)).current;
@@ -90,10 +114,33 @@ export function Hammy({
     return () => { blinkLoop.stop(); earLoop.stop(); earLoopR.stop(); tailLoop.stop(); };
   }, [blink, earL, earR, tail]);
 
-  const eyeRy = blink.interpolate({ inputRange: [0.08, 1], outputRange: [1.6, 19] });
-  const earLRotation = earL.interpolate({ inputRange: [0, 1], outputRange: [-18, -26] });
-  const earRRotation = earR.interpolate({ inputRange: [0, 1], outputRange: [18, 26] });
-  const tailRotation = tail.interpolate({ inputRange: [0, 1], outputRange: [-5, 8] });
+  // react-native-svg's web G/Ellipse are plain class components with no native-driver
+  // support, so Animated.createAnimatedComponent(G/Ellipse) throws on mount there (fine
+  // on native). Drive plain elements from listener-updated state instead — works
+  // identically on both platforms since these loops already run with useNativeDriver: false.
+  const [eyeRy, setEyeRy] = useState(19);
+  const [earLTransform, setEarLTransform] = useState('rotate(-18 32 74)');
+  const [earRTransform, setEarRTransform] = useState('rotate(18 32 74)');
+  const [tailTransform, setTailTransform] = useState('rotate(-5 14 26)');
+
+  useEffect(() => {
+    const eyeRyInterp = blink.interpolate({ inputRange: [0.08, 1], outputRange: [1.6, 19] });
+    const earLInterp = earL.interpolate({ inputRange: [0, 1], outputRange: ['rotate(-18 32 74)', 'rotate(-26 32 74)'] });
+    const earRInterp = earR.interpolate({ inputRange: [0, 1], outputRange: ['rotate(18 32 74)', 'rotate(26 32 74)'] });
+    const tailInterp = tail.interpolate({ inputRange: [0, 1], outputRange: ['rotate(-5 14 26)', 'rotate(8 14 26)'] });
+    const ids = [
+      eyeRyInterp.addListener(({ value }) => setEyeRy(value as unknown as number)),
+      earLInterp.addListener(({ value }) => setEarLTransform(value as unknown as string)),
+      earRInterp.addListener(({ value }) => setEarRTransform(value as unknown as string)),
+      tailInterp.addListener(({ value }) => setTailTransform(value as unknown as string)),
+    ];
+    return () => {
+      eyeRyInterp.removeListener(ids[0]);
+      earLInterp.removeListener(ids[1]);
+      earRInterp.removeListener(ids[2]);
+      tailInterp.removeListener(ids[3]);
+    };
+  }, [blink, earL, earR, tail]);
 
   const aspect = STAGE_H / STAGE_W;
   const width = size;
@@ -223,6 +270,9 @@ export function Hammy({
           <ClipPath id="hm-clip-ear"><Path d={EAR_PATH} /></ClipPath>
         </Defs>
 
+        {/* back-layer equipped items (e.g. capes) — drawn behind body/arms/head */}
+        {backItems.map((item) => <EquippedItem key={item.id} item={item} />)}
+
         {/* shadow */}
         <Ellipse cx={220} cy={417} rx={150} ry={23} fill="url(#hm-shadow)" />
 
@@ -234,14 +284,14 @@ export function Hammy({
 
         {/* tail */}
         <G x={362} y={236}>
-          <AnimatedG rotation={tailRotation} origin="14, 26">
+          <G transform={tailTransform}>
             <Path
               d="M 9,31 C 9,11 27,5 39,15 C 51,25 49,41 39,47 C 29,53 17,49 15,41 C 13,33 21,31 27,33"
               fill="none" stroke="#F7ADD0" strokeWidth={6} strokeLinecap="round"
               transform="scale(0.7857)"
             />
             <Circle cx={21.2} cy={25.9} r={2.75} fill="#F0A0BE" />
-          </AnimatedG>
+          </G>
         </G>
 
         {/* arms */}
@@ -258,18 +308,18 @@ export function Hammy({
 
         {/* ears */}
         <G x={106} y={54}>
-          <AnimatedG rotation={earLRotation} origin="32, 74">
+          <G transform={earLTransform}>
             <Path d={EAR_PATH} fill="url(#hm-ear-l)" />
             <Path d={EAR_PATH} fill="url(#hm-ear-shadow-l)" clipPath="url(#hm-clip-ear)" />
             <Ellipse cx={32} cy={38} rx={13} ry={20} fill="#F48BB0" />
-          </AnimatedG>
+          </G>
         </G>
         <G x={270} y={54}>
-          <AnimatedG rotation={earRRotation} origin="32, 74">
+          <G transform={earRTransform}>
             <Path d={EAR_PATH} fill="url(#hm-ear-r)" />
             <Path d={EAR_PATH} fill="url(#hm-ear-shadow-r)" clipPath="url(#hm-clip-ear)" />
             <Ellipse cx={32} cy={38} rx={13} ry={20} fill="#F48BB0" />
-          </AnimatedG>
+          </G>
         </G>
 
         {/* head */}
@@ -282,8 +332,8 @@ export function Hammy({
         <Ellipse cx={306} cy={222} rx={28} ry={20} fill="url(#hm-cheek)" />
 
         {/* eyes */}
-        <AnimatedEllipse cx={141} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
-        <AnimatedEllipse cx={299} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
+        <Ellipse cx={141} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
+        <Ellipse cx={299} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
         <Circle cx={134.5} cy={186.5} r={6.5} fill="#FFFFFF" />
         <Circle cx={145} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
         <Circle cx={292.5} cy={186.5} r={6.5} fill="#FFFFFF" />
@@ -296,6 +346,9 @@ export function Hammy({
         <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout-shine)" clipPath="url(#hm-clip-snout)" />
         <Ellipse cx={191} cy={212} rx={10} ry={15} fill="#D9608C" />
         <Ellipse cx={249} cy={212} rx={10} ry={15} fill="#D9608C" />
+
+        {/* front-layer equipped items (hats, glasses, neckwear) — drawn above everything */}
+        {frontItems.map((item) => <EquippedItem key={item.id} item={item} />)}
       </Svg>
     </Animated.View>
   );

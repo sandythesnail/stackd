@@ -4,10 +4,14 @@ import { useRouter } from 'expo-router';
 import { Screen, Header, Txt, Button, Hammy, Slot } from '@/components';
 import { colors, font } from '@/theme';
 import { user } from '@/data';
+import { shopItemById } from '@/content';
 
 /** Screen 12 — Room (Hammy's scene & outfit). */
 export default function Room() {
   const router = useRouter();
+  const equipped = user.equippedItemIds.map(shopItemById).filter((i) => i !== undefined);
+  const wearingLabel = equipped.length ? equipped.map((i) => i.name).join(' + ') : 'Nothing yet';
+
   return (
     <Screen edges={['top']}>
       <Header level={user.level} name="Hammy's Room" coins={user.coins} diamonds={user.diamonds} />
@@ -18,10 +22,10 @@ export default function Room() {
           <Slot width={64} height={64} radius={14} style={styles.plant} colors={['#DFF0DA', '#BFE0B6']} />
 
           <View style={styles.shadow} />
-          <Hammy size={218} ring style={styles.hammy} />
+          <Hammy size={218} ring equipped={equipped} style={styles.hammy} />
 
           <View style={styles.wearing}>
-            <Txt style={styles.wearingTxt}>Wearing: UConn Hoodie 🐷</Txt>
+            <Txt style={styles.wearingTxt}>Wearing: {wearingLabel} 🐷</Txt>
           </View>
         </View>
 

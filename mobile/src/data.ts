@@ -16,6 +16,8 @@ export const user = {
   coins: 340,
   diamonds: 8,
   referral: 'stackd.app/r/MAYA-UC',
+  // Ids into content/shopItems.json — up to MAX_EQUIPPED_ITEMS (3) on the website.
+  equippedItemIds: ['crown', 'sunglasses'],
 };
 
 export type Module = {

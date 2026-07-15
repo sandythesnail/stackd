@@ -2,7 +2,7 @@ import { View, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Txt, Button, Tag, Card, IconButton, CurrencyChip, Coin, Diamond, ItemArt } from '@/components';
+import { Txt, Button, Tag, Card, IconButton, CurrencyChip, Coin, Diamond, ItemArt, Hammy } from '@/components';
 import { colors, font } from '@/theme';
 import { user } from '@/data';
 import { shopItemById } from '@/content';
@@ -49,7 +49,11 @@ export default function ShopItemModal() {
           </View>
 
           <LinearGradient colors={['#FFF3F7', '#FBE0EA']} style={styles.preview}>
-            <ItemArt item={item} size={150} />
+            {item.category === 'room' ? (
+              <ItemArt item={item} size={150} />
+            ) : (
+              <Hammy size={150} bob={false} equipped={[item]} />
+            )}
           </LinearGradient>
 
           <View style={styles.head}>
