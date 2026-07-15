@@ -111,9 +111,11 @@ export default function QuestPlayer() {
     <Screen edges={['top']}>
       <View style={styles.stick}>
         <IconButton name="x" size={34} iconSize={16} onPress={() => router.back()} />
-        <Hammy size={40} bob={false} face={reactionMood ? REACTION_FACES[reactionMood] : undefined} />
         <ProgressBar value={chapterIdx / quest.chapters.length} style={{ flex: 1 }} height={10} />
         <Txt style={styles.step}>{chapterIdx + 1} / {quest.chapters.length}</Txt>
+      </View>
+      <View style={styles.companionWrap}>
+        <Hammy size={190} bob face={reactionMood ? REACTION_FACES[reactionMood] : undefined} />
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ChapterView
@@ -781,6 +783,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5, borderBottomColor: '#EFEFE7',
   },
   step: { fontFamily: font.bold, fontSize: 12, color: colors.green },
+  companionWrap: { alignItems: 'center', paddingTop: 10, paddingBottom: 4 },
   content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
