@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Screen, Spacer, Txt, Button, Option, ProgressBar, IconButton, Card, MIcon } from '@/components';
-import { colors, font } from '@/theme';
+import { Screen, Spacer, Txt, Button, Option, ProgressBar, IconButton, MIcon } from '@/components';
+import { colors, font, radius } from '@/theme';
 import { modules } from '@/data';
 import { SURVEY_GOALS, SURVEY_FAMILIARITY_LABELS, SURVEY_TRACKS, getRecommendedTrack, trackReason, type SurveyAnswers } from '@/survey';
 import { useStore } from '@/store';
@@ -116,30 +117,56 @@ export default function Survey() {
             <Txt variant="h1">Your starting track</Txt>
           </View>
 
-          <Card style={{ marginTop: 16, gap: 10 }}>
-            <Txt variant="h2">{activeTrack.title}</Txt>
-            <Txt variant="lead" style={{ fontSize: 13 }}>{trackReason(activeTrack, answers)}</Txt>
-            <View style={{ gap: 8, marginTop: 4 }}>
+          <LinearGradient
+            colors={[colors.pink, colors.pinkDark]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.hero}
+          >
+            <View style={styles.heroTag}>
+              <Txt style={styles.heroTagTxt}>RECOMMENDED FOR YOU</Txt>
+            </View>
+            <Txt style={styles.heroTitle}>{activeTrack.title}</Txt>
+            <Txt style={styles.heroBlurb}>{trackReason(activeTrack, answers)}</Txt>
+          </LinearGradient>
+
+          <View style={{ marginTop: 22 }}>
+            <Txt style={styles.pathLabel}>YOUR PATH</Txt>
+            <Txt style={styles.pathCaption}>These {activeTrack.moduleIds.length} modules, in order — you can always explore the rest later.</Txt>
+            <View style={{ marginTop: 12 }}>
               {activeTrack.moduleIds.map((id, i) => {
                 const m = modules.find((x) => x.id === id);
                 if (!m) return null;
+                const isLast = i === activeTrack.moduleIds.length - 1;
                 return (
-                  <View key={id} style={styles.trackRow}>
-                    <View style={styles.trackStep}><Txt style={styles.trackStepTxt}>{i + 1}</Txt></View>
-                    <MIcon abbr={m.abbr} color={m.color} size={30} r={9} fontSize={12} />
-                    <Txt style={styles.modName}>{m.name}</Txt>
+                  <View key={id} style={styles.pathRow}>
+                    <View style={styles.pathRail}>
+                      <View style={styles.pathDot}><Txt style={styles.pathDotTxt}>{i + 1}</Txt></View>
+                      {!isLast ? <View style={styles.pathLine} /> : null}
+                    </View>
+                    <View style={styles.pathCard}>
+                      <MIcon abbr={m.abbr} color={m.color} size={34} r={10} fontSize={13} />
+                      <Txt style={styles.modName}>{m.name}</Txt>
+                    </View>
                   </View>
                 );
               })}
             </View>
-          </Card>
-
-          <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.muted5, marginTop: 18 }}>PREFER A DIFFERENT TRACK?</Txt>
-          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-            {SURVEY_TRACKS.filter((t) => t.id !== activeTrack.id).map((t) => (
-              <Button key={t.id} label={t.title} variant="ghost" size="sm" onPress={() => setTrackId(t.id)} />
-            ))}
           </View>
+
+          <Txt style={[styles.pathLabel, { marginTop: 6 }]}>PREFER A DIFFERENT TRACK?</Txt>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 10, paddingTop: 10, paddingRight: 6 }}
+          >
+            {SURVEY_TRACKS.filter((t) => t.id !== activeTrack.id).map((t) => (
+              <Pressable key={t.id} onPress={() => setTrackId(t.id)} style={styles.altCard}>
+                <Txt style={styles.altCardTitle}>{t.title}</Txt>
+                <Txt style={styles.altCardBlurb} numberOfLines={3}>{t.blurb}</Txt>
+              </Pressable>
+            ))}
+          </ScrollView>
         </ScrollView>
       )}
 
@@ -167,7 +194,55 @@ const styles = StyleSheet.create({
   tick: { fontFamily: font.bold, fontSize: 10, color: colors.muted5 },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   endLabel: { fontFamily: font.semi, fontSize: 10.5, color: colors.muted3, flex: 1 },
-  trackRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  trackStep: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
-  trackStepTxt: { fontFamily: font.extra, fontSize: 11, color: colors.white },
+  hero: {
+    marginTop: 16,
+    borderRadius: radius.card,
+    padding: 20,
+    shadowColor: colors.pinkDark,
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
+  },
+  heroTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.24)',
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+  },
+  heroTagTxt: { fontFamily: font.extra, fontSize: 11, color: colors.white, letterSpacing: 0.7 },
+  heroTitle: { fontFamily: font.display, fontSize: 27, color: colors.white, marginTop: 12 },
+  heroBlurb: { fontFamily: font.semi, fontSize: 14.5, lineHeight: 21, color: 'rgba(255,255,255,0.94)', marginTop: 8 },
+  pathLabel: { fontFamily: font.extra, fontSize: 12, color: colors.muted5, letterSpacing: 0.5 },
+  pathCaption: { fontFamily: font.semi, fontSize: 13, color: colors.muted2, marginTop: 4 },
+  pathRow: { flexDirection: 'row', gap: 12 },
+  pathRail: { width: 28, alignItems: 'center' },
+  pathDot: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
+  pathDotTxt: { fontFamily: font.extra, fontSize: 12, color: colors.white },
+  pathLine: { width: 2, flex: 1, minHeight: 18, backgroundColor: colors.greenSoft, marginVertical: 3 },
+  pathCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.card,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+  },
+  altCard: {
+    width: 200,
+    backgroundColor: colors.card,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    padding: 14,
+    gap: 6,
+  },
+  altCardTitle: { fontFamily: font.extra, fontSize: 14, color: colors.ink },
+  altCardBlurb: { fontFamily: font.medium, fontSize: 12, lineHeight: 16.5, color: colors.muted2 },
 });
