@@ -18,6 +18,15 @@ const MYSTERY_DUPLICATE_REFUND_RATE = 0.5;
  * the results screen has always promised. */
 export const LESSON_COMPLETE_COINS = 40;
 export const LESSON_COMPLETE_DIAMONDS = 1;
+
+/** STREAK_DIAMOND_INTERVAL/REWARD and DAILY_LOGIN_BASE/STEP/CAP_COINS ported verbatim from
+ * app.js (updateStreak / claimDailyLoginBonus) — a once-per-calendar-day streak+diamond
+ * bonus, plus a separate escalating daily-login coin drip keyed by distinct days logged. */
+const STREAK_DIAMOND_INTERVAL = 3;
+const STREAK_DIAMOND_REWARD = 5;
+const DAILY_LOGIN_BASE_COINS = 10;
+const DAILY_LOGIN_STEP_COINS = 2;
+const DAILY_LOGIN_CAP_COINS = 20;
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
 const RARITY_WEIGHT: Record<string, number> = { common: 8, rare: 4, epic: 2, legendary: 1 };
 
@@ -81,6 +90,10 @@ export type AppState = {
   pendingLifeEventId: string | null;
   /** Sessions remaining before an ambient life event can roll again (LIFE_EVENT_COOLDOWN_SESSIONS). */
   lifeEventCooldown: number;
+  /** toDateString() of the last day the streak/daily-login check ran. */
+  lastPlayedDate: string | null;
+  /** toDateString() -> coins awarded that day, so the coin drip only ever pays out once/day. */
+  dailyLoginLog: Record<string, number>;
 };
 
 const DEFAULT_STATE: AppState = {
@@ -101,6 +114,10 @@ const DEFAULT_STATE: AppState = {
   shownLifeEventIds: [],
   pendingLifeEventId: null,
   lifeEventCooldown: 0,
+  // Seeded to "today" so a fresh install shows Maya's established streak as-is; real
+  // day-to-day tracking (increment/reset/daily coin drip) begins from the next real day.
+  lastPlayedDate: new Date().toDateString(),
+  dailyLoginLog: {},
 };
 
 export type MysteryResult = {
@@ -210,9 +227,39 @@ type Ctx = {
   pendingLifeEvent: () => LifeEvent | null;
   /** Applies a choice's coinDelta (if any), records the event as shown, and clears pending. */
   resolveLifeEvent: (choiceId: string) => void;
+  /** Set once per calendar day when the streak/daily-login check awards something worth
+   * telling the player about; null once dismissed. */
+  dailyLoginBanner: { streak: number; loginCoins: number; streakDiamonds: number } | null;
+  dismissDailyLoginBanner: () => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
+
+type DailyLoginBanner = { streak: number; loginCoins: number; streakDiamonds: number } | null;
+
+/** Ported from app.js's updateStreak + claimDailyLoginBonus, combined into one once-per-day
+ * check. No-ops (returns the same state, null banner) if today was already checked. */
+function runDailyCheck(s: AppState): { next: AppState; banner: DailyLoginBanner } {
+  const today = new Date().toDateString();
+  if (s.lastPlayedDate === today) return { next: s, banner: null };
+
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  const streak = s.lastPlayedDate === yesterday ? s.streak + 1 : 1;
+  const streakDiamonds = streak % STREAK_DIAMOND_INTERVAL === 0 ? STREAK_DIAMOND_REWARD : 0;
+
+  const dayNumber = Object.keys(s.dailyLoginLog).length + 1;
+  const loginCoins = Math.min(DAILY_LOGIN_BASE_COINS + DAILY_LOGIN_STEP_COINS * (dayNumber - 1), DAILY_LOGIN_CAP_COINS);
+
+  const next: AppState = {
+    ...s,
+    streak,
+    lastPlayedDate: today,
+    diamonds: s.diamonds + streakDiamonds,
+    coins: s.coins + loginCoins,
+    dailyLoginLog: { ...s.dailyLoginLog, [today]: loginCoins },
+  };
+  return { next: applyAchievementUnlocks(next), banner: { streak, loginCoins, streakDiamonds } };
+}
 
 /** Applies BADGE_TIER_REWARD for any newly-met achievement and records it as unlocked. */
 function applyAchievementUnlocks(s: AppState): AppState {
@@ -232,17 +279,22 @@ function applyAchievementUnlocks(s: AppState): AppState {
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
+  const [dailyLoginBanner, setDailyLoginBanner] = useState<DailyLoginBanner>(null);
   const loaded = useRef(false);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+      let loadedState = DEFAULT_STATE;
       if (raw) {
         try {
-          setState({ ...DEFAULT_STATE, ...JSON.parse(raw) });
+          loadedState = { ...DEFAULT_STATE, ...JSON.parse(raw) };
         } catch {
           // corrupt/incompatible saved state — fall back to defaults already set
         }
       }
+      const { next, banner } = runDailyCheck(loadedState);
+      setState(next);
+      if (banner) setDailyLoginBanner(banner);
       loaded.current = true;
     });
   }, []);
@@ -414,8 +466,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           pendingLifeEventId: null,
         }));
       },
+
+      dailyLoginBanner,
+      dismissDailyLoginBanner: () => setDailyLoginBanner(null),
     };
-  }, [state]);
+  }, [state, dailyLoginBanner]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

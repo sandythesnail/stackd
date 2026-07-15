@@ -2,7 +2,7 @@ import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   Screen, Header, Txt, Card, Button, ProgressBar, Tag, Stat, Speech, Hammy,
-  SectionHead, MIcon, ModuleTile, BadgeMedal, MEDAL_GRAD, Flame, Coin, Diamond,
+  SectionHead, MIcon, ModuleTile, BadgeMedal, MEDAL_GRAD, Flame, Coin, Diamond, CurrencyChip,
 } from '@/components';
 import { colors, font } from '@/theme';
 import { user, modules } from '@/data';
@@ -11,7 +11,10 @@ import { useStore } from '@/store';
 /** Screen 7 — Home / Dashboard. Real module progress, badges, and next-quest card. */
 export default function Home() {
   const router = useRouter();
-  const { state, level, tierName, moduleDone, moduleTotal, moduleStatus, achievements, equippedMascotItems } = useStore();
+  const {
+    state, level, tierName, moduleDone, moduleTotal, moduleStatus, achievements,
+    equippedMascotItems, dailyLoginBanner, dismissDailyLoginBanner,
+  } = useStore();
 
   const homeModules = modules.slice(0, 4).map((m) => {
     const status = moduleStatus(m.id, m.unlockLevel);
@@ -95,6 +98,24 @@ export default function Home() {
           )}
         </View>
       </ScrollView>
+
+      {dailyLoginBanner ? (
+        <View style={styles.bannerRoot}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={dismissDailyLoginBanner} />
+          <View style={styles.bannerCard}>
+            <Txt style={{ fontSize: 32 }}>👋</Txt>
+            <Txt variant="disp" style={{ fontSize: 19, marginTop: 6 }}>Welcome back!</Txt>
+            <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center', marginTop: 2 }}>
+              {dailyLoginBanner.streak}-day streak{dailyLoginBanner.streakDiamonds ? ' — bonus diamonds earned!' : '!'}
+            </Txt>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
+              <CurrencyChip kind="coin" value={dailyLoginBanner.loginCoins} />
+              {dailyLoginBanner.streakDiamonds ? <CurrencyChip kind="diamond" value={dailyLoginBanner.streakDiamonds} /> : null}
+            </View>
+            <Button label="Nice!" onPress={dismissDailyLoginBanner} style={{ marginTop: 16, width: '100%' }} />
+          </View>
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -121,4 +142,20 @@ const styles = StyleSheet.create({
   badgeRow: { flexDirection: 'row', gap: 12, paddingBottom: 6 },
   badgeCell: { flex: 1, alignItems: 'center', gap: 8 },
   badgeLbl: { fontFamily: font.extra, fontSize: 10.5, color: colors.muted1, textAlign: 'center' },
+  bannerRoot: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(22,32,23,0.5)',
+  },
+  bannerCard: {
+    width: '80%',
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: 22,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
 });
