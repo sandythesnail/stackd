@@ -29,18 +29,21 @@ export type Module = {
   unlockLevel?: number;
 };
 
+// Order, ids, and titles match the website's MODULES array exactly (01-11). quests/done
+// are the real lesson counts from content/modules.json — status/unlockLevel are mobile's
+// own level-gated progression (the website doesn't gate at all; see mobile/CLAUDE.md).
 export const modules: Module[] = [
   { id: 'earning', name: 'Earning', abbr: 'Er', color: moduleColor.earning, quests: 6, done: 6, status: 'done' },
-  { id: 'career', name: 'Career & Salary', abbr: 'Cs', color: moduleColor.career, quests: 5, done: 5, status: 'done' },
-  { id: 'spending', name: 'Spending', abbr: 'Sp', color: moduleColor.spending, quests: 5, done: 3, status: 'active' },
+  { id: 'spending', name: 'Spending', abbr: 'Sp', color: moduleColor.spending, quests: 9, done: 5, status: 'active' },
   { id: 'saving', name: 'Saving', abbr: 'Sv', color: moduleColor.saving, quests: 6, done: 2, status: 'active' },
-  { id: 'credit', name: 'Managing Credit', abbr: 'Cr', color: moduleColor.credit, quests: 5, done: 1, status: 'active' },
-  { id: 'taxes', name: 'Taxes', abbr: 'Tx', color: moduleColor.taxes, quests: 4, done: 4, status: 'done' },
   { id: 'investing', name: 'Investing', abbr: 'Iv', color: moduleColor.investing, quests: 6, done: 0, status: 'locked', unlockLevel: 6 },
-  { id: 'risk', name: 'Managing Risk', abbr: 'Rk', color: moduleColor.risk, quests: 5, done: 0, status: 'locked', unlockLevel: 6 },
-  { id: 'loans', name: 'Loans', abbr: 'Ln', color: moduleColor.loans, quests: 5, done: 0, status: 'locked', unlockLevel: 7 },
-  { id: 'psych', name: 'Consumer Psych.', abbr: 'Ps', color: moduleColor.psych, quests: 4, done: 0, status: 'locked', unlockLevel: 8 },
-  { id: 'scams', name: 'Scams & Fraud', abbr: 'Sc', color: moduleColor.scams, quests: 5, done: 0, status: 'locked', unlockLevel: 9 },
+  { id: 'credit', name: 'Managing Credit', abbr: 'Cr', color: moduleColor.credit, quests: 6, done: 1, status: 'active' },
+  { id: 'risk', name: 'Managing Risk', abbr: 'Rk', color: moduleColor.risk, quests: 6, done: 0, status: 'locked', unlockLevel: 6 },
+  { id: 'loans', name: 'Loans', abbr: 'Ln', color: moduleColor.loans, quests: 6, done: 0, status: 'locked', unlockLevel: 7 },
+  { id: 'taxes', name: 'Taxes', abbr: 'Tx', color: moduleColor.taxes, quests: 6, done: 6, status: 'done' },
+  { id: 'psychology', name: 'Consumer Psychology', abbr: 'Ps', color: moduleColor.psychology, quests: 8, done: 0, status: 'locked', unlockLevel: 8 },
+  { id: 'career', name: 'Career & Salary', abbr: 'Cs', color: moduleColor.career, quests: 7, done: 7, status: 'done' },
+  { id: 'scams', name: 'Scams & Fraud Prevention', abbr: 'Sc', color: moduleColor.scams, quests: 6, done: 0, status: 'locked', unlockLevel: 9 },
 ];
 
 export const moduleById = (id: string) => modules.find((m) => m.id === id);
@@ -64,30 +67,4 @@ export const badges: Badge[] = [
   { name: 'Debt Slayer', char: '★', tier: 'gold', earned: false },
 ];
 
-export type ShopItem = {
-  name: string;
-  file: string;
-  price: number;
-  currency: 'coin' | 'diamond';
-  owned?: boolean;
-  category: 'Hats' | 'Glasses' | 'Outfits' | 'Room';
-};
-
-export const shopItems: ShopItem[] = [
-  { name: 'Cozy Beanie', file: 'beanie.png', price: 120, currency: 'coin', category: 'Hats' },
-  { name: 'Grad Cap', file: 'gradcap.png', price: 300, currency: 'coin', category: 'Hats' },
-  { name: 'Party Hat', file: 'partyhat.png', price: 0, currency: 'coin', owned: true, category: 'Hats' },
-  { name: 'Gold Crown', file: 'crown.png', price: 5, currency: 'diamond', category: 'Hats' },
-  { name: 'Husky Ears', file: 'huskyhat.png', price: 180, currency: 'coin', category: 'Hats' },
-  { name: 'Sun Visor', file: 'visor.png', price: 90, currency: 'coin', category: 'Hats' },
-];
-
-/** Quests inside the Saving module (screen 15). */
-export const savingQuests = [
-  { title: 'Why saving beats stress', status: 'done', note: '+80 XP earned' },
-  { title: 'Pay yourself first', status: 'done', note: '+80 XP earned' },
-  { title: 'Your first emergency fund', status: 'active', note: 'In progress · Quest 3/6' },
-  { title: 'Saving on a student budget', status: 'locked', note: 'Finish quest 3 to unlock' },
-  { title: 'Where to stash your cash', status: 'locked', note: '' },
-  { title: 'Boss: your 3-month plan', status: 'boss', note: 'Final quest · +1 💎' },
-] as const;
+// Real shop catalog now lives in content/shopItems.json — see content/index.ts (shopItemsReal).

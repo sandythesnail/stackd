@@ -10,6 +10,7 @@ export { IconButton } from './IconButton';
 export { Field } from './Field';
 export { Option, CheckBox, Radio } from './Option';
 export { Hammy, Slot } from './Hammy';
+export { ItemArt } from './ItemArt';
 export { TabBar } from './TabBar';
 export { Stat, SectionHead, Speech, Callout, Segmented, Dots, Divider } from './bits';
 export { MIcon, ModuleTile, ListRow, BadgeMedal, MEDAL_GRAD } from './ModuleBits';

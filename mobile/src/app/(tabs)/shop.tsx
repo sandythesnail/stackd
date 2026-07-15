@@ -2,40 +2,59 @@ import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Screen, Header, Txt, Coin, Diamond } from '@/components';
+import { Screen, Header, Txt, Coin, Diamond, ItemArt } from '@/components';
 import { colors, font } from '@/theme';
-import { shopItems, user, ShopItem } from '@/data';
+import { user } from '@/data';
+import { shopItemsReal } from '@/content';
+import type { ShopItemReal } from '@/content';
 
-const FILTERS = ['Hats', 'Glasses', 'Outfits', 'Room'] as const;
+const CATEGORIES: { key: ShopItemReal['category']; label: string }[] = [
+  { key: 'hat', label: 'Hats' },
+  { key: 'accessory', label: 'Accessories' },
+  { key: 'room', label: 'Room' },
+  { key: 'exclusive', label: 'Exclusive' },
+  { key: 'reward', label: 'Rewards' },
+];
 
-/** Screen 13 — Shop (coins & diamonds). */
+const RARITY_COLOR: Record<string, string> = {
+  common: colors.muted3,
+  rare: '#2E6FE0',
+  epic: '#9B3FD6',
+  legendary: '#C9781A',
+};
+
+/** Screen 13 — Shop (coins & diamonds). Real catalog ported from the website's SHOP_ITEMS. */
 export default function Shop() {
   const router = useRouter();
   const [filter, setFilter] = useState(0);
-  const cat = FILTERS[filter];
-  const items = shopItems.filter((i) => i.category === cat);
+  const cat = CATEGORIES[filter];
+  const items = shopItemsReal.filter((i) => i.category === cat.key);
 
   return (
     <Screen edges={['top']}>
       <Header title="Shop" coins={user.coins} diamonds={user.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.filters}>
-          {FILTERS.map((f, i) => {
+          {CATEGORIES.map((c, i) => {
             const on = i === filter;
             return (
-              <Pressable key={f} onPress={() => setFilter(i)} style={[styles.fchip, on && styles.fchipOn]}>
-                <Txt style={[styles.fchipTxt, on && { color: colors.white }]}>{f}</Txt>
+              <Pressable key={c.key} onPress={() => setFilter(i)} style={[styles.fchip, on && styles.fchipOn]}>
+                <Txt style={[styles.fchipTxt, on && { color: colors.white }]}>{c.label}</Txt>
               </Pressable>
             );
           })}
         </View>
 
         {items.length === 0 ? (
-          <Txt variant="lead" style={{ marginTop: 12 }}>No {cat.toLowerCase()} yet — check back soon!</Txt>
+          <Txt variant="lead" style={{ marginTop: 12 }}>No {cat.label.toLowerCase()} yet — check back soon!</Txt>
         ) : (
           <View style={styles.grid}>
             {items.map((item) => (
-              <ItemTile key={item.name} item={item} onPress={() => router.push('/modal/shop-item')} />
+              <ItemTile
+                key={item.id}
+                item={item}
+                onPress={() => router.push({ pathname: '/modal/shop-item', params: { id: item.id } })}
+              />
             ))}
           </View>
         )}
@@ -44,19 +63,21 @@ export default function Shop() {
   );
 }
 
-function ItemTile({ item, onPress }: { item: ShopItem; onPress: () => void }) {
+function ItemTile({ item, onPress }: { item: ShopItemReal; onPress: () => void }) {
+  const currency = item.currency ?? 'coin';
   return (
     <Pressable style={styles.itile} onPress={onPress}>
       <LinearGradient colors={['#FFF3F7', '#FBE0EA']} style={styles.iprev}>
-        <Txt style={styles.mono}>{item.file}</Txt>
+        <ItemArt item={item} size={70} />
+        {item.rarity ? (
+          <View style={[styles.rarity, { backgroundColor: RARITY_COLOR[item.rarity] ?? colors.muted3 }]}>
+            <Txt style={styles.rarityTxt}>{item.rarity}</Txt>
+          </View>
+        ) : null}
       </LinearGradient>
       <View style={styles.itileFoot}>
-        <Txt style={styles.iname}>{item.name}</Txt>
-        {item.owned ? (
-          <View style={[styles.price, { backgroundColor: colors.tagGreenBg }]}>
-            <Txt style={[styles.priceTxt, { color: colors.tagGreenText }]}>✓ Owned</Txt>
-          </View>
-        ) : item.currency === 'diamond' ? (
+        <Txt style={styles.iname} numberOfLines={1}>{item.name}</Txt>
+        {currency === 'diamond' ? (
           <View style={[styles.price, { backgroundColor: '#EAF6FB' }]}>
             <Diamond size={13} />
             <Txt style={[styles.priceTxt, { color: '#2E7FA3' }]}>{item.price}</Txt>
@@ -74,7 +95,7 @@ function ItemTile({ item, onPress }: { item: ShopItem; onPress: () => void }) {
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 22, paddingBottom: 28, gap: 14 },
-  filters: { flexDirection: 'row', gap: 7 },
+  filters: { flexDirection: 'row', gap: 7, flexWrap: 'wrap' },
   fchip: {
     paddingVertical: 8,
     paddingHorizontal: 13,
@@ -97,7 +118,8 @@ const styles = StyleSheet.create({
     gap: 9,
   },
   iprev: { borderRadius: 13, height: 92, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  mono: { fontFamily: font.bold, fontSize: 12, color: colors.muted5 },
+  rarity: { position: 'absolute', top: 6, left: 6, borderRadius: 10, paddingVertical: 2, paddingHorizontal: 7 },
+  rarityTxt: { fontFamily: font.extra, fontSize: 9, color: colors.white, textTransform: 'uppercase' },
   itileFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   iname: { fontFamily: font.extra, fontSize: 13.5, color: colors.ink, flexShrink: 1 },
   price: {
