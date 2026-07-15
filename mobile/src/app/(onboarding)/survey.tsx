@@ -8,13 +8,16 @@ import { modules } from '@/data';
 import { SURVEY_GOALS, SURVEY_FAMILIARITY_LABELS, SURVEY_TRACKS, getRecommendedTrack, trackReason, type SurveyAnswers } from '@/survey';
 import { useStore } from '@/store';
 
+type Step = 0 | 1 | 2;
+
 /** Screen 6 — Onboarding survey. Real per-module familiarity + goals (SURVEY_FAMILIARITY_
- * LABELS/SURVEY_GOALS) feeding the website's real track-recommendation scoring, condensed
- * into one scrollable form + a results step instead of the website's 12-step wizard. */
+ * LABELS/SURVEY_GOALS) feeding the website's real track-recommendation scoring, as three
+ * steps: familiarity sliders, then the goals ("financial toolkit") multiple-choice, then
+ * the recommended-track results — instead of the website's 12-step wizard. */
 export default function Survey() {
   const router = useRouter();
   const { setOnboardingTrack } = useStore();
-  const [step, setStep] = useState<0 | 1>(0);
+  const [step, setStep] = useState<Step>(0);
   const [familiarity, setFamiliarity] = useState<Record<string, number>>(
     () => Object.fromEntries(modules.map((m) => [m.id, 3])),
   );
@@ -36,30 +39,32 @@ export default function Survey() {
     router.replace('/(tabs)/home');
   };
 
+  const back = () => {
+    if (step === 0) { router.back(); return; }
+    setStep((step - 1) as Step);
+  };
+  const next = () => {
+    if (step === 2) { finish(); return; }
+    setStep((step + 1) as Step);
+  };
+
   return (
     <Screen style={{ paddingHorizontal: 22 }}>
       <View style={styles.topbar}>
-        <IconButton name="chevron-left" onPress={() => (step === 1 ? setStep(0) : router.back())} />
-        <ProgressBar value={step === 0 ? 0.5 : 1} style={{ flex: 1 }} />
-        <Txt style={styles.step}>{step === 0 ? '1 / 2' : '2 / 2'}</Txt>
+        <IconButton name="chevron-left" onPress={back} />
+        <ProgressBar value={(step + 1) / 3} style={{ flex: 1 }} />
+        <Txt style={styles.step}>{step + 1} / 3</Txt>
       </View>
 
       {step === 0 ? (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
           <View style={{ gap: 6, marginTop: 8 }}>
-            <Txt style={styles.eyebrow}>YOUR FINANCIAL TOOLKIT</Txt>
-            <Txt variant="h1">What are you hoping to get out of Stackd?</Txt>
-            <Txt variant="lead">Select all that apply — this helps us recommend where to start.</Txt>
+            <Txt style={styles.eyebrow}>GET TO KNOW YOU</Txt>
+            <Txt variant="h1">How familiar are you with each topic?</Txt>
+            <Txt variant="lead">Drag each slider — there are no wrong answers, we just meet you where you are.</Txt>
           </View>
 
-          <View style={{ gap: 10, marginTop: 14 }}>
-            {SURVEY_GOALS.map((g) => (
-              <Option key={g.id} label={g.label} state={focusGoals.has(g.id) ? 'on' : 'default'} onPress={() => toggleGoal(g.id)} />
-            ))}
-          </View>
-
-          <Txt variant="h2" style={{ marginTop: 22 }}>How familiar are you with each topic?</Txt>
-          <View style={{ gap: 18, marginTop: 10 }}>
+          <View style={{ gap: 18, marginTop: 14 }}>
             {modules.map((m) => {
               const [lo, hi] = SURVEY_FAMILIARITY_LABELS[m.id] ?? ['', ''];
               return (
@@ -88,6 +93,20 @@ export default function Survey() {
                 </View>
               );
             })}
+          </View>
+        </ScrollView>
+      ) : step === 1 ? (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
+          <View style={{ gap: 6, marginTop: 8 }}>
+            <Txt style={styles.eyebrow}>YOUR FINANCIAL TOOLKIT</Txt>
+            <Txt variant="h1">What are you hoping to get out of Stackd?</Txt>
+            <Txt variant="lead">Select all that apply — this helps us recommend where to start.</Txt>
+          </View>
+
+          <View style={{ gap: 10, marginTop: 14 }}>
+            {SURVEY_GOALS.map((g) => (
+              <Option key={g.id} label={g.label} state={focusGoals.has(g.id) ? 'on' : 'default'} onPress={() => toggleGoal(g.id)} />
+            ))}
           </View>
         </ScrollView>
       ) : (
@@ -126,8 +145,12 @@ export default function Survey() {
 
       <Spacer />
       <View style={styles.actions}>
-        <Button label="Back" variant="ghost" onPress={() => router.back()} style={{ paddingHorizontal: 22 }} />
-        <Button label={step === 0 ? 'See my starting track →' : 'Start learning'} onPress={() => (step === 0 ? setStep(1) : finish())} style={{ flex: 1 }} />
+        <Button label="Back" variant="ghost" onPress={back} style={{ paddingHorizontal: 22 }} />
+        <Button
+          label={step === 0 ? 'Next →' : step === 1 ? 'See my starting track →' : 'Start learning'}
+          onPress={next}
+          style={{ flex: 1 }}
+        />
       </View>
     </Screen>
   );
