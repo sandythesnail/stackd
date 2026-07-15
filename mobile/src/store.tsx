@@ -94,6 +94,9 @@ export type AppState = {
   lastPlayedDate: string | null;
   /** toDateString() -> coins awarded that day, so the coin drip only ever pays out once/day. */
   dailyLoginLog: Record<string, number>;
+  /** Track chosen at the end of the onboarding survey (getRecommendedTrack, or a manual
+   * switch) — see @/survey. */
+  onboardingTrackId: string | null;
 };
 
 const DEFAULT_STATE: AppState = {
@@ -118,6 +121,7 @@ const DEFAULT_STATE: AppState = {
   // day-to-day tracking (increment/reset/daily coin drip) begins from the next real day.
   lastPlayedDate: new Date().toDateString(),
   dailyLoginLog: {},
+  onboardingTrackId: null,
 };
 
 export type MysteryResult = {
@@ -231,6 +235,7 @@ type Ctx = {
    * telling the player about; null once dismissed. */
   dailyLoginBanner: { streak: number; loginCoins: number; streakDiamonds: number } | null;
   dismissDailyLoginBanner: () => void;
+  setOnboardingTrack: (trackId: string) => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
@@ -469,6 +474,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       dailyLoginBanner,
       dismissDailyLoginBanner: () => setDailyLoginBanner(null),
+      setOnboardingTrack: (trackId) => setState((s) => ({ ...s, onboardingTrackId: trackId })),
     };
   }, [state, dailyLoginBanner]);
 
