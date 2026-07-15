@@ -8,6 +8,7 @@ import { colors, font } from '@/theme';
 import { user, modules } from '@/data';
 import { useStore } from '@/store';
 import { todaysHammyMood, hasModuleActivityToday } from '@/hammyMood';
+import { MOOD_FACES } from '@/hammyFaces';
 
 /** Screen 7 — Home / Dashboard. Real module progress, badges, and next-quest card. */
 export default function Home() {
@@ -35,10 +36,13 @@ export default function Home() {
   const nextPct = nextTotal ? nextDone / nextTotal : 0;
 
   // One mood per calendar day (todaysHammyMood), unless a lesson's already been finished
-  // today — then Hammy's just happy about that instead.
-  const speechMsg = hasModuleActivityToday(state.lastModuleActivityDate)
+  // today — then Hammy's just happy (satisfied) about that instead.
+  const activeToday = hasModuleActivityToday(state.lastModuleActivityDate);
+  const mood = todaysHammyMood();
+  const speechMsg = activeToday
     ? "Hammy's had a great day — you already finished a module! Come back tomorrow for more."
-    : todaysHammyMood().msg;
+    : mood.msg;
+  const moodFace = activeToday ? MOOD_FACES.satisfied : MOOD_FACES[mood.id];
 
   return (
     <Screen edges={['top']}>
@@ -58,7 +62,7 @@ export default function Home() {
           <Card style={styles.questCard}>
             <View style={styles.questTop}>
               <Pressable onPress={() => router.push('/modal/life-event')}>
-                <Hammy size={76} bob equipped={equippedMascotItems()} style={styles.questHammy} />
+                <Hammy size={76} bob equipped={equippedMascotItems()} face={moodFace} style={styles.questHammy} />
               </Pressable>
               <Speech>{speechMsg}</Speech>
             </View>

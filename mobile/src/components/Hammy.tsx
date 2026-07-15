@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, ViewStyle, View } from 'react-native';
 import Svg, {
-  Defs, LinearGradient, RadialGradient, Stop, Ellipse, Circle, Path, G, ClipPath, SvgXml,
+  Defs, LinearGradient, RadialGradient, Stop, Ellipse, Circle, Path, G, ClipPath, SvgXml, Image as SvgImage,
 } from 'react-native-svg';
 import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ShopItemReal } from '@/content';
+import type { FaceOverlay } from '@/hammyFaces';
 
 // Full-stage geometry ported from the website's CSS pig (styles.css .pig-* rules), a
 // 440×460 frame. Kept in the same coordinate space so proportions match the web mascot.
@@ -51,6 +52,7 @@ export function Hammy({
   bob = true,
   pig: _pig = '#E27EA0',
   equipped = [],
+  face,
   style,
 }: {
   size?: number;
@@ -59,6 +61,9 @@ export function Hammy({
   pig?: string;
   /** Currently-worn shop items, matrix-transformed onto the mascot (see EquippedItem). */
   equipped?: ShopItemReal[];
+  /** Illustrated mood/reaction face (see @/hammyFaces) — replaces the default eyes/cheeks/
+   * snout with a cropped PNG overlay, matching the website's .hammy-face-overlay behavior. */
+  face?: FaceOverlay;
   style?: ViewStyle;
 }) {
   const backItems = equipped.filter((i) => i.layer === 'back');
@@ -327,25 +332,40 @@ export function Hammy({
         <Ellipse cx={220} cy={198} rx={138} ry={124} fill="url(#hm-head-shadow)" clipPath="url(#hm-clip-head)" />
         <Ellipse cx={220} cy={198} rx={138} ry={124} fill="url(#hm-head-shine)" clipPath="url(#hm-clip-head)" />
 
-        {/* cheeks */}
-        <Ellipse cx={134} cy={222} rx={28} ry={20} fill="url(#hm-cheek)" />
-        <Ellipse cx={306} cy={222} rx={28} ry={20} fill="url(#hm-cheek)" />
+        {/* cheeks, eyes, snout — hidden when an illustrated face overlay replaces them,
+            matching the website's .has-face-overlay { .pig-eye/.pig-cheek/.pig-snout { opacity: 0 } } */}
+        {!face && (
+          <>
+            <Ellipse cx={134} cy={222} rx={28} ry={20} fill="url(#hm-cheek)" />
+            <Ellipse cx={306} cy={222} rx={28} ry={20} fill="url(#hm-cheek)" />
 
-        {/* eyes */}
-        <Ellipse cx={141} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
-        <Ellipse cx={299} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
-        <Circle cx={134.5} cy={186.5} r={6.5} fill="#FFFFFF" />
-        <Circle cx={145} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
-        <Circle cx={292.5} cy={186.5} r={6.5} fill="#FFFFFF" />
-        <Circle cx={303} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
+            <Ellipse cx={141} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
+            <Ellipse cx={299} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
+            <Circle cx={134.5} cy={186.5} r={6.5} fill="#FFFFFF" />
+            <Circle cx={145} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
+            <Circle cx={292.5} cy={186.5} r={6.5} fill="#FFFFFF" />
+            <Circle cx={303} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
 
-        {/* snout — soft drop shadow drawn first so it peeks out from beneath the fill */}
-        <Ellipse cx={220} cy={218} rx={56} ry={36} fill="url(#hm-snout-drop)" />
-        <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout)" />
-        <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout-shadow)" clipPath="url(#hm-clip-snout)" />
-        <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout-shine)" clipPath="url(#hm-clip-snout)" />
-        <Ellipse cx={191} cy={212} rx={10} ry={15} fill="#D9608C" />
-        <Ellipse cx={249} cy={212} rx={10} ry={15} fill="#D9608C" />
+            {/* soft drop shadow drawn first so it peeks out from beneath the fill */}
+            <Ellipse cx={220} cy={218} rx={56} ry={36} fill="url(#hm-snout-drop)" />
+            <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout)" />
+            <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout-shadow)" clipPath="url(#hm-clip-snout)" />
+            <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout-shine)" clipPath="url(#hm-clip-snout)" />
+            <Ellipse cx={191} cy={212} rx={10} ry={15} fill="#D9608C" />
+            <Ellipse cx={249} cy={212} rx={10} ry={15} fill="#D9608C" />
+          </>
+        )}
+
+        {face ? (
+          <SvgImage
+            href={face.image}
+            x={face.left}
+            y={face.top}
+            width={face.width}
+            height={face.height}
+            preserveAspectRatio="xMidYMid slice"
+          />
+        ) : null}
 
         {/* front-layer equipped items (hats, glasses, neckwear) — drawn above everything */}
         {frontItems.map((item) => <EquippedItem key={item.id} item={item} />)}

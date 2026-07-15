@@ -3,10 +3,11 @@ import { View, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
 import { Feather } from '@expo/vector-icons';
-import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag } from '@/components';
+import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy } from '@/components';
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
+import { REACTION_FACES } from '@/hammyFaces';
 import type {
   Chapter, Question, StoryChapter, TeachChapter, MatchingChapter, HintChapter, DecisionChapter,
   MicrosimChapter, PollChapter, MythcardsChapter, KnowledgecheckChapter, SimulatorChapter,
@@ -25,6 +26,9 @@ const HINT_BUDGET = 3;
 const HINT_FREE_CHAPTER_TYPES = new Set(['story', 'teach', 'hint']);
 
 type HintProps = { hintsRemaining: number; onUseHint: () => void };
+/** Reports right/wrong to the persistent companion Hammy (see showHammyReaction on the
+ * website) so its face/message reacts — happy, gentle, or a 3-in-a-row streak callout. */
+type ReactProps = { reactTo: (isCorrect: boolean) => void };
 
 /** Screen 17 (extended) — Quest player. Renders the website's full multi-chapter quest
  * content (story/teach/matching/decision/microsim/etc — all 15 chapter types) instead of
@@ -44,6 +48,8 @@ export default function QuestPlayer() {
   const [hintsUsed, setHintsUsed] = useState(0);
   const [terms, setTerms] = useState<string[]>([]);
   const [bossWon, setBossWon] = useState(false);
+  const [reactionMood, setReactionMood] = useState<'happy' | 'gentle' | 'streak' | null>(null);
+  const [answerStreak, setAnswerStreak] = useState(0);
 
   if (!quest || !content) {
     return (
@@ -59,6 +65,16 @@ export default function QuestPlayer() {
   const chapter = quest.chapters[chapterIdx];
   const hintsRemaining = Math.max(0, HINT_BUDGET - hintsUsed);
   const onUseHint = () => setHintsUsed((h) => h + 1);
+
+  // Ported from showHammyReaction: the persistent companion's face/mood reacts to every
+  // graded answer across the quest — happy, gentle, or (every 3rd correct in a row) a streak
+  // callout — then clears itself a beat later so it never sits stale into a later chapter.
+  const reactTo = (isCorrect: boolean) => {
+    const nextStreak = isCorrect ? answerStreak + 1 : 0;
+    setAnswerStreak(nextStreak);
+    setReactionMood(isCorrect ? (nextStreak > 0 && nextStreak % 3 === 0 ? 'streak' : 'happy') : 'gentle');
+    setTimeout(() => setReactionMood(null), 1400);
+  };
 
   const onComplete: Complete = (xpDelta, graded) => {
     const nextXp = xpEarned + xpDelta;
@@ -95,6 +111,7 @@ export default function QuestPlayer() {
     <Screen edges={['top']}>
       <View style={styles.stick}>
         <IconButton name="x" size={34} iconSize={16} onPress={() => router.back()} />
+        <Hammy size={40} bob={false} face={reactionMood ? REACTION_FACES[reactionMood] : undefined} />
         <ProgressBar value={chapterIdx / quest.chapters.length} style={{ flex: 1 }} height={10} />
         <Txt style={styles.step}>{chapterIdx + 1} / {quest.chapters.length}</Txt>
       </View>
@@ -107,6 +124,7 @@ export default function QuestPlayer() {
           onComplete={onComplete}
           hintsRemaining={hintsRemaining}
           onUseHint={onUseHint}
+          reactTo={reactTo}
         />
       </ScrollView>
     </Screen>
@@ -114,23 +132,24 @@ export default function QuestPlayer() {
 }
 
 function ChapterView({
-  chapter, questions, moduleXpReward, onComplete, hintsRemaining, onUseHint,
-}: { chapter: Chapter; questions: Question[]; moduleXpReward: number; onComplete: Complete } & HintProps) {
+  chapter, questions, moduleXpReward, onComplete, hintsRemaining, onUseHint, reactTo,
+}: { chapter: Chapter; questions: Question[]; moduleXpReward: number; onComplete: Complete } & HintProps & ReactProps) {
   const hintProps: HintProps = { hintsRemaining, onUseHint };
+  const reactProps: ReactProps = { reactTo };
   switch (chapter.type) {
     case 'story': return <StoryView chapter={chapter} onComplete={onComplete} />;
     case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} />;
-    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...hintProps} />;
+    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...hintProps} {...reactProps} />;
     case 'hint': return <HintView chapter={chapter} onComplete={onComplete} />;
     case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} {...hintProps} />;
     case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} {...hintProps} />;
-    case 'poll': return <PollView chapter={chapter} onComplete={onComplete} />;
-    case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} />;
-    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} />;
+    case 'poll': return <PollView chapter={chapter} onComplete={onComplete} {...reactProps} />;
+    case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} {...reactProps} />;
+    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} {...reactProps} />;
     case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} {...hintProps} />;
     case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} />;
     case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} />;
-    case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} {...hintProps} />;
+    case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} {...hintProps} {...reactProps} />;
     case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} />;
     case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} />;
     default: return null;
@@ -232,7 +251,9 @@ function shuffle<T>(arr: T[]): T[] {
   return [...arr].map((v) => [Math.random(), v] as const).sort((a, b) => a[0] - b[0]).map(([, v]) => v);
 }
 
-function MatchingView({ chapter, onComplete, hintsRemaining, onUseHint }: { chapter: MatchingChapter; onComplete: Complete } & HintProps) {
+function MatchingView({
+  chapter, onComplete, hintsRemaining, onUseHint, reactTo,
+}: { chapter: MatchingChapter; onComplete: Complete } & HintProps & ReactProps) {
   const [terms] = useState(() => shuffle(chapter.pairs.map((p) => p.term)));
   const [defs] = useState(() => shuffle(chapter.pairs.map((p) => p.definition)));
   const [matched, setMatched] = useState<Set<string>>(new Set());
@@ -242,6 +263,7 @@ function MatchingView({ chapter, onComplete, hintsRemaining, onUseHint }: { chap
   const pickDef = (def: string) => {
     if (!selTerm) return;
     const correct = chapter.pairs.find((p) => p.term === selTerm)?.definition === def;
+    reactTo(correct);
     if (correct) {
       const next = new Set(matched); next.add(selTerm);
       setMatched(next);
@@ -390,8 +412,9 @@ function MicrosimView({ chapter, onComplete, hintsRemaining, onUseHint }: { chap
 }
 
 /* ───────────────────────── poll ───────────────────────── */
-function PollView({ chapter, onComplete }: { chapter: PollChapter; onComplete: Complete }) {
+function PollView({ chapter, onComplete, reactTo }: { chapter: PollChapter; onComplete: Complete } & ReactProps) {
   const [answered, setAnswered] = useState<boolean | null>(null);
+  const pick = (guess: boolean) => { setAnswered(guess); reactTo(guess === chapter.isTrue); };
   return (
     <View style={{ gap: 14 }}>
       <Txt variant="h2">{chapter.title}</Txt>
@@ -399,8 +422,8 @@ function PollView({ chapter, onComplete }: { chapter: PollChapter; onComplete: C
       <Card><Txt style={{ fontFamily: font.displayMed, fontSize: 15, color: colors.ink }}>{chapter.statement}</Txt></Card>
       {answered === null ? (
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Button label="True" variant="ghost" onPress={() => setAnswered(true)} style={{ flex: 1 }} />
-          <Button label="False" variant="ghost" onPress={() => setAnswered(false)} style={{ flex: 1 }} />
+          <Button label="True" variant="ghost" onPress={() => pick(true)} style={{ flex: 1 }} />
+          <Button label="False" variant="ghost" onPress={() => pick(false)} style={{ flex: 1 }} />
         </View>
       ) : (
         <>
@@ -418,7 +441,7 @@ function PollView({ chapter, onComplete }: { chapter: PollChapter; onComplete: C
 }
 
 /* ───────────────────────── mythcards ───────────────────────── */
-function MythcardsView({ chapter, onComplete }: { chapter: MythcardsChapter; onComplete: Complete }) {
+function MythcardsView({ chapter, onComplete, reactTo }: { chapter: MythcardsChapter; onComplete: Complete } & ReactProps) {
   const [i, setI] = useState(0);
   const [answered, setAnswered] = useState<boolean | null>(null);
   const [correctSoFar, setCorrectSoFar] = useState(0);
@@ -427,6 +450,7 @@ function MythcardsView({ chapter, onComplete }: { chapter: MythcardsChapter; onC
 
   const pick = (guess: boolean) => {
     setAnswered(guess);
+    reactTo(guess === card.isTrue);
     if (guess === card.isTrue) setCorrectSoFar((c) => c + 1);
   };
   const next = () => {
@@ -466,7 +490,9 @@ function MythcardsView({ chapter, onComplete }: { chapter: MythcardsChapter; onC
 }
 
 /* ───────────────────────── knowledgecheck ───────────────────────── */
-function KnowledgecheckView({ chapter, questions, onComplete }: { chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete }) {
+function KnowledgecheckView({
+  chapter, questions, onComplete, reactTo,
+}: { chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete } & ReactProps) {
   const [i, setI] = useState(0);
   const [sel, setSel] = useState<number | null>(null);
   const question = questions[chapter.qIndices[i]];
@@ -474,6 +500,10 @@ function KnowledgecheckView({ chapter, questions, onComplete }: { chapter: Knowl
   const right = question ? sel === question.correct : false;
   const last = i + 1 >= chapter.qIndices.length;
 
+  const pick = (idx: number) => {
+    setSel(idx);
+    reactTo(question ? idx === question.correct : false);
+  };
   const next = () => {
     if (last) { onComplete(0, right); return; }
     setI(i + 1);
@@ -494,7 +524,7 @@ function KnowledgecheckView({ chapter, questions, onComplete }: { chapter: Knowl
               label={c}
               control="radio"
               state={st}
-              onPress={() => !answered && setSel(idx)}
+              onPress={() => !answered && pick(idx)}
               right={st === 'correct' ? <Feather name="check" size={20} color={colors.greenDark} /> : st === 'wrong' ? <Feather name="x" size={20} color={colors.danger} /> : undefined}
             />
           );
@@ -620,12 +650,16 @@ function SpotcheckView({ chapter, onComplete }: { chapter: SpotcheckChapter; onC
 }
 
 /* ───────────────────────── priceisright ───────────────────────── */
-function PriceisrightView({ chapter, onComplete, hintsRemaining, onUseHint }: { chapter: PriceisrightChapter; onComplete: Complete } & HintProps) {
+function PriceisrightView({
+  chapter, onComplete, hintsRemaining, onUseHint, reactTo,
+}: { chapter: PriceisrightChapter; onComplete: Complete } & HintProps & ReactProps) {
   const { min, max, step } = chapter.guessRange;
   const [guess, setGuess] = useState(Math.round((min + max) / 2 / step) * step);
   const [submitted, setSubmitted] = useState(false);
   const diff = Math.abs(guess - chapter.actualValue);
   const close = diff <= (max - min) * 0.1;
+
+  const submit = () => { setSubmitted(true); reactTo(close); };
 
   return (
     <View style={{ gap: 14 }}>
@@ -652,7 +686,7 @@ function PriceisrightView({ chapter, onComplete, hintsRemaining, onUseHint }: { 
           <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0, close)} />
         </>
       ) : (
-        <Button label="Lock in my guess" onPress={() => setSubmitted(true)} />
+        <Button label="Lock in my guess" onPress={submit} />
       )}
     </View>
   );
