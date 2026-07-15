@@ -16953,7 +16953,7 @@ function computeModulePriority(m, survey) {
   if (!survey || isModuleFullyDone(m)) return 0;
   let score = 0;
   if (survey.moduleFamiliarity && Object.prototype.hasOwnProperty.call(survey.moduleFamiliarity, m.id)) {
-    score += (100 - survey.moduleFamiliarity[m.id]) / 100 * 30;
+    score += (5 - survey.moduleFamiliarity[m.id]) / 4 * 30;
   }
   (survey.focusGoals || []).forEach(goalId => {
     const goal = SURVEY_GOALS.find(g => g.id === goalId);
@@ -16991,7 +16991,7 @@ function trackModulesRemaining(track, survey) {
   return track.moduleIds
     .map(id => MODULES.find(m => m.id === id))
     .filter(m => m && !isModuleFullyDone(m))
-    .sort((a, b) => (survey.moduleFamiliarity[a.id] ?? 50) - (survey.moduleFamiliarity[b.id] ?? 50));
+    .sort((a, b) => (survey.moduleFamiliarity[a.id] ?? 3) - (survey.moduleFamiliarity[b.id] ?? 3));
 }
 
 function showOnboardingSurvey() {
@@ -17048,14 +17048,14 @@ function renderSurveyStep() {
     const modId = SURVEY_MODULE_IDS[surveyStep - 1];
     const mod = MODULES.find(m => m.id === modId);
     const [lowLabel, highLabel] = SURVEY_FAMILIARITY_LABELS[modId] || ['Never heard of it', 'Could teach it'];
-    const current = surveyDraft.moduleFamiliarity[modId] ?? 50;
+    const current = surveyDraft.moduleFamiliarity[modId] ?? 3;
 
     stepLabel.textContent = `Step ${surveyStep} of ${SURVEY_TOTAL_STEPS}`;
     heading.textContent = mod.title;
     sub.textContent = "Slide to where you're really at, no wrong answer, it just helps us know where to start you off.";
     body.innerHTML = `
       <div class="survey-slider-wrap">
-        <input type="range" class="survey-slider" id="survey-slider" min="0" max="100" step="1" value="${current}">
+        <input type="range" class="survey-slider" id="survey-slider" min="1" max="5" step="1" value="${current}">
         <div class="survey-slider-ticks">
           <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
         </div>
