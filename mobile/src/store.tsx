@@ -262,6 +262,8 @@ type Ctx = {
   /** Achievements newly unlocked since the last dismissal — drives the global unlock toast. */
   newAchievements: () => AchievementView[];
   dismissNewAchievements: () => void;
+  /** Ported from the website's Settings reset button: wipes local state back to defaults. */
+  resetProgress: () => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
@@ -525,6 +527,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setOnboardingTrack: (trackId) => setState((s) => ({ ...s, onboardingTrackId: trackId })),
       newAchievements: () => ACHIEVEMENTS.filter((a) => newAchievementIds.includes(a.id)).map((a) => ({ ...a, earned: true })),
       dismissNewAchievements: () => setNewAchievementIds([]),
+      resetProgress: () => {
+        AsyncStorage.removeItem(STORAGE_KEY);
+        setState(DEFAULT_STATE);
+        setDailyLoginBanner(null);
+        setNewAchievementIds([]);
+      },
     };
   }, [state, dailyLoginBanner, newAchievementIds]);
 

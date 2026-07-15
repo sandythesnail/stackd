@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -20,12 +20,26 @@ import { useStore } from '@/store';
  * IS real here: the referral code and a working copy-to-clipboard. */
 export default function Settings() {
   const router = useRouter();
-  const { state, level, tierName } = useStore();
+  const { state, level, tierName, resetProgress } = useStore();
   const [copied, setCopied] = useState(false);
   const copyReferral = async () => {
     await Clipboard.setStringAsync(user.referral);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const confirmReset = () => {
+    Alert.alert('Reset all progress?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Reset',
+        style: 'destructive',
+        onPress: () => {
+          resetProgress();
+          router.replace('/(onboarding)/welcome');
+        },
+      },
+    ]);
   };
   return (
     <Screen edges={['top']}>
@@ -50,7 +64,7 @@ export default function Settings() {
           <Row icon="user" title="Account" sub={user.email} />
           <Row icon="bell" title="Notifications" />
           <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.push('/(onboarding)/survey')} />
-          <Row icon="trash-2" title="Reset all progress" sub="Hammy goes back to a piglet" danger />
+          <Row icon="trash-2" title="Reset all progress" sub="Hammy goes back to a piglet" danger onPress={confirmReset} />
           <Row icon="log-out" title="Sign out" last onPress={() => router.replace('/(onboarding)/signin')} />
         </View>
 
