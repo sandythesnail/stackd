@@ -229,21 +229,21 @@ body { background: var(--bg); min-height: 100vh; }
 .has-face-overlay .pig-eye, .has-face-overlay .pig-cheek, .has-face-overlay .pig-snout { opacity: 0; }
 .has-face-overlay .pig-head { box-shadow: inset 16px 16px 30px rgba(255,255,255,.35); }
 .has-face-overlay .pig-body { box-shadow: none; }
-.mood-star .hammy-face-overlay { background-image: url('faces/star.png'); }
-.mood-sleepy .hammy-face-overlay { background-image: url('faces/sleepy.png'); }
-.mood-curious .hammy-face-overlay { background-image: url('faces/curious.png'); }
-.mood-excited .hammy-face-overlay { background-image: url('faces/excited.png'); }
-.mood-frustrated .hammy-face-overlay { background-image: url('faces/frustrated.png'); }
-.mood-angry .hammy-face-overlay { background-image: url('faces/angry.png'); }
-.mood-confused .hammy-face-overlay { background-image: url('faces/confused.png'); }
-.mood-love .hammy-face-overlay { background-image: url('faces/love.png'); }
-.mood-nervy .hammy-face-overlay { background-image: url('faces/nervy.png'); }
-.mood-relieved .hammy-face-overlay { background-image: url('faces/relieved.png'); }
-.mood-sad .hammy-face-overlay { background-image: url('faces/sad.png'); }
-.mood-shockhappy .hammy-face-overlay { background-image: url('faces/shockhappy.png'); }
-.mood-sick .hammy-face-overlay { background-image: url('faces/sick.png'); }
-.mood-surprise .hammy-face-overlay { background-image: url('faces/surprise.png'); }
-.mood-wink .hammy-face-overlay { background-image: url('faces/wink.png'); }
+/* Each mood's overlay box is sized off its own cropped image's aspect ratio (see
+   process_faces.js / faces/*-face.png), scaled to a shared 160px display height and centered
+   on the same point as the pig's snout so every mood lines up the same way regardless of its
+   source crop's proportions. */
+.mood-star .hammy-face-overlay { background-image: url('faces/star-face.png'); top:143px; left:117px; width:206px; height:160px; }
+.mood-sleepy .hammy-face-overlay { background-image: url('faces/sleepy-face.png'); top:143px; left:115px; width:211px; height:160px; }
+.mood-curious .hammy-face-overlay { background-image: url('faces/curious-face.png'); top:143px; left:91px; width:259px; height:160px; }
+.mood-angry .hammy-face-overlay { background-image: url('faces/angry-face.png'); top:143px; left:94px; width:252px; height:160px; }
+.mood-love .hammy-face-overlay { background-image: url('faces/love-face.png'); top:143px; left:96px; width:248px; height:160px; }
+.mood-nervy .hammy-face-overlay { background-image: url('faces/nervy-face.png'); top:143px; left:103px; width:234px; height:160px; }
+.mood-sad .hammy-face-overlay { background-image: url('faces/sad-face.png'); top:143px; left:100px; width:240px; height:160px; }
+.mood-surprise .hammy-face-overlay { background-image: url('faces/surprise-face.png'); top:143px; left:110px; width:220px; height:160px; }
+.mood-wink .hammy-face-overlay { background-image: url('faces/wink-face.png'); top:143px; left:102px; width:237px; height:160px; }
+/* Post-lesson "satisfied" state reuses the exact same hammy-happy.png already used by the
+   quiz-companion Hammy elsewhere in the app — no separate cropping needed for this one. */
 .mood-satisfied .hammy-face-overlay { background-image: url('faces/hammy-happy.png'); }
 
 /* ─── HOME SECTIONS ─── */
