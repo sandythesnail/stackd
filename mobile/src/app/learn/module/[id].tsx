@@ -3,20 +3,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Txt, IconButton, ProgressBar, ListRow, MIcon, Button } from '@/components';
 import { colors, font } from '@/theme';
-import { moduleById, savingQuests } from '@/data';
+import { moduleById } from '@/data';
+import { moduleContentById } from '@/content';
 
 const QNODE: Record<string, { bg: string }> = {
   done: { bg: colors.green },
   active: { bg: colors.pink },
   locked: { bg: colors.lockIcon },
-  boss: { bg: '#E0A458' },
 };
 
-/** Screen 15 — Module detail (quests, locked/done). */
+/** Screen 15 — Module detail (real lessons, locked/done from the module's mock progress). */
 export default function ModuleDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const mod = moduleById(id ?? 'saving') ?? moduleById('saving')!;
+  const content = moduleContentById(mod.id);
+  const lessons = content?.lessons ?? [];
+  const pct = lessons.length ? mod.done / lessons.length : 0;
 
   return (
     <Screen edges={['top']}>
@@ -30,40 +33,38 @@ export default function ModuleDetail() {
         <LinearGradient colors={['#EAF4F6', '#DCEEF1']} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={styles.hero}>
           <MIcon abbr={mod.abbr} color="#4FA3B8" size={52} r={16} fontSize={20} />
           <View style={{ flex: 1 }}>
-            <Txt variant="h2">Build your safety net</Txt>
+            <Txt variant="h2">{content?.desc ?? mod.name}</Txt>
             <View style={styles.heroMeta}>
-              <Txt style={styles.heroTiny}>2 of 6 quests</Txt>
-              <Txt style={styles.heroTiny}>Unlock Investing next</Txt>
+              <Txt style={styles.heroTiny}>{mod.done} of {lessons.length} lessons</Txt>
+              <Txt style={styles.heroTiny}>{content?.xpReward ?? 0} XP each</Txt>
             </View>
-            <ProgressBar value={0.33} height={9} fillColors={['#68B7C9', '#4FA3B8']} style={{ marginTop: 6 }} />
+            <ProgressBar value={pct} height={9} fillColors={['#68B7C9', '#4FA3B8']} style={{ marginTop: 6 }} />
           </View>
         </LinearGradient>
 
         <View style={{ gap: 10 }}>
-          {savingQuests.map((q, i) => {
-            const node = QNODE[q.status];
-            const isActive = q.status === 'active';
-            const locked = q.status === 'locked';
-            const boss = q.status === 'boss';
+          {lessons.map((lesson, i) => {
+            const status = mod.status === 'locked' ? 'locked' : mod.status === 'done' ? 'done' : i < mod.done ? 'done' : i === mod.done ? 'active' : 'locked';
+            const node = QNODE[status];
+            const isActive = status === 'active';
+            const locked = status === 'locked';
+            const goToLesson = () => router.push({ pathname: '/learn/hook', params: { moduleId: mod.id, lessonIndex: String(i) } });
             return (
               <ListRow
-                key={i}
+                key={lesson.title}
                 locked={locked}
-                onPress={() => !locked && router.push('/learn/hook')}
-                style={[
-                  isActive && { borderWidth: 2, borderColor: colors.green, backgroundColor: '#F1F6EF' },
-                  boss && { borderStyle: 'dashed' },
-                ].filter(Boolean) as object[]}
+                onPress={() => !locked && goToLesson()}
+                style={isActive ? [{ borderWidth: 2, borderColor: colors.green, backgroundColor: '#F1F6EF' }] : undefined}
               >
                 <View style={[styles.qnode, { backgroundColor: node.bg }]}>
-                  <Txt style={styles.qnodeTxt}>{q.status === 'done' ? '✓' : q.status === 'locked' ? '🔒' : boss ? '★' : String(i + 1)}</Txt>
+                  <Txt style={styles.qnodeTxt}>{status === 'done' ? '✓' : status === 'locked' ? '🔒' : String(i + 1)}</Txt>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Txt style={[styles.qTitle, locked && { color: colors.lockText }]}>{q.title}</Txt>
-                  {q.note ? <Txt style={[styles.qNote, isActive && { color: colors.green }]}>{q.note}</Txt> : null}
+                  <Txt style={[styles.qTitle, locked && { color: colors.lockText }]}>{lesson.title}</Txt>
+                  {isActive ? <Txt style={[styles.qNote, { color: colors.green }]}>In progress</Txt> : null}
                 </View>
                 {isActive ? (
-                  <Button label="Resume" variant="pink" size="sm" style={{ paddingHorizontal: 16 }} onPress={() => router.push('/learn/hook')} />
+                  <Button label="Resume" variant="pink" size="sm" style={{ paddingHorizontal: 16 }} onPress={goToLesson} />
                 ) : null}
               </ListRow>
             );

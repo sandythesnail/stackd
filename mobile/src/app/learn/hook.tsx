@@ -1,14 +1,22 @@
 import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Txt, Button, Tag, IconButton, Spacer } from '@/components';
 import { colors, font } from '@/theme';
+import { moduleById } from '@/data';
+import { moduleContentById } from '@/content';
 
-/** Screen 16 — Hook (scenario intro, one CTA). */
+/** Screen 16 — Hook (scenario intro, one CTA). Real hook text per lesson. */
 export default function Hook() {
   const router = useRouter();
+  const { moduleId, lessonIndex } = useLocalSearchParams<{ moduleId: string; lessonIndex: string }>();
+  const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
+  const content = moduleContentById(mod.id);
+  const i = Number(lessonIndex ?? 0);
+  const lesson = content?.lessons[i];
+
   return (
     <View style={{ flex: 1, backgroundColor: '#2C3E2D' }}>
       <StatusBar style="light" />
@@ -24,12 +32,15 @@ export default function Hook() {
         <IconButton name="chevron-left" size={36} color={colors.white} onPress={() => router.back()} style={styles.back} />
         <Spacer />
         <Tag tone="pink" textColor={colors.white} style={styles.tag}>📖 SCENARIO</Tag>
-        <Txt style={styles.title}>The $600{'\n'}surprise</Txt>
-        <Txt style={styles.body}>
-          Your laptop dies the week before finals. The repair is $180 you didn&apos;t plan for — and rent&apos;s due Friday. Where does that money come from?
-        </Txt>
-        <Button label="Start quest →" variant="pink" onPress={() => router.push('/learn/lesson')} style={{ marginTop: 22 }} />
-        <Txt style={styles.foot}>QUEST 3 · SAVING</Txt>
+        <Txt style={styles.title}>{lesson?.title ?? mod.name}</Txt>
+        <Txt style={styles.body}>{lesson?.hook ?? content?.hook ?? ''}</Txt>
+        <Button
+          label="Start quest →"
+          variant="pink"
+          onPress={() => router.push({ pathname: '/learn/quiz', params: { moduleId: mod.id, lessonIndex: String(i) } })}
+          style={{ marginTop: 22 }}
+        />
+        <Txt style={styles.foot}>LESSON {i + 1} · {mod.name.toUpperCase()}</Txt>
       </SafeAreaView>
     </View>
   );

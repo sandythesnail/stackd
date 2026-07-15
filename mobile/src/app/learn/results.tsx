@@ -1,25 +1,39 @@
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Txt, Button, Tag, Hammy, Flame, Coin, Diamond } from '@/components';
 import { colors, font } from '@/theme';
+import { moduleById } from '@/data';
+import { moduleContentById } from '@/content';
 
-/** Screen 19 — Results (rewards & streak). */
+/** Screen 19 — Results (rewards & streak). Reflects the lesson just finished. */
 export default function Results() {
   const router = useRouter();
+  const { moduleId, lessonIndex, correctCount, total } = useLocalSearchParams<{
+    moduleId: string; lessonIndex: string; correctCount: string; total: string;
+  }>();
+  const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
+  const content = moduleContentById(mod.id);
+  const li = Number(lessonIndex ?? 0);
+  const lesson = content?.lessons[li];
+  const correct = Number(correctCount ?? 0);
+  const totalQ = Number(total ?? 0);
+  const allCorrect = totalQ > 0 && correct === totalQ;
+
   return (
     <LinearGradient colors={[colors.green, colors.greenDark]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1 }}>
       <StatusBar style="light" />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Hammy size={150} ring style={{ marginTop: 6 }} />
-          <Tag textColor={colors.greenDark} style={styles.tag}>🎉 QUEST COMPLETE</Tag>
-          <Txt style={styles.title}>Emergency Fund —{'\n'}nailed it!</Txt>
+          <Tag textColor={colors.greenDark} style={styles.tag}>🎉 LESSON COMPLETE</Tag>
+          <Txt style={styles.title}>{lesson?.title ?? mod.name} —{'\n'}{allCorrect ? 'nailed it!' : 'done!'}</Txt>
+          <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt>
 
           <View style={styles.rewards}>
-            <Reward value="+120" label="XP" />
+            <Reward value={`+${content?.xpReward ?? 0}`} label="XP" />
             <Reward value={<Coin size={22} />} label="Coins" big="40" />
             <Reward value={<Diamond size={19} />} label="Diamond" big="1" />
           </View>
@@ -68,6 +82,7 @@ const styles = StyleSheet.create({
   content: { alignItems: 'center', paddingHorizontal: 22, paddingTop: 8, paddingBottom: 12 },
   tag: { backgroundColor: 'rgba(255,255,255,0.9)', marginTop: 16 },
   title: { fontFamily: font.display, fontSize: 32, color: colors.white, textAlign: 'center', marginTop: 10, lineHeight: 35 },
+  scoreLine: { fontFamily: font.bold, fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 6 },
   rewards: { flexDirection: 'row', gap: 10, width: '100%', marginTop: 22 },
   reward: {
     flex: 1,

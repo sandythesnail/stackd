@@ -109,13 +109,13 @@ export const moduleColor: Record<string, string> = {
   career: '#559E86',
   spending: '#D4899E',
   saving: '#4FA3B8',
-  investing: '#C4C0B4',
+  investing: '#5B7FD4',
   credit: '#7C6FBF',
-  risk: '#C4C0B4',
-  loans: '#C4C0B4',
+  risk: '#D98A4A',
+  loans: '#A8791A',
   taxes: '#7FA45C',
-  psych: '#C4C0B4',
-  scams: '#C4C0B4',
+  psychology: '#B5568F',
+  scams: '#A0522D',
 };
 
 export const font = {

@@ -1,0 +1,701 @@
+[
+  {
+    "id": "hat_mystery_box",
+    "name": "Hat Mystery Box",
+    "category": "hat",
+    "price": 150,
+    "isMysteryBox": true,
+    "mysteryPool": "hat",
+    "viewBox": "20 20 80 75",
+    "desc": "A random hat, ribbon and all. You never know what you'll get!",
+    "svg": "<defs><linearGradient id=\"hb-g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#FF8FB8\"/><stop offset=\"100%\" stop-color=\"#E0507F\"/></linearGradient></defs>\n          <rect x=\"35\" y=\"45\" width=\"50\" height=\"40\" rx=\"3\" fill=\"url(#hb-g)\"/>\n          <rect x=\"35\" y=\"45\" width=\"50\" height=\"10\" fill=\"rgba(255,255,255,0.2)\"/>\n          <rect x=\"55\" y=\"45\" width=\"10\" height=\"40\" fill=\"#FFD700\"/>\n          <rect x=\"35\" y=\"60\" width=\"50\" height=\"10\" fill=\"#FFD700\"/>\n          <path d=\"M60,45 Q48,32 40,38 Q38,45 48,46 Q54,46 60,45Z\" fill=\"#FFD700\"/>\n          <path d=\"M60,45 Q72,32 80,38 Q82,45 72,46 Q66,46 60,45Z\" fill=\"#FFD700\"/>\n          <circle cx=\"60\" cy=\"45\" r=\"4\" fill=\"#FFE87A\"/>"
+  },
+  {
+    "id": "party_hat",
+    "name": "Party Hat",
+    "category": "hat",
+    "price": 50,
+    "mysteryOnly": true,
+    "mysteryPool": "hat",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": 5
+    },
+    "desc": "Every lesson deserves a celebration.",
+    "svg": "<defs>\n            <linearGradient id=\"ph-g\" x1=\"15%\" y1=\"0%\" x2=\"85%\" y2=\"100%\">\n              <stop offset=\"0%\" stop-color=\"#FF8A75\"/>\n              <stop offset=\"50%\" stop-color=\"#E5372B\"/>\n              <stop offset=\"100%\" stop-color=\"#8A1010\"/>\n            </linearGradient>\n            <linearGradient id=\"ph-rim\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\">\n              <stop offset=\"0%\" stop-color=\"#FF5A4A\"/>\n              <stop offset=\"100%\" stop-color=\"#7A1010\"/>\n            </linearGradient>\n            <clipPath id=\"ph-clip\"><path d=\"M 60 4 L 37 27 L 83 27 Z\"/></clipPath>\n          </defs>\n          <ellipse cx=\"60\" cy=\"28.3\" rx=\"25\" ry=\"5.2\" fill=\"#5E0A0A\"/>\n          <ellipse cx=\"60\" cy=\"27\" rx=\"24\" ry=\"4.6\" fill=\"url(#ph-rim)\" stroke=\"#6E0E0E\" stroke-width=\"0.8\"/>\n          <ellipse cx=\"60\" cy=\"26.2\" rx=\"18.5\" ry=\"2.4\" fill=\"#3E0606\"/>\n          <path d=\"M 60 4 L 37 27 L 83 27 Z\" fill=\"url(#ph-g)\"/>\n          <path d=\"M 60 4 L 46 27 L 53 27 Z\" fill=\"rgba(255,255,255,0.22)\"/>\n          <path d=\"M 60 4 L 72 27 L 65 27 Z\" fill=\"rgba(0,0,0,0.16)\"/>\n          <line x1=\"60\" y1=\"4\" x2=\"60\" y2=\"27\" stroke=\"rgba(0,0,0,0.1)\" stroke-width=\"1\"/>\n          <g clip-path=\"url(#ph-clip)\">\n            <circle cx=\"56\" cy=\"10\" r=\"2\" fill=\"#FFE45A\"/>\n            <circle cx=\"65\" cy=\"9\" r=\"1.8\" fill=\"#5AC8FA\"/>\n            <circle cx=\"60\" cy=\"14\" r=\"1.6\" fill=\"#FF9ED8\"/>\n            <circle cx=\"50\" cy=\"15\" r=\"1.8\" fill=\"#7BE0A0\"/>\n            <circle cx=\"70\" cy=\"16\" r=\"1.7\" fill=\"#FFE45A\"/>\n            <circle cx=\"58\" cy=\"19\" r=\"1.8\" fill=\"#5AC8FA\"/>\n            <circle cx=\"45\" cy=\"20\" r=\"1.6\" fill=\"#FF9ED8\"/>\n            <circle cx=\"66\" cy=\"21\" r=\"1.7\" fill=\"#7BE0A0\"/>\n            <circle cx=\"75\" cy=\"22\" r=\"1.5\" fill=\"#FFE45A\"/>\n            <circle cx=\"41\" cy=\"24\" r=\"1.6\" fill=\"#5AC8FA\"/>\n            <circle cx=\"52\" cy=\"25\" r=\"1.7\" fill=\"#FF9ED8\"/>\n            <circle cx=\"63\" cy=\"25.5\" r=\"1.6\" fill=\"#7BE0A0\"/>\n            <circle cx=\"73\" cy=\"25\" r=\"1.5\" fill=\"#FFE45A\"/>\n            <circle cx=\"45\" cy=\"26.5\" r=\"1.4\" fill=\"#FFE45A\"/>\n            <circle cx=\"79\" cy=\"26\" r=\"1.4\" fill=\"#5AC8FA\"/>\n          </g>\n          <circle cx=\"55\" cy=\"0.5\" r=\"3\" fill=\"#FFCE30\"/>\n          <circle cx=\"65\" cy=\"0.5\" r=\"3\" fill=\"#FFCE30\"/>\n          <circle cx=\"60\" cy=\"-3.5\" r=\"3\" fill=\"#FFDD60\"/>\n          <circle cx=\"60\" cy=\"1.5\" r=\"3.6\" fill=\"#FFD240\"/>\n          <circle cx=\"58\" cy=\"-1.5\" r=\"1.6\" fill=\"rgba(255,255,255,0.7)\"/>"
+  },
+  {
+    "id": "flower_crown",
+    "name": "Flower Crown",
+    "category": "hat",
+    "price": 80,
+    "mysteryOnly": true,
+    "mysteryPool": "hat",
+    "rarity": "epic",
+    "desc": "Bloom where you are planted.",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": 45
+    },
+    "svg": "<path d=\"M 20 30 C 35 22 50 18 60 15 C 70 18 85 22 100 30\" stroke=\"#4A7840\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M 20 30 C 35 22 50 18 60 15 C 70 18 85 22 100 30\" stroke=\"#88B870\" stroke-width=\"1.8\" fill=\"none\" stroke-linecap=\"round\"/>\n          <ellipse cx=\"36\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#F8B0C8\" transform=\"rotate(0 36 25)\"/>\n          <ellipse cx=\"36\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#F8B0C8\" transform=\"rotate(60 36 25)\"/>\n          <ellipse cx=\"36\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#F8B0C8\" transform=\"rotate(120 36 25)\"/>\n          <ellipse cx=\"36\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#F8B0C8\" transform=\"rotate(180 36 25)\"/>\n          <ellipse cx=\"36\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#F8B0C8\" transform=\"rotate(240 36 25)\"/>\n          <ellipse cx=\"36\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#F8B0C8\" transform=\"rotate(300 36 25)\"/>\n          <circle cx=\"36\" cy=\"25\" r=\"3.8\" fill=\"#FFDD70\"/>\n          <circle cx=\"36\" cy=\"25\" r=\"2.2\" fill=\"#FFAA28\"/>\n          <circle cx=\"35\" cy=\"24\" r=\"1\" fill=\"rgba(255,255,255,0.65)\"/>\n          <ellipse cx=\"60\" cy=\"9.5\" rx=\"3\" ry=\"6.5\" fill=\"#F090C0\" transform=\"rotate(0 60 16)\"/>\n          <ellipse cx=\"60\" cy=\"9.5\" rx=\"3\" ry=\"6.5\" fill=\"#F090C0\" transform=\"rotate(60 60 16)\"/>\n          <ellipse cx=\"60\" cy=\"9.5\" rx=\"3\" ry=\"6.5\" fill=\"#F090C0\" transform=\"rotate(120 60 16)\"/>\n          <ellipse cx=\"60\" cy=\"9.5\" rx=\"3\" ry=\"6.5\" fill=\"#F090C0\" transform=\"rotate(180 60 16)\"/>\n          <ellipse cx=\"60\" cy=\"9.5\" rx=\"3\" ry=\"6.5\" fill=\"#F090C0\" transform=\"rotate(240 60 16)\"/>\n          <ellipse cx=\"60\" cy=\"9.5\" rx=\"3\" ry=\"6.5\" fill=\"#F090C0\" transform=\"rotate(300 60 16)\"/>\n          <circle cx=\"60\" cy=\"16\" r=\"5\" fill=\"#FFDD70\"/>\n          <circle cx=\"60\" cy=\"16\" r=\"3\" fill=\"#FFAA28\"/>\n          <circle cx=\"58.5\" cy=\"14.5\" r=\"1.4\" fill=\"rgba(255,255,255,0.7)\"/>\n          <ellipse cx=\"84\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#C8D4FF\" transform=\"rotate(0 84 25)\"/>\n          <ellipse cx=\"84\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#C8D4FF\" transform=\"rotate(60 84 25)\"/>\n          <ellipse cx=\"84\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#C8D4FF\" transform=\"rotate(120 84 25)\"/>\n          <ellipse cx=\"84\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#C8D4FF\" transform=\"rotate(180 84 25)\"/>\n          <ellipse cx=\"84\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#C8D4FF\" transform=\"rotate(240 84 25)\"/>\n          <ellipse cx=\"84\" cy=\"20\" rx=\"2.3\" ry=\"5\" fill=\"#C8D4FF\" transform=\"rotate(300 84 25)\"/>\n          <circle cx=\"84\" cy=\"25\" r=\"3.8\" fill=\"#FFDD70\"/>\n          <circle cx=\"84\" cy=\"25\" r=\"2.2\" fill=\"#FFAA28\"/>\n          <circle cx=\"83\" cy=\"24\" r=\"1\" fill=\"rgba(255,255,255,0.65)\"/>\n          <path d=\"M 50 27 Q 46 20 51 15 Q 55 21 50 27 Z\" fill=\"#5A9050\"/>\n          <path d=\"M 50 27 Q 51 19 56 16 Q 56 23 50 27 Z\" fill=\"#7AB870\"/>\n          <path d=\"M 70 27 Q 74 20 69 15 Q 65 21 70 27 Z\" fill=\"#5A9050\"/>\n          <path d=\"M 70 27 Q 69 19 64 16 Q 64 23 70 27 Z\" fill=\"#7AB870\"/>"
+  },
+  {
+    "id": "witch_hat",
+    "name": "Witch Hat",
+    "category": "hat",
+    "price": 90,
+    "mysteryOnly": true,
+    "mysteryPool": "hat",
+    "desc": "Put a spell on your debt.",
+    "svg": "<defs>\n            <linearGradient id=\"wh-g\" x1=\"20%\" y1=\"0%\" x2=\"80%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#3D2458\"/><stop offset=\"100%\" stop-color=\"#120828\"/></linearGradient>\n            <radialGradient id=\"wh-brim-g\" cx=\"45%\" cy=\"30%\" r=\"70%\"><stop offset=\"0%\" stop-color=\"#4A2C68\"/><stop offset=\"100%\" stop-color=\"#160A2C\"/></radialGradient>\n            <radialGradient id=\"wh-hl\" cx=\"42%\" cy=\"8%\" r=\"55%\"><stop offset=\"0%\" stop-color=\"rgba(255,255,255,0.22)\"/><stop offset=\"100%\" stop-color=\"rgba(255,255,255,0)\"/></radialGradient>\n            <clipPath id=\"wh-clip\"><path d=\"M 60 3 L 37 29 L 84 29 Z\"/></clipPath>\n          </defs>\n          <ellipse cx=\"60\" cy=\"29.5\" rx=\"27\" ry=\"5\" fill=\"url(#wh-brim-g)\"/>\n          <ellipse cx=\"60\" cy=\"30.5\" rx=\"27\" ry=\"4.2\" fill=\"#120828\"/>\n          <ellipse cx=\"55\" cy=\"27.7\" rx=\"15\" ry=\"1.6\" fill=\"rgba(255,255,255,0.09)\"/>\n          <path d=\"M 60 3 L 37 29 L 84 29 Z\" fill=\"url(#wh-g)\"/>\n          <rect x=\"37\" y=\"3\" width=\"47\" height=\"26\" fill=\"url(#wh-hl)\" clip-path=\"url(#wh-clip)\"/>\n          <rect x=\"36\" y=\"17\" width=\"48\" height=\"6\" fill=\"#7B3FB0\" clip-path=\"url(#wh-clip)\"/>\n          <rect x=\"36\" y=\"17\" width=\"48\" height=\"2.4\" fill=\"#8F4FC8\" clip-path=\"url(#wh-clip)\"/>\n          <rect x=\"53\" y=\"18.5\" width=\"14\" height=\"5\" rx=\"1.2\" fill=\"#1C0E30\"/>\n          <rect x=\"55.2\" y=\"19.5\" width=\"9.6\" height=\"3\" rx=\"0.6\" fill=\"none\" stroke=\"#FFD700\" stroke-width=\"1.3\"/>\n          <line x1=\"60\" y1=\"19.5\" x2=\"60\" y2=\"23\" stroke=\"#FFD700\" stroke-width=\"1.3\"/>"
+  },
+  {
+    "id": "santa_hat",
+    "name": "Santa Hat",
+    "category": "hat",
+    "price": 100,
+    "mysteryOnly": true,
+    "mysteryPool": "hat",
+    "desc": "Ho ho ho, compound interest!",
+    "svg": "<defs>\n            <linearGradient id=\"sh-g\" x1=\"30%\" y1=\"0%\" x2=\"70%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#FF4848\"/><stop offset=\"100%\" stop-color=\"#B81818\"/></linearGradient>\n            <radialGradient id=\"sh-hl\" cx=\"38%\" cy=\"15%\" r=\"60%\"><stop offset=\"0%\" stop-color=\"rgba(255,150,150,0.55)\"/><stop offset=\"100%\" stop-color=\"rgba(255,150,150,0)\"/></radialGradient>\n            <clipPath id=\"sh-clip\"><path d=\"M 60 4 C 65 8 73 18 76 29 L 36 29 C 40 18 50 10 60 4 Z\"/></clipPath>\n          </defs>\n          <path d=\"M 60 4 C 65 8 73 18 76 29 L 36 29 C 40 18 50 10 60 4 Z\" fill=\"url(#sh-g)\"/>\n          <rect x=\"36\" y=\"4\" width=\"40\" height=\"25\" fill=\"url(#sh-hl)\" clip-path=\"url(#sh-clip)\"/>\n          <path d=\"M 60 4 Q 70 1 77 8 Q 82 14 76 19 Q 70 22 63 17 Q 57 11 60 4 Z\" fill=\"url(#sh-g)\"/>\n          <path d=\"M 60 4 Q 66 1 72 5\" stroke=\"rgba(255,255,255,0.3)\" stroke-width=\"1.6\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M 34 29 Q 38 23.5 42 27 Q 46 23.5 50 27 Q 54 23.5 58 27 Q 62 23.5 66 27 Q 70 23.5 74 27 Q 78 23.5 82 27 Q 86 29 86 29 L 34 29 Z\" fill=\"white\"/>\n          <path d=\"M 34 28 Q 38 23 42 26 Q 46 23 50 26 Q 54 23 58 26 Q 62 23 66 26 Q 70 23 74 26 Q 78 23 82 26 Q 86 28 86 28\" stroke=\"#E8E8E8\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\"/>\n          <circle cx=\"76\" cy=\"18\" r=\"8\" fill=\"white\"/>\n          <circle cx=\"73.5\" cy=\"15.5\" r=\"4\" fill=\"#F4F4F4\"/>\n          <circle cx=\"79\" cy=\"16.5\" r=\"3.8\" fill=\"#EEEEEE\"/>\n          <circle cx=\"76\" cy=\"21.5\" r=\"3.6\" fill=\"#F0F0F0\"/>\n          <circle cx=\"73\" cy=\"14.5\" r=\"2.4\" fill=\"rgba(255,255,255,0.92)\"/>"
+  },
+  {
+    "id": "top_hat",
+    "name": "Top Hat",
+    "category": "hat",
+    "price": 120,
+    "mysteryOnly": true,
+    "mysteryPool": "hat",
+    "desc": "Old money energy.",
+    "svg": "<defs>\n            <linearGradient id=\"th-cyl\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"0%\"><stop offset=\"0%\" stop-color=\"#1C1C1C\"/><stop offset=\"35%\" stop-color=\"#2E2E2E\"/><stop offset=\"100%\" stop-color=\"#0E0E0E\"/></linearGradient>\n            <linearGradient id=\"th-brim\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#252525\"/><stop offset=\"100%\" stop-color=\"#080808\"/></linearGradient>\n          </defs>\n          <rect x=\"40\" y=\"7\" width=\"40\" height=\"21\" rx=\"3\" fill=\"url(#th-cyl)\"/>\n          <ellipse cx=\"60\" cy=\"7\" rx=\"20\" ry=\"4.5\" fill=\"#2A2A2A\"/>\n          <ellipse cx=\"60\" cy=\"6.8\" rx=\"20\" ry=\"3.8\" fill=\"#343434\"/>\n          <rect x=\"43\" y=\"9\" width=\"4.5\" height=\"19\" rx=\"2\" fill=\"rgba(255,255,255,0.065)\"/>\n          <rect x=\"40\" y=\"23\" width=\"40\" height=\"5\" fill=\"#0E0E0E\"/>\n          <rect x=\"40\" y=\"23\" width=\"40\" height=\"2.5\" fill=\"#181818\"/>\n          <line x1=\"46\" y1=\"23\" x2=\"46\" y2=\"28\" stroke=\"rgba(255,255,255,0.06)\" stroke-width=\"1.5\"/>\n          <line x1=\"52\" y1=\"23\" x2=\"52\" y2=\"28\" stroke=\"rgba(255,255,255,0.06)\" stroke-width=\"1.5\"/>\n          <line x1=\"58\" y1=\"23\" x2=\"58\" y2=\"28\" stroke=\"rgba(255,255,255,0.06)\" stroke-width=\"1.5\"/>\n          <line x1=\"64\" y1=\"23\" x2=\"64\" y2=\"28\" stroke=\"rgba(255,255,255,0.06)\" stroke-width=\"1.5\"/>\n          <line x1=\"70\" y1=\"23\" x2=\"70\" y2=\"28\" stroke=\"rgba(255,255,255,0.06)\" stroke-width=\"1.5\"/>\n          <line x1=\"76\" y1=\"23\" x2=\"76\" y2=\"28\" stroke=\"rgba(255,255,255,0.06)\" stroke-width=\"1.5\"/>\n          <ellipse cx=\"61\" cy=\"30\" rx=\"30\" ry=\"6.5\" fill=\"#040404\"/>\n          <ellipse cx=\"60\" cy=\"28.5\" rx=\"29\" ry=\"5.8\" fill=\"url(#th-brim)\"/>\n          <ellipse cx=\"60\" cy=\"27\" rx=\"24\" ry=\"3.5\" fill=\"#202020\"/>\n          <path d=\"M 33 28.5 Q 60 23 87 28.5\" stroke=\"rgba(255,255,255,0.08)\" stroke-width=\"1.5\" fill=\"none\"/>\n          <path d=\"M 55 25 C 52 23 49 24.5 51 26 C 53 27.5 56 26.5 60 25.5 C 64 26.5 67 27.5 69 26 C 71 24.5 68 23 65 25 C 63 25.8 61.5 26 60 25.5\" fill=\"#1A1A1A\" stroke=\"rgba(255,255,255,0.08)\" stroke-width=\"0.8\"/>\n          <ellipse cx=\"60\" cy=\"25.5\" rx=\"2.2\" ry=\"1.8\" fill=\"#202020\"/>"
+  },
+  {
+    "id": "chef_hat",
+    "name": "Chef Hat",
+    "category": "hat",
+    "price": 125,
+    "mysteryOnly": true,
+    "mysteryPool": "hat",
+    "rarity": "rare",
+    "desc": "Cooking up a budget.",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": 6
+    },
+    "svg": "<defs><linearGradient id=\"ch-dome\" x1=\"30%\" y1=\"0%\" x2=\"70%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#FFFFFF\"/><stop offset=\"100%\" stop-color=\"#DCDCDC\"/></linearGradient></defs>\n          <ellipse cx=\"60\" cy=\"31\" rx=\"24\" ry=\"5\" fill=\"#C4C4C4\"/>\n          <rect x=\"39\" y=\"21\" width=\"42\" height=\"11\" rx=\"3\" fill=\"#F0F0F0\" stroke=\"#CCCCCC\" stroke-width=\"1\"/>\n          <line x1=\"46\" y1=\"21\" x2=\"46\" y2=\"32\" stroke=\"#D0D0D0\" stroke-width=\"1.1\"/>\n          <line x1=\"53\" y1=\"21\" x2=\"53\" y2=\"32\" stroke=\"#D0D0D0\" stroke-width=\"1.1\"/>\n          <line x1=\"60\" y1=\"21\" x2=\"60\" y2=\"32\" stroke=\"#D0D0D0\" stroke-width=\"1.1\"/>\n          <line x1=\"67\" y1=\"21\" x2=\"67\" y2=\"32\" stroke=\"#D0D0D0\" stroke-width=\"1.1\"/>\n          <line x1=\"74\" y1=\"21\" x2=\"74\" y2=\"32\" stroke=\"#D0D0D0\" stroke-width=\"1.1\"/>\n          <path d=\"M 39 21 L 36 -5 Q 36 -9 40 -9 L 80 -9 Q 84 -9 84 -5 L 81 21 Z\" fill=\"url(#ch-dome)\" stroke=\"#D8D8D8\" stroke-width=\"0.6\"/>\n          <line x1=\"45\" y1=\"-7.5\" x2=\"46\" y2=\"21\" stroke=\"#D0D0D0\" stroke-width=\"1.1\"/>\n          <line x1=\"52.5\" y1=\"-8.7\" x2=\"53\" y2=\"21\" stroke=\"#D0D0D0\" stroke-width=\"1.1\"/>\n          <line x1=\"60\" y1=\"-9\" x2=\"60\" y2=\"21\" stroke=\"#D0D0D0\" stroke-width=\"1.1\"/>\n          <line x1=\"67.5\" y1=\"-8.7\" x2=\"67\" y2=\"21\" stroke=\"#D0D0D0\" stroke-width=\"1.1\"/>\n          <line x1=\"75\" y1=\"-7.5\" x2=\"74\" y2=\"21\" stroke=\"#D0D0D0\" stroke-width=\"1.1\"/>\n          <ellipse cx=\"60\" cy=\"-9\" rx=\"22\" ry=\"3\" fill=\"#E8E8E8\"/>\n          <ellipse cx=\"52\" cy=\"-6\" rx=\"8\" ry=\"4\" fill=\"rgba(255,255,255,0.5)\"/>"
+  },
+  {
+    "id": "cowboy_hat",
+    "name": "Cowboy Hat",
+    "category": "hat",
+    "price": 150,
+    "mysteryOnly": true,
+    "mysteryPool": "hat",
+    "rarity": "rare",
+    "desc": "Riding off into a debt-free sunset.",
+    "svg": "<defs>\n            <linearGradient id=\"cw-crown\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#A87040\"/><stop offset=\"100%\" stop-color=\"#5A3618\"/></linearGradient>\n            <linearGradient id=\"cw-brim\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#8C5C28\"/><stop offset=\"100%\" stop-color=\"#482C10\"/></linearGradient>\n          </defs>\n          <ellipse cx=\"61\" cy=\"30\" rx=\"38\" ry=\"8.5\" fill=\"#3A1C08\"/>\n          <ellipse cx=\"60\" cy=\"28.5\" rx=\"37\" ry=\"7.5\" fill=\"url(#cw-brim)\"/>\n          <path d=\"M 25 27.5 Q 60 21 95 27.5\" stroke=\"#A06830\" stroke-width=\"2.5\" fill=\"none\"/>\n          <path d=\"M 38 28.5 C 38 20 40 13 42 9 L 78 9 C 80 13 82 21 82 28.5 Z\" fill=\"url(#cw-crown)\"/>\n          <path d=\"M 38 28.5 C 38 20 40 13 42 9 L 47 9 C 45 15 44 21 44 28.5 Z\" fill=\"rgba(255,255,255,0.12)\"/>\n          <ellipse cx=\"60\" cy=\"9\" rx=\"19.5\" ry=\"5.2\" fill=\"#8C5C28\"/>\n          <ellipse cx=\"60\" cy=\"8.5\" rx=\"19.5\" ry=\"4.2\" fill=\"#A07038\"/>\n          <ellipse cx=\"60\" cy=\"9\" rx=\"14\" ry=\"3.5\" fill=\"#7A4C22\"/>\n          <path d=\"M 41 24.5 Q 60 20.5 79 24.5 L 79 28.5 Q 60 24.5 41 28.5 Z\" fill=\"#3C1E0C\"/>\n          <path d=\"M 41 24.5 Q 60 20.5 79 24.5 L 79 26.5 Q 60 22.5 41 26.5 Z\" fill=\"#5A3018\"/>\n          <rect x=\"57\" y=\"21.5\" width=\"6\" height=\"5\" rx=\"1\" fill=\"#281408\"/>\n          <rect x=\"58.2\" y=\"22.6\" width=\"3.6\" height=\"3\" rx=\"0.5\" fill=\"none\" stroke=\"#C89050\" stroke-width=\"1.2\"/>\n          <line x1=\"60\" y1=\"22.6\" x2=\"60\" y2=\"25.6\" stroke=\"#C89050\" stroke-width=\"1.2\"/>\n          <path d=\"M 27 27.5 Q 60 22 93 27.5\" stroke=\"rgba(200,160,100,0.45)\" stroke-width=\"1\" stroke-dasharray=\"2.5 2\" fill=\"none\"/>\n          <path d=\"M 31 28 Q 60 22.5 89 28\" stroke=\"rgba(200,160,100,0.3)\" stroke-width=\"0.8\" stroke-dasharray=\"2.5 2\" fill=\"none\"/>"
+  },
+  {
+    "id": "pirate_hat",
+    "name": "Pirate Hat",
+    "category": "hat",
+    "price": 175,
+    "mysteryOnly": true,
+    "mysteryPool": "hat",
+    "rarity": "epic",
+    "desc": "Yarr, no debt on this ship.",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": 18
+    },
+    "svg": "<defs><linearGradient id=\"pi-g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#282828\"/><stop offset=\"100%\" stop-color=\"#0C0C0C\"/></linearGradient></defs>\n          <path d=\"M 32 29 Q 25 10 40 2 Q 48 8 60 4 Q 72 8 80 2 Q 95 10 88 29 Z\" fill=\"#060606\"/>\n          <path d=\"M 32 29 Q 25 9 40 1 Q 48 7 60 3 Q 72 7 80 1 Q 95 9 88 29 Z\" fill=\"url(#pi-g)\"/>\n          <path d=\"M 32 29 Q 25 9 40 1 Q 44 4 41 14 L 38 29 Z\" fill=\"rgba(255,255,255,0.07)\"/>\n          <path d=\"M 22 24 C 25 15 32 7 38 4 L 32 29 C 28 28 24 26 22 24 Z\" fill=\"#1C1C1C\"/>\n          <path d=\"M 22 24 C 25 15 32 7 38 4 L 36 12 C 30 15 25 19 22 24 Z\" fill=\"rgba(255,255,255,0.06)\"/>\n          <path d=\"M 98 24 C 95 15 88 7 82 4 L 88 29 C 92 28 96 26 98 24 Z\" fill=\"#1C1C1C\"/>\n          <path d=\"M 22 24 C 25 15 32 7 38 4\" stroke=\"#C8A038\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M 98 24 C 95 15 88 7 82 4\" stroke=\"#C8A038\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\"/>\n          <line x1=\"32\" y1=\"29\" x2=\"88\" y2=\"29\" stroke=\"#C8A038\" stroke-width=\"2\"/>\n          <ellipse cx=\"60\" cy=\"30\" rx=\"29\" ry=\"5.5\" fill=\"#080808\"/>\n          <ellipse cx=\"60\" cy=\"29\" rx=\"28\" ry=\"4.5\" fill=\"#161616\"/>\n          <line x1=\"48\" y1=\"9\" x2=\"72\" y2=\"27\" stroke=\"white\" stroke-width=\"3\" stroke-linecap=\"round\"/>\n          <line x1=\"72\" y1=\"9\" x2=\"48\" y2=\"27\" stroke=\"white\" stroke-width=\"3\" stroke-linecap=\"round\"/>\n          <circle cx=\"48\" cy=\"9\" r=\"3.2\" fill=\"white\"/>\n          <circle cx=\"72\" cy=\"9\" r=\"3.2\" fill=\"white\"/>\n          <circle cx=\"48\" cy=\"27\" r=\"3.2\" fill=\"white\"/>\n          <circle cx=\"72\" cy=\"27\" r=\"3.2\" fill=\"white\"/>\n          <circle cx=\"60\" cy=\"17.5\" r=\"8.5\" fill=\"white\"/>\n          <circle cx=\"60\" cy=\"17\" r=\"8\" fill=\"#F2F2F2\"/>\n          <ellipse cx=\"56.2\" cy=\"15.5\" rx=\"2.8\" ry=\"3.2\" fill=\"#161616\"/>\n          <ellipse cx=\"63.8\" cy=\"15.5\" rx=\"2.8\" ry=\"3.2\" fill=\"#161616\"/>\n          <circle cx=\"55.2\" cy=\"14.3\" r=\"1\" fill=\"rgba(255,255,255,0.4)\"/>\n          <circle cx=\"62.8\" cy=\"14.3\" r=\"1\" fill=\"rgba(255,255,255,0.4)\"/>\n          <path d=\"M 58.5 19.5 L 60 18 L 61.5 19.5 L 61 21.5 L 59 21.5 Z\" fill=\"#161616\"/>\n          <rect x=\"56\" y=\"21.5\" width=\"2.3\" height=\"2.5\" rx=\"0.4\" fill=\"#161616\"/>\n          <rect x=\"58.9\" y=\"21.5\" width=\"2.3\" height=\"2.5\" rx=\"0.4\" fill=\"#161616\"/>\n          <rect x=\"61.7\" y=\"21.5\" width=\"2.3\" height=\"2.5\" rx=\"0.4\" fill=\"#161616\"/>"
+  },
+  {
+    "id": "crown",
+    "name": "Crown",
+    "category": "hat",
+    "price": 200,
+    "mysteryOnly": true,
+    "mysteryPool": "hat",
+    "rarity": "legendary",
+    "desc": "The financially literate royalty.",
+    "svg": "<defs>\n            <linearGradient id=\"cr-body\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#FFE440\"/><stop offset=\"50%\" stop-color=\"#C88010\"/><stop offset=\"100%\" stop-color=\"#FFD030\"/></linearGradient>\n            <linearGradient id=\"cr-band\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#E8A820\"/><stop offset=\"100%\" stop-color=\"#A86010\"/></linearGradient>\n          </defs>\n          <path d=\"M 33 30 L 38 15 L 51 24 L 60 8 L 69 24 L 82 15 L 87 30 Z\" fill=\"url(#cr-body)\"/>\n          <path d=\"M 33 30 L 38 15 L 43 22 Z\" fill=\"rgba(0,0,0,0.18)\"/>\n          <path d=\"M 51 24 L 60 8 L 65 23 Z\" fill=\"rgba(0,0,0,0.14)\"/>\n          <path d=\"M 38 15 L 51 24 L 47 24 L 37 17 Z\" fill=\"rgba(255,255,255,0.22)\"/>\n          <path d=\"M 60 8 L 51 24 L 55 24 Z\" fill=\"rgba(255,255,255,0.28)\"/>\n          <path d=\"M 69 24 L 72 24 L 82 15 L 80 17 Z\" fill=\"rgba(255,255,255,0.18)\"/>\n          <rect x=\"33\" y=\"26\" width=\"54\" height=\"8\" rx=\"3\" fill=\"url(#cr-band)\"/>\n          <rect x=\"33\" y=\"26\" width=\"54\" height=\"4\" rx=\"2\" fill=\"#E8A828\"/>\n          <rect x=\"35\" y=\"26.5\" width=\"50\" height=\"2\" rx=\"1\" fill=\"rgba(255,255,255,0.28)\"/>\n          <ellipse cx=\"38\" cy=\"17\" rx=\"4.2\" ry=\"3.8\" fill=\"#CC2020\"/>\n          <ellipse cx=\"38\" cy=\"16.5\" rx=\"4.2\" ry=\"3.3\" fill=\"#E83030\"/>\n          <ellipse cx=\"37\" cy=\"15.5\" rx=\"2\" ry=\"1.5\" fill=\"rgba(255,255,255,0.5)\"/>\n          <ellipse cx=\"60\" cy=\"10\" rx=\"5\" ry=\"4.5\" fill=\"#1040CC\"/>\n          <ellipse cx=\"60\" cy=\"9.5\" rx=\"5\" ry=\"4\" fill=\"#2060EE\"/>\n          <ellipse cx=\"58.5\" cy=\"8\" rx=\"2.2\" ry=\"1.6\" fill=\"rgba(255,255,255,0.58)\"/>\n          <ellipse cx=\"82\" cy=\"17\" rx=\"4.2\" ry=\"3.8\" fill=\"#108030\"/>\n          <ellipse cx=\"82\" cy=\"16.5\" rx=\"4.2\" ry=\"3.3\" fill=\"#20A040\"/>\n          <ellipse cx=\"81\" cy=\"15.5\" rx=\"2\" ry=\"1.5\" fill=\"rgba(255,255,255,0.5)\"/>\n          <circle cx=\"44\" cy=\"29\" r=\"2.8\" fill=\"#E83030\"/>\n          <circle cx=\"60\" cy=\"29\" r=\"2.8\" fill=\"#2060EE\"/>\n          <circle cx=\"76\" cy=\"29\" r=\"2.8\" fill=\"#20A040\"/>\n          <circle cx=\"37\" cy=\"29\" r=\"1.8\" fill=\"#FFE060\"/>\n          <circle cx=\"52\" cy=\"29\" r=\"1.8\" fill=\"#FFE060\"/>\n          <circle cx=\"68\" cy=\"29\" r=\"1.8\" fill=\"#FFE060\"/>\n          <circle cx=\"83\" cy=\"29\" r=\"1.8\" fill=\"#FFE060\"/>"
+  },
+  {
+    "id": "round_glasses",
+    "name": "Round Glasses",
+    "category": "accessory",
+    "price": 60,
+    "mysteryOnly": true,
+    "mysteryPool": "accessory",
+    "viewBox": "6 41 108 34",
+    "desc": "For the bookish budgeter.",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": -15
+    },
+    "svg": "<circle cx=\"36\" cy=\"61\" r=\"10\" fill=\"rgba(180,220,255,0.15)\" stroke=\"#6B4C3A\" stroke-width=\"2.2\"/>\n          <circle cx=\"85\" cy=\"61\" r=\"10\" fill=\"rgba(180,220,255,0.15)\" stroke=\"#6B4C3A\" stroke-width=\"2.2\"/>\n          <path d=\"M 30 54 A 8 8 0 0 1 42 54\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"1.8\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M 79 54 A 8 8 0 0 1 91 54\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"1.8\" fill=\"none\" stroke-linecap=\"round\"/>\n          <line x1=\"46\" y1=\"61\" x2=\"75\" y2=\"61\" stroke=\"#6B4C3A\" stroke-width=\"2.2\"/>\n          <line x1=\"17\" y1=\"59\" x2=\"26\" y2=\"60\" stroke=\"#6B4C3A\" stroke-width=\"2.2\"/>\n          <line x1=\"95\" y1=\"60\" x2=\"104\" y2=\"59\" stroke=\"#6B4C3A\" stroke-width=\"2.2\"/>"
+  },
+  {
+    "id": "sunglasses",
+    "name": "Sunglasses",
+    "category": "accessory",
+    "price": 75,
+    "mysteryOnly": true,
+    "mysteryPool": "accessory",
+    "rarity": "rare",
+    "viewBox": "6 41 108 34",
+    "desc": "Too cool for financial stress.",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": -15
+    },
+    "svg": "<rect x=\"24\" y=\"52\" width=\"24\" height=\"18\" rx=\"8\" fill=\"#1A1A1A\"/>\n          <rect x=\"73\" y=\"52\" width=\"24\" height=\"18\" rx=\"8\" fill=\"#1A1A1A\"/>\n          <rect x=\"25\" y=\"53\" width=\"22\" height=\"7\" rx=\"5\" fill=\"rgba(255,255,255,0.08)\"/>\n          <rect x=\"74\" y=\"53\" width=\"22\" height=\"7\" rx=\"5\" fill=\"rgba(255,255,255,0.08)\"/>\n          <line x1=\"48\" y1=\"60\" x2=\"73\" y2=\"60\" stroke=\"#1A1A1A\" stroke-width=\"3.5\"/>\n          <line x1=\"15\" y1=\"58\" x2=\"24\" y2=\"60\" stroke=\"#1A1A1A\" stroke-width=\"2.5\"/>\n          <line x1=\"97\" y1=\"60\" x2=\"106\" y2=\"58\" stroke=\"#1A1A1A\" stroke-width=\"2.5\"/>\n          <path d=\"M 27 54 Q 32 51 39 54\" stroke=\"rgba(255,255,255,0.4)\" stroke-width=\"1.8\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M 76 54 Q 81 51 88 54\" stroke=\"rgba(255,255,255,0.4)\" stroke-width=\"1.8\" fill=\"none\" stroke-linecap=\"round\"/>"
+  },
+  {
+    "id": "heart_glasses",
+    "name": "Heart Glasses",
+    "category": "accessory",
+    "price": 90,
+    "mysteryOnly": true,
+    "mysteryPool": "accessory",
+    "rarity": "epic",
+    "viewBox": "6 41 108 34",
+    "desc": "In love with compound interest.",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": -15
+    },
+    "svg": "<path d=\"M 36 56 C 33 50 24 50 24 58 C 24 64 30 68 36 76 C 42 68 48 64 48 58 C 48 50 39 50 36 56 Z\" fill=\"#FF6B8A\"/>\n          <path d=\"M 85 56 C 82 50 73 50 73 58 C 73 64 79 68 85 76 C 91 68 97 64 97 58 C 97 50 88 50 85 56 Z\" fill=\"#FF6B8A\"/>\n          <line x1=\"48\" y1=\"58\" x2=\"73\" y2=\"58\" stroke=\"#CC2255\" stroke-width=\"2.5\"/>\n          <line x1=\"15\" y1=\"56\" x2=\"24\" y2=\"58\" stroke=\"#CC2255\" stroke-width=\"2.2\"/>\n          <line x1=\"97\" y1=\"58\" x2=\"106\" y2=\"56\" stroke=\"#CC2255\" stroke-width=\"2.2\"/>"
+  },
+  {
+    "id": "star_glasses",
+    "name": "Star Glasses",
+    "category": "accessory",
+    "price": 110,
+    "mysteryOnly": true,
+    "mysteryPool": "accessory",
+    "rarity": "legendary",
+    "viewBox": "6 41 108 34",
+    "desc": "Your portfolio is looking stellar.",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": -15
+    },
+    "svg": "<polygon points=\"36,48 41.9,52.9 48.4,57.0 45.5,64.1 43.6,71.5 36,71 28.4,71.5 26.5,64.1 23.6,57.0 30.1,52.9\" fill=\"#FFD700\"/>\n          <polygon points=\"85,48 90.9,52.9 97.4,57.0 94.5,64.1 92.6,71.5 85,71 77.4,71.5 75.5,64.1 72.6,57.0 79.1,52.9\" fill=\"#FFD700\"/>\n          <path d=\"M 31.5 54 L 34.5 59\" stroke=\"rgba(255,255,255,0.55)\" stroke-width=\"1.4\" stroke-linecap=\"round\"/>\n          <path d=\"M 80.5 54 L 83.5 59\" stroke=\"rgba(255,255,255,0.55)\" stroke-width=\"1.4\" stroke-linecap=\"round\"/>\n          <line x1=\"48.4\" y1=\"57\" x2=\"72.6\" y2=\"57\" stroke=\"#C0A010\" stroke-width=\"2.5\"/>\n          <line x1=\"14.6\" y1=\"55\" x2=\"23.6\" y2=\"57\" stroke=\"#C0A010\" stroke-width=\"2.2\"/>\n          <line x1=\"97.4\" y1=\"57\" x2=\"106.4\" y2=\"55\" stroke=\"#C0A010\" stroke-width=\"2.2\"/>"
+  },
+  {
+    "id": "accessory_mystery_box",
+    "name": "Accessory Mystery Box",
+    "category": "accessory",
+    "price": 110,
+    "isMysteryBox": true,
+    "mysteryPool": "accessory",
+    "viewBox": "20 20 80 75",
+    "desc": "A random accessory to complete the look.",
+    "svg": "<defs><linearGradient id=\"ab-g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#C9A0FF\"/><stop offset=\"100%\" stop-color=\"#8A3FE0\"/></linearGradient></defs>\n          <rect x=\"35\" y=\"45\" width=\"50\" height=\"40\" rx=\"3\" fill=\"url(#ab-g)\"/>\n          <rect x=\"35\" y=\"45\" width=\"50\" height=\"10\" fill=\"rgba(255,255,255,0.2)\"/>\n          <rect x=\"55\" y=\"45\" width=\"10\" height=\"40\" fill=\"#FFD700\"/>\n          <rect x=\"35\" y=\"60\" width=\"50\" height=\"10\" fill=\"#FFD700\"/>\n          <path d=\"M60,45 Q48,32 40,38 Q38,45 48,46 Q54,46 60,45Z\" fill=\"#FFD700\"/>\n          <path d=\"M60,45 Q72,32 80,38 Q82,45 72,46 Q66,46 60,45Z\" fill=\"#FFD700\"/>\n          <circle cx=\"60\" cy=\"45\" r=\"4\" fill=\"#FFE87A\"/>"
+  },
+  {
+    "id": "bow_tie",
+    "name": "Bow Tie",
+    "category": "accessory",
+    "price": 65,
+    "mysteryOnly": true,
+    "mysteryPool": "accessory",
+    "desc": "Business casual, pig casual.",
+    "svg": "<path d=\"M44,93 L57,98 L44,103 Z\" fill=\"#6B8F65\"/>\n          <path d=\"M76,93 L63,98 L76,103 Z\" fill=\"#6B8F65\"/>\n          <path d=\"M44,93 L57,98 L50,93 Z\" fill=\"rgba(255,255,255,0.22)\"/>\n          <ellipse cx=\"60\" cy=\"98\" rx=\"5.5\" ry=\"4.5\" fill=\"#4A6844\"/>\n          <ellipse cx=\"60\" cy=\"97\" rx=\"5.5\" ry=\"2.5\" fill=\"#7BA173\"/>\n          <circle cx=\"60\" cy=\"98\" r=\"2\" fill=\"#6B8F65\"/>"
+  },
+  {
+    "id": "necktie",
+    "name": "Necktie",
+    "category": "accessory",
+    "price": 70,
+    "mysteryOnly": true,
+    "mysteryPool": "accessory",
+    "rarity": "rare",
+    "desc": "Dressed for a shareholder meeting.",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": 55
+    },
+    "svg": "<path d=\"M53,78 L67,78 L63,86 L57,86 Z\" fill=\"#8B2635\"/>\n          <path d=\"M53,78 L67,78 L63,86 L57,86 Z\" fill=\"rgba(255,255,255,0.15)\"/>\n          <path d=\"M57,86 L63,86 L67,104 L60,110 L53,104 Z\" fill=\"#A6304A\"/>\n          <path d=\"M57,86 L63,86 L65,98 L60,101 L55,98 Z\" fill=\"rgba(0,0,0,0.12)\"/>\n          <line x1=\"55\" y1=\"92\" x2=\"65\" y2=\"93\" stroke=\"#7A1F2C\" stroke-width=\"1\" opacity=\"0.5\"/>\n          <line x1=\"54\" y1=\"100\" x2=\"66\" y2=\"101\" stroke=\"#7A1F2C\" stroke-width=\"1\" opacity=\"0.5\"/>"
+  },
+  {
+    "id": "cape",
+    "name": "Cape",
+    "category": "accessory",
+    "price": 130,
+    "mysteryOnly": true,
+    "mysteryPool": "accessory",
+    "rarity": "legendary",
+    "viewBox": "-10 68 144 72",
+    "desc": "The hero of your own budget.",
+    "layer": "back",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 4.33,
+      "e": 23,
+      "f": -132
+    },
+    "svg": "<defs><linearGradient id=\"cp-g\" x1=\"20%\" y1=\"0%\" x2=\"80%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#C9A0FF\"/><stop offset=\"55%\" stop-color=\"#8A3FE0\"/><stop offset=\"100%\" stop-color=\"#4A1A8A\"/></linearGradient></defs>\n          <path d=\"M 8 82 Q 60 72 112 82 L 124 132 Q 60 122 -4 132 Z\" fill=\"url(#cp-g)\" stroke=\"#3D1470\" stroke-width=\"1\"/>\n          <path d=\"M 8 82 Q 60 72 112 82 L 109 94 Q 60 84 11 94 Z\" fill=\"rgba(255,255,255,0.22)\"/>\n          <path d=\"M 8 82 Q 60 96 112 82\" stroke=\"#3D1470\" stroke-width=\"1\" fill=\"none\" opacity=\"0.4\"/>\n          <path d=\"M 30 88 L 34 128\" stroke=\"#EEDCFF\" stroke-width=\"1.2\" opacity=\"0.4\"/>\n          <path d=\"M 60 84 L 60 130\" stroke=\"#EEDCFF\" stroke-width=\"1.2\" opacity=\"0.4\"/>\n          <path d=\"M 90 88 L 86 128\" stroke=\"#EEDCFF\" stroke-width=\"1.2\" opacity=\"0.4\"/>"
+  },
+  {
+    "id": "necklace",
+    "name": "Charm Necklace",
+    "category": "accessory",
+    "price": 95,
+    "mysteryOnly": true,
+    "mysteryPool": "accessory",
+    "rarity": "epic",
+    "viewBox": "10 58 100 52",
+    "desc": "A little sparkle for your budget glow-up.",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": 37
+    },
+    "svg": "<path d=\"M20,64 Q60,90 100,64 L100,70 Q60,96 20,70 Z\" fill=\"#C0C0C8\"/>\n          <path d=\"M20,64 Q60,90 100,64 L98,66 Q60,92 22,66 Z\" fill=\"#EFEFF4\" opacity=\"0.6\"/>\n          <circle cx=\"60\" cy=\"88\" r=\"6\" fill=\"#4A90D9\"/>\n          <circle cx=\"60\" cy=\"88\" r=\"6\" fill=\"none\" stroke=\"#2C6FB8\" stroke-width=\"1.5\"/>\n          <circle cx=\"58\" cy=\"86\" r=\"2\" fill=\"rgba(255,255,255,0.6)\"/>"
+  },
+  {
+    "id": "wallpaper_sage",
+    "name": "Sage Dot Wallpaper",
+    "category": "room",
+    "slot": "wallpaper",
+    "price": 40,
+    "desc": "A calm little dotted backdrop.",
+    "wallCss": "background-color: var(--green-pale); background-image: radial-gradient(circle, rgba(107,143,101,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;"
+  },
+  {
+    "id": "wallpaper_blush",
+    "name": "Blush Dot Wallpaper",
+    "category": "room",
+    "slot": "wallpaper",
+    "price": 40,
+    "desc": "Soft pink polka dots.",
+    "wallCss": "background-color: var(--pink-pale); background-image: radial-gradient(circle, rgba(212,137,158,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;"
+  },
+  {
+    "id": "wallpaper_stripes",
+    "name": "Mint Stripe Wallpaper",
+    "category": "room",
+    "slot": "wallpaper",
+    "price": 55,
+    "desc": "Diagonal stripes, fully vibing.",
+    "wallCss": "background: repeating-linear-gradient(45deg, var(--green-light), var(--green-light) 10px, var(--green-pale) 10px, var(--green-pale) 20px);"
+  },
+  {
+    "id": "wallpaper_cream",
+    "name": "Classic Cream Wallpaper",
+    "category": "room",
+    "slot": "wallpaper",
+    "price": 30,
+    "desc": "Simple, clean, and cozy.",
+    "wallCss": "background: var(--bg);"
+  },
+  {
+    "id": "wall_money_poster",
+    "name": "Money Tree Poster",
+    "category": "room",
+    "slot": "wall",
+    "price": 70,
+    "viewBox": "0 0 100 130",
+    "desc": "Grows dollars, not leaves.",
+    "svg": "<rect x=\"4\" y=\"4\" width=\"92\" height=\"122\" rx=\"4\" fill=\"var(--white)\" stroke=\"var(--border)\" stroke-width=\"4\"/>\n          <rect x=\"14\" y=\"14\" width=\"72\" height=\"102\" fill=\"var(--green-pale)\"/>\n          <rect x=\"46\" y=\"80\" width=\"8\" height=\"30\" fill=\"#8A6438\"/>\n          <circle cx=\"50\" cy=\"60\" r=\"30\" fill=\"var(--green-light)\"/>\n          <circle cx=\"38\" cy=\"70\" r=\"6\" fill=\"#FFD700\"/>\n          <circle cx=\"62\" cy=\"72\" r=\"6\" fill=\"#FFD700\"/>\n          <circle cx=\"50\" cy=\"52\" r=\"6\" fill=\"#FFD700\"/>\n          <text x=\"50\" y=\"57\" font-size=\"9\" text-anchor=\"middle\" fill=\"var(--green-dark)\" font-weight=\"700\">$</text>"
+  },
+  {
+    "id": "wall_motivation_poster",
+    "name": "You Got This Poster",
+    "category": "room",
+    "slot": "wall",
+    "price": 70,
+    "viewBox": "0 0 100 130",
+    "desc": "A little pep talk on the wall.",
+    "svg": "<rect x=\"4\" y=\"4\" width=\"92\" height=\"122\" rx=\"4\" fill=\"var(--white)\" stroke=\"var(--border)\" stroke-width=\"4\"/>\n          <rect x=\"14\" y=\"14\" width=\"72\" height=\"102\" fill=\"var(--pink-pale)\"/>\n          <circle cx=\"50\" cy=\"50\" r=\"22\" fill=\"var(--pink-light)\"/>\n          <path d=\"M40,50 L47,58 L62,42\" stroke=\"var(--pink-dark)\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n          <text x=\"50\" y=\"95\" font-size=\"10\" text-anchor=\"middle\" fill=\"var(--pink-dark)\" font-weight=\"700\">YOU GOT THIS</text>"
+  },
+  {
+    "id": "wall_plant_frame",
+    "name": "Plant Frame Art",
+    "category": "room",
+    "slot": "wall",
+    "price": 65,
+    "viewBox": "0 0 100 130",
+    "desc": "A little greenery, framed up.",
+    "svg": "<rect x=\"4\" y=\"4\" width=\"92\" height=\"122\" rx=\"4\" fill=\"var(--white)\" stroke=\"var(--border)\" stroke-width=\"4\"/>\n          <rect x=\"14\" y=\"14\" width=\"72\" height=\"102\" fill=\"var(--green-pale)\"/>\n          <path d=\"M50,100 L50,55\" stroke=\"#4A7840\" stroke-width=\"4\" stroke-linecap=\"round\"/>\n          <ellipse cx=\"38\" cy=\"58\" rx=\"14\" ry=\"9\" fill=\"#7EC96A\" transform=\"rotate(-25 38 58)\"/>\n          <ellipse cx=\"62\" cy=\"52\" rx=\"14\" ry=\"9\" fill=\"#8FDD78\" transform=\"rotate(25 62 52)\"/>\n          <ellipse cx=\"50\" cy=\"40\" rx=\"12\" ry=\"16\" fill=\"#6FAE5C\"/>"
+  },
+  {
+    "id": "wall_savings_chart",
+    "name": "Rising Chart Poster",
+    "category": "room",
+    "slot": "wall",
+    "price": 75,
+    "viewBox": "0 0 100 130",
+    "desc": "Up and to the right, baby.",
+    "svg": "<rect x=\"4\" y=\"4\" width=\"92\" height=\"122\" rx=\"4\" fill=\"var(--white)\" stroke=\"var(--border)\" stroke-width=\"4\"/>\n          <rect x=\"14\" y=\"14\" width=\"72\" height=\"102\" fill=\"var(--green-pale)\"/>\n          <rect x=\"26\" y=\"86\" width=\"10\" height=\"20\" fill=\"var(--green-light)\"/>\n          <rect x=\"42\" y=\"70\" width=\"10\" height=\"36\" fill=\"var(--green)\"/>\n          <rect x=\"58\" y=\"50\" width=\"10\" height=\"56\" fill=\"var(--green-dark)\"/>\n          <path d=\"M24,64 L44,44 L58,54 L76,28\" stroke=\"#FFD700\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n          <path d=\"M68,28 L76,28 L76,36\" stroke=\"#FFD700\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+  },
+  {
+    "id": "rug_green",
+    "name": "Sage Rug",
+    "category": "room",
+    "slot": "rug",
+    "price": 60,
+    "viewBox": "0 0 220 70",
+    "desc": "Ties the room together.",
+    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"var(--green-light)\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"80\" ry=\"20\" fill=\"none\" stroke=\"var(--green-dark)\" stroke-width=\"3\" opacity=\"0.35\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"55\" ry=\"13\" fill=\"none\" stroke=\"var(--green-dark)\" stroke-width=\"2.5\" opacity=\"0.3\"/>"
+  },
+  {
+    "id": "rug_pink",
+    "name": "Blush Rug",
+    "category": "room",
+    "slot": "rug",
+    "price": 60,
+    "viewBox": "0 0 220 70",
+    "desc": "Soft under those little hooves.",
+    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"var(--pink-light)\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"80\" ry=\"20\" fill=\"none\" stroke=\"var(--pink-dark)\" stroke-width=\"3\" opacity=\"0.35\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"55\" ry=\"13\" fill=\"none\" stroke=\"var(--pink-dark)\" stroke-width=\"2.5\" opacity=\"0.3\"/>"
+  },
+  {
+    "id": "rug_yellow",
+    "name": "Mustard Rug",
+    "category": "room",
+    "slot": "rug",
+    "price": 60,
+    "viewBox": "0 0 220 70",
+    "desc": "A sunny spot to stand on.",
+    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#F5D67A\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"80\" ry=\"20\" fill=\"none\" stroke=\"#B8935E\" stroke-width=\"3\" opacity=\"0.35\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"55\" ry=\"13\" fill=\"none\" stroke=\"#B8935E\" stroke-width=\"2.5\" opacity=\"0.3\"/>"
+  },
+  {
+    "id": "rug_braided",
+    "name": "Braided Rug",
+    "category": "room",
+    "slot": "rug",
+    "price": 70,
+    "viewBox": "0 0 220 70",
+    "desc": "Ringed in every color of the collection.",
+    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"var(--pink-light)\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"88\" ry=\"23\" fill=\"var(--white)\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"70\" ry=\"18\" fill=\"var(--green-light)\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"45\" ry=\"11\" fill=\"var(--white)\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"22\" ry=\"5.5\" fill=\"var(--pink-light)\"/>"
+  },
+  {
+    "id": "plant_pothos",
+    "name": "Potted Pothos",
+    "category": "room",
+    "slot": "plant",
+    "price": 55,
+    "viewBox": "0 0 80 120",
+    "desc": "Low maintenance, unlike your budget last semester.",
+    "svg": "<path d=\"M30,90 L26,116 L54,116 L50,90 Z\" fill=\"#C87848\"/>\n          <rect x=\"28\" y=\"86\" width=\"24\" height=\"8\" fill=\"#A56238\"/>\n          <path d=\"M40,90 C34,70 20,64 12,50\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M40,90 C44,66 60,58 68,44\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M40,90 C40,64 40,50 40,30\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <ellipse cx=\"12\" cy=\"48\" rx=\"12\" ry=\"8\" fill=\"#7EC96A\" transform=\"rotate(-30 12 48)\"/>\n          <ellipse cx=\"68\" cy=\"42\" rx=\"12\" ry=\"8\" fill=\"#7EC96A\" transform=\"rotate(30 68 42)\"/>\n          <ellipse cx=\"40\" cy=\"26\" rx=\"10\" ry=\"14\" fill=\"#8FDD78\"/>"
+  },
+  {
+    "id": "plant_cactus",
+    "name": "Tiny Cactus",
+    "category": "room",
+    "slot": "plant",
+    "price": 45,
+    "viewBox": "0 0 80 120",
+    "desc": "Thrives on neglect. Relatable.",
+    "svg": "<path d=\"M28,90 L24,116 L56,116 L52,90 Z\" fill=\"#D68A54\"/>\n          <rect x=\"26\" y=\"86\" width=\"28\" height=\"8\" fill=\"#B06A38\"/>\n          <rect x=\"34\" y=\"40\" width=\"12\" height=\"50\" rx=\"6\" fill=\"#6FAE5C\"/>\n          <rect x=\"18\" y=\"55\" width=\"10\" height=\"26\" rx=\"5\" fill=\"#6FAE5C\"/>\n          <rect x=\"52\" y=\"48\" width=\"10\" height=\"30\" rx=\"5\" fill=\"#6FAE5C\"/>\n          <circle cx=\"40\" cy=\"34\" r=\"4\" fill=\"#FF96B8\"/>"
+  },
+  {
+    "id": "plant_succulent",
+    "name": "Succulent Trio",
+    "category": "room",
+    "slot": "plant",
+    "price": 50,
+    "viewBox": "0 0 80 120",
+    "desc": "A little cluster of low-key vibes.",
+    "svg": "<path d=\"M22,96 L18,116 L62,116 L58,96 Z\" fill=\"#D68A54\"/>\n          <rect x=\"20\" y=\"92\" width=\"40\" height=\"8\" fill=\"#B06A38\"/>\n          <ellipse cx=\"30\" cy=\"82\" rx=\"12\" ry=\"9\" fill=\"#7EC96A\"/>\n          <ellipse cx=\"50\" cy=\"80\" rx=\"13\" ry=\"10\" fill=\"#6FAE5C\"/>\n          <ellipse cx=\"40\" cy=\"70\" rx=\"10\" ry=\"12\" fill=\"#8FDD78\"/>"
+  },
+  {
+    "id": "plant_fern",
+    "name": "Leafy Fern",
+    "category": "room",
+    "slot": "plant",
+    "price": 55,
+    "viewBox": "0 0 80 120",
+    "desc": "Growing steadily, like your savings.",
+    "svg": "<path d=\"M30,90 L26,116 L54,116 L50,90 Z\" fill=\"#C87848\"/>\n          <rect x=\"28\" y=\"86\" width=\"24\" height=\"8\" fill=\"#A56238\"/>\n          <path d=\"M40,88 C40,60 40,40 40,18\" stroke=\"#4A7840\" stroke-width=\"3\" fill=\"none\"/>\n          <path d=\"M40,80 L20,66 M40,80 L60,66 M40,64 L18,52 M40,64 L62,52 M40,48 L22,38 M40,48 L58,38 M40,32 L26,24 M40,32 L54,24\" stroke=\"#5E9950\" stroke-width=\"3\" stroke-linecap=\"round\"/>"
+  },
+  {
+    "id": "bed_cozy",
+    "name": "Cozy Bed",
+    "category": "room",
+    "slot": "bed",
+    "price": 140,
+    "viewBox": "0 0 160 100",
+    "desc": "Every good saver needs good rest.",
+    "svg": "<rect x=\"10\" y=\"50\" width=\"140\" height=\"40\" rx=\"10\" fill=\"var(--pink)\"/>\n          <rect x=\"10\" y=\"50\" width=\"140\" height=\"14\" rx=\"7\" fill=\"var(--pink-light)\"/>\n          <rect x=\"16\" y=\"34\" width=\"34\" height=\"26\" rx=\"8\" fill=\"var(--white)\" stroke=\"var(--border)\" stroke-width=\"2\"/>\n          <rect x=\"20\" y=\"88\" width=\"10\" height=\"10\" fill=\"#8A6438\"/>\n          <rect x=\"130\" y=\"88\" width=\"10\" height=\"10\" fill=\"#8A6438\"/>"
+  },
+  {
+    "id": "bed_bunk",
+    "name": "Bunk Bed",
+    "category": "room",
+    "slot": "bed",
+    "price": 160,
+    "viewBox": "0 0 160 130",
+    "desc": "For a piggy with big dreams.",
+    "svg": "<rect x=\"14\" y=\"14\" width=\"132\" height=\"28\" rx=\"6\" fill=\"var(--green-light)\"/>\n          <rect x=\"14\" y=\"14\" width=\"132\" height=\"10\" rx=\"5\" fill=\"var(--white)\" opacity=\"0.6\"/>\n          <rect x=\"14\" y=\"70\" width=\"132\" height=\"34\" rx=\"6\" fill=\"var(--green)\"/>\n          <rect x=\"14\" y=\"70\" width=\"132\" height=\"12\" rx=\"6\" fill=\"var(--white)\" opacity=\"0.4\"/>\n          <rect x=\"8\" y=\"14\" width=\"8\" height=\"96\" fill=\"#8A6438\"/>\n          <rect x=\"144\" y=\"14\" width=\"8\" height=\"96\" fill=\"#8A6438\"/>"
+  },
+  {
+    "id": "bed_daybed",
+    "name": "Daybed",
+    "category": "room",
+    "slot": "bed",
+    "price": 130,
+    "viewBox": "0 0 160 100",
+    "desc": "Perfect for a mid-budgeting nap.",
+    "svg": "<rect x=\"10\" y=\"56\" width=\"140\" height=\"30\" rx=\"8\" fill=\"var(--green)\"/>\n          <rect x=\"10\" y=\"56\" width=\"140\" height=\"12\" rx=\"6\" fill=\"var(--green-light)\"/>\n          <rect x=\"16\" y=\"40\" width=\"18\" height=\"24\" rx=\"6\" fill=\"var(--white)\" stroke=\"var(--border)\" stroke-width=\"2\"/>\n          <rect x=\"126\" y=\"40\" width=\"18\" height=\"24\" rx=\"6\" fill=\"var(--white)\" stroke=\"var(--border)\" stroke-width=\"2\"/>\n          <rect x=\"20\" y=\"86\" width=\"10\" height=\"10\" fill=\"#8A6438\"/>\n          <rect x=\"130\" y=\"86\" width=\"10\" height=\"10\" fill=\"#8A6438\"/>"
+  },
+  {
+    "id": "bed_canopy",
+    "name": "Canopy Bed",
+    "category": "room",
+    "slot": "bed",
+    "price": 175,
+    "viewBox": "0 0 160 100",
+    "desc": "A dreamy upgrade for a top saver.",
+    "svg": "<rect x=\"6\" y=\"10\" width=\"6\" height=\"90\" fill=\"#8A6438\"/>\n          <rect x=\"148\" y=\"10\" width=\"6\" height=\"90\" fill=\"#8A6438\"/>\n          <path d=\"M12,10 Q80,-4 148,10\" stroke=\"#8A6438\" stroke-width=\"4\" fill=\"none\"/>\n          <path d=\"M14,12 Q80,50 14,90\" fill=\"var(--pink-pale)\" opacity=\"0.55\"/>\n          <path d=\"M146,12 Q80,50 146,90\" fill=\"var(--pink-pale)\" opacity=\"0.55\"/>\n          <rect x=\"10\" y=\"60\" width=\"140\" height=\"34\" rx=\"8\" fill=\"var(--pink)\"/>\n          <rect x=\"10\" y=\"60\" width=\"140\" height=\"12\" rx=\"6\" fill=\"var(--pink-light)\"/>"
+  },
+  {
+    "id": "desk_study",
+    "name": "Study Desk",
+    "category": "room",
+    "slot": "desk",
+    "price": 115,
+    "viewBox": "0 0 160 100",
+    "desc": "A tidy desk for getting things done.",
+    "svg": "<rect x=\"15\" y=\"56\" width=\"130\" height=\"8\" rx=\"2\" fill=\"#C6935B\"/>\n          <rect x=\"21\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <rect x=\"133\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <rect x=\"63\" y=\"56\" width=\"34\" height=\"4\" rx=\"1\" fill=\"var(--border)\"/>\n          <rect x=\"65\" y=\"40\" width=\"30\" height=\"18\" rx=\"2\" fill=\"var(--green-pale)\" stroke=\"var(--border)\" stroke-width=\"2\"/>"
+  },
+  {
+    "id": "desk_vanity",
+    "name": "Vanity Desk",
+    "category": "room",
+    "slot": "desk",
+    "price": 135,
+    "viewBox": "0 0 160 100",
+    "desc": "A desk with a little mirror to match.",
+    "svg": "<rect x=\"15\" y=\"56\" width=\"130\" height=\"8\" rx=\"2\" fill=\"#E8B896\"/>\n          <rect x=\"21\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <rect x=\"133\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <rect x=\"76\" y=\"50\" width=\"8\" height=\"8\" fill=\"var(--border)\"/>\n          <ellipse cx=\"80\" cy=\"32\" rx=\"16\" ry=\"20\" fill=\"var(--pink-pale)\" stroke=\"var(--border)\" stroke-width=\"2\"/>"
+  },
+  {
+    "id": "lamp_moon",
+    "name": "Moon Lamp",
+    "category": "room",
+    "slot": "lamp",
+    "price": 50,
+    "viewBox": "0 0 70 110",
+    "desc": "Soft light for late-night budgeting.",
+    "svg": "<rect x=\"30\" y=\"90\" width=\"10\" height=\"16\" fill=\"#8A6438\"/>\n          <ellipse cx=\"35\" cy=\"106\" rx=\"20\" ry=\"4\" fill=\"var(--border)\"/>\n          <line x1=\"35\" y1=\"20\" x2=\"35\" y2=\"90\" stroke=\"#B8935E\" stroke-width=\"3\"/>\n          <circle cx=\"35\" cy=\"18\" r=\"18\" fill=\"#FFF6D8\"/>\n          <circle cx=\"41\" cy=\"12\" r=\"4\" fill=\"#F5E5A8\"/>\n          <circle cx=\"30\" cy=\"24\" r=\"2.5\" fill=\"#F5E5A8\"/>"
+  },
+  {
+    "id": "lamp_fairy",
+    "name": "Fairy Lights",
+    "category": "room",
+    "slot": "lamp",
+    "price": 65,
+    "viewBox": "0 0 70 120",
+    "desc": "Twinkly and financially responsible.",
+    "svg": "<path d=\"M10,10 Q35,40 10,60 Q35,90 10,110\" stroke=\"#B8935E\" stroke-width=\"2\" fill=\"none\"/>\n          <path d=\"M60,10 Q35,40 60,60 Q35,90 60,110\" stroke=\"#B8935E\" stroke-width=\"2\" fill=\"none\"/>\n          <circle cx=\"10\" cy=\"10\" r=\"5\" fill=\"#FFE45A\"/>\n          <circle cx=\"10\" cy=\"60\" r=\"5\" fill=\"#FF96B8\"/>\n          <circle cx=\"10\" cy=\"110\" r=\"5\" fill=\"#8FDD78\"/>\n          <circle cx=\"60\" cy=\"10\" r=\"5\" fill=\"#8FDD78\"/>\n          <circle cx=\"60\" cy=\"60\" r=\"5\" fill=\"#FFE45A\"/>\n          <circle cx=\"60\" cy=\"110\" r=\"5\" fill=\"#FF96B8\"/>"
+  },
+  {
+    "id": "lamp_desk",
+    "name": "Desk Lamp",
+    "category": "room",
+    "slot": "lamp",
+    "price": 55,
+    "viewBox": "0 0 70 110",
+    "desc": "For late-night budget spreadsheets.",
+    "svg": "<rect x=\"14\" y=\"98\" width=\"42\" height=\"8\" rx=\"3\" fill=\"#8A6438\"/>\n          <line x1=\"35\" y1=\"98\" x2=\"35\" y2=\"70\" stroke=\"#B8935E\" stroke-width=\"4\"/>\n          <line x1=\"35\" y1=\"70\" x2=\"55\" y2=\"46\" stroke=\"#B8935E\" stroke-width=\"4\"/>\n          <path d=\"M40,30 L64,42 L52,58 L32,48 Z\" fill=\"#FFF6D8\"/>"
+  },
+  {
+    "id": "lamp_lava",
+    "name": "Lava Lamp",
+    "category": "room",
+    "slot": "lamp",
+    "price": 70,
+    "viewBox": "0 0 70 110",
+    "desc": "Groovy glow for the room.",
+    "svg": "<rect x=\"26\" y=\"94\" width=\"18\" height=\"12\" rx=\"3\" fill=\"#4A4A52\"/>\n          <path d=\"M18,92 L52,92 L46,30 Q35,20 24,30 Z\" fill=\"none\" stroke=\"#C0C0C8\" stroke-width=\"3\"/>\n          <ellipse cx=\"35\" cy=\"70\" rx=\"9\" ry=\"12\" fill=\"#FF6F91\"/>\n          <ellipse cx=\"33\" cy=\"46\" rx=\"6\" ry=\"8\" fill=\"#FF6F91\"/>"
+  },
+  {
+    "id": "window_sunny",
+    "name": "Sunny Window",
+    "category": "room",
+    "slot": "window",
+    "price": 90,
+    "viewBox": "0 0 220 100",
+    "desc": "A bright view to budget by.",
+    "svg": "<rect x=\"4\" y=\"4\" width=\"212\" height=\"92\" rx=\"6\" fill=\"#8A6438\"/>\n          <rect x=\"14\" y=\"14\" width=\"192\" height=\"72\" fill=\"#7EC1E8\"/>\n          <circle cx=\"55\" cy=\"34\" r=\"14\" fill=\"#FFE45A\"/>\n          <ellipse cx=\"130\" cy=\"46\" rx=\"26\" ry=\"10\" fill=\"var(--white)\" opacity=\"0.85\"/>\n          <ellipse cx=\"160\" cy=\"38\" rx=\"20\" ry=\"8\" fill=\"var(--white)\" opacity=\"0.85\"/>\n          <rect x=\"14\" y=\"14\" width=\"192\" height=\"72\" fill=\"none\" stroke=\"#8A6438\" stroke-width=\"4\"/>\n          <line x1=\"110\" y1=\"14\" x2=\"110\" y2=\"86\" stroke=\"#8A6438\" stroke-width=\"4\"/>\n          <line x1=\"14\" y1=\"50\" x2=\"206\" y2=\"50\" stroke=\"#8A6438\" stroke-width=\"4\"/>"
+  },
+  {
+    "id": "window_night",
+    "name": "Starry Window",
+    "category": "room",
+    "slot": "window",
+    "price": 95,
+    "viewBox": "0 0 220 100",
+    "desc": "Stargaze while your streak grows.",
+    "svg": "<rect x=\"4\" y=\"4\" width=\"212\" height=\"92\" rx=\"6\" fill=\"#5E5E68\"/>\n          <rect x=\"14\" y=\"14\" width=\"192\" height=\"72\" fill=\"#2B2E4A\"/>\n          <circle cx=\"150\" cy=\"34\" r=\"16\" fill=\"#F5E5A8\"/>\n          <circle cx=\"45\" cy=\"30\" r=\"2.5\" fill=\"var(--white)\"/>\n          <circle cx=\"70\" cy=\"50\" r=\"2\" fill=\"var(--white)\"/>\n          <circle cx=\"95\" cy=\"26\" r=\"2\" fill=\"var(--white)\"/>\n          <circle cx=\"185\" cy=\"60\" r=\"2\" fill=\"var(--white)\"/>\n          <circle cx=\"60\" cy=\"70\" r=\"2\" fill=\"var(--white)\"/>\n          <rect x=\"14\" y=\"14\" width=\"192\" height=\"72\" fill=\"none\" stroke=\"#5E5E68\" stroke-width=\"4\"/>\n          <line x1=\"110\" y1=\"14\" x2=\"110\" y2=\"86\" stroke=\"#5E5E68\" stroke-width=\"4\"/>\n          <line x1=\"14\" y1=\"50\" x2=\"206\" y2=\"50\" stroke=\"#5E5E68\" stroke-width=\"4\"/>"
+  },
+  {
+    "id": "diamond_mystery_box",
+    "name": "Diamond Mystery Box",
+    "category": "exclusive",
+    "currency": "diamond",
+    "price": 20,
+    "isMysteryBox": true,
+    "mysteryPool": "exclusive",
+    "viewBox": "20 20 80 75",
+    "desc": "Crack open a dazzling diamond-tier surprise.",
+    "svg": "<defs><linearGradient id=\"db-g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#8FE3F5\"/><stop offset=\"100%\" stop-color=\"#2AA8C4\"/></linearGradient></defs>\n          <rect x=\"35\" y=\"45\" width=\"50\" height=\"40\" rx=\"3\" fill=\"#1C1C2E\"/>\n          <rect x=\"35\" y=\"45\" width=\"50\" height=\"40\" rx=\"3\" fill=\"none\" stroke=\"url(#db-g)\" stroke-width=\"2\"/>\n          <rect x=\"55\" y=\"45\" width=\"10\" height=\"40\" fill=\"url(#db-g)\"/>\n          <rect x=\"35\" y=\"60\" width=\"50\" height=\"10\" fill=\"url(#db-g)\"/>\n          <path d=\"M60,38 L67,45 L60,54 L53,45 Z\" fill=\"url(#db-g)\" stroke=\"#E8FBFF\" stroke-width=\"0.8\"/>\n          <path d=\"M28,40 L29,37 L30,40 L33,41 L30,42 L29,45 L28,42 L25,41 Z\" fill=\"#FFF7C4\" opacity=\"0.85\"/>\n          <path d=\"M92,50 L92.8,47.6 L93.6,50 L96,50.8 L93.6,51.6 L92.8,54 L92,51.6 L89.6,50.8 Z\" fill=\"#FFF7C4\" opacity=\"0.7\"/>"
+  },
+  {
+    "id": "diamond_crown",
+    "name": "Diamond Crown",
+    "category": "exclusive",
+    "currency": "diamond",
+    "price": 15,
+    "mysteryOnly": true,
+    "mysteryPool": "exclusive",
+    "viewBox": "14 -4 92 46",
+    "desc": "Only streak-keepers get to wear this one.",
+    "svg": "<defs><linearGradient id=\"dc-g\" x1=\"20%\" y1=\"0%\" x2=\"80%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#FFF3B0\"/><stop offset=\"55%\" stop-color=\"#FFD23F\"/><stop offset=\"100%\" stop-color=\"#D4980A\"/></linearGradient>\n          <linearGradient id=\"dc-gem\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#E8FBFF\"/><stop offset=\"45%\" stop-color=\"#8FE3F5\"/><stop offset=\"100%\" stop-color=\"#2AA8C4\"/></linearGradient></defs>\n          <path d=\"M 33 30 L 33 20 L 42 24 L 50 12 L 60 22 L 70 12 L 78 24 L 87 20 L 87 30 Z\" fill=\"url(#dc-g)\" stroke=\"#B8790A\" stroke-width=\"1\"/>\n          <path d=\"M 35 28 L 35 22 L 42 25 L 50 15 L 60 24 L 70 15 L 78 25 L 85 22 L 85 28 Z\" fill=\"rgba(255,255,255,0.25)\"/>\n          <circle cx=\"42\" cy=\"24\" r=\"3\" fill=\"#FFE87A\"/>\n          <circle cx=\"60\" cy=\"12\" r=\"3.6\" fill=\"#FFE87A\"/>\n          <circle cx=\"78\" cy=\"24\" r=\"3\" fill=\"#FFE87A\"/>\n          <path d=\"M 60 17 L 65 22 L 60 30 L 55 22 Z\" fill=\"url(#dc-gem)\" stroke=\"#1C8CA8\" stroke-width=\"0.8\"/>\n          <path d=\"M 60 17 L 65 22 L 60 24 L 55 22 Z\" fill=\"rgba(255,255,255,0.55)\"/>\n          <circle cx=\"42\" cy=\"24\" r=\"1.6\" fill=\"#FF6FA8\"/>\n          <circle cx=\"78\" cy=\"24\" r=\"1.6\" fill=\"#FF6FA8\"/>\n          <path d=\"M 30 8 L 31 5 L 32 8 L 35 9 L 32 10 L 31 13 L 30 10 L 27 9 Z\" fill=\"#FFF7C4\"/>\n          <path d=\"M 88 10 L 88.8 7.6 L 89.6 10 L 92 10.8 L 89.6 11.6 L 88.8 14 L 88 11.6 L 85.6 10.8 Z\" fill=\"#FFF7C4\" opacity=\"0.85\"/>"
+  },
+  {
+    "id": "diamond_shades",
+    "name": "Diamond Shades",
+    "category": "exclusive",
+    "currency": "diamond",
+    "price": 20,
+    "mysteryOnly": true,
+    "mysteryPool": "exclusive",
+    "rarity": "rare",
+    "viewBox": "6 41 108 34",
+    "desc": "Too cool to be affordable in coins.",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": -15
+    },
+    "svg": "<defs><linearGradient id=\"ds-lens\" x1=\"20%\" y1=\"0%\" x2=\"80%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#FFD6F0\"/><stop offset=\"50%\" stop-color=\"#C7A6FF\"/><stop offset=\"100%\" stop-color=\"#7FD9FF\"/></linearGradient></defs>\n          <path d=\"M 20 61 Q 20 49 34 49 L 46 49 Q 54 49 55 58 L 65 58 Q 66 49 74 49 L 87 49 Q 101 49 101 61 Q 101 73 87 73 L 74 73 Q 66 73 65 64 L 55 64 Q 54 73 46 73 L 34 73 Q 20 73 20 61 Z\" fill=\"#2B2B2B\"/>\n          <circle cx=\"36\" cy=\"61\" r=\"9.5\" fill=\"url(#ds-lens)\"/>\n          <circle cx=\"85\" cy=\"61\" r=\"9.5\" fill=\"url(#ds-lens)\"/>\n          <circle cx=\"32\" cy=\"57\" r=\"2.4\" fill=\"rgba(255,255,255,0.7)\"/>\n          <circle cx=\"81\" cy=\"57\" r=\"2.4\" fill=\"rgba(255,255,255,0.7)\"/>\n          <path d=\"M 20 59 L 12 57\" stroke=\"#2B2B2B\" stroke-width=\"3\" stroke-linecap=\"round\"/>\n          <path d=\"M 101 59 L 109 57\" stroke=\"#2B2B2B\" stroke-width=\"3\" stroke-linecap=\"round\"/>\n          <path d=\"M 36 53 L 37 50 L 38 53 L 41 54 L 38 55 L 37 58 L 36 55 L 33 54 Z\" fill=\"#FFF\" opacity=\"0.9\"/>\n          <path d=\"M 85 53 L 86 50 L 87 53 L 90 54 L 87 55 L 86 58 L 85 55 L 82 54 Z\" fill=\"#FFF\" opacity=\"0.9\"/>"
+  },
+  {
+    "id": "golden_cape",
+    "name": "Golden Cape",
+    "category": "exclusive",
+    "currency": "diamond",
+    "price": 25,
+    "mysteryOnly": true,
+    "mysteryPool": "exclusive",
+    "rarity": "epic",
+    "viewBox": "-10 68 144 72",
+    "desc": "The rarest flex in Hammy's closet.",
+    "layer": "back",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 4.33,
+      "e": 23,
+      "f": -132
+    },
+    "svg": "<defs><linearGradient id=\"gc-g\" x1=\"20%\" y1=\"0%\" x2=\"80%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#FFE9A6\"/><stop offset=\"55%\" stop-color=\"#FFC93F\"/><stop offset=\"100%\" stop-color=\"#C68A0A\"/></linearGradient></defs>\n          <path d=\"M 8 82 Q 60 72 112 82 L 124 132 Q 60 122 -4 132 Z\" fill=\"url(#gc-g)\" stroke=\"#A66E08\" stroke-width=\"1\"/>\n          <path d=\"M 8 82 Q 60 72 112 82 L 109 94 Q 60 84 11 94 Z\" fill=\"rgba(255,255,255,0.25)\"/>\n          <path d=\"M 8 82 Q 60 96 112 82\" stroke=\"#A66E08\" stroke-width=\"1\" fill=\"none\" opacity=\"0.4\"/>\n          <path d=\"M 30 88 L 34 128\" stroke=\"#FFF3CC\" stroke-width=\"1.2\" opacity=\"0.4\"/>\n          <path d=\"M 60 84 L 60 130\" stroke=\"#FFF3CC\" stroke-width=\"1.2\" opacity=\"0.4\"/>\n          <path d=\"M 90 88 L 86 128\" stroke=\"#FFF3CC\" stroke-width=\"1.2\" opacity=\"0.4\"/>\n          <circle cx=\"10\" cy=\"92\" r=\"4.5\" fill=\"#8FE3F5\"/>\n          <circle cx=\"10\" cy=\"92\" r=\"2.3\" fill=\"#E8FBFF\"/>\n          <circle cx=\"110\" cy=\"92\" r=\"4.5\" fill=\"#8FE3F5\"/>\n          <circle cx=\"110\" cy=\"92\" r=\"2.3\" fill=\"#E8FBFF\"/>"
+  },
+  {
+    "id": "gold_chain",
+    "name": "Gold Chain",
+    "category": "exclusive",
+    "currency": "diamond",
+    "price": 35,
+    "mysteryOnly": true,
+    "mysteryPool": "exclusive",
+    "rarity": "legendary",
+    "viewBox": "12 56 96 52",
+    "desc": "The ultimate flex for a maxed-out savings account.",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": 32
+    },
+    "svg": "<defs><linearGradient id=\"gch-g\" x1=\"20%\" y1=\"0%\" x2=\"80%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#FFF3B0\"/><stop offset=\"50%\" stop-color=\"#FFD23F\"/><stop offset=\"100%\" stop-color=\"#C68A0A\"/></linearGradient></defs>\n          <path d=\"M20,64 Q60,90 100,64 L100,70 Q60,96 20,70 Z\" fill=\"url(#gch-g)\" stroke=\"#A66E08\" stroke-width=\"1\"/>\n          <path d=\"M20,64 Q60,90 100,64 L98,66 Q60,92 22,66 Z\" fill=\"#FFF9DD\" opacity=\"0.5\"/>\n          <circle cx=\"32\" cy=\"73.6\" r=\"2.6\" fill=\"none\" stroke=\"#A66E08\" stroke-width=\"1.4\"/>\n          <circle cx=\"44\" cy=\"77.9\" r=\"2.6\" fill=\"none\" stroke=\"#A66E08\" stroke-width=\"1.4\"/>\n          <circle cx=\"54\" cy=\"79.7\" r=\"2.6\" fill=\"none\" stroke=\"#A66E08\" stroke-width=\"1.4\"/>\n          <circle cx=\"66\" cy=\"79.7\" r=\"2.6\" fill=\"none\" stroke=\"#A66E08\" stroke-width=\"1.4\"/>\n          <circle cx=\"76\" cy=\"77.9\" r=\"2.6\" fill=\"none\" stroke=\"#A66E08\" stroke-width=\"1.4\"/>\n          <circle cx=\"88\" cy=\"73.6\" r=\"2.6\" fill=\"none\" stroke=\"#A66E08\" stroke-width=\"1.4\"/>\n          <path d=\"M51,83 L69,83 L60,99 Z\" fill=\"url(#gch-g)\" stroke=\"#A66E08\" stroke-width=\"1\"/>\n          <circle cx=\"60\" cy=\"89\" r=\"4.5\" fill=\"#8FE3F5\"/>\n          <circle cx=\"60\" cy=\"89\" r=\"2.3\" fill=\"#E8FBFF\"/>\n          <path d=\"M53,85 L59,86.5\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"1.2\"/>"
+  },
+  {
+    "id": "graduation_cap",
+    "name": "Graduation Cap",
+    "category": "reward",
+    "reward": true,
+    "viewBox": "14 -4 92 46",
+    "desc": "Awarded for completing all 10 modules. Can't be bought, only earned.",
+    "svg": "<defs><linearGradient id=\"gcp-top\" x1=\"20%\" y1=\"0%\" x2=\"80%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#3D3D3D\"/><stop offset=\"100%\" stop-color=\"#141414\"/></linearGradient></defs>\n          <ellipse cx=\"60\" cy=\"27\" rx=\"19\" ry=\"7\" fill=\"#1C1C1C\"/>\n          <ellipse cx=\"60\" cy=\"25\" rx=\"19\" ry=\"6.4\" fill=\"#2B2B2B\"/>\n          <path d=\"M 60 4 L 96 18 L 60 32 L 24 18 Z\" fill=\"url(#gcp-top)\" stroke=\"#000\" stroke-width=\"0.6\"/>\n          <path d=\"M 60 4 L 96 18 L 60 20 L 24 18 Z\" fill=\"rgba(255,255,255,0.08)\"/>\n          <circle cx=\"60\" cy=\"18\" r=\"3\" fill=\"#C9A227\"/>\n          <path d=\"M 60 18 Q 66 24 66 30\" stroke=\"#C9A227\" stroke-width=\"1.4\" fill=\"none\"/>\n          <path d=\"M 63 30 L 69 30 L 68 38 L 66 36 L 64 38 Z\" fill=\"#D9B33E\"/>\n          <circle cx=\"66\" cy=\"30\" r=\"2\" fill=\"#C9A227\"/>"
+  },
+  {
+    "id": "grandmaster_halo",
+    "name": "Angelic Halo",
+    "category": "reward",
+    "reward": true,
+    "rewardHint": "Unlock every other achievement to earn this",
+    "viewBox": "14 -8 92 40",
+    "desc": "Awarded for unlocking every single achievement. Can't be bought, only earned.",
+    "svg": "<defs><linearGradient id=\"gh-g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#FFF3B0\"/><stop offset=\"50%\" stop-color=\"#FFD23F\"/><stop offset=\"100%\" stop-color=\"#C68A0A\"/></linearGradient></defs>\n          <ellipse cx=\"60\" cy=\"10\" rx=\"26\" ry=\"7\" fill=\"none\" stroke=\"url(#gh-g)\" stroke-width=\"4\"/>\n          <ellipse cx=\"60\" cy=\"9\" rx=\"26\" ry=\"7\" fill=\"none\" stroke=\"#FFF3B0\" stroke-width=\"1.5\" opacity=\"0.6\"/>\n          <path d=\"M32 6 L33 3 L34 6 L37 7 L34 8 L33 11 L32 8 L29 7 Z\" fill=\"#FFF7C4\"/>\n          <path d=\"M88 6 L89 3 L90 6 L93 7 L90 8 L89 11 L88 8 L85 7 Z\" fill=\"#FFF7C4\" opacity=\"0.85\"/>\n          <circle cx=\"60\" cy=\"3\" r=\"2.4\" fill=\"#FFE87A\"/>"
+  },
+  {
+    "id": "marathon_medal",
+    "name": "Marathon Medal",
+    "category": "reward",
+    "reward": true,
+    "rewardHint": "Reach a 30-day streak to earn this",
+    "viewBox": "10 58 100 56",
+    "fit": {
+      "a": 3.28,
+      "b": 0,
+      "c": 0,
+      "d": 3.4,
+      "e": 23,
+      "f": 32
+    },
+    "desc": "Awarded for a 30-day streak without missing a day. Can't be bought, only earned.",
+    "svg": "<defs><linearGradient id=\"mm-g\" x1=\"20%\" y1=\"0%\" x2=\"80%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#FFE9A6\"/><stop offset=\"55%\" stop-color=\"#FFC93F\"/><stop offset=\"100%\" stop-color=\"#C68A0A\"/></linearGradient></defs>\n          <path d=\"M20,64 Q60,90 100,64 L100,70 Q60,96 20,70 Z\" fill=\"#3B5FA0\"/>\n          <path d=\"M20,64 Q60,90 100,64 L98,66 Q60,92 22,66 Z\" fill=\"#7B9FE0\" opacity=\"0.5\"/>\n          <circle cx=\"60\" cy=\"90\" r=\"9\" fill=\"url(#mm-g)\" stroke=\"#A66E08\" stroke-width=\"1.5\"/>\n          <circle cx=\"60\" cy=\"90\" r=\"6\" fill=\"none\" stroke=\"#FFF3B0\" stroke-width=\"1.2\"/>\n          <polygon points=\"60,85.5 61.1,88.5 64.3,88.6 61.7,90.6 62.7,93.6 60,91.8 57.4,93.6 58.3,90.6 55.7,88.6 58.9,88.5\" fill=\"#FFF3B0\"/>"
+  }
+]

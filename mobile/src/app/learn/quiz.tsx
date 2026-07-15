@@ -1,44 +1,76 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Screen, Txt, Button, Option, ProgressBar, IconButton } from '@/components';
 import { colors, font } from '@/theme';
+import { moduleById } from '@/data';
+import { moduleContentById } from '@/content';
 
-const CHOICES = [
-  'Nothing — she earned it, spend it',
-  'Around 20%',
-  'Exactly half of it',
-  "It doesn't matter",
-];
-const CORRECT = 1;
-
-/** Screen 18 — Quiz (default / correct / incorrect states). */
+/** Screen 18 — Quiz. Real questions: loops through the lesson's qIndices into the
+ * module's flat questions array, then hands the score off to Results. */
 export default function Quiz() {
   const router = useRouter();
+  const { moduleId, lessonIndex } = useLocalSearchParams<{ moduleId: string; lessonIndex: string }>();
+  const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
+  const content = moduleContentById(mod.id);
+  const li = Number(lessonIndex ?? 0);
+  const lesson = content?.lessons[li];
+  const qIndices = lesson?.qIndices ?? [];
+
+  const [pos, setPos] = useState(0);
   const [sel, setSel] = useState<number | null>(null);
+  const [correctCount, setCorrectCount] = useState(0);
+
+  const question = content?.questions[qIndices[pos]];
   const answered = sel !== null;
-  const right = sel === CORRECT;
+  const right = question ? sel === question.correct : false;
+  const total = qIndices.length;
 
   const stateFor = (i: number) => {
-    if (!answered) return 'default' as const;
-    if (i === CORRECT) return 'correct' as const;
+    if (!answered || !question) return 'default' as const;
+    if (i === question.correct) return 'correct' as const;
     if (i === sel) return 'wrong' as const;
     return 'default' as const;
   };
+
+  const next = () => {
+    const tally = right ? correctCount + 1 : correctCount;
+    if (pos + 1 >= total) {
+      router.replace({
+        pathname: '/learn/results',
+        params: { moduleId: mod.id, lessonIndex: String(li), correctCount: String(tally), total: String(total) },
+      });
+      return;
+    }
+    setCorrectCount(tally);
+    setPos(pos + 1);
+    setSel(null);
+  };
+
+  if (!question) {
+    return (
+      <Screen edges={['top']}>
+        <View style={styles.content}>
+          <Txt variant="h1">No questions found for this lesson.</Txt>
+          <Button label="Back" onPress={() => router.back()} style={{ marginTop: 14 }} />
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen edges={['top']}>
       <View style={styles.stick}>
         <IconButton name="x" size={34} iconSize={16} onPress={() => router.back()} />
-        <ProgressBar value={0.66} style={{ flex: 1 }} height={10} />
-        <Txt style={styles.step}>Q4 / 6</Txt>
+        <ProgressBar value={(pos + (answered ? 1 : 0)) / total} style={{ flex: 1 }} height={10} />
+        <Txt style={styles.step}>Q{pos + 1} / {total}</Txt>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Txt variant="h1">Maya gets her first $1,200 paycheck. How much should she aim to save?</Txt>
+        <Txt variant="h1">{question.q}</Txt>
         <View style={{ gap: 10, marginTop: 4 }}>
-          {CHOICES.map((c, i) => {
+          {question.opts.map((c, i) => {
             const st = stateFor(i);
             return (
               <Option
@@ -66,9 +98,9 @@ export default function Quiz() {
             {right ? 'Nice work!' : 'So close!'}
           </Txt>
           <Txt style={[styles.feedBody, { color: right ? colors.greenDark : colors.pinkText }]}>
-            Saving ~20% builds the habit without starving your fun budget. Even $10 counts.
+            {question.exp}
           </Txt>
-          <Button label="Got it →" variant={right ? 'green' : 'pink'} onPress={() => router.replace('/learn/results')} />
+          <Button label="Got it →" variant={right ? 'green' : 'pink'} onPress={next} />
         </View>
       ) : null}
     </Screen>

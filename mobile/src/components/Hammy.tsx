@@ -1,17 +1,36 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, ViewStyle, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import Svg, {
+  Defs, LinearGradient, RadialGradient, Stop, Ellipse, Circle, Path, G, ClipPath,
+} from 'react-native-svg';
+import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+const AnimatedG = Animated.createAnimatedComponent(G);
+const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
+
+// Full-stage geometry ported from the website's CSS pig (styles.css .pig-* rules), a
+// 440×460 frame. Kept in the same coordinate space so proportions match the web mascot.
+const STAGE_W = 440;
+const STAGE_H = 460;
+
+// Ear silhouette: the website draws ears with CSS border-radius "54% 54% 46% 46% / 70% 70%
+// 34% 34%" on a 64×74 box — a much rounder top than bottom, i.e. a teardrop/petal, not a
+// plain ellipse. This path is that same per-corner-radius rounded rect converted to arcs
+// (with the same CSS overlap correction where adjacent corner radii exceed the box edge).
+const EAR_PATH = 'M 32,0 A 32,49.8 0 0 1 64,49.8 A 29.44,24.2 0 0 1 34.56,74 L 29.44,74 A 29.44,24.2 0 0 1 0,49.8 A 32,49.8 0 0 1 32,0 Z';
+
 /**
- * Hammy the pig — placeholder mascot that drops into the design's image slots.
- * Swap for final art later; keeps the pink "hslot" look and a gentle bob.
+ * Hammy the pig — the real mascot, redrawn as SVG from the web app's CSS illustration
+ * (gradients/shapes ported from styles.css .pig-*). Idle animation: gentle float, eye
+ * blink, ear wiggle, tail wag. Swap `pig` to recolor the body/head tint if ever needed;
+ * no current screen does.
  */
 export function Hammy({
   size = 120,
   ring = false,
   bob = true,
-  pig = '#E27EA0',
+  pig: _pig = '#E27EA0',
   style,
 }: {
   size?: number;
@@ -20,30 +39,70 @@ export function Hammy({
   pig?: string;
   style?: ViewStyle;
 }) {
-  const y = useRef(new Animated.Value(0)).current;
+  const floatY = useRef(new Animated.Value(0)).current;
+  const blink = useRef(new Animated.Value(1)).current; // 1 = open, ~0.08 = closed
+  const earL = useRef(new Animated.Value(0)).current;
+  const earR = useRef(new Animated.Value(0)).current;
+  const tail = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!bob) return;
-    const loop = Animated.loop(
+    const floatLoop = Animated.loop(
       Animated.sequence([
-        Animated.timing(y, { toValue: -8, duration: 1500, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(y, { toValue: 0, duration: 1500, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(floatY, { toValue: -14, duration: 2100, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(floatY, { toValue: 0, duration: 2100, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ])
     );
-    loop.start();
-    return () => loop.stop();
-  }, [bob, y]);
+    floatLoop.start();
+    return () => floatLoop.stop();
+  }, [bob, floatY]);
+
+  useEffect(() => {
+    const blinkLoop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(4200),
+        Animated.timing(blink, { toValue: 0.08, duration: 90, easing: Easing.linear, useNativeDriver: false }),
+        Animated.timing(blink, { toValue: 1, duration: 120, easing: Easing.linear, useNativeDriver: false }),
+      ])
+    );
+    blinkLoop.start();
+    const earLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(earL, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
+        Animated.timing(earL, { toValue: 0, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
+      ])
+    );
+    earLoop.start();
+    const earLoopR = Animated.loop(
+      Animated.sequence([
+        Animated.timing(earR, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
+        Animated.timing(earR, { toValue: 0, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
+      ])
+    );
+    earLoopR.start();
+    const tailLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(tail, { toValue: 1, duration: 1300, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
+        Animated.timing(tail, { toValue: 0, duration: 1300, easing: Easing.inOut(Easing.sin), useNativeDriver: false }),
+      ])
+    );
+    tailLoop.start();
+    return () => { blinkLoop.stop(); earLoop.stop(); earLoopR.stop(); tailLoop.stop(); };
+  }, [blink, earL, earR, tail]);
+
+  const eyeRy = blink.interpolate({ inputRange: [0.08, 1], outputRange: [1.6, 19] });
+  const earLRotation = earL.interpolate({ inputRange: [0, 1], outputRange: [-18, -26] });
+  const earRRotation = earR.interpolate({ inputRange: [0, 1], outputRange: [18, 26] });
+  const tailRotation = tail.interpolate({ inputRange: [0, 1], outputRange: [-5, 8] });
+
+  const aspect = STAGE_H / STAGE_W;
+  const width = size;
+  const height = size * aspect;
 
   return (
     <Animated.View
       style={[
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          overflow: 'hidden',
-          transform: [{ translateY: y }],
-        },
+        { width, height, transform: bob ? [{ translateY: floatY }] : undefined },
         ring
           ? {
               shadowColor: '#FF96B8',
@@ -56,19 +115,193 @@ export function Hammy({
         style,
       ]}
     >
-      <LinearGradient
-        colors={['#FFE7EF', '#FBD3E0']}
-        start={{ x: 0.5, y: 0.2 }}
-        end={{ x: 0.5, y: 1 }}
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
-      >
-        <MaterialCommunityIcons name="pig-variant" size={size * 0.56} color={pig} />
-      </LinearGradient>
+      <Svg width={width} height={height} viewBox={`0 0 ${STAGE_W} ${STAGE_H}`}>
+        <Defs>
+          {/* Base fills — gradient stop angles converted from the website's CSS
+              (linear-gradient(165deg,...) etc.) to precise SVG x1/y1/x2/y2 so the tilt matches. */}
+          <RadialGradient id="hm-shadow" cx="50%" cy="50%" r="50%">
+            <Stop offset="0%" stopColor="#D678A0" stopOpacity={0.28} />
+            <Stop offset="100%" stopColor="#D678A0" stopOpacity={0} />
+          </RadialGradient>
+          <LinearGradient id="hm-body" x1="36.6%" y1="0%" x2="63.4%" y2="100%">
+            <Stop offset="0%" stopColor="#FFD4E4" />
+            <Stop offset="60%" stopColor="#FFC2D9" />
+            <Stop offset="100%" stopColor="#FFB4CE" />
+          </LinearGradient>
+          <RadialGradient id="hm-tummy" cx="50%" cy="40%" r="70%">
+            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.5} />
+            <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
+          </RadialGradient>
+          <LinearGradient id="hm-arm-l" x1="31.8%" y1="0%" x2="68.2%" y2="100%">
+            <Stop offset="0%" stopColor="#FFD0E1" />
+            <Stop offset="100%" stopColor="#FFBCD4" />
+          </LinearGradient>
+          <LinearGradient id="hm-arm-r" x1="68.2%" y1="0%" x2="31.8%" y2="100%">
+            <Stop offset="0%" stopColor="#FFD0E1" />
+            <Stop offset="100%" stopColor="#FFBCD4" />
+          </LinearGradient>
+          <LinearGradient id="hm-ear-l" x1="31.8%" y1="0%" x2="68.2%" y2="100%">
+            <Stop offset="0%" stopColor="#FFC6DC" />
+            <Stop offset="100%" stopColor="#FF9FC1" />
+          </LinearGradient>
+          <LinearGradient id="hm-ear-r" x1="68.2%" y1="0%" x2="31.8%" y2="100%">
+            <Stop offset="0%" stopColor="#FFC6DC" />
+            <Stop offset="100%" stopColor="#FF9FC1" />
+          </LinearGradient>
+          <LinearGradient id="hm-head" x1="31.8%" y1="0%" x2="68.2%" y2="100%">
+            <Stop offset="0%" stopColor="#FFD9E7" />
+            <Stop offset="58%" stopColor="#FFC6DB" />
+            <Stop offset="100%" stopColor="#FFB8D0" />
+          </LinearGradient>
+          <LinearGradient id="hm-snout" x1="31.8%" y1="0%" x2="68.2%" y2="100%">
+            <Stop offset="0%" stopColor="#FFB3CD" />
+            <Stop offset="100%" stopColor="#FF96B8" />
+          </LinearGradient>
+
+          {/* Highlight/shadow overlays — approximate the CSS's inset box-shadows (glossy
+              top-left highlight, soft bottom-right/bottom shadow) that give the puffy 3D look. */}
+          <RadialGradient id="hm-body-shine" cx="32%" cy="24%" r="55%">
+            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.5} />
+            <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-body-shadow" cx="74%" cy="78%" r="60%">
+            <Stop offset="0%" stopColor="#E783AA" stopOpacity={0.32} />
+            <Stop offset="100%" stopColor="#E783AA" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-head-shine" cx="28%" cy="22%" r="55%">
+            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.55} />
+            <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-head-shadow" cx="76%" cy="80%" r="60%">
+            <Stop offset="0%" stopColor="#E783AA" stopOpacity={0.28} />
+            <Stop offset="100%" stopColor="#E783AA" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-arm-shadow-l" cx="76%" cy="80%" r="65%">
+            <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.28} />
+            <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-arm-shadow-r" cx="24%" cy="80%" r="65%">
+            <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.28} />
+            <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-ear-shadow-l" cx="76%" cy="82%" r="65%">
+            <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.28} />
+            <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-ear-shadow-r" cx="24%" cy="82%" r="65%">
+            <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.28} />
+            <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-snout-shine" cx="50%" cy="18%" r="55%">
+            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.5} />
+            <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-snout-shadow" cx="50%" cy="84%" r="55%">
+            <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.32} />
+            <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-snout-drop" cx="50%" cy="50%" r="50%">
+            <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.35} />
+            <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-foot-shadow" cx="50%" cy="90%" r="55%">
+            <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.28} />
+            <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hm-cheek" cx="50%" cy="50%" r="70%">
+            <Stop offset="0%" stopColor="#FF9BBE" />
+            <Stop offset="100%" stopColor="#FF9BBE" stopOpacity={0} />
+          </RadialGradient>
+
+          <ClipPath id="hm-clip-body"><Ellipse cx={220} cy={287} rx={150} ry={125} /></ClipPath>
+          <ClipPath id="hm-clip-head"><Ellipse cx={220} cy={198} rx={138} ry={124} /></ClipPath>
+          <ClipPath id="hm-clip-arm-l"><Ellipse cx={84} cy={286} rx={30} ry={24} /></ClipPath>
+          <ClipPath id="hm-clip-arm-r"><Ellipse cx={356} cy={286} rx={30} ry={24} /></ClipPath>
+          <ClipPath id="hm-clip-snout"><Ellipse cx={220} cy={212} rx={59} ry={42} /></ClipPath>
+          <ClipPath id="hm-clip-foot-l"><Ellipse cx={150} cy={400} rx={30} ry={26} /></ClipPath>
+          <ClipPath id="hm-clip-foot-r"><Ellipse cx={290} cy={400} rx={30} ry={26} /></ClipPath>
+          <ClipPath id="hm-clip-ear"><Path d={EAR_PATH} /></ClipPath>
+        </Defs>
+
+        {/* shadow */}
+        <Ellipse cx={220} cy={417} rx={150} ry={23} fill="url(#hm-shadow)" />
+
+        {/* feet */}
+        <Ellipse cx={150} cy={400} rx={30} ry={26} fill="#F7A8C4" />
+        <Ellipse cx={290} cy={400} rx={30} ry={26} fill="#F7A8C4" />
+        <Ellipse cx={150} cy={400} rx={30} ry={26} fill="url(#hm-foot-shadow)" clipPath="url(#hm-clip-foot-l)" />
+        <Ellipse cx={290} cy={400} rx={30} ry={26} fill="url(#hm-foot-shadow)" clipPath="url(#hm-clip-foot-r)" />
+
+        {/* tail */}
+        <G x={362} y={236}>
+          <AnimatedG rotation={tailRotation} origin="14, 26">
+            <Path
+              d="M 9,31 C 9,11 27,5 39,15 C 51,25 49,41 39,47 C 29,53 17,49 15,41 C 13,33 21,31 27,33"
+              fill="none" stroke="#F7ADD0" strokeWidth={6} strokeLinecap="round"
+              transform="scale(0.7857)"
+            />
+            <Circle cx={21.2} cy={25.9} r={2.75} fill="#F0A0BE" />
+          </AnimatedG>
+        </G>
+
+        {/* arms */}
+        <Ellipse cx={84} cy={286} rx={30} ry={24} fill="url(#hm-arm-l)" />
+        <Ellipse cx={84} cy={286} rx={30} ry={24} fill="url(#hm-arm-shadow-l)" clipPath="url(#hm-clip-arm-l)" />
+        <Ellipse cx={356} cy={286} rx={30} ry={24} fill="url(#hm-arm-r)" />
+        <Ellipse cx={356} cy={286} rx={30} ry={24} fill="url(#hm-arm-shadow-r)" clipPath="url(#hm-clip-arm-r)" />
+
+        {/* body */}
+        <Ellipse cx={220} cy={287} rx={150} ry={125} fill="url(#hm-body)" />
+        <Ellipse cx={220} cy={287} rx={150} ry={125} fill="url(#hm-body-shadow)" clipPath="url(#hm-clip-body)" />
+        <Ellipse cx={220} cy={287} rx={150} ry={125} fill="url(#hm-body-shine)" clipPath="url(#hm-clip-body)" />
+        <Ellipse cx={220} cy={330} rx={75} ry={60} fill="url(#hm-tummy)" />
+
+        {/* ears */}
+        <G x={106} y={54}>
+          <AnimatedG rotation={earLRotation} origin="32, 74">
+            <Path d={EAR_PATH} fill="url(#hm-ear-l)" />
+            <Path d={EAR_PATH} fill="url(#hm-ear-shadow-l)" clipPath="url(#hm-clip-ear)" />
+            <Ellipse cx={32} cy={38} rx={13} ry={20} fill="#F48BB0" />
+          </AnimatedG>
+        </G>
+        <G x={270} y={54}>
+          <AnimatedG rotation={earRRotation} origin="32, 74">
+            <Path d={EAR_PATH} fill="url(#hm-ear-r)" />
+            <Path d={EAR_PATH} fill="url(#hm-ear-shadow-r)" clipPath="url(#hm-clip-ear)" />
+            <Ellipse cx={32} cy={38} rx={13} ry={20} fill="#F48BB0" />
+          </AnimatedG>
+        </G>
+
+        {/* head */}
+        <Ellipse cx={220} cy={198} rx={138} ry={124} fill="url(#hm-head)" />
+        <Ellipse cx={220} cy={198} rx={138} ry={124} fill="url(#hm-head-shadow)" clipPath="url(#hm-clip-head)" />
+        <Ellipse cx={220} cy={198} rx={138} ry={124} fill="url(#hm-head-shine)" clipPath="url(#hm-clip-head)" />
+
+        {/* cheeks */}
+        <Ellipse cx={134} cy={222} rx={28} ry={20} fill="url(#hm-cheek)" />
+        <Ellipse cx={306} cy={222} rx={28} ry={20} fill="url(#hm-cheek)" />
+
+        {/* eyes */}
+        <AnimatedEllipse cx={141} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
+        <AnimatedEllipse cx={299} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
+        <Circle cx={134.5} cy={186.5} r={6.5} fill="#FFFFFF" />
+        <Circle cx={145} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
+        <Circle cx={292.5} cy={186.5} r={6.5} fill="#FFFFFF" />
+        <Circle cx={303} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
+
+        {/* snout — soft drop shadow drawn first so it peeks out from beneath the fill */}
+        <Ellipse cx={220} cy={218} rx={56} ry={36} fill="url(#hm-snout-drop)" />
+        <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout)" />
+        <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout-shadow)" clipPath="url(#hm-clip-snout)" />
+        <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout-shine)" clipPath="url(#hm-clip-snout)" />
+        <Ellipse cx={191} cy={212} rx={10} ry={15} fill="#D9608C" />
+        <Ellipse cx={249} cy={212} rx={10} ry={15} fill="#D9608C" />
+      </Svg>
     </Animated.View>
   );
 }
 
-/** Rounded-rect image slot placeholder (posters, illustrations). */
+/** Rounded-rect image slot placeholder (posters, illustrations — unrelated to Hammy). */
 export function Slot({
   width,
   height,
@@ -85,7 +318,7 @@ export function Slot({
   style?: ViewStyle;
 }) {
   return (
-    <LinearGradient
+    <ExpoLinearGradient
       colors={colors}
       start={{ x: 0.5, y: 0.2 }}
       end={{ x: 0.5, y: 1 }}
@@ -99,6 +332,6 @@ export function Slot({
           <MaterialCommunityIcons name="pig-variant" size={Math.min(64, height * 0.4)} color="#E27EA0" />
         </View>
       ) : null}
-    </LinearGradient>
+    </ExpoLinearGradient>
   );
 }
