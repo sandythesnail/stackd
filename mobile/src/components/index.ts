@@ -12,6 +12,7 @@ export { Option, CheckBox, Radio } from './Option';
 export { Hammy, Slot } from './Hammy';
 export { ItemArt } from './ItemArt';
 export { Wallpaper } from './Wallpaper';
+export { AchievementToast } from './AchievementToast';
 export { TabBar } from './TabBar';
 export { Stat, SectionHead, Speech, Callout, Segmented, Dots, Divider } from './bits';
 export { MIcon, ModuleTile, ListRow, BadgeMedal, MEDAL_GRAD } from './ModuleBits';

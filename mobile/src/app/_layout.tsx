@@ -20,6 +20,7 @@ import {
 } from '@expo-google-fonts/nunito';
 import { colors } from '@/theme';
 import { StoreProvider } from '@/store';
+import { AchievementToast } from '@/components';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -71,6 +72,7 @@ export default function RootLayout() {
               options={{ presentation: 'transparentModal', animation: 'fade' }}
             />
           </Stack>
+          <AchievementToast />
         </StoreProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

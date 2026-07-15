@@ -259,6 +259,9 @@ type Ctx = {
   dailyLoginBanner: { streak: number; loginCoins: number; streakDiamonds: number } | null;
   dismissDailyLoginBanner: () => void;
   setOnboardingTrack: (trackId: string) => void;
+  /** Achievements newly unlocked since the last dismissal — drives the global unlock toast. */
+  newAchievements: () => AchievementView[];
+  dismissNewAchievements: () => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
@@ -290,6 +293,15 @@ function runDailyCheck(s: AppState): { next: AppState; banner: DailyLoginBanner 
 }
 
 /** Applies BADGE_TIER_REWARD for any newly-met achievement and records it as unlocked. */
+/** Applies unlocks against `candidate`, reporting (via `report`) any achievement id that
+ * wasn't already unlocked in `prev` — used to drive the global achievement-unlock toast. */
+function applyAndReport(prev: AppState, candidate: AppState, report: (ids: string[]) => void): AppState {
+  const applied = applyAchievementUnlocks(candidate);
+  const newly = applied.unlockedAchievementIds.filter((id) => !prev.unlockedAchievementIds.includes(id));
+  if (newly.length) report(newly);
+  return applied;
+}
+
 function applyAchievementUnlocks(s: AppState): AppState {
   const met = computeMetAchievementIds(s);
   const newly = met.filter((id) => !s.unlockedAchievementIds.includes(id));
@@ -308,6 +320,7 @@ function applyAchievementUnlocks(s: AppState): AppState {
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
   const [dailyLoginBanner, setDailyLoginBanner] = useState<DailyLoginBanner>(null);
+  const [newAchievementIds, setNewAchievementIds] = useState<string[]>([]);
   const loaded = useRef(false);
 
   useEffect(() => {
@@ -403,22 +416,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const isDiamond = item.currency === 'diamond';
 
         if (equippedHere) {
-          setState((s) => applyAchievementUnlocks({ ...s, equippedRoom: { ...s.equippedRoom, [slot]: null } }));
+          setState((s) => applyAndReport(s, { ...s, equippedRoom: { ...s.equippedRoom, [slot]: null } }, setNewAchievementIds));
           return true;
         }
         if (owned) {
-          setState((s) => applyAchievementUnlocks({ ...s, equippedRoom: { ...s.equippedRoom, [slot]: itemId } }));
+          setState((s) => applyAndReport(s, { ...s, equippedRoom: { ...s.equippedRoom, [slot]: itemId } }, setNewAchievementIds));
           return true;
         }
         const balance = isDiamond ? state.diamonds : state.coins;
         if (balance < item.price) return false;
-        setState((s) => applyAchievementUnlocks({
+        setState((s) => applyAndReport(s, {
           ...s,
           coins: isDiamond ? s.coins : s.coins - item.price,
           diamonds: isDiamond ? s.diamonds - item.price : s.diamonds,
           ownedRoomItems: [...s.ownedRoomItems, itemId],
           equippedRoom: { ...s.equippedRoom, [slot]: itemId },
-        }));
+        }, setNewAchievementIds));
         return true;
       },
 
@@ -477,7 +490,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             termsLearned: newTerms?.length
               ? [...new Set([...s.termsLearned, ...newTerms])] : s.termsLearned,
           };
-          next = applyAchievementUnlocks(next);
+          next = applyAndReport(s, next, setNewAchievementIds);
 
           // Life events: a guaranteed module-unlock event takes priority over an ambient roll.
           const justMastered = !wasMastered && isModuleMastered(next.moduleProgress, moduleId);
@@ -510,8 +523,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dailyLoginBanner,
       dismissDailyLoginBanner: () => setDailyLoginBanner(null),
       setOnboardingTrack: (trackId) => setState((s) => ({ ...s, onboardingTrackId: trackId })),
+      newAchievements: () => ACHIEVEMENTS.filter((a) => newAchievementIds.includes(a.id)).map((a) => ({ ...a, earned: true })),
+      dismissNewAchievements: () => setNewAchievementIds([]),
     };
-  }, [state, dailyLoginBanner]);
+  }, [state, dailyLoginBanner, newAchievementIds]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
