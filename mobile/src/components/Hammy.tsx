@@ -40,6 +40,20 @@ function EquippedItem({ item }: { item: ShopItemReal }) {
 // (with the same CSS overlap correction where adjacent corner radii exceed the box edge).
 const EAR_PATH = 'M 32,0 A 32,49.8 0 0 1 64,49.8 A 29.44,24.2 0 0 1 34.56,74 L 29.44,74 A 29.44,24.2 0 0 1 0,49.8 A 32,49.8 0 0 1 32,0 Z';
 
+/** CSS border-radius shorthand (top-left top-right bottom-right bottom-left) on a w×h box,
+ * converted to an SVG path of 4 independent-radius corner arcs — same technique as EAR_PATH,
+ * generalized. Used for the feet/arms, which (unlike the ears) use plain circular corners. */
+function roundedRectPath(w: number, h: number, tl: number, tr: number, br: number, bl: number): string {
+  return `M ${tl},0 L ${w - tr},0 A ${tr},${tr} 0 0 1 ${w},${tr} L ${w},${h - br} A ${br},${br} 0 0 1 ${w - br},${h} L ${bl},${h} A ${bl},${bl} 0 0 1 0,${h - bl} L 0,${tl} A ${tl},${tl} 0 0 1 ${tl},0 Z`;
+}
+
+// Feet/hands are rounded rectangles with a DIFFERENT radius per corner (styles.css
+// .pig-foot/.pig-arm border-radius), not plain ellipses — a stubbier, more "paw-like"
+// silhouette than a full oval.
+const FOOT_PATH = roundedRectPath(60, 52, 26, 26, 18, 18);
+const ARM_L_PATH = roundedRectPath(60, 48, 30, 18, 24, 28);
+const ARM_R_PATH = roundedRectPath(60, 48, 18, 30, 28, 24);
+
 /**
  * Hammy the pig — the real mascot, redrawn as SVG from the web app's CSS illustration
  * (gradients/shapes ported from styles.css .pig-*). Idle animation: gentle float, eye
@@ -267,11 +281,11 @@ export function Hammy({
 
           <ClipPath id="hm-clip-body"><Ellipse cx={220} cy={287} rx={150} ry={125} /></ClipPath>
           <ClipPath id="hm-clip-head"><Ellipse cx={220} cy={198} rx={138} ry={124} /></ClipPath>
-          <ClipPath id="hm-clip-arm-l"><Ellipse cx={84} cy={286} rx={30} ry={24} /></ClipPath>
-          <ClipPath id="hm-clip-arm-r"><Ellipse cx={356} cy={286} rx={30} ry={24} /></ClipPath>
+          <ClipPath id="hm-clip-arm-l"><G x={54} y={262}><Path d={ARM_L_PATH} /></G></ClipPath>
+          <ClipPath id="hm-clip-arm-r"><G x={326} y={262}><Path d={ARM_R_PATH} /></G></ClipPath>
           <ClipPath id="hm-clip-snout"><Ellipse cx={220} cy={212} rx={59} ry={42} /></ClipPath>
-          <ClipPath id="hm-clip-foot-l"><Ellipse cx={150} cy={400} rx={30} ry={26} /></ClipPath>
-          <ClipPath id="hm-clip-foot-r"><Ellipse cx={290} cy={400} rx={30} ry={26} /></ClipPath>
+          <ClipPath id="hm-clip-foot-l"><G x={120} y={374}><Path d={FOOT_PATH} /></G></ClipPath>
+          <ClipPath id="hm-clip-foot-r"><G x={260} y={374}><Path d={FOOT_PATH} /></G></ClipPath>
           <ClipPath id="hm-clip-ear"><Path d={EAR_PATH} /></ClipPath>
         </Defs>
 
@@ -282,10 +296,10 @@ export function Hammy({
         <Ellipse cx={220} cy={417} rx={150} ry={23} fill="url(#hm-shadow)" />
 
         {/* feet */}
-        <Ellipse cx={150} cy={400} rx={30} ry={26} fill="#F7A8C4" />
-        <Ellipse cx={290} cy={400} rx={30} ry={26} fill="#F7A8C4" />
-        <Ellipse cx={150} cy={400} rx={30} ry={26} fill="url(#hm-foot-shadow)" clipPath="url(#hm-clip-foot-l)" />
-        <Ellipse cx={290} cy={400} rx={30} ry={26} fill="url(#hm-foot-shadow)" clipPath="url(#hm-clip-foot-r)" />
+        <G x={120} y={374}><Path d={FOOT_PATH} fill="#F7A8C4" /></G>
+        <G x={260} y={374}><Path d={FOOT_PATH} fill="#F7A8C4" /></G>
+        <G x={120} y={374}><Path d={FOOT_PATH} fill="url(#hm-foot-shadow)" clipPath="url(#hm-clip-foot-l)" /></G>
+        <G x={260} y={374}><Path d={FOOT_PATH} fill="url(#hm-foot-shadow)" clipPath="url(#hm-clip-foot-r)" /></G>
 
         {/* tail */}
         <G x={362} y={236}>
@@ -300,10 +314,10 @@ export function Hammy({
         </G>
 
         {/* arms */}
-        <Ellipse cx={84} cy={286} rx={30} ry={24} fill="url(#hm-arm-l)" />
-        <Ellipse cx={84} cy={286} rx={30} ry={24} fill="url(#hm-arm-shadow-l)" clipPath="url(#hm-clip-arm-l)" />
-        <Ellipse cx={356} cy={286} rx={30} ry={24} fill="url(#hm-arm-r)" />
-        <Ellipse cx={356} cy={286} rx={30} ry={24} fill="url(#hm-arm-shadow-r)" clipPath="url(#hm-clip-arm-r)" />
+        <G x={54} y={262}><Path d={ARM_L_PATH} fill="url(#hm-arm-l)" /></G>
+        <G x={54} y={262}><Path d={ARM_L_PATH} fill="url(#hm-arm-shadow-l)" clipPath="url(#hm-clip-arm-l)" /></G>
+        <G x={326} y={262}><Path d={ARM_R_PATH} fill="url(#hm-arm-r)" /></G>
+        <G x={326} y={262}><Path d={ARM_R_PATH} fill="url(#hm-arm-shadow-r)" clipPath="url(#hm-clip-arm-r)" /></G>
 
         {/* body */}
         <Ellipse cx={220} cy={287} rx={150} ry={125} fill="url(#hm-body)" />
