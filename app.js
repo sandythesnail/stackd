@@ -16244,7 +16244,7 @@ let state = {
   ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null },
   metHammy: false,
   questProgress: {}, questBossesWon: [],
-  onboardingSurvey: { completed: false, moduleFamiliarity: {}, focusGoals: [], completedAt: null },
+  onboardingSurvey: { completed: false, moduleFamiliarity: {}, focusGoals: [], trackId: null, completedAt: null },
   budgetPlan: {
     incomeSources: [],
     fixedExpenses: [],
@@ -16750,14 +16750,14 @@ function renderModuleList(containerId) {
   container.innerHTML = '';
 
   // Modules always stay in their fixed numeric order (01–11) — personalization only
-  // affects which one gets the "Recommended" highlight below, never the list order, so
-  // the module list reads as a stable, predictable sequence.
+  // affects which ones get the "Recommended" highlight below (every module in the user's
+  // chosen track), never the list order, so the module list reads as a stable, predictable
+  // sequence.
   const survey = state.onboardingSurvey;
-  const topRecommendedId = survey && survey.completed
-    ? (MODULES.map((m, i) => ({ m, i, score: computeModulePriority(m, survey) }))
-        .sort((a, b) => b.score - a.score || a.i - b.i)
-        .find(x => x.score > 0) || {}).m?.id
+  const activeTrack = survey && survey.completed
+    ? SURVEY_TRACKS.find(t => t.id === survey.trackId) || getRecommendedTrack(survey)
     : null;
+  const trackModuleIds = activeTrack ? activeTrack.moduleIds : [];
 
   MODULES.forEach(m => {
     const quest = hasQuest(m);
@@ -16766,7 +16766,7 @@ function renderModuleList(containerId) {
       ? mainQuests(m).every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
       : lessonsDone === m.lessons.length;
 
-    const isRecommended = !allDone && m.id === topRecommendedId;
+    const isRecommended = !allDone && trackModuleIds.includes(m.id);
     const row = document.createElement('div');
     row.className = 'module-row' + (allDone ? ' completed' : '') + (isRecommended ? ' recommended' : '');
 
@@ -16881,10 +16881,11 @@ function renderModuleList(containerId) {
 
 // ── ONBOARDING SURVEY ────────────────────────────
 // Shown once, before the student ever really lands on the dashboard: a quick "what do you
-// already know, what do you want out of this" check-in that personalizes module ordering
-// without gating anything. Answers persist in state.onboardingSurvey until reset from Settings.
-// One module per screen, each a slider between two relatable "low" and "high" phrases instead
-// of a bank of generic multiple-choice buttons.
+// already know, what do you want out of this" check-in that recommends a themed "track" (a
+// short, ordered handful of modules) instead of dumping the full 11-module list on someone
+// who's brand new — without gating anything. Answers persist in state.onboardingSurvey until
+// reset from Settings. One module per screen, each a slider between two relatable "low" and
+// "high" phrases instead of a bank of generic multiple-choice buttons.
 const SURVEY_MODULE_IDS = MODULES.map(m => m.id);
 const SURVEY_FAMILIARITY_LABELS = {
   earning: ["I've never seen an actual paycheck", 'I know exactly what gets taken out before it hits my account'],
@@ -16908,8 +16909,36 @@ const SURVEY_GOALS = [
 ];
 const SURVEY_TOTAL_STEPS = SURVEY_MODULE_IDS.length + 1; // familiarity sliders + one goals step
 
+// Themed starting paths shown on the survey's results screen. Deliberately short (3 modules
+// each) so a brand-new user gets "start here, then here, then here" instead of an overwhelming
+// full roster — the rest of the catalog is still there, just not thrust at them on day one.
+// Modules can appear in more than one track; tracks are overlapping suggested paths, not a
+// strict partition of the catalog.
+const SURVEY_TRACKS = [
+  {
+    id: 'starting_fresh', title: 'Starting Fresh',
+    blurb: "You're just getting going, so let's cover the everyday basics first: where money comes from and where it goes.",
+    moduleIds: ['earning', 'spending', 'saving'],
+  },
+  {
+    id: 'debt_freedom', title: 'Debt Freedom',
+    blurb: 'Get a handle on loans, credit, and your paycheck so debt stops being scary.',
+    moduleIds: ['loans', 'credit', 'taxes'],
+  },
+  {
+    id: 'building_wealth', title: 'Building Wealth',
+    blurb: "You've got the basics covered, now let's grow what you have and earn more of it.",
+    moduleIds: ['saving', 'investing', 'career'],
+  },
+  {
+    id: 'stay_protected', title: 'Stay Protected',
+    blurb: 'Sharpen your radar for scams, marketing tricks, and risk before they cost you.',
+    moduleIds: ['risk', 'psychology', 'scams'],
+  },
+];
+
 let surveyStep = 1;
-let surveyDraft = { moduleFamiliarity: {}, focusGoals: [] };
+let surveyDraft = { moduleFamiliarity: {}, focusGoals: [], trackId: null };
 
 function isModuleFullyDone(m) {
   return hasQuest(m)
@@ -16933,29 +16962,41 @@ function computeModulePriority(m, survey) {
   return score;
 }
 
-function getRecommendedModule(survey) {
-  let best = null, bestScore = 0;
-  MODULES.forEach(m => {
-    const score = computeModulePriority(m, survey);
-    if (score > bestScore) { bestScore = score; best = m; }
+function computeTrackScore(track, survey) {
+  return track.moduleIds.reduce((sum, id) => {
+    const m = MODULES.find(mm => mm.id === id);
+    return sum + (m ? computeModulePriority(m, survey) : 0);
+  }, 0);
+}
+
+function getRecommendedTrack(survey) {
+  let best = SURVEY_TRACKS[0], bestScore = -1;
+  SURVEY_TRACKS.forEach(t => {
+    const score = computeTrackScore(t, survey);
+    if (score > bestScore) { bestScore = score; best = t; }
   });
-  if (!best) return null;
-  const fam = survey.moduleFamiliarity[best.id];
-  const goalHit = SURVEY_GOALS.find(g => survey.focusGoals.includes(g.id) && g.moduleIds.includes(best.id));
-  let reason;
-  if (goalHit && fam !== undefined && fam <= 33) {
-    reason = `It lines up with "${goalHit.label}," and you're just getting started there.`;
-  } else if (goalHit) {
-    reason = `It lines up with "${goalHit.label}."`;
-  } else {
-    reason = "You said you're not very familiar with it yet, so it's a solid place to start.";
-  }
-  return Object.assign({}, best, { reason });
+  return best;
+}
+
+function trackReason(track, survey) {
+  const goalHit = SURVEY_GOALS.find(g =>
+    (survey.focusGoals || []).includes(g.id) && g.moduleIds.some(id => track.moduleIds.includes(id)));
+  return goalHit ? `It lines up with "${goalHit.label}."` : track.blurb;
+}
+
+// Modules from a track a user has already finished drop out of their "start here" list; if
+// that empties the whole track, the results screen falls back to the no-track message.
+function trackModulesRemaining(track, survey) {
+  if (!track) return [];
+  return track.moduleIds
+    .map(id => MODULES.find(m => m.id === id))
+    .filter(m => m && !isModuleFullyDone(m))
+    .sort((a, b) => (survey.moduleFamiliarity[a.id] ?? 50) - (survey.moduleFamiliarity[b.id] ?? 50));
 }
 
 function showOnboardingSurvey() {
   surveyStep = 1;
-  surveyDraft = { moduleFamiliarity: {}, focusGoals: [] };
+  surveyDraft = { moduleFamiliarity: {}, focusGoals: [], trackId: null };
   document.getElementById('onboarding-mascot').innerHTML = getHammyFaceMarkup(0.32);
   renderSurveyStep();
   document.getElementById('onboarding-overlay').classList.add('visible');
@@ -16966,6 +17007,9 @@ function finishOnboardingSurvey(skipped) {
     completed: true,
     moduleFamiliarity: skipped ? state.onboardingSurvey.moduleFamiliarity || {} : surveyDraft.moduleFamiliarity,
     focusGoals: skipped ? state.onboardingSurvey.focusGoals || [] : surveyDraft.focusGoals,
+    trackId: skipped
+      ? state.onboardingSurvey.trackId || null
+      : surveyDraft.trackId || getRecommendedTrack(surveyDraft).id,
     completedAt: Date.now(),
   };
   saveState();
@@ -17012,6 +17056,9 @@ function renderSurveyStep() {
     body.innerHTML = `
       <div class="survey-slider-wrap">
         <input type="range" class="survey-slider" id="survey-slider" min="0" max="100" step="1" value="${current}">
+        <div class="survey-slider-ticks">
+          <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+        </div>
         <div class="survey-slider-labels">
           <span class="survey-slider-left">${lowLabel}</span>
           <span class="survey-slider-right">${highLabel}</span>
@@ -17042,27 +17089,55 @@ function renderSurveyStep() {
       });
     });
     skipBtn.style.display = '';
-    nextBtn.textContent = 'See my starting path →';
+    nextBtn.textContent = 'See my starting track →';
     nextBtn.onclick = () => { surveyStep++; renderSurveyStep(); };
   } else {
     stepLabel.textContent = "You're all set";
-    heading.textContent = 'Your starting path';
+    heading.textContent = 'Your starting track';
     sub.textContent = '';
-    const rec = getRecommendedModule(surveyDraft);
-    body.innerHTML = rec
-      ? `<div class="survey-recommend-card">
-          <div class="survey-recommend-icon"><div class="mod-icon ${rec.iconColor}">${rec.icon}</div></div>
-          <div>
-            <div class="survey-recommend-title">Start with ${rec.title}</div>
-            <div class="survey-recommend-text">${rec.reason}</div>
-          </div>
-        </div>`
-      : `<div class="survey-recommend-card">
+
+    const activeTrack = SURVEY_TRACKS.find(t => t.id === surveyDraft.trackId) || getRecommendedTrack(surveyDraft);
+    const trackModules = trackModulesRemaining(activeTrack, surveyDraft);
+
+    if (!activeTrack || trackModules.length === 0) {
+      body.innerHTML = `<div class="survey-recommend-card">
           <div>
             <div class="survey-recommend-title">Explore at your own pace</div>
             <div class="survey-recommend-text">Jump into whatever module looks interesting on your dashboard, there's no set order.</div>
           </div>
         </div>`;
+    } else {
+      body.innerHTML = `
+        <div class="survey-recommend-card survey-track-card">
+          <div>
+            <div class="survey-recommend-title">Your track: ${activeTrack.title}</div>
+            <div class="survey-recommend-text">${trackReason(activeTrack, surveyDraft)}</div>
+            <div class="survey-track-modules">
+              ${trackModules.map((m, i) => `
+                <div class="survey-track-module">
+                  <span class="survey-track-step">${i + 1}</span>
+                  <div class="mod-icon ${m.iconColor}">${m.icon}</div>
+                  <span class="survey-track-module-title">${m.title}</span>
+                </div>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="survey-track-switch">
+          <span class="survey-track-switch-label">Prefer a different track?</span>
+          <div class="survey-track-switch-options">
+            ${SURVEY_TRACKS.filter(t => t.id !== activeTrack.id).map(t =>
+              `<button type="button" class="survey-track-chip" data-track="${t.id}">${t.title}</button>`
+            ).join('')}
+          </div>
+        </div>`;
+      body.querySelectorAll('.survey-track-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          surveyDraft.trackId = btn.dataset.track;
+          renderSurveyStep();
+        });
+      });
+    }
+
     backBtn.style.display = 'none';
     skipBtn.style.display = 'none';
     nextBtn.textContent = 'Take me to my dashboard →';
@@ -18044,7 +18119,7 @@ function renderSettingsPage() {
   const retakeBtn = document.getElementById('retake-survey-btn');
   if (retakeBtn) {
     retakeBtn.onclick = () => {
-      state.onboardingSurvey = { completed: false, moduleFamiliarity: {}, focusGoals: [], completedAt: null };
+      state.onboardingSurvey = { completed: false, moduleFamiliarity: {}, focusGoals: [], trackId: null, completedAt: null };
       saveState();
       showOnboardingSurvey();
     };

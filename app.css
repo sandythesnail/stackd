@@ -1734,7 +1734,9 @@ select.budget-input { cursor: pointer; }
   width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 3px solid var(--green-dark);
   cursor: grab; box-shadow: var(--shadow-sm);
 }
-.survey-slider-labels { display: flex; justify-content: space-between; gap: 1.5rem; margin-top: 1rem; }
+.survey-slider-ticks { display: flex; justify-content: space-between; padding: 0 1px; margin-top: 0.45rem; }
+.survey-slider-ticks span { font-size: 0.72rem; font-weight: 600; color: var(--text-soft); }
+.survey-slider-labels { display: flex; justify-content: space-between; gap: 1.5rem; margin-top: 0.6rem; }
 .survey-slider-left, .survey-slider-right {
   font-size: 0.88rem; font-weight: 600; color: var(--text); line-height: 1.4; max-width: 46%;
 }
@@ -1765,6 +1767,28 @@ select.budget-input { cursor: pointer; }
 .survey-recommend-icon { flex-shrink: 0; }
 .survey-recommend-title { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 0.3rem; }
 .survey-recommend-text { font-size: 0.85rem; color: var(--text-mid); line-height: 1.5; }
+
+.survey-track-card { display: block; }
+.survey-track-modules { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-top: 1rem; }
+.survey-track-module {
+  display: flex; align-items: center; gap: 0.5rem; background: #fff; border: 1px solid var(--green-light);
+  border-radius: 999px; padding: 0.35rem 0.85rem 0.35rem 0.35rem;
+}
+.survey-track-step {
+  display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--green-dark); color: #fff; font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
+}
+.survey-track-module-title { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+
+.survey-track-switch { margin-top: 1.1rem; }
+.survey-track-switch-label { display: block; font-size: 0.78rem; color: var(--text-soft); margin-bottom: 0.55rem; }
+.survey-track-switch-options { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.survey-track-chip {
+  padding: 0.45rem 0.9rem; border-radius: 999px; border: 1.5px solid var(--border); background: #fff;
+  font-size: 0.8rem; font-weight: 600; color: var(--text-mid); cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s; font-family: inherit;
+}
+.survey-track-chip:hover { border-color: var(--green); background: var(--green-pale); color: var(--green-dark); }
 
 @media (max-width: 600px) {
   .onboarding-header { flex-direction: column; align-items: center; text-align: center; }
