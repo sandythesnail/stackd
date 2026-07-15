@@ -1,17 +1,32 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { Screen, Header, Txt, Field, Button } from '@/components';
 import { colors, font } from '@/theme';
 import { user } from '@/data';
 import { useStore } from '@/store';
 
-/** Screen 14 — Settings (invite, account, sources). */
+/** Screen 14 — Settings (invite, account, sources).
+ *
+ * Referral REWARD payout (REFERRAL_ACTIVATION_COINS=15 for the new signup,
+ * server-determined diamonds for the referrer) is intentionally not ported here: on the
+ * website it's paid out entirely server-side via Supabase RPCs (claim_referral_activation /
+ * claim_referrer_rewards) tied to real Clerk accounts, specifically so a client can never
+ * credit itself. The mobile app has no auth/backend wired up yet, so faking that payout
+ * client-side would mean showing a reward for something that didn't actually happen. What
+ * IS real here: the referral code and a working copy-to-clipboard. */
 export default function Settings() {
   const router = useRouter();
   const { state, level, tierName } = useStore();
+  const [copied, setCopied] = useState(false);
+  const copyReferral = async () => {
+    await Clipboard.setStringAsync(user.referral);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   return (
     <Screen edges={['top']}>
       <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} />
@@ -19,15 +34,15 @@ export default function Settings() {
         <Txt variant="disp" style={{ fontSize: 23 }}>Settings</Txt>
 
         <LinearGradient colors={[colors.pinkBg, colors.pinkBorder]} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={styles.invite}>
-          <Txt style={styles.inviteH}>Invite a friend, earn 5 💎</Txt>
+          <Txt style={styles.inviteH}>Invite a friend, they get 15 🪙</Txt>
           <Txt variant="lead" style={{ fontSize: 13, marginTop: 5, marginBottom: 11 }}>
-            You both get diamonds when they finish their first quest.
+            You both get rewarded once they finish their first quest — diamonds for you, coins for them.
           </Txt>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'stretch' }}>
             <View style={styles.codeField}>
               <Txt style={styles.code}>{user.referral}</Txt>
             </View>
-            <Button label="Copy" variant="pink" size="sm" style={{ paddingHorizontal: 18 }} />
+            <Button label={copied ? 'Copied!' : 'Copy'} variant="pink" size="sm" onPress={copyReferral} style={{ paddingHorizontal: 18 }} />
           </View>
         </LinearGradient>
 
