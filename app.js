@@ -17818,7 +17818,7 @@ function renderHome() {
   document.getElementById('home-mascot-card').innerHTML = `
     <div class="mascot-pig-wrap has-face-overlay ${moodClass}">${withFaceOverlay(getPigWithItemMarkup(0.34, getEquippedItems()))}</div>
     <div class="mascot-mood-label">Hammy is feeling <strong>${satisfiedToday ? 'happy' : mood.label}</strong> today</div>
-    <div class="mascot-mood-msg">${satisfiedToday ? "Thanks for working on a module today — Hammy's mood is lifted! Come back tomorrow for more." : mood.msg}</div>`;
+    <div class="mascot-mood-msg">${satisfiedToday ? "Thanks for working on a module today — Hammy's mood is lifted!" : mood.msg}</div>`;
 
   const loginBonusPending = dailyLoginBonusPending() || pendingStreakDiamonds > 0;
   document.getElementById('home-stats-row').innerHTML = `
