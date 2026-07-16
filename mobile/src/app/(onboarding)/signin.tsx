@@ -1,10 +1,88 @@
+import { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSignIn } from '@clerk/clerk-expo';
 import { Screen, Spacer, Txt, Button, Field, Hammy, Divider } from '@/components';
 import { colors, font } from '@/theme';
+import { authEnabled } from '@/lib/env';
 
-/** Screen 4 — Sign in (NetID SSO + email). */
+/** Screen 4 — Sign in. Real Clerk email/password when auth is configured; otherwise the
+ * original local stub (drops straight into the app), so the app runs without keys. */
 export default function SignIn() {
+  return authEnabled ? <ClerkSignIn /> : <StubSignIn />;
+}
+
+function ClerkSignIn() {
+  const router = useRouter();
+  const { signIn, setActive, isLoaded } = useSignIn();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [show, setShow] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const onSignIn = async () => {
+    if (!isLoaded || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await signIn.create({ identifier: email.trim(), password });
+      if (res.status === 'complete') {
+        await setActive({ session: res.createdSessionId });
+        router.replace('/(tabs)/home');
+      } else {
+        setError('Additional verification needed. Try again or reset your password.');
+      }
+    } catch (e: unknown) {
+      setError(clerkError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Screen style={{ paddingHorizontal: 22 }}>
+      <View style={{ alignItems: 'center', gap: 16, marginTop: 14 }}>
+        <Hammy size={104} ring />
+        <Txt variant="disp" style={{ textAlign: 'center' }}>Welcome back!</Txt>
+      </View>
+
+      <View style={{ gap: 12, marginTop: 22 }}>
+        <Field
+          label="EMAIL"
+          value={email}
+          onChangeText={setEmail}
+          placeholder="you@uconn.edu"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+        />
+        <Field
+          label="PASSWORD"
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Your password"
+          secureTextEntry={!show}
+          autoCapitalize="none"
+          autoComplete="password"
+          right={<Txt style={styles.link} onPress={() => setShow((s) => !s)}>{show ? 'Hide' : 'Show'}</Txt>}
+        />
+      </View>
+
+      {error ? <Txt style={styles.error}>{error}</Txt> : null}
+
+      <Button label={busy ? 'Signing in…' : 'Sign in'} onPress={onSignIn} style={{ marginTop: 16 }} />
+
+      <Spacer />
+      <View style={styles.footer}>
+        <Txt style={styles.footTxt}>New to Stackd? </Txt>
+        <Txt style={styles.link} onPress={() => router.push('/(onboarding)/signup')}>Create account</Txt>
+      </View>
+    </Screen>
+  );
+}
+
+function StubSignIn() {
   const router = useRouter();
   return (
     <Screen style={{ paddingHorizontal: 22 }}>
@@ -27,11 +105,7 @@ export default function SignIn() {
 
       <View style={{ gap: 12 }}>
         <Field label="EMAIL" value="maya.rodriguez@uconn.edu" />
-        <Field
-          label="PASSWORD"
-          value="••••••••••"
-          right={<Txt style={styles.link}>Show</Txt>}
-        />
+        <Field label="PASSWORD" value="••••••••••" right={<Txt style={styles.link}>Show</Txt>} />
       </View>
 
       <View style={{ alignItems: 'flex-end', marginTop: 12 }}>
@@ -49,6 +123,11 @@ export default function SignIn() {
   );
 }
 
+export function clerkError(e: unknown): string {
+  const err = e as { errors?: { message?: string; longMessage?: string }[] };
+  return err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Something went wrong. Please try again.';
+}
+
 function MsLogo() {
   const sq = (bg: string) => <View style={[styles.sq, { backgroundColor: bg }]} />;
   return (
@@ -61,6 +140,7 @@ function MsLogo() {
 
 const styles = StyleSheet.create({
   link: { fontFamily: font.extra, fontSize: 14, color: colors.green },
+  error: { fontFamily: font.bold, fontSize: 13, color: colors.danger, marginTop: 12 },
   footer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 10 },
   footTxt: { fontFamily: font.bold, fontSize: 13.5, color: colors.muted3 },
   ms: { gap: 2 },

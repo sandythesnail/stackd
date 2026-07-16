@@ -4,10 +4,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import { useUser, useClerk } from '@clerk/clerk-expo';
 import { Screen, Header, Txt, Field, Button } from '@/components';
 import { colors, font } from '@/theme';
 import { user } from '@/data';
 import { useStore } from '@/store';
+import { authEnabled } from '@/lib/env';
 
 /** Screen 14 — Settings (invite, account, sources).
  *
@@ -61,11 +63,15 @@ export default function Settings() {
         </LinearGradient>
 
         <View style={{ marginTop: 2 }}>
-          <Row icon="user" title="Account" sub={user.email} />
+          {authEnabled ? <ClerkAccountRow /> : <Row icon="user" title="Account" sub={user.email} />}
           <Row icon="bell" title="Notifications" />
           <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.push('/(onboarding)/survey')} />
           <Row icon="trash-2" title="Reset all progress" sub="Hammy goes back to a piglet" danger onPress={confirmReset} />
-          <Row icon="log-out" title="Sign out" last onPress={() => router.replace('/(onboarding)/signin')} />
+          {authEnabled ? (
+            <ClerkSignOutRow />
+          ) : (
+            <Row icon="log-out" title="Sign out" last onPress={() => router.replace('/(onboarding)/signin')} />
+          )}
         </View>
 
         <Txt style={styles.srcHead}>SOURCES & REFERENCES</Txt>
@@ -73,6 +79,33 @@ export default function Settings() {
       </ScrollView>
     </Screen>
   );
+}
+
+/** Account row backed by the real signed-in Clerk user (only rendered when auth is on). */
+function ClerkAccountRow() {
+  const { user: clerkUser } = useUser();
+  const email = clerkUser?.primaryEmailAddress?.emailAddress ?? clerkUser?.username ?? 'Account';
+  return <Row icon="user" title="Account" sub={email} />;
+}
+
+/** Real Clerk sign-out (only rendered when auth is on). */
+function ClerkSignOutRow() {
+  const router = useRouter();
+  const { signOut } = useClerk();
+  const onSignOut = () => {
+    Alert.alert('Sign out?', 'Your progress is saved to your account.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign out',
+        style: 'destructive',
+        onPress: async () => {
+          await signOut();
+          router.replace('/(onboarding)/welcome');
+        },
+      },
+    ]);
+  };
+  return <Row icon="log-out" title="Sign out" last onPress={onSignOut} />;
 }
 
 function Row({

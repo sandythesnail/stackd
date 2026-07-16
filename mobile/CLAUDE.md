@@ -16,6 +16,15 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
 - `src/components/` — shared UI, re-exported from `src/components/index.ts`. Import via `@/components`.
   Key pieces: `Screen`, `Header`/`TierBadge`/`CurrencyChip`, `Button` (3D press), `Card`, `ProgressBar`,
   `Tag`, `Option`, `Field`, `Hammy`/`Slot` (mascot placeholder), `TabBar` (custom 5-tab bar), `bits`, `ModuleBits`.
+- `src/lib/` — **auth + cloud sync** (Clerk + Supabase), mirroring the web's `app-auth.js`. Keys come
+  from `EXPO_PUBLIC_*` in `.env` (`.env.example` is the template); `env.authEnabled` is false until the
+  Clerk key is set, and while false the whole layer stays dormant — the app runs local-only (AsyncStorage),
+  exactly as before, so a missing key never breaks it. `webState.ts` does the translate+merge between
+  mobile `AppState` and the web's canonical `user_progress.state` blob (web = source of truth; web-only
+  fields preserved on write, mobile-only stashed under `_mobile`). `SupabaseSync.tsx` (mounted only when
+  `authEnabled`) loads on sign-in, debounced-upserts on change, flushes on background. Same Clerk instance
+  + Supabase project as the web (trystacked.app) → cross-device sync. Real Clerk sign-in/up live in
+  `(onboarding)/signin|signup` (stub fallback when disabled); real sign-out + account in Settings.
 - `src/app/` routes:
   - `index.tsx` — splash (screen 1), auto-advances to onboarding.
   - `(onboarding)/` — welcome, signup, signin, piggy-born, survey (screens 2–6).

@@ -4,11 +4,25 @@ import {
   Screen, Header, Txt, Card, Button, ProgressBar, Tag, Stat, Speech, Hammy,
   SectionHead, MIcon, ModuleTile, BadgeMedal, MEDAL_GRAD, Flame, Coin, Diamond, CurrencyChip,
 } from '@/components';
+import { useUser } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
 import { user, modules } from '@/data';
 import { useStore } from '@/store';
+import { authEnabled } from '@/lib/env';
 import { todaysHammyMood, hasModuleActivityToday } from '@/hammyMood';
 import { MOOD_FACES } from '@/hammyFaces';
+
+/** Greeting name from the real signed-in Clerk user when auth is on, else the local mock. */
+function Greeting() {
+  return <Txt variant="disp" style={{ fontSize: 23 }}>Good afternoon, {authEnabled ? <ClerkName /> : user.name}</Txt>;
+}
+function ClerkName() {
+  const { user: clerkUser } = useUser();
+  const name = clerkUser?.firstName
+    || clerkUser?.primaryEmailAddress?.emailAddress?.split('@')[0]
+    || 'there';
+  return <>{name}</>;
+}
 
 /** Screen 7 — Home / Dashboard. Real module progress, badges, and next-quest card. */
 export default function Home() {
@@ -48,7 +62,7 @@ export default function Home() {
     <Screen edges={['top']}>
       <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} onGear={() => router.push('/(tabs)/settings')} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Txt variant="disp" style={{ fontSize: 23 }}>Good afternoon, {user.name}</Txt>
+        <Greeting />
 
         <Pressable style={styles.statRow} onPress={() => router.push('/(tabs)/progress')}>
           <Stat value={state.xp.toLocaleString()} label="XP" />

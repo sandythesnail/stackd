@@ -264,6 +264,9 @@ type Ctx = {
   dismissNewAchievements: () => void;
   /** Ported from the website's Settings reset button: wipes local state back to defaults. */
   resetProgress: () => void;
+  /** Merge a remote (cloud-synced) snapshot into local state — used by SupabaseSync after
+   * translating the web's user_progress blob into mobile's AppState. */
+  hydrateFromRemote: (partial: Partial<AppState>) => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
@@ -533,6 +536,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setDailyLoginBanner(null);
         setNewAchievementIds([]);
       },
+      hydrateFromRemote: (partial) => setState((s) => ({ ...s, ...partial })),
     };
   }, [state, dailyLoginBanner, newAchievementIds]);
 

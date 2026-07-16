@@ -18,11 +18,27 @@ import {
   Nunito_700Bold,
   Nunito_800ExtraBold,
 } from '@expo-google-fonts/nunito';
+import { ClerkProvider } from '@clerk/clerk-expo';
 import { colors } from '@/theme';
 import { StoreProvider } from '@/store';
 import { AchievementToast } from '@/components';
+import { authEnabled, env } from '@/lib/env';
+import { tokenCache } from '@/lib/tokenCache';
+import { SupabaseSync } from '@/lib/SupabaseSync';
 
 SplashScreen.preventAutoHideAsync();
+
+/** Provide Clerk only when the public keys are configured; otherwise render children as-is
+ * so the app keeps working locally (no sign-in gate, no sync). ClerkProvider sits OUTSIDE
+ * StoreProvider so both auth and store contexts are available to <SupabaseSync/>. */
+function AuthGate({ children }: { children: React.ReactNode }) {
+  if (!authEnabled) return <>{children}</>;
+  return (
+    <ClerkProvider publishableKey={env.clerkPublishableKey} tokenCache={tokenCache}>
+      {children}
+    </ClerkProvider>
+  );
+}
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -46,7 +62,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
+        <AuthGate>
         <StoreProvider>
+          {authEnabled ? <SupabaseSync /> : null}
           <StatusBar style="dark" />
           <Stack
             screenOptions={{
@@ -74,6 +92,7 @@ export default function RootLayout() {
           </Stack>
           <AchievementToast />
         </StoreProvider>
+        </AuthGate>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
