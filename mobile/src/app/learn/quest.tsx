@@ -7,6 +7,7 @@ import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy 
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
+import { useStore } from '@/store';
 import { REACTION_FACES } from '@/hammyFaces';
 import type {
   Chapter, Question, StoryChapter, TeachChapter, MatchingChapter, HintChapter, DecisionChapter,
@@ -35,6 +36,7 @@ type ReactProps = { reactTo: (isCorrect: boolean) => void };
  * the flat single-quiz flow, one chapter at a time. */
 export default function QuestPlayer() {
   const router = useRouter();
+  const { equippedMascotItems } = useStore();
   const { moduleId, lessonIndex } = useLocalSearchParams<{ moduleId: string; lessonIndex: string }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
@@ -115,7 +117,7 @@ export default function QuestPlayer() {
         <Txt style={styles.step}>{chapterIdx + 1} / {quest.chapters.length}</Txt>
       </View>
       <View style={styles.companionWrap}>
-        <Hammy size={190} bob face={reactionMood ? REACTION_FACES[reactionMood] : undefined} />
+        <Hammy size={190} bob equipped={equippedMascotItems()} face={reactionMood ? REACTION_FACES[reactionMood] : undefined} />
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ChapterView
