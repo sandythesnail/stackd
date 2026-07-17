@@ -11,6 +11,12 @@
   function underApp() {
     return location.pathname === '/m' || location.pathname.indexOf('/m/') === 0;
   }
+  // Shared Clerk sign-in / sign-up pages: usable on ANY viewport (the /m app sends mobile
+  // users here to authenticate), so never viewport-redirect away from them.
+  function isAuthPage() {
+    var p = location.pathname;
+    return p === '/login.html' || p === '/signup.html' || p === '/login' || p === '/signup';
+  }
   function isNarrow() {
     return !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
   }
@@ -20,6 +26,7 @@
 
   function apply() {
     try {
+      if (isAuthPage()) return;
       if (!underApp()) {
         // On the vanilla site: a phone or a narrow viewport belongs in the app.
         if (isNarrow() || isMobileUA()) location.replace('/m/');

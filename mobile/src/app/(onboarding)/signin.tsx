@@ -1,14 +1,17 @@
 import { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSignIn } from '@clerk/clerk-expo';
 import { Screen, Spacer, Txt, Button, Field, Hammy, Divider } from '@/components';
 import { colors, font } from '@/theme';
 import { authEnabled } from '@/lib/env';
+import { WebAuthRedirect } from '@/lib/webAuth';
 
-/** Screen 4 — Sign in. Real Clerk email/password when auth is configured; otherwise the
- * original local stub (drops straight into the app), so the app runs without keys. */
+/** Screen 4 — Sign in. On the web build we reuse the site's real Clerk sign-in (Google +
+ * all methods) via WebAuthRedirect. On native it's the in-app Clerk email/password form
+ * (or the local stub when auth isn't configured). */
 export default function SignIn() {
+  if (Platform.OS === 'web' && authEnabled) return <WebAuthRedirect page="login" />;
   return authEnabled ? <ClerkSignIn /> : <StubSignIn />;
 }
 

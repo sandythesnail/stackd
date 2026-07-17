@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useSignUp } from '@clerk/clerk-expo';
@@ -7,10 +7,13 @@ import { Screen, Spacer, Txt, Button, Field, IconButton, CheckBox } from '@/comp
 import { colors, font } from '@/theme';
 import { authEnabled } from '@/lib/env';
 import { clerkError } from './signin';
+import { WebAuthRedirect } from '@/lib/webAuth';
 
-/** Screen 3 — Sign up. Real Clerk account creation (email + password, with email-code
- * verification) when auth is configured; otherwise the original local stub. */
+/** Screen 3 — Sign up. On the web build we reuse the site's real Clerk sign-up (Google +
+ * all methods) via WebAuthRedirect. On native it's the in-app Clerk flow (email + password
+ * with email-code verification), or the local stub when auth isn't configured. */
 export default function SignUp() {
+  if (Platform.OS === 'web' && authEnabled) return <WebAuthRedirect page="signup" />;
   return authEnabled ? <ClerkSignUp /> : <StubSignUp />;
 }
 
