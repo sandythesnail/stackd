@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build && cd mobile && npm ci && EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=\"$CLERK_PUBLISHABLE_KEY\" EXPO_PUBLIC_SUPABASE_URL=\"$SUPABASE_URL\" EXPO_PUBLIC_SUPABASE_ANON_KEY=\"$SUPABASE_ANON_KEY\" npx expo export -p web && cd .. && cp -r mobile/dist dist/m",
+  "buildCommand": "npm run build && cd mobile && npm ci && EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=\"$CLERK_PUBLISHABLE_KEY\" EXPO_PUBLIC_SUPABASE_URL=\"$SUPABASE_URL\" EXPO_PUBLIC_SUPABASE_ANON_KEY=\"$SUPABASE_ANON_KEY\" npx expo export -p web && cd .. && cp -r mobile/dist dist/m && node scripts/inject-m-redirect.js",
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/m", "destination": "/m/index.html" },
