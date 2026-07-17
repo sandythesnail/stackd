@@ -52,6 +52,21 @@ const EXCLUDE_AT_ROOT = new Set([
   'package.json', 'package-lock.json', 'skills-lock.json', '.gitignore', 'vercel.json', '.env',
 ]);
 
+// Render-blocking script injected at the top of every page's <head>. It bounces
+// phones / narrow viewports to the Expo app under /m/ (see m-redirect.js), while
+// desktop widths stay on this vanilla site. The mobile app export under dist/m is
+// added after this build runs, so its pages are never injected (no redirect loop).
+const REDIRECT_TAG = '<script src="/m-redirect.js"></script>';
+
+function injectRedirect(html) {
+  if (html.includes(REDIRECT_TAG)) return html;
+  // Insert immediately after the opening <head ...> so it runs before first paint.
+  if (/<head[^>]*>/i.test(html)) {
+    return html.replace(/<head[^>]*>/i, (m) => `${m}${REDIRECT_TAG}`);
+  }
+  return html; // no <head> (not an app page) — leave untouched
+}
+
 function copyDir(srcDir, destDir, isRoot) {
   fs.mkdirSync(destDir, { recursive: true });
   for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
@@ -65,7 +80,10 @@ function copyDir(srcDir, destDir, isRoot) {
       for (const [token, value] of Object.entries(REPLACEMENTS)) {
         content = content.split(token).join(value);
       }
-      fs.writeFileSync(dest, content);
+      fs.writeFileSync(dest, injectRedirect(content));
+    } else if (entry.name.endsWith('.html')) {
+      // Every other HTML page still needs the viewport redirect.
+      fs.writeFileSync(dest, injectRedirect(fs.readFileSync(src, 'utf-8')));
     } else {
       fs.copyFileSync(src, dest);
     }
