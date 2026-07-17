@@ -5,6 +5,7 @@
   "description": "Stacked — financial literacy web app (static HTML/CSS/JS) with a self-contained local security scanner.",
   "scripts": {
     "security-check": "node SecurityAgent/runner.js",
-    "build": "node scripts/build.js"
+    "build": "node scripts/build.js",
+    "vercel-build": "npm run build && cd mobile && npm ci && EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=\"$CLERK_PUBLISHABLE_KEY\" EXPO_PUBLIC_SUPABASE_URL=\"$SUPABASE_URL\" EXPO_PUBLIC_SUPABASE_ANON_KEY=\"$SUPABASE_ANON_KEY\" npx expo export -p web && cd .. && cp -r mobile/dist dist/m && node scripts/inject-m-redirect.js"
   }
 }
