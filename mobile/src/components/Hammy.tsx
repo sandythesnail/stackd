@@ -169,6 +169,10 @@ export function Hammy({
               shadowRadius: 14,
               shadowOffset: { width: 0, height: 0 },
               elevation: 6,
+              // Without this, web renders the shadow as a literal rectangle around Hammy's
+              // bounding box (a visible box outline) instead of a soft glow — clamped border
+              // radius makes the shadow follow a circle/ellipse instead.
+              borderRadius: 9999,
             }
           : null,
         style,
@@ -310,7 +314,7 @@ export function Hammy({
         <Rect x={260} y={374} width={FOOT_W} height={FOOT_H} rx={FOOT_R} ry={FOOT_R} fill="url(#hm-foot-shadow)" clipPath="url(#hm-clip-foot-r)" />
 
         {/* tail */}
-        <G x={362} y={236}>
+        <G transform="translate(362, 236)">
           <G transform={tailTransform}>
             <Path
               d="M 9,31 C 9,11 27,5 39,15 C 51,25 49,41 39,47 C 29,53 17,49 15,41 C 13,33 21,31 27,33"
@@ -334,14 +338,14 @@ export function Hammy({
         <Ellipse cx={220} cy={330} rx={75} ry={60} fill="url(#hm-tummy)" />
 
         {/* ears */}
-        <G x={106} y={54}>
+        <G transform="translate(106, 54)">
           <G transform={earLTransform}>
             <Path d={EAR_PATH} fill="url(#hm-ear-l)" />
             <Path d={EAR_PATH} fill="url(#hm-ear-shadow-l)" clipPath="url(#hm-clip-ear)" />
             <Ellipse cx={32} cy={38} rx={13} ry={20} fill="#F48BB0" />
           </G>
         </G>
-        <G x={270} y={54}>
+        <G transform="translate(270, 54)">
           <G transform={earRTransform}>
             <Path d={EAR_PATH} fill="url(#hm-ear-r)" />
             <Path d={EAR_PATH} fill="url(#hm-ear-shadow-r)" clipPath="url(#hm-clip-ear)" />

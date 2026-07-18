@@ -157,7 +157,9 @@ const styles = StyleSheet.create({
   statRow: { flexDirection: 'row', gap: 8 },
   questCard: { backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder },
   questTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  questHammy: { shadowColor: colors.white, shadowOpacity: 0.6, shadowRadius: 6, elevation: 3 },
+  // borderRadius keeps the glow circular on web — without it, shadow* renders as a literal
+  // rectangle around Hammy's bounding box instead of a soft halo.
+  questHammy: { shadowColor: colors.white, shadowOpacity: 0.6, shadowRadius: 6, elevation: 3, borderRadius: 9999 },
   questMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   gridItem: { width: '47.5%', flexGrow: 1 },

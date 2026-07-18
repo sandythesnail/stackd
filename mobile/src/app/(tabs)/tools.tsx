@@ -90,7 +90,7 @@ function CompoundInterestPanel() {
 
   return (
     <>
-      <Card style={{ gap: 14 }}>
+      <Card style={{ gap: 11 }}>
         <Txt style={styles.cardTitle}>Your Numbers</Txt>
         <SliderRow label="Starting amount" value={startingAmount} onChange={setStartingAmount} min={0} max={5000} step={50} format={money} />
         <SliderRow label="Monthly contribution" value={monthlyContribution} onChange={setMonthlyContribution} min={0} max={1000} step={10} format={money} />
@@ -112,16 +112,16 @@ function CompoundInterestPanel() {
         />
         <Pressable onPress={() => setShowCompare((s) => !s)}>
           <Tag tone="lock" style={{ paddingVertical: 8, alignSelf: 'flex-start' }}>
-            {showCompare ? 'Hide comparison ▴' : 'Compare: start at 18 vs. start at 28 →'}
+            {showCompare ? 'Hide ▴' : 'Compare: 18 vs. 28 →'}
           </Tag>
         </Pressable>
       </Card>
 
       {showCompare ? (
         <Card style={{ gap: 8 }}>
-          <Txt style={styles.cardTitle}>Start at 18 vs. Start at 28</Txt>
+          <Txt style={styles.cardTitle}>Start at 18 vs. 28</Txt>
           <Txt variant="lead" style={{ fontSize: 12.5 }}>
-            Same {money(monthlyContribution)}/month, same {annualRatePct}% rate, both stop contributing at 65. A 10-year head start:
+            Same {money(monthlyContribution)}/mo, same {annualRatePct}%, both stop at 65:
           </Txt>
           <View style={styles.compareRow}>
             <Txt style={styles.compareLabel}>Start at 18</Txt>
@@ -132,7 +132,7 @@ function CompoundInterestPanel() {
             <Txt style={styles.compareVal}>{money(lateFinal)}</Txt>
           </View>
           <Txt variant="lead" style={{ fontSize: 12.5, marginTop: 4 }}>
-            The 10-year head start is worth {money(earlyFinal - lateFinal)} more by 65 — from the same monthly amount.
+            Worth {money(earlyFinal - lateFinal)} more by 65 — same monthly amount.
           </Txt>
         </Card>
       ) : null}
@@ -141,27 +141,27 @@ function CompoundInterestPanel() {
         <Txt style={styles.resultCap}>WHERE YOU&apos;LL LAND</Txt>
         <Txt style={styles.resultBig}>{money(final.balance)}</Txt>
         <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center' }}>
-          after {years} year{years === 1 ? '' : 's'} — you&apos;ll have put in {money(final.contributed)}, interest earned the rest: {money(final.balance - final.contributed)}
+          {years}yr: {money(final.contributed)} in, {money(final.balance - final.contributed)} interest
         </Txt>
         <StackedAreaChart points={points} baseKey="contributed" totalKey="balance" tone="growth" />
         <View style={styles.legendRow}>
           <View style={styles.legendItem}>
             <View style={[styles.swatch, { backgroundColor: colors.greenSoft }]} />
-            <Txt style={styles.legendTxt}>What you put in</Txt>
+            <Txt style={styles.legendTxt}>Put in</Txt>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.swatch, { backgroundColor: colors.pinkBorder }]} />
-            <Txt style={styles.legendTxt}>What interest earned</Txt>
+            <Txt style={styles.legendTxt}>Interest</Txt>
           </View>
         </View>
         {doublingYears ? (
           <Txt variant="lead" style={styles.milestone}>
-            📈 At {annualRatePct}%, your money roughly doubles every {doublingYears.toFixed(1)} years (Rule of 72).
+            📈 Doubles every {doublingYears.toFixed(1)} yrs at {annualRatePct}% (Rule of 72)
           </Txt>
         ) : null}
         {milestone && milestonePoint ? (
           <Txt variant="lead" style={styles.milestone}>
-            🎯 You&apos;ll cross {money(milestone)} around year {(milestonePoint.month / 12).toFixed(1)}.
+            🎯 Crosses {money(milestone)} around year {(milestonePoint.month / 12).toFixed(1)}
           </Txt>
         ) : null}
       </Card>
@@ -169,13 +169,13 @@ function CompoundInterestPanel() {
       <Card style={styles.warningCard}>
         <Txt style={styles.resultCap}>⚠ CREDIT CARD WARNING</Txt>
         <Txt variant="lead" style={{ fontSize: 12 }}>
-          A $1,000 balance at 24% APR, paying only the minimum (2% of balance or $25, whichever is more) every month:
+          $1,000 at 24% APR, minimum payments only:
         </Txt>
         <StackedAreaChart points={withZero(debtPoints)} baseKey="zero" totalKey="balance" tone="debt" />
         <Txt variant="lead" style={{ fontSize: 12.5 }}>
           {debtFinal.balance <= 0.5
-            ? `Paid off after about ${debtYears.toFixed(1)} years — total interest paid: ${money(debtFinal.totalInterest)}, more than the original balance.`
-            : `Still not paid off after 10 years — total interest paid so far: ${money(debtFinal.totalInterest)}, and ${money(debtFinal.balance)} of the balance remains.`}
+            ? `${debtYears.toFixed(1)} yrs to pay off — ${money(debtFinal.totalInterest)} interest, more than the balance itself.`
+            : `Still not paid off after 10 yrs — ${money(debtFinal.totalInterest)} interest paid, ${money(debtFinal.balance)} still owed.`}
         </Txt>
       </Card>
     </>
@@ -218,7 +218,7 @@ function LoanPayoffPanel() {
 
   return (
     <>
-      <Card style={{ gap: 14 }}>
+      <Card style={{ gap: 11 }}>
         <Txt style={styles.cardTitle}>Your Loan</Txt>
         <SliderRow label="Loan balance" value={loanBalance} onChange={setLoanBalance} min={1000} max={100000} step={500} format={money} />
         <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
@@ -234,13 +234,12 @@ function LoanPayoffPanel() {
         <SliderRow label="Term (years)" value={termYears} onChange={setTermYears} min={5} max={25} step={5} format={(v) => `${v}yr`} />
       </Card>
 
-      <Card style={{ gap: 14 }}>
-        <Txt style={styles.cardTitle}>Monthly Take-Home Pay & Living Costs</Txt>
-        <Txt variant="lead" style={{ fontSize: 12 }}>Uses take-home (net) pay, not gross salary.</Txt>
+      <Card style={{ gap: 11 }}>
+        <Txt style={styles.cardTitle}>Take-Home Pay & Living Costs</Txt>
         <SliderRow label="Monthly take-home pay" value={monthlyIncome} onChange={setMonthlyIncome} min={1500} max={7000} step={50} format={money} />
         <SliderRow label="Rent" value={rent} onChange={setRent} min={0} max={3000} step={25} format={money} />
         <SliderRow label="Food" value={food} onChange={setFood} min={0} max={1000} step={10} format={money} />
-        <SliderRow label="Other (utilities, transport, etc.)" value={otherExpenses} onChange={setOtherExpenses} min={0} max={1500} step={10} format={money} />
+        <SliderRow label="Other (utilities, etc.)" value={otherExpenses} onChange={setOtherExpenses} min={0} max={1500} step={10} format={money} />
       </Card>
 
       <Card style={styles.resultCard}>
@@ -249,16 +248,16 @@ function LoanPayoffPanel() {
           <>
             <Txt style={styles.resultBig}>{payoffYears.toFixed(1)} yrs</Txt>
             <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center' }}>
-              paid off — total interest paid: {money(payoffFinal.totalInterest)}, total paid: {money(loanBalance + payoffFinal.totalInterest)}
+              {money(payoffFinal.totalInterest)} interest, {money(loanBalance + payoffFinal.totalInterest)} total paid
             </Txt>
             <StackedAreaChart points={withZero(payoffPoints)} baseKey="zero" totalKey="balance" tone="debt" />
             <Txt variant="lead" style={styles.milestone}>
-              💳 A {money(totalPayment)}/month payment clears a {money(loanBalance)} balance at {annualRatePct}% in {payoffYears.toFixed(1)} years.
+              💳 {money(totalPayment)}/mo clears {money(loanBalance)} at {annualRatePct}% in {payoffYears.toFixed(1)} yrs
             </Txt>
           </>
         ) : (
           <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center' }}>
-            A {money(totalPayment)}/month payment doesn&apos;t even cover this loan&apos;s interest — the balance would only grow. Raise the payment to see a payoff timeline.
+            {money(totalPayment)}/mo doesn&apos;t cover the interest — balance would grow. Raise the payment.
           </Txt>
         )}
       </Card>
@@ -268,25 +267,25 @@ function LoanPayoffPanel() {
         <Txt style={styles.resultBig}>{money(minPayment)}/mo</Txt>
         {canAffordMinimum ? (
           <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center' }}>
-            After rent, food, other expenses, and the minimum loan payment, you have {money(Math.max(0, availableForLoan - minPayment))}/month left over.
+            {money(Math.max(0, availableForLoan - minPayment))}/mo left after expenses + minimum payment
           </Txt>
         ) : (
           <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center' }}>
-            After rent, food, and other expenses, you have {money(Math.max(0, availableForLoan))}/month left, but the minimum payment is {money(minPayment)} — you&apos;re {money(shortfall)} short.
+            {money(Math.max(0, availableForLoan))}/mo left after expenses, but minimum is {money(minPayment)} — {money(shortfall)} short
           </Txt>
         )}
       </Card>
 
       {canAffordMinimum && maxExtra > 0 ? (
         <Card style={{ gap: 12 }}>
-          <Txt style={styles.cardTitle}>Pay Extra With What&apos;s Left Over</Txt>
+          <Txt style={styles.cardTitle}>Pay Extra With What&apos;s Left</Txt>
           <SliderRow label="Extra toward the loan" value={cappedExtra} onChange={setExtraPayment} min={0} max={maxExtra} step={5} format={money} />
           {cappedExtra > 0 && minOnlyFinal && withExtraFinal && minOnly && withExtra ? (
             <View style={{ gap: 6 }}>
-              <CompareRow label="Minimum payments only" years={(minOnly.length - 1) / 12} interest={minOnlyFinal.totalInterest} />
-              <CompareRow label={`With ${money(cappedExtra)} extra/month`} years={(withExtra.length - 1) / 12} interest={withExtraFinal.totalInterest} />
+              <CompareRow label="Minimum only" years={(minOnly.length - 1) / 12} interest={minOnlyFinal.totalInterest} />
+              <CompareRow label={`+${money(cappedExtra)}/mo extra`} years={(withExtra.length - 1) / 12} interest={withExtraFinal.totalInterest} />
               <Txt variant="lead" style={{ fontSize: 12.5, marginTop: 4 }}>
-                That extra {money(cappedExtra)}/month pays this off {((minOnly.length - withExtra.length) / 12).toFixed(1)} years sooner and saves {money(minOnlyFinal.totalInterest - withExtraFinal.totalInterest)} in interest.
+                {((minOnly.length - withExtra.length) / 12).toFixed(1)} yrs sooner, saves {money(minOnlyFinal.totalInterest - withExtraFinal.totalInterest)}
               </Txt>
             </View>
           ) : null}
@@ -368,14 +367,11 @@ function BudgetPanel() {
 
       <Card style={{ gap: 12 }}>
         <Txt style={styles.cardTitle}>Fixed Expenses</Txt>
-        <SliderRow label="Rent & other fixed costs" value={fixedExpenses} onChange={setFixedExpenses} min={0} max={3000} step={25} format={money} />
+        <SliderRow label="Rent & fixed costs" value={fixedExpenses} onChange={setFixedExpenses} min={0} max={3000} step={25} format={money} />
       </Card>
 
-      <Card style={{ gap: 14 }}>
+      <Card style={{ gap: 11 }}>
         <Txt style={styles.cardTitle}>Variable Expenses</Txt>
-        <Txt variant="lead" style={{ fontSize: 12 }}>
-          Food delivery and beauty services add up faster than most students expect — see your monthly total below.
-        </Txt>
         {BUDGET_CATEGORY_ORDER.map((key) => (
           <SliderRow
             key={key}
@@ -386,7 +382,7 @@ function BudgetPanel() {
           />
         ))}
         <Txt variant="lead" style={[{ fontSize: 12.5 }, overThreshold && styles.overThresholdTxt]}>
-          Food delivery + beauty: {money(deliveryBeautyTotal)}/month{overThreshold ? ' — that adds up fast.' : ''}
+          {overThreshold ? '⚠ ' : ''}Delivery + beauty: {money(deliveryBeautyTotal)}/mo
         </Txt>
       </Card>
 
@@ -409,8 +405,8 @@ function BudgetPanel() {
         {goalGap !== null ? (
           <Txt variant="lead" style={[{ fontSize: 12.5, textAlign: 'center' }, goalGap < 0 && styles.overThresholdTxt]}>
             {goalGap >= 0
-              ? `On track — this leaves ${money(goalGap)}/month beyond your ${money(savingsGoal)} goal.`
-              : `You'd need to cut about ${money(Math.abs(goalGap))}/month to hit your ${money(savingsGoal)} savings goal.`}
+              ? `On track — ${money(goalGap)}/mo beyond your ${money(savingsGoal)} goal`
+              : `Cut about ${money(Math.abs(goalGap))}/mo to hit your ${money(savingsGoal)} goal`}
           </Txt>
         ) : null}
       </Card>
@@ -438,14 +434,14 @@ function BudgetPanel() {
           <>
             <SliderRow label={`Cut ${BUDGET_CATEGORY_LABELS[whatIfCategory]} by`} value={cut} onChange={setWhatIfCut} min={0} max={maxCut} step={1} format={money} />
             <Txt variant="lead" style={{ fontSize: 12.5 }}>
-              Cut this by {money(cut)} → remaining balance becomes {money(newRemaining)}
+              Cut {money(cut)} → {money(newRemaining)} remaining
               {savingsGoal > 0
-                ? (newRemaining >= savingsGoal ? ' — enough to hit your savings goal.' : `, still ${money(Math.max(0, savingsGoal - newRemaining))} short of your goal.`)
-                : '.'}
+                ? (newRemaining >= savingsGoal ? ' — hits your goal' : `, ${money(Math.max(0, savingsGoal - newRemaining))} short of goal`)
+                : ''}
             </Txt>
           </>
         ) : (
-          <Txt variant="lead" style={{ fontSize: 12.5 }}>Add a monthly amount for this category above to see what cutting it would save.</Txt>
+          <Txt variant="lead" style={{ fontSize: 12.5 }}>Add an amount above to see what cutting it would save.</Txt>
         )}
       </Card>
     </>
@@ -453,7 +449,7 @@ function BudgetPanel() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 22, paddingBottom: 28, gap: 15 },
+  content: { paddingHorizontal: 22, paddingBottom: 28, gap: 12 },
   cardTitle: { fontFamily: font.displayMed, fontSize: 14, color: colors.ink },
   sliderLabelRow: { flexDirection: 'row', justifyContent: 'space-between' },
   sliderLabel: { fontFamily: font.semi, fontSize: 12.5, color: colors.muted1, flexShrink: 1 },
