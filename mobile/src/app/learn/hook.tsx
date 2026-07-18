@@ -17,6 +17,13 @@ export default function Hook() {
   const i = Number(lessonIndex ?? 0);
   const lesson = content?.lessons[i];
 
+  // router.back() no-ops with no in-app history (e.g. a direct/reloaded web URL) — fall
+  // back to the module's own page so the back chevron always goes somewhere.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace(`/learn/module/${mod.id}`);
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#2C3E2D' }}>
       <StatusBar style="light" />
@@ -29,7 +36,7 @@ export default function Hook() {
         style={StyleSheet.absoluteFill}
       />
       <SafeAreaView style={styles.wrap}>
-        <IconButton name="chevron-left" size={36} color={colors.white} onPress={() => router.back()} style={styles.back} />
+        <IconButton name="chevron-left" size={36} color={colors.white} onPress={goBack} style={styles.back} />
         <Spacer />
         <Tag tone="pink" textColor={colors.white} style={styles.tag}>📖 SCENARIO</Tag>
         <Txt style={styles.title}>{lesson?.title ?? mod.name}</Txt>

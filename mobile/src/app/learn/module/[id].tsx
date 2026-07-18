@@ -25,10 +25,17 @@ export default function ModuleDetail() {
   const status = moduleStatus(mod.id, mod.unlockLevel);
   const pct = lessons.length ? done / lessons.length : 0;
 
+  // router.back() no-ops with no in-app history (e.g. a direct/reloaded web URL) — fall
+  // back to the modules list so the back chevron always goes somewhere.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)/modules');
+  };
+
   return (
     <Screen edges={['top']}>
       <View style={styles.stick}>
-        <IconButton name="chevron-left" size={36} onPress={() => router.back()} />
+        <IconButton name="chevron-left" size={36} onPress={goBack} />
         <Txt variant="h2" style={{ flex: 1, textAlign: 'center', fontSize: 17 }}>{mod.name}</Txt>
         <View style={{ width: 36 }} />
       </View>

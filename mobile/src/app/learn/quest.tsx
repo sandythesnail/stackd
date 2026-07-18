@@ -53,12 +53,20 @@ export default function QuestPlayer() {
   const [reactionMood, setReactionMood] = useState<'happy' | 'gentle' | 'streak' | null>(null);
   const [answerStreak, setAnswerStreak] = useState(0);
 
+  // router.back() no-ops with nowhere to go — e.g. the web build reloaded directly on this
+  // route (no in-app history) via a deep link or the /m viewport redirect. Fall back to the
+  // module's own page so the X/Back button always goes somewhere.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace(`/learn/module/${mod.id}`);
+  };
+
   if (!quest || !content) {
     return (
       <Screen edges={['top']}>
         <View style={styles.content}>
           <Txt variant="h1">No quest found for this lesson.</Txt>
-          <Button label="Back" onPress={() => router.back()} style={{ marginTop: 14 }} />
+          <Button label="Back" onPress={goBack} style={{ marginTop: 14 }} />
         </View>
       </Screen>
     );
@@ -112,7 +120,7 @@ export default function QuestPlayer() {
   return (
     <Screen edges={['top']}>
       <View style={styles.stick}>
-        <IconButton name="x" size={34} iconSize={16} onPress={() => router.back()} />
+        <IconButton name="x" size={34} iconSize={16} onPress={goBack} />
         <ProgressBar value={chapterIdx / quest.chapters.length} style={{ flex: 1 }} height={10} />
         <Txt style={styles.step}>{chapterIdx + 1} / {quest.chapters.length}</Txt>
       </View>
