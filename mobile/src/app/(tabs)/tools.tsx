@@ -13,6 +13,21 @@ const withZero = (points: SeriesPoint[]): SeriesPoint[] => points.map((p) => ({ 
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
+/** Collapsed-by-default section so secondary content (warnings, category editors, "what
+ * if" scenarios) doesn't add to the default scroll length. */
+function Collapsible({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <>
+      <Pressable onPress={() => setOpen((o) => !o)} style={styles.collapseHead}>
+        <Txt style={styles.cardTitle}>{title}</Txt>
+        <Txt style={styles.collapseChevron}>{open ? '▾' : '▸'}</Txt>
+      </Pressable>
+      {open ? children : null}
+    </>
+  );
+}
+
 function SliderRow({
   label, value, onChange, min, max, step, format,
 }: {
@@ -167,16 +182,17 @@ function CompoundInterestPanel() {
       </Card>
 
       <Card style={styles.warningCard}>
-        <Txt style={styles.resultCap}>⚠ CREDIT CARD WARNING</Txt>
-        <Txt variant="lead" style={{ fontSize: 12 }}>
-          $1,000 at 24% APR, minimum payments only:
-        </Txt>
-        <StackedAreaChart points={withZero(debtPoints)} baseKey="zero" totalKey="balance" tone="debt" />
-        <Txt variant="lead" style={{ fontSize: 12.5 }}>
-          {debtFinal.balance <= 0.5
-            ? `${debtYears.toFixed(1)} yrs to pay off — ${money(debtFinal.totalInterest)} interest, more than the balance itself.`
-            : `Still not paid off after 10 yrs — ${money(debtFinal.totalInterest)} interest paid, ${money(debtFinal.balance)} still owed.`}
-        </Txt>
+        <Collapsible title="⚠ Credit Card Warning">
+          <Txt variant="lead" style={{ fontSize: 12 }}>
+            $1,000 at 24% APR, minimum payments only:
+          </Txt>
+          <StackedAreaChart points={withZero(debtPoints)} baseKey="zero" totalKey="balance" tone="debt" />
+          <Txt variant="lead" style={{ fontSize: 12.5 }}>
+            {debtFinal.balance <= 0.5
+              ? `${debtYears.toFixed(1)} yrs to pay off — ${money(debtFinal.totalInterest)} interest, more than the balance itself.`
+              : `Still not paid off after 10 yrs — ${money(debtFinal.totalInterest)} interest paid, ${money(debtFinal.balance)} still owed.`}
+          </Txt>
+        </Collapsible>
       </Card>
     </>
   );
@@ -361,34 +377,26 @@ function BudgetPanel() {
   return (
     <>
       <Card style={{ gap: 12 }}>
-        <Txt style={styles.cardTitle}>Monthly Income</Txt>
         <SliderRow label="Take-home pay" value={monthlyIncome} onChange={setMonthlyIncome} min={0} max={6000} step={25} format={money} />
-      </Card>
-
-      <Card style={{ gap: 12 }}>
-        <Txt style={styles.cardTitle}>Fixed Expenses</Txt>
         <SliderRow label="Rent & fixed costs" value={fixedExpenses} onChange={setFixedExpenses} min={0} max={3000} step={25} format={money} />
+        <SliderRow label="Savings goal" value={savingsGoal} onChange={setSavingsGoal} min={0} max={1500} step={25} format={money} />
       </Card>
 
       <Card style={{ gap: 11 }}>
-        <Txt style={styles.cardTitle}>Variable Expenses</Txt>
-        {BUDGET_CATEGORY_ORDER.map((key) => (
-          <SliderRow
-            key={key}
-            label={BUDGET_CATEGORY_LABELS[key]}
-            value={variable[key] || 0}
-            onChange={(v) => setCategory(key, v)}
-            min={0} max={key === 'groceries' ? 600 : 300} step={5} format={money}
-          />
-        ))}
-        <Txt variant="lead" style={[{ fontSize: 12.5 }, overThreshold && styles.overThresholdTxt]}>
-          {overThreshold ? '⚠ ' : ''}Delivery + beauty: {money(deliveryBeautyTotal)}/mo
-        </Txt>
-      </Card>
-
-      <Card style={{ gap: 12 }}>
-        <Txt style={styles.cardTitle}>Savings Goal</Txt>
-        <SliderRow label="I want to save" value={savingsGoal} onChange={setSavingsGoal} min={0} max={1500} step={25} format={money} />
+        <Collapsible title={`Variable Expenses (${money(totalVariable)}/mo)`}>
+          {BUDGET_CATEGORY_ORDER.map((key) => (
+            <SliderRow
+              key={key}
+              label={BUDGET_CATEGORY_LABELS[key]}
+              value={variable[key] || 0}
+              onChange={(v) => setCategory(key, v)}
+              min={0} max={key === 'groceries' ? 600 : 300} step={5} format={money}
+            />
+          ))}
+          <Txt variant="lead" style={[{ fontSize: 12.5 }, overThreshold && styles.overThresholdTxt]}>
+            {overThreshold ? '⚠ ' : ''}Delivery + beauty: {money(deliveryBeautyTotal)}/mo
+          </Txt>
+        </Collapsible>
       </Card>
 
       <Card style={styles.resultCard}>
@@ -420,29 +428,30 @@ function BudgetPanel() {
       </Card>
 
       <Card style={{ gap: 10 }}>
-        <Txt style={styles.cardTitle}>What If?</Txt>
-        <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-          {BUDGET_CATEGORY_ORDER.map((key) => (
-            <Pressable key={key} onPress={() => { setWhatIfCategory(key); setWhatIfCut(0); }}>
-              <Tag tone={whatIfCategory === key ? 'green' : 'lock'} style={{ paddingVertical: 5, paddingHorizontal: 8 }}>
-                {BUDGET_CATEGORY_LABELS[key]}
-              </Tag>
-            </Pressable>
-          ))}
-        </View>
-        {maxCut > 0 ? (
-          <>
-            <SliderRow label={`Cut ${BUDGET_CATEGORY_LABELS[whatIfCategory]} by`} value={cut} onChange={setWhatIfCut} min={0} max={maxCut} step={1} format={money} />
-            <Txt variant="lead" style={{ fontSize: 12.5 }}>
-              Cut {money(cut)} → {money(newRemaining)} remaining
-              {savingsGoal > 0
-                ? (newRemaining >= savingsGoal ? ' — hits your goal' : `, ${money(Math.max(0, savingsGoal - newRemaining))} short of goal`)
-                : ''}
-            </Txt>
-          </>
-        ) : (
-          <Txt variant="lead" style={{ fontSize: 12.5 }}>Add an amount above to see what cutting it would save.</Txt>
-        )}
+        <Collapsible title="What If?">
+          <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+            {BUDGET_CATEGORY_ORDER.map((key) => (
+              <Pressable key={key} onPress={() => { setWhatIfCategory(key); setWhatIfCut(0); }}>
+                <Tag tone={whatIfCategory === key ? 'green' : 'lock'} style={{ paddingVertical: 5, paddingHorizontal: 8 }}>
+                  {BUDGET_CATEGORY_LABELS[key]}
+                </Tag>
+              </Pressable>
+            ))}
+          </View>
+          {maxCut > 0 ? (
+            <>
+              <SliderRow label={`Cut ${BUDGET_CATEGORY_LABELS[whatIfCategory]} by`} value={cut} onChange={setWhatIfCut} min={0} max={maxCut} step={1} format={money} />
+              <Txt variant="lead" style={{ fontSize: 12.5 }}>
+                Cut {money(cut)} → {money(newRemaining)} remaining
+                {savingsGoal > 0
+                  ? (newRemaining >= savingsGoal ? ' — hits your goal' : `, ${money(Math.max(0, savingsGoal - newRemaining))} short of goal`)
+                  : ''}
+              </Txt>
+            </>
+          ) : (
+            <Txt variant="lead" style={{ fontSize: 12.5 }}>Add an amount above to see what cutting it would save.</Txt>
+          )}
+        </Collapsible>
       </Card>
     </>
   );
@@ -472,4 +481,6 @@ const styles = StyleSheet.create({
   barVal: { fontFamily: font.display, fontSize: 13.5, color: colors.ink },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
   overThresholdTxt: { color: colors.pinkDark },
+  collapseHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  collapseChevron: { fontFamily: font.bold, fontSize: 13, color: colors.muted4 },
 });

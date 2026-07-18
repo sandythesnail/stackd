@@ -101,7 +101,7 @@ export default function Room() {
             })}
 
             <View style={styles.shadow} />
-            <Hammy size={218} ring equipped={equipped} style={styles.hammy} />
+            <Hammy size={218} equipped={equipped} style={styles.hammy} />
 
             <View style={styles.wearing}>
               <Txt style={styles.wearingTxt}>Wearing: {wearingLabel} 🐷</Txt>
@@ -110,7 +110,7 @@ export default function Room() {
         ) : (
           <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
             <View style={styles.wardrobeStage}>
-              <Hammy size={190} ring equipped={equipped} />
+              <Hammy size={190} equipped={equipped} />
               <View style={styles.wearingInline}>
                 <Txt style={styles.wearingTxt}>Wearing: {wearingLabel} 🐷</Txt>
               </View>

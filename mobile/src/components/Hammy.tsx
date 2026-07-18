@@ -55,7 +55,6 @@ const ARM_W = 60; const ARM_H = 48; const ARM_R = ARM_H / 2;
  */
 export function Hammy({
   size = 120,
-  ring = false,
   bob = true,
   pig: _pig = '#E27EA0',
   equipped = [],
@@ -63,7 +62,6 @@ export function Hammy({
   style,
 }: {
   size?: number;
-  ring?: boolean;
   bob?: boolean;
   pig?: string;
   /** Currently-worn shop items, matrix-transformed onto the mascot (see EquippedItem). */
@@ -162,19 +160,6 @@ export function Hammy({
     <Animated.View
       style={[
         { width, height, transform: bob ? [{ translateY: floatY }] : undefined },
-        ring
-          ? {
-              shadowColor: '#FF96B8',
-              shadowOpacity: 0.4,
-              shadowRadius: 14,
-              shadowOffset: { width: 0, height: 0 },
-              elevation: 6,
-              // Without this, web renders the shadow as a literal rectangle around Hammy's
-              // bounding box (a visible box outline) instead of a soft glow — clamped border
-              // radius makes the shadow follow a circle/ellipse instead.
-              borderRadius: 9999,
-            }
-          : null,
         style,
       ]}
     >

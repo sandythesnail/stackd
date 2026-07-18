@@ -46,7 +46,7 @@ function ClerkSignIn() {
   return (
     <Screen style={{ paddingHorizontal: 22 }}>
       <View style={{ alignItems: 'center', gap: 16, marginTop: 14 }}>
-        <Hammy size={104} ring />
+        <Hammy size={104} />
         <Txt variant="disp" style={{ textAlign: 'center' }}>Welcome back!</Txt>
       </View>
 
@@ -90,7 +90,7 @@ function StubSignIn() {
   return (
     <Screen style={{ paddingHorizontal: 22 }}>
       <View style={{ alignItems: 'center', gap: 16, marginTop: 14 }}>
-        <Hammy size={104} ring />
+        <Hammy size={104} />
         <Txt variant="disp" style={{ textAlign: 'center' }}>Welcome back!</Txt>
       </View>
 

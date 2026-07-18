@@ -76,7 +76,7 @@ export default function Home() {
           <Card style={styles.questCard}>
             <View style={styles.questTop}>
               <Pressable onPress={() => router.push('/modal/life-event')}>
-                <Hammy size={76} bob equipped={equippedMascotItems()} face={moodFace} style={styles.questHammy} />
+                <Hammy size={76} bob equipped={equippedMascotItems()} face={moodFace} />
               </Pressable>
               <Speech>{speechMsg}</Speech>
             </View>
@@ -157,9 +157,6 @@ const styles = StyleSheet.create({
   statRow: { flexDirection: 'row', gap: 8 },
   questCard: { backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder },
   questTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  // borderRadius keeps the glow circular on web — without it, shadow* renders as a literal
-  // rectangle around Hammy's bounding box instead of a soft halo.
-  questHammy: { shadowColor: colors.white, shadowOpacity: 0.6, shadowRadius: 6, elevation: 3, borderRadius: 9999 },
   questMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   gridItem: { width: '47.5%', flexGrow: 1 },

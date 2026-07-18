@@ -40,7 +40,7 @@ export default function PiggyBorn() {
           Meet Hammy — your money buddy. Feed him good habits and watch him grow up right alongside your savings.
         </Txt>
 
-        <Hammy size={210} ring style={styles.hammy} />
+        <Hammy size={210} style={styles.hammy} />
 
         <Spacer />
         <Button label="Say hi to Hammy" variant="pink" onPress={() => router.push('/(onboarding)/survey')} style={{ marginBottom: 12 }} />
@@ -53,12 +53,5 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, paddingHorizontal: 22, alignItems: 'center' },
   title: { fontFamily: font.display, fontSize: 34, color: colors.pinkDark, textAlign: 'center', marginTop: 14, lineHeight: 37 },
   body: { fontFamily: font.semi, fontSize: 15, color: '#9E6B79', textAlign: 'center', marginTop: 8, lineHeight: 22 },
-  hammy: {
-    marginTop: 22,
-    shadowColor: colors.pinkDark,
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 14 },
-    elevation: 8,
-  },
+  hammy: { marginTop: 22 },
 });

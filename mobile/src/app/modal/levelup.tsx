@@ -38,7 +38,7 @@ export default function LevelUp() {
       <SafeAreaView style={styles.wrap}>
         <View style={styles.center}>
           <Tag tone="pink" textColor={colors.white} style={{ backgroundColor: '#FF96B8' }}>⬆ LEVEL UP</Tag>
-          <Hammy size={184} ring bob equipped={equippedMascotItems()} style={styles.hammy} />
+          <Hammy size={184} bob equipped={equippedMascotItems()} style={styles.hammy} />
           <Txt style={styles.big}>Level {level}!</Txt>
           <Txt style={styles.body}>Hammy grew up — and so did you. You&apos;re now a</Txt>
 
@@ -58,14 +58,7 @@ export default function LevelUp() {
 const styles = StyleSheet.create({
   wrap: { flex: 1, paddingHorizontal: 22, paddingBottom: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  hammy: {
-    marginVertical: 18,
-    shadowColor: '#FF96B8',
-    shadowOpacity: 0.6,
-    shadowRadius: 30,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 10,
-  },
+  hammy: { marginVertical: 18 },
   big: { fontFamily: font.display, fontSize: 44, color: colors.white },
   body: { fontFamily: font.semi, fontSize: 15, color: 'rgba(250,246,237,0.92)', marginTop: 6, textAlign: 'center' },
   tierChip: {

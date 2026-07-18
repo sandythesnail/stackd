@@ -50,7 +50,7 @@ function SplashView({ children }: { children: React.ReactNode }) {
       <StatusBar style="light" />
       <View style={{ flex: 1 }}>
         <SafeAreaView style={styles.wrap}>
-          <Hammy size={190} ring />
+          <Hammy size={190} />
           <View style={{ alignItems: 'center', gap: 8 }}>
             <Txt style={styles.logo}>Stackd</Txt>
             <Txt style={styles.tagline}>Grow your money smarts.</Txt>
