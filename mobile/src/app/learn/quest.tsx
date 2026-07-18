@@ -36,9 +36,17 @@ const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it!', 'Grea
 const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn from it:", "Close! Here's what's true:"];
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
+/** Flexible filler dropped before a chapter's trailing action button so short chapters use
+ * the full screen height (button lands near the bottom) instead of leaving dead space below
+ * a short card — paired with the ScrollView's flexGrow so it only expands when there's room
+ * to fill; long chapters that already overflow just scroll as before. */
+const Grow = () => <View style={{ flex: 1, minHeight: 8 }} />;
+
 /** Hammy's reaction speech bubble — ported from the website's .hammy-side-msg, which fades
  * in/out (opacity + a small rise) rather than popping instantly. Keeps showing the last
- * message while fading out so there's text to fade from. */
+ * message while fading out so there's text to fade from. Always renders its slot at a fixed
+ * height (whether or not a message is showing) so Hammy and everything below never shifts
+ * when a reaction pops up — Hammy just permanently sits below the reserved space. */
 function ReactionBubble({ message }: { message: string | null }) {
   const anim = useRef(new Animated.Value(0)).current;
   const [display, setDisplay] = useState(message);
@@ -48,11 +56,14 @@ function ReactionBubble({ message }: { message: string | null }) {
       if (!message) setDisplay(null);
     });
   }, [message, anim]);
-  if (!display) return null;
   return (
-    <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
-      <Speech>{display}</Speech>
-    </Animated.View>
+    <View style={styles.bubbleSlot}>
+      {display ? (
+        <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
+          <Speech>{display}</Speech>
+        </Animated.View>
+      ) : null}
+    </View>
   );
 }
 
@@ -102,6 +113,7 @@ export default function QuestPlayer() {
   const chapter = quest.chapters[chapterIdx];
   const hintsRemaining = Math.max(0, HINT_BUDGET - hintsUsed);
   const onUseHint = () => setHintsUsed((h) => h + 1);
+  const hintText = (chapter as { hintText?: string }).hintText;
 
   // Ported from showHammyReaction: the persistent companion's face/mood/message reacts to
   // every graded answer across the quest — happy, gentle, or (every 3rd correct in a row) a
@@ -155,11 +167,12 @@ export default function QuestPlayer() {
         <IconButton name="x" size={34} iconSize={16} onPress={goBack} />
         <ProgressBar value={chapterIdx / quest.chapters.length} style={{ flex: 1 }} height={10} />
         <Txt style={styles.step}>{chapterIdx + 1} / {quest.chapters.length}</Txt>
+        <HintCorner key={chapter.id} hintText={hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       </View>
       <View style={styles.companionWrap}>
         <ReactionBubble message={reactionMsg} />
         <Hammy
-          size={190}
+          size={116}
           bob
           equipped={equippedMascotItems()}
           face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
@@ -174,8 +187,6 @@ export default function QuestPlayer() {
           questions={content.questions}
           moduleXpReward={content.xpReward}
           onComplete={onComplete}
-          hintsRemaining={hintsRemaining}
-          onUseHint={onUseHint}
           reactTo={reactTo}
         />
       </ScrollView>
@@ -184,51 +195,60 @@ export default function QuestPlayer() {
 }
 
 function ChapterView({
-  chapter, questions, moduleXpReward, onComplete, hintsRemaining, onUseHint, reactTo,
-}: { chapter: Chapter; questions: Question[]; moduleXpReward: number; onComplete: Complete } & HintProps & ReactProps) {
-  const hintProps: HintProps = { hintsRemaining, onUseHint };
+  chapter, questions, moduleXpReward, onComplete, reactTo,
+}: { chapter: Chapter; questions: Question[]; moduleXpReward: number; onComplete: Complete } & ReactProps) {
   const reactProps: ReactProps = { reactTo };
   switch (chapter.type) {
     case 'story': return <StoryView chapter={chapter} onComplete={onComplete} />;
     case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} />;
-    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...hintProps} {...reactProps} />;
+    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...reactProps} />;
     case 'hint': return <HintView chapter={chapter} onComplete={onComplete} />;
-    case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} {...hintProps} />;
-    case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} {...hintProps} />;
+    case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} />;
+    case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} />;
     case 'poll': return <PollView chapter={chapter} onComplete={onComplete} {...reactProps} />;
     case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} {...reactProps} />;
     case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} {...reactProps} />;
-    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} {...hintProps} />;
+    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} />;
     case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} />;
     case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} />;
-    case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} {...hintProps} {...reactProps} />;
+    case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} {...reactProps} />;
     case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} />;
     case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} />;
     default: return null;
   }
 }
 
-/** "💡 Hint (N left)" — ported from renderHintBudget. Only rendered for chapters that have
- * hintText and aren't in HINT_FREE_CHAPTER_TYPES (story/teach/hint, which don't spend budget). */
-function HintButton({ hintText, hintsRemaining, onUseHint }: { hintText?: string } & HintProps) {
+/** Floating hint control, pinned in the header's top-right corner — ported budget logic from
+ * renderHintBudget (only rendered for chapters with hintText; story/teach/hint chapters never
+ * spend budget since they have none). Tapping opens a popover anchored under the button
+ * instead of pushing chapter content around, so revealing a hint never moves anything else. */
+function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string } & HintProps) {
   const [revealed, setRevealed] = useState(false);
+  const [open, setOpen] = useState(false);
   if (!hintText) return null;
+  const press = () => {
+    if (!revealed) {
+      if (hintsRemaining <= 0) return;
+      onUseHint();
+      setRevealed(true);
+    }
+    setOpen((o) => !o);
+  };
   return (
-    <View style={{ gap: 8 }}>
-      {revealed ? (
-        <Card style={{ backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder }}>
+    <View style={styles.hintWrap}>
+      <Pressable
+        style={[styles.hintFab, hintsRemaining <= 0 && !revealed && styles.hintFabDisabled]}
+        disabled={hintsRemaining <= 0 && !revealed}
+        onPress={press}
+      >
+        <Txt style={styles.hintFabTxt}>{revealed ? '💡' : `💡 ${hintsRemaining}`}</Txt>
+      </Pressable>
+      {open ? (
+        <Card style={styles.hintPopover}>
           <Tag tone="pink">🐷 HAMMY'S HINT</Tag>
           <Txt variant="lead" style={{ fontSize: 13, marginTop: 6 }}>{hintText}</Txt>
         </Card>
-      ) : (
-        <Button
-          label={`💡 Hint (${hintsRemaining} left)`}
-          variant="ghost"
-          size="sm"
-          disabled={hintsRemaining <= 0}
-          onPress={() => { onUseHint(); setRevealed(true); }}
-        />
-      )}
+      ) : null}
     </View>
   );
 }
@@ -239,12 +259,13 @@ function StoryView({ chapter, onComplete }: { chapter: StoryChapter; onComplete:
   const beat = chapter.beats[i];
   const last = i + 1 >= chapter.beats.length;
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       {chapter.title ? <Txt variant="h2">{chapter.title}</Txt> : null}
       <Card style={{ gap: 6 }}>
         <Tag tone="pink">{beat.speaker}</Tag>
         <Txt variant="lead" style={{ fontSize: 15, color: colors.ink }}>{beat.text}</Txt>
       </Card>
+      <Grow />
       <Button label={last ? 'Continue →' : 'Next'} onPress={() => (last ? onComplete(0) : setI(i + 1))} />
     </View>
   );
@@ -268,7 +289,7 @@ function TeachView({ chapter, onComplete }: { chapter: TeachChapter; onComplete:
   };
 
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Card style={{ gap: 8 }}>
         <Txt style={styles.term}>{concept.term}</Txt>
@@ -293,6 +314,7 @@ function TeachView({ chapter, onComplete }: { chapter: TeachChapter; onComplete:
           )}
         </Card>
       ) : null}
+      <Grow />
       {!hasCheck || answered !== null ? <Button label={last ? 'Continue →' : 'Next concept'} onPress={next} /> : null}
     </View>
   );
@@ -304,8 +326,8 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function MatchingView({
-  chapter, onComplete, hintsRemaining, onUseHint, reactTo,
-}: { chapter: MatchingChapter; onComplete: Complete } & HintProps & ReactProps) {
+  chapter, onComplete, reactTo,
+}: { chapter: MatchingChapter; onComplete: Complete } & ReactProps) {
   const [terms] = useState(() => shuffle(chapter.pairs.map((p) => p.term)));
   const [defs] = useState(() => shuffle(chapter.pairs.map((p) => p.definition)));
   const [matched, setMatched] = useState<Set<string>>(new Set());
@@ -330,7 +352,6 @@ function MatchingView({
   return (
     <View style={{ gap: 14 }}>
       <Txt variant="h2">{chapter.title}</Txt>
-      <HintButton hintText={chapter.hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1, gap: 8 }}>
           {terms.map((t) => (
@@ -367,36 +388,35 @@ function MatchingView({
 /* ───────────────────────── hint ───────────────────────── */
 function HintView({ chapter, onComplete }: { chapter: HintChapter; onComplete: Complete }) {
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Card style={{ gap: 8 }}>
         <Tag tone="warm">{chapter.tag}</Tag>
         <Txt variant="lead" style={{ fontSize: 14.5, color: colors.ink }}>{chapter.text}</Txt>
       </Card>
+      <Grow />
       <Button label="Got it →" onPress={() => onComplete(chapter.xpOnComplete ?? 0)} />
     </View>
   );
 }
 
 /* ───────────────────────── decision ───────────────────────── */
-function DecisionView({ chapter, onComplete, hintsRemaining, onUseHint }: { chapter: DecisionChapter; onComplete: Complete } & HintProps) {
+function DecisionView({ chapter, onComplete }: { chapter: DecisionChapter; onComplete: Complete }) {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const picked = chapter.choices.find((c) => c.id === pickedId);
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       {!picked ? (
-        <>
-          <HintButton hintText={chapter.hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
-          <View style={{ gap: 10 }}>
-            {chapter.choices.map((c) => (
-              <Option key={c.id} label={c.label} onPress={() => setPickedId(c.id)} />
-            ))}
-          </View>
-        </>
+        <View style={{ gap: 10 }}>
+          {chapter.choices.map((c) => (
+            <Option key={c.id} label={c.label} onPress={() => setPickedId(c.id)} />
+          ))}
+        </View>
       ) : (
         <>
           <Card><Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.outcome.text}</Txt></Card>
+          <Grow />
           <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0)} />
         </>
       )}
@@ -405,7 +425,7 @@ function DecisionView({ chapter, onComplete, hintsRemaining, onUseHint }: { chap
 }
 
 /* ───────────────────────── microsim ───────────────────────── */
-function MicrosimView({ chapter, onComplete, hintsRemaining, onUseHint }: { chapter: MicrosimChapter; onComplete: Complete } & HintProps) {
+function MicrosimView({ chapter, onComplete }: { chapter: MicrosimChapter; onComplete: Complete }) {
   const [values, setValues] = useState<Record<string, number>>(
     () => Object.fromEntries(chapter.sliders.map((s) => [s.id, s.default])),
   );
@@ -419,10 +439,9 @@ function MicrosimView({ chapter, onComplete, hintsRemaining, onUseHint }: { chap
     ?? chapter.feedbackTiers[chapter.feedbackTiers.length - 1];
 
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
-      <HintButton hintText={chapter.hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       <Card style={{ gap: 4 }}>
         <Txt style={styles.term}>Income: ${chapter.income}</Txt>
         {chapter.fixedCosts.map((f) => (
@@ -451,6 +470,7 @@ function MicrosimView({ chapter, onComplete, hintsRemaining, onUseHint }: { chap
         <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.muted5 }}>LEFT OVER</Txt>
         <Txt style={{ fontFamily: font.display, fontSize: 28, color: leftover < 0 ? colors.danger : colors.greenDark }}>${leftover}</Txt>
       </Card>
+      <Grow />
       {submitted ? (
         <>
           <Card><Txt style={{ fontFamily: font.semi, fontSize: 14, color: tier.ok ? colors.greenDark : colors.pinkDark }}>{tier.text}</Txt></Card>
@@ -468,7 +488,7 @@ function PollView({ chapter, onComplete, reactTo }: { chapter: PollChapter; onCo
   const [answered, setAnswered] = useState<boolean | null>(null);
   const pick = (guess: boolean) => { setAnswered(guess); reactTo(guess === chapter.isTrue); };
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
       <Card><Txt style={{ fontFamily: font.displayMed, fontSize: 15, color: colors.ink }}>{chapter.statement}</Txt></Card>
@@ -485,6 +505,7 @@ function PollView({ chapter, onComplete, reactTo }: { chapter: PollChapter; onCo
             </Txt>
             <Txt variant="lead" style={{ fontSize: 13, marginTop: 4 }}>{chapter.explanation}</Txt>
           </Card>
+          <Grow />
           <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0, answered === chapter.isTrue)} />
         </>
       )}
@@ -515,7 +536,7 @@ function MythcardsView({ chapter, onComplete, reactTo }: { chapter: MythcardsCha
   };
 
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Card style={{ gap: 8 }}>
         <Tag tone="warm">MYTH OR FACT?</Tag>
@@ -534,6 +555,7 @@ function MythcardsView({ chapter, onComplete, reactTo }: { chapter: MythcardsCha
             </Txt>
             <Txt variant="lead" style={{ fontSize: 13, marginTop: 4 }}>{card.explanation}</Txt>
           </Card>
+          <Grow />
           <Button label={last ? 'Continue →' : 'Next card'} onPress={next} />
         </>
       )}
@@ -564,7 +586,7 @@ function KnowledgecheckView({
 
   if (!question) return null;
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{question.q}</Txt>
       <View style={{ gap: 10 }}>
@@ -582,6 +604,7 @@ function KnowledgecheckView({
           );
         })}
       </View>
+      <Grow />
       {answered ? (
         <>
           <Card><Txt variant="lead" style={{ fontSize: 13 }}>{question.exp}</Txt></Card>
@@ -593,7 +616,7 @@ function KnowledgecheckView({
 }
 
 /* ───────────────────────── simulator ───────────────────────── */
-function SimulatorView({ chapter, onComplete, hintsRemaining, onUseHint }: { chapter: SimulatorChapter; onComplete: Complete } & HintProps) {
+function SimulatorView({ chapter, onComplete }: { chapter: SimulatorChapter; onComplete: Complete }) {
   // meterKey/meterMin/meterMax are missing on 2/22 real chapters — fall back to a plain 0-100 score.
   const meterKey = chapter.meterKey ?? 'score';
   const meterMin = chapter.meterMin ?? 0;
@@ -610,10 +633,9 @@ function SimulatorView({ chapter, onComplete, hintsRemaining, onUseHint }: { cha
   const pct = (meter - meterMin) / (meterMax - meterMin);
 
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
-      <HintButton hintText={chapter.hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       <Card style={{ gap: 6 }}>
         <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.muted5, textTransform: 'uppercase' }}>{meterKey}</Txt>
         <Txt style={{ fontFamily: font.display, fontSize: 28, color: colors.greenDark }}>{Math.round(meter)}</Txt>
@@ -629,6 +651,7 @@ function SimulatorView({ chapter, onComplete, hintsRemaining, onUseHint }: { cha
           {notes.map((n, idx) => <Txt key={idx} variant="lead" style={{ fontSize: 12.5 }}>{n}</Txt>)}
         </Card>
       ) : null}
+      <Grow />
       {used.size > 0 ? <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0)} /> : null}
     </View>
   );
@@ -639,7 +662,7 @@ function BossbattleView({ chapter, moduleXpReward, onComplete }: { chapter: Boss
   const [pickedId, setPickedId] = useState<string | null>(null);
   const picked = chapter.choices.find((c) => c.id === pickedId);
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Tag tone="warm">⚔ BOSS CHALLENGE</Tag>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.scenario}</Txt>
@@ -652,6 +675,7 @@ function BossbattleView({ chapter, moduleXpReward, onComplete }: { chapter: Boss
       ) : (
         <>
           <Card><Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.consequence.text}</Txt></Card>
+          <Grow />
           {/* Ported verbatim from finishQuest: bossXP = Math.round(module.xpReward * xpMultiplier). */}
           <Button label="Finish quest →" onPress={() => onComplete(Math.round(moduleXpReward * picked.consequence.xpMultiplier))} />
         </>
@@ -669,7 +693,7 @@ function SpotcheckView({ chapter, onComplete }: { chapter: SpotcheckChapter; onC
   });
 
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
       <Card style={{ gap: 10 }}>
@@ -692,6 +716,7 @@ function SpotcheckView({ chapter, onComplete }: { chapter: SpotcheckChapter; onC
           );
         })}
       </Card>
+      <Grow />
       {!revealed ? (
         <Button label="Check my answers" onPress={() => setRevealed(true)} />
       ) : (
@@ -703,8 +728,8 @@ function SpotcheckView({ chapter, onComplete }: { chapter: SpotcheckChapter; onC
 
 /* ───────────────────────── priceisright ───────────────────────── */
 function PriceisrightView({
-  chapter, onComplete, hintsRemaining, onUseHint, reactTo,
-}: { chapter: PriceisrightChapter; onComplete: Complete } & HintProps & ReactProps) {
+  chapter, onComplete, reactTo,
+}: { chapter: PriceisrightChapter; onComplete: Complete } & ReactProps) {
   const { min, max, step } = chapter.guessRange;
   const [guess, setGuess] = useState(Math.round((min + max) / 2 / step) * step);
   const [submitted, setSubmitted] = useState(false);
@@ -714,10 +739,9 @@ function PriceisrightView({
   const submit = () => { setSubmitted(true); reactTo(close); };
 
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
-      <HintButton hintText={chapter.hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       <Card style={{ gap: 8, alignItems: 'center' }}>
         <Txt style={{ fontFamily: font.display, fontSize: 32, color: colors.ink }}>${guess}</Txt>
         <RNSlider
@@ -727,6 +751,7 @@ function PriceisrightView({
           minimumTrackTintColor={colors.green} maximumTrackTintColor={colors.track} thumbTintColor={colors.green}
         />
       </Card>
+      <Grow />
       {submitted ? (
         <>
           <Card>
@@ -751,7 +776,7 @@ function ExplainbackView({ chapter, onComplete }: { chapter: ExplainbackChapter;
   const hitKeywords = chapter.keywords.filter((k) => text.toLowerCase().includes(k.toLowerCase()));
 
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       <TextInput
@@ -763,6 +788,7 @@ function ExplainbackView({ chapter, onComplete }: { chapter: ExplainbackChapter;
         placeholder="Explain it in your own words…"
         placeholderTextColor={colors.muted6}
       />
+      <Grow />
       {submitted ? (
         <>
           <Card style={{ gap: 6 }}>
@@ -789,7 +815,7 @@ function UrlinspectView({ chapter, onComplete }: { chapter: UrlinspectChapter; o
   });
 
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
       <Card style={{ gap: 4 }}>
@@ -810,6 +836,7 @@ function UrlinspectView({ chapter, onComplete }: { chapter: UrlinspectChapter; o
           })}
         </View>
       </Card>
+      <Grow />
       {revealed ? (
         <>
           <Card style={{ gap: 8 }}>
@@ -833,8 +860,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5, borderBottomColor: '#EFEFE7',
   },
   step: { fontFamily: font.bold, fontSize: 12, color: colors.green },
-  companionWrap: { alignItems: 'center', paddingTop: 10, paddingBottom: 4, gap: 8 },
-  content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14 },
+  hintWrap: { position: 'relative' },
+  hintFab: {
+    minWidth: 34, height: 30, paddingHorizontal: 8, borderRadius: 15,
+    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderCool,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  hintFabDisabled: { opacity: 0.4 },
+  hintFabTxt: { fontFamily: font.bold, fontSize: 12, color: colors.ink },
+  hintPopover: {
+    position: 'absolute', top: 38, right: 0, width: 230, zIndex: 30, elevation: 8,
+    backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder,
+  },
+  companionWrap: { alignItems: 'center', paddingTop: 6, paddingBottom: 2, gap: 6 },
+  bubbleSlot: { minHeight: 46, justifyContent: 'center', width: '84%' },
+  content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
   matchChip: {
