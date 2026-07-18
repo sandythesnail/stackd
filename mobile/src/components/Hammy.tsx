@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Animated, Easing, ViewStyle, View } from 'react-native';
 import Svg, {
   Defs, LinearGradient, RadialGradient, Stop, Ellipse, Circle, Path, Rect, G, ClipPath, SvgXml, Image as SvgImage,
@@ -71,6 +71,16 @@ export function Hammy({
   face?: FaceOverlay;
   style?: ViewStyle;
 }) {
+  // react-native-svg-web renders each <Defs> gradient/clipPath as a real DOM element with
+  // its literal id — with more than one Hammy mounted at once (e.g. a tab screen kept alive
+  // behind a pushed quest screen), duplicate ids across instances broke gradient/clipPath
+  // resolution on later-mounted instances entirely (solid-fill shapes still rendered; every
+  // gradient-filled shape — head, body, snout, arms, ear fill — silently went invisible).
+  // Namespacing every id per instance (same pattern EquippedItem already uses) fixes this.
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const gid = (base: string) => `${base}-${uid}`;
+  const gidUrl = (base: string) => `url(#${gid(base)})`;
+
   const backItems = equipped.filter((i) => i.layer === 'back');
   const frontItems = equipped.filter((i) => i.layer !== 'back');
   const floatY = useRef(new Animated.Value(0)).current;
@@ -167,11 +177,11 @@ export function Hammy({
         <Defs>
           {/* Base fills — gradient stop angles converted from the website's CSS
               (linear-gradient(165deg,...) etc.) to precise SVG x1/y1/x2/y2 so the tilt matches. */}
-          <RadialGradient id="hm-shadow" cx="50%" cy="50%" r="50%">
+          <RadialGradient id={gid('hm-shadow')} cx="50%" cy="50%" r="50%">
             <Stop offset="0%" stopColor="#D678A0" stopOpacity={0.28} />
             <Stop offset="100%" stopColor="#D678A0" stopOpacity={0} />
           </RadialGradient>
-          <LinearGradient id="hm-body" x1="36.6%" y1="0%" x2="63.4%" y2="100%">
+          <LinearGradient id={gid('hm-body')} x1="36.6%" y1="0%" x2="63.4%" y2="100%">
             <Stop offset="0%" stopColor="#FFD4E4" />
             <Stop offset="60%" stopColor="#FFC2D9" />
             <Stop offset="100%" stopColor="#FFB4CE" />
@@ -183,83 +193,83 @@ export function Hammy({
               coordinates: center (220,318) is 50%/40% of the tummy box in canvas terms, and
               104 is the farthest-corner distance from that off-center point (CSS's default
               radial-gradient sizing keyword) — not the box's own half-diagonal. */}
-          <RadialGradient id="hm-tummy" cx={220} cy={318} r={104} gradientUnits="userSpaceOnUse">
+          <RadialGradient id={gid('hm-tummy')} cx={220} cy={318} r={104} gradientUnits="userSpaceOnUse">
             <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.5} />
             <Stop offset="70%" stopColor="#FFFFFF" stopOpacity={0} />
           </RadialGradient>
-          <LinearGradient id="hm-arm-l" x1="31.8%" y1="0%" x2="68.2%" y2="100%">
+          <LinearGradient id={gid('hm-arm-l')} x1="31.8%" y1="0%" x2="68.2%" y2="100%">
             <Stop offset="0%" stopColor="#FFD0E1" />
             <Stop offset="100%" stopColor="#FFBCD4" />
           </LinearGradient>
-          <LinearGradient id="hm-arm-r" x1="68.2%" y1="0%" x2="31.8%" y2="100%">
+          <LinearGradient id={gid('hm-arm-r')} x1="68.2%" y1="0%" x2="31.8%" y2="100%">
             <Stop offset="0%" stopColor="#FFD0E1" />
             <Stop offset="100%" stopColor="#FFBCD4" />
           </LinearGradient>
-          <LinearGradient id="hm-ear-l" x1="31.8%" y1="0%" x2="68.2%" y2="100%">
+          <LinearGradient id={gid('hm-ear-l')} x1="31.8%" y1="0%" x2="68.2%" y2="100%">
             <Stop offset="0%" stopColor="#FFC6DC" />
             <Stop offset="100%" stopColor="#FF9FC1" />
           </LinearGradient>
-          <LinearGradient id="hm-ear-r" x1="68.2%" y1="0%" x2="31.8%" y2="100%">
+          <LinearGradient id={gid('hm-ear-r')} x1="68.2%" y1="0%" x2="31.8%" y2="100%">
             <Stop offset="0%" stopColor="#FFC6DC" />
             <Stop offset="100%" stopColor="#FF9FC1" />
           </LinearGradient>
-          <LinearGradient id="hm-head" x1="31.8%" y1="0%" x2="68.2%" y2="100%">
+          <LinearGradient id={gid('hm-head')} x1="31.8%" y1="0%" x2="68.2%" y2="100%">
             <Stop offset="0%" stopColor="#FFD9E7" />
             <Stop offset="58%" stopColor="#FFC6DB" />
             <Stop offset="100%" stopColor="#FFB8D0" />
           </LinearGradient>
-          <LinearGradient id="hm-snout" x1="31.8%" y1="0%" x2="68.2%" y2="100%">
+          <LinearGradient id={gid('hm-snout')} x1="31.8%" y1="0%" x2="68.2%" y2="100%">
             <Stop offset="0%" stopColor="#FFB3CD" />
             <Stop offset="100%" stopColor="#FF96B8" />
           </LinearGradient>
 
           {/* Highlight/shadow overlays — approximate the CSS's inset box-shadows (glossy
               top-left highlight, soft bottom-right/bottom shadow) that give the puffy 3D look. */}
-          <RadialGradient id="hm-body-shine" cx="32%" cy="24%" r="55%">
+          <RadialGradient id={gid('hm-body-shine')} cx="32%" cy="24%" r="55%">
             <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.5} />
             <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-body-shadow" cx="74%" cy="78%" r="60%">
+          <RadialGradient id={gid('hm-body-shadow')} cx="74%" cy="78%" r="60%">
             <Stop offset="0%" stopColor="#E783AA" stopOpacity={0.32} />
             <Stop offset="100%" stopColor="#E783AA" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-head-shine" cx="28%" cy="22%" r="55%">
+          <RadialGradient id={gid('hm-head-shine')} cx="28%" cy="22%" r="55%">
             <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.55} />
             <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-head-shadow" cx="76%" cy="80%" r="60%">
+          <RadialGradient id={gid('hm-head-shadow')} cx="76%" cy="80%" r="60%">
             <Stop offset="0%" stopColor="#E783AA" stopOpacity={0.28} />
             <Stop offset="100%" stopColor="#E783AA" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-arm-shadow-l" cx="76%" cy="80%" r="65%">
+          <RadialGradient id={gid('hm-arm-shadow-l')} cx="76%" cy="80%" r="65%">
             <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.28} />
             <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-arm-shadow-r" cx="24%" cy="80%" r="65%">
+          <RadialGradient id={gid('hm-arm-shadow-r')} cx="24%" cy="80%" r="65%">
             <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.28} />
             <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-ear-shadow-l" cx="76%" cy="82%" r="65%">
+          <RadialGradient id={gid('hm-ear-shadow-l')} cx="76%" cy="82%" r="65%">
             <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.28} />
             <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-ear-shadow-r" cx="24%" cy="82%" r="65%">
+          <RadialGradient id={gid('hm-ear-shadow-r')} cx="24%" cy="82%" r="65%">
             <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.28} />
             <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-snout-shine" cx="50%" cy="18%" r="55%">
+          <RadialGradient id={gid('hm-snout-shine')} cx="50%" cy="18%" r="55%">
             <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.5} />
             <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-snout-shadow" cx="50%" cy="84%" r="55%">
+          <RadialGradient id={gid('hm-snout-shadow')} cx="50%" cy="84%" r="55%">
             <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.32} />
             <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-snout-drop" cx="50%" cy="50%" r="50%">
+          <RadialGradient id={gid('hm-snout-drop')} cx="50%" cy="50%" r="50%">
             <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.35} />
             <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-foot-shadow" cx="50%" cy="90%" r="55%">
+          <RadialGradient id={gid('hm-foot-shadow')} cx="50%" cy="90%" r="55%">
             <Stop offset="0%" stopColor="#D0638C" stopOpacity={0.28} />
             <Stop offset="100%" stopColor="#D0638C" stopOpacity={0} />
           </RadialGradient>
@@ -267,36 +277,36 @@ export function Hammy({
               same true-circle-on-a-non-square-box issue as the tummy (see hm-tummy above).
               Centered (no "at" offset), so r is just the half-diagonal: sqrt(28²+20²)≈34.4.
               Two copies since the left/right cheeks sit at different absolute centers. */}
-          <RadialGradient id="hm-cheek-l" cx={134} cy={222} r={34.4} gradientUnits="userSpaceOnUse">
+          <RadialGradient id={gid('hm-cheek-l')} cx={134} cy={222} r={34.4} gradientUnits="userSpaceOnUse">
             <Stop offset="0%" stopColor="#FF9BBE" />
             <Stop offset="70%" stopColor="#FF9BBE" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hm-cheek-r" cx={306} cy={222} r={34.4} gradientUnits="userSpaceOnUse">
+          <RadialGradient id={gid('hm-cheek-r')} cx={306} cy={222} r={34.4} gradientUnits="userSpaceOnUse">
             <Stop offset="0%" stopColor="#FF9BBE" />
             <Stop offset="70%" stopColor="#FF9BBE" stopOpacity={0} />
           </RadialGradient>
 
-          <ClipPath id="hm-clip-body"><Ellipse cx={220} cy={287} rx={150} ry={125} /></ClipPath>
-          <ClipPath id="hm-clip-head"><Ellipse cx={220} cy={198} rx={138} ry={124} /></ClipPath>
-          <ClipPath id="hm-clip-arm-l"><Rect x={54} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} /></ClipPath>
-          <ClipPath id="hm-clip-arm-r"><Rect x={326} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} /></ClipPath>
-          <ClipPath id="hm-clip-snout"><Ellipse cx={220} cy={212} rx={59} ry={42} /></ClipPath>
-          <ClipPath id="hm-clip-foot-l"><Rect x={120} y={374} width={FOOT_W} height={FOOT_H} rx={FOOT_R} ry={FOOT_R} /></ClipPath>
-          <ClipPath id="hm-clip-foot-r"><Rect x={260} y={374} width={FOOT_W} height={FOOT_H} rx={FOOT_R} ry={FOOT_R} /></ClipPath>
-          <ClipPath id="hm-clip-ear"><Path d={EAR_PATH} /></ClipPath>
+          <ClipPath id={gid('hm-clip-body')}><Ellipse cx={220} cy={287} rx={150} ry={125} /></ClipPath>
+          <ClipPath id={gid('hm-clip-head')}><Ellipse cx={220} cy={198} rx={138} ry={124} /></ClipPath>
+          <ClipPath id={gid('hm-clip-arm-l')}><Rect x={54} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} /></ClipPath>
+          <ClipPath id={gid('hm-clip-arm-r')}><Rect x={326} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} /></ClipPath>
+          <ClipPath id={gid('hm-clip-snout')}><Ellipse cx={220} cy={212} rx={59} ry={42} /></ClipPath>
+          <ClipPath id={gid('hm-clip-foot-l')}><Rect x={120} y={374} width={FOOT_W} height={FOOT_H} rx={FOOT_R} ry={FOOT_R} /></ClipPath>
+          <ClipPath id={gid('hm-clip-foot-r')}><Rect x={260} y={374} width={FOOT_W} height={FOOT_H} rx={FOOT_R} ry={FOOT_R} /></ClipPath>
+          <ClipPath id={gid('hm-clip-ear')}><Path d={EAR_PATH} /></ClipPath>
         </Defs>
 
         {/* back-layer equipped items (e.g. capes) — drawn behind body/arms/head */}
         {backItems.map((item) => <EquippedItem key={item.id} item={item} />)}
 
         {/* shadow */}
-        <Ellipse cx={220} cy={417} rx={150} ry={23} fill="url(#hm-shadow)" />
+        <Ellipse cx={220} cy={417} rx={150} ry={23} fill={gidUrl('hm-shadow')} />
 
         {/* feet */}
         <Rect x={120} y={374} width={FOOT_W} height={FOOT_H} rx={FOOT_R} ry={FOOT_R} fill="#F7A8C4" />
         <Rect x={260} y={374} width={FOOT_W} height={FOOT_H} rx={FOOT_R} ry={FOOT_R} fill="#F7A8C4" />
-        <Rect x={120} y={374} width={FOOT_W} height={FOOT_H} rx={FOOT_R} ry={FOOT_R} fill="url(#hm-foot-shadow)" clipPath="url(#hm-clip-foot-l)" />
-        <Rect x={260} y={374} width={FOOT_W} height={FOOT_H} rx={FOOT_R} ry={FOOT_R} fill="url(#hm-foot-shadow)" clipPath="url(#hm-clip-foot-r)" />
+        <Rect x={120} y={374} width={FOOT_W} height={FOOT_H} rx={FOOT_R} ry={FOOT_R} fill={gidUrl('hm-foot-shadow')} clipPath={gidUrl('hm-clip-foot-l')} />
+        <Rect x={260} y={374} width={FOOT_W} height={FOOT_H} rx={FOOT_R} ry={FOOT_R} fill={gidUrl('hm-foot-shadow')} clipPath={gidUrl('hm-clip-foot-r')} />
 
         {/* tail */}
         <G transform="translate(362, 236)">
@@ -311,44 +321,44 @@ export function Hammy({
         </G>
 
         {/* arms */}
-        <Rect x={54} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} fill="url(#hm-arm-l)" />
-        <Rect x={54} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} fill="url(#hm-arm-shadow-l)" clipPath="url(#hm-clip-arm-l)" />
-        <Rect x={326} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} fill="url(#hm-arm-r)" />
-        <Rect x={326} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} fill="url(#hm-arm-shadow-r)" clipPath="url(#hm-clip-arm-r)" />
+        <Rect x={54} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} fill={gidUrl('hm-arm-l')} />
+        <Rect x={54} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} fill={gidUrl('hm-arm-shadow-l')} clipPath={gidUrl('hm-clip-arm-l')} />
+        <Rect x={326} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} fill={gidUrl('hm-arm-r')} />
+        <Rect x={326} y={262} width={ARM_W} height={ARM_H} rx={ARM_R} ry={ARM_R} fill={gidUrl('hm-arm-shadow-r')} clipPath={gidUrl('hm-clip-arm-r')} />
 
         {/* body */}
-        <Ellipse cx={220} cy={287} rx={150} ry={125} fill="url(#hm-body)" />
-        <Ellipse cx={220} cy={287} rx={150} ry={125} fill="url(#hm-body-shadow)" clipPath="url(#hm-clip-body)" />
-        <Ellipse cx={220} cy={287} rx={150} ry={125} fill="url(#hm-body-shine)" clipPath="url(#hm-clip-body)" />
-        <Ellipse cx={220} cy={330} rx={75} ry={60} fill="url(#hm-tummy)" />
+        <Ellipse cx={220} cy={287} rx={150} ry={125} fill={gidUrl('hm-body')} />
+        <Ellipse cx={220} cy={287} rx={150} ry={125} fill={gidUrl('hm-body-shadow')} clipPath={gidUrl('hm-clip-body')} />
+        <Ellipse cx={220} cy={287} rx={150} ry={125} fill={gidUrl('hm-body-shine')} clipPath={gidUrl('hm-clip-body')} />
+        <Ellipse cx={220} cy={330} rx={75} ry={60} fill={gidUrl('hm-tummy')} />
 
         {/* ears */}
         <G transform="translate(106, 54)">
           <G transform={earLTransform}>
-            <Path d={EAR_PATH} fill="url(#hm-ear-l)" />
-            <Path d={EAR_PATH} fill="url(#hm-ear-shadow-l)" clipPath="url(#hm-clip-ear)" />
+            <Path d={EAR_PATH} fill={gidUrl('hm-ear-l')} />
+            <Path d={EAR_PATH} fill={gidUrl('hm-ear-shadow-l')} clipPath={gidUrl('hm-clip-ear')} />
             <Ellipse cx={32} cy={38} rx={13} ry={20} fill="#F48BB0" />
           </G>
         </G>
         <G transform="translate(270, 54)">
           <G transform={earRTransform}>
-            <Path d={EAR_PATH} fill="url(#hm-ear-r)" />
-            <Path d={EAR_PATH} fill="url(#hm-ear-shadow-r)" clipPath="url(#hm-clip-ear)" />
+            <Path d={EAR_PATH} fill={gidUrl('hm-ear-r')} />
+            <Path d={EAR_PATH} fill={gidUrl('hm-ear-shadow-r')} clipPath={gidUrl('hm-clip-ear')} />
             <Ellipse cx={32} cy={38} rx={13} ry={20} fill="#F48BB0" />
           </G>
         </G>
 
         {/* head */}
-        <Ellipse cx={220} cy={198} rx={138} ry={124} fill="url(#hm-head)" />
-        <Ellipse cx={220} cy={198} rx={138} ry={124} fill="url(#hm-head-shadow)" clipPath="url(#hm-clip-head)" />
-        <Ellipse cx={220} cy={198} rx={138} ry={124} fill="url(#hm-head-shine)" clipPath="url(#hm-clip-head)" />
+        <Ellipse cx={220} cy={198} rx={138} ry={124} fill={gidUrl('hm-head')} />
+        <Ellipse cx={220} cy={198} rx={138} ry={124} fill={gidUrl('hm-head-shadow')} clipPath={gidUrl('hm-clip-head')} />
+        <Ellipse cx={220} cy={198} rx={138} ry={124} fill={gidUrl('hm-head-shine')} clipPath={gidUrl('hm-clip-head')} />
 
         {/* cheeks, eyes, snout — hidden when an illustrated face overlay replaces them,
             matching the website's .has-face-overlay { .pig-eye/.pig-cheek/.pig-snout { opacity: 0 } } */}
         {!face && (
           <>
-            <Ellipse cx={134} cy={222} rx={28} ry={20} fill="url(#hm-cheek-l)" />
-            <Ellipse cx={306} cy={222} rx={28} ry={20} fill="url(#hm-cheek-r)" />
+            <Ellipse cx={134} cy={222} rx={28} ry={20} fill={gidUrl('hm-cheek-l')} />
+            <Ellipse cx={306} cy={222} rx={28} ry={20} fill={gidUrl('hm-cheek-r')} />
 
             <Ellipse cx={141} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
             <Ellipse cx={299} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
@@ -358,10 +368,10 @@ export function Hammy({
             <Circle cx={303} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
 
             {/* soft drop shadow drawn first so it peeks out from beneath the fill */}
-            <Ellipse cx={220} cy={218} rx={56} ry={36} fill="url(#hm-snout-drop)" />
-            <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout)" />
-            <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout-shadow)" clipPath="url(#hm-clip-snout)" />
-            <Ellipse cx={220} cy={212} rx={59} ry={42} fill="url(#hm-snout-shine)" clipPath="url(#hm-clip-snout)" />
+            <Ellipse cx={220} cy={218} rx={56} ry={36} fill={gidUrl('hm-snout-drop')} />
+            <Ellipse cx={220} cy={212} rx={59} ry={42} fill={gidUrl('hm-snout')} />
+            <Ellipse cx={220} cy={212} rx={59} ry={42} fill={gidUrl('hm-snout-shadow')} clipPath={gidUrl('hm-clip-snout')} />
+            <Ellipse cx={220} cy={212} rx={59} ry={42} fill={gidUrl('hm-snout-shine')} clipPath={gidUrl('hm-clip-snout')} />
             <Ellipse cx={191} cy={212} rx={10} ry={15} fill="#D9608C" />
             <Ellipse cx={249} cy={212} rx={10} ry={15} fill="#D9608C" />
           </>
