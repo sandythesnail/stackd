@@ -16,3 +16,4 @@ export { AchievementToast } from './AchievementToast';
 export { TabBar } from './TabBar';
 export { Stat, SectionHead, Speech, Callout, Segmented, Dots, Divider } from './bits';
 export { MIcon, ModuleTile, ListRow, BadgeMedal, MEDAL_GRAD } from './ModuleBits';
+export { StackedAreaChart } from './Chart';

@@ -1,6 +1,5 @@
-import { View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Text as SvgText, Polygon, Line, Path } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme';
 
 /** Gold coin token — ported verbatim from the website's ICON_COIN inline SVG (app.js)
@@ -33,24 +32,7 @@ export function Diamond({ size = 16 }: { size?: number }) {
   );
 }
 
-/** Orange streak flame token. */
+/** Orange streak flame token — an actual flame glyph (was a plain rounded-rect blob). */
 export function Flame({ size = 17 }: { size?: number }) {
-  const h = size * 1.12;
-  return (
-    <View style={{ transform: [{ rotate: '-6deg' }] }}>
-      <LinearGradient
-        colors={[colors.flameLight, colors.flame]}
-        start={{ x: 0.5, y: 1 }}
-        end={{ x: 0.5, y: 0 }}
-        style={{
-          width: size,
-          height: h,
-          borderTopLeftRadius: size * 0.5,
-          borderTopRightRadius: size * 0.5,
-          borderBottomLeftRadius: size * 0.5,
-          borderBottomRightRadius: size * 0.5,
-        }}
-      />
-    </View>
-  );
+  return <Ionicons name="flame" size={size} color={colors.flame} />;
 }
