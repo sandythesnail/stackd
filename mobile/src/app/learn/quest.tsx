@@ -60,7 +60,7 @@ function ReactionBubble({ message }: { message: string | null }) {
     <View style={styles.bubbleSlot}>
       {display ? (
         <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
-          <Speech>{display}</Speech>
+          <Speech numberOfLines={2}>{display}</Speech>
         </Animated.View>
       ) : null}
     </View>
@@ -120,6 +120,15 @@ export default function QuestPlayer() {
   // streak callout — then clears itself a beat later so it never sits stale into a later
   // chapter. reactionKey bumps on every call (even repeat-same-mood) so the body bounce/wobble
   // replays each time, mirroring the website forcing its CSS animation to restart.
+  //
+  // Chapters like matching fire reactTo once per pick, often faster than the 1400ms clear
+  // delay (e.g. two quick matches) — each call used to schedule its own unconditional
+  // "clear" timeout, so an old timeout from an earlier reaction would fire *after* a newer
+  // reaction had already set its own mood/face, wiping it out mid-animation (the face
+  // flickering/disappearing the user saw). Track the pending timeout and cancel it whenever
+  // a new reaction comes in, so only the most recent reaction's timer can clear the state.
+  const reactionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (reactionTimeout.current) clearTimeout(reactionTimeout.current); }, []);
   const reactTo = (isCorrect: boolean) => {
     const nextStreak = isCorrect ? answerStreak + 1 : 0;
     setAnswerStreak(nextStreak);
@@ -127,7 +136,12 @@ export default function QuestPlayer() {
     setReactionMood(isCorrect ? (isStreak ? 'streak' : 'happy') : 'gentle');
     setReactionMsg(isStreak ? `🎉 ${nextStreak} in a row! You're on fire!` : isCorrect ? pickRandom(HAMMY_CORRECT_MSGS) : pickRandom(HAMMY_GENTLE_MSGS));
     setReactionKey((k) => k + 1);
-    setTimeout(() => { setReactionMood(null); setReactionMsg(null); }, 1400);
+    if (reactionTimeout.current) clearTimeout(reactionTimeout.current);
+    reactionTimeout.current = setTimeout(() => {
+      setReactionMood(null);
+      setReactionMsg(null);
+      reactionTimeout.current = null;
+    }, 1400);
   };
 
   const onComplete: Complete = (xpDelta, graded) => {
@@ -873,7 +887,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder,
   },
   companionWrap: { alignItems: 'center', paddingTop: 6, paddingBottom: 2, gap: 6 },
-  bubbleSlot: { minHeight: 46, justifyContent: 'center', width: '84%' },
+  // Fixed (not min) height, sized for the longest reaction message wrapped to 2 lines
+  // (numberOfLines={2} on the Speech below caps it there) — a taller message can never
+  // grow this slot and shift Hammy/content, it just clips instead.
+  bubbleSlot: { height: 68, overflow: 'hidden', justifyContent: 'center', width: '84%' },
   content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },

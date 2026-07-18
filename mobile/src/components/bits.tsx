@@ -44,11 +44,11 @@ export function SectionHead({
 }
 
 /** Speech bubble with a left-pointing tail. */
-export function Speech({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+export function Speech({ children, style, numberOfLines }: { children: ReactNode; style?: ViewStyle; numberOfLines?: number }) {
   return (
     <View style={[styles.speech, style]}>
       <View style={styles.tail} />
-      <Txt style={styles.speechTxt}>{children}</Txt>
+      <Txt style={styles.speechTxt} numberOfLines={numberOfLines}>{children}</Txt>
     </View>
   );
 }
