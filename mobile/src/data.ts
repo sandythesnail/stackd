@@ -26,20 +26,20 @@ export type Module = {
   unlockLevel?: number;
 };
 
-// Order, ids, titles, and unlock levels match the website's MODULES array / mobile's
-// original level-gating design.
+// Order and ids match the website's MODULES array. All unlocked from level 1, matching
+// the website's no-gating behavior.
 export const modules: Module[] = [
   { id: 'earning', name: 'Earning', abbr: 'Er', color: moduleColor.earning },
   { id: 'spending', name: 'Spending', abbr: 'Sp', color: moduleColor.spending },
   { id: 'saving', name: 'Saving', abbr: 'Sv', color: moduleColor.saving },
-  { id: 'investing', name: 'Investing', abbr: 'Iv', color: moduleColor.investing, unlockLevel: 6 },
+  { id: 'investing', name: 'Investing', abbr: 'Iv', color: moduleColor.investing },
   { id: 'credit', name: 'Managing Credit', abbr: 'Cr', color: moduleColor.credit },
-  { id: 'risk', name: 'Managing Risk', abbr: 'Rk', color: moduleColor.risk, unlockLevel: 6 },
-  { id: 'loans', name: 'Loans', abbr: 'Ln', color: moduleColor.loans, unlockLevel: 7 },
+  { id: 'risk', name: 'Managing Risk', abbr: 'Rk', color: moduleColor.risk },
+  { id: 'loans', name: 'Loans', abbr: 'Ln', color: moduleColor.loans },
   { id: 'taxes', name: 'Taxes', abbr: 'Tx', color: moduleColor.taxes },
-  { id: 'psychology', name: 'Consumer Psychology', abbr: 'Ps', color: moduleColor.psychology, unlockLevel: 8 },
+  { id: 'psychology', name: 'Consumer Psychology', abbr: 'Ps', color: moduleColor.psychology },
   { id: 'career', name: 'Career & Salary', abbr: 'Cs', color: moduleColor.career },
-  { id: 'scams', name: 'Scams & Fraud Prevention', abbr: 'Sc', color: moduleColor.scams, unlockLevel: 9 },
+  { id: 'scams', name: 'Scams & Fraud Prevention', abbr: 'Sc', color: moduleColor.scams },
 ];
 
 export const moduleById = (id: string) => modules.find((m) => m.id === id);
