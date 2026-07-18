@@ -59,6 +59,8 @@ export function Hammy({
   pig: _pig = '#E27EA0',
   equipped = [],
   face,
+  reaction,
+  reactionKey,
   style,
 }: {
   size?: number;
@@ -69,6 +71,12 @@ export function Hammy({
   /** Illustrated mood/reaction face (see @/hammyFaces) — replaces the default eyes/cheeks/
    * snout with a cropped PNG overlay, matching the website's .hammy-face-overlay behavior. */
   face?: FaceOverlay;
+  /** Ported from the website's hammyBounce/hammyWobble/hammyCelebrate keyframes — a one-shot
+   * body animation on top of the idle float, played whenever reactionKey changes. */
+  reaction?: 'happy' | 'gentle' | 'streak' | null;
+  /** Bump this (e.g. a counter) on every reaction so repeat-same-mood reactions still replay
+   * the animation — mirrors the website forcing a CSS animation restart (`void el.offsetWidth`). */
+  reactionKey?: number;
   style?: ViewStyle;
 }) {
   // react-native-svg-web renders each <Defs> gradient/clipPath as a real DOM element with
@@ -88,6 +96,64 @@ export function Hammy({
   const earL = useRef(new Animated.Value(0)).current;
   const earR = useRef(new Animated.Value(0)).current;
   const tail = useRef(new Animated.Value(0)).current;
+  const reactY = useRef(new Animated.Value(0)).current;
+  const reactRot = useRef(new Animated.Value(0)).current;
+
+  // Ported from the website's hammyBounce (happy) / hammyWobble (gentle/wrong) /
+  // hammyCelebrate (streak) keyframes — a quick one-shot bounce/shake layered on top of the
+  // idle float, replayed every time reactionKey changes (not just when `reaction` changes,
+  // so answering "correct" twice in a row still replays the animation both times).
+  useEffect(() => {
+    if (!reaction) return;
+    reactY.setValue(0);
+    reactRot.setValue(0);
+    const q = Easing.inOut(Easing.quad);
+    const seq = reaction === 'gentle'
+      ? Animated.sequence([
+          Animated.timing(reactRot, { toValue: -6, duration: 150, easing: q, useNativeDriver: true }),
+          Animated.timing(reactRot, { toValue: 6, duration: 150, easing: q, useNativeDriver: true }),
+          Animated.timing(reactRot, { toValue: -6, duration: 150, easing: q, useNativeDriver: true }),
+          Animated.timing(reactRot, { toValue: 0, duration: 150, easing: q, useNativeDriver: true }),
+        ])
+      : reaction === 'streak'
+        ? Animated.sequence([
+            Animated.timing(reactY, { toValue: -30, duration: 150, easing: q, useNativeDriver: true }),
+            Animated.timing(reactY, { toValue: 0, duration: 150, easing: q, useNativeDriver: true }),
+            Animated.timing(reactY, { toValue: -30, duration: 150, easing: q, useNativeDriver: true }),
+            Animated.timing(reactY, { toValue: 0, duration: 150, easing: q, useNativeDriver: true }),
+            Animated.timing(reactY, { toValue: -16, duration: 150, easing: q, useNativeDriver: true }),
+            Animated.timing(reactY, { toValue: 0, duration: 150, easing: q, useNativeDriver: true }),
+          ])
+        : Animated.sequence([
+            Animated.timing(reactY, { toValue: -22, duration: 210, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+            Animated.timing(reactY, { toValue: 0, duration: 175, easing: q, useNativeDriver: true }),
+            Animated.timing(reactY, { toValue: -10, duration: 140, easing: q, useNativeDriver: true }),
+            Animated.timing(reactY, { toValue: 0, duration: 175, easing: q, useNativeDriver: true }),
+          ]);
+    seq.start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reactionKey]);
+
+  // Smooth crossfade between the default eyes/cheeks/snout and an illustrated face overlay
+  // (was an instant swap — react-native-svg's Image has no built-in transition). Keeps
+  // rendering the last-shown overlay image during fade-out so there's something to fade
+  // from/to on both sides, mirroring the website's `transition: opacity 0.15s ease` on both
+  // the CSS face and the overlay.
+  const faceAnim = useRef(new Animated.Value(face ? 1 : 0)).current;
+  const [faceOpacity, setFaceOpacity] = useState(face ? 1 : 0);
+  const [displayFace, setDisplayFace] = useState(face);
+
+  useEffect(() => {
+    if (face) setDisplayFace(face);
+    Animated.timing(faceAnim, { toValue: face ? 1 : 0, duration: 180, easing: Easing.ease, useNativeDriver: false }).start(() => {
+      if (!face) setDisplayFace(undefined);
+    });
+  }, [face, faceAnim]);
+
+  useEffect(() => {
+    const id = faceAnim.addListener(({ value }) => setFaceOpacity(value));
+    return () => faceAnim.removeListener(id);
+  }, [faceAnim]);
 
   useEffect(() => {
     if (!bob) return;
@@ -165,11 +231,12 @@ export function Hammy({
   const aspect = STAGE_H / STAGE_W;
   const width = size;
   const height = size * aspect;
+  const reactRotDeg = reactRot.interpolate({ inputRange: [-30, 30], outputRange: ['-30deg', '30deg'] });
 
   return (
     <Animated.View
       style={[
-        { width, height, transform: bob ? [{ translateY: floatY }] : undefined },
+        { width, height, transform: [{ translateY: Animated.add(floatY, reactY) }, { rotate: reactRotDeg }] },
         style,
       ]}
     >
@@ -353,37 +420,37 @@ export function Hammy({
         <Ellipse cx={220} cy={198} rx={138} ry={124} fill={gidUrl('hm-head-shadow')} clipPath={gidUrl('hm-clip-head')} />
         <Ellipse cx={220} cy={198} rx={138} ry={124} fill={gidUrl('hm-head-shine')} clipPath={gidUrl('hm-clip-head')} />
 
-        {/* cheeks, eyes, snout — hidden when an illustrated face overlay replaces them,
-            matching the website's .has-face-overlay { .pig-eye/.pig-cheek/.pig-snout { opacity: 0 } } */}
-        {!face && (
-          <>
-            <Ellipse cx={134} cy={222} rx={28} ry={20} fill={gidUrl('hm-cheek-l')} />
-            <Ellipse cx={306} cy={222} rx={28} ry={20} fill={gidUrl('hm-cheek-r')} />
+        {/* cheeks, eyes, snout — crossfade out when an illustrated face overlay replaces
+            them (smooth version of the website's .has-face-overlay opacity transition;
+            always rendered, opacity-driven, instead of an instant conditional swap). */}
+        <G opacity={1 - faceOpacity}>
+          <Ellipse cx={134} cy={222} rx={28} ry={20} fill={gidUrl('hm-cheek-l')} />
+          <Ellipse cx={306} cy={222} rx={28} ry={20} fill={gidUrl('hm-cheek-r')} />
 
-            <Ellipse cx={141} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
-            <Ellipse cx={299} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
-            <Circle cx={134.5} cy={186.5} r={6.5} fill="#FFFFFF" />
-            <Circle cx={145} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
-            <Circle cx={292.5} cy={186.5} r={6.5} fill="#FFFFFF" />
-            <Circle cx={303} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
+          <Ellipse cx={141} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
+          <Ellipse cx={299} cy={193} rx={19} ry={eyeRy} fill="#3A2230" />
+          <Circle cx={134.5} cy={186.5} r={6.5} fill="#FFFFFF" />
+          <Circle cx={145} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
+          <Circle cx={292.5} cy={186.5} r={6.5} fill="#FFFFFF" />
+          <Circle cx={303} cy={198} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
 
-            {/* soft drop shadow drawn first so it peeks out from beneath the fill */}
-            <Ellipse cx={220} cy={218} rx={56} ry={36} fill={gidUrl('hm-snout-drop')} />
-            <Ellipse cx={220} cy={212} rx={59} ry={42} fill={gidUrl('hm-snout')} />
-            <Ellipse cx={220} cy={212} rx={59} ry={42} fill={gidUrl('hm-snout-shadow')} clipPath={gidUrl('hm-clip-snout')} />
-            <Ellipse cx={220} cy={212} rx={59} ry={42} fill={gidUrl('hm-snout-shine')} clipPath={gidUrl('hm-clip-snout')} />
-            <Ellipse cx={191} cy={212} rx={10} ry={15} fill="#D9608C" />
-            <Ellipse cx={249} cy={212} rx={10} ry={15} fill="#D9608C" />
-          </>
-        )}
+          {/* soft drop shadow drawn first so it peeks out from beneath the fill */}
+          <Ellipse cx={220} cy={218} rx={56} ry={36} fill={gidUrl('hm-snout-drop')} />
+          <Ellipse cx={220} cy={212} rx={59} ry={42} fill={gidUrl('hm-snout')} />
+          <Ellipse cx={220} cy={212} rx={59} ry={42} fill={gidUrl('hm-snout-shadow')} clipPath={gidUrl('hm-clip-snout')} />
+          <Ellipse cx={220} cy={212} rx={59} ry={42} fill={gidUrl('hm-snout-shine')} clipPath={gidUrl('hm-clip-snout')} />
+          <Ellipse cx={191} cy={212} rx={10} ry={15} fill="#D9608C" />
+          <Ellipse cx={249} cy={212} rx={10} ry={15} fill="#D9608C" />
+        </G>
 
-        {face ? (
+        {displayFace ? (
           <SvgImage
-            href={face.image}
-            x={face.left}
-            y={face.top}
-            width={face.width}
-            height={face.height}
+            href={displayFace.image}
+            x={displayFace.left}
+            y={displayFace.top}
+            width={displayFace.width}
+            height={displayFace.height}
+            opacity={faceOpacity}
             preserveAspectRatio="xMidYMid slice"
           />
         ) : null}

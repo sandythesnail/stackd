@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { View, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, View, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
 import { Feather } from '@expo/vector-icons';
-import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy } from '@/components';
+import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, Speech } from '@/components';
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
@@ -31,6 +31,31 @@ type HintProps = { hintsRemaining: number; onUseHint: () => void };
  * website) so its face/message reacts — happy, gentle, or a 3-in-a-row streak callout. */
 type ReactProps = { reactTo: (isCorrect: boolean) => void };
 
+/** Ported verbatim from app.js's HAMMY_CORRECT_MSGS/HAMMY_GENTLE_MSGS. */
+const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it!', 'Great job!'];
+const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn from it:", "Close! Here's what's true:"];
+const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+
+/** Hammy's reaction speech bubble — ported from the website's .hammy-side-msg, which fades
+ * in/out (opacity + a small rise) rather than popping instantly. Keeps showing the last
+ * message while fading out so there's text to fade from. */
+function ReactionBubble({ message }: { message: string | null }) {
+  const anim = useRef(new Animated.Value(0)).current;
+  const [display, setDisplay] = useState(message);
+  useEffect(() => {
+    if (message) setDisplay(message);
+    Animated.timing(anim, { toValue: message ? 1 : 0, duration: 250, easing: Easing.ease, useNativeDriver: true }).start(() => {
+      if (!message) setDisplay(null);
+    });
+  }, [message, anim]);
+  if (!display) return null;
+  return (
+    <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
+      <Speech>{display}</Speech>
+    </Animated.View>
+  );
+}
+
 /** Screen 17 (extended) — Quest player. Renders the website's full multi-chapter quest
  * content (story/teach/matching/decision/microsim/etc — all 15 chapter types) instead of
  * the flat single-quiz flow, one chapter at a time. */
@@ -51,6 +76,8 @@ export default function QuestPlayer() {
   const [terms, setTerms] = useState<string[]>([]);
   const [bossWon, setBossWon] = useState(false);
   const [reactionMood, setReactionMood] = useState<'happy' | 'gentle' | 'streak' | null>(null);
+  const [reactionMsg, setReactionMsg] = useState<string | null>(null);
+  const [reactionKey, setReactionKey] = useState(0);
   const [answerStreak, setAnswerStreak] = useState(0);
 
   // router.back() no-ops with nowhere to go — e.g. the web build reloaded directly on this
@@ -76,14 +103,19 @@ export default function QuestPlayer() {
   const hintsRemaining = Math.max(0, HINT_BUDGET - hintsUsed);
   const onUseHint = () => setHintsUsed((h) => h + 1);
 
-  // Ported from showHammyReaction: the persistent companion's face/mood reacts to every
-  // graded answer across the quest — happy, gentle, or (every 3rd correct in a row) a streak
-  // callout — then clears itself a beat later so it never sits stale into a later chapter.
+  // Ported from showHammyReaction: the persistent companion's face/mood/message reacts to
+  // every graded answer across the quest — happy, gentle, or (every 3rd correct in a row) a
+  // streak callout — then clears itself a beat later so it never sits stale into a later
+  // chapter. reactionKey bumps on every call (even repeat-same-mood) so the body bounce/wobble
+  // replays each time, mirroring the website forcing its CSS animation to restart.
   const reactTo = (isCorrect: boolean) => {
     const nextStreak = isCorrect ? answerStreak + 1 : 0;
     setAnswerStreak(nextStreak);
-    setReactionMood(isCorrect ? (nextStreak > 0 && nextStreak % 3 === 0 ? 'streak' : 'happy') : 'gentle');
-    setTimeout(() => setReactionMood(null), 1400);
+    const isStreak = isCorrect && nextStreak > 0 && nextStreak % 3 === 0;
+    setReactionMood(isCorrect ? (isStreak ? 'streak' : 'happy') : 'gentle');
+    setReactionMsg(isStreak ? `🎉 ${nextStreak} in a row! You're on fire!` : isCorrect ? pickRandom(HAMMY_CORRECT_MSGS) : pickRandom(HAMMY_GENTLE_MSGS));
+    setReactionKey((k) => k + 1);
+    setTimeout(() => { setReactionMood(null); setReactionMsg(null); }, 1400);
   };
 
   const onComplete: Complete = (xpDelta, graded) => {
@@ -125,7 +157,15 @@ export default function QuestPlayer() {
         <Txt style={styles.step}>{chapterIdx + 1} / {quest.chapters.length}</Txt>
       </View>
       <View style={styles.companionWrap}>
-        <Hammy size={190} bob equipped={equippedMascotItems()} face={reactionMood ? REACTION_FACES[reactionMood] : undefined} />
+        <ReactionBubble message={reactionMsg} />
+        <Hammy
+          size={190}
+          bob
+          equipped={equippedMascotItems()}
+          face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
+          reaction={reactionMood}
+          reactionKey={reactionKey}
+        />
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ChapterView
@@ -793,7 +833,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5, borderBottomColor: '#EFEFE7',
   },
   step: { fontFamily: font.bold, fontSize: 12, color: colors.green },
-  companionWrap: { alignItems: 'center', paddingTop: 10, paddingBottom: 4 },
+  companionWrap: { alignItems: 'center', paddingTop: 10, paddingBottom: 4, gap: 8 },
   content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
