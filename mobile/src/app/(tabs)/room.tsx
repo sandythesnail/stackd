@@ -100,7 +100,6 @@ export default function Room() {
               );
             })}
 
-            <View style={styles.shadow} />
             <Hammy size={218} equipped={equipped} style={styles.hammy} />
 
             <View style={styles.wearing}>
@@ -245,15 +244,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 8,
-  },
-  shadow: {
-    position: 'absolute',
-    bottom: '10%',
-    alignSelf: 'center',
-    width: 210,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: 'rgba(107,143,101,0.22)',
   },
   hammy: { position: 'absolute', bottom: '12%', alignSelf: 'center' },
   wearing: {

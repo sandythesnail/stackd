@@ -83,7 +83,7 @@ export function Hammy({
     if (!bob) return;
     const floatLoop = Animated.loop(
       Animated.sequence([
-        Animated.timing(floatY, { toValue: -14, duration: 2100, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(floatY, { toValue: -5, duration: 2100, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         Animated.timing(floatY, { toValue: 0, duration: 2100, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ])
     );
