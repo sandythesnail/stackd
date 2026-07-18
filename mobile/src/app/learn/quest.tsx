@@ -31,9 +31,10 @@ type HintProps = { hintsRemaining: number; onUseHint: () => void };
  * website) so its face/message reacts — happy, gentle, or a 3-in-a-row streak callout. */
 type ReactProps = { reactTo: (isCorrect: boolean) => void };
 
-/** Ported verbatim from app.js's HAMMY_CORRECT_MSGS/HAMMY_GENTLE_MSGS. */
-const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it!', 'Great job!'];
-const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn from it:", "Close! Here's what's true:"];
+/** Ported from app.js's HAMMY_CORRECT_MSGS/HAMMY_GENTLE_MSGS, plus "Good job!"/"Nice try!"
+ * added to each pool per direct request. */
+const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it!', 'Great job!', 'Good job!'];
+const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn from it:", "Close! Here's what's true:", 'Nice try!'];
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
 /** Flexible filler dropped before a chapter's trailing action button so short chapters use
@@ -44,9 +45,15 @@ const Grow = () => <View style={{ flex: 1, minHeight: 8 }} />;
 
 /** Hammy's reaction speech bubble — ported from the website's .hammy-side-msg, which fades
  * in/out (opacity + a small rise) rather than popping instantly. Keeps showing the last
- * message while fading out so there's text to fade from. Always renders its slot at a fixed
- * height (whether or not a message is showing) so Hammy and everything below never shifts
- * when a reaction pops up — Hammy just permanently sits below the reserved space. */
+ * message while fading out so there's text to fade from.
+ *
+ * The bubble is rendered `position: 'absolute'` inside a fixed-height slot so it is taken
+ * completely out of normal layout flow — it can never change the slot's size no matter how
+ * much text it holds or what flex behavior Speech itself uses, so the slot's box is
+ * guaranteed constant and nothing below it (Hammy, chapter content, buttons) can ever shift
+ * when the bubble appears or disappears. (A previous version relied on a min/fixed-height
+ * View containing the bubble in normal flow, which still let a wide/2-line message push the
+ * slot taller in some layouts — this version can't, by construction.) */
 function ReactionBubble({ message }: { message: string | null }) {
   const anim = useRef(new Animated.Value(0)).current;
   const [display, setDisplay] = useState(message);
@@ -57,10 +64,10 @@ function ReactionBubble({ message }: { message: string | null }) {
     });
   }, [message, anim]);
   return (
-    <View style={styles.bubbleSlot}>
+    <View style={styles.bubbleSlot} pointerEvents="none">
       {display ? (
-        <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
-          <Speech numberOfLines={2}>{display}</Speech>
+        <Animated.View style={[styles.bubbleInner, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }]}>
+          <Speech numberOfLines={2} style={styles.bubbleSpeech}>{display}</Speech>
         </Animated.View>
       ) : null}
     </View>
@@ -214,7 +221,7 @@ function ChapterView({
   const reactProps: ReactProps = { reactTo };
   switch (chapter.type) {
     case 'story': return <StoryView chapter={chapter} onComplete={onComplete} />;
-    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} />;
+    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} {...reactProps} />;
     case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...reactProps} />;
     case 'hint': return <HintView chapter={chapter} onComplete={onComplete} />;
     case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} />;
@@ -286,7 +293,7 @@ function StoryView({ chapter, onComplete }: { chapter: StoryChapter; onComplete:
 }
 
 /* ───────────────────────── teach ───────────────────────── */
-function TeachView({ chapter, onComplete }: { chapter: TeachChapter; onComplete: Complete }) {
+function TeachView({ chapter, onComplete, reactTo }: { chapter: TeachChapter; onComplete: Complete } & ReactProps) {
   const router = useRouter();
   const [i, setI] = useState(0);
   const [answered, setAnswered] = useState<boolean | null>(null);
@@ -295,7 +302,10 @@ function TeachView({ chapter, onComplete }: { chapter: TeachChapter; onComplete:
   // Some concepts have no statement at all (check: {} or absent) — informational only, no quiz.
   const hasCheck = !!concept.check?.statement;
 
-  const pick = (guess: boolean) => setAnswered(guess);
+  const pick = (guess: boolean) => {
+    setAnswered(guess);
+    reactTo(guess === concept.check?.isTrue);
+  };
   const next = () => {
     if (last) { onComplete(chapter.xpOnComplete ?? 0); return; }
     setI(i + 1);
@@ -887,10 +897,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder,
   },
   companionWrap: { alignItems: 'center', paddingTop: 6, paddingBottom: 2, gap: 6 },
-  // Fixed (not min) height, sized for the longest reaction message wrapped to 2 lines
-  // (numberOfLines={2} on the Speech below caps it there) — a taller message can never
-  // grow this slot and shift Hammy/content, it just clips instead.
-  bubbleSlot: { height: 68, overflow: 'hidden', justifyContent: 'center', width: '84%' },
+  // Fixed height, and the bubble itself is absolutely positioned inside it (see
+  // ReactionBubble) — taking it out of flow entirely so it is structurally impossible for
+  // the bubble's content to change this slot's size, regardless of message length or flex
+  // quirks. alignSelf: 'center' since bubbleSlot no longer relies on companionWrap's
+  // alignItems for horizontal centering (an absolutely-positioned child ignores that).
+  bubbleSlot: { height: 68, width: '84%', alignSelf: 'center', overflow: 'hidden' },
+  bubbleInner: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'center' },
+  bubbleSpeech: { flex: undefined },
   content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
