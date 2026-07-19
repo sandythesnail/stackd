@@ -19,14 +19,13 @@ const MYSTERY_DUPLICATE_REFUND_RATE = 0.5;
 export const QUEST_COIN_PER_CORRECT = 8;
 export const QUEST_COIN_FLAT_FALLBACK = 8;
 
-/** STREAK_DIAMOND_INTERVAL/REWARD and DAILY_LOGIN_BASE/STEP/CAP_COINS ported verbatim from
- * app.js (updateStreak / claimDailyLoginBonus) — a once-per-calendar-day streak+diamond
- * bonus, plus a separate escalating daily-login coin drip keyed by distinct days logged. */
+/** STREAK_DIAMOND_INTERVAL/REWARD ported verbatim from app.js (updateStreak) — a
+ * once-per-calendar-day streak bonus, auto-credited at boot. DAILY_LOGIN_COINS is a flat
+ * "thanks for showing up" coin drip claimed by tapping the streak card (claimDailyLoginBonus),
+ * same as the website's click-to-collect flow. */
 const STREAK_DIAMOND_INTERVAL = 3;
 const STREAK_DIAMOND_REWARD = 5;
-const DAILY_LOGIN_BASE_COINS = 10;
-const DAILY_LOGIN_STEP_COINS = 2;
-const DAILY_LOGIN_CAP_COINS = 20;
+const DAILY_LOGIN_COINS = 15;
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
 const RARITY_WEIGHT: Record<string, number> = { common: 8, rare: 4, epic: 2, legendary: 1 };
 
@@ -254,10 +253,17 @@ type Ctx = {
   pendingLifeEvent: () => LifeEvent | null;
   /** Applies a choice's coinDelta (if any), records the event as shown, and clears pending. */
   resolveLifeEvent: (choiceId: string) => void;
-  /** Set once per calendar day when the streak/daily-login check awards something worth
-   * telling the player about; null once dismissed. */
+  /** Set when a claimed reward is worth telling the player about; null once dismissed. */
   dailyLoginBanner: { streak: number; loginCoins: number; streakDiamonds: number } | null;
   dismissDailyLoginBanner: () => void;
+  /** Whether the streak card should show its "come collect" yellow-outline treatment —
+   * true if today's login coin drip hasn't been claimed yet, or a streak-diamond milestone
+   * was just auto-credited and hasn't been shown to the player yet. */
+  loginBonusPending: boolean;
+  /** Claims today's login coin drip (if not already claimed) plus any pending streak-diamond
+   * reward, adds them to the player's balance, and pops dailyLoginBanner. Ported from the
+   * website's click-to-collect streak card (see hs-streak-card in app.js). */
+  claimDailyLoginBonus: () => void;
   setOnboardingTrack: (trackId: string) => void;
   /** Achievements newly unlocked since the last dismissal — drives the global unlock toast. */
   newAchievements: () => AchievementView[];
@@ -276,28 +282,31 @@ const StoreContext = createContext<Ctx | null>(null);
 
 type DailyLoginBanner = { streak: number; loginCoins: number; streakDiamonds: number } | null;
 
-/** Ported from app.js's updateStreak + claimDailyLoginBonus, combined into one once-per-day
- * check. No-ops (returns the same state, null banner) if today was already checked. */
-function runDailyCheck(s: AppState): { next: AppState; banner: DailyLoginBanner } {
+function hasClaimedToday(s: AppState) {
   const today = new Date().toDateString();
-  if (s.lastPlayedDate === today) return { next: s, banner: null };
+  return !!s.dailyLoginLog[today];
+}
+
+/** Ported from app.js's updateStreak — runs once per calendar day at boot (or whenever a
+ * fresher day boundary is discovered, e.g. via hydrateFromRemote). Advances the login
+ * streak and auto-credits any diamond milestone reward immediately, same as the website.
+ * Does NOT touch coins — that's a separate player-triggered claim (claimDailyLoginBonus).
+ * No-ops if today was already checked. */
+function runDailyCheck(s: AppState): { next: AppState; streakDiamondsEarned: number } {
+  const today = new Date().toDateString();
+  if (s.lastPlayedDate === today) return { next: s, streakDiamondsEarned: 0 };
 
   const yesterday = new Date(Date.now() - 86400000).toDateString();
   const streak = s.lastPlayedDate === yesterday ? s.streak + 1 : 1;
   const streakDiamonds = streak % STREAK_DIAMOND_INTERVAL === 0 ? STREAK_DIAMOND_REWARD : 0;
-
-  const dayNumber = Object.keys(s.dailyLoginLog).length + 1;
-  const loginCoins = Math.min(DAILY_LOGIN_BASE_COINS + DAILY_LOGIN_STEP_COINS * (dayNumber - 1), DAILY_LOGIN_CAP_COINS);
 
   const next: AppState = {
     ...s,
     streak,
     lastPlayedDate: today,
     diamonds: s.diamonds + streakDiamonds,
-    coins: s.coins + loginCoins,
-    dailyLoginLog: { ...s.dailyLoginLog, [today]: loginCoins },
   };
-  return { next: applyAchievementUnlocks(next), banner: { streak, loginCoins, streakDiamonds } };
+  return { next: applyAchievementUnlocks(next), streakDiamondsEarned: streakDiamonds };
 }
 
 /** Applies BADGE_TIER_REWARD for any newly-met achievement and records it as unlocked. */
@@ -329,6 +338,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
   const [dailyLoginBanner, setDailyLoginBanner] = useState<DailyLoginBanner>(null);
   const [newAchievementIds, setNewAchievementIds] = useState<string[]>([]);
+  /** Diamonds auto-credited by the day's runDailyCheck but not yet shown to the player —
+   * mirrors app.js's module-level `pendingStreakDiamonds` (in-memory only, not persisted,
+   * so it naturally clears itself on next launch same as the website). */
+  const [pendingStreakDiamonds, setPendingStreakDiamonds] = useState(0);
   const loaded = useRef(false);
 
   useEffect(() => {
@@ -341,9 +354,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           // corrupt/incompatible saved state — fall back to defaults already set
         }
       }
-      const { next, banner } = runDailyCheck(loadedState);
+      const { next, streakDiamondsEarned } = runDailyCheck(loadedState);
       setState(next);
-      if (banner) setDailyLoginBanner(banner);
+      if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
       loaded.current = true;
     });
   }, []);
@@ -359,11 +372,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       state.equippedItems.includes(id) || Object.values(state.equippedRoom).includes(id);
     const level = levelForXp(state.xp);
     const tierName = tierForMasteredCount(masteredCount(state.moduleProgress));
+    const loginBonusPending = !hasClaimedToday(state) || pendingStreakDiamonds > 0;
 
     return {
       state,
       level,
       tierName,
+      loginBonusPending,
       isOwned,
       isEquipped,
       equippedRoomItems: () =>
@@ -530,6 +545,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       dailyLoginBanner,
       dismissDailyLoginBanner: () => setDailyLoginBanner(null),
+      claimDailyLoginBonus: () => {
+        const today = new Date().toDateString();
+        const alreadyClaimed = hasClaimedToday(state);
+        const coins = alreadyClaimed ? 0 : DAILY_LOGIN_COINS;
+        const diamonds = pendingStreakDiamonds;
+        if (coins === 0 && diamonds === 0) return;
+        setPendingStreakDiamonds(0);
+        setState((s) =>
+          applyAchievementUnlocks({
+            ...s,
+            coins: s.coins + coins,
+            dailyLoginLog: alreadyClaimed ? s.dailyLoginLog : { ...s.dailyLoginLog, [today]: coins },
+          }),
+        );
+        setDailyLoginBanner({ streak: state.streak, loginCoins: coins, streakDiamonds: diamonds });
+      },
       setOnboardingTrack: (trackId) => setState((s) => ({ ...s, onboardingTrackId: trackId })),
       newAchievements: () => ACHIEVEMENTS.filter((a) => newAchievementIds.includes(a.id)).map((a) => ({ ...a, earned: true })),
       dismissNewAchievements: () => setNewAchievementIds([]),
@@ -543,18 +574,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // result — otherwise a stale cloud streak/lastPlayedDate (from before today's local
       // increment) clobbers the increment we just computed on local load.
       hydrateFromRemote: (partial) => {
-        const { next, banner } = runDailyCheck({ ...state, ...partial });
+        const { next, streakDiamondsEarned } = runDailyCheck({ ...state, ...partial });
         setState(next);
-        if (banner) setDailyLoginBanner(banner);
+        if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
       },
       debugSimulateNewDay: () => {
         const yesterday = new Date(Date.now() - 86400000).toDateString();
-        const { next, banner } = runDailyCheck({ ...state, lastPlayedDate: yesterday });
+        const { next, streakDiamondsEarned } = runDailyCheck({ ...state, lastPlayedDate: yesterday });
         setState(next);
-        if (banner) setDailyLoginBanner(banner);
+        if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
       },
     };
-  }, [state, dailyLoginBanner, newAchievementIds]);
+  }, [state, dailyLoginBanner, newAchievementIds, pendingStreakDiamonds]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

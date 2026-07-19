@@ -94,6 +94,13 @@ export const colors = {
   dangerBg: '#FBEDED',
   dangerSoft: '#D08A8A',
 
+  // reward / "come collect" highlight (streak claim, recommended module) — ported from
+  // the website's #F0C22E yellow (hs-card-reward / module-row.recommended in app.css).
+  reward: '#F0C22E',
+  rewardBg: '#FFF9E6',
+  rewardBadgeBg: '#FFEDB0',
+  rewardBadgeText: '#8A6800',
+
   // callout
   calloutBg: '#FBF0F3',
   calloutBorder: '#F2CDD7',

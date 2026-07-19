@@ -3,10 +3,22 @@ import { View, Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { colors, font, radius } from '@/theme';
 import { Txt } from './Txt';
 
-/** Small stat cell (XP / streak / coins). */
-export function Stat({ value, label, style }: { value: ReactNode; label: string; style?: ViewStyle }) {
+/** Small stat cell (XP / streak / coins). `reward` draws the yellow "come collect" outline
+ * + dot ported from the website's `.hs-card-streak.hs-card-reward` (see renderHome in app.js). */
+export function Stat({
+  value,
+  label,
+  style,
+  reward,
+}: {
+  value: ReactNode;
+  label: string;
+  style?: ViewStyle;
+  reward?: boolean;
+}) {
   return (
-    <View style={[styles.stat, style]}>
+    <View style={[styles.stat, reward && styles.statReward, style]}>
+      {reward ? <View style={styles.statRewardDot} /> : null}
       <View style={styles.statVal}>
         {typeof value === 'string' || typeof value === 'number' ? (
           <Txt style={styles.statb}>{value}</Txt>
@@ -119,6 +131,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     alignItems: 'center',
     gap: 2,
+  },
+  statReward: {
+    borderColor: colors.reward,
+    borderWidth: 2,
+    shadowColor: colors.reward,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 3,
+  },
+  statRewardDot: {
+    position: 'absolute',
+    top: 7,
+    right: 7,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: colors.reward,
+    borderWidth: 2,
+    borderColor: colors.white,
   },
   statVal: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statb: { fontFamily: font.display, fontSize: 19, color: colors.ink },

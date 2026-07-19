@@ -3,13 +3,14 @@ import { View, StyleSheet, ViewStyle } from 'react-native';
 import { colors, font } from '@/theme';
 import { Txt } from './Txt';
 
-type Tone = 'green' | 'pink' | 'lock' | 'warm';
+type Tone = 'green' | 'pink' | 'lock' | 'warm' | 'gold';
 
 const TONES: Record<Tone, { bg: string; text: string }> = {
   green: { bg: colors.tagGreenBg, text: colors.tagGreenText },
   pink: { bg: colors.tagPinkBg, text: colors.tagPinkText },
   lock: { bg: colors.tagLockBg, text: colors.tagLockText },
   warm: { bg: colors.tagWarmBg, text: colors.tagWarmText },
+  gold: { bg: colors.rewardBadgeBg, text: colors.rewardBadgeText },
 };
 
 export function Tag({

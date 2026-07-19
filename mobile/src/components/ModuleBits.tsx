@@ -25,22 +25,25 @@ export function MIcon({
   );
 }
 
-/** Grid tile for a module. */
+/** Grid tile for a module. `recommended` draws the yellow "part of your track" outline
+ * ported from the website's `.module-row.recommended` (see renderModuleList in app.js). */
 export function ModuleTile({
   children,
   locked,
+  recommended,
   onPress,
   style,
 }: {
   children: ReactNode;
   locked?: boolean;
+  recommended?: boolean;
   onPress?: () => void;
   style?: ViewStyle;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.mtile, locked && styles.mtileLock, style]}
+      style={[styles.mtile, recommended && styles.mtileRecommended, locked && styles.mtileLock, style]}
     >
       {children}
     </Pressable>
@@ -115,6 +118,16 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   mtileLock: { backgroundColor: colors.lockBg, borderColor: colors.lockBorder },
+  mtileRecommended: {
+    borderWidth: 2,
+    borderColor: colors.reward,
+    backgroundColor: colors.rewardBg,
+    shadowColor: colors.reward,
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 3,
+  },
   lrow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -4,6 +4,7 @@ import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleTile } from '@/comp
 import { colors, font } from '@/theme';
 import { modules } from '@/data';
 import { useStore } from '@/store';
+import { SURVEY_TRACKS } from '@/survey';
 
 /** Screen 9 — Modules (all 11, locked/unlocked). Done/total/status derived live from the
  * store + real lesson content, not static mock fields. */
@@ -11,6 +12,8 @@ export default function Modules() {
   const router = useRouter();
   const { state, level, tierName, moduleDone, moduleTotal, moduleStatus } = useStore();
   const doneCount = modules.filter((m) => moduleStatus(m.id, m.unlockLevel) === 'done').length;
+  const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
+  const trackModuleIds = activeTrack?.moduleIds ?? [];
 
   return (
     <Screen edges={['top']}>
@@ -28,10 +31,12 @@ export default function Modules() {
             const pct = total ? done / total : 0;
             const status = moduleStatus(m.id, m.unlockLevel);
             const locked = status === 'locked';
+            const recommended = status === 'active' && trackModuleIds.includes(m.id);
             return (
               <ModuleTile
                 key={m.id}
                 locked={locked}
+                recommended={recommended}
                 onPress={() => !locked && router.push(`/learn/module/${m.id}`)}
                 style={styles.item}
               >
@@ -39,6 +44,8 @@ export default function Modules() {
                   <MIcon abbr={m.abbr} color={m.color} />
                   {status === 'done' ? (
                     <Tag tone="green" style={styles.tag}>✓</Tag>
+                  ) : recommended ? (
+                    <Tag tone="gold" style={styles.tag}>★ Recommended</Tag>
                   ) : status === 'active' ? (
                     <Tag tone="pink" style={styles.tag}>{Math.round(pct * 100)}%</Tag>
                   ) : (

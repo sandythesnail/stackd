@@ -9,6 +9,7 @@ import { colors, font } from '@/theme';
 import { user, modules } from '@/data';
 import { useStore } from '@/store';
 import { authEnabled } from '@/lib/env';
+import { SURVEY_TRACKS } from '@/survey';
 import { todaysHammyMood, hasModuleActivityToday } from '@/hammyMood';
 import { MOOD_FACES } from '@/hammyFaces';
 
@@ -30,16 +31,21 @@ export default function Home() {
   const {
     state, level, tierName, moduleDone, moduleTotal, moduleStatus, achievements,
     equippedMascotItems, dailyLoginBanner, dismissDailyLoginBanner,
+    loginBonusPending, claimDailyLoginBonus,
   } = useStore();
+
+  const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
+  const trackModuleIds = activeTrack?.moduleIds ?? [];
 
   const homeModules = modules.slice(0, 4).map((m) => {
     const status = moduleStatus(m.id, m.unlockLevel);
     const total = moduleTotal(m.id);
     const done = moduleDone(m.id);
     const pct = total ? done / total : 0;
-    const tone = status === 'done' ? ('green' as const) : status === 'locked' ? ('lock' as const) : ('pink' as const);
-    const tag = status === 'done' ? '✓ Done' : status === 'locked' ? `🔒 Lvl ${m.unlockLevel}` : `${Math.round(pct * 100)}%`;
-    return { ...m, status, total, done, pct, tone, tag, locked: status === 'locked' };
+    const recommended = status === 'active' && trackModuleIds.includes(m.id);
+    const tone = status === 'done' ? ('green' as const) : recommended ? ('gold' as const) : status === 'locked' ? ('lock' as const) : ('pink' as const);
+    const tag = status === 'done' ? '✓ Done' : recommended ? '★ Recommended' : status === 'locked' ? `🔒 Lvl ${m.unlockLevel}` : `${Math.round(pct * 100)}%`;
+    return { ...m, status, total, done, pct, tone, tag, locked: status === 'locked', recommended };
   });
 
   const earnedBadges = achievements().filter((b) => b.earned).slice(0, 4);
@@ -66,7 +72,16 @@ export default function Home() {
 
         <Pressable style={styles.statRow} onPress={() => router.push('/(tabs)/progress')}>
           <Stat value={state.xp.toLocaleString()} label="XP" />
-          <Stat value={<Row><Flame size={13} /><Num>{state.streak}</Num></Row>} label="Streak" />
+          <Pressable
+            style={{ flex: 1 }}
+            onPress={loginBonusPending ? claimDailyLoginBonus : () => router.push('/(tabs)/progress')}
+          >
+            <Stat
+              value={<Row><Flame size={13} /><Num>{state.streak}</Num></Row>}
+              label="Streak"
+              reward={loginBonusPending}
+            />
+          </Pressable>
           <Stat value={<Row><Coin /><Num>{state.coins}</Num></Row>} label="Coins" />
           <Stat value={<Row><Diamond /><Num>{state.diamonds}</Num></Row>} label="Diamonds" />
         </Pressable>
@@ -100,7 +115,7 @@ export default function Home() {
         <SectionHead title="Keep learning" action="See all →" onAction={() => router.push('/(tabs)/modules')} />
         <View style={styles.grid}>
           {homeModules.map((m) => (
-            <ModuleTile key={m.id} locked={m.locked} onPress={() => router.push(`/learn/module/${m.id}`)} style={styles.gridItem}>
+            <ModuleTile key={m.id} locked={m.locked} recommended={m.recommended} onPress={() => router.push(`/learn/module/${m.id}`)} style={styles.gridItem}>
               <View style={styles.tileTop}>
                 <MIcon abbr={m.abbr} color={m.color} />
                 <Tag tone={m.tone} style={styles.miniTag}>{m.tag}</Tag>
