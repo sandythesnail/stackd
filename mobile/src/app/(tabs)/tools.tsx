@@ -65,7 +65,7 @@ export default function Tools() {
       <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Txt variant="disp" style={{ fontSize: 23 }}>Tools</Txt>
-        <Segmented options={['Budget', 'Loan Payoff', 'Compound Interest']} value={tab} onChange={setTab} />
+        <Segmented options={['Budget', 'Loan Payoff', 'Interest']} value={tab} onChange={setTab} />
         {tab === 2 ? <CompoundInterestPanel /> : tab === 1 ? <LoanPayoffPanel /> : <BudgetPanel />}
       </ScrollView>
     </Screen>
@@ -81,7 +81,7 @@ function CompoundInterestPanel() {
   const [startingAmount, setStartingAmount] = useState(500);
   const [monthlyContribution, setMonthlyContribution] = useState(100);
   const [years, setYears] = useState(10);
-  const [annualRatePct, setAnnualRatePct] = useState(8);
+  const [annualRatePct, setAnnualRatePct] = useState(8.5);
   const [rateMode, setRateMode] = useState<'hysa' | 'index' | 'custom'>('index');
   const [showCompare, setShowCompare] = useState(false);
 
@@ -105,26 +105,33 @@ function CompoundInterestPanel() {
 
   return (
     <>
-      <Card style={{ gap: 11 }}>
+      <Card style={{ gap: 13 }}>
         <Txt style={styles.cardTitle}>Your Numbers</Txt>
         <SliderRow label="Starting amount" value={startingAmount} onChange={setStartingAmount} min={0} max={5000} step={50} format={money} />
         <SliderRow label="Monthly contribution" value={monthlyContribution} onChange={setMonthlyContribution} min={0} max={1000} step={10} format={money} />
         <SliderRow label="Years" value={years} onChange={setYears} min={1} max={47} step={1} format={(v) => String(v)} />
-        <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
-          {CI_RATE_PRESETS.map((p) => (
-            <Pressable key={p.mode} onPress={() => { setRateMode(p.mode); setAnnualRatePct(p.rate); }}>
-              <Tag tone={rateMode === p.mode ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>{p.label} {p.sub}</Tag>
+
+        <View style={{ gap: 8 }}>
+          <Txt style={styles.sliderLabel}>Where&apos;s the money growing?</Txt>
+          <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
+            {CI_RATE_PRESETS.map((p) => (
+              <Pressable key={p.mode} onPress={() => { setRateMode(p.mode); setAnnualRatePct(p.rate); }}>
+                <Tag tone={rateMode === p.mode ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>{p.label} {p.sub}</Tag>
+              </Pressable>
+            ))}
+            <Pressable onPress={() => setRateMode('custom')}>
+              <Tag tone={rateMode === 'custom' ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>Custom</Tag>
             </Pressable>
-          ))}
-          <Pressable onPress={() => setRateMode('custom')}>
-            <Tag tone={rateMode === 'custom' ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>Custom</Tag>
-          </Pressable>
+          </View>
+          {rateMode === 'custom' ? (
+            <SliderRow
+              label="Annual interest rate" value={annualRatePct}
+              onChange={setAnnualRatePct}
+              min={1} max={12} step={0.5} format={(v) => `${v}%`}
+            />
+          ) : null}
         </View>
-        <SliderRow
-          label="Annual interest rate" value={annualRatePct}
-          onChange={(v) => { setAnnualRatePct(v); setRateMode('custom'); }}
-          min={1} max={12} step={0.5} format={(v) => `${v}%`}
-        />
+
         <Pressable onPress={() => setShowCompare((s) => !s)}>
           <Tag tone="lock" style={{ paddingVertical: 8, alignSelf: 'flex-start' }}>
             {showCompare ? 'Hide ▴' : 'Compare: 18 vs. 28 →'}
@@ -204,18 +211,18 @@ const RATE_PRESETS = [
   { mode: 'private', label: 'Private', rate: 9 },
 ] as const;
 
+const TERM_PRESETS = [5, 10, 15, 20, 25];
+
 function LoanPayoffPanel() {
   const [loanBalance, setLoanBalance] = useState(27000);
   const [annualRatePct, setAnnualRatePct] = useState(5.5);
   const [termYears, setTermYears] = useState(10);
   const [monthlyIncome, setMonthlyIncome] = useState(3200);
-  const [rent, setRent] = useState(1100);
-  const [food, setFood] = useState(400);
-  const [otherExpenses, setOtherExpenses] = useState(300);
+  const [livingExpenses, setLivingExpenses] = useState(1800);
   const [extraPayment, setExtraPayment] = useState(0);
 
   const minPayment = computeLoanMinPayment({ principal: loanBalance, annualRatePct, termYears });
-  const essential = rent + food + otherExpenses;
+  const essential = livingExpenses;
   const availableForLoan = monthlyIncome - essential;
   const shortfall = minPayment - availableForLoan;
   const canAffordMinimum = shortfall <= 0;
@@ -234,7 +241,7 @@ function LoanPayoffPanel() {
 
   return (
     <>
-      <Card style={{ gap: 11 }}>
+      <Card style={{ gap: 13 }}>
         <Txt style={styles.cardTitle}>Your Loan</Txt>
         <SliderRow label="Loan balance" value={loanBalance} onChange={setLoanBalance} min={1000} max={100000} step={500} format={money} />
         <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
@@ -247,15 +254,22 @@ function LoanPayoffPanel() {
           ))}
         </View>
         <SliderRow label="Interest rate" value={annualRatePct} onChange={setAnnualRatePct} min={1} max={14} step={0.25} format={(v) => `${v}%`} />
-        <SliderRow label="Term (years)" value={termYears} onChange={setTermYears} min={5} max={25} step={5} format={(v) => `${v}yr`} />
+        <View style={{ gap: 8 }}>
+          <Txt style={styles.sliderLabel}>Term</Txt>
+          <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
+            {TERM_PRESETS.map((yr) => (
+              <Pressable key={yr} onPress={() => setTermYears(yr)}>
+                <Tag tone={termYears === yr ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>{yr}yr</Tag>
+              </Pressable>
+            ))}
+          </View>
+        </View>
       </Card>
 
-      <Card style={{ gap: 11 }}>
+      <Card style={{ gap: 13 }}>
         <Txt style={styles.cardTitle}>Take-Home Pay & Living Costs</Txt>
         <SliderRow label="Monthly take-home pay" value={monthlyIncome} onChange={setMonthlyIncome} min={1500} max={7000} step={50} format={money} />
-        <SliderRow label="Rent" value={rent} onChange={setRent} min={0} max={3000} step={25} format={money} />
-        <SliderRow label="Food" value={food} onChange={setFood} min={0} max={1000} step={10} format={money} />
-        <SliderRow label="Other (utilities, etc.)" value={otherExpenses} onChange={setOtherExpenses} min={0} max={1500} step={10} format={money} />
+        <SliderRow label="Living expenses (rent, food, everything else)" value={livingExpenses} onChange={setLivingExpenses} min={0} max={4000} step={25} format={money} />
       </Card>
 
       <Card style={styles.resultCard}>
@@ -320,16 +334,23 @@ function CompareRow({ label, years, interest }: { label: string; years: number; 
   );
 }
 
-// Matches the website's BUDGET_CATEGORY_LABELS / BUDGET_CATEGORY_ORDER (app.js) exactly.
+// Grouped from the website's 10-category BUDGET_CATEGORY_LABELS (app.js) into 5 broader
+// buckets — mobile's audience is first-time budgeters, and 10 individual sliders was more
+// granularity than "basic and easy to understand" calls for. Not synced anywhere (this
+// panel's state is local-only, see BudgetPanel), so the grouping is mobile-only.
 const BUDGET_CATEGORY_LABELS: Record<string, string> = {
-  groceries: 'Groceries', diningOut: 'Dining Out', foodDelivery: 'Food Delivery',
-  coffee: 'Coffee', clothing: 'Clothing / Thrift', beauty: 'Beauty / Personal Care',
-  transportation: 'Transportation', entertainment: 'Entertainment', textbooks: 'Textbooks', gym: 'Gym',
+  food: 'Food & Drink',
+  shopping: 'Shopping & Personal Care',
+  transportation: 'Transportation',
+  funFitness: 'Entertainment & Fitness',
+  textbooks: 'Textbooks',
 };
-const BUDGET_CATEGORY_ORDER = ['groceries', 'diningOut', 'foodDelivery', 'coffee', 'clothing', 'beauty', 'transportation', 'entertainment', 'textbooks', 'gym'];
+const BUDGET_CATEGORY_ORDER = ['food', 'shopping', 'transportation', 'funFitness', 'textbooks'];
 const BUDGET_CATEGORY_DEFAULTS: Record<string, number> = {
-  groceries: 220, diningOut: 90, foodDelivery: 60, coffee: 25, clothing: 40,
-  beauty: 30, transportation: 70, entertainment: 40, textbooks: 20, gym: 20,
+  food: 395, shopping: 70, transportation: 70, funFitness: 60, textbooks: 20,
+};
+const BUDGET_CATEGORY_MAX: Record<string, number> = {
+  food: 900, shopping: 400, transportation: 400, funFitness: 400, textbooks: 300,
 };
 
 function BarRow({ label, val, max, tone }: { label: string; val: number; max: number; tone: 'pink' | 'green' }) {
@@ -356,7 +377,7 @@ function BudgetPanel() {
   const [fixedExpenses, setFixedExpenses] = useState(700);
   const [variable, setVariable] = useState<Record<string, number>>(BUDGET_CATEGORY_DEFAULTS);
   const [savingsGoal, setSavingsGoal] = useState(150);
-  const [whatIfCategory, setWhatIfCategory] = useState('foodDelivery');
+  const [whatIfCategory, setWhatIfCategory] = useState('food');
   const [whatIfCut, setWhatIfCut] = useState(0);
 
   const setCategory = (key: string, v: number) => setVariable((prev) => ({ ...prev, [key]: v }));
@@ -364,8 +385,6 @@ function BudgetPanel() {
   const totalVariable = BUDGET_CATEGORY_ORDER.reduce((s, k) => s + (variable[k] || 0), 0);
   const totalExpenses = fixedExpenses + totalVariable;
   const remaining = monthlyIncome - totalExpenses;
-  const deliveryBeautyTotal = (variable.foodDelivery || 0) + (variable.beauty || 0);
-  const overThreshold = deliveryBeautyTotal > 100;
 
   const goalGap = savingsGoal > 0 ? remaining - savingsGoal : null;
 
@@ -376,26 +395,23 @@ function BudgetPanel() {
 
   return (
     <>
-      <Card style={{ gap: 12 }}>
+      <Card style={{ gap: 13 }}>
         <SliderRow label="Take-home pay" value={monthlyIncome} onChange={setMonthlyIncome} min={0} max={6000} step={25} format={money} />
         <SliderRow label="Rent & fixed costs" value={fixedExpenses} onChange={setFixedExpenses} min={0} max={3000} step={25} format={money} />
         <SliderRow label="Savings goal" value={savingsGoal} onChange={setSavingsGoal} min={0} max={1500} step={25} format={money} />
       </Card>
 
-      <Card style={{ gap: 11 }}>
-        <Collapsible title={`Variable Expenses (${money(totalVariable)}/mo)`}>
+      <Card style={{ gap: 13 }}>
+        <Collapsible title={`Everyday Spending (${money(totalVariable)}/mo)`}>
           {BUDGET_CATEGORY_ORDER.map((key) => (
             <SliderRow
               key={key}
               label={BUDGET_CATEGORY_LABELS[key]}
               value={variable[key] || 0}
               onChange={(v) => setCategory(key, v)}
-              min={0} max={key === 'groceries' ? 600 : 300} step={5} format={money}
+              min={0} max={BUDGET_CATEGORY_MAX[key]} step={5} format={money}
             />
           ))}
-          <Txt variant="lead" style={[{ fontSize: 12.5 }, overThreshold && styles.overThresholdTxt]}>
-            {overThreshold ? '⚠ ' : ''}Delivery + beauty: {money(deliveryBeautyTotal)}/mo
-          </Txt>
         </Collapsible>
       </Card>
 
