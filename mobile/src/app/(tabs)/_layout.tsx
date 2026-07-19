@@ -13,7 +13,6 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="home" />
       <Tabs.Screen name="modules" />
-      <Tabs.Screen name="real-life" />
       <Tabs.Screen name="progress" />
       <Tabs.Screen name="tools" />
       <Tabs.Screen name="room" />

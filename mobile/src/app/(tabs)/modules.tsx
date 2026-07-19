@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList } from '@/components';
+import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow } from '@/components';
 import { colors, font, radius } from '@/theme';
 import { modules } from '@/data';
 import { moduleContentById } from '@/content';
@@ -44,8 +44,11 @@ export default function Modules() {
         <View style={{ gap: 12 }}>
           {modules.map((m) => {
             const content = moduleContentById(m.id);
-            // The real-life step-by-step guide lesson lives in the Real Life tab instead.
+            // The real-life step-by-step guide lesson is surfaced separately, right below
+            // the main list, via RealLifeSubQuestRow — same split the website makes between
+            // a module's main quests and its real-life sub-quest.
             const lessons = content?.lessons.filter((l) => !l.isLifeTask) ?? [];
+            const guideIndex = content?.lessons.findIndex((l) => l.isLifeTask) ?? -1;
             const done = moduleDone(m.id);
             const total = moduleTotal(m.id);
             const pct = total ? done / total : 0;
@@ -83,6 +86,12 @@ export default function Modules() {
                       status={status}
                       onPressLesson={(i) => router.push({ pathname: '/learn/hook', params: { moduleId: m.id, lessonIndex: String(i) } })}
                     />
+                    {guideIndex >= 0 ? (
+                      <RealLifeSubQuestRow
+                        moduleId={m.id}
+                        onPress={() => router.push({ pathname: '/learn/hook', params: { moduleId: m.id, lessonIndex: String(guideIndex), isLifeTask: '1' } })}
+                      />
+                    ) : null}
                   </View>
                 ) : null}
               </View>

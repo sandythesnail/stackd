@@ -108,8 +108,8 @@ export type AppState = {
    * today" face once this is today instead of the deterministic daily mood. */
   lastModuleActivityDate: string | null;
   /** Module ids whose real-life "step-by-step guide" quest (see LessonSummary.isLifeTask)
-   * has been completed — tracked separately from moduleProgress/mastery, see the Real
-   * Life tab (app/(tabs)/real-life.tsx) and completeLifeTask below. */
+   * has been completed — tracked separately from moduleProgress/mastery, see
+   * RealLifeSubQuestRow and completeLifeTask below. */
   completedLifeTaskIds: string[];
 };
 

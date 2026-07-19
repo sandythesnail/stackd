@@ -1,7 +1,7 @@
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen, Txt, IconButton, ProgressBar, MIcon, ModuleLessonList } from '@/components';
+import { Screen, Txt, IconButton, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow } from '@/components';
 import { font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
@@ -18,13 +18,17 @@ export default function ModuleDetail() {
   const { moduleDone, moduleStatus } = useStore();
   const mod = moduleById(id ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
-  // The real-life step-by-step guide lesson lives in the Real Life tab instead.
+  // The real-life step-by-step guide lesson is surfaced separately, right below the main
+  // list, via RealLifeSubQuestRow — same split the website makes between a module's main
+  // quests and its real-life sub-quest.
   const lessons = content?.lessons.filter((l) => !l.isLifeTask) ?? [];
+  const guideIndex = content?.lessons.findIndex((l) => l.isLifeTask) ?? -1;
   const done = moduleDone(mod.id);
   const status = moduleStatus(mod.id);
   const pct = lessons.length ? done / lessons.length : 0;
 
   const goToLesson = (i: number) => router.push({ pathname: '/learn/hook', params: { moduleId: mod.id, lessonIndex: String(i) } });
+  const goToGuide = () => router.push({ pathname: '/learn/hook', params: { moduleId: mod.id, lessonIndex: String(guideIndex), isLifeTask: '1' } });
 
   // router.back() no-ops with no in-app history (e.g. a direct/reloaded web URL) — fall
   // back to the modules list so the back chevron always goes somewhere.
@@ -55,6 +59,7 @@ export default function ModuleDetail() {
         </LinearGradient>
 
         <ModuleLessonList moduleId={mod.id} lessons={lessons} done={done} status={status} onPressLesson={goToLesson} />
+        {guideIndex >= 0 ? <RealLifeSubQuestRow moduleId={mod.id} onPress={goToGuide} /> : null}
       </ScrollView>
     </Screen>
   );

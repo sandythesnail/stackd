@@ -776,7 +776,7 @@ function TeachView({
   }, [hasCheck, answered, last]);
 
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Card style={{ gap: 8 }}>
         <Txt style={styles.term}>{concept.term}</Txt>
@@ -839,7 +839,7 @@ function MatchingView({
   };
 
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 10 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1, gap: 8 }}>
@@ -943,7 +943,7 @@ function DecisionView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked]);
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       {!picked ? (
@@ -1011,7 +1011,7 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
   }, [submitted, tier.ok]);
 
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       <Card style={{ gap: 4 }}>
@@ -1023,7 +1023,7 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
           </View>
         ))}
       </Card>
-      <Card style={{ gap: 14 }}>
+      <Card style={{ gap: 11 }}>
         {chapter.sliders.map((s) => (
           <View key={s.id} style={{ gap: 4 }}>
             <View style={styles.rowBetween}>
@@ -1058,7 +1058,7 @@ function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollCha
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answered]);
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
       <Card><Txt style={{ fontFamily: font.displayMed, fontSize: 15, color: colors.ink }}>{chapter.statement}</Txt></Card>
@@ -1236,7 +1236,7 @@ function KnowledgecheckView({
 
   if (!question) return null;
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{question.q}</Txt>
       <View style={{ gap: 10 }}>
@@ -1307,7 +1307,7 @@ function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: Si
   }, [used.size]);
 
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
       <Card style={{ gap: 4 }}>
@@ -1345,7 +1345,7 @@ function BossbattleView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked]);
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Tag tone="warm">⚔ BOSS CHALLENGE</Tag>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.scenario}</Txt>
@@ -1382,7 +1382,7 @@ function SpotcheckView({ chapter, onComplete, onAction, reactTo }: { chapter: Sp
   }, [revealed]);
 
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
       <Card style={{ gap: 10 }}>
@@ -1429,7 +1429,7 @@ function PriceisrightView({
   }, [submitted, guess]);
 
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       <Card style={{ gap: 8, alignItems: 'center' }}>
@@ -1476,7 +1476,7 @@ function ExplainbackView({
   }, [submitted, text]);
 
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       <TextInput
@@ -1520,7 +1520,7 @@ function UrlinspectView({ chapter, onComplete, onAction, reactTo }: { chapter: U
   }, [revealed]);
 
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
       <Card style={{ gap: 4 }}>

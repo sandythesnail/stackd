@@ -5,7 +5,9 @@ import { Txt } from './Txt';
 import { ListRow } from './ModuleBits';
 import { Button } from './Button';
 import type { LessonSummary } from '@/content';
+import { moduleContentById } from '@/content';
 import { resolveLessonSections } from '@/lessonSections';
+import { useStore } from '@/store';
 
 const QNODE: Record<string, { bg: string }> = {
   done: { bg: colors.green },
@@ -58,6 +60,27 @@ export function ModuleLessonList({
         <LessonRow key={lesson.title} lesson={lesson} index={i} status={rowStatusFor(i)} onPress={() => onPressLesson(i)} />
       ))}
     </View>
+  );
+}
+
+/** The module's real-life "step-by-step guide" quest (see LessonSummary.isLifeTask) —
+ * surfaced right here, inline with the module's own lesson list, instead of mobile's
+ * earlier separate Real Life tab. Ported from the website's .lt-subquest line ("🎯
+ * Real-life sub-quest: {topic} →", "✓ ..." once done), which sits attached to the module
+ * it belongs to rather than living on its own screen. Renders nothing if this module has
+ * no life-task lesson. Shared between the Modules tab's accordion and the module-detail
+ * screen, same reasoning as ModuleLessonList above. */
+export function RealLifeSubQuestRow({ moduleId, onPress }: { moduleId: string; onPress: () => void }) {
+  const { state } = useStore();
+  const guide = moduleContentById(moduleId)?.lessons.find((l) => l.isLifeTask);
+  if (!guide) return null;
+  const done = state.completedLifeTaskIds.includes(moduleId);
+  return (
+    <Pressable onPress={onPress} style={[styles.subQuest, done && styles.subQuestDone]}>
+      <Txt style={[styles.subQuestTxt, done && styles.subQuestTxtDone]}>
+        {done ? '✓' : '🎯'} Real-life sub-quest: {guide.title} →
+      </Txt>
+    </Pressable>
   );
 }
 
@@ -151,4 +174,11 @@ const styles = StyleSheet.create({
   qnodeTxt: { fontFamily: font.display, fontSize: 15, color: colors.white },
   qTitle: { fontFamily: font.extra, fontSize: 14, color: colors.ink },
   qNote: { fontFamily: font.bold, fontSize: 12, color: colors.muted5, marginTop: 1 },
+  subQuest: {
+    marginTop: 10, paddingVertical: 10, paddingHorizontal: 12,
+    borderRadius: 12, borderWidth: 1.5, borderColor: colors.pinkBorder, backgroundColor: colors.pinkBg2,
+  },
+  subQuestDone: { borderColor: colors.greenSoft, backgroundColor: colors.tagGreenBg },
+  subQuestTxt: { fontFamily: font.bold, fontSize: 12.5, color: colors.pinkDark },
+  subQuestTxtDone: { color: colors.greenDark },
 });

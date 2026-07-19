@@ -18,8 +18,10 @@ export type LessonSummary = {
   qIndices: number[];
   /** True for the module's real-life "step-by-step guide" quest (e.g. "Setting Up Direct
    * Deposit") — every module has exactly one, always last. Tracked separately from the
-   * module's 8 real lessons: excluded from moduleTotal/moduleProgress, surfaced instead in
-   * the Real Life tab (see app/(tabs)/real-life.tsx, store.tsx's completeLifeTask). */
+   * module's 8 real lessons: excluded from moduleTotal/moduleProgress, surfaced instead as
+   * its own row right below the module's lesson list (see @/components'
+   * RealLifeSubQuestRow, store.tsx's completeLifeTask) — matching the website's own
+   * .lt-subquest, attached to the module it belongs to rather than living on its own screen. */
   isLifeTask?: boolean;
 };
 
