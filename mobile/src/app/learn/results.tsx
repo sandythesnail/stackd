@@ -73,24 +73,21 @@ export default function Results() {
   // maybeShowPostCompletionOverlays) — a numeric level-up alone doesn't get a full screen.
   // A life event (if one triggered) is deferred until after that overlay, same as the website.
   const tieredUp = tierName !== tierBefore;
-  // Previously called router.dismissAll() before this replace() — dismissAll is an
-  // imperative native-stack API that Expo Router's web output (history-based navigation,
-  // no real dismissable stack) can't service, which is what produced the "unmatched route"
-  // error on the web build after finishing a lesson/module. replace() alone is enough to
-  // land on Home on every platform.
-  //
-  // The levelup/life-event hops below used router.push (not replace) despite that same
-  // fix — that pushed a transparentModal route on top of results instead of swapping it,
-  // leaving results (and, transitively, quest — replace()d by results itself) still on the
-  // stack underneath a route the modal's own screens then replace() out from under. On the
-  // web build this mismatched push/replace pairing across a "modal" that isn't a real
-  // dismissable native-stack modal is exactly what produced "broken route" after Continue —
-  // replace() throughout keeps the stack from ever holding more than one of these screens
-  // at once, on every platform.
+  // This screen lives inside the nested "learn" stack (app/learn/_layout.tsx) — a SEPARATE
+  // navigator from the root Stack that owns /modal/* and /(tabs)/*. replace() only reliably
+  // swaps a screen within its OWN navigator's history (that's exactly why quest.tsx's own
+  // replace() into this same results screen, another "learn" sibling, works fine); asking it
+  // to jump into a different top-level branch is what actually produced "broken
+  // route"/blank-screen after Continue, through two rounds of trying to fix this by shuffling
+  // push vs replace between results/levelup/life-event while they all stayed cross-navigator
+  // replaces. push() is the operation that reliably escapes to a sibling navigator branch —
+  // see shop.tsx's identical modal/shop-item hop, which has never had this problem.
+  // Trade-off: back-stack cleanliness (dismissAll() was tried for this and broke the web
+  // build outright, see git history) in exchange for the navigation actually working.
   const continuePress = () => {
-    if (tieredUp) { router.replace('/modal/levelup'); return; }
-    if (state.pendingLifeEventId) { router.replace('/modal/life-event'); return; }
-    router.replace('/(tabs)/home');
+    if (tieredUp) { router.push('/modal/levelup'); return; }
+    if (state.pendingLifeEventId) { router.push('/modal/life-event'); return; }
+    router.push('/(tabs)/home');
   };
 
   return (

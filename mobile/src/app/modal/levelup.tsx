@@ -21,9 +21,13 @@ const SPOTS = [
 export default function LevelUp() {
   const router = useRouter();
   const { state, level, tierName, equippedMascotItems } = useStore();
+  // /modal/life-event is a same-navigator sibling (both are root-Stack screens, see
+  // _layout.tsx), so replace() is fine there — but /(tabs)/home lives in a different nested
+  // navigator, and replace() across that boundary is unreliable (see results.tsx's
+  // continuePress for the full story of the "broken route" this caused); push() instead.
   const done = () => {
     if (state.pendingLifeEventId) { router.replace('/modal/life-event'); return; }
-    router.replace('/(tabs)/home');
+    router.push('/(tabs)/home');
   };
   return (
     <LinearGradient colors={[colors.green, colors.greenDark]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1 }}>

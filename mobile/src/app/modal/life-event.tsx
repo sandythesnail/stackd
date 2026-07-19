@@ -15,8 +15,11 @@ export default function LifeEvent() {
   const [answeredId, setAnsweredId] = useState<string | null>(null);
   const answeredChoice = event?.choices.find((c) => c.id === answeredId);
 
+  // /(tabs)/home lives in a different nested navigator than this root-Stack screen —
+  // replace() across that boundary is unreliable (see results.tsx's continuePress for the
+  // full story of the "broken route" this caused); push() instead.
   const done = () => {
-    router.replace('/(tabs)/home');
+    router.push('/(tabs)/home');
   };
 
   const pick = (choiceId: string) => {
