@@ -20,6 +20,7 @@ const ICONS: Record<
 > = {
   home: { label: 'Home', render: (c) => <Feather name="home" size={25} color={c} /> },
   modules: { label: 'Modules', render: (c) => <Feather name="grid" size={25} color={c} /> },
+  progress: { label: 'Progress', render: (c) => <Feather name="bar-chart-2" size={25} color={c} /> },
   tools: { label: 'Tools', render: (c) => <Ionicons name="calculator-outline" size={26} color={c} /> },
   room: { label: 'Room', render: (c) => <MaterialCommunityIcons name="pig-variant" size={27} color={c} /> },
   shop: { label: 'Shop', render: (c) => <Feather name="shopping-bag" size={25} color={c} /> },

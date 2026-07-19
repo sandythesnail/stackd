@@ -71,7 +71,7 @@ export default function Survey() {
               return (
                 <View key={m.id} style={{ gap: 6 }}>
                   <View style={styles.modRow}>
-                    <MIcon abbr={m.abbr} color={m.color} size={26} r={8} fontSize={11} />
+                    <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} size={26} r={8} fontSize={11} />
                     <Txt style={styles.modName}>{m.name}</Txt>
                   </View>
                   <Slider
@@ -145,7 +145,7 @@ export default function Survey() {
                       {!isLast ? <View style={styles.pathLine} /> : null}
                     </View>
                     <View style={styles.pathCard}>
-                      <MIcon abbr={m.abbr} color={m.color} size={34} r={10} fontSize={13} />
+                      <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} size={34} r={10} fontSize={13} />
                       <Txt style={styles.modName}>{m.name}</Txt>
                     </View>
                   </View>

@@ -3,7 +3,7 @@
  * badges, shop items, and the sample learner (Maya). Mirrors the design mockups.
  * Swap for Sandra's web content / Supabase later.
  */
-import { moduleColor } from '@/theme';
+import { moduleColor, moduleColorText } from '@/theme';
 
 // Mutable game state (coins, diamonds, xp, level, streak, inventory, equipped) lives in
 // the store (@/store) so it can persist and update live — this is just the static profile.
@@ -12,34 +12,32 @@ export const user = {
   fullName: 'Maya Rodriguez',
   email: 'maya.rodriguez@uconn.edu',
   tier: 'Sophomore Saver',
-  referral: 'stackd.app/r/MAYA-UC',
 };
 
 export type Module = {
   id: string;
   name: string;
-  abbr: string;
+  /** Zero-padded fixed number ("01".."11") — ported from the website's MODULES[i].icon
+   * field, shown in the module badge instead of a two-letter abbreviation. */
+  icon: string;
   color: string;
-  /** Mobile's own level-gated progression — the website doesn't gate at all (see
-   * mobile/CLAUDE.md). Undefined means unlocked from level 1. Done/total lesson counts
-   * are now derived live from the store + real content, not stored here. */
-  unlockLevel?: number;
+  textColor: string;
 };
 
-// Order and ids match the website's MODULES array. All unlocked from level 1, matching
-// the website's no-gating behavior.
+// Order, ids, and numbers match the website's MODULES array. Nothing is level-gated,
+// matching the website's no-gating behavior — every module and lesson is reachable any time.
 export const modules: Module[] = [
-  { id: 'earning', name: 'Earning', abbr: 'Er', color: moduleColor.earning },
-  { id: 'spending', name: 'Spending', abbr: 'Sp', color: moduleColor.spending },
-  { id: 'saving', name: 'Saving', abbr: 'Sv', color: moduleColor.saving },
-  { id: 'investing', name: 'Investing', abbr: 'Iv', color: moduleColor.investing },
-  { id: 'credit', name: 'Managing Credit', abbr: 'Cr', color: moduleColor.credit },
-  { id: 'risk', name: 'Managing Risk', abbr: 'Rk', color: moduleColor.risk },
-  { id: 'loans', name: 'Loans', abbr: 'Ln', color: moduleColor.loans },
-  { id: 'taxes', name: 'Taxes', abbr: 'Tx', color: moduleColor.taxes },
-  { id: 'psychology', name: 'Consumer Psychology', abbr: 'Ps', color: moduleColor.psychology },
-  { id: 'career', name: 'Career & Salary', abbr: 'Cs', color: moduleColor.career },
-  { id: 'scams', name: 'Scams & Fraud Prevention', abbr: 'Sc', color: moduleColor.scams },
+  { id: 'earning', name: 'Earning', icon: '01', color: moduleColor.earning, textColor: moduleColorText.earning },
+  { id: 'spending', name: 'Spending', icon: '02', color: moduleColor.spending, textColor: moduleColorText.spending },
+  { id: 'saving', name: 'Saving', icon: '03', color: moduleColor.saving, textColor: moduleColorText.saving },
+  { id: 'investing', name: 'Investing', icon: '04', color: moduleColor.investing, textColor: moduleColorText.investing },
+  { id: 'credit', name: 'Managing Credit', icon: '05', color: moduleColor.credit, textColor: moduleColorText.credit },
+  { id: 'risk', name: 'Managing Risk', icon: '06', color: moduleColor.risk, textColor: moduleColorText.risk },
+  { id: 'loans', name: 'Loans', icon: '07', color: moduleColor.loans, textColor: moduleColorText.loans },
+  { id: 'taxes', name: 'Taxes', icon: '08', color: moduleColor.taxes, textColor: moduleColorText.taxes },
+  { id: 'psychology', name: 'Consumer Psychology', icon: '09', color: moduleColor.psychology, textColor: moduleColorText.psychology },
+  { id: 'career', name: 'Career & Salary', icon: '10', color: moduleColor.career, textColor: moduleColorText.career },
+  { id: 'scams', name: 'Scams & Fraud Prevention', icon: '11', color: moduleColor.scams, textColor: moduleColorText.scams },
 ];
 
 export const moduleById = (id: string) => modules.find((m) => m.id === id);

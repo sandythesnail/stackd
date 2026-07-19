@@ -110,19 +110,40 @@ export const colors = {
   cream: '#FAF6ED',
 } as const;
 
-/** Module accent colors keyed by module id. */
+/** Module accent colors keyed by module id — ported from the website's `.mod-icon.<color>`
+ * pastel pairs (app.css) so module icon badges match exactly: a pale background with a
+ * darker, same-hue foreground for the icon glyph/text (see `moduleColorText` below).
+ * `scams` has no source value — the website's own `iconColor: 'rust'` has no matching
+ * `.mod-icon.rust` CSS rule anywhere in app.css, a real bug on the site itself, so this is
+ * a filled-in rust/terracotta pastel consistent with the rest of the palette. */
 export const moduleColor: Record<string, string> = {
-  earning: '#6B8F65',
-  career: '#559E86',
-  spending: '#D4899E',
-  saving: '#4FA3B8',
-  investing: '#5B7FD4',
-  credit: '#7C6FBF',
-  risk: '#D98A4A',
-  loans: '#A8791A',
-  taxes: '#7FA45C',
-  psychology: '#B5568F',
-  scams: '#A0522D',
+  earning: '#B2C9AE',
+  spending: '#F2CDD7',
+  saving: '#C8F5F0',
+  investing: '#E8D6FF',
+  credit: '#D6EEFF',
+  risk: '#FFE5D0',
+  loans: '#FFEDB0',
+  taxes: '#E3E7F0',
+  psychology: '#F5D9E8',
+  career: '#DCE0FA',
+  scams: '#F5D9C8',
+};
+
+/** Darker foreground paired with each `moduleColor` background — the module icon's text
+ * color on the website (never plain white on the pale chip). */
+export const moduleColorText: Record<string, string> = {
+  earning: '#4A6844',
+  spending: '#B5607A',
+  saving: '#1A6B64',
+  investing: '#6B35B8',
+  credit: '#1A5E8A',
+  risk: '#8A3E1A',
+  loans: '#8A6800',
+  taxes: '#3C4A63',
+  psychology: '#8F2D5E',
+  career: '#38408A',
+  scams: '#8A4A1A',
 };
 
 export const font = {

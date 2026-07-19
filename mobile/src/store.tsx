@@ -229,9 +229,9 @@ type Ctx = {
   moduleDone: (moduleId: string) => number;
   moduleTotal: (moduleId: string) => number;
   moduleMastered: (moduleId: string) => boolean;
-  /** 'locked' if below unlockLevel (mobile's own level-gating), else 'done' once every
-   * lesson is complete, else 'active'. */
-  moduleStatus: (moduleId: string, unlockLevel?: number) => 'done' | 'active' | 'locked';
+  /** 'done' once every lesson is complete, else 'active'. Nothing is level-gated —
+   * every module is reachable from the start (matches the website's no-gating behavior). */
+  moduleStatus: (moduleId: string) => 'done' | 'active';
   achievements: () => AchievementView[];
   /** Buy/equip/unequip toggle for non-room items (hats, accessories, exclusives). Mirrors
    * the website's handleShopAction non-slot branch. No-ops (returns false) if unaffordable. */
@@ -390,10 +390,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       moduleDone: (moduleId) => Math.min(state.moduleProgress[moduleId] ?? 0, moduleTotal(moduleId)),
       moduleTotal,
       moduleMastered: (moduleId) => isModuleMastered(state.moduleProgress, moduleId),
-      moduleStatus: (moduleId, unlockLevel) => {
-        if (unlockLevel && level < unlockLevel) return 'locked';
-        return isModuleMastered(state.moduleProgress, moduleId) ? 'done' : 'active';
-      },
+      moduleStatus: (moduleId) => (isModuleMastered(state.moduleProgress, moduleId) ? 'done' : 'active'),
       achievements: () => {
         const met = new Set(computeMetAchievementIds(state));
         return ACHIEVEMENTS.map((a) => ({ ...a, earned: met.has(a.id) }));

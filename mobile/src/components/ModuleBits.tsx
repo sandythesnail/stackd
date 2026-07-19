@@ -4,23 +4,26 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors, font, radius } from '@/theme';
 import { Txt } from './Txt';
 
-/** Rounded colored module icon with a short abbreviation. */
+/** Rounded module icon badge — a pale background with its paired darker foreground number
+ * ("01".."11"), matching the website's `.mod-icon` chip exactly (never white-on-color). */
 export function MIcon({
   abbr,
   color,
+  textColor = colors.white,
   size = 42,
   r = 13,
   fontSize = 16,
 }: {
   abbr: string;
   color: string;
+  textColor?: string;
   size?: number;
   r?: number;
   fontSize?: number;
 }) {
   return (
     <View style={[styles.micon, { width: size, height: size, borderRadius: r, backgroundColor: color }]}>
-      <Txt style={{ fontFamily: font.display, fontSize, color: colors.white }}>{abbr}</Txt>
+      <Txt style={{ fontFamily: font.display, fontSize, color: textColor }}>{abbr}</Txt>
     </View>
   );
 }

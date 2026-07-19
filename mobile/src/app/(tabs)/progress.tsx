@@ -13,7 +13,7 @@ export default function Progress() {
 
   const totalDone = modules.reduce((sum, m) => sum + moduleDone(m.id), 0);
   const totalQuests = modules.reduce((sum, m) => sum + moduleTotal(m.id), 0);
-  const masteredCount = modules.filter((m) => moduleStatus(m.id, m.unlockLevel) === 'done').length;
+  const masteredCount = modules.filter((m) => moduleStatus(m.id) === 'done').length;
   const overallPct = totalQuests ? totalDone / totalQuests : 0;
 
   return (
@@ -35,29 +35,20 @@ export default function Progress() {
         <View style={{ gap: 8 }}>
           {ROWS.map((id) => {
             const m = modules.find((x) => x.id === id)!;
-            const status = moduleStatus(m.id, m.unlockLevel);
-            const locked = status === 'locked';
+            const status = moduleStatus(m.id);
             const done = moduleDone(m.id);
             const total = moduleTotal(m.id);
             const pct = total ? done / total : 0;
             const complete = status === 'done';
             return (
-              <View key={id} style={[styles.row, locked && styles.rowLock]}>
-                <MIcon abbr={m.abbr} color={m.color} size={34} r={10} fontSize={13} />
+              <View key={id} style={styles.row}>
+                <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} size={34} r={10} fontSize={13} />
                 <View style={{ flex: 1 }}>
                   <View style={styles.rowTop}>
                     <Txt style={styles.rowName}>{m.name}</Txt>
-                    <Txt style={[styles.rowCount, complete && { color: colors.green }]}>
-                      {locked ? '🔒 Locked' : `${done} / ${total}`}
-                    </Txt>
+                    <Txt style={[styles.rowCount, complete && { color: colors.green }]}>{done} / {total}</Txt>
                   </View>
-                  <ProgressBar
-                    value={locked ? 0 : pct}
-                    tone={complete ? 'green' : 'pink'}
-                    height={8}
-                    track={locked ? '#E4E0D6' : colors.track}
-                    style={{ marginTop: 6 }}
-                  />
+                  <ProgressBar value={pct} tone={complete ? 'green' : 'pink'} height={8} style={{ marginTop: 6 }} />
                 </View>
               </View>
             );
@@ -124,7 +115,6 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 15,
   },
-  rowLock: { backgroundColor: colors.lockBg, borderColor: colors.lockBorder },
   rowTop: { flexDirection: 'row', justifyContent: 'space-between' },
   rowName: { fontFamily: font.extra, fontSize: 13.5, color: colors.ink },
   rowCount: { fontFamily: font.bold, fontSize: 12, color: colors.muted5 },

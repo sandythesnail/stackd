@@ -16,7 +16,6 @@ export default function LifeEvent() {
   const answeredChoice = event?.choices.find((c) => c.id === answeredId);
 
   const done = () => {
-    router.dismissAll();
     router.replace('/(tabs)/home');
   };
 

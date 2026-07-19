@@ -41,6 +41,7 @@ export function Button({
       onPress={onPress}
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
+      android_ripple={{ color: 'transparent' }}
       style={[{ borderRadius: r, backgroundColor: v.shadow, paddingBottom: 4 }, style]}
     >
       <View

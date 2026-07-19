@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { View, Pressable, StyleSheet, ViewStyle } from 'react-native';
+import { View, Pressable, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { colors, font, radius } from '@/theme';
 import { Txt } from './Txt';
 
@@ -56,11 +56,21 @@ export function SectionHead({
 }
 
 /** Speech bubble with a left-pointing tail. */
-export function Speech({ children, style, numberOfLines }: { children: ReactNode; style?: ViewStyle; numberOfLines?: number }) {
+export function Speech({
+  children,
+  style,
+  textStyle,
+  numberOfLines,
+}: {
+  children: ReactNode;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
+  numberOfLines?: number;
+}) {
   return (
     <View style={[styles.speech, style]}>
       <View style={styles.tail} />
-      <Txt style={styles.speechTxt} numberOfLines={numberOfLines}>{children}</Txt>
+      <Txt style={[styles.speechTxt, textStyle]} numberOfLines={numberOfLines}>{children}</Txt>
     </View>
   );
 }

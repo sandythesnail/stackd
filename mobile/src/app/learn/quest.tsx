@@ -8,7 +8,7 @@ import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
-import { REACTION_FACES } from '@/hammyFaces';
+import { REACTION_FACES, MOOD_FACES } from '@/hammyFaces';
 import type {
   Chapter, Question, StoryChapter, TeachChapter, MatchingChapter, HintChapter, DecisionChapter,
   MicrosimChapter, PollChapter, MythcardsChapter, KnowledgecheckChapter, SimulatorChapter,
@@ -67,7 +67,7 @@ function ReactionBubble({ message }: { message: string | null }) {
     <View style={styles.bubbleSlot} pointerEvents="none">
       {display ? (
         <Animated.View style={[styles.bubbleInner, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }]}>
-          <Speech numberOfLines={2} style={styles.bubbleSpeech}>{display}</Speech>
+          <Speech numberOfLines={2} style={styles.bubbleSpeech} textStyle={styles.bubbleSpeechTxt}>{display}</Speech>
         </Animated.View>
       ) : null}
     </View>
@@ -193,15 +193,15 @@ export default function QuestPlayer() {
       <View style={styles.companionWrap}>
         <ReactionBubble message={reactionMsg} />
         <Hammy
-          size={116}
+          size={168}
           bob
           equipped={equippedMascotItems()}
-          face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
+          face={reactionMood ? REACTION_FACES[reactionMood] : MOOD_FACES.curious}
           reaction={reactionMood}
           reactionKey={reactionKey}
         />
       </View>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ChapterView
           key={chapter.id}
           chapter={chapter}
@@ -896,15 +896,19 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 38, right: 0, width: 230, zIndex: 30, elevation: 8,
     backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder,
   },
-  companionWrap: { alignItems: 'center', paddingTop: 6, paddingBottom: 2, gap: 6 },
+  companionWrap: { alignItems: 'center', paddingTop: 4, paddingBottom: 2, gap: 4 },
   // Fixed height, and the bubble itself is absolutely positioned inside it (see
   // ReactionBubble) — taking it out of flow entirely so it is structurally impossible for
   // the bubble's content to change this slot's size, regardless of message length or flex
   // quirks. alignSelf: 'center' since bubbleSlot no longer relies on companionWrap's
   // alignItems for horizontal centering (an absolutely-positioned child ignores that).
-  bubbleSlot: { height: 68, width: '84%', alignSelf: 'center', overflow: 'hidden' },
-  bubbleInner: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'center' },
-  bubbleSpeech: { flex: undefined },
+  // Full-width with the inner content centered (rather than a fixed 84%-wide slot) so a
+  // short one-line reaction ("Nice! 🎉") gets a bubble that hugs its own text instead of a
+  // wide bar of mostly-empty padding — see bubbleSpeech's own maxWidth for the actual cap.
+  bubbleSlot: { height: 46, width: '100%', overflow: 'hidden' },
+  bubbleInner: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' },
+  bubbleSpeech: { flex: undefined, maxWidth: 240, paddingVertical: 7, paddingHorizontal: 12 },
+  bubbleSpeechTxt: { fontSize: 12, lineHeight: 15 },
   content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },

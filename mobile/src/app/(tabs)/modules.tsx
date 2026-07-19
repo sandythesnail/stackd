@@ -11,7 +11,7 @@ import { SURVEY_TRACKS } from '@/survey';
 export default function Modules() {
   const router = useRouter();
   const { state, level, tierName, moduleDone, moduleTotal, moduleStatus } = useStore();
-  const doneCount = modules.filter((m) => moduleStatus(m.id, m.unlockLevel) === 'done').length;
+  const doneCount = modules.filter((m) => moduleStatus(m.id) === 'done').length;
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
   const trackModuleIds = activeTrack?.moduleIds ?? [];
 
@@ -29,36 +29,30 @@ export default function Modules() {
             const done = moduleDone(m.id);
             const total = moduleTotal(m.id);
             const pct = total ? done / total : 0;
-            const status = moduleStatus(m.id, m.unlockLevel);
-            const locked = status === 'locked';
+            const status = moduleStatus(m.id);
             const recommended = status === 'active' && trackModuleIds.includes(m.id);
             return (
               <ModuleTile
                 key={m.id}
-                locked={locked}
                 recommended={recommended}
-                onPress={() => !locked && router.push(`/learn/module/${m.id}`)}
+                onPress={() => router.push(`/learn/module/${m.id}`)}
                 style={styles.item}
               >
                 <View style={styles.top}>
-                  <MIcon abbr={m.abbr} color={m.color} />
+                  <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} />
                   {status === 'done' ? (
                     <Tag tone="green" style={styles.tag}>✓</Tag>
                   ) : recommended ? (
                     <Tag tone="gold" style={styles.tag}>★ Recommended</Tag>
-                  ) : status === 'active' ? (
-                    <Tag tone="pink" style={styles.tag}>{Math.round(pct * 100)}%</Tag>
                   ) : (
-                    <Tag tone="lock" style={styles.tag}>🔒{m.unlockLevel}</Tag>
+                    <Tag tone="pink" style={styles.tag}>{Math.round(pct * 100)}%</Tag>
                   )}
                 </View>
-                <Txt style={[styles.name, locked && { color: colors.lockText }]}>{m.name}</Txt>
+                <Txt style={styles.name}>{m.name}</Txt>
                 {status === 'active' ? (
                   <ProgressBar value={pct} tone="pink" height={7} />
                 ) : (
-                  <Txt style={styles.sub}>
-                    {status === 'done' ? `${done}/${total} quests` : `Unlock at Lvl ${m.unlockLevel}`}
-                  </Txt>
+                  <Txt style={styles.sub}>{done}/{total} quests</Txt>
                 )}
               </ModuleTile>
             );

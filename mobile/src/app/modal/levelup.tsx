@@ -23,7 +23,6 @@ export default function LevelUp() {
   const { state, level, tierName, equippedMascotItems } = useStore();
   const done = () => {
     if (state.pendingLifeEventId) { router.replace('/modal/life-event'); return; }
-    router.dismissAll();
     router.replace('/(tabs)/home');
   };
   return (

@@ -38,19 +38,19 @@ export default function Home() {
   const trackModuleIds = activeTrack?.moduleIds ?? [];
 
   const homeModules = modules.slice(0, 4).map((m) => {
-    const status = moduleStatus(m.id, m.unlockLevel);
+    const status = moduleStatus(m.id);
     const total = moduleTotal(m.id);
     const done = moduleDone(m.id);
     const pct = total ? done / total : 0;
     const recommended = status === 'active' && trackModuleIds.includes(m.id);
-    const tone = status === 'done' ? ('green' as const) : recommended ? ('gold' as const) : status === 'locked' ? ('lock' as const) : ('pink' as const);
-    const tag = status === 'done' ? '✓ Done' : recommended ? '★ Recommended' : status === 'locked' ? `🔒 Lvl ${m.unlockLevel}` : `${Math.round(pct * 100)}%`;
-    return { ...m, status, total, done, pct, tone, tag, locked: status === 'locked', recommended };
+    const tone = status === 'done' ? ('green' as const) : recommended ? ('gold' as const) : ('pink' as const);
+    const tag = status === 'done' ? '✓ Done' : recommended ? '★ Recommended' : `${Math.round(pct * 100)}%`;
+    return { ...m, status, total, done, pct, tone, tag, recommended };
   });
 
   const earnedBadges = achievements().filter((b) => b.earned).slice(0, 4);
 
-  const nextModule = modules.find((m) => moduleStatus(m.id, m.unlockLevel) === 'active');
+  const nextModule = modules.find((m) => moduleStatus(m.id) === 'active');
   const nextDone = nextModule ? moduleDone(nextModule.id) : 0;
   const nextTotal = nextModule ? moduleTotal(nextModule.id) : 0;
   const nextPct = nextTotal ? nextDone / nextTotal : 0;
@@ -75,21 +75,22 @@ export default function Home() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Greeting />
 
-        <Pressable style={styles.statRow} onPress={() => router.push('/(tabs)/progress')}>
+        <View style={styles.statRow}>
           <Stat value={state.xp.toLocaleString()} label="XP" />
-          <Pressable
-            style={{ flex: 1 }}
-            onPress={loginBonusPending ? claimDailyLoginBonus : () => router.push('/(tabs)/progress')}
-          >
-            <Stat
-              value={<Row><Flame size={13} /><Num>{state.streak}</Num></Row>}
-              label="Streak"
-              reward={loginBonusPending}
-            />
-          </Pressable>
+          {loginBonusPending ? (
+            <Pressable style={{ flex: 1 }} onPress={claimDailyLoginBonus}>
+              <Stat
+                value={<Row><Flame size={13} /><Num>{state.streak}</Num></Row>}
+                label="Streak"
+                reward
+              />
+            </Pressable>
+          ) : (
+            <Stat value={<Row><Flame size={13} /><Num>{state.streak}</Num></Row>} label="Streak" />
+          )}
           <Stat value={<Row><Coin /><Num>{state.coins}</Num></Row>} label="Coins" />
           <Stat value={<Row><Diamond /><Num>{state.diamonds}</Num></Row>} label="Diamonds" />
-        </Pressable>
+        </View>
 
         {/* Continue quest */}
         {nextModule ? (
@@ -125,13 +126,13 @@ export default function Home() {
         <SectionHead title="Keep learning" action="See all →" onAction={() => router.push('/(tabs)/modules')} />
         <View style={styles.grid}>
           {homeModules.map((m) => (
-            <ModuleTile key={m.id} locked={m.locked} recommended={m.recommended} onPress={() => router.push(`/learn/module/${m.id}`)} style={styles.gridItem}>
+            <ModuleTile key={m.id} recommended={m.recommended} onPress={() => router.push(`/learn/module/${m.id}`)} style={styles.gridItem}>
               <View style={styles.tileTop}>
-                <MIcon abbr={m.abbr} color={m.color} />
+                <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} />
                 <Tag tone={m.tone} style={styles.miniTag}>{m.tag}</Tag>
               </View>
-              <Txt style={[styles.tileName, m.locked && { color: colors.lockText }]}>{m.name}</Txt>
-              <ProgressBar value={m.pct} tone={m.tone === 'pink' ? 'pink' : 'green'} height={7} track={m.locked ? '#E4E0D6' : colors.track} />
+              <Txt style={styles.tileName}>{m.name}</Txt>
+              <ProgressBar value={m.pct} tone={m.tone === 'pink' ? 'pink' : 'green'} height={7} />
             </ModuleTile>
           ))}
         </View>

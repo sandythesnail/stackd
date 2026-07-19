@@ -105,39 +105,41 @@ function CompoundInterestPanel() {
 
   return (
     <>
-      <Card style={{ gap: 13 }}>
+      <Card style={{ gap: 15 }}>
         <Txt style={styles.cardTitle}>Your Numbers</Txt>
         <SliderRow label="Starting amount" value={startingAmount} onChange={setStartingAmount} min={0} max={5000} step={50} format={money} />
         <SliderRow label="Monthly contribution" value={monthlyContribution} onChange={setMonthlyContribution} min={0} max={1000} step={10} format={money} />
         <SliderRow label="Years" value={years} onChange={setYears} min={1} max={47} step={1} format={(v) => String(v)} />
-
-        <View style={{ gap: 8 }}>
-          <Txt style={styles.sliderLabel}>Where&apos;s the money growing?</Txt>
-          <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
-            {CI_RATE_PRESETS.map((p) => (
-              <Pressable key={p.mode} onPress={() => { setRateMode(p.mode); setAnnualRatePct(p.rate); }}>
-                <Tag tone={rateMode === p.mode ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>{p.label} {p.sub}</Tag>
-              </Pressable>
-            ))}
-            <Pressable onPress={() => setRateMode('custom')}>
-              <Tag tone={rateMode === 'custom' ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>Custom</Tag>
-            </Pressable>
-          </View>
-          {rateMode === 'custom' ? (
-            <SliderRow
-              label="Annual interest rate" value={annualRatePct}
-              onChange={setAnnualRatePct}
-              min={1} max={12} step={0.5} format={(v) => `${v}%`}
-            />
-          ) : null}
-        </View>
-
-        <Pressable onPress={() => setShowCompare((s) => !s)}>
-          <Tag tone="lock" style={{ paddingVertical: 8, alignSelf: 'flex-start' }}>
-            {showCompare ? 'Hide ▴' : 'Compare: 18 vs. 28 →'}
-          </Tag>
-        </Pressable>
       </Card>
+
+      <Card style={{ gap: 12 }}>
+        <Txt style={styles.cardTitle}>Growth Rate</Txt>
+        <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
+          {CI_RATE_PRESETS.map((p) => (
+            <Pressable key={p.mode} onPress={() => { setRateMode(p.mode); setAnnualRatePct(p.rate); }}>
+              <Tag tone={rateMode === p.mode ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>{p.label} {p.sub}</Tag>
+            </Pressable>
+          ))}
+          <Pressable onPress={() => setRateMode('custom')}>
+            <Tag tone={rateMode === 'custom' ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>Custom</Tag>
+          </Pressable>
+        </View>
+        {rateMode === 'custom' ? (
+          <SliderRow
+            label="Annual interest rate" value={annualRatePct}
+            onChange={setAnnualRatePct}
+            min={1} max={12} step={0.5} format={(v) => `${v}%`}
+          />
+        ) : (
+          <Txt variant="lead" style={{ fontSize: 12.5 }}>Using {annualRatePct}% per year</Txt>
+        )}
+      </Card>
+
+      <Pressable onPress={() => setShowCompare((s) => !s)} style={{ alignSelf: 'center' }}>
+        <Tag tone="lock" style={{ paddingVertical: 8 }}>
+          {showCompare ? 'Hide ▴' : 'Compare: 18 vs. 28 →'}
+        </Tag>
+      </Pressable>
 
       {showCompare ? (
         <Card style={{ gap: 8 }}>
@@ -216,6 +218,7 @@ const TERM_PRESETS = [5, 10, 15, 20, 25];
 function LoanPayoffPanel() {
   const [loanBalance, setLoanBalance] = useState(27000);
   const [annualRatePct, setAnnualRatePct] = useState(5.5);
+  const [rateMode, setRateMode] = useState<'subsidized' | 'unsubsidized' | 'private' | 'custom'>('subsidized');
   const [termYears, setTermYears] = useState(10);
   const [monthlyIncome, setMonthlyIncome] = useState(3200);
   const [livingExpenses, setLivingExpenses] = useState(1800);
@@ -241,19 +244,31 @@ function LoanPayoffPanel() {
 
   return (
     <>
-      <Card style={{ gap: 13 }}>
+      <Card style={{ gap: 15 }}>
         <Txt style={styles.cardTitle}>Your Loan</Txt>
         <SliderRow label="Loan balance" value={loanBalance} onChange={setLoanBalance} min={1000} max={100000} step={500} format={money} />
-        <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
-          {RATE_PRESETS.map((p) => (
-            <Pressable key={p.mode} onPress={() => setAnnualRatePct(p.rate)}>
-              <Tag tone={annualRatePct === p.rate ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>
-                {p.label} ~{p.rate}%
-              </Tag>
+
+        <View style={{ gap: 8 }}>
+          <Txt style={styles.sliderLabel}>Interest rate</Txt>
+          <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
+            {RATE_PRESETS.map((p) => (
+              <Pressable key={p.mode} onPress={() => { setRateMode(p.mode); setAnnualRatePct(p.rate); }}>
+                <Tag tone={rateMode === p.mode ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>
+                  {p.label} ~{p.rate}%
+                </Tag>
+              </Pressable>
+            ))}
+            <Pressable onPress={() => setRateMode('custom')}>
+              <Tag tone={rateMode === 'custom' ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>Custom</Tag>
             </Pressable>
-          ))}
+          </View>
+          {rateMode === 'custom' ? (
+            <SliderRow label="Annual rate" value={annualRatePct} onChange={setAnnualRatePct} min={1} max={14} step={0.25} format={(v) => `${v}%`} />
+          ) : (
+            <Txt variant="lead" style={{ fontSize: 12.5 }}>Using {annualRatePct}% per year</Txt>
+          )}
         </View>
-        <SliderRow label="Interest rate" value={annualRatePct} onChange={setAnnualRatePct} min={1} max={14} step={0.25} format={(v) => `${v}%`} />
+
         <View style={{ gap: 8 }}>
           <Txt style={styles.sliderLabel}>Term</Txt>
           <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
@@ -266,7 +281,7 @@ function LoanPayoffPanel() {
         </View>
       </Card>
 
-      <Card style={{ gap: 13 }}>
+      <Card style={{ gap: 15 }}>
         <Txt style={styles.cardTitle}>Take-Home Pay & Living Costs</Txt>
         <SliderRow label="Monthly take-home pay" value={monthlyIncome} onChange={setMonthlyIncome} min={1500} max={7000} step={50} format={money} />
         <SliderRow label="Living expenses (rent, food, everything else)" value={livingExpenses} onChange={setLivingExpenses} min={0} max={4000} step={25} format={money} />
@@ -474,7 +489,7 @@ function BudgetPanel() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 22, paddingBottom: 28, gap: 12 },
+  content: { paddingHorizontal: 22, paddingBottom: 28, gap: 16 },
   cardTitle: { fontFamily: font.displayMed, fontSize: 14, color: colors.ink },
   sliderLabelRow: { flexDirection: 'row', justifyContent: 'space-between' },
   sliderLabel: { fontFamily: font.semi, fontSize: 12.5, color: colors.muted1, flexShrink: 1 },
