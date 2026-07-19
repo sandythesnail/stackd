@@ -44,7 +44,8 @@ export default function Modules() {
         <View style={{ gap: 12 }}>
           {modules.map((m) => {
             const content = moduleContentById(m.id);
-            const lessons = content?.lessons ?? [];
+            // The real-life step-by-step guide lesson lives in the Real Life tab instead.
+            const lessons = content?.lessons.filter((l) => !l.isLifeTask) ?? [];
             const done = moduleDone(m.id);
             const total = moduleTotal(m.id);
             const pct = total ? done / total : 0;

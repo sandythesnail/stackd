@@ -18,7 +18,8 @@ export default function ModuleDetail() {
   const { moduleDone, moduleStatus } = useStore();
   const mod = moduleById(id ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
-  const lessons = content?.lessons ?? [];
+  // The real-life step-by-step guide lesson lives in the Real Life tab instead.
+  const lessons = content?.lessons.filter((l) => !l.isLifeTask) ?? [];
   const done = moduleDone(mod.id);
   const status = moduleStatus(mod.id);
   const pct = lessons.length ? done / lessons.length : 0;

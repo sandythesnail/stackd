@@ -107,6 +107,10 @@ export type AppState = {
   /** toDateString() of the last day a lesson was finished — Home's mascot shows a "happy
    * today" face once this is today instead of the deterministic daily mood. */
   lastModuleActivityDate: string | null;
+  /** Module ids whose real-life "step-by-step guide" quest (see LessonSummary.isLifeTask)
+   * has been completed — tracked separately from moduleProgress/mastery, see the Real
+   * Life tab (app/(tabs)/real-life.tsx) and completeLifeTask below. */
+  completedLifeTaskIds: string[];
 };
 
 const DEFAULT_STATE: AppState = {
@@ -136,6 +140,7 @@ const DEFAULT_STATE: AppState = {
   questHintsUsed: {},
   termsLearned: [],
   lastModuleActivityDate: null,
+  completedLifeTaskIds: [],
 };
 
 export type MysteryResult = {
@@ -177,8 +182,10 @@ export function mysteryDropChance(item: ShopItemReal): number {
 
 const ALL_MODULE_IDS = Object.keys(MODULE_MASTERY_ACHIEVEMENT);
 
+/** Excludes the module's real-life step-by-step-guide lesson — that one is tracked
+ * separately (completedLifeTaskIds), not counted toward module progress/mastery. */
 function moduleTotal(moduleId: string) {
-  return moduleContentById(moduleId)?.lessons.length ?? 0;
+  return moduleContentById(moduleId)?.lessons.filter((l) => !l.isLifeTask).length ?? 0;
 }
 
 function isModuleMastered(moduleProgress: Record<string, number>, moduleId: string) {
@@ -249,6 +256,12 @@ type Ctx = {
   completeLesson: (moduleId: string, lessonIndex: number, xpEarned: number, opts?: {
     correctCount?: number; gradedTotal?: number;
     questId?: string; bossWon?: boolean; hintsUsed?: number; newTerms?: string[];
+  }) => number;
+  /** Same reward shape as completeLesson (XP + the real coin formula), but for a module's
+   * real-life step-by-step-guide lesson — never touches moduleProgress/mastery, and only
+   * pays out once (replaying a finished life task earns nothing further). */
+  completeLifeTask: (moduleId: string, xpEarned: number, opts?: {
+    correctCount?: number; gradedTotal?: number; questId?: string; hintsUsed?: number; newTerms?: string[];
   }) => number;
   pendingLifeEvent: () => LifeEvent | null;
   /** Applies a choice's coinDelta (if any), records the event as shown, and clears pending. */
@@ -523,6 +536,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             const pick = LIFE_EVENTS[Math.floor(Math.random() * LIFE_EVENTS.length)];
             next = { ...next, pendingLifeEventId: pick.id, lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS };
           }
+          return next;
+        });
+        return coinsEarned;
+      },
+
+      completeLifeTask: (moduleId, xpEarned, opts) => {
+        const { correctCount = 0, gradedTotal = 0, questId, hintsUsed, newTerms } = opts ?? {};
+        const coinsEarned = gradedTotal > 0 ? correctCount * QUEST_COIN_PER_CORRECT : QUEST_COIN_FLAT_FALLBACK;
+
+        setState((s) => {
+          const firstTime = !s.completedLifeTaskIds.includes(moduleId);
+          let next: AppState = {
+            ...s,
+            xp: s.xp + (firstTime ? xpEarned : 0),
+            coins: s.coins + (firstTime ? coinsEarned : 0),
+            completedLifeTaskIds: firstTime ? [...s.completedLifeTaskIds, moduleId] : s.completedLifeTaskIds,
+            lastModuleActivityDate: new Date().toDateString(),
+            questHintsUsed: firstTime && questId && hintsUsed !== undefined
+              ? { ...s.questHintsUsed, [`${moduleId}::${questId}`]: hintsUsed } : s.questHintsUsed,
+            termsLearned: newTerms?.length
+              ? [...new Set([...s.termsLearned, ...newTerms])] : s.termsLearned,
+          };
+          next = applyAndReport(s, next, setNewAchievementIds);
           return next;
         });
         return coinsEarned;

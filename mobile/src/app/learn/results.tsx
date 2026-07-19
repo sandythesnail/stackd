@@ -17,10 +17,10 @@ import { buildQuestReport, takePendingQuestAnalytics } from '@/questReport';
 export default function Results() {
   const router = useRouter();
   const {
-    moduleId, lessonIndex, correctCount, total, xpEarned, questId, hintsUsed, bossWon, newTerms,
+    moduleId, lessonIndex, correctCount, total, xpEarned, questId, hintsUsed, bossWon, isLifeTask,
   } = useLocalSearchParams<{
     moduleId: string; lessonIndex: string; correctCount: string; total: string; xpEarned?: string;
-    questId?: string; hintsUsed?: string; bossWon?: string; newTerms?: string;
+    questId?: string; hintsUsed?: string; bossWon?: string; isLifeTask?: string;
   }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
@@ -32,29 +32,38 @@ export default function Results() {
   // The quest player (learn/quest.tsx) accumulates real XP across its chapters; the flat
   // quiz path falls back to the module's flat per-lesson reward.
   const xpForLesson = xpEarned !== undefined ? Number(xpEarned) : (content?.xpReward ?? 0);
-  const learnedTerms = useMemo(() => (newTerms ? newTerms.split('|').filter(Boolean) : []), [newTerms]);
   // Read-and-clear exactly once per mount (a ref, not useMemo, so it survives whatever
   // render-count quirks Strict Mode introduces without taking the handoff value twice).
+  // Learned terms travel in here too now, not as a URL param — see @/questReport.
   const analyticsCapture = useRef<ReturnType<typeof takePendingQuestAnalytics> | null>(null);
   if (analyticsCapture.current === null) analyticsCapture.current = takePendingQuestAnalytics();
   const analytics = analyticsCapture.current;
+  const learnedTerms = analytics.learnedTerms;
   const report = useMemo(() => buildQuestReport(mod.name, analytics, Number(hintsUsed ?? 0)), [mod.name, analytics, hintsUsed]);
 
-  const { state, level, tierName, completeLesson, equippedMascotItems } = useStore();
+  const { state, level, tierName, completeLesson, completeLifeTask, equippedMascotItems } = useStore();
   const tierBefore = useRef(tierName).current;
   const recorded = useRef(false);
   const [coinsEarned, setCoinsEarned] = useState(0);
   useEffect(() => {
     if (recorded.current) return;
     recorded.current = true;
-    const earned = completeLesson(mod.id, li, xpForLesson, {
-      correctCount: correct,
-      gradedTotal: totalQ,
-      questId,
-      bossWon: bossWon === '1',
-      hintsUsed: hintsUsed !== undefined ? Number(hintsUsed) : undefined,
-      newTerms: newTerms ? newTerms.split('|').filter(Boolean) : undefined,
-    });
+    const earned = isLifeTask
+      ? completeLifeTask(mod.id, xpForLesson, {
+        correctCount: correct,
+        gradedTotal: totalQ,
+        questId,
+        hintsUsed: hintsUsed !== undefined ? Number(hintsUsed) : undefined,
+        newTerms: learnedTerms.length ? learnedTerms : undefined,
+      })
+      : completeLesson(mod.id, li, xpForLesson, {
+        correctCount: correct,
+        gradedTotal: totalQ,
+        questId,
+        bossWon: bossWon === '1',
+        hintsUsed: hintsUsed !== undefined ? Number(hintsUsed) : undefined,
+        newTerms: learnedTerms.length ? learnedTerms : undefined,
+      });
     setCoinsEarned(earned);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -170,69 +179,52 @@ function QuestReportCard({
       <View style={styles.reportMastery}>
         <MasteryRing pct={report.masteryPct} />
         <View style={{ flex: 1 }}>
-          <Txt style={styles.reportMasteryLabel}>Overall mastery this lesson</Txt>
+          <Txt style={styles.reportMasteryLabel}>Mastery this lesson</Txt>
           <Txt style={styles.reportMasterySub}>
-            {report.totalAnswered > 0
-              ? `${report.totalRight} of ${report.totalAnswered} correct across quick checks and true/false cards`
-              : 'No quick-check or true/false questions in this lesson'}
+            {report.totalAnswered > 0 ? `${report.totalRight}/${report.totalAnswered} correct` : 'Nothing graded this lesson'}
           </Txt>
         </View>
       </View>
 
-      <Txt style={styles.reportSectionTitle}>Words you learned ({learnedTerms.length})</Txt>
-      <View style={styles.reportTerms}>
-        {learnedTerms.length ? learnedTerms.map((t) => (
-          <View key={t} style={styles.reportTermChip}><Txt style={styles.reportTermChipTxt}>{t}</Txt></View>
-        )) : <Txt style={styles.reportTermChipTxt}>None recorded</Txt>}
-      </View>
+      {learnedTerms.length ? (
+        <View>
+          <Txt style={styles.reportSectionTitle}>Words you learned</Txt>
+          <View style={styles.reportTerms}>
+            {learnedTerms.map((t) => (
+              <View key={t} style={styles.reportTermChip}><Txt style={styles.reportTermChipTxt}>{t}</Txt></View>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       <View style={styles.reportStatRow}>
         <ReportStat num={`${report.kcRightCount}/${report.kcTotal}`} label="Quick Check" />
         <ReportStat num={`${report.mythRightCount}/${report.mythTotal}`} label="True/False" />
-        <ReportStat num={String(report.matchingMistakes)} label="Matching Misses" />
-        <ReportStat num={String(report.hintsUsed)} label="Hints Used" />
+        <ReportStat num={String(report.matchingMistakes)} label="Match Misses" />
+        <ReportStat num={String(report.hintsUsed)} label="Hints" />
       </View>
 
-      {report.decisions.length ? (
-        <View>
-          <Txt style={styles.reportSectionTitle}>Choices you made</Txt>
-          {report.decisions.map((d, i) => (
-            <Txt key={i} style={styles.reportListItem}>• <Txt style={{ fontFamily: font.extra }}>{d.title}:</Txt> {d.choice}</Txt>
-          ))}
-        </View>
-      ) : null}
-
       {report.explainback ? (
-        <View>
-          <Txt style={styles.reportSectionTitle}>Your written answer</Txt>
-          <Txt style={styles.reportBody}>
-            &quot;{report.explainback.term}&quot;: {
-              report.explainback.tier === 'great' ? 'you got the key idea on your own.'
-                : report.explainback.tier === 'ok' ? 'you were on the right track.'
-                  : "this one didn't click yet, and it's worth rereading."
-            }
-          </Txt>
-        </View>
-      ) : null}
-
-      {report.strengths.length ? (
-        <View>
-          <Txt style={styles.reportSectionTitle}>What you got right</Txt>
-          {report.strengths.map((s, i) => <Txt key={i} style={styles.reportListItem}>• {s}</Txt>)}
-        </View>
+        <Txt style={styles.reportBody}>
+          <Txt style={{ fontFamily: font.extra }}>&quot;{report.explainback.term}&quot;: </Txt>
+          {report.explainback.tier === 'great' ? 'you got the key idea on your own.'
+            : report.explainback.tier === 'ok' ? 'you were on the right track.'
+              : "worth rereading — didn't quite click yet."}
+        </Txt>
       ) : null}
 
       {report.weakSpots.length ? (
         <View>
           <Txt style={styles.reportSectionTitle}>Worth another look</Txt>
-          {report.weakSpots.map((s, i) => <Txt key={i} style={styles.reportListItem}>• {s}</Txt>)}
+          {report.weakSpots.slice(0, 2).map((s, i) => <Txt key={i} numberOfLines={1} style={styles.reportListItem}>• {s}</Txt>)}
+          {report.weakSpots.length > 2 ? <Txt style={styles.reportListItem}>+ {report.weakSpots.length - 2} more</Txt> : null}
         </View>
       ) : (
-        <Txt style={styles.reportPerfect}>You got every question and true/false card right this time.</Txt>
+        <Txt style={styles.reportPerfect}>Every question right this time. 🎉</Txt>
       )}
 
       <View style={styles.reportAdvice}>
-        <Hammy size={56} bob={false} equipped={equipped} />
+        <Hammy size={92} bob={false} equipped={equipped} />
         <Txt style={styles.reportAdviceTxt}><Txt style={{ fontFamily: font.extra }}>Hammy&apos;s advice: </Txt>{report.advice}</Txt>
       </View>
     </Card>

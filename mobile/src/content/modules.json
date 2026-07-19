@@ -185,7 +185,8 @@
       {
         "title": "Setting Up Direct Deposit: A Step-by-Step Guide",
         "hook": "You just got hired for a campus job, and the onboarding paperwork wants your direct deposit information. Knowing what a pay stub says is one thing — actually setting up how the money gets there is another.",
-        "qIndices": []
+        "qIndices": [],
+        "isLifeTask": true
       }
     ],
     "quests": [
@@ -3313,7 +3314,8 @@
       {
         "title": "Setting Up a Real Budget: A Step-by-Step Guide",
         "hook": "You can recite the 50/30/20 rule perfectly, but you have never actually written your real budget down anywhere. What does that actually look like on paper?",
-        "qIndices": []
+        "qIndices": [],
+        "isLifeTask": true
       }
     ],
     "quests": [
@@ -6542,7 +6544,8 @@
       {
         "title": "Opening a High-Yield Savings Account: A Step-by-Step Guide",
         "hook": "You know a high-yield savings account beats a big bank's 0.01% APY — but the account itself does not exist yet. Knowing the theory and actually doing the paperwork are two different things.",
-        "qIndices": []
+        "qIndices": [],
+        "isLifeTask": true
       }
     ],
     "quests": [
@@ -9563,7 +9566,8 @@
       {
         "title": "Opening a Brokerage Account: A Step-by-Step Guide",
         "hook": "You understand compound interest and index funds now — but you have never actually opened the account. Knowing the theory and doing the paperwork are two different things.",
-        "qIndices": []
+        "qIndices": [],
+        "isLifeTask": true
       }
     ],
     "quests": [
@@ -12518,7 +12522,8 @@
       {
         "title": "Opening & Setting Up Your Card: A Step-by-Step Guide",
         "hook": "Your new credit card just showed up in the mail. Knowing what a credit card is is one thing — actually setting it up correctly is another.",
-        "qIndices": []
+        "qIndices": [],
+        "isLifeTask": true
       }
     ],
     "quests": [
@@ -15519,7 +15524,8 @@
       {
         "title": "Enrolling in a Health Insurance Plan: A Step-by-Step Guide",
         "hook": "Your school just emailed: enroll in the student health plan or submit a waiver within two weeks. Understanding premiums and deductibles is one thing — actually doing the paperwork is another.",
-        "qIndices": []
+        "qIndices": [],
+        "isLifeTask": true
       }
     ],
     "quests": [
@@ -18487,7 +18493,8 @@
       {
         "title": "Accepting Your Loan Offer on StudentAid.gov: A Step-by-Step Guide",
         "hook": "Your financial aid offer just arrived with $5,500 in federal loans listed. Knowing subsidized from unsubsidized is one thing — actually accepting, reducing, or declining the offer is another.",
-        "qIndices": []
+        "qIndices": [],
+        "isLifeTask": true
       }
     ],
     "quests": [
@@ -21447,7 +21454,8 @@
       {
         "title": "Filing Your Taxes for Free: A Step-by-Step Guide",
         "hook": "You have a W-2 from a campus job and have never filed a tax return. Knowing what a W-2 means is one thing — actually filing the return is another.",
-        "qIndices": []
+        "qIndices": [],
+        "isLifeTask": true
       }
     ],
     "quests": [
@@ -24364,7 +24372,8 @@
       {
         "title": "Setting Up Auto-Save & Spending Alerts: A Step-by-Step Guide",
         "hook": "You know exactly why willpower alone does not stop late-night impulse spending — but the auto-save rule and spending alerts that would actually help have never been set up.",
-        "qIndices": []
+        "qIndices": [],
+        "isLifeTask": true
       }
     ],
     "quests": [
@@ -27226,7 +27235,8 @@
       {
         "title": "Negotiating Your Offer by Email: A Step-by-Step Guide",
         "hook": "You just got a $58,000 offer and know negotiating is worth it in theory. Actually writing the email that asks for more is a different challenge entirely.",
-        "qIndices": []
+        "qIndices": [],
+        "isLifeTask": true
       }
     ],
     "quests": [
@@ -30146,7 +30156,8 @@
       {
         "title": "Freezing Your Credit & Setting Fraud Alerts: A Step-by-Step Guide",
         "hook": "You almost fell for a phishing text last week. Knowing identity theft is a risk is one thing — actually freezing your credit and setting up fraud alerts is another.",
-        "qIndices": []
+        "qIndices": [],
+        "isLifeTask": true
       }
     ],
     "quests": [

@@ -11,6 +11,10 @@ export type QuestAnalytics = {
   matchingMistakes: number;
   decisions: { title: string; choice: string }[];
   explainback: { term: string; tier: 'great' | 'ok' | 'retry' } | null;
+  /** Terms learned this quest (matching pairs + teach concepts) — also handed off
+   * in-memory rather than a URL param, same reasoning as the rest of this type: terms like
+   * "50/30/20 Rule" or "Pay-Upfront / Overpayment Scam" contain "/" too. */
+  learnedTerms: string[];
 };
 
 export const EMPTY_ANALYTICS: QuestAnalytics = {
@@ -19,6 +23,7 @@ export const EMPTY_ANALYTICS: QuestAnalytics = {
   matchingMistakes: 0,
   decisions: [],
   explainback: null,
+  learnedTerms: [],
 };
 
 /** In-memory handoff from quest.tsx to results.tsx for the just-finished quest's analytics

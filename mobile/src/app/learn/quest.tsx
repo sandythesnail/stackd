@@ -32,6 +32,14 @@ type HintProps = { hintsRemaining: number; onUseHint: () => void };
  * website) so its face/message reacts — happy, gentle, or a 3-in-a-row streak callout. */
 type ReactProps = { reactTo: (isCorrect: boolean) => void };
 
+/** A chapter's current primary action ("Next", "Continue →", "Check my answer", ...), or
+ * null when it has nothing to show yet (e.g. a True/False chapter before it's answered).
+ * Lifted into the header (top-right, next to the hint button) instead of trailing the
+ * chapter's own content, so the primary action is always reachable without scrolling —
+ * every chapter view reports its own action here instead of rendering a bottom button. */
+type QuestAction = { label: string; onPress: () => void; variant?: 'green' | 'pink'; disabled?: boolean } | null;
+type ActionProps = { onAction: (action: QuestAction) => void };
+
 /** Feeds the end-of-lesson report (see @/questReport, results.tsx) — mirrors what the
  * website's per-chapter handlers write into `qp.analytics`. Only the chapter types the
  * website itself tracks (knowledgecheck/mythcards/matching/decision/bossbattle/explainback)
@@ -45,16 +53,12 @@ type ReportProps = {
 };
 
 /** Ported from app.js's HAMMY_CORRECT_MSGS/HAMMY_GENTLE_MSGS, plus "Good job!"/"Nice try!"
- * added to each pool per direct request, with more varied celebration emoji mixed in. */
-const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it! ✅', 'Great job! 🌟', 'Good job! 👏', 'Awesome! 🎊', 'Yes! 💪'];
+ * added to each pool per direct request. Only two celebration emoji in rotation — hands
+ * and confetti — per direct request (no checkmark or others). */
+const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it! 🙌', 'Great job! 🎉', 'Good job! 🙌', 'Awesome! 🎉'];
 const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn from it:", "Close! Here's what's true:", 'Nice try!'];
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
-/** Flexible filler dropped before a chapter's trailing action button so short chapters use
- * the full screen height (button lands near the bottom) instead of leaving dead space below
- * a short card — paired with the ScrollView's flexGrow so it only expands when there's room
- * to fill; long chapters that already overflow just scroll as before. */
-const Grow = () => <View style={{ flex: 1, minHeight: 8 }} />;
 
 /** Hammy's reaction speech bubble — ported from the website's .hammy-side-msg, which fades
  * in/out (opacity + a small rise) rather than popping instantly, AND colors the text green
@@ -99,7 +103,7 @@ function ReactionBubble({ message, mood }: { message: string | null; mood: 'happ
 export default function QuestPlayer() {
   const router = useRouter();
   const { equippedMascotItems } = useStore();
-  const { moduleId, lessonIndex } = useLocalSearchParams<{ moduleId: string; lessonIndex: string }>();
+  const { moduleId, lessonIndex, isLifeTask } = useLocalSearchParams<{ moduleId: string; lessonIndex: string; isLifeTask?: string }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
   const li = Number(lessonIndex ?? 0);
@@ -116,6 +120,12 @@ export default function QuestPlayer() {
   const [reactionMsg, setReactionMsg] = useState<string | null>(null);
   const [reactionKey, setReactionKey] = useState(0);
   const [answerStreak, setAnswerStreak] = useState(0);
+  const [action, setAction] = useState<QuestAction>(null);
+  // Each chapter's own onAction call is only relevant while IT is mounted — clear
+  // whatever the previous chapter left behind the instant the chapter changes, so a stale
+  // action can never linger into the next chapter for even one frame.
+  const onAction = (a: QuestAction) => setAction(a);
+  useEffect(() => { setAction(null); }, [chapterIdx]);
   // A ref, not state — analytics never drives a render in this screen, it's only read once
   // at the final chapter's onComplete to build the results-screen params. A question's
   // "report" and the quest's final onComplete can fire in the very same handler (the last
@@ -165,20 +175,26 @@ export default function QuestPlayer() {
   const onUseHint = () => setHintsUsed((h) => h + 1);
   const hintText = (chapter as { hintText?: string }).hintText;
 
-  // Ported from showHammyReaction: the persistent companion's face/mood/message reacts to
-  // every graded answer across the quest — happy, gentle, or (every 3rd correct in a row) a
-  // streak callout — then clears itself a beat later so it never sits stale into a later
-  // chapter. reactionKey bumps on every call (even repeat-same-mood) so the body bounce/wobble
-  // replays each time, mirroring the website forcing its CSS animation to restart.
+  // Ported from showHammyReaction: the persistent companion's face/mood reacts to every
+  // graded answer across the quest — happy, gentle, or (every 3rd correct in a row) a
+  // streak callout. reactionKey bumps on every call (even repeat-same-mood) so the body
+  // bounce/wobble replays each time, mirroring the website forcing its CSS animation to
+  // restart.
   //
-  // Chapters like matching fire reactTo once per pick, often faster than the 1400ms clear
-  // delay (e.g. two quick matches) — each call used to schedule its own unconditional
-  // "clear" timeout, so an old timeout from an earlier reaction would fire *after* a newer
-  // reaction had already set its own mood/face, wiping it out mid-animation (the face
-  // flickering/disappearing the user saw). Track the pending timeout and cancel it whenever
-  // a new reaction comes in, so only the most recent reaction's timer can clear the state.
+  // The face itself is sticky — it keeps showing the LAST reaction until a new one replaces
+  // it (or the chapter changes, see the chapterIdx effect below), rather than reverting to
+  // the plain default face on a timer. Chapters like matching space reactions out (pick a
+  // term, THEN a definition, repeat), so a short auto-revert made Hammy's face flicker back
+  // to blank/plain between nearly every attempt — reported as "Hammy's face goes blank in
+  // the matching portion." Only the speech-bubble MESSAGE still auto-fades after a beat
+  // (repeating "Nice! 🎉" indefinitely would look stale); the face doesn't.
   const reactionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (reactionTimeout.current) clearTimeout(reactionTimeout.current); }, []);
+  useEffect(() => {
+    setReactionMood(null);
+    setReactionMsg(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapterIdx]);
   const reactTo = (isCorrect: boolean) => {
     const nextStreak = isCorrect ? answerStreak + 1 : 0;
     setAnswerStreak(nextStreak);
@@ -188,7 +204,6 @@ export default function QuestPlayer() {
     setReactionKey((k) => k + 1);
     if (reactionTimeout.current) clearTimeout(reactionTimeout.current);
     reactionTimeout.current = setTimeout(() => {
-      setReactionMood(null);
       setReactionMsg(null);
       reactionTimeout.current = null;
     }, 1400);
@@ -206,14 +221,14 @@ export default function QuestPlayer() {
     const nextBossWon = bossWon || chapter.type === 'bossbattle';
 
     if (chapterIdx + 1 >= quest.chapters.length) {
-      setPendingQuestAnalytics(analyticsRef.current);
+      setPendingQuestAnalytics({ ...analyticsRef.current, learnedTerms: nextTerms });
       router.replace({
         pathname: '/learn/results',
         params: {
           moduleId: mod.id, lessonIndex: String(li),
           correctCount: String(nextCorrect), total: String(nextGraded), xpEarned: String(nextXp),
           questId: quest.id, hintsUsed: String(hintsUsed), bossWon: nextBossWon ? '1' : '0',
-          newTerms: nextTerms.join('|'),
+          ...(isLifeTask ? { isLifeTask } : {}),
         },
       });
       return;
@@ -231,9 +246,24 @@ export default function QuestPlayer() {
       <View style={styles.stick}>
         <IconButton name="x" size={34} iconSize={16} onPress={goBack} />
         <ProgressBar value={chapterIdx / quest.chapters.length} style={{ flex: 1 }} height={10} />
-        <Txt style={styles.step}>{chapterIdx + 1} / {quest.chapters.length}</Txt>
+        <Txt style={styles.step}>{Math.round((chapterIdx / quest.chapters.length) * 100)}%</Txt>
         <HintCorner key={chapter.id} hintText={hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       </View>
+      {/* The chapter's own primary action ("Next", "Continue →", "Check my answer", ...),
+          reported up via onAction — lives here, top-right, instead of trailing the
+          chapter's scrollable content, so it's never something you have to scroll to find. */}
+      {action ? (
+        <View style={styles.actionBar}>
+          <Button
+            label={action.label}
+            onPress={action.onPress}
+            variant={action.variant ?? 'pink'}
+            disabled={action.disabled}
+            size="sm"
+            style={{ paddingHorizontal: 20 }}
+          />
+        </View>
+      ) : null}
       <View style={styles.companionWrap}>
         <ReactionBubble message={reactionMsg} mood={reactionMood} />
         <Hammy
@@ -253,6 +283,7 @@ export default function QuestPlayer() {
           moduleXpReward={content.xpReward}
           onComplete={onComplete}
           reactTo={reactTo}
+          onAction={onAction}
           {...reportProps}
         />
       </ScrollView>
@@ -261,26 +292,26 @@ export default function QuestPlayer() {
 }
 
 function ChapterView({
-  chapter, questions, moduleXpReward, onComplete, reactTo,
+  chapter, questions, moduleXpReward, onComplete, reactTo, onAction,
   reportKnowledgeCheck, reportMythCard, reportMatchingMistake, reportDecision, reportExplainback,
-}: { chapter: Chapter; questions: Question[]; moduleXpReward: number; onComplete: Complete } & ReactProps & ReportProps) {
+}: { chapter: Chapter; questions: Question[]; moduleXpReward: number; onComplete: Complete } & ReactProps & ReportProps & ActionProps) {
   const reactProps: ReactProps = { reactTo };
   switch (chapter.type) {
-    case 'story': return <StoryView chapter={chapter} onComplete={onComplete} />;
-    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} {...reactProps} />;
+    case 'story': return <StoryView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
+    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...reactProps} reportMatchingMistake={reportMatchingMistake} />;
-    case 'hint': return <HintView chapter={chapter} onComplete={onComplete} />;
-    case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} reportDecision={reportDecision} />;
-    case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} />;
-    case 'poll': return <PollView chapter={chapter} onComplete={onComplete} {...reactProps} />;
-    case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} {...reactProps} reportMythCard={reportMythCard} />;
-    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} />;
-    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} />;
-    case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} reportDecision={reportDecision} />;
-    case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} />;
-    case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} {...reactProps} />;
-    case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} reportExplainback={reportExplainback} />;
-    case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} />;
+    case 'hint': return <HintView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
+    case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} onAction={onAction} reportDecision={reportDecision} />;
+    case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
+    case 'poll': return <PollView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
+    case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMythCard={reportMythCard} />;
+    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} onAction={onAction} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} />;
+    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
+    case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} onAction={onAction} reportDecision={reportDecision} />;
+    case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
+    case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
+    case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} onAction={onAction} reportExplainback={reportExplainback} />;
+    case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
     default: return null;
   }
 }
@@ -338,7 +369,7 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
         disabled={hintsRemaining <= 0 && !revealed}
         onPress={press}
       >
-        <Txt style={styles.hintFabTxt}>{revealed ? '💡' : `💡 ${hintsRemaining}`}</Txt>
+        <Txt style={styles.hintFabTxt}>{revealed ? '💡 HINT' : `💡 HINT ${hintsRemaining}`}</Txt>
       </Pressable>
       {open ? (
         <Card style={styles.hintPopover}>
@@ -351,10 +382,14 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
 }
 
 /* ───────────────────────── story ───────────────────────── */
-function StoryView({ chapter, onComplete }: { chapter: StoryChapter; onComplete: Complete }) {
+function StoryView({ chapter, onComplete, onAction }: { chapter: StoryChapter; onComplete: Complete } & ActionProps) {
   const [i, setI] = useState(0);
   const beat = chapter.beats[i];
   const last = i + 1 >= chapter.beats.length;
+  useEffect(() => {
+    onAction({ label: last ? 'Continue →' : 'Next', onPress: () => (last ? onComplete(0) : setI(i + 1)) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i, last]);
   return (
     <View style={{ gap: 14, flex: 1 }}>
       {chapter.title ? <Txt variant="h2">{chapter.title}</Txt> : null}
@@ -362,14 +397,12 @@ function StoryView({ chapter, onComplete }: { chapter: StoryChapter; onComplete:
         <Tag tone="pink">{beat.speaker}</Tag>
         <Txt variant="lead" style={{ fontSize: 15, color: colors.ink }}>{beat.text}</Txt>
       </Card>
-      <Grow />
-      <Button label={last ? 'Continue →' : 'Next'} onPress={() => (last ? onComplete(0) : setI(i + 1))} />
     </View>
   );
 }
 
 /* ───────────────────────── teach ───────────────────────── */
-function TeachView({ chapter, onComplete, reactTo }: { chapter: TeachChapter; onComplete: Complete } & ReactProps) {
+function TeachView({ chapter, onComplete, onAction, reactTo }: { chapter: TeachChapter; onComplete: Complete } & ReactProps & ActionProps) {
   const router = useRouter();
   const [i, setI] = useState(0);
   const [answered, setAnswered] = useState<boolean | null>(null);
@@ -387,6 +420,11 @@ function TeachView({ chapter, onComplete, reactTo }: { chapter: TeachChapter; on
     setI(i + 1);
     setAnswered(null);
   };
+
+  useEffect(() => {
+    onAction(!hasCheck || answered !== null ? { label: last ? 'Continue →' : 'Next concept', onPress: next } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasCheck, answered, last]);
 
   return (
     <View style={{ gap: 14, flex: 1 }}>
@@ -413,8 +451,6 @@ function TeachView({ chapter, onComplete, reactTo }: { chapter: TeachChapter; on
           ) : null}
         </Card>
       ) : null}
-      <Grow />
-      {!hasCheck || answered !== null ? <Button label={last ? 'Continue →' : 'Next concept'} onPress={next} /> : null}
     </View>
   );
 }
@@ -486,29 +522,35 @@ function MatchingView({
 }
 
 /* ───────────────────────── hint ───────────────────────── */
-function HintView({ chapter, onComplete }: { chapter: HintChapter; onComplete: Complete }) {
+function HintView({ chapter, onComplete, onAction }: { chapter: HintChapter; onComplete: Complete } & ActionProps) {
+  useEffect(() => {
+    onAction({ label: 'Got it →', onPress: () => onComplete(chapter.xpOnComplete ?? 0) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <View style={{ gap: 14, flex: 1 }}>
       <Card style={{ gap: 8 }}>
         <Tag tone="warm">{chapter.tag}</Tag>
         <Txt variant="lead" style={{ fontSize: 14.5, color: colors.ink }}>{chapter.text}</Txt>
       </Card>
-      <Grow />
-      <Button label="Got it →" onPress={() => onComplete(chapter.xpOnComplete ?? 0)} />
     </View>
   );
 }
 
 /* ───────────────────────── decision ───────────────────────── */
 function DecisionView({
-  chapter, onComplete, reportDecision,
-}: { chapter: DecisionChapter; onComplete: Complete } & Pick<ReportProps, 'reportDecision'>) {
+  chapter, onComplete, onAction, reportDecision,
+}: { chapter: DecisionChapter; onComplete: Complete } & ActionProps & Pick<ReportProps, 'reportDecision'>) {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const picked = chapter.choices.find((c) => c.id === pickedId);
   const pick = (c: DecisionChapter['choices'][number]) => {
     setPickedId(c.id);
     reportDecision(chapter.title, c.label);
   };
+  useEffect(() => {
+    onAction(picked ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0) } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [picked]);
   return (
     <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
@@ -520,22 +562,24 @@ function DecisionView({
           ))}
         </View>
       ) : (
-        <>
-          <Card><Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.outcome.text}</Txt></Card>
-          <Grow />
-          <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0)} />
-        </>
+        <Card><Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.outcome.text}</Txt></Card>
       )}
     </View>
   );
 }
 
 /* ───────────────────────── microsim ───────────────────────── */
-function MicrosimView({ chapter, onComplete }: { chapter: MicrosimChapter; onComplete: Complete }) {
+function MicrosimView({ chapter, onComplete, onAction }: { chapter: MicrosimChapter; onComplete: Complete } & ActionProps) {
   const [values, setValues] = useState<Record<string, number>>(
     () => Object.fromEntries(chapter.sliders.map((s) => [s.id, s.default])),
   );
   const [submitted, setSubmitted] = useState(false);
+  useEffect(() => {
+    onAction(submitted
+      ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0) }
+      : { label: 'See how you did', onPress: () => setSubmitted(true) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitted]);
   const fixedTotal = chapter.fixedCosts.reduce((s, f) => s + f.amount, 0);
   const variableTotal = chapter.sliders.reduce((s, sl) => s + (values[sl.id] ?? 0), 0);
   const leftover = chapter.income - fixedTotal - variableTotal;
@@ -576,23 +620,21 @@ function MicrosimView({ chapter, onComplete }: { chapter: MicrosimChapter; onCom
         <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.muted5 }}>LEFT OVER</Txt>
         <Txt style={{ fontFamily: font.display, fontSize: 28, color: leftover < 0 ? colors.danger : colors.greenDark }}>${leftover}</Txt>
       </Card>
-      <Grow />
       {submitted ? (
-        <>
-          <Card><Txt style={{ fontFamily: font.semi, fontSize: 14, color: tier.ok ? colors.greenDark : colors.pinkDark }}>{tier.text}</Txt></Card>
-          <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0)} />
-        </>
-      ) : (
-        <Button label="See how you did" onPress={() => setSubmitted(true)} />
-      )}
+        <Card><Txt style={{ fontFamily: font.semi, fontSize: 14, color: tier.ok ? colors.greenDark : colors.pinkDark }}>{tier.text}</Txt></Card>
+      ) : null}
     </View>
   );
 }
 
 /* ───────────────────────── poll ───────────────────────── */
-function PollView({ chapter, onComplete, reactTo }: { chapter: PollChapter; onComplete: Complete } & ReactProps) {
+function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollChapter; onComplete: Complete } & ReactProps & ActionProps) {
   const [answered, setAnswered] = useState<boolean | null>(null);
   const pick = (guess: boolean) => { setAnswered(guess); reactTo(guess === chapter.isTrue); };
+  useEffect(() => {
+    onAction(answered !== null ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0, answered === chapter.isTrue) } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answered]);
   return (
     <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
@@ -603,16 +645,12 @@ function PollView({ chapter, onComplete, reactTo }: { chapter: PollChapter; onCo
         <TrueFalseButton label="False" state={tfState(false, answered, chapter.isTrue)} onPress={answered === null ? () => pick(false) : undefined} />
       </View>
       {answered !== null ? (
-        <>
-          <Card>
-            <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === chapter.isTrue ? colors.greenDark : colors.pinkDark }}>
-              {answered === chapter.isTrue ? 'Correct!' : 'Not quite.'}
-            </Txt>
-            <Txt variant="lead" style={{ fontSize: 13, marginTop: 4 }}>{chapter.explanation}</Txt>
-          </Card>
-          <Grow />
-          <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0, answered === chapter.isTrue)} />
-        </>
+        <Card>
+          <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === chapter.isTrue ? colors.greenDark : colors.pinkDark }}>
+            {answered === chapter.isTrue ? 'Correct!' : 'Not quite.'}
+          </Txt>
+          <Txt variant="lead" style={{ fontSize: 13, marginTop: 4 }}>{chapter.explanation}</Txt>
+        </Card>
       ) : null}
     </View>
   );
@@ -620,8 +658,8 @@ function PollView({ chapter, onComplete, reactTo }: { chapter: PollChapter; onCo
 
 /* ───────────────────────── mythcards ───────────────────────── */
 function MythcardsView({
-  chapter, onComplete, reactTo, reportMythCard,
-}: { chapter: MythcardsChapter; onComplete: Complete } & ReactProps & Pick<ReportProps, 'reportMythCard'>) {
+  chapter, onComplete, onAction, reactTo, reportMythCard,
+}: { chapter: MythcardsChapter; onComplete: Complete } & ReactProps & ActionProps & Pick<ReportProps, 'reportMythCard'>) {
   const [i, setI] = useState(0);
   const [answered, setAnswered] = useState<boolean | null>(null);
   const [correctSoFar, setCorrectSoFar] = useState(0);
@@ -643,6 +681,11 @@ function MythcardsView({
     setAnswered(null);
   };
 
+  useEffect(() => {
+    onAction(answered !== null ? { label: last ? 'Continue →' : 'Next card', onPress: next } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answered, last]);
+
   return (
     <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
@@ -655,16 +698,12 @@ function MythcardsView({
         <TrueFalseButton label="Fact" state={tfState(true, answered, card.isTrue)} onPress={answered === null ? () => pick(true) : undefined} />
       </View>
       {answered !== null ? (
-        <>
-          <Card>
-            <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === card.isTrue ? colors.greenDark : colors.pinkDark }}>
-              {answered === card.isTrue ? 'Correct!' : `Actually, that's ${card.isTrue ? 'a fact' : 'a myth'}.`}
-            </Txt>
-            <Txt variant="lead" style={{ fontSize: 13, marginTop: 4 }}>{card.explanation}</Txt>
-          </Card>
-          <Grow />
-          <Button label={last ? 'Continue →' : 'Next card'} onPress={next} />
-        </>
+        <Card>
+          <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === card.isTrue ? colors.greenDark : colors.pinkDark }}>
+            {answered === card.isTrue ? 'Correct!' : `Actually, that's ${card.isTrue ? 'a fact' : 'a myth'}.`}
+          </Txt>
+          <Txt variant="lead" style={{ fontSize: 13, marginTop: 4 }}>{card.explanation}</Txt>
+        </Card>
       ) : null}
     </View>
   );
@@ -672,8 +711,8 @@ function MythcardsView({
 
 /* ───────────────────────── knowledgecheck ───────────────────────── */
 function KnowledgecheckView({
-  chapter, questions, onComplete, reactTo, reportKnowledgeCheck,
-}: { chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete } & ReactProps & Pick<ReportProps, 'reportKnowledgeCheck'>) {
+  chapter, questions, onComplete, onAction, reactTo, reportKnowledgeCheck,
+}: { chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete } & ReactProps & ActionProps & Pick<ReportProps, 'reportKnowledgeCheck'>) {
   const [i, setI] = useState(0);
   const [sel, setSel] = useState<number | null>(null);
   const question = questions[chapter.qIndices[i]];
@@ -692,6 +731,11 @@ function KnowledgecheckView({
     setI(i + 1);
     setSel(null);
   };
+
+  useEffect(() => {
+    onAction(answered ? { label: last ? 'Continue →' : 'Next question', onPress: next, variant: right ? 'green' : 'pink' } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answered, last, right]);
 
   if (!question) return null;
   return (
@@ -713,19 +757,15 @@ function KnowledgecheckView({
           );
         })}
       </View>
-      <Grow />
       {answered ? (
-        <>
-          <Card><Txt variant="lead" style={{ fontSize: 13 }}>{question.exp}</Txt></Card>
-          <Button label={last ? 'Continue →' : 'Next question'} variant={right ? 'green' : 'pink'} onPress={next} />
-        </>
+        <Card><Txt variant="lead" style={{ fontSize: 13 }}>{question.exp}</Txt></Card>
       ) : null}
     </View>
   );
 }
 
 /* ───────────────────────── simulator ───────────────────────── */
-function SimulatorView({ chapter, onComplete }: { chapter: SimulatorChapter; onComplete: Complete }) {
+function SimulatorView({ chapter, onComplete, onAction }: { chapter: SimulatorChapter; onComplete: Complete } & ActionProps) {
   // meterKey/meterMin/meterMax are missing on 2/22 real chapters — fall back to a plain 0-100 score.
   const meterKey = chapter.meterKey ?? 'score';
   const meterMin = chapter.meterMin ?? 0;
@@ -740,6 +780,11 @@ function SimulatorView({ chapter, onComplete }: { chapter: SimulatorChapter; onC
     setNotes((prev) => [...prev, d.note]);
   };
   const pct = (meter - meterMin) / (meterMax - meterMin);
+
+  useEffect(() => {
+    onAction(used.size > 0 ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0) } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [used.size]);
 
   return (
     <View style={{ gap: 14, flex: 1 }}>
@@ -760,22 +805,25 @@ function SimulatorView({ chapter, onComplete }: { chapter: SimulatorChapter; onC
           {notes.map((n, idx) => <Txt key={idx} variant="lead" style={{ fontSize: 12.5 }}>{n}</Txt>)}
         </Card>
       ) : null}
-      <Grow />
-      {used.size > 0 ? <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0)} /> : null}
     </View>
   );
 }
 
 /* ───────────────────────── bossbattle ───────────────────────── */
 function BossbattleView({
-  chapter, moduleXpReward, onComplete, reportDecision,
-}: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete } & Pick<ReportProps, 'reportDecision'>) {
+  chapter, moduleXpReward, onComplete, onAction, reportDecision,
+}: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete } & ActionProps & Pick<ReportProps, 'reportDecision'>) {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const picked = chapter.choices.find((c) => c.id === pickedId);
   const pick = (c: BossbattleChapter['choices'][number]) => {
     setPickedId(c.id);
     reportDecision('Boss battle', c.label);
   };
+  useEffect(() => {
+    // Ported verbatim from finishQuest: bossXP = Math.round(module.xpReward * xpMultiplier).
+    onAction(picked ? { label: 'Finish quest →', onPress: () => onComplete(Math.round(moduleXpReward * picked.consequence.xpMultiplier)) } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [picked]);
   return (
     <View style={{ gap: 14, flex: 1 }}>
       <Tag tone="warm">⚔ BOSS CHALLENGE</Tag>
@@ -788,24 +836,24 @@ function BossbattleView({
           ))}
         </View>
       ) : (
-        <>
-          <Card><Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.consequence.text}</Txt></Card>
-          <Grow />
-          {/* Ported verbatim from finishQuest: bossXP = Math.round(module.xpReward * xpMultiplier). */}
-          <Button label="Finish quest →" onPress={() => onComplete(Math.round(moduleXpReward * picked.consequence.xpMultiplier))} />
-        </>
+        <Card><Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.consequence.text}</Txt></Card>
       )}
     </View>
   );
 }
 
 /* ───────────────────────── spotcheck ───────────────────────── */
-function SpotcheckView({ chapter, onComplete }: { chapter: SpotcheckChapter; onComplete: Complete }) {
+function SpotcheckView({ chapter, onComplete, onAction }: { chapter: SpotcheckChapter; onComplete: Complete } & ActionProps) {
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [revealed, setRevealed] = useState(false);
   const toggle = (id: string) => setFlagged((prev) => {
     const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
   });
+
+  useEffect(() => {
+    onAction(revealed ? { label: 'Continue →', onPress: () => onComplete(0) } : { label: 'Check my answers', onPress: () => setRevealed(true) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealed]);
 
   return (
     <View style={{ gap: 14, flex: 1 }}>
@@ -831,20 +879,14 @@ function SpotcheckView({ chapter, onComplete }: { chapter: SpotcheckChapter; onC
           );
         })}
       </Card>
-      <Grow />
-      {!revealed ? (
-        <Button label="Check my answers" onPress={() => setRevealed(true)} />
-      ) : (
-        <Button label="Continue →" onPress={() => onComplete(0)} />
-      )}
     </View>
   );
 }
 
 /* ───────────────────────── priceisright ───────────────────────── */
 function PriceisrightView({
-  chapter, onComplete, reactTo,
-}: { chapter: PriceisrightChapter; onComplete: Complete } & ReactProps) {
+  chapter, onComplete, onAction, reactTo,
+}: { chapter: PriceisrightChapter; onComplete: Complete } & ReactProps & ActionProps) {
   const { min, max, step } = chapter.guessRange;
   const [guess, setGuess] = useState(Math.round((min + max) / 2 / step) * step);
   const [submitted, setSubmitted] = useState(false);
@@ -852,6 +894,13 @@ function PriceisrightView({
   const close = diff <= (max - min) * 0.1;
 
   const submit = () => { setSubmitted(true); reactTo(close); };
+
+  useEffect(() => {
+    onAction(submitted
+      ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0, close) }
+      : { label: 'Lock in my guess', onPress: submit });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitted, guess]);
 
   return (
     <View style={{ gap: 14, flex: 1 }}>
@@ -866,28 +915,22 @@ function PriceisrightView({
           minimumTrackTintColor={colors.green} maximumTrackTintColor={colors.track} thumbTintColor={colors.green}
         />
       </Card>
-      <Grow />
       {submitted ? (
-        <>
-          <Card>
-            <Txt style={{ fontFamily: font.bold, fontSize: 13, color: close ? colors.greenDark : colors.pinkDark }}>
-              {close ? 'Close enough!' : `Actual: $${chapter.actualValue}`}
-            </Txt>
-            <Txt variant="lead" style={{ fontSize: 13, marginTop: 4 }}>{chapter.explanation}</Txt>
-          </Card>
-          <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0, close)} />
-        </>
-      ) : (
-        <Button label="Lock in my guess" onPress={submit} />
-      )}
+        <Card>
+          <Txt style={{ fontFamily: font.bold, fontSize: 13, color: close ? colors.greenDark : colors.pinkDark }}>
+            {close ? 'Close enough!' : `Actual: $${chapter.actualValue}`}
+          </Txt>
+          <Txt variant="lead" style={{ fontSize: 13, marginTop: 4 }}>{chapter.explanation}</Txt>
+        </Card>
+      ) : null}
     </View>
   );
 }
 
 /* ───────────────────────── explainback ───────────────────────── */
 function ExplainbackView({
-  chapter, onComplete, reportExplainback,
-}: { chapter: ExplainbackChapter; onComplete: Complete } & Pick<ReportProps, 'reportExplainback'>) {
+  chapter, onComplete, onAction, reportExplainback,
+}: { chapter: ExplainbackChapter; onComplete: Complete } & ActionProps & Pick<ReportProps, 'reportExplainback'>) {
   const [text, setText] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const hitKeywords = chapter.keywords.filter((k) => text.toLowerCase().includes(k.toLowerCase()));
@@ -897,6 +940,13 @@ function ExplainbackView({
     const tier = hitKeywords.length >= 2 ? 'great' : hitKeywords.length === 1 ? 'ok' : 'retry';
     reportExplainback(chapter.title || 'In Your Own Words', tier);
   };
+
+  useEffect(() => {
+    onAction(submitted
+      ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0) }
+      : { label: 'Check my answer', onPress: submit, disabled: !text.trim() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitted, text]);
 
   return (
     <View style={{ gap: 14, flex: 1 }}>
@@ -911,31 +961,30 @@ function ExplainbackView({
         placeholder="Explain it in your own words…"
         placeholderTextColor={colors.muted6}
       />
-      <Grow />
       {submitted ? (
-        <>
-          <Card style={{ gap: 6 }}>
-            <Txt style={{ fontFamily: font.bold, fontSize: 13, color: colors.greenDark }}>
-              {hitKeywords.length ? `Nice — you covered: ${hitKeywords.join(', ')}` : "Here's the full picture:"}
-            </Txt>
-            <Txt variant="lead" style={{ fontSize: 13 }}>{chapter.fullDefinition}</Txt>
-          </Card>
-          <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0)} />
-        </>
-      ) : (
-        <Button label="Check my answer" onPress={submit} disabled={!text.trim()} />
-      )}
+        <Card style={{ gap: 6 }}>
+          <Txt style={{ fontFamily: font.bold, fontSize: 13, color: colors.greenDark }}>
+            {hitKeywords.length ? `Nice — you covered: ${hitKeywords.join(', ')}` : "Here's the full picture:"}
+          </Txt>
+          <Txt variant="lead" style={{ fontSize: 13 }}>{chapter.fullDefinition}</Txt>
+        </Card>
+      ) : null}
     </View>
   );
 }
 
 /* ───────────────────────── urlinspect ───────────────────────── */
-function UrlinspectView({ chapter, onComplete }: { chapter: UrlinspectChapter; onComplete: Complete }) {
+function UrlinspectView({ chapter, onComplete, onAction }: { chapter: UrlinspectChapter; onComplete: Complete } & ActionProps) {
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [revealed, setRevealed] = useState(false);
   const toggle = (id: string) => setFlagged((prev) => {
     const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
   });
+
+  useEffect(() => {
+    onAction(revealed ? { label: 'Continue →', onPress: () => onComplete(0) } : { label: 'Reveal the risky parts', onPress: () => setRevealed(true) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealed]);
 
   return (
     <View style={{ gap: 14, flex: 1 }}>
@@ -959,19 +1008,13 @@ function UrlinspectView({ chapter, onComplete }: { chapter: UrlinspectChapter; o
           })}
         </View>
       </Card>
-      <Grow />
       {revealed ? (
-        <>
-          <Card style={{ gap: 8 }}>
-            {chapter.parts.filter((p) => p.isSuspicious).map((p) => (
-              <Txt key={p.id} variant="lead" style={{ fontSize: 12.5 }}>• {p.note}</Txt>
-            ))}
-          </Card>
-          <Button label="Continue →" onPress={() => onComplete(0)} />
-        </>
-      ) : (
-        <Button label="Reveal the risky parts" onPress={() => setRevealed(true)} />
-      )}
+        <Card style={{ gap: 8 }}>
+          {chapter.parts.filter((p) => p.isSuspicious).map((p) => (
+            <Txt key={p.id} variant="lead" style={{ fontSize: 12.5 }}>• {p.note}</Txt>
+          ))}
+        </Card>
+      ) : null}
     </View>
   );
 }
@@ -983,6 +1026,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5, borderBottomColor: '#EFEFE7',
   },
   step: { fontFamily: font.bold, fontSize: 12, color: colors.green },
+  actionBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 8 },
   hintWrap: { position: 'relative' },
   hintFab: {
     minWidth: 34, height: 30, paddingHorizontal: 8, borderRadius: 15,

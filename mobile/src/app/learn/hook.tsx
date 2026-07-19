@@ -11,7 +11,7 @@ import { moduleContentById } from '@/content';
 /** Screen 16 — Hook (scenario intro, one CTA). Real hook text per lesson. */
 export default function Hook() {
   const router = useRouter();
-  const { moduleId, lessonIndex } = useLocalSearchParams<{ moduleId: string; lessonIndex: string }>();
+  const { moduleId, lessonIndex, isLifeTask } = useLocalSearchParams<{ moduleId: string; lessonIndex: string; isLifeTask?: string }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
   const i = Number(lessonIndex ?? 0);
@@ -44,10 +44,13 @@ export default function Hook() {
         <Button
           label="Start quest →"
           variant="pink"
-          onPress={() => router.push({ pathname: '/learn/quest', params: { moduleId: mod.id, lessonIndex: String(i) } })}
+          onPress={() => router.push({
+            pathname: '/learn/quest',
+            params: { moduleId: mod.id, lessonIndex: String(i), ...(isLifeTask ? { isLifeTask } : {}) },
+          })}
           style={{ marginTop: 22 }}
         />
-        <Txt style={styles.foot}>LESSON {i + 1} · {mod.name.toUpperCase()}</Txt>
+        <Txt style={styles.foot}>{isLifeTask ? 'REAL LIFE' : `LESSON ${i + 1}`} · {mod.name.toUpperCase()}</Txt>
       </SafeAreaView>
     </View>
   );

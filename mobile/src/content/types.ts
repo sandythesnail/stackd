@@ -16,6 +16,11 @@ export type LessonSummary = {
   title: string;
   hook: string;
   qIndices: number[];
+  /** True for the module's real-life "step-by-step guide" quest (e.g. "Setting Up Direct
+   * Deposit") — every module has exactly one, always last. Tracked separately from the
+   * module's 8 real lessons: excluded from moduleTotal/moduleProgress, surfaced instead in
+   * the Real Life tab (see app/(tabs)/real-life.tsx, store.tsx's completeLifeTask). */
+  isLifeTask?: boolean;
 };
 
 export type StatDelta = { checking?: number; savings?: number; moneyScore?: number };
