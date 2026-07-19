@@ -16,9 +16,9 @@ export type LessonSection = { label: string; count: number };
 
 export const MODULE_LESSON_SECTIONS: Record<string, LessonSection[]> = {
   earning: [
-    { label: 'Your Paycheck, Explained', count: 2 },
-    { label: 'Campus & Gig Income', count: 2 },
-    { label: 'Growing What You Earn', count: 2 },
+    { label: 'Your Paycheck, Explained', count: 3 },
+    { label: 'Campus & Gig Income', count: 3 },
+    { label: 'Growing What You Earn', count: 3 },
   ],
   spending: [
     { label: 'Budgeting Basics', count: 3 },

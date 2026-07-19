@@ -143,52 +143,49 @@
     ],
     "lessons": [
       {
-        "title": "Your First Paycheck",
+        "title": "Understanding Your Paycheck: Gross vs. Net Pay",
         "hook": "You just started your on-campus job and received your first paycheck. The stub says $300 gross but only $241 hit your bank. Where did $59 go — and what does \"withholding\" actually mean?",
-        "qIndices": [
-          0,
-          1
-        ]
+        "qIndices": []
       },
       {
-        "title": "Tax Forms & Withholding",
+        "title": "Tax Withholding & W-4s",
         "hook": "Your employer hands you a W-4 on day one. Fill it out wrong and you could owe a surprise tax bill in April — or hand the government an interest-free loan all year. What should you actually put down?",
-        "qIndices": [
-          2,
-          3
-        ]
+        "qIndices": []
+      },
+      {
+        "title": "Reading Your Pay Stub Line by Line",
+        "hook": "Your paycheck seems short this week. Before assuming payroll made a mistake — or missing one that actually happened — do you even know how to read everything on your pay stub?",
+        "qIndices": []
       },
       {
         "title": "Work-Study & Campus Jobs",
-        "hook": "Your financial aid offer includes $3,000 in Federal Work-Study — a term you've never seen before. Is it a loan? A regular job? And does it matter how many hours you work?",
-        "qIndices": [
-          4,
-          5
-        ]
+        "hook": "Your financial aid offer includes $3,000 in Federal Work-Study — a term you have never seen before. Is it a loan? A regular job? And does it matter how many hours you work?",
+        "qIndices": []
       },
       {
-        "title": "Gig Work & Side Income",
+        "title": "Gig Work & 1099 Income",
         "hook": "You start picking up dog-walking and tutoring gigs for extra cash, paid straight to Venmo. No W-4, no withholding — just money landing in your account. Is that too good to be true?",
-        "qIndices": [
-          6,
-          7
-        ]
+        "qIndices": []
       },
       {
-        "title": "Reading Your Pay Stub",
-        "hook": "Your paycheck seems short this week. Before assuming payroll made a mistake — or missing one that actually happened — do you even know how to read everything on your pay stub?",
-        "qIndices": [
-          8,
-          9
-        ]
+        "title": "Setting Aside Taxes as a Gig Worker",
+        "hook": "You earned $400 in gig money this month, tutoring and dog-walking, and spent it about as fast as it came in — no taxes were ever withheld. Is some of that supposed to be set aside, and how much?",
+        "qIndices": []
       },
       {
-        "title": "Raises & Growing Your Income",
+        "title": "Negotiating Raises & Growing Your Income",
         "hook": "Your manager offers you a raise from $16/hour to $17.50/hour, and mentions the university's 403(b) retirement match up to 3%. Between the raise and the match, what should you actually do with the extra money?",
-        "qIndices": [
-          10,
-          11
-        ]
+        "qIndices": []
+      },
+      {
+        "title": "Multiple Income Streams: Job + Side Gigs",
+        "hook": "You are now juggling a W-2 campus paycheck and 1099 gig payments landing in the same account. More money coming in feels great, but how do you actually budget across two income types that get taxed completely differently?",
+        "qIndices": []
+      },
+      {
+        "title": "Setting Up Direct Deposit: A Step-by-Step Guide",
+        "hook": "You just got hired for a campus job, and the onboarding paperwork wants your direct deposit information. Knowing what a pay stub says is one thing — actually setting up how the money gets there is another.",
+        "qIndices": []
       }
     ],
     "quests": [
