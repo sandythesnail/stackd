@@ -11,6 +11,7 @@ import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore, xpProgressPct } from '@/store';
 import { buildQuestReport, takePendingQuestAnalytics } from '@/questReport';
+import { REACTION_FACES } from '@/hammyFaces';
 
 /** Screen 19 — Results (rewards & streak). Reflects the lesson just finished — actually
  * records XP/coins/module progress into the store (not just decorative numbers). */
@@ -95,7 +96,10 @@ export default function Results() {
       <StatusBar style="light" />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Hammy size={150} equipped={equippedMascotItems()} style={{ marginTop: 6 }} />
+          {/* The 3-in-a-row streak face (not a generic 'happy' one) — this screen is
+              already a celebration moment, so Hammy gets the same excited expression as an
+              in-quest streak callout, not the default neutral face. */}
+          <Hammy size={150} equipped={equippedMascotItems()} face={REACTION_FACES.streak} style={{ marginTop: 6 }} />
           <Tag textColor={colors.greenDark} style={styles.tag}>🎉 LESSON COMPLETE</Tag>
           <Txt style={styles.title}>{lesson?.title ?? mod.name} —{'\n'}{allCorrect ? 'nailed it!' : 'done!'}</Txt>
           {totalQ > 0 ? <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt> : null}
