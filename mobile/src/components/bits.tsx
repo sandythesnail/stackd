@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { View, Pressable, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { View, Pressable, StyleSheet, ViewStyle, TextStyle, StyleProp } from 'react-native';
 import { colors, font, radius } from '@/theme';
 import { Txt } from './Txt';
 
@@ -64,7 +64,7 @@ export function Speech({
 }: {
   children: ReactNode;
   style?: ViewStyle;
-  textStyle?: TextStyle;
+  textStyle?: StyleProp<TextStyle>;
   numberOfLines?: number;
 }) {
   return (

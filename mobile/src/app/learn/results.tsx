@@ -10,17 +10,17 @@ import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore, xpProgressPct } from '@/store';
-import { EMPTY_ANALYTICS, buildQuestReport, type QuestAnalytics } from '@/questReport';
+import { buildQuestReport, takePendingQuestAnalytics } from '@/questReport';
 
 /** Screen 19 — Results (rewards & streak). Reflects the lesson just finished — actually
  * records XP/coins/module progress into the store (not just decorative numbers). */
 export default function Results() {
   const router = useRouter();
   const {
-    moduleId, lessonIndex, correctCount, total, xpEarned, questId, hintsUsed, bossWon, newTerms, analytics: analyticsRaw,
+    moduleId, lessonIndex, correctCount, total, xpEarned, questId, hintsUsed, bossWon, newTerms,
   } = useLocalSearchParams<{
     moduleId: string; lessonIndex: string; correctCount: string; total: string; xpEarned?: string;
-    questId?: string; hintsUsed?: string; bossWon?: string; newTerms?: string; analytics?: string;
+    questId?: string; hintsUsed?: string; bossWon?: string; newTerms?: string;
   }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
@@ -33,10 +33,11 @@ export default function Results() {
   // quiz path falls back to the module's flat per-lesson reward.
   const xpForLesson = xpEarned !== undefined ? Number(xpEarned) : (content?.xpReward ?? 0);
   const learnedTerms = useMemo(() => (newTerms ? newTerms.split('|').filter(Boolean) : []), [newTerms]);
-  const analytics = useMemo<QuestAnalytics>(() => {
-    if (!analyticsRaw) return EMPTY_ANALYTICS;
-    try { return JSON.parse(analyticsRaw); } catch { return EMPTY_ANALYTICS; }
-  }, [analyticsRaw]);
+  // Read-and-clear exactly once per mount (a ref, not useMemo, so it survives whatever
+  // render-count quirks Strict Mode introduces without taking the handoff value twice).
+  const analyticsCapture = useRef<ReturnType<typeof takePendingQuestAnalytics> | null>(null);
+  if (analyticsCapture.current === null) analyticsCapture.current = takePendingQuestAnalytics();
+  const analytics = analyticsCapture.current;
   const report = useMemo(() => buildQuestReport(mod.name, analytics, Number(hintsUsed ?? 0)), [mod.name, analytics, hintsUsed]);
 
   const { state, level, tierName, completeLesson, equippedMascotItems } = useStore();

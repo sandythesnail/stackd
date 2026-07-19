@@ -8,8 +8,8 @@ import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
-import { REACTION_FACES, MOOD_FACES } from '@/hammyFaces';
-import { EMPTY_ANALYTICS, type QuestAnalytics } from '@/questReport';
+import { REACTION_FACES } from '@/hammyFaces';
+import { EMPTY_ANALYTICS, setPendingQuestAnalytics, type QuestAnalytics } from '@/questReport';
 import type {
   Chapter, Question, StoryChapter, TeachChapter, MatchingChapter, HintChapter, DecisionChapter,
   MicrosimChapter, PollChapter, MythcardsChapter, KnowledgecheckChapter, SimulatorChapter,
@@ -45,8 +45,8 @@ type ReportProps = {
 };
 
 /** Ported from app.js's HAMMY_CORRECT_MSGS/HAMMY_GENTLE_MSGS, plus "Good job!"/"Nice try!"
- * added to each pool per direct request. */
-const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it!', 'Great job!', 'Good job!'];
+ * added to each pool per direct request, with more varied celebration emoji mixed in. */
+const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it! ✅', 'Great job! 🌟', 'Good job! 👏', 'Awesome! 🎊', 'Yes! 💪'];
 const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn from it:", "Close! Here's what's true:", 'Nice try!'];
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -57,30 +57,36 @@ const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)
 const Grow = () => <View style={{ flex: 1, minHeight: 8 }} />;
 
 /** Hammy's reaction speech bubble — ported from the website's .hammy-side-msg, which fades
- * in/out (opacity + a small rise) rather than popping instantly. Keeps showing the last
- * message while fading out so there's text to fade from.
+ * in/out (opacity + a small rise) rather than popping instantly, AND colors the text green
+ * for a right answer / pink for wrong (mirrors the website's feedback-panel text color).
+ * Keeps showing the last message+mood while fading out so there's text to fade from.
  *
- * The bubble is rendered `position: 'absolute'` inside a fixed-height slot so it is taken
- * completely out of normal layout flow — it can never change the slot's size no matter how
- * much text it holds or what flex behavior Speech itself uses, so the slot's box is
- * guaranteed constant and nothing below it (Hammy, chapter content, buttons) can ever shift
- * when the bubble appears or disappears. (A previous version relied on a min/fixed-height
- * View containing the bubble in normal flow, which still let a wide/2-line message push the
- * slot taller in some layouts — this version can't, by construction.) */
-function ReactionBubble({ message }: { message: string | null }) {
+ * The reserved slot's height is measured from the bubble's own real layout (onLayout) and
+ * only ever grows to the tallest message seen so far — sized to fit whatever's actually in
+ * it instead of a guessed fixed height that left empty space under short one-line messages,
+ * while still never letting Hammy jump when the bubble disappears or a later message is
+ * shorter than an earlier one. */
+function ReactionBubble({ message, mood }: { message: string | null; mood: 'happy' | 'gentle' | 'streak' | null }) {
   const anim = useRef(new Animated.Value(0)).current;
   const [display, setDisplay] = useState(message);
+  const [displayMood, setDisplayMood] = useState(mood);
+  const [slotHeight, setSlotHeight] = useState(0);
   useEffect(() => {
-    if (message) setDisplay(message);
+    if (message) { setDisplay(message); setDisplayMood(mood); }
     Animated.timing(anim, { toValue: message ? 1 : 0, duration: 250, easing: Easing.ease, useNativeDriver: true }).start(() => {
       if (!message) setDisplay(null);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message, anim]);
+  const textColor = displayMood === 'gentle' ? colors.pinkDark : displayMood ? colors.greenDark : colors.inkSoft;
   return (
-    <View style={styles.bubbleSlot} pointerEvents="none">
+    <View style={[styles.bubbleSlot, slotHeight ? { height: slotHeight } : null]} pointerEvents="none">
       {display ? (
-        <Animated.View style={[styles.bubbleInner, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }]}>
-          <Speech numberOfLines={2} style={styles.bubbleSpeech} textStyle={styles.bubbleSpeechTxt}>{display}</Speech>
+        <Animated.View
+          style={[styles.bubbleInner, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }]}
+          onLayout={(e) => setSlotHeight((h) => Math.max(h, e.nativeEvent.layout.height))}
+        >
+          <Speech numberOfLines={2} style={styles.bubbleSpeech} textStyle={[styles.bubbleSpeechTxt, { color: textColor }]}>{display}</Speech>
         </Animated.View>
       ) : null}
     </View>
@@ -200,6 +206,7 @@ export default function QuestPlayer() {
     const nextBossWon = bossWon || chapter.type === 'bossbattle';
 
     if (chapterIdx + 1 >= quest.chapters.length) {
+      setPendingQuestAnalytics(analyticsRef.current);
       router.replace({
         pathname: '/learn/results',
         params: {
@@ -207,7 +214,6 @@ export default function QuestPlayer() {
           correctCount: String(nextCorrect), total: String(nextGraded), xpEarned: String(nextXp),
           questId: quest.id, hintsUsed: String(hintsUsed), bossWon: nextBossWon ? '1' : '0',
           newTerms: nextTerms.join('|'),
-          analytics: JSON.stringify(analyticsRef.current),
         },
       });
       return;
@@ -229,12 +235,12 @@ export default function QuestPlayer() {
         <HintCorner key={chapter.id} hintText={hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       </View>
       <View style={styles.companionWrap}>
-        <ReactionBubble message={reactionMsg} />
+        <ReactionBubble message={reactionMsg} mood={reactionMood} />
         <Hammy
           size={168}
           bob
           equipped={equippedMascotItems()}
-          face={reactionMood ? REACTION_FACES[reactionMood] : MOOD_FACES.curious}
+          face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
           reaction={reactionMood}
           reactionKey={reactionKey}
         />
@@ -277,6 +283,36 @@ function ChapterView({
     case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} />;
     default: return null;
   }
+}
+
+/** True/False (or Myth/Fact) choice button — ported from the website's `.option-btn`
+ * correct/wrong treatment (app.css), used for every true/false-shaped chapter (teach's
+ * inline check, poll, mythcards). Once answered, BOTH buttons recolor: whichever one holds
+ * the correct answer turns green regardless of which was tapped, and the player's own wrong
+ * tap (if any) turns pink — exactly the website's `classList.add('correct'/'wrong')` logic. */
+function TrueFalseButton({
+  label, state, onPress,
+}: { label: string; state: 'default' | 'correct' | 'wrong'; onPress?: () => void }) {
+  const c = TF_STATE[state];
+  return (
+    <Pressable disabled={state !== 'default' && !onPress} onPress={onPress} style={[styles.tfBtn, { borderColor: c.border, backgroundColor: c.bg }]}>
+      <Txt style={[styles.tfBtnTxt, { color: c.text }]}>{label}</Txt>
+    </Pressable>
+  );
+}
+const TF_STATE: Record<'default' | 'correct' | 'wrong', { border: string; bg: string; text: string }> = {
+  default: { border: colors.borderOpt, bg: colors.white, text: colors.ink },
+  correct: { border: colors.green, bg: colors.tagGreenBg, text: colors.greenDark },
+  wrong: { border: '#D98A9E', bg: colors.pinkBg2, text: colors.pinkDark },
+};
+/** The correct option always turns green once answered; the player's own wrong tap (if
+ * any) turns pink — ported from app.js's `if (bIsTrue === isTrue) correct; else if
+ * (b===btn) wrong`. */
+function tfState(optionValue: boolean, answered: boolean | null, isTrue: boolean | undefined): 'default' | 'correct' | 'wrong' {
+  if (answered === null) return 'default';
+  if (optionValue === isTrue) return 'correct';
+  if (optionValue === answered) return 'wrong';
+  return 'default';
 }
 
 /** Floating hint control, pinned in the header's top-right corner — ported budget logic from
@@ -366,16 +402,15 @@ function TeachView({ chapter, onComplete, reactTo }: { chapter: TeachChapter; on
       {hasCheck ? (
         <Card style={{ gap: 10 }}>
           <Txt style={{ fontFamily: font.displayMed, fontSize: 14, color: colors.ink }}>{concept.check?.statement}</Txt>
-          {answered === null ? (
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Button label="True" variant="ghost" onPress={() => pick(true)} style={{ flex: 1 }} />
-              <Button label="False" variant="ghost" onPress={() => pick(false)} style={{ flex: 1 }} />
-            </View>
-          ) : (
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TrueFalseButton label="True" state={tfState(true, answered, concept.check?.isTrue)} onPress={answered === null ? () => pick(true) : undefined} />
+            <TrueFalseButton label="False" state={tfState(false, answered, concept.check?.isTrue)} onPress={answered === null ? () => pick(false) : undefined} />
+          </View>
+          {answered !== null ? (
             <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === concept.check?.isTrue ? colors.greenDark : colors.pinkDark }}>
               {answered === concept.check?.isTrue ? 'Correct!' : `Not quite — that's ${concept.check?.isTrue ? 'true' : 'false'}.`}
             </Txt>
-          )}
+          ) : null}
         </Card>
       ) : null}
       <Grow />
@@ -563,12 +598,11 @@ function PollView({ chapter, onComplete, reactTo }: { chapter: PollChapter; onCo
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
       <Card><Txt style={{ fontFamily: font.displayMed, fontSize: 15, color: colors.ink }}>{chapter.statement}</Txt></Card>
-      {answered === null ? (
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Button label="True" variant="ghost" onPress={() => pick(true)} style={{ flex: 1 }} />
-          <Button label="False" variant="ghost" onPress={() => pick(false)} style={{ flex: 1 }} />
-        </View>
-      ) : (
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <TrueFalseButton label="True" state={tfState(true, answered, chapter.isTrue)} onPress={answered === null ? () => pick(true) : undefined} />
+        <TrueFalseButton label="False" state={tfState(false, answered, chapter.isTrue)} onPress={answered === null ? () => pick(false) : undefined} />
+      </View>
+      {answered !== null ? (
         <>
           <Card>
             <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === chapter.isTrue ? colors.greenDark : colors.pinkDark }}>
@@ -579,7 +613,7 @@ function PollView({ chapter, onComplete, reactTo }: { chapter: PollChapter; onCo
           <Grow />
           <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0, answered === chapter.isTrue)} />
         </>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -616,12 +650,11 @@ function MythcardsView({
         <Tag tone="warm">MYTH OR FACT?</Tag>
         <Txt style={{ fontFamily: font.displayMed, fontSize: 15, color: colors.ink }}>{card.myth}</Txt>
       </Card>
-      {answered === null ? (
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Button label="Myth" variant="ghost" onPress={() => pick(false)} style={{ flex: 1 }} />
-          <Button label="Fact" variant="ghost" onPress={() => pick(true)} style={{ flex: 1 }} />
-        </View>
-      ) : (
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <TrueFalseButton label="Myth" state={tfState(false, answered, card.isTrue)} onPress={answered === null ? () => pick(false) : undefined} />
+        <TrueFalseButton label="Fact" state={tfState(true, answered, card.isTrue)} onPress={answered === null ? () => pick(true) : undefined} />
+      </View>
+      {answered !== null ? (
         <>
           <Card>
             <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === card.isTrue ? colors.greenDark : colors.pinkDark }}>
@@ -632,7 +665,7 @@ function MythcardsView({
           <Grow />
           <Button label={last ? 'Continue →' : 'Next card'} onPress={next} />
         </>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -962,19 +995,19 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 38, right: 0, width: 230, zIndex: 30, elevation: 8,
     backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder,
   },
+  tfBtn: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10,
+  },
+  tfBtnTxt: { fontFamily: font.extra, fontSize: 15 },
   companionWrap: { alignItems: 'center', paddingTop: 4, paddingBottom: 2, gap: 4 },
-  // Fixed height, and the bubble itself is absolutely positioned inside it (see
-  // ReactionBubble) — taking it out of flow entirely so it is structurally impossible for
-  // the bubble's content to change this slot's size, regardless of message length or flex
-  // quirks. alignSelf: 'center' since bubbleSlot no longer relies on companionWrap's
-  // alignItems for horizontal centering (an absolutely-positioned child ignores that).
-  // Full-width with the inner content centered (rather than a fixed 84%-wide slot) so a
-  // short one-line reaction ("Nice! 🎉") gets a bubble that hugs its own text instead of a
-  // wide bar of mostly-empty padding — see bubbleSpeech's own maxWidth for the actual cap.
-  bubbleSlot: { height: 46, width: '100%', overflow: 'hidden' },
-  bubbleInner: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' },
-  bubbleSpeech: { flex: undefined, maxWidth: 240, paddingVertical: 7, paddingHorizontal: 12 },
-  bubbleSpeechTxt: { fontSize: 12, lineHeight: 15 },
+  // Height is set imperatively once the bubble's real content is measured (see
+  // ReactionBubble's onLayout) and only ever grows — sized to fit whatever's actually
+  // inside instead of a guessed fixed height that left empty space under it.
+  bubbleSlot: { width: '100%', alignItems: 'center' },
+  bubbleInner: { alignItems: 'center' },
+  bubbleSpeech: { flex: undefined, maxWidth: 300, paddingVertical: 12, paddingHorizontal: 16 },
+  bubbleSpeechTxt: { fontSize: 15.5, lineHeight: 20 },
   content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },

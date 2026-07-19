@@ -21,6 +21,24 @@ export const EMPTY_ANALYTICS: QuestAnalytics = {
   explainback: null,
 };
 
+/** In-memory handoff from quest.tsx to results.tsx for the just-finished quest's analytics
+ * — NOT passed as a URL param. Lesson/question text routinely contains "/" (dates, ratios
+ * like "50/30/20", "and/or"), and Expo Router's web build doesn't reliably URL-encode a
+ * large JSON blob dropped into router.replace's params; a stray "/" turned into extra path
+ * segments and broke route matching ("unmatched route"). A module-level variable survives
+ * the in-app SPA navigation between the two screens without touching the URL at all. */
+let pendingAnalytics: QuestAnalytics | null = null;
+export function setPendingQuestAnalytics(a: QuestAnalytics) {
+  pendingAnalytics = a;
+}
+/** Reads and clears the handoff — call exactly once per results-screen mount (a direct
+ * load of /learn/results with nothing pending falls back to EMPTY_ANALYTICS). */
+export function takePendingQuestAnalytics(): QuestAnalytics {
+  const a = pendingAnalytics ?? EMPTY_ANALYTICS;
+  pendingAnalytics = null;
+  return a;
+}
+
 export type QuestReportData = {
   masteryPct: number;
   totalAnswered: number;
