@@ -536,7 +536,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setDailyLoginBanner(null);
         setNewAchievementIds([]);
       },
-      hydrateFromRemote: (partial) => setState((s) => ({ ...s, ...partial })),
+      // Merge the remote snapshot, then re-run the once-per-day check against the merged
+      // result — otherwise a stale cloud streak/lastPlayedDate (from before today's local
+      // increment) clobbers the increment we just computed on local load.
+      hydrateFromRemote: (partial) => {
+        const { next, banner } = runDailyCheck({ ...state, ...partial });
+        setState(next);
+        if (banner) setDailyLoginBanner(banner);
+      },
     };
   }, [state, dailyLoginBanner, newAchievementIds]);
 
