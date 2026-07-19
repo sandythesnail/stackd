@@ -131,6 +131,10 @@ export default function QuestPlayer() {
   const [reactionMsg, setReactionMsg] = useState<string | null>(null);
   const [reactionKey, setReactionKey] = useState(0);
   const [answerStreak, setAnswerStreak] = useState(0);
+  // Bumped whenever the player taps Hammy to reveal his tip — plays the same body-wobble
+  // animation as a "gentle" reaction (a little shake) as a tap acknowledgment, decoupled
+  // from the face/mood system so tapping for a hint never changes his face.
+  const [wobbleTick, setWobbleTick] = useState(0);
   // Each chapter view remounts on chapter change (see ChapterView's key={chapter.id} below)
   // and reports its own fresh action on mount, so no separate reset-on-chapterIdx effect is
   // needed here — a sibling effect that clears `action` would fire AFTER the child's mount
@@ -286,44 +290,40 @@ export default function QuestPlayer() {
           />
         </View>
       ) : null}
-      {/* Two-column layout (ported from the website's .quest-layout): Hammy pinned in a
-          narrow side column, chapter content beside him instead of below a full-width
-          companion block — keeps dialogue/questions/choices in view without competing with
-          him for vertical space. */}
-      <View style={styles.questBody}>
-        <View style={styles.questSide}>
-          <Pressable
-            disabled={!hintGate}
-            onPress={() => hintGate?.onReveal()}
-            hitSlop={10}
-            style={hintGate ? styles.hammyTappable : undefined}
-          >
-            <Hammy
-              size={104}
-              bob
-              equipped={equippedMascotItems()}
-              face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
-              reaction={reactionMood}
-              reactionKey={reactionKey}
-            />
-          </Pressable>
-          <ReactionBubble message={reactionMsg} mood={reactionMood} />
-        </View>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <ChapterView
-            key={chapter.id}
-            chapter={chapter}
-            questions={content.questions}
-            moduleXpReward={content.xpReward}
-            charName={quest.character.name}
-            onComplete={onComplete}
-            reactTo={reactTo}
-            onAction={onAction}
-            onHintGate={onHintGate}
-            {...reportProps}
+      <View style={styles.companionWrap}>
+        <Pressable
+          disabled={!hintGate}
+          onPress={() => {
+            hintGate?.onReveal();
+            setWobbleTick((t) => t + 1);
+          }}
+          hitSlop={10}
+        >
+          <Hammy
+            size={168}
+            bob
+            equipped={equippedMascotItems()}
+            face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
+            reaction={reactionMood ?? (wobbleTick > 0 ? 'gentle' : null)}
+            reactionKey={reactionKey + wobbleTick}
           />
-        </ScrollView>
+        </Pressable>
+        <ReactionBubble message={reactionMsg} mood={reactionMood} />
       </View>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ChapterView
+          key={chapter.id}
+          chapter={chapter}
+          questions={content.questions}
+          moduleXpReward={content.xpReward}
+          charName={quest.character.name}
+          onComplete={onComplete}
+          reactTo={reactTo}
+          onAction={onAction}
+          onHintGate={onHintGate}
+          {...reportProps}
+        />
+      </ScrollView>
     </Screen>
   );
 }
@@ -425,29 +425,46 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
  * Speaker-styled: Hammy (or the story's protagonist/"intro" establishing beats) gets a
  * pig-head avatar and a white bordered bubble; the narrator gets no avatar at all and a
  * plain, muted, italic box — so it never reads as Hammy narrating. */
+/** Hammy's actual illustrated head (not an emoji) — the same SVG the rest of the app uses,
+ * rendered oversized inside a small clipped circle and shifted so only the head fills it,
+ * roughly matching the website's getHammyFaceMarkup crop of the same pig. */
+function HammyHeadAvatar() {
+  return (
+    <View style={styles.storyAvatar}>
+      <Hammy size={120} bob={false} style={{ position: 'absolute', left: -40, top: -34 }} />
+    </View>
+  );
+}
+
 function StoryView({ chapter, charName, onComplete, onAction }: { chapter: StoryChapter; charName: string; onComplete: Complete } & ActionProps) {
   const [i, setI] = useState(0);
-  const beat = chapter.beats[i];
   const last = i + 1 >= chapter.beats.length;
   useEffect(() => {
     onAction({ label: 'Next', onPress: () => (last ? onComplete(0) : setI(i + 1)) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i, last]);
-  const isNarrator = beat.speaker === 'narrator';
-  const isHammy = beat.speaker === charName || beat.speaker === 'intro';
+  // Beats accumulate on screen as a running conversation log instead of replacing each
+  // other — ported from renderStoryChapter ("nothing disappears when the student clicks
+  // Next, so they can never lose track of what's already been said").
   return (
     <View style={{ gap: 10, flex: 1 }}>
       {chapter.title ? <Txt variant="h2">{chapter.title}</Txt> : null}
-      <View style={styles.storyBeat}>
-        {!isNarrator ? (
-          <View style={styles.storyAvatar}>
-            <Txt style={styles.storyAvatarTxt}>{isHammy ? '🐷' : beat.speaker.charAt(0)}</Txt>
+      {chapter.beats.slice(0, i + 1).map((beat, idx) => {
+        const isNarrator = beat.speaker === 'narrator';
+        const isHammy = beat.speaker === charName || beat.speaker === 'intro';
+        return (
+          <View key={idx} style={styles.storyBeat}>
+            {!isNarrator ? (isHammy ? <HammyHeadAvatar /> : (
+              <View style={styles.storyAvatar}>
+                <Txt style={styles.storyAvatarTxt}>{beat.speaker.charAt(0)}</Txt>
+              </View>
+            )) : null}
+            <View style={[styles.storyBubble, isNarrator && styles.storyBubbleNarrator]}>
+              <Txt style={[styles.storyBubbleTxt, isNarrator && styles.storyBubbleNarratorTxt]}>{beat.text}</Txt>
+            </View>
           </View>
-        ) : null}
-        <View style={[styles.storyBubble, isNarrator && styles.storyBubbleNarrator]}>
-          <Txt style={[styles.storyBubbleTxt, isNarrator && styles.storyBubbleNarratorTxt]}>{beat.text}</Txt>
-        </View>
-      </View>
+        );
+      })}
     </View>
   );
 }
@@ -574,7 +591,7 @@ function MatchingView({
 
 /* ───────────────────────── hint (Hammy's Tip) ───────────────────────── */
 /** Ported from renderHintChapter: the tip stays hidden behind a placeholder until the
- * player taps Hammy himself (see QuestPlayer's questSide Pressable, wired up via
+ * player taps Hammy himself (see QuestPlayer's companionWrap Pressable, wired up via
  * onHintGate) — not a button in the content area. */
 function HintView({ chapter, onComplete, onAction, onHintGate }: { chapter: HintChapter; onComplete: Complete } & ActionProps & HintGateProps) {
   const [revealed, setRevealed] = useState(false);
@@ -797,8 +814,13 @@ function MythcardsView({
     : dragDir === 'true' ? colors.green : dragDir === 'false' ? '#D98A9E' : colors.borderOpt;
 
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    <View style={{ gap: 10 }}>
       <Txt variant="h2">{chapter.title}</Txt>
+      <Txt variant="lead" style={{ fontSize: 13.5 }}>
+        Read the card, then swipe right if you think it&apos;s <Txt style={{ fontFamily: font.extra }}>true</Txt>, left if you think
+        it&apos;s <Txt style={{ fontFamily: font.extra }}>false</Txt>. Take your time — the answer stays on screen until you&apos;re
+        ready to move on.
+      </Txt>
       <Txt style={styles.mythProgress}>Card {i + 1} of {chapter.cards.length}</Txt>
       <View style={styles.mythStack}>
         <Animated.View
@@ -1199,21 +1221,15 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10,
   },
   tfBtnTxt: { fontFamily: font.extra, fontSize: 15 },
-  // Two-column body (ported from the website's .quest-layout) — Hammy + his reaction
-  // bubble in a fixed-width side column, chapter content filling the rest.
-  questBody: { flex: 1, flexDirection: 'row' },
-  questSide: {
-    width: 108, alignItems: 'center', paddingTop: 10, paddingHorizontal: 4, gap: 4,
-  },
-  hammyTappable: { transform: [{ scale: 1.04 }] },
+  companionWrap: { alignItems: 'center', paddingTop: 4, paddingBottom: 2, gap: 4 },
   bubbleSlot: { width: '100%', alignItems: 'center', minHeight: 4 },
-  bubbleInner: { alignItems: 'center', width: '100%' },
+  bubbleInner: { alignItems: 'center' },
   reactionBox: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
-    borderRadius: 12, paddingVertical: 8, paddingHorizontal: 9,
+    borderRadius: 14, paddingVertical: 10, paddingHorizontal: 16, maxWidth: 300,
   },
-  reactionTxt: { fontFamily: font.bold, fontSize: 11.5, lineHeight: 14.5, textAlign: 'center' },
-  content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24, gap: 12, flexGrow: 1 },
+  reactionTxt: { fontFamily: font.bold, fontSize: 14.5, lineHeight: 19, textAlign: 'center' },
+  content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
   // Story beats — speaker-styled: white bordered bubble + pig-head avatar for Hammy, a
@@ -1221,8 +1237,8 @@ const styles = StyleSheet.create({
   // .story-bubble.narrator / .story-avatar).
   storyBeat: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   storyAvatar: {
-    width: 38, height: 38, borderRadius: 19, backgroundColor: colors.screen,
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    width: 40, height: 40, borderRadius: 20, backgroundColor: colors.screen,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden',
   },
   storyAvatarTxt: { fontSize: 18 },
   storyBubble: {

@@ -134,26 +134,18 @@ export function Hammy({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reactionKey]);
 
-  // Smooth crossfade between the default eyes/cheeks/snout and an illustrated face overlay
-  // (was an instant swap — react-native-svg's Image has no built-in transition). Keeps
-  // rendering the last-shown overlay image during fade-out so there's something to fade
-  // from/to on both sides, mirroring the website's `transition: opacity 0.15s ease` on both
-  // the CSS face and the overlay.
-  const faceAnim = useRef(new Animated.Value(face ? 1 : 0)).current;
-  const [faceOpacity, setFaceOpacity] = useState(face ? 1 : 0);
-  const [displayFace, setDisplayFace] = useState(face);
-
-  useEffect(() => {
-    if (face) setDisplayFace(face);
-    Animated.timing(faceAnim, { toValue: face ? 1 : 0, duration: 180, easing: Easing.ease, useNativeDriver: false }).start(() => {
-      if (!face) setDisplayFace(undefined);
-    });
-  }, [face, faceAnim]);
-
-  useEffect(() => {
-    const id = faceAnim.addListener(({ value }) => setFaceOpacity(value));
-    return () => faceAnim.removeListener(id);
-  }, [faceAnim]);
+  // Swap between the default eyes/cheeks/snout and an illustrated face overlay. This used
+  // to crossfade via an Animated-driven opacity + a `displayFace` staging value, but that
+  // three-piece dance (anim value, a value-listener syncing React state, and a staged
+  // "last known face" var) had a real failure mode: whenever a new reaction interrupted an
+  // in-flight fade (very easy to do — matching fires reactions in quick succession), the
+  // opacity could end up parked at a mid-value with the listener's last update not
+  // reflecting the latest `face`, showing neither the overlay nor the base features —
+  // exactly the "face goes blank" bug. A direct swap has no intermediate state to get
+  // stuck in: `face` truthy shows only the overlay, falsy shows only the base features,
+  // full stop, on every single render.
+  const faceOpacity = face ? 1 : 0;
+  const displayFace = face;
 
   useEffect(() => {
     if (!bob) return;
