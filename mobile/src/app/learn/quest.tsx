@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, StyleSheet } from 'react-native';
+import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
@@ -35,7 +35,7 @@ type HintProps = { hintsRemaining: number; onUseHint: () => void };
  * optional `customMsg` puts specific narration text in the bubble instead of a random
  * pick (ported from showHammyMessage — used by the simulator to narrate what a decision
  * actually does) and stays up longer (2.8s vs 1.4s), and doesn't touch the streak count. */
-type ReactProps = { reactTo: (isCorrect: boolean, customMsg?: string) => void };
+type ReactProps = { reactTo: (isCorrect: boolean, customMsg?: string, gentlePool?: string[]) => void };
 
 /** A chapter's current primary action ("Next", "Check my answer", ...), or null when it has
  * nothing to show yet (e.g. a True/False chapter before it's answered). Lifted into the
@@ -70,6 +70,10 @@ type ReportProps = {
  * and confetti — per direct request (no checkmark or others). */
 const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it! 🙌', 'Great job! 🎉', 'Good job! 🙌', 'Awesome! 🎉'];
 const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn from it:", "Close! Here's what's true:", 'Nice try!'];
+/** Matching has no explanation to point to (it's just a retry, not a right-answer reveal),
+ * so a wrong match gets its own phrasing instead of HAMMY_GENTLE_MSGS's "here's why" —
+ * ported from the website's HAMMY_TRYAGAIN_MSGS. */
+const HAMMY_TRYAGAIN_MSGS = ['Not quite, try again!', 'Close, give it another shot!', "Not quite, look at the definitions above if you're stuck."];
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
 /** Hammy's reaction speech bubble, in the side column below him — ported from the website's
@@ -94,7 +98,7 @@ function ReactionBubble({ message, mood }: { message: string | null; mood: 'happ
     <View style={[styles.bubbleSlot, slotHeight ? { height: slotHeight } : null]} pointerEvents="none">
       {display ? (
         <Animated.View
-          style={[styles.bubbleInner, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [-4, 0] }) }] }]}
+          style={[styles.bubbleInner, { opacity: anim, transform: [{ translateX: anim.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) }] }]}
           onLayout={(e) => setSlotHeight((h) => Math.max(h, e.nativeEvent.layout.height))}
         >
           <View style={styles.reactionBox}>
@@ -212,7 +216,7 @@ export default function QuestPlayer() {
     setReactionMsg(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterIdx]);
-  const reactTo = (isCorrect: boolean, customMsg?: string) => {
+  const reactTo = (isCorrect: boolean, customMsg?: string, gentlePool?: string[]) => {
     let msg: string;
     if (customMsg) {
       msg = customMsg;
@@ -222,7 +226,7 @@ export default function QuestPlayer() {
       setAnswerStreak(nextStreak);
       const isStreak = isCorrect && nextStreak > 0 && nextStreak % 3 === 0;
       setReactionMood(isCorrect ? (isStreak ? 'streak' : 'happy') : 'gentle');
-      msg = isStreak ? `🎉 ${nextStreak} in a row! You're on fire!` : isCorrect ? pickRandom(HAMMY_CORRECT_MSGS) : pickRandom(HAMMY_GENTLE_MSGS);
+      msg = isStreak ? `🎉 ${nextStreak} in a row! You're on fire!` : isCorrect ? pickRandom(HAMMY_CORRECT_MSGS) : pickRandom(gentlePool ?? HAMMY_GENTLE_MSGS);
     }
     setReactionMsg(msg);
     setReactionKey((k) => k + 1);
@@ -290,7 +294,10 @@ export default function QuestPlayer() {
           />
         </View>
       ) : null}
+      {/* Dialogue on the left (takes the flexible width), Hammy shifted to the right —
+          shares one row instead of stacking, so this whole area takes less vertical space. */}
       <View style={styles.companionWrap}>
+        <ReactionBubble message={reactionMsg} mood={reactionMood} />
         <Pressable
           disabled={!hintGate}
           onPress={() => {
@@ -300,7 +307,7 @@ export default function QuestPlayer() {
           hitSlop={10}
         >
           <Hammy
-            size={168}
+            size={130}
             bob
             equipped={equippedMascotItems()}
             face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
@@ -308,7 +315,6 @@ export default function QuestPlayer() {
             reactionKey={reactionKey + wobbleTick}
           />
         </Pressable>
-        <ReactionBubble message={reactionMsg} mood={reactionMood} />
       </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ChapterView
@@ -399,10 +405,10 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
       onUseHint();
       setRevealed(true);
     }
-    setOpen((o) => !o);
+    setOpen(true);
   };
   return (
-    <View style={styles.hintWrap}>
+    <>
       <Pressable
         style={[styles.hintFab, hintsRemaining <= 0 && !revealed && styles.hintFabDisabled]}
         disabled={hintsRemaining <= 0 && !revealed}
@@ -410,13 +416,20 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
       >
         <Txt style={styles.hintFabTxt}>{revealed ? '💡 HINT' : `💡 HINT ${hintsRemaining}`}</Txt>
       </Pressable>
-      {open ? (
-        <Card style={styles.hintPopover}>
-          <Tag tone="pink">🐷 HAMMY'S HINT</Tag>
-          <Txt variant="lead" style={{ fontSize: 13, marginTop: 6 }}>{hintText}</Txt>
-        </Card>
-      ) : null}
-    </View>
+      {/* A real Modal instead of an anchored popover — Modal renders as its own top-level
+          overlay outside the normal view tree, so it always sits above everything else
+          regardless of DOM/paint order. The previous position:absolute popover was
+          reported rendering behind Hammy/content instead of on top of it. */}
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <Pressable style={styles.hintScrim} onPress={() => setOpen(false)}>
+          <Pressable style={styles.hintModalCard} onPress={(e) => e.stopPropagation()}>
+            <Tag tone="pink">🐷 HAMMY'S HINT</Tag>
+            <Txt variant="lead" style={{ fontSize: 14, marginTop: 8 }}>{hintText}</Txt>
+            <Button label="Got it" onPress={() => setOpen(false)} style={{ marginTop: 16 }} />
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
@@ -428,10 +441,21 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
 /** Hammy's actual illustrated head (not an emoji) — the same SVG the rest of the app uses,
  * rendered oversized inside a small clipped circle and shifted so only the head fills it,
  * roughly matching the website's getHammyFaceMarkup crop of the same pig. */
-function HammyHeadAvatar() {
+/** A square region of Hammy's 440x460 SVG stage containing just the ears/head (no
+ * body/arms/feet) — measured directly from Hammy.tsx's own shape coordinates (head ellipse
+ * cx=220,cy=198,rx=138,ry=124 → x:82-358; ears translate(*, 54), ~74 tall → top ~50), sized
+ * to a square so it crops the same way the favicon does. */
+const HEAD_CROP = { x: 82, y: 50, size: 276 };
+
+function HammyHeadAvatar({ size = 40 }: { size?: number }) {
+  const scale = size / HEAD_CROP.size;
   return (
-    <View style={styles.storyAvatar}>
-      <Hammy size={120} bob={false} style={{ position: 'absolute', left: -40, top: -34 }} />
+    <View style={[styles.storyAvatar, { width: size, height: size, borderRadius: size / 2 }]}>
+      <Hammy
+        size={440 * scale}
+        bob={false}
+        style={{ position: 'absolute', left: -HEAD_CROP.x * scale, top: -HEAD_CROP.y * scale }}
+      />
     </View>
   );
 }
@@ -540,7 +564,7 @@ function MatchingView({
   const pickDef = (def: string) => {
     if (!selTerm) return;
     const correct = chapter.pairs.find((p) => p.term === selTerm)?.definition === def;
-    reactTo(correct);
+    reactTo(correct, undefined, HAMMY_TRYAGAIN_MSGS);
     if (!correct) reportMatchingMistake();
     if (correct) {
       const next = new Set(matched); next.add(selTerm);
@@ -766,7 +790,12 @@ function MythcardsView({
 
   const commit = (guessedTrue: boolean) => {
     const guessedRight = guessedTrue === card.isTrue;
-    Animated.spring(pan, { toValue: { x: guessedTrue ? 50 : -50, y: 0 }, friction: 7, useNativeDriver: true }).start();
+    // Snap straight back to center instead of springing to a small offset — a spring can
+    // get interrupted or (especially with mouse-emulated touch, e.g. desktop devtools'
+    // mobile-view toggle) never resolve at all if release doesn't fire cleanly, which
+    // could leave the card stuck wherever the drag left it, off-screen. An instant reset
+    // has nothing to fail: the revealed answer is always exactly where the card started.
+    pan.setValue({ x: 0, y: 0 });
     setDragDir(null);
     setResolved({ guessedTrue, guessedRight });
     if (guessedRight) setCorrectSoFar((c) => c + 1);
@@ -792,6 +821,13 @@ function MythcardsView({
         Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 6, useNativeDriver: true }).start();
       }
     },
+    // If something else steals the gesture mid-drag (e.g. the page's own scroll) instead
+    // of a clean release, snap back immediately rather than leaving the card wherever the
+    // drag left off.
+    onPanResponderTerminate: () => {
+      setDragDir(null);
+      pan.setValue({ x: 0, y: 0 });
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [i]);
 
@@ -808,7 +844,12 @@ function MythcardsView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolved, last]);
 
-  const rotate = pan.x.interpolate({ inputRange: [-220, 0, 220], outputRange: ['-14deg', '0deg', '14deg'] });
+  // Once resolved, the tilt is a fixed small value (hinting which way was swiped) instead
+  // of tracking pan.x — pan is reset to 0 on commit (see above), so this keeps a bit of
+  // the swipe's visual direction without depending on any animation actually completing.
+  const rotate = resolved
+    ? (resolved.guessedTrue ? '5deg' : '-5deg')
+    : pan.x.interpolate({ inputRange: [-220, 0, 220], outputRange: ['-14deg', '0deg', '14deg'] });
   const borderColor = resolved
     ? (resolved.guessedTrue ? colors.green : '#D98A9E')
     : dragDir === 'true' ? colors.green : dragDir === 'false' ? '#D98A9E' : colors.borderOpt;
@@ -1204,7 +1245,6 @@ const styles = StyleSheet.create({
   },
   step: { fontFamily: font.bold, fontSize: 12, color: colors.green },
   actionBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 8 },
-  hintWrap: { position: 'relative' },
   hintFab: {
     minWidth: 34, height: 30, paddingHorizontal: 8, borderRadius: 15,
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderCool,
@@ -1212,23 +1252,27 @@ const styles = StyleSheet.create({
   },
   hintFabDisabled: { opacity: 0.4 },
   hintFabTxt: { fontFamily: font.bold, fontSize: 12, color: colors.ink },
-  hintPopover: {
-    position: 'absolute', top: 38, right: 0, width: 230, zIndex: 30, elevation: 8,
-    backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder,
+  hintScrim: { flex: 1, backgroundColor: 'rgba(22,32,23,0.55)', alignItems: 'center', justifyContent: 'center', padding: 26 },
+  hintModalCard: {
+    width: '100%', maxWidth: 340, backgroundColor: colors.pinkBg, borderWidth: 1.5,
+    borderColor: colors.pinkBorder, borderRadius: 20, padding: 20,
   },
   tfBtn: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10,
   },
   tfBtnTxt: { fontFamily: font.extra, fontSize: 15 },
-  companionWrap: { alignItems: 'center', paddingTop: 4, paddingBottom: 2, gap: 4 },
-  bubbleSlot: { width: '100%', alignItems: 'center', minHeight: 4 },
-  bubbleInner: { alignItems: 'center' },
+  companionWrap: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
+    paddingHorizontal: 16, paddingTop: 4, paddingBottom: 2, gap: 10,
+  },
+  bubbleSlot: { flex: 1, justifyContent: 'center', minHeight: 4 },
+  bubbleInner: { alignItems: 'flex-start' },
   reactionBox: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
-    borderRadius: 14, paddingVertical: 10, paddingHorizontal: 16, maxWidth: 300,
+    borderRadius: 14, paddingVertical: 10, paddingHorizontal: 14,
   },
-  reactionTxt: { fontFamily: font.bold, fontSize: 14.5, lineHeight: 19, textAlign: 'center' },
+  reactionTxt: { fontFamily: font.bold, fontSize: 14, lineHeight: 18.5 },
   content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
