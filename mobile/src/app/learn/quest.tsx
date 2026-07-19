@@ -9,6 +9,7 @@ import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
 import { REACTION_FACES, MOOD_FACES } from '@/hammyFaces';
+import { EMPTY_ANALYTICS, type QuestAnalytics } from '@/questReport';
 import type {
   Chapter, Question, StoryChapter, TeachChapter, MatchingChapter, HintChapter, DecisionChapter,
   MicrosimChapter, PollChapter, MythcardsChapter, KnowledgecheckChapter, SimulatorChapter,
@@ -30,6 +31,18 @@ type HintProps = { hintsRemaining: number; onUseHint: () => void };
 /** Reports right/wrong to the persistent companion Hammy (see showHammyReaction on the
  * website) so its face/message reacts — happy, gentle, or a 3-in-a-row streak callout. */
 type ReactProps = { reactTo: (isCorrect: boolean) => void };
+
+/** Feeds the end-of-lesson report (see @/questReport, results.tsx) — mirrors what the
+ * website's per-chapter handlers write into `qp.analytics`. Only the chapter types the
+ * website itself tracks (knowledgecheck/mythcards/matching/decision/bossbattle/explainback)
+ * report anything; other types (story, teach, poll, microsim, etc.) don't call these. */
+type ReportProps = {
+  reportKnowledgeCheck: (question: string, isCorrect: boolean) => void;
+  reportMythCard: (myth: string, guessedRight: boolean) => void;
+  reportMatchingMistake: () => void;
+  reportDecision: (title: string, choice: string) => void;
+  reportExplainback: (term: string, tier: 'great' | 'ok' | 'retry') => void;
+};
 
 /** Ported from app.js's HAMMY_CORRECT_MSGS/HAMMY_GENTLE_MSGS, plus "Good job!"/"Nice try!"
  * added to each pool per direct request. */
@@ -97,6 +110,30 @@ export default function QuestPlayer() {
   const [reactionMsg, setReactionMsg] = useState<string | null>(null);
   const [reactionKey, setReactionKey] = useState(0);
   const [answerStreak, setAnswerStreak] = useState(0);
+  // A ref, not state — analytics never drives a render in this screen, it's only read once
+  // at the final chapter's onComplete to build the results-screen params. A question's
+  // "report" and the quest's final onComplete can fire in the very same handler (the last
+  // knowledgecheck question's "next" click both reports and completes), and React state
+  // updates from the same handler wouldn't be visible yet when onComplete reads them — a
+  // ref sidesteps that staleness entirely by updating synchronously.
+  const analyticsRef = useRef<QuestAnalytics>(EMPTY_ANALYTICS);
+  const reportProps: ReportProps = {
+    reportKnowledgeCheck: (question, isCorrect) => {
+      analyticsRef.current = { ...analyticsRef.current, knowledgeCheck: [...analyticsRef.current.knowledgeCheck, { question, isCorrect }] };
+    },
+    reportMythCard: (myth, guessedRight) => {
+      analyticsRef.current = { ...analyticsRef.current, mythCards: [...analyticsRef.current.mythCards, { myth, guessedRight }] };
+    },
+    reportMatchingMistake: () => {
+      analyticsRef.current = { ...analyticsRef.current, matchingMistakes: analyticsRef.current.matchingMistakes + 1 };
+    },
+    reportDecision: (title, choice) => {
+      analyticsRef.current = { ...analyticsRef.current, decisions: [...analyticsRef.current.decisions, { title, choice }] };
+    },
+    reportExplainback: (term, tier) => {
+      analyticsRef.current = { ...analyticsRef.current, explainback: { term, tier } };
+    },
+  };
 
   // router.back() no-ops with nowhere to go — e.g. the web build reloaded directly on this
   // route (no in-app history) via a deep link or the /m viewport redirect. Fall back to the
@@ -170,6 +207,7 @@ export default function QuestPlayer() {
           correctCount: String(nextCorrect), total: String(nextGraded), xpEarned: String(nextXp),
           questId: quest.id, hintsUsed: String(hintsUsed), bossWon: nextBossWon ? '1' : '0',
           newTerms: nextTerms.join('|'),
+          analytics: JSON.stringify(analyticsRef.current),
         },
       });
       return;
@@ -209,6 +247,7 @@ export default function QuestPlayer() {
           moduleXpReward={content.xpReward}
           onComplete={onComplete}
           reactTo={reactTo}
+          {...reportProps}
         />
       </ScrollView>
     </Screen>
@@ -217,23 +256,24 @@ export default function QuestPlayer() {
 
 function ChapterView({
   chapter, questions, moduleXpReward, onComplete, reactTo,
-}: { chapter: Chapter; questions: Question[]; moduleXpReward: number; onComplete: Complete } & ReactProps) {
+  reportKnowledgeCheck, reportMythCard, reportMatchingMistake, reportDecision, reportExplainback,
+}: { chapter: Chapter; questions: Question[]; moduleXpReward: number; onComplete: Complete } & ReactProps & ReportProps) {
   const reactProps: ReactProps = { reactTo };
   switch (chapter.type) {
     case 'story': return <StoryView chapter={chapter} onComplete={onComplete} />;
     case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} {...reactProps} />;
-    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...reactProps} />;
+    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...reactProps} reportMatchingMistake={reportMatchingMistake} />;
     case 'hint': return <HintView chapter={chapter} onComplete={onComplete} />;
-    case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} />;
+    case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} reportDecision={reportDecision} />;
     case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} />;
     case 'poll': return <PollView chapter={chapter} onComplete={onComplete} {...reactProps} />;
-    case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} {...reactProps} />;
-    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} {...reactProps} />;
+    case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} {...reactProps} reportMythCard={reportMythCard} />;
+    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} />;
     case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} />;
-    case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} />;
+    case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} reportDecision={reportDecision} />;
     case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} />;
     case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} {...reactProps} />;
-    case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} />;
+    case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} reportExplainback={reportExplainback} />;
     case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} />;
     default: return null;
   }
@@ -350,8 +390,8 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function MatchingView({
-  chapter, onComplete, reactTo,
-}: { chapter: MatchingChapter; onComplete: Complete } & ReactProps) {
+  chapter, onComplete, reactTo, reportMatchingMistake,
+}: { chapter: MatchingChapter; onComplete: Complete } & ReactProps & Pick<ReportProps, 'reportMatchingMistake'>) {
   const [terms] = useState(() => shuffle(chapter.pairs.map((p) => p.term)));
   const [defs] = useState(() => shuffle(chapter.pairs.map((p) => p.definition)));
   const [matched, setMatched] = useState<Set<string>>(new Set());
@@ -362,6 +402,7 @@ function MatchingView({
     if (!selTerm) return;
     const correct = chapter.pairs.find((p) => p.term === selTerm)?.definition === def;
     reactTo(correct);
+    if (!correct) reportMatchingMistake();
     if (correct) {
       const next = new Set(matched); next.add(selTerm);
       setMatched(next);
@@ -424,9 +465,15 @@ function HintView({ chapter, onComplete }: { chapter: HintChapter; onComplete: C
 }
 
 /* ───────────────────────── decision ───────────────────────── */
-function DecisionView({ chapter, onComplete }: { chapter: DecisionChapter; onComplete: Complete }) {
+function DecisionView({
+  chapter, onComplete, reportDecision,
+}: { chapter: DecisionChapter; onComplete: Complete } & Pick<ReportProps, 'reportDecision'>) {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const picked = chapter.choices.find((c) => c.id === pickedId);
+  const pick = (c: DecisionChapter['choices'][number]) => {
+    setPickedId(c.id);
+    reportDecision(chapter.title, c.label);
+  };
   return (
     <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
@@ -434,7 +481,7 @@ function DecisionView({ chapter, onComplete }: { chapter: DecisionChapter; onCom
       {!picked ? (
         <View style={{ gap: 10 }}>
           {chapter.choices.map((c) => (
-            <Option key={c.id} label={c.label} onPress={() => setPickedId(c.id)} />
+            <Option key={c.id} label={c.label} onPress={() => pick(c)} />
           ))}
         </View>
       ) : (
@@ -538,7 +585,9 @@ function PollView({ chapter, onComplete, reactTo }: { chapter: PollChapter; onCo
 }
 
 /* ───────────────────────── mythcards ───────────────────────── */
-function MythcardsView({ chapter, onComplete, reactTo }: { chapter: MythcardsChapter; onComplete: Complete } & ReactProps) {
+function MythcardsView({
+  chapter, onComplete, reactTo, reportMythCard,
+}: { chapter: MythcardsChapter; onComplete: Complete } & ReactProps & Pick<ReportProps, 'reportMythCard'>) {
   const [i, setI] = useState(0);
   const [answered, setAnswered] = useState<boolean | null>(null);
   const [correctSoFar, setCorrectSoFar] = useState(0);
@@ -548,6 +597,7 @@ function MythcardsView({ chapter, onComplete, reactTo }: { chapter: MythcardsCha
   const pick = (guess: boolean) => {
     setAnswered(guess);
     reactTo(guess === card.isTrue);
+    reportMythCard(card.myth, guess === card.isTrue);
     if (guess === card.isTrue) setCorrectSoFar((c) => c + 1);
   };
   const next = () => {
@@ -589,8 +639,8 @@ function MythcardsView({ chapter, onComplete, reactTo }: { chapter: MythcardsCha
 
 /* ───────────────────────── knowledgecheck ───────────────────────── */
 function KnowledgecheckView({
-  chapter, questions, onComplete, reactTo,
-}: { chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete } & ReactProps) {
+  chapter, questions, onComplete, reactTo, reportKnowledgeCheck,
+}: { chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete } & ReactProps & Pick<ReportProps, 'reportKnowledgeCheck'>) {
   const [i, setI] = useState(0);
   const [sel, setSel] = useState<number | null>(null);
   const question = questions[chapter.qIndices[i]];
@@ -600,7 +650,9 @@ function KnowledgecheckView({
 
   const pick = (idx: number) => {
     setSel(idx);
-    reactTo(question ? idx === question.correct : false);
+    const isCorrect = question ? idx === question.correct : false;
+    reactTo(isCorrect);
+    if (question) reportKnowledgeCheck(question.q, isCorrect);
   };
   const next = () => {
     if (last) { onComplete(0, right); return; }
@@ -682,9 +734,15 @@ function SimulatorView({ chapter, onComplete }: { chapter: SimulatorChapter; onC
 }
 
 /* ───────────────────────── bossbattle ───────────────────────── */
-function BossbattleView({ chapter, moduleXpReward, onComplete }: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete }) {
+function BossbattleView({
+  chapter, moduleXpReward, onComplete, reportDecision,
+}: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete } & Pick<ReportProps, 'reportDecision'>) {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const picked = chapter.choices.find((c) => c.id === pickedId);
+  const pick = (c: BossbattleChapter['choices'][number]) => {
+    setPickedId(c.id);
+    reportDecision('Boss battle', c.label);
+  };
   return (
     <View style={{ gap: 14, flex: 1 }}>
       <Tag tone="warm">⚔ BOSS CHALLENGE</Tag>
@@ -693,7 +751,7 @@ function BossbattleView({ chapter, moduleXpReward, onComplete }: { chapter: Boss
       {!picked ? (
         <View style={{ gap: 10 }}>
           {chapter.choices.map((c) => (
-            <Option key={c.id} label={c.label} onPress={() => setPickedId(c.id)} />
+            <Option key={c.id} label={c.label} onPress={() => pick(c)} />
           ))}
         </View>
       ) : (
@@ -794,10 +852,18 @@ function PriceisrightView({
 }
 
 /* ───────────────────────── explainback ───────────────────────── */
-function ExplainbackView({ chapter, onComplete }: { chapter: ExplainbackChapter; onComplete: Complete }) {
+function ExplainbackView({
+  chapter, onComplete, reportExplainback,
+}: { chapter: ExplainbackChapter; onComplete: Complete } & Pick<ReportProps, 'reportExplainback'>) {
   const [text, setText] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const hitKeywords = chapter.keywords.filter((k) => text.toLowerCase().includes(k.toLowerCase()));
+  // Thresholds ported verbatim from app.js's explainback grading (renderExplainbackChapter).
+  const submit = () => {
+    setSubmitted(true);
+    const tier = hitKeywords.length >= 2 ? 'great' : hitKeywords.length === 1 ? 'ok' : 'retry';
+    reportExplainback(chapter.title || 'In Your Own Words', tier);
+  };
 
   return (
     <View style={{ gap: 14, flex: 1 }}>
@@ -824,7 +890,7 @@ function ExplainbackView({ chapter, onComplete }: { chapter: ExplainbackChapter;
           <Button label="Continue →" onPress={() => onComplete(chapter.xpOnComplete ?? 0)} />
         </>
       ) : (
-        <Button label="Check my answer" onPress={() => setSubmitted(true)} disabled={!text.trim()} />
+        <Button label="Check my answer" onPress={submit} disabled={!text.trim()} />
       )}
     </View>
   );

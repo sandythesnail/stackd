@@ -1,24 +1,26 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Txt, Button, Tag, Hammy, Coin } from '@/components';
+import { Txt, Button, Tag, Card, Hammy, Coin } from '@/components';
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore, xpProgressPct } from '@/store';
+import { EMPTY_ANALYTICS, buildQuestReport, type QuestAnalytics } from '@/questReport';
 
 /** Screen 19 — Results (rewards & streak). Reflects the lesson just finished — actually
  * records XP/coins/module progress into the store (not just decorative numbers). */
 export default function Results() {
   const router = useRouter();
   const {
-    moduleId, lessonIndex, correctCount, total, xpEarned, questId, hintsUsed, bossWon, newTerms,
+    moduleId, lessonIndex, correctCount, total, xpEarned, questId, hintsUsed, bossWon, newTerms, analytics: analyticsRaw,
   } = useLocalSearchParams<{
     moduleId: string; lessonIndex: string; correctCount: string; total: string; xpEarned?: string;
-    questId?: string; hintsUsed?: string; bossWon?: string; newTerms?: string;
+    questId?: string; hintsUsed?: string; bossWon?: string; newTerms?: string; analytics?: string;
   }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
@@ -30,6 +32,12 @@ export default function Results() {
   // The quest player (learn/quest.tsx) accumulates real XP across its chapters; the flat
   // quiz path falls back to the module's flat per-lesson reward.
   const xpForLesson = xpEarned !== undefined ? Number(xpEarned) : (content?.xpReward ?? 0);
+  const learnedTerms = useMemo(() => (newTerms ? newTerms.split('|').filter(Boolean) : []), [newTerms]);
+  const analytics = useMemo<QuestAnalytics>(() => {
+    if (!analyticsRaw) return EMPTY_ANALYTICS;
+    try { return JSON.parse(analyticsRaw); } catch { return EMPTY_ANALYTICS; }
+  }, [analyticsRaw]);
+  const report = useMemo(() => buildQuestReport(mod.name, analytics, Number(hintsUsed ?? 0)), [mod.name, analytics, hintsUsed]);
 
   const { state, level, tierName, completeLesson, equippedMascotItems } = useStore();
   const tierBefore = useRef(tierName).current;
@@ -90,6 +98,8 @@ export default function Results() {
               <View style={[styles.levelFill, { width: `${pct}%` }]} />
             </View>
           </View>
+
+          <QuestReportCard report={report} learnedTerms={learnedTerms} equipped={equippedMascotItems()} />
         </ScrollView>
         <View style={styles.footer}>
           <Button label="Continue" variant="pink" onPress={continuePress} />
@@ -111,6 +121,128 @@ function Reward({ value, label, big }: { value: React.ReactNode; label: string; 
         </View>
       )}
       <Txt style={styles.rewardEm}>{label}</Txt>
+    </View>
+  );
+}
+
+/** Circular mastery ring — same SVG-stroke technique as the Progress tab's Ring, ported
+ * from the website's conic-gradient .report-mastery-ring at the same 84/64px proportions. */
+function MasteryRing({ pct }: { pct: number }) {
+  const size = 76;
+  const stroke = 9;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={colors.border} strokeWidth={stroke} fill="none" />
+        <Circle
+          cx={size / 2} cy={size / 2} r={r}
+          stroke={colors.green} strokeWidth={stroke} fill="none" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <View style={styles.ringInner}>
+        <Txt style={styles.ringPct}>{pct}%</Txt>
+      </View>
+    </View>
+  );
+}
+
+/** "Scroll down to see your progress report, then Hammy's advice" — ported from the
+ * website's buildQuestReport/renderQuestResults (app.js), which only ever built this for
+ * the two quest-based modules (credit, scams). Per product decision this now shows after
+ * every lesson, using whatever chapters that lesson actually had — a lesson with no
+ * knowledgecheck/mythcards/matching/decision/explainback chapters just shows the ring at
+ * 100% with empty stat counts and a generic "solid handle on this module" note from Hammy,
+ * same as the website would for a quest with nothing to grade. */
+function QuestReportCard({
+  report, learnedTerms, equipped,
+}: {
+  report: ReturnType<typeof buildQuestReport>;
+  learnedTerms: string[];
+  equipped: Parameters<typeof Hammy>[0]['equipped'];
+}) {
+  return (
+    <Card style={styles.reportCard}>
+      <View style={styles.reportMastery}>
+        <MasteryRing pct={report.masteryPct} />
+        <View style={{ flex: 1 }}>
+          <Txt style={styles.reportMasteryLabel}>Overall mastery this lesson</Txt>
+          <Txt style={styles.reportMasterySub}>
+            {report.totalAnswered > 0
+              ? `${report.totalRight} of ${report.totalAnswered} correct across quick checks and true/false cards`
+              : 'No quick-check or true/false questions in this lesson'}
+          </Txt>
+        </View>
+      </View>
+
+      <Txt style={styles.reportSectionTitle}>Words you learned ({learnedTerms.length})</Txt>
+      <View style={styles.reportTerms}>
+        {learnedTerms.length ? learnedTerms.map((t) => (
+          <View key={t} style={styles.reportTermChip}><Txt style={styles.reportTermChipTxt}>{t}</Txt></View>
+        )) : <Txt style={styles.reportTermChipTxt}>None recorded</Txt>}
+      </View>
+
+      <View style={styles.reportStatRow}>
+        <ReportStat num={`${report.kcRightCount}/${report.kcTotal}`} label="Quick Check" />
+        <ReportStat num={`${report.mythRightCount}/${report.mythTotal}`} label="True/False" />
+        <ReportStat num={String(report.matchingMistakes)} label="Matching Misses" />
+        <ReportStat num={String(report.hintsUsed)} label="Hints Used" />
+      </View>
+
+      {report.decisions.length ? (
+        <View>
+          <Txt style={styles.reportSectionTitle}>Choices you made</Txt>
+          {report.decisions.map((d, i) => (
+            <Txt key={i} style={styles.reportListItem}>• <Txt style={{ fontFamily: font.extra }}>{d.title}:</Txt> {d.choice}</Txt>
+          ))}
+        </View>
+      ) : null}
+
+      {report.explainback ? (
+        <View>
+          <Txt style={styles.reportSectionTitle}>Your written answer</Txt>
+          <Txt style={styles.reportBody}>
+            &quot;{report.explainback.term}&quot;: {
+              report.explainback.tier === 'great' ? 'you got the key idea on your own.'
+                : report.explainback.tier === 'ok' ? 'you were on the right track.'
+                  : "this one didn't click yet, and it's worth rereading."
+            }
+          </Txt>
+        </View>
+      ) : null}
+
+      {report.strengths.length ? (
+        <View>
+          <Txt style={styles.reportSectionTitle}>What you got right</Txt>
+          {report.strengths.map((s, i) => <Txt key={i} style={styles.reportListItem}>• {s}</Txt>)}
+        </View>
+      ) : null}
+
+      {report.weakSpots.length ? (
+        <View>
+          <Txt style={styles.reportSectionTitle}>Worth another look</Txt>
+          {report.weakSpots.map((s, i) => <Txt key={i} style={styles.reportListItem}>• {s}</Txt>)}
+        </View>
+      ) : (
+        <Txt style={styles.reportPerfect}>You got every question and true/false card right this time.</Txt>
+      )}
+
+      <View style={styles.reportAdvice}>
+        <Hammy size={56} bob={false} equipped={equipped} />
+        <Txt style={styles.reportAdviceTxt}><Txt style={{ fontFamily: font.extra }}>Hammy&apos;s advice: </Txt>{report.advice}</Txt>
+      </View>
+    </Card>
+  );
+}
+
+function ReportStat({ num, label }: { num: string; label: string }) {
+  return (
+    <View style={styles.reportStat}>
+      <Txt style={styles.reportStatNum}>{num}</Txt>
+      <Txt style={styles.reportStatLabel}>{label}</Txt>
     </View>
   );
 }
@@ -141,4 +273,26 @@ const styles = StyleSheet.create({
   levelTrack: { height: 11, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
   levelFill: { height: '100%', borderRadius: 8, backgroundColor: colors.pinkBright },
   footer: { paddingHorizontal: 22, paddingTop: 12, paddingBottom: 8 },
+  reportCard: { width: '100%', marginTop: 18, gap: 14, alignItems: 'stretch' },
+  ringInner: {
+    position: 'absolute', width: 58, height: 58, borderRadius: 29,
+    backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center',
+  },
+  ringPct: { fontFamily: font.display, fontSize: 16, color: colors.ink },
+  reportMastery: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  reportMasteryLabel: { fontFamily: font.displayMed, fontSize: 15, color: colors.ink },
+  reportMasterySub: { fontFamily: font.medium, fontSize: 11.5, color: colors.muted3, marginTop: 4, lineHeight: 15 },
+  reportSectionTitle: { fontFamily: font.displayMed, fontSize: 14.5, color: colors.ink },
+  reportTerms: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  reportTermChip: { backgroundColor: colors.tagGreenBg, borderWidth: 1, borderColor: colors.greenSoft, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 },
+  reportTermChipTxt: { fontFamily: font.bold, fontSize: 12, color: colors.greenDark },
+  reportStatRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  reportStat: { flex: 1, minWidth: 76, alignItems: 'center', backgroundColor: colors.screen, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 6 },
+  reportStatNum: { fontFamily: font.display, fontSize: 18, color: colors.ink },
+  reportStatLabel: { fontFamily: font.bold, fontSize: 9.5, color: colors.muted5, textTransform: 'uppercase', letterSpacing: 0.3, marginTop: 3, textAlign: 'center' },
+  reportListItem: { fontFamily: font.semi, fontSize: 12.5, color: colors.muted2, lineHeight: 18, marginTop: 4 },
+  reportBody: { fontFamily: font.semi, fontSize: 12.5, color: colors.muted2, lineHeight: 18, marginTop: 4 },
+  reportPerfect: { fontFamily: font.bold, fontSize: 12.5, color: colors.greenDark, backgroundColor: colors.tagGreenBg, borderRadius: 12, padding: 12 },
+  reportAdvice: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.screen, borderRadius: 14, padding: 12 },
+  reportAdviceTxt: { flex: 1, fontFamily: font.semi, fontSize: 12.5, color: colors.muted1, lineHeight: 18 },
 });
