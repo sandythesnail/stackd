@@ -58,7 +58,7 @@ const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is str
 /** Mobile-only AppState fields that the web schema has no home for (kept under `_mobile`). */
 const MOBILE_ONLY_KEYS = [
   'shownLifeEventIds', 'pendingLifeEventId', 'lifeEventCooldown', 'onboardingTrackId',
-  'questHintsUsed', 'termsLearned', 'lastModuleActivityDate',
+  'questHintsUsed', 'termsLearned', 'lastModuleActivityDate', 'completedLifeTaskIds',
 ] as const;
 
 function extractMobileOnly(m: AppState): Partial<AppState> {

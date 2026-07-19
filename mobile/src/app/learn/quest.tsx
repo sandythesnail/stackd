@@ -120,12 +120,14 @@ export default function QuestPlayer() {
   const [reactionMsg, setReactionMsg] = useState<string | null>(null);
   const [reactionKey, setReactionKey] = useState(0);
   const [answerStreak, setAnswerStreak] = useState(0);
+  // Each chapter view remounts on chapter change (see ChapterView's key={chapter.id} below)
+  // and reports its own fresh action on mount, so no separate reset-on-chapterIdx effect is
+  // needed here — a sibling effect that clears `action` would fire AFTER the child's mount
+  // effect (React flushes passive effects child-before-parent), permanently wiping out any
+  // action a chapter reports immediately on mount (story's "Next", hint's "Got it →",
+  // microsim/spotcheck/urlinspect/priceisright's first button) before it could ever render.
   const [action, setAction] = useState<QuestAction>(null);
-  // Each chapter's own onAction call is only relevant while IT is mounted — clear
-  // whatever the previous chapter left behind the instant the chapter changes, so a stale
-  // action can never linger into the next chapter for even one frame.
   const onAction = (a: QuestAction) => setAction(a);
-  useEffect(() => { setAction(null); }, [chapterIdx]);
   // A ref, not state — analytics never drives a render in this screen, it's only read once
   // at the final chapter's onComplete to build the results-screen params. A question's
   // "report" and the quest's final onComplete can fire in the very same handler (the last
