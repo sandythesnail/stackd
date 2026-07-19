@@ -76,7 +76,8 @@ export default function Quiz() {
               <Option
                 key={c}
                 label={c}
-                control="radio"
+                control="letter"
+                letter={['A', 'B', 'C', 'D'][i]}
                 state={st}
                 onPress={() => !answered && setSel(i)}
                 right={

@@ -106,7 +106,7 @@ export default function Survey() {
 
           <View style={{ gap: 10, marginTop: 14 }}>
             {SURVEY_GOALS.map((g) => (
-              <Option key={g.id} label={g.label} state={focusGoals.has(g.id) ? 'on' : 'default'} onPress={() => toggleGoal(g.id)} />
+              <Option key={g.id} label={g.label} control="check" state={focusGoals.has(g.id) ? 'on' : 'default'} onPress={() => toggleGoal(g.id)} />
             ))}
           </View>
         </ScrollView>

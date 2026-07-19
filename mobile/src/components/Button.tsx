@@ -1,18 +1,21 @@
 import { useState, ReactNode } from 'react';
-import { Pressable, View, StyleSheet, ViewStyle, GestureResponderEvent } from 'react-native';
+import { Pressable, StyleSheet, ViewStyle, GestureResponderEvent } from 'react-native';
 import { colors, font, radius } from '@/theme';
 import { Txt } from './Txt';
 
 type Variant = 'green' | 'pink' | 'dark' | 'ghost' | 'disabled';
 
-const VARIANTS: Record<Variant, { bg: string; shadow: string; text: string; border?: string }> = {
-  green: { bg: colors.green, shadow: colors.greenShadow, text: colors.white },
-  pink: { bg: colors.pink, shadow: colors.pinkShadow, text: colors.white },
-  dark: { bg: colors.dark, shadow: colors.darkShadow, text: colors.white },
-  ghost: { bg: colors.white, shadow: colors.ghostShadow, text: colors.ghostText, border: colors.borderField },
-  disabled: { bg: colors.disBg, shadow: colors.disShadow, text: colors.disText },
+const VARIANTS: Record<Variant, { bg: string; text: string; border?: string }> = {
+  green: { bg: colors.green, text: colors.white },
+  pink: { bg: colors.pink, text: colors.white },
+  dark: { bg: colors.dark, text: colors.white },
+  ghost: { bg: colors.white, text: colors.ghostText, border: colors.borderField },
+  disabled: { bg: colors.disBg, text: colors.disText },
 };
 
+/** Flat, single-color pill — matches the website's .quest-continue-fab.ready (solid fill,
+ * no bezel/offset-shadow "3D press" layer). Pressed state just dims slightly instead of
+ * shifting/revealing an underlayer. */
 export function Button({
   label,
   onPress,
@@ -41,33 +44,29 @@ export function Button({
       onPress={onPress}
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
-      android_ripple={{ color: 'transparent' }}
-      style={[{ borderRadius: r, backgroundColor: v.shadow, paddingBottom: 4 }, style]}
+      style={[
+        styles.inner,
+        {
+          height: h,
+          borderRadius: r,
+          backgroundColor: v.bg,
+          opacity: pressed ? 0.85 : 1,
+          borderWidth: v.border ? 1.5 : 0,
+          borderColor: v.border,
+        },
+        style,
+      ]}
     >
-      <View
-        style={[
-          styles.inner,
-          {
-            height: h,
-            borderRadius: r,
-            backgroundColor: v.bg,
-            borderWidth: v.border ? 1.5 : 0,
-            borderColor: v.border,
-            transform: [{ translateY: pressed ? 4 : 0 }],
-          },
-        ]}
+      {left}
+      <Txt
+        style={{
+          fontFamily: font.displayMed,
+          fontSize: size === 'sm' ? 16 : 18,
+          color: v.text,
+        }}
       >
-        {left}
-        <Txt
-          style={{
-            fontFamily: font.displayMed,
-            fontSize: size === 'sm' ? 16 : 18,
-            color: v.text,
-          }}
-        >
-          {label}
-        </Txt>
-      </View>
+        {label}
+      </Txt>
     </Pressable>
   );
 }

@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, View, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
-import { Feather } from '@expo/vector-icons';
-import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, Speech } from '@/components';
+import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy } from '@/components';
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
@@ -23,22 +23,35 @@ import type {
 type Complete = (xpDelta: number, graded?: boolean) => void;
 
 /** Ported verbatim from app.js — a limited "Ask Hammy for a hint" budget available during
- * interactive chapters only, so getting stuck doesn't leave the student with nowhere to turn. */
+ * interactive chapters only, so getting stuck doesn't leave the student with nowhere to turn.
+ * Separate from the 'hint' CHAPTER TYPE (Hammy's Tip, see HintView) — this is the small
+ * always-available FAB used across other interactive chapters (renderHintBudget). */
 const HINT_BUDGET = 3;
 const HINT_FREE_CHAPTER_TYPES = new Set(['story', 'teach', 'hint']);
 
 type HintProps = { hintsRemaining: number; onUseHint: () => void };
 /** Reports right/wrong to the persistent companion Hammy (see showHammyReaction on the
- * website) so its face/message reacts — happy, gentle, or a 3-in-a-row streak callout. */
-type ReactProps = { reactTo: (isCorrect: boolean) => void };
+ * website) so its face/message reacts — happy, gentle, or a 3-in-a-row streak callout. An
+ * optional `customMsg` puts specific narration text in the bubble instead of a random
+ * pick (ported from showHammyMessage — used by the simulator to narrate what a decision
+ * actually does) and stays up longer (2.8s vs 1.4s), and doesn't touch the streak count. */
+type ReactProps = { reactTo: (isCorrect: boolean, customMsg?: string) => void };
 
-/** A chapter's current primary action ("Next", "Continue →", "Check my answer", ...), or
- * null when it has nothing to show yet (e.g. a True/False chapter before it's answered).
- * Lifted into the header (top-right, next to the hint button) instead of trailing the
- * chapter's own content, so the primary action is always reachable without scrolling —
- * every chapter view reports its own action here instead of rendering a bottom button. */
+/** A chapter's current primary action ("Next", "Check my answer", ...), or null when it has
+ * nothing to show yet (e.g. a True/False chapter before it's answered). Lifted into the
+ * header (top-right, next to the hint button) instead of trailing the chapter's own
+ * content, so the primary action is always reachable without scrolling — every chapter
+ * view reports its own action here instead of rendering a bottom button. Always a single
+ * flat green unless a chapter opts into something else. */
 type QuestAction = { label: string; onPress: () => void; variant?: 'green' | 'pink'; disabled?: boolean } | null;
 type ActionProps = { onAction: (action: QuestAction) => void };
+
+/** Lets the 'hint' chapter (Hammy's Tip) gate its reveal behind tapping the persistent Hammy
+ * mascot itself (which lives up in QuestPlayer, not inside the chapter view) — ported from
+ * the website's renderHintChapter/.hammy-tappable. Registered via a mount effect with an
+ * unmount cleanup, so it's never left dangling into a later, unrelated chapter. */
+type HintGate = { onReveal: () => void } | null;
+type HintGateProps = { onHintGate: (gate: HintGate) => void };
 
 /** Feeds the end-of-lesson report (see @/questReport, results.tsx) — mirrors what the
  * website's per-chapter handlers write into `qp.analytics`. Only the chapter types the
@@ -59,17 +72,11 @@ const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it! 🙌', 
 const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn from it:", "Close! Here's what's true:", 'Nice try!'];
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
-
-/** Hammy's reaction speech bubble — ported from the website's .hammy-side-msg, which fades
- * in/out (opacity + a small rise) rather than popping instantly, AND colors the text green
- * for a right answer / pink for wrong (mirrors the website's feedback-panel text color).
- * Keeps showing the last message+mood while fading out so there's text to fade from.
- *
- * The reserved slot's height is measured from the bubble's own real layout (onLayout) and
- * only ever grows to the tallest message seen so far — sized to fit whatever's actually in
- * it instead of a guessed fixed height that left empty space under short one-line messages,
- * while still never letting Hammy jump when the bubble disappears or a later message is
- * shorter than an earlier one. */
+/** Hammy's reaction speech bubble, in the side column below him — ported from the website's
+ * .hammy-side-msg (fades in/out with a small rise instead of popping instantly, and colors
+ * green for a right answer / pink for wrong). Keeps showing the last message+mood while
+ * fading out so there's text to fade from. The reserved slot's height is measured from the
+ * bubble's own real layout and only ever grows to the tallest message seen so far. */
 function ReactionBubble({ message, mood }: { message: string | null; mood: 'happy' | 'gentle' | 'streak' | null }) {
   const anim = useRef(new Animated.Value(0)).current;
   const [display, setDisplay] = useState(message);
@@ -87,10 +94,12 @@ function ReactionBubble({ message, mood }: { message: string | null; mood: 'happ
     <View style={[styles.bubbleSlot, slotHeight ? { height: slotHeight } : null]} pointerEvents="none">
       {display ? (
         <Animated.View
-          style={[styles.bubbleInner, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }]}
+          style={[styles.bubbleInner, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [-4, 0] }) }] }]}
           onLayout={(e) => setSlotHeight((h) => Math.max(h, e.nativeEvent.layout.height))}
         >
-          <Speech numberOfLines={2} style={styles.bubbleSpeech} textStyle={[styles.bubbleSpeechTxt, { color: textColor }]}>{display}</Speech>
+          <View style={styles.reactionBox}>
+            <Txt style={[styles.reactionTxt, { color: textColor }]} numberOfLines={4}>{display}</Txt>
+          </View>
         </Animated.View>
       ) : null}
     </View>
@@ -99,7 +108,9 @@ function ReactionBubble({ message, mood }: { message: string | null; mood: 'happ
 
 /** Screen 17 (extended) — Quest player. Renders the website's full multi-chapter quest
  * content (story/teach/matching/decision/microsim/etc — all 15 chapter types) instead of
- * the flat single-quiz flow, one chapter at a time. */
+ * the flat single-quiz flow, one chapter at a time. Hammy lives in a fixed side column
+ * (matching the website's two-column .quest-layout) so the content column beside him stays
+ * put — dialogue, questions and choices don't have to share scroll space with him. */
 export default function QuestPlayer() {
   const router = useRouter();
   const { equippedMascotItems } = useStore();
@@ -124,10 +135,11 @@ export default function QuestPlayer() {
   // and reports its own fresh action on mount, so no separate reset-on-chapterIdx effect is
   // needed here — a sibling effect that clears `action` would fire AFTER the child's mount
   // effect (React flushes passive effects child-before-parent), permanently wiping out any
-  // action a chapter reports immediately on mount (story's "Next", hint's "Got it →",
-  // microsim/spotcheck/urlinspect/priceisright's first button) before it could ever render.
+  // action a chapter reports immediately on mount.
   const [action, setAction] = useState<QuestAction>(null);
   const onAction = (a: QuestAction) => setAction(a);
+  const [hintGate, setHintGate] = useState<HintGate>(null);
+  const onHintGate = (g: HintGate) => setHintGate(g);
   // A ref, not state — analytics never drives a render in this screen, it's only read once
   // at the final chapter's onComplete to build the results-screen params. A question's
   // "report" and the quest's final onComplete can fire in the very same handler (the last
@@ -177,19 +189,18 @@ export default function QuestPlayer() {
   const onUseHint = () => setHintsUsed((h) => h + 1);
   const hintText = (chapter as { hintText?: string }).hintText;
 
-  // Ported from showHammyReaction: the persistent companion's face/mood reacts to every
-  // graded answer across the quest — happy, gentle, or (every 3rd correct in a row) a
-  // streak callout. reactionKey bumps on every call (even repeat-same-mood) so the body
-  // bounce/wobble replays each time, mirroring the website forcing its CSS animation to
-  // restart.
+  // Ported from showHammyReaction/showHammyMessage: the persistent companion's face/mood
+  // reacts to every graded answer across the quest — happy, gentle, or (every 3rd correct
+  // in a row) a streak callout. reactionKey bumps on every call (even repeat-same-mood) so
+  // the body bounce/wobble replays each time, mirroring the website forcing its CSS
+  // animation to restart.
   //
-  // The face itself is sticky — it keeps showing the LAST reaction until a new one replaces
-  // it (or the chapter changes, see the chapterIdx effect below), rather than reverting to
-  // the plain default face on a timer. Chapters like matching space reactions out (pick a
-  // term, THEN a definition, repeat), so a short auto-revert made Hammy's face flicker back
-  // to blank/plain between nearly every attempt — reported as "Hammy's face goes blank in
-  // the matching portion." Only the speech-bubble MESSAGE still auto-fades after a beat
-  // (repeating "Nice! 🎉" indefinitely would look stale); the face doesn't.
+  // Mood and message clear together on the SAME timer (this is the actual fix the website
+  // itself documents — see its showHammyReaction/showHammyMessage comments: they used to
+  // clear on different timers, "leaving Hammy blank-faced under a still-visible message",
+  // which is exactly what was reported here as "Hammy's face goes blank in the matching
+  // portion." The fix is a synced revert, not making the face permanently sticky — Hammy
+  // reacts, then reverts cleanly to the default face a beat later, every time.
   const reactionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (reactionTimeout.current) clearTimeout(reactionTimeout.current); }, []);
   useEffect(() => {
@@ -197,18 +208,26 @@ export default function QuestPlayer() {
     setReactionMsg(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterIdx]);
-  const reactTo = (isCorrect: boolean) => {
-    const nextStreak = isCorrect ? answerStreak + 1 : 0;
-    setAnswerStreak(nextStreak);
-    const isStreak = isCorrect && nextStreak > 0 && nextStreak % 3 === 0;
-    setReactionMood(isCorrect ? (isStreak ? 'streak' : 'happy') : 'gentle');
-    setReactionMsg(isStreak ? `🎉 ${nextStreak} in a row! You're on fire!` : isCorrect ? pickRandom(HAMMY_CORRECT_MSGS) : pickRandom(HAMMY_GENTLE_MSGS));
+  const reactTo = (isCorrect: boolean, customMsg?: string) => {
+    let msg: string;
+    if (customMsg) {
+      msg = customMsg;
+      setReactionMood(isCorrect ? 'happy' : 'gentle');
+    } else {
+      const nextStreak = isCorrect ? answerStreak + 1 : 0;
+      setAnswerStreak(nextStreak);
+      const isStreak = isCorrect && nextStreak > 0 && nextStreak % 3 === 0;
+      setReactionMood(isCorrect ? (isStreak ? 'streak' : 'happy') : 'gentle');
+      msg = isStreak ? `🎉 ${nextStreak} in a row! You're on fire!` : isCorrect ? pickRandom(HAMMY_CORRECT_MSGS) : pickRandom(HAMMY_GENTLE_MSGS);
+    }
+    setReactionMsg(msg);
     setReactionKey((k) => k + 1);
     if (reactionTimeout.current) clearTimeout(reactionTimeout.current);
     reactionTimeout.current = setTimeout(() => {
+      setReactionMood(null);
       setReactionMsg(null);
       reactionTimeout.current = null;
-    }, 1400);
+    }, customMsg ? 2800 : 1400);
   };
 
   const onComplete: Complete = (xpDelta, graded) => {
@@ -251,77 +270,95 @@ export default function QuestPlayer() {
         <Txt style={styles.step}>{Math.round((chapterIdx / quest.chapters.length) * 100)}%</Txt>
         <HintCorner key={chapter.id} hintText={hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       </View>
-      {/* The chapter's own primary action ("Next", "Continue →", "Check my answer", ...),
-          reported up via onAction — lives here, top-right, instead of trailing the
-          chapter's scrollable content, so it's never something you have to scroll to find. */}
+      {/* The chapter's own primary action ("Next", "Check my answer", ...), reported up via
+          onAction — lives here, top-right, instead of trailing the chapter's scrollable
+          content, so it's never something you have to scroll to find. Always flat green
+          unless a chapter opts into a different variant. */}
       {action ? (
         <View style={styles.actionBar}>
           <Button
             label={action.label}
             onPress={action.onPress}
-            variant={action.variant ?? 'pink'}
+            variant={action.variant ?? 'green'}
             disabled={action.disabled}
             size="sm"
             style={{ paddingHorizontal: 20 }}
           />
         </View>
       ) : null}
-      <View style={styles.companionWrap}>
-        <ReactionBubble message={reactionMsg} mood={reactionMood} />
-        <Hammy
-          size={168}
-          bob
-          equipped={equippedMascotItems()}
-          face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
-          reaction={reactionMood}
-          reactionKey={reactionKey}
-        />
+      {/* Two-column layout (ported from the website's .quest-layout): Hammy pinned in a
+          narrow side column, chapter content beside him instead of below a full-width
+          companion block — keeps dialogue/questions/choices in view without competing with
+          him for vertical space. */}
+      <View style={styles.questBody}>
+        <View style={styles.questSide}>
+          <Pressable
+            disabled={!hintGate}
+            onPress={() => hintGate?.onReveal()}
+            hitSlop={10}
+            style={hintGate ? styles.hammyTappable : undefined}
+          >
+            <Hammy
+              size={104}
+              bob
+              equipped={equippedMascotItems()}
+              face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
+              reaction={reactionMood}
+              reactionKey={reactionKey}
+            />
+          </Pressable>
+          <ReactionBubble message={reactionMsg} mood={reactionMood} />
+        </View>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ChapterView
+            key={chapter.id}
+            chapter={chapter}
+            questions={content.questions}
+            moduleXpReward={content.xpReward}
+            charName={quest.character.name}
+            onComplete={onComplete}
+            reactTo={reactTo}
+            onAction={onAction}
+            onHintGate={onHintGate}
+            {...reportProps}
+          />
+        </ScrollView>
       </View>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ChapterView
-          key={chapter.id}
-          chapter={chapter}
-          questions={content.questions}
-          moduleXpReward={content.xpReward}
-          onComplete={onComplete}
-          reactTo={reactTo}
-          onAction={onAction}
-          {...reportProps}
-        />
-      </ScrollView>
     </Screen>
   );
 }
 
 function ChapterView({
-  chapter, questions, moduleXpReward, onComplete, reactTo, onAction,
+  chapter, questions, moduleXpReward, charName, onComplete, reactTo, onAction, onHintGate,
   reportKnowledgeCheck, reportMythCard, reportMatchingMistake, reportDecision, reportExplainback,
-}: { chapter: Chapter; questions: Question[]; moduleXpReward: number; onComplete: Complete } & ReactProps & ReportProps & ActionProps) {
+}: {
+  chapter: Chapter; questions: Question[]; moduleXpReward: number; charName: string; onComplete: Complete;
+} & ReactProps & ReportProps & ActionProps & HintGateProps) {
   const reactProps: ReactProps = { reactTo };
   switch (chapter.type) {
-    case 'story': return <StoryView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
+    case 'story': return <StoryView chapter={chapter} charName={charName} onComplete={onComplete} onAction={onAction} />;
     case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...reactProps} reportMatchingMistake={reportMatchingMistake} />;
-    case 'hint': return <HintView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
-    case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} onAction={onAction} reportDecision={reportDecision} />;
+    case 'hint': return <HintView chapter={chapter} onComplete={onComplete} onAction={onAction} onHintGate={onHintGate} />;
+    case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
     case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
     case 'poll': return <PollView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMythCard={reportMythCard} />;
     case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} onAction={onAction} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} />;
-    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
-    case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} onAction={onAction} reportDecision={reportDecision} />;
-    case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
+    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
+    case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
+    case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
-    case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} onAction={onAction} reportExplainback={reportExplainback} />;
-    case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
+    case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportExplainback={reportExplainback} />;
+    case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     default: return null;
   }
 }
 
 /** True/False (or Myth/Fact) choice button — ported from the website's `.option-btn`
  * correct/wrong treatment (app.css), used for every true/false-shaped chapter (teach's
- * inline check, poll, mythcards). Once answered, BOTH buttons recolor: whichever one holds
- * the correct answer turns green regardless of which was tapped, and the player's own wrong
+ * inline check, poll). Once answered, BOTH buttons recolor: whichever one holds the
+ * correct answer turns green regardless of which was tapped, and the player's own wrong
  * tap (if any) turns pink — exactly the website's `classList.add('correct'/'wrong')` logic. */
 function TrueFalseButton({
   label, state, onPress,
@@ -384,21 +421,33 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
 }
 
 /* ───────────────────────── story ───────────────────────── */
-function StoryView({ chapter, onComplete, onAction }: { chapter: StoryChapter; onComplete: Complete } & ActionProps) {
+/** One beat per screen, "Next" reveals the next line — ported from renderStoryChapter.
+ * Speaker-styled: Hammy (or the story's protagonist/"intro" establishing beats) gets a
+ * pig-head avatar and a white bordered bubble; the narrator gets no avatar at all and a
+ * plain, muted, italic box — so it never reads as Hammy narrating. */
+function StoryView({ chapter, charName, onComplete, onAction }: { chapter: StoryChapter; charName: string; onComplete: Complete } & ActionProps) {
   const [i, setI] = useState(0);
   const beat = chapter.beats[i];
   const last = i + 1 >= chapter.beats.length;
   useEffect(() => {
-    onAction({ label: last ? 'Continue →' : 'Next', onPress: () => (last ? onComplete(0) : setI(i + 1)) });
+    onAction({ label: 'Next', onPress: () => (last ? onComplete(0) : setI(i + 1)) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i, last]);
+  const isNarrator = beat.speaker === 'narrator';
+  const isHammy = beat.speaker === charName || beat.speaker === 'intro';
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       {chapter.title ? <Txt variant="h2">{chapter.title}</Txt> : null}
-      <Card style={{ gap: 6 }}>
-        <Tag tone="pink">{beat.speaker}</Tag>
-        <Txt variant="lead" style={{ fontSize: 15, color: colors.ink }}>{beat.text}</Txt>
-      </Card>
+      <View style={styles.storyBeat}>
+        {!isNarrator ? (
+          <View style={styles.storyAvatar}>
+            <Txt style={styles.storyAvatarTxt}>{isHammy ? '🐷' : beat.speaker.charAt(0)}</Txt>
+          </View>
+        ) : null}
+        <View style={[styles.storyBubble, isNarrator && styles.storyBubbleNarrator]}>
+          <Txt style={[styles.storyBubbleTxt, isNarrator && styles.storyBubbleNarratorTxt]}>{beat.text}</Txt>
+        </View>
+      </View>
     </View>
   );
 }
@@ -424,7 +473,7 @@ function TeachView({ chapter, onComplete, onAction, reactTo }: { chapter: TeachC
   };
 
   useEffect(() => {
-    onAction(!hasCheck || answered !== null ? { label: last ? 'Continue →' : 'Next concept', onPress: next } : null);
+    onAction(!hasCheck || answered !== null ? { label: last ? 'Next' : 'Next concept', onPress: next } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasCheck, answered, last]);
 
@@ -523,17 +572,36 @@ function MatchingView({
   );
 }
 
-/* ───────────────────────── hint ───────────────────────── */
-function HintView({ chapter, onComplete, onAction }: { chapter: HintChapter; onComplete: Complete } & ActionProps) {
+/* ───────────────────────── hint (Hammy's Tip) ───────────────────────── */
+/** Ported from renderHintChapter: the tip stays hidden behind a placeholder until the
+ * player taps Hammy himself (see QuestPlayer's questSide Pressable, wired up via
+ * onHintGate) — not a button in the content area. */
+function HintView({ chapter, onComplete, onAction, onHintGate }: { chapter: HintChapter; onComplete: Complete } & ActionProps & HintGateProps) {
+  const [revealed, setRevealed] = useState(false);
+
   useEffect(() => {
-    onAction({ label: 'Got it →', onPress: () => onComplete(chapter.xpOnComplete ?? 0) });
+    if (revealed) return undefined;
+    onHintGate({ onReveal: () => setRevealed(true) });
+    return () => onHintGate(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [revealed]);
+
+  useEffect(() => {
+    onAction(revealed ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0) } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealed]);
+
   return (
     <View style={{ gap: 14, flex: 1 }}>
+      <Tag tone="warm">{chapter.tag || "🐷 Hammy's Tip"}</Tag>
       <Card style={{ gap: 8 }}>
-        <Tag tone="warm">{chapter.tag}</Tag>
-        <Txt variant="lead" style={{ fontSize: 14.5, color: colors.ink }}>{chapter.text}</Txt>
+        {revealed ? (
+          <Txt variant="lead" style={{ fontSize: 14.5, color: colors.ink }}>{chapter.text}</Txt>
+        ) : (
+          <Txt variant="lead" style={{ fontSize: 14.5, color: colors.muted3, fontStyle: 'italic' }}>
+            Tap Hammy to hear what they have to say.
+          </Txt>
+        )}
       </Card>
     </View>
   );
@@ -541,16 +609,18 @@ function HintView({ chapter, onComplete, onAction }: { chapter: HintChapter; onC
 
 /* ───────────────────────── decision ───────────────────────── */
 function DecisionView({
-  chapter, onComplete, onAction, reportDecision,
-}: { chapter: DecisionChapter; onComplete: Complete } & ActionProps & Pick<ReportProps, 'reportDecision'>) {
+  chapter, onComplete, onAction, reactTo, reportDecision,
+}: { chapter: DecisionChapter; onComplete: Complete } & ActionProps & ReactProps & Pick<ReportProps, 'reportDecision'>) {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const picked = chapter.choices.find((c) => c.id === pickedId);
   const pick = (c: DecisionChapter['choices'][number]) => {
     setPickedId(c.id);
     reportDecision(chapter.title, c.label);
+    const deltaSum = Object.values(c.outcome.delta).reduce((a: number, b) => a + (b ?? 0), 0);
+    reactTo(deltaSum >= 0);
   };
   useEffect(() => {
-    onAction(picked ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0) } : null);
+    onAction(picked ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0) } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked]);
   return (
@@ -578,7 +648,7 @@ function MicrosimView({ chapter, onComplete, onAction }: { chapter: MicrosimChap
   const [submitted, setSubmitted] = useState(false);
   useEffect(() => {
     onAction(submitted
-      ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0) }
+      ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0) }
       : { label: 'See how you did', onPress: () => setSubmitted(true) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted]);
@@ -634,7 +704,7 @@ function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollCha
   const [answered, setAnswered] = useState<boolean | null>(null);
   const pick = (guess: boolean) => { setAnswered(guess); reactTo(guess === chapter.isTrue); };
   useEffect(() => {
-    onAction(answered !== null ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0, answered === chapter.isTrue) } : null);
+    onAction(answered !== null ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0, answered === chapter.isTrue) } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answered]);
   return (
@@ -658,60 +728,107 @@ function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollCha
   );
 }
 
-/* ───────────────────────── mythcards ───────────────────────── */
+/* ───────────────────────── mythcards (swipeable flashcards) ───────────────────────── */
+/** Ported from initMythCardStack: swipe right for true, left for false. The card follows
+ * the drag with a subtle rotation and its border tints green/pink once the drag clears a
+ * small threshold, then flips to reveal the answer on release past the commit threshold —
+ * it does NOT auto-advance, the player reads at their own pace and taps "Next card." */
+const MYTH_SWIPE_COMMIT = 90;
+const MYTH_SWIPE_TINT = 30;
+
 function MythcardsView({
   chapter, onComplete, onAction, reactTo, reportMythCard,
 }: { chapter: MythcardsChapter; onComplete: Complete } & ReactProps & ActionProps & Pick<ReportProps, 'reportMythCard'>) {
   const [i, setI] = useState(0);
-  const [answered, setAnswered] = useState<boolean | null>(null);
+  const [resolved, setResolved] = useState<{ guessedTrue: boolean; guessedRight: boolean } | null>(null);
   const [correctSoFar, setCorrectSoFar] = useState(0);
+  const [dragDir, setDragDir] = useState<'true' | 'false' | null>(null);
   const card = chapter.cards[i];
   const last = i + 1 >= chapter.cards.length;
+  const pan = useRef(new Animated.ValueXY()).current;
 
-  const pick = (guess: boolean) => {
-    setAnswered(guess);
-    reactTo(guess === card.isTrue);
-    reportMythCard(card.myth, guess === card.isTrue);
-    if (guess === card.isTrue) setCorrectSoFar((c) => c + 1);
+  const commit = (guessedTrue: boolean) => {
+    const guessedRight = guessedTrue === card.isTrue;
+    Animated.spring(pan, { toValue: { x: guessedTrue ? 50 : -50, y: 0 }, friction: 7, useNativeDriver: true }).start();
+    setDragDir(null);
+    setResolved({ guessedTrue, guessedRight });
+    if (guessedRight) setCorrectSoFar((c) => c + 1);
+    reactTo(guessedRight);
+    reportMythCard(card.myth, guessedRight);
   };
+
+  // Recreated per card (not per render) so each new card starts from a clean pan/drag
+  // state — panHandlers are only attached while unresolved (see the Animated.View below),
+  // so there's no need to gate on `resolved` inside the responder itself.
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponderCapture: (_, g) => Math.abs(g.dx) > 6,
+    onPanResponderMove: (_, g) => {
+      pan.setValue({ x: g.dx, y: 0 });
+      setDragDir(g.dx > MYTH_SWIPE_TINT ? 'true' : g.dx < -MYTH_SWIPE_TINT ? 'false' : null);
+    },
+    onPanResponderRelease: (_, g) => {
+      if (Math.abs(g.dx) > MYTH_SWIPE_COMMIT) {
+        commit(g.dx > 0);
+      } else {
+        setDragDir(null);
+        Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 6, useNativeDriver: true }).start();
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [i]);
+
   const next = () => {
-    if (last) {
-      onComplete((chapter.xpPerCorrect ?? 0) * correctSoFar, true);
-      return;
-    }
+    if (last) { onComplete((chapter.xpPerCorrect ?? 0) * correctSoFar, true); return; }
+    pan.setValue({ x: 0, y: 0 });
+    setDragDir(null);
+    setResolved(null);
     setI(i + 1);
-    setAnswered(null);
   };
 
   useEffect(() => {
-    onAction(answered !== null ? { label: last ? 'Continue →' : 'Next card', onPress: next } : null);
+    onAction(resolved ? { label: last ? 'Next' : 'Next card', onPress: next } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [answered, last]);
+  }, [resolved, last]);
+
+  const rotate = pan.x.interpolate({ inputRange: [-220, 0, 220], outputRange: ['-14deg', '0deg', '14deg'] });
+  const borderColor = resolved
+    ? (resolved.guessedTrue ? colors.green : '#D98A9E')
+    : dragDir === 'true' ? colors.green : dragDir === 'false' ? '#D98A9E' : colors.borderOpt;
 
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
-      <Card style={{ gap: 8 }}>
-        <Tag tone="warm">MYTH OR FACT?</Tag>
-        <Txt style={{ fontFamily: font.displayMed, fontSize: 15, color: colors.ink }}>{card.myth}</Txt>
-      </Card>
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <TrueFalseButton label="Myth" state={tfState(false, answered, card.isTrue)} onPress={answered === null ? () => pick(false) : undefined} />
-        <TrueFalseButton label="Fact" state={tfState(true, answered, card.isTrue)} onPress={answered === null ? () => pick(true) : undefined} />
+      <Txt style={styles.mythProgress}>Card {i + 1} of {chapter.cards.length}</Txt>
+      <View style={styles.mythStack}>
+        <Animated.View
+          {...(resolved ? {} : panResponder.panHandlers)}
+          style={[styles.mythCard, { borderColor, transform: [{ translateX: pan.x }, { rotate }] }]}
+        >
+          {!resolved ? (
+            <>
+              <Tag tone="warm">TRUE OR FALSE?</Tag>
+              <Txt style={styles.mythCardTxt}>{card.myth}</Txt>
+              <Txt style={styles.mythSwipeHint}>← False   ·   True →</Txt>
+            </>
+          ) : (
+            <>
+              <Tag tone={resolved.guessedTrue ? 'green' : 'pink'}>{card.isTrue ? 'TRUE' : 'FALSE'}</Tag>
+              <Txt style={[styles.mythGuessLine, { color: resolved.guessedRight ? colors.greenDark : colors.pinkDark }]}>
+                You said {resolved.guessedTrue ? 'True' : 'False'}, {resolved.guessedRight ? 'and that is right.' : 'not quite.'}
+              </Txt>
+              <Txt variant="lead" style={{ fontSize: 13 }}>{card.explanation}</Txt>
+            </>
+          )}
+        </Animated.View>
       </View>
-      {answered !== null ? (
-        <Card>
-          <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === card.isTrue ? colors.greenDark : colors.pinkDark }}>
-            {answered === card.isTrue ? 'Correct!' : `Actually, that's ${card.isTrue ? 'a fact' : 'a myth'}.`}
-          </Txt>
-          <Txt variant="lead" style={{ fontSize: 13, marginTop: 4 }}>{card.explanation}</Txt>
-        </Card>
-      ) : null}
     </View>
   );
 }
 
 /* ───────────────────────── knowledgecheck ───────────────────────── */
+const OPT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
 function KnowledgecheckView({
   chapter, questions, onComplete, onAction, reactTo, reportKnowledgeCheck,
 }: { chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete } & ReactProps & ActionProps & Pick<ReportProps, 'reportKnowledgeCheck'>) {
@@ -735,9 +852,9 @@ function KnowledgecheckView({
   };
 
   useEffect(() => {
-    onAction(answered ? { label: last ? 'Continue →' : 'Next question', onPress: next, variant: right ? 'green' : 'pink' } : null);
+    onAction(answered ? { label: last ? 'Next' : 'Next question', onPress: next } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [answered, last, right]);
+  }, [answered, last]);
 
   if (!question) return null;
   return (
@@ -751,10 +868,10 @@ function KnowledgecheckView({
             <Option
               key={c}
               label={c}
-              control="radio"
+              control="letter"
+              letter={OPT_LETTERS[idx]}
               state={st}
               onPress={() => !answered && pick(idx)}
-              right={st === 'correct' ? <Feather name="check" size={20} color={colors.greenDark} /> : st === 'wrong' ? <Feather name="x" size={20} color={colors.danger} /> : undefined}
             />
           );
         })}
@@ -766,25 +883,48 @@ function KnowledgecheckView({
   );
 }
 
-/* ───────────────────────── simulator ───────────────────────── */
-function SimulatorView({ chapter, onComplete, onAction }: { chapter: SimulatorChapter; onComplete: Complete } & ActionProps) {
+/* ───────────────────────── simulator (credit-climb meter) ───────────────────────── */
+/** Fixed pink→gold→green gradient track spanning the full width with a thin marker that
+ * slides smoothly to the score's position — ported from the website's exact
+ * .sim-meter-track/.sim-meter-marker (a scale with a needle, NOT a bar that fills). */
+function MeterTrack({ pct, height = 14 }: { pct: number; height?: number }) {
+  const clamped = Math.max(0, Math.min(1, pct));
+  const anim = useRef(new Animated.Value(clamped)).current;
+  useEffect(() => {
+    Animated.timing(anim, { toValue: clamped, duration: 600, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+  }, [clamped, anim]);
+  const left = anim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  return (
+    <View style={{ height: height + 12, justifyContent: 'center' }}>
+      <LinearGradient
+        colors={[colors.pink, '#F2C879', colors.green]}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={{ height, borderRadius: 999 }}
+      />
+      <Animated.View style={[styles.meterMarker, { height: height + 12, left }]} />
+    </View>
+  );
+}
+
+function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: SimulatorChapter; onComplete: Complete } & ActionProps & ReactProps) {
   // meterKey/meterMin/meterMax are missing on 2/22 real chapters — fall back to a plain 0-100 score.
   const meterKey = chapter.meterKey ?? 'score';
   const meterMin = chapter.meterMin ?? 0;
   const meterMax = chapter.meterMax ?? 100;
   const [meter, setMeter] = useState((meterMin + meterMax) / 2);
   const [used, setUsed] = useState<Set<string>>(new Set());
-  const [notes, setNotes] = useState<string[]>([]);
 
   const apply = (d: SimulatorChapter['decisions'][number]) => {
     setMeter((m) => Math.min(meterMax, Math.max(meterMin, m + d.scoreDelta)));
     setUsed((prev) => new Set(prev).add(d.id));
-    setNotes((prev) => [...prev, d.note]);
+    // Hammy narrates the actual explanation for this decision (ported from
+    // showHammyMessage) instead of a generic "Nice!"/"Not quite".
+    reactTo(d.scoreDelta >= 0, d.note);
   };
   const pct = (meter - meterMin) / (meterMax - meterMin);
 
   useEffect(() => {
-    onAction(used.size > 0 ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0) } : null);
+    onAction(used.size > 0 ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0) } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [used.size]);
 
@@ -792,34 +932,34 @@ function SimulatorView({ chapter, onComplete, onAction }: { chapter: SimulatorCh
     <View style={{ gap: 14, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
-      <Card style={{ gap: 6 }}>
+      <Card style={{ gap: 4 }}>
         <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.muted5, textTransform: 'uppercase' }}>{meterKey}</Txt>
         <Txt style={{ fontFamily: font.display, fontSize: 28, color: colors.greenDark }}>{Math.round(meter)}</Txt>
-        <ProgressBar value={pct} height={9} />
+        <MeterTrack pct={pct} />
+        <View style={styles.rowBetween}>
+          <Txt style={styles.meterScaleTxt}>{meterMin}</Txt>
+          <Txt style={styles.meterScaleTxt}>{meterMax}</Txt>
+        </View>
       </Card>
       <View style={{ gap: 10 }}>
         {chapter.decisions.map((d) => (
           <Option key={d.id} label={d.label} state={used.has(d.id) ? 'on' : 'default'} onPress={() => !used.has(d.id) && apply(d)} />
         ))}
       </View>
-      {notes.length ? (
-        <Card style={{ gap: 6 }}>
-          {notes.map((n, idx) => <Txt key={idx} variant="lead" style={{ fontSize: 12.5 }}>{n}</Txt>)}
-        </Card>
-      ) : null}
     </View>
   );
 }
 
 /* ───────────────────────── bossbattle ───────────────────────── */
 function BossbattleView({
-  chapter, moduleXpReward, onComplete, onAction, reportDecision,
-}: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete } & ActionProps & Pick<ReportProps, 'reportDecision'>) {
+  chapter, moduleXpReward, onComplete, onAction, reactTo, reportDecision,
+}: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete } & ActionProps & ReactProps & Pick<ReportProps, 'reportDecision'>) {
   const [pickedId, setPickedId] = useState<string | null>(null);
   const picked = chapter.choices.find((c) => c.id === pickedId);
   const pick = (c: BossbattleChapter['choices'][number]) => {
     setPickedId(c.id);
     reportDecision('Boss battle', c.label);
+    reactTo(c.consequence.xpMultiplier >= 1);
   };
   useEffect(() => {
     // Ported verbatim from finishQuest: bossXP = Math.round(module.xpReward * xpMultiplier).
@@ -845,15 +985,21 @@ function BossbattleView({
 }
 
 /* ───────────────────────── spotcheck ───────────────────────── */
-function SpotcheckView({ chapter, onComplete, onAction }: { chapter: SpotcheckChapter; onComplete: Complete } & ActionProps) {
+function SpotcheckView({ chapter, onComplete, onAction, reactTo }: { chapter: SpotcheckChapter; onComplete: Complete } & ActionProps & ReactProps) {
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [revealed, setRevealed] = useState(false);
   const toggle = (id: string) => setFlagged((prev) => {
     const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
   });
+  const reveal = () => {
+    setRevealed(true);
+    const flags = chapter.segments.filter((s) => s.isRedFlag);
+    const caughtCount = flags.filter((s) => flagged.has(s.id)).length;
+    reactTo(caughtCount === flags.length);
+  };
 
   useEffect(() => {
-    onAction(revealed ? { label: 'Continue →', onPress: () => onComplete(0) } : { label: 'Check my answers', onPress: () => setRevealed(true) });
+    onAction(revealed ? { label: 'Next', onPress: () => onComplete(0) } : { label: 'Check my answers', onPress: reveal });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed]);
 
@@ -899,7 +1045,7 @@ function PriceisrightView({
 
   useEffect(() => {
     onAction(submitted
-      ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0, close) }
+      ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0, close) }
       : { label: 'Lock in my guess', onPress: submit });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted, guess]);
@@ -931,8 +1077,8 @@ function PriceisrightView({
 
 /* ───────────────────────── explainback ───────────────────────── */
 function ExplainbackView({
-  chapter, onComplete, onAction, reportExplainback,
-}: { chapter: ExplainbackChapter; onComplete: Complete } & ActionProps & Pick<ReportProps, 'reportExplainback'>) {
+  chapter, onComplete, onAction, reactTo, reportExplainback,
+}: { chapter: ExplainbackChapter; onComplete: Complete } & ActionProps & ReactProps & Pick<ReportProps, 'reportExplainback'>) {
   const [text, setText] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const hitKeywords = chapter.keywords.filter((k) => text.toLowerCase().includes(k.toLowerCase()));
@@ -941,11 +1087,12 @@ function ExplainbackView({
     setSubmitted(true);
     const tier = hitKeywords.length >= 2 ? 'great' : hitKeywords.length === 1 ? 'ok' : 'retry';
     reportExplainback(chapter.title || 'In Your Own Words', tier);
+    reactTo(hitKeywords.length >= 1);
   };
 
   useEffect(() => {
     onAction(submitted
-      ? { label: 'Continue →', onPress: () => onComplete(chapter.xpOnComplete ?? 0) }
+      ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0) }
       : { label: 'Check my answer', onPress: submit, disabled: !text.trim() });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted, text]);
@@ -976,15 +1123,21 @@ function ExplainbackView({
 }
 
 /* ───────────────────────── urlinspect ───────────────────────── */
-function UrlinspectView({ chapter, onComplete, onAction }: { chapter: UrlinspectChapter; onComplete: Complete } & ActionProps) {
+function UrlinspectView({ chapter, onComplete, onAction, reactTo }: { chapter: UrlinspectChapter; onComplete: Complete } & ActionProps & ReactProps) {
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [revealed, setRevealed] = useState(false);
   const toggle = (id: string) => setFlagged((prev) => {
     const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
   });
+  const reveal = () => {
+    setRevealed(true);
+    const suspicious = chapter.parts.filter((p) => p.isSuspicious);
+    const caughtCount = suspicious.filter((p) => flagged.has(p.id)).length;
+    reactTo(caughtCount === suspicious.length);
+  };
 
   useEffect(() => {
-    onAction(revealed ? { label: 'Continue →', onPress: () => onComplete(0) } : { label: 'Reveal the risky parts', onPress: () => setRevealed(true) });
+    onAction(revealed ? { label: 'Next', onPress: () => onComplete(0) } : { label: 'Reveal the risky parts', onPress: reveal });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed]);
 
@@ -1046,17 +1199,39 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10,
   },
   tfBtnTxt: { fontFamily: font.extra, fontSize: 15 },
-  companionWrap: { alignItems: 'center', paddingTop: 4, paddingBottom: 2, gap: 4 },
-  // Height is set imperatively once the bubble's real content is measured (see
-  // ReactionBubble's onLayout) and only ever grows — sized to fit whatever's actually
-  // inside instead of a guessed fixed height that left empty space under it.
-  bubbleSlot: { width: '100%', alignItems: 'center' },
-  bubbleInner: { alignItems: 'center' },
-  bubbleSpeech: { flex: undefined, maxWidth: 300, paddingVertical: 12, paddingHorizontal: 16 },
-  bubbleSpeechTxt: { fontSize: 15.5, lineHeight: 20 },
-  content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14, flexGrow: 1 },
+  // Two-column body (ported from the website's .quest-layout) — Hammy + his reaction
+  // bubble in a fixed-width side column, chapter content filling the rest.
+  questBody: { flex: 1, flexDirection: 'row' },
+  questSide: {
+    width: 108, alignItems: 'center', paddingTop: 10, paddingHorizontal: 4, gap: 4,
+  },
+  hammyTappable: { transform: [{ scale: 1.04 }] },
+  bubbleSlot: { width: '100%', alignItems: 'center', minHeight: 4 },
+  bubbleInner: { alignItems: 'center', width: '100%' },
+  reactionBox: {
+    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
+    borderRadius: 12, paddingVertical: 8, paddingHorizontal: 9,
+  },
+  reactionTxt: { fontFamily: font.bold, fontSize: 11.5, lineHeight: 14.5, textAlign: 'center' },
+  content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24, gap: 12, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
+  // Story beats — speaker-styled: white bordered bubble + pig-head avatar for Hammy, a
+  // plain muted italic box with no avatar for the narrator (ported from .story-bubble /
+  // .story-bubble.narrator / .story-avatar).
+  storyBeat: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  storyAvatar: {
+    width: 38, height: 38, borderRadius: 19, backgroundColor: colors.screen,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  storyAvatarTxt: { fontSize: 18 },
+  storyBubble: {
+    flex: 1, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.borderOpt,
+    borderRadius: 16, padding: 14,
+  },
+  storyBubbleTxt: { fontFamily: font.semi, fontSize: 14.5, lineHeight: 20, color: colors.ink },
+  storyBubbleNarrator: { backgroundColor: colors.screen, borderColor: colors.border },
+  storyBubbleNarratorTxt: { fontFamily: font.medium, fontStyle: 'italic', color: colors.muted2 },
   matchChip: {
     borderWidth: 1.5, borderColor: colors.borderOpt, borderRadius: 14,
     paddingVertical: 12, paddingHorizontal: 12, backgroundColor: colors.white,
@@ -1065,6 +1240,22 @@ const styles = StyleSheet.create({
   matchChipWrong: { borderColor: '#D98A9E', backgroundColor: colors.pinkBg2 },
   matchChipDone: { borderColor: colors.green, backgroundColor: colors.tagGreenBg, opacity: 0.6 },
   matchChipTxt: { fontFamily: font.semi, fontSize: 12.5, color: colors.ink },
+  // Myth/fact swipeable flashcards.
+  mythStack: { alignItems: 'center', paddingVertical: 4 },
+  mythCard: {
+    width: '100%', minHeight: 160, borderWidth: 2, borderRadius: 20,
+    backgroundColor: colors.white, padding: 18, gap: 10, justifyContent: 'center',
+  },
+  mythProgress: { fontFamily: font.bold, fontSize: 11.5, color: colors.muted5 },
+  mythCardTxt: { fontFamily: font.displayMed, fontSize: 16, color: colors.ink, lineHeight: 22 },
+  mythSwipeHint: { fontFamily: font.bold, fontSize: 11.5, color: colors.muted5, marginTop: 4 },
+  mythGuessLine: { fontFamily: font.bold, fontSize: 13.5 },
+  // Simulator meter marker — a thin needle sliding over the fixed gradient track.
+  meterMarker: {
+    position: 'absolute', top: 0, width: 3, marginLeft: -1.5,
+    backgroundColor: colors.ink, borderRadius: 2,
+  },
+  meterScaleTxt: { fontFamily: font.bold, fontSize: 10.5, color: colors.muted5 },
   segment: { borderRadius: 12, padding: 10, borderWidth: 1.5, borderColor: colors.borderOpt },
   segmentFlagged: { borderColor: colors.pink, backgroundColor: colors.pinkBg2 },
   segmentBad: { borderColor: colors.danger, backgroundColor: colors.dangerBg },

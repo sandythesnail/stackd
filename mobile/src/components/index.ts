@@ -8,7 +8,7 @@ export { Header, CurrencyChip, TierBadge } from './Header';
 export { Coin, Diamond, Flame } from './Currency';
 export { IconButton } from './IconButton';
 export { Field } from './Field';
-export { Option, CheckBox, Radio } from './Option';
+export { Option, CheckBox, LetterBadge } from './Option';
 export { Hammy, Slot } from './Hammy';
 export { ItemArt } from './ItemArt';
 export { Wallpaper } from './Wallpaper';

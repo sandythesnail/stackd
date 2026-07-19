@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -174,6 +174,7 @@ function QuestReportCard({
   learnedTerms: string[];
   equipped: Parameters<typeof Hammy>[0]['equipped'];
 }) {
+  const [expanded, setExpanded] = useState(false);
   return (
     <Card style={styles.reportCard}>
       <View style={styles.reportMastery}>
@@ -216,8 +217,14 @@ function QuestReportCard({
       {report.weakSpots.length ? (
         <View>
           <Txt style={styles.reportSectionTitle}>Worth another look</Txt>
-          {report.weakSpots.slice(0, 2).map((s, i) => <Txt key={i} numberOfLines={1} style={styles.reportListItem}>• {s}</Txt>)}
-          {report.weakSpots.length > 2 ? <Txt style={styles.reportListItem}>+ {report.weakSpots.length - 2} more</Txt> : null}
+          {(expanded ? report.weakSpots : report.weakSpots.slice(0, 2)).map((s, i) => (
+            <Txt key={i} style={styles.reportListItem}>• {s}</Txt>
+          ))}
+          {!expanded && report.weakSpots.length > 2 ? (
+            <Pressable onPress={() => setExpanded(true)} hitSlop={6}>
+              <Txt style={styles.reportMoreLink}>+ {report.weakSpots.length - 2} more</Txt>
+            </Pressable>
+          ) : null}
         </View>
       ) : (
         <Txt style={styles.reportPerfect}>Every question right this time. 🎉</Txt>
@@ -284,6 +291,7 @@ const styles = StyleSheet.create({
   reportStatNum: { fontFamily: font.display, fontSize: 18, color: colors.ink },
   reportStatLabel: { fontFamily: font.bold, fontSize: 9.5, color: colors.muted5, textTransform: 'uppercase', letterSpacing: 0.3, marginTop: 3, textAlign: 'center' },
   reportListItem: { fontFamily: font.semi, fontSize: 12.5, color: colors.muted2, lineHeight: 18, marginTop: 4 },
+  reportMoreLink: { fontFamily: font.extra, fontSize: 12.5, color: colors.green, marginTop: 6 },
   reportBody: { fontFamily: font.semi, fontSize: 12.5, color: colors.muted2, lineHeight: 18, marginTop: 4 },
   reportPerfect: { fontFamily: font.bold, fontSize: 12.5, color: colors.greenDark, backgroundColor: colors.tagGreenBg, borderRadius: 12, padding: 12 },
   reportAdvice: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.screen, borderRadius: 14, padding: 12 },
