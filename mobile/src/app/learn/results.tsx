@@ -40,6 +40,7 @@ export default function Results() {
   if (analyticsCapture.current === null) analyticsCapture.current = takePendingQuestAnalytics();
   const analytics = analyticsCapture.current;
   const learnedTerms = analytics.learnedTerms;
+  const learnedTermNames = useMemo(() => learnedTerms.map((t) => t.term), [learnedTerms]);
   const report = useMemo(() => buildQuestReport(mod.name, analytics, Number(hintsUsed ?? 0)), [mod.name, analytics, hintsUsed]);
 
   const { state, level, tierName, completeLesson, completeLifeTask, equippedMascotItems } = useStore();
@@ -55,7 +56,7 @@ export default function Results() {
         gradedTotal: totalQ,
         questId,
         hintsUsed: hintsUsed !== undefined ? Number(hintsUsed) : undefined,
-        newTerms: learnedTerms.length ? learnedTerms : undefined,
+        newTerms: learnedTermNames.length ? learnedTermNames : undefined,
       })
       : completeLesson(mod.id, li, xpForLesson, {
         correctCount: correct,
@@ -63,7 +64,7 @@ export default function Results() {
         questId,
         bossWon: bossWon === '1',
         hintsUsed: hintsUsed !== undefined ? Number(hintsUsed) : undefined,
-        newTerms: learnedTerms.length ? learnedTerms : undefined,
+        newTerms: learnedTermNames.length ? learnedTermNames : undefined,
       });
     setCoinsEarned(earned);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -181,7 +182,7 @@ function QuestReportCard({
   report, learnedTerms, equipped,
 }: {
   report: ReturnType<typeof buildQuestReport>;
-  learnedTerms: string[];
+  learnedTerms: { term: string; plain: string; section: string }[];
   equipped: Parameters<typeof Hammy>[0]['equipped'];
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -202,7 +203,7 @@ function QuestReportCard({
           <Txt style={styles.reportSectionTitle}>Words you learned</Txt>
           <View style={styles.reportTerms}>
             {learnedTerms.map((t) => (
-              <View key={t} style={styles.reportTermChip}><Txt style={styles.reportTermChipTxt}>{t}</Txt></View>
+              <View key={t.term} style={styles.reportTermChip}><Txt style={styles.reportTermChipTxt}>{t.term}</Txt></View>
             ))}
           </View>
         </View>

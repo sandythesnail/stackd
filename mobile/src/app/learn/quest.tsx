@@ -23,6 +23,13 @@ import type {
  * work on the website). */
 type Complete = (xpDelta: number, graded?: boolean) => void;
 
+/** A vocab term the player has been taught so far this quest — ported from the website's
+ * qp.learnedTerms (same {term, plain, section} shape end to end: pushLearnedTerm, the
+ * live "look back" glossary tray, and the results-screen chip list all read off of this
+ * one array). `section` is the chapter's own title, matching the website's exact grouping
+ * (pushLearnedTerm(mod, c.term, c.plain, chapter.title)). */
+type LearnedTerm = { term: string; plain: string; section: string };
+
 /** Ported verbatim from app.js — a limited "Ask Hammy for a hint" budget available during
  * interactive chapters only, so getting stuck doesn't leave the student with nowhere to turn.
  * Separate from the 'hint' CHAPTER TYPE (Hammy's Tip, see HintView) — this is the small
@@ -152,7 +159,7 @@ export default function QuestPlayer() {
   const [correctCount, setCorrectCount] = useState(0);
   const [gradedTotal, setGradedTotal] = useState(0);
   const [hintsUsed, setHintsUsed] = useState(0);
-  const [terms, setTerms] = useState<string[]>([]);
+  const [terms, setTerms] = useState<LearnedTerm[]>([]);
   const [bossWon, setBossWon] = useState(false);
   const [reactionMood, setReactionMood] = useState<'happy' | 'gentle' | 'streak' | null>(null);
   const [reactionMsg, setReactionMsg] = useState<string | null>(null);
@@ -278,10 +285,11 @@ export default function QuestPlayer() {
     const nextXp = xpEarned + xpDelta;
     const nextCorrect = correctCount + (graded ? 1 : 0);
     const nextGraded = gradedTotal + (graded !== undefined ? 1 : 0);
+    const known = new Set(terms.map((t) => t.term));
     const nextTerms = chapter.type === 'matching'
-      ? [...new Set([...terms, ...chapter.pairs.map((p) => p.term)])]
+      ? [...terms, ...chapter.pairs.filter((p) => !known.has(p.term)).map((p) => ({ term: p.term, plain: p.definition, section: chapter.title }))]
       : chapter.type === 'teach'
-        ? [...new Set([...terms, ...chapter.concepts.map((c) => c.term)])]
+        ? [...terms, ...chapter.concepts.filter((c) => !known.has(c.term)).map((c) => ({ term: c.term, plain: c.plain, section: chapter.title }))]
         : terms;
     const nextBossWon = bossWon || chapter.type === 'bossbattle';
     const isFinalChapter = chapterIdx + 1 >= quest.chapters.length;
@@ -330,6 +338,11 @@ export default function QuestPlayer() {
         <Txt style={styles.step}>{Math.round((chapterIdx / quest.chapters.length) * 100)}%</Txt>
         <HintCorner key={chapter.id} hintText={hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       </View>
+      {/* "Look back" glossary tray — ported from the website's #glossary-tray. Hidden during
+          a big-centered-Hammy 'intro' screen (story intro / Hammy's Tip) same as the
+          companion row, and naturally absent until the first teach/matching chapter has
+          taught at least one term. */}
+      {terms.length > 0 && layoutMode !== 'intro' ? <GlossaryTray terms={terms} /> : null}
       {/* The chapter's own primary action ("Next", "Check my answer", ...), reported up via
           onAction — lives here, top-right, instead of trailing the chapter's scrollable
           content, so it's never something you have to scroll to find. Always flat green
@@ -552,6 +565,80 @@ function AmbientLifeEventModal({
         </View>
       </View>
     </Modal>
+  );
+}
+
+/** "Look back" glossary tray — ported from the website's renderGlossaryTray/
+ * showGlossarySectionPopup/showGlossaryPopup. Terms taught so far this quest, grouped by
+ * the chapter they came from (so a long lesson doesn't turn into one giant wall of chips):
+ * tap a section chip to see the words in it, tap a word to see its definition again, with a
+ * way back to that section's list so re-checking a few words in a row doesn't mean
+ * re-opening the tray each time. */
+function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
+  const [openSectionName, setOpenSectionName] = useState<string | null>(null);
+  const [openTerm, setOpenTerm] = useState<LearnedTerm | null>(null);
+
+  // Group into sections, preserving the order each section was first encountered.
+  const sections = useMemo(() => {
+    const list: { name: string; terms: LearnedTerm[] }[] = [];
+    for (const t of terms) {
+      let s = list.find((sec) => sec.name === t.section);
+      if (!s) { s = { name: t.section, terms: [] }; list.push(s); }
+      s.terms.push(t);
+    }
+    return list;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [terms.length]);
+  const activeSection = sections.find((s) => s.name === openSectionName) ?? null;
+
+  const closeAll = () => { setOpenTerm(null); setOpenSectionName(null); };
+
+  return (
+    <>
+      <ScrollView
+        horizontal showsHorizontalScrollIndicator={false}
+        style={styles.glossaryTray} contentContainerStyle={styles.glossaryTrayContent}
+      >
+        <Txt style={styles.glossaryLabel}>📖 Look back:</Txt>
+        {sections.map((s) => (
+          <Pressable key={s.name} onPress={() => setOpenSectionName(s.name)} style={styles.glossaryChip}>
+            <Txt style={styles.glossaryChipTxt}>{s.name}</Txt>
+            <View style={styles.glossaryCount}><Txt style={styles.glossaryCountTxt}>{s.terms.length}</Txt></View>
+          </Pressable>
+        ))}
+      </ScrollView>
+      <Modal visible={!!activeSection} transparent animationType="fade" onRequestClose={closeAll}>
+        <Pressable style={styles.hintScrim} onPress={closeAll}>
+          <Pressable style={styles.glossaryPopupCard} onPress={(e) => e.stopPropagation()}>
+            {openTerm ? (
+              <>
+                <Pressable onPress={() => setOpenTerm(null)} hitSlop={8}>
+                  <Txt style={styles.glossaryBackLink}>← Back to {openTerm.section}</Txt>
+                </Pressable>
+                <Txt style={styles.glossaryPopupTerm}>{openTerm.term}</Txt>
+                <Txt style={styles.glossaryPopupDef}>{openTerm.plain}</Txt>
+                <Button label="Got it" onPress={closeAll} style={{ marginTop: 16 }} />
+              </>
+            ) : activeSection ? (
+              <>
+                <Txt style={styles.glossaryPopupTitle}>{activeSection.name}</Txt>
+                <View style={styles.glossaryWordGrid}>
+                  {activeSection.terms.map((t) => (
+                    // Strips a trailing parenthetical qualifier for the chip label only (the
+                    // full term still shows on the definition screen) — ported verbatim from
+                    // the website's chip.textContent = t.term.replace(/\s*\(.*?\)/, '').
+                    <Pressable key={t.term} onPress={() => setOpenTerm(t)} style={styles.glossaryWordChip}>
+                      <Txt style={styles.glossaryWordChipTxt}>{t.term.replace(/\s*\(.*?\)/, '')}</Txt>
+                    </Pressable>
+                  ))}
+                </View>
+                <Button label="Close" variant="ghost" onPress={closeAll} style={{ marginTop: 16 }} />
+              </>
+            ) : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
@@ -866,8 +953,34 @@ function DecisionView({
           ))}
         </View>
       ) : (
-        <Card><Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.outcome.text}</Txt></Card>
+        <Card style={{ gap: 12 }}>
+          <Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.outcome.text}</Txt>
+          {/* Ported from the website's renderDecisionOutcome pg-column-chart — a real
+              comparison chart instead of just prose, e.g. "saved this check" vs. "take-home
+              pay" as two bars. Only some decision chapters carry `compare` data. */}
+          {picked.outcome.compare ? <ColumnChart data={picked.outcome.compare} /> : null}
+        </Card>
       )}
+    </View>
+  );
+}
+
+/** Vertical bar/column chart — ported from the website's .pg-column-chart (bars scaled to
+ * the largest value in the set, value label on top, category label below). Currently used
+ * by DecisionView's outcome comparisons; a generic enough shape to reuse elsewhere. */
+function ColumnChart({ data }: { data: { label: string; value: number }[] }) {
+  const max = Math.max(...data.map((d) => d.value), 1);
+  return (
+    <View style={styles.columnChart}>
+      {data.map((d) => (
+        <View key={d.label} style={styles.columnChartCol}>
+          <Txt style={styles.columnChartVal}>${d.value}</Txt>
+          <View style={styles.columnChartBarWrap}>
+            <View style={[styles.columnChartBar, { height: `${Math.max(4, (d.value / max) * 100)}%` }]} />
+          </View>
+          <Txt style={styles.columnChartName}>{d.label}</Txt>
+        </View>
+      ))}
     </View>
   );
 }
@@ -1459,6 +1572,46 @@ const styles = StyleSheet.create({
     width: '100%', maxWidth: 340, backgroundColor: colors.pinkBg, borderWidth: 1.5,
     borderColor: colors.pinkBorder, borderRadius: 20, padding: 20,
   },
+  // "Look back" glossary tray — a single-line horizontal scroller so it costs minimal
+  // vertical space even with several sections taught so far.
+  glossaryTray: { maxHeight: 34, flexGrow: 0 },
+  glossaryTrayContent: { alignItems: 'center', paddingHorizontal: 16, gap: 8 },
+  glossaryLabel: { fontFamily: font.bold, fontSize: 12, color: colors.muted5 },
+  glossaryChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    borderWidth: 1.5, borderColor: colors.borderCool, borderRadius: 14,
+    paddingVertical: 5, paddingHorizontal: 10, backgroundColor: colors.white,
+  },
+  glossaryChipTxt: { fontFamily: font.bold, fontSize: 11.5, color: colors.ink },
+  glossaryCount: {
+    minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.screen,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3,
+  },
+  glossaryCountTxt: { fontFamily: font.bold, fontSize: 10, color: colors.muted3 },
+  glossaryPopupCard: {
+    width: '100%', maxWidth: 360, maxHeight: '75%', backgroundColor: colors.white,
+    borderWidth: 1.5, borderColor: colors.border, borderRadius: 22, padding: 20,
+  },
+  glossaryPopupTitle: { fontFamily: font.display, fontSize: 17, color: colors.ink, marginBottom: 12 },
+  glossaryWordGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  glossaryWordChip: {
+    borderWidth: 1.5, borderColor: colors.borderOpt, borderRadius: 14,
+    paddingVertical: 9, paddingHorizontal: 12, backgroundColor: colors.screen,
+  },
+  glossaryWordChipTxt: { fontFamily: font.semi, fontSize: 12.5, color: colors.ink },
+  glossaryBackLink: { fontFamily: font.bold, fontSize: 12.5, color: colors.green, marginBottom: 10 },
+  glossaryPopupTerm: { fontFamily: font.display, fontSize: 18, color: colors.ink },
+  glossaryPopupDef: { fontFamily: font.medium, fontSize: 14, lineHeight: 20, color: colors.muted1, marginTop: 6 },
+  // Decision-outcome comparison chart.
+  columnChart: { flexDirection: 'row', gap: 16, alignItems: 'flex-end', paddingTop: 4 },
+  columnChartCol: { flex: 1, alignItems: 'center', gap: 5 },
+  columnChartVal: { fontFamily: font.bold, fontSize: 12.5, color: colors.ink },
+  columnChartBarWrap: {
+    width: '68%', height: 92, justifyContent: 'flex-end',
+    backgroundColor: colors.screen, borderRadius: 6, overflow: 'hidden',
+  },
+  columnChartBar: { width: '100%', backgroundColor: colors.green, borderRadius: 6 },
+  columnChartName: { fontFamily: font.semi, fontSize: 10.5, color: colors.muted3, textAlign: 'center' },
   tfBtn: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10,

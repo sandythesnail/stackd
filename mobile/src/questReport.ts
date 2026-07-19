@@ -11,10 +11,13 @@ export type QuestAnalytics = {
   matchingMistakes: number;
   decisions: { title: string; choice: string }[];
   explainback: { term: string; tier: 'great' | 'ok' | 'retry' } | null;
-  /** Terms learned this quest (matching pairs + teach concepts) — also handed off
-   * in-memory rather than a URL param, same reasoning as the rest of this type: terms like
-   * "50/30/20 Rule" or "Pay-Upfront / Overpayment Scam" contain "/" too. */
-  learnedTerms: string[];
+  /** Terms learned this quest (matching pairs + teach concepts), each with its own
+   * definition and the chapter title it came from — ported from the website's
+   * qp.learnedTerms, which is this same {term, plain, section} shape end to end (both the
+   * live in-quest "look back" glossary tray and this results-screen chip list read off of
+   * it). Also handed off in-memory rather than a URL param, same reasoning as the rest of
+   * this type: terms like "50/30/20 Rule" or "Pay-Upfront / Overpayment Scam" contain "/" too. */
+  learnedTerms: { term: string; plain: string; section: string }[];
 };
 
 export const EMPTY_ANALYTICS: QuestAnalytics = {
