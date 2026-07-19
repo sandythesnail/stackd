@@ -3271,313 +3271,49 @@
     ],
     "lessons": [
       {
-        "title": "The 50/30/20 Rule",
-        "hook": "It's week 6 of the semester. You had $800 for the month. You check your account and there's $23 left. You didn't buy anything big. How did this happen — and how do you stop it?",
-        "qIndices": [
-          0,
-          1
-        ]
+        "title": "The 50/30/20 Budget Rule",
+        "hook": "Your financial aid offer, part-time job, and family help all land in one account with zero system for tracking any of it. Is there an actual rule for how much should go where?",
+        "qIndices": []
       },
       {
-        "title": "Needs vs. Wants & Staying in the Black",
-        "hook": "You've labeled your rent as a \"need\" and brunch as a \"want\" — but by the end of the month you've spent more than you earned anyway. What happened, and how do you catch it before you're in the red?",
-        "qIndices": [
-          2,
-          3
-        ]
+        "title": "Needs vs. Wants: Staying in the Black",
+        "hook": "You have $1,200 this month and a running list of things you \"need\" that keeps quietly including things you just want. Where is the actual line?",
+        "qIndices": []
       },
       {
-        "title": "Day-to-Day Money on Campus",
-        "hook": "You've got $1,200 in dining dollars and $47 in your emergency fund, both meant to last the semester. One is about pacing spending, the other about surviving a surprise cost — how do you handle both?",
-        "qIndices": [
-          4,
-          8
-        ]
+        "title": "Day-to-Day Money Management on Campus",
+        "hook": "Your money moves differently on campus than it did at home — meal swipes, a campus card, cash for laundry, all separate from your real bank account. Does any of that actually matter for tracking spending?",
+        "qIndices": []
       },
       {
-        "title": "FAFSA & the Financial Aid Timeline",
-        "hook": "It's October 1st and your inbox reminds you: FAFSA is open. Last year you put it off, missed a scholarship deadline, and scrambled to gather documents in August. This year, what's the plan?",
-        "qIndices": [
-          5,
-          9
-        ]
+        "title": "The FAFSA & Financial Aid Timeline",
+        "hook": "The FAFSA opens every October, and missing deadlines can mean missing out on aid entirely. Do you actually know when yours is due?",
+        "qIndices": []
       },
       {
-        "title": "Grants, Scholarships & Your Aid Offer",
-        "hook": "Your financial aid offer lists grants, a scholarship, work-study, and loans all on one page, and it feels like a single number to accept or reject. Is it — or does each line deserve its own decision?",
-        "qIndices": [
-          6,
-          10
-        ]
+        "title": "Grants & Scholarships: Your Aid Offer",
+        "hook": "Your financial aid offer lists grants, scholarships, and loans all mixed together with no explanation of which ones you have to pay back. Can you actually tell the difference?",
+        "qIndices": []
       },
       {
-        "title": "Payment Plans & Closing the Gap",
-        "hook": "After grants and scholarships, you're still $1,800 short for the semester. Loans aren't your only option, and neither is panicking. What else can actually close that gap?",
-        "qIndices": [
-          7,
-          11
-        ]
+        "title": "Payment Plans & Closing the Tuition Gap",
+        "hook": "Tuition is due in one lump sum you don't have — but the bursar's office also offers a payment plan you've never looked into. Is that actually a better option?",
+        "qIndices": []
       },
       {
-        "title": "Opportunity Cost: The Real Price of Every Decision",
-        "type": "decision-chain",
-        "hook": "You just spent $80 on a concert ticket without a second thought. But that $80 didn't just disappear — it was a choice. What did you actually give up to make it?",
-        "activity": {
-          "intro": "Every dollar you spend is a dollar that could have gone somewhere else. That's opportunity cost — the value of the next-best thing you gave up. Over one week, you'll make three spending decisions. At the end, you'll see exactly what each one cost you beyond the price tag.",
-          "decisions": [
-            {
-              "day": "Monday",
-              "prompt": "Your friends invite you to a concert. Tickets are $80. You have $150 in checking and $65 saved toward a new laptop.",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Buy the ticket",
-                  "cost": 80,
-                  "gaveUp": "about 3 weeks of groceries, or $80 closer to your laptop fund",
-                  "good": false
-                },
-                {
-                  "id": "b",
-                  "label": "Skip it, keep the $80",
-                  "cost": 0,
-                  "gaveUp": "a night out with friends",
-                  "good": true
-                }
-              ]
-            },
-            {
-              "day": "Wednesday",
-              "prompt": "Next semester's textbook is $110 new, or $70 used online with 3–5 day shipping. You need it by Friday for an assignment preview.",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Buy new today, guaranteed on time",
-                  "cost": 110,
-                  "gaveUp": "$40 that could have covered a week of gas",
-                  "good": false
-                },
-                {
-                  "id": "b",
-                  "label": "Order used and borrow a friend's copy until it arrives",
-                  "cost": 70,
-                  "gaveUp": "a little extra effort coordinating with a friend",
-                  "good": true
-                }
-              ]
-            },
-            {
-              "day": "Saturday",
-              "prompt": "A promo email offers 40% off a $60 hoodie — $36 for the next 2 hours. You weren't planning to buy anything.",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Buy it, the deal is too good to pass up",
-                  "cost": 36,
-                  "gaveUp": "almost a whole week of your food delivery budget",
-                  "good": false
-                },
-                {
-                  "id": "b",
-                  "label": "Close the email and think it over for 24 hours",
-                  "cost": 0,
-                  "gaveUp": "the urgency-driven \"deal\" — if you still want it tomorrow, it'll likely still be there",
-                  "good": true
-                }
-              ]
-            }
-          ],
-          "xpOnComplete": 8
-        }
+        "title": "Opportunity Cost of Spending Decisions",
+        "hook": "That $60 you spent on a concert ticket could have gone toward something else entirely. Is there an actual way to think about what you gave up?",
+        "qIndices": []
       },
       {
-        "title": "Wants vs. Needs (And the Gray Zone)",
-        "type": "sorter",
-        "hook": "Marketing is designed to make wants feel like needs. Before your next purchase, can you actually tell the difference — and does it matter?",
-        "activity": {
-          "intro": "Sort each expense into Need, Want, or It Depends. There's no judgment here — the goal is just noticing the difference before you spend, not guilt after. Tap an item, then tap the bucket it belongs in.",
-          "items": [
-            {
-              "id": "i1",
-              "label": "Rent",
-              "category": "need"
-            },
-            {
-              "id": "i2",
-              "label": "Groceries",
-              "category": "need"
-            },
-            {
-              "id": "i3",
-              "label": "Phone bill (basic plan)",
-              "category": "need"
-            },
-            {
-              "id": "i4",
-              "label": "Textbooks required for class",
-              "category": "need"
-            },
-            {
-              "id": "i5",
-              "label": "Bus pass or gas money for commuting to class",
-              "category": "need"
-            },
-            {
-              "id": "i6",
-              "label": "Renter's or health insurance",
-              "category": "need"
-            },
-            {
-              "id": "i7",
-              "label": "Emergency car repair",
-              "category": "need"
-            },
-            {
-              "id": "i8",
-              "label": "DoorDash instead of cooking, twice a week",
-              "category": "want"
-            },
-            {
-              "id": "i9",
-              "label": "Concert tickets",
-              "category": "want"
-            },
-            {
-              "id": "i10",
-              "label": "A $6 coffee, every day",
-              "category": "want"
-            },
-            {
-              "id": "i11",
-              "label": "The newest phone when yours still works fine",
-              "category": "want"
-            },
-            {
-              "id": "i12",
-              "label": "All your streaming subscriptions, combined",
-              "category": "depends",
-              "note": "One is often a want you actually use — five you forgot you had is subscription creep."
-            },
-            {
-              "id": "i13",
-              "label": "A gym membership you use 3x/week",
-              "category": "depends",
-              "note": "A want that supports your health — reasonable if it fits your budget and you actually use it."
-            },
-            {
-              "id": "i14",
-              "label": "A new outfit for a one-time event",
-              "category": "depends",
-              "note": "Could be a want, or a need if you truly have nothing appropriate to wear."
-            },
-            {
-              "id": "i15",
-              "label": "A haircut",
-              "category": "depends",
-              "note": "A basic trim is upkeep; a $150 salon visit before a big event leans want."
-            }
-          ],
-          "subscriptionCreepNote": "Subscription creep: you sign up for one thing, forget about it, and a year later you're paying for seven. Once a month, scroll through your bank statement and cancel anything you can't remember using in the last 30 days.",
-          "xpOnComplete": 8
-        }
+        "title": "The Gray Zone: When Needs and Wants Overlap",
+        "hook": "A new laptop for class is clearly a need. A slightly nicer laptop than you need is... somewhere in between. How do you actually draw that line?",
+        "qIndices": []
       },
       {
-        "title": "Boss Challenge: Survive the Last Week Before Your Refund Hits",
-        "type": "boss-challenge",
-        "hook": "You've got $150 in checking and a full week of decisions before your financial aid refund posts. Every choice either protects that cushion or eats into it.",
-        "activity": {
-          "intro": "You're heading into the last week before your refund hits, with $150 in checking. Four decisions are coming at you this week. Each one either protects your balance or chips away at it — there's no pausing the week to think it over.",
-          "startLabel": "Start the Week →",
-          "dashboardLabel": "Checking",
-          "startingValue": 150,
-          "stages": [
-            {
-              "tag": "Monday",
-              "prompt": "Your meal plan is unlimited, but you've been skipping the dining hall to DoorDash instead, about $18 an order, four times this week so far.",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Keep DoorDashing, it's already how the week started",
-                  "delta": -54,
-                  "isOptimal": false,
-                  "result": "Another $54 gone on delivery fees for food you already had free access to."
-                },
-                {
-                  "id": "b",
-                  "label": "Actually use your meal swipes for the rest of the week",
-                  "delta": 0,
-                  "isOptimal": true,
-                  "result": "Zero extra spent, the meal plan was already covering this."
-                }
-              ]
-            },
-            {
-              "tag": "Wednesday",
-              "prompt": "Your favorite band just announced a surprise $45 show this weekend. Tickets are going fast.",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Buy the ticket now, before it sells out",
-                  "delta": -45,
-                  "isOptimal": false,
-                  "result": "Rent's still due in 2 days, and now there's less cushion than you'd like heading into it."
-                },
-                {
-                  "id": "b",
-                  "label": "Skip this one, catch the next show once your refund posts",
-                  "delta": 0,
-                  "isOptimal": true,
-                  "result": "A real skip, but nothing this week's budget couldn't afford to lose."
-                }
-              ]
-            },
-            {
-              "tag": "Friday",
-              "prompt": "Rent auto-pays tomorrow: $110, already accounted for in your checking balance.",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Let it auto-pay as planned",
-                  "delta": -110,
-                  "isOptimal": true,
-                  "result": "Handled, exactly what that $110 was already budgeted for."
-                },
-                {
-                  "id": "b",
-                  "label": "Panic and put $50 of it on a credit card \"to save cash\"",
-                  "delta": -60,
-                  "isOptimal": false,
-                  "result": "Now there's a card balance accruing interest on top of everything else, the \"cash saved\" cost more than it kept."
-                }
-              ]
-            },
-            {
-              "tag": "Saturday",
-              "prompt": "A group of friends invites you to brunch, about $22, with two days left until the refund posts.",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Go to brunch",
-                  "delta": -22,
-                  "isOptimal": false,
-                  "result": "A nice morning, but that's $22 that could've been the cushion between you and $0."
-                },
-                {
-                  "id": "b",
-                  "label": "Suggest a free hangout instead, coffee and a study session at home",
-                  "delta": 0,
-                  "isOptimal": true,
-                  "result": "Same friends, same time together, $22 still in your pocket."
-                }
-              ]
-            }
-          ],
-          "passThreshold": 0,
-          "endNoteAtOrAbove": "You made it to refund day without going negative, exactly what that starting $150 was supposed to cover.",
-          "endNoteBelow": "You hit $0 before the refund posted. That's not a moral failing, it's exactly the gap an emergency fund or a tighter week-one budget is meant to close.",
-          "takeaway": "Every \"small\" decision this week either protected your cushion or ate into it, that's opportunity cost playing out in real time, not just a lesson.",
-          "xpOnComplete": 12,
-          "bonusXpForOptimalPath": 8
-        }
+        "title": "Setting Up a Real Budget: A Step-by-Step Guide",
+        "hook": "You can recite the 50/30/20 rule perfectly, but you have never actually written your real budget down anywhere. What does that actually look like on paper?",
+        "qIndices": []
       }
     ],
     "quests": [
@@ -6764,52 +6500,49 @@
     ],
     "lessons": [
       {
-        "title": "High-Yield Savings",
-        "hook": "You check your big bank's savings account: 0.01% APY. A friend mentions their online account pays 4.5%. Same FDIC insurance, same $1,000 balance — what's actually different?",
-        "qIndices": [
-          0,
-          5
-        ]
+        "title": "Building Your First Emergency Fund",
+        "hook": "Your laptop just died during finals week. A replacement costs $400 — and you have $47 in checking. This is exactly what a missing emergency fund looks like. Where do you even start?",
+        "qIndices": []
       },
       {
-        "title": "Checking vs. Savings & Avoiding Fees",
-        "hook": "You keep your checking account hovering right around $0 between paychecks. One surprise subscription renewal later, you're hit with a $34 overdraft fee. What should you have set up?",
-        "qIndices": [
-          2,
-          6
-        ]
+        "title": "High-Yield Savings Accounts Explained",
+        "hook": "Your money is sitting in a savings account earning basically nothing, while a \"high-yield\" account somewhere else claims to pay 40x more. Is that actually worth switching for?",
+        "qIndices": []
       },
       {
-        "title": "How Interest & Consistency Add Up",
-        "hook": "You set up an automatic $50/month transfer to savings and mostly forget about it. A year later, you check the balance and don't recognize the number. How did doing basically nothing add up to this much?",
-        "qIndices": [
-          3,
-          11
-        ]
+        "title": "Checking vs. Savings: Avoiding Fees",
+        "hook": "You keep all your money in one checking account because moving it around seems like a hassle — and you just got hit with an overdraft fee. Would a separate savings account actually have prevented that?",
+        "qIndices": []
+      },
+      {
+        "title": "How Interest & Consistency Compound Over Time",
+        "hook": "A friend says even $20/month adds up to real money over time thanks to interest. That sounds like something people just say — does the math actually back it up?",
+        "qIndices": []
+      },
+      {
+        "title": "Automating Your Savings Habits",
+        "hook": "You keep meaning to move money into savings manually every month, and you keep forgetting. Is there a way to make saving happen without having to remember?",
+        "qIndices": []
       },
       {
         "title": "Sinking Funds for Predictable Costs",
-        "hook": "Your laptop just died during finals week. A replacement costs $400. You have $47 in your checking account. This is what a missing emergency fund looks like — and it's completely avoidable.",
-        "qIndices": [
-          7,
-          1
-        ]
-      },
-      {
-        "title": "Automating Your Savings",
-        "hook": "You've decided to start saving, but at the end of every month there's nothing left. You keep saying \"I'll save whatever's left\" — but there's never anything left. What changes?",
-        "qIndices": [
-          4,
-          8
-        ]
+        "hook": "Textbooks, a laptop repair, a flight home — all predictable costs that somehow still catch you off guard every time. Is there a better way to plan for expenses you know are coming?",
+        "qIndices": []
       },
       {
         "title": "Setting & Prioritizing Savings Goals",
-        "hook": "You're saving for an emergency fund, a new laptop, and a spring break trip all at once, with only $60 free this month. Do you split it evenly, or does one of these actually matter more right now?",
-        "qIndices": [
-          9,
-          10
-        ]
+        "hook": "You want to save for three different things at once — a trip, an emergency cushion, and a new phone — and it is all just mixed together in one account. Does it matter how you organize it?",
+        "qIndices": []
+      },
+      {
+        "title": "Saving for a Big Purchase (Study Abroad, Car, Moving Out)",
+        "hook": "You want to study abroad next year, and the program costs $3,000 beyond what aid covers. You have $0 saved and 10 months until the deposit is due. How do you turn that into an actual plan?",
+        "qIndices": []
+      },
+      {
+        "title": "Opening a High-Yield Savings Account: A Step-by-Step Guide",
+        "hook": "You know a high-yield savings account beats a big bank's 0.01% APY — but the account itself does not exist yet. Knowing the theory and actually doing the paperwork are two different things.",
+        "qIndices": []
       }
     ],
     "quests": [
@@ -9788,52 +9521,49 @@
     ],
     "lessons": [
       {
-        "title": "Compound Interest & Time",
-        "hook": "Two students each invest $1,000 into the same fund. Alex starts at 18, Sam starts at 28. At 65, Alex has $21,000. Sam has $10,700. Same amount invested. What made the difference?",
-        "qIndices": [
-          1,
-          2
-        ]
+        "title": "Compound Interest & Why Starting Early Wins",
+        "hook": "Two students each invest $1,000 into the same fund. One starts at 18, the other at 28. At 65, the early starter has almost double. Same amount invested — what made the difference?",
+        "qIndices": []
       },
       {
         "title": "Roth IRA Basics",
-        "hook": "You have $50/month to invest and someone says \"open a Roth IRA.\" You've heard the words but don't know if you even qualify — do you need a big salary, a certain age, or a special account first?",
-        "qIndices": [
-          0,
-          6
-        ]
-      },
-      {
-        "title": "Contribution Limits & Where to Save First",
-        "hook": "Your job offers a 403(b) with a match, and you're also eligible for a Roth IRA with a $7,500 annual limit. You can't max out both right now — which comes first?",
-        "qIndices": [
-          4,
-          9
-        ]
+        "hook": "You keep hearing \"open a Roth IRA\" as generic advice, but you are not even sure what it actually is or whether you are allowed to have one yet. What is the real story?",
+        "qIndices": []
       },
       {
         "title": "Index Funds & Diversification",
-        "hook": "A friend tells you to put your $500 savings into one stock they're sure will \"blow up.\" Another friend says index funds are the smarter move. What's actually different about spreading your money across hundreds of companies?",
-        "qIndices": [
-          3,
-          5
-        ]
+        "hook": "A friend says to \"just buy an index fund\" instead of picking individual stocks. That sounds too simple to actually work — what are you actually buying?",
+        "qIndices": []
+      },
+      {
+        "title": "Contribution Limits & Where to Save First",
+        "hook": "You finally have $50/month you could invest, but you are not sure whether it should go into a Roth IRA, a 401(k), or somewhere else entirely. Does the order actually matter?",
+        "qIndices": []
       },
       {
         "title": "Risk, Time Horizon & Staying the Course",
-        "hook": "The market drops 15% the same month you started investing, right as your 60-year-old parent's retirement account also takes a hit. Should you both be reacting the same way?",
-        "qIndices": [
-          7,
-          11
-        ]
+        "hook": "The market just dropped 15% and your investment account is down for the first time. Is this the moment to pull everything out, or does it matter that retirement is 40 years away?",
+        "qIndices": []
       },
       {
-        "title": "Getting Started Small",
-        "hook": "You only have $25/month to invest and figure it's not worth starting until you've saved up more. Meanwhile a friend jumps into whatever fund had the best return last year. Is either of you making the smart move?",
-        "qIndices": [
-          8,
-          10
-        ]
+        "title": "Getting Started With Very Little Money",
+        "hook": "You only have $25 to invest and assumed that was not even worth doing yet. Is there really a minimum, or can you actually start with that?",
+        "qIndices": []
+      },
+      {
+        "title": "401(k)s & Employer Matches: Free Money on the Table",
+        "hook": "Your new job hands you a 401(k) enrollment form defaulted to a 1% contribution, with the employer matching dollar-for-dollar up to 3%. Is 1% actually fine, or are you leaving free money on the table?",
+        "qIndices": []
+      },
+      {
+        "title": "Brokerage vs. Retirement Accounts: Where to Invest",
+        "hook": "You have $100/month to invest, split between retirement decades away and a house down payment maybe 8 years out. Can you just put it all in the Roth IRA you already know about?",
+        "qIndices": []
+      },
+      {
+        "title": "Opening a Brokerage Account: A Step-by-Step Guide",
+        "hook": "You understand compound interest and index funds now — but you have never actually opened the account. Knowing the theory and doing the paperwork are two different things.",
+        "qIndices": []
       }
     ],
     "quests": [
@@ -12746,52 +12476,49 @@
     ],
     "lessons": [
       {
-        "title": "APR & Minimum Payments",
-        "hook": "You got your first credit card with a $1,000 limit. Textbooks and dorm supplies ran you $800. You pay the minimum each month. Three years later, you've paid $300 in interest and still owe $600. What went wrong?",
-        "qIndices": [
-          0,
-          2
-        ]
-      },
-      {
-        "title": "Utilization & Store Cards",
-        "hook": "Your roommate got 20% off by opening a store credit card at checkout. Meanwhile you're both told to keep your credit utilization under 30%. Are these two things related?",
-        "qIndices": [
-          1,
-          7
-        ]
-      },
-      {
-        "title": "Building Credit From Scratch",
-        "hook": "You've never had a credit card, loan, or any credit history at all. Meanwhile you keep hearing that checking your own score doesn't hurt it, but applying for five cards at once might. What's actually true?",
-        "qIndices": [
-          5,
-          11
-        ]
+        "title": "Credit Cards & Building Your Credit Score",
+        "hook": "You just started your first year of college and are holding your very first credit card — a free t-shirt got you a $1,000 limit at a table in the student union. Before you use it, do you actually know what you are holding?",
+        "qIndices": []
       },
       {
         "title": "Common Mistakes That Hurt Your Score",
         "hook": "Your friend co-signed a car loan for their sibling and closed their oldest credit card the same month \"to simplify things.\" Their score dropped 60 points. What happened?",
-        "qIndices": [
-          3,
-          6
-        ]
+        "qIndices": []
+      },
+      {
+        "title": "Building Credit From Scratch",
+        "hook": "You've never had a credit card, loan, or any credit history at all. Meanwhile you keep hearing that checking your own score doesn't hurt it, but applying for five cards at once might. What's actually true?",
+        "qIndices": []
       },
       {
         "title": "The FICO Scale",
         "hook": "Your roommate got an apartment at a better rate because their credit score was 720. Yours was 610 — despite having a card for the same amount of time. What actually goes into that number?",
-        "qIndices": [
-          4,
-          10
-        ]
+        "qIndices": []
+      },
+      {
+        "title": "Balance Transfers: When They Actually Help",
+        "hook": "You carry a $600 balance at 24% APR, and a new card offers 0% APR on balance transfers for 12 months. Is moving the balance over actually free money?",
+        "qIndices": []
       },
       {
         "title": "Credit Reports & Disputing Errors",
         "hook": "You get an alert that an account you don't recognize just showed up on your credit report. Before panicking, do you even know what's normally on there — or how to get it fixed?",
-        "qIndices": [
-          8,
-          9
-        ]
+        "qIndices": []
+      },
+      {
+        "title": "Secured Cards & Authorized-User Status",
+        "hook": "With no credit history, you are stuck between two starting points: a secured credit card, or becoming an authorized user on a parent card. Does putting down a deposit actually help build credit?",
+        "qIndices": []
+      },
+      {
+        "title": "Paying Off Debt: Avalanche vs. Snowball",
+        "hook": "You have two balances — $200 at 24% APR and $80 at 15% APR — and $50 extra this month to put toward one of them. Is paying off the smaller one first actually the fastest way out?",
+        "qIndices": []
+      },
+      {
+        "title": "Opening & Setting Up Your Card: A Step-by-Step Guide",
+        "hook": "Your new credit card just showed up in the mail. Knowing what a credit card is is one thing — actually setting it up correctly is another.",
+        "qIndices": []
       }
     ],
     "quests": [
@@ -15750,52 +15477,49 @@
     ],
     "lessons": [
       {
-        "title": "Health Insurance Basics",
+        "title": "Health Insurance Basics: Premiums & Deductibles",
         "hook": "You just turned 20 and get a letter asking if you want to enroll in your school's health plan for $2,000/year. You're already covered under a parent's plan. Do you need this — and what do all these insurance terms even mean?",
-        "qIndices": [
-          0,
-          5
-        ]
+        "qIndices": []
       },
       {
-        "title": "Health Waivers & Car Insurance",
-        "hook": "It's move-in day. You've got a car in the parking lot for the first time and a health insurance waiver deadline you almost forgot about. Both are the kind of things that quietly cost you money if you ignore them.",
-        "qIndices": [
-          6,
-          7
-        ]
+        "title": "Navigating Your Student Health Insurance Options",
+        "hook": "It is move-in day, and buried in your email is a health insurance waiver deadline that is easy to miss. Miss it, and you get auto-billed for a plan you might not need — what does that waiver process actually involve?",
+        "qIndices": []
       },
       {
-        "title": "Renter's & Landlord Insurance",
-        "hook": "You're moving off-campus next fall. A pipe bursts in your apartment and ruins your laptop, TV, and clothes. Your landlord's insurance covers the building — not your stuff. You owe $2,000 in replacements. What should you have had?",
-        "qIndices": [
-          1,
-          2
-        ]
+        "title": "Renter's Insurance: Protecting Your Stuff",
+        "hook": "A pipe bursts in your off-campus apartment, ruining a laptop, a TV, and a closet full of clothes. The landlord insurance covers the building — does it cover any of your stuff?",
+        "qIndices": []
+      },
+      {
+        "title": "Auto Insurance Basics: What Coverage Actually Means",
+        "hook": "You are bringing an old, barely-worth-anything car to campus and wonder if real insurance is even worth it. Is a car value and the insurance requirement actually the same thing?",
+        "qIndices": []
       },
       {
         "title": "What Insurance Actually Pays Out",
         "hook": "In the same week, you notice a $47 charge you don't recognize on your debit card, and you're filing your first-ever renter's insurance claim after a burst pipe. Do you know what to expect from either process?",
-        "qIndices": [
-          9,
-          4
-        ]
+        "qIndices": []
       },
       {
-        "title": "Identity Theft & Staying Safe Online",
-        "hook": "You get a text claiming to be your bank, asking you to confirm your login while you're on public coffee-shop WiFi. Something about it feels off, but you're not totally sure why.",
-        "qIndices": [
-          3,
-          10
-        ]
+        "title": "Life & Disability Insurance in Your 20s",
+        "hook": "Your new job offers optional life insurance and disability insurance. At 22 with nobody depending on your income, does either one actually matter yet?",
+        "qIndices": []
       },
       {
-        "title": "If Something Is Stolen or Compromised",
-        "hook": "Your wallet gets stolen the same week you get a suspicious \"verify your financial aid account\" email. Reacting fast to both keeps a bad day from turning into months of cleanup.",
-        "qIndices": [
-          11,
-          8
-        ]
+        "title": "Umbrella Coverage & Extra Liability Protection",
+        "hook": "A friend mentions their family carries an \"umbrella policy\" on top of their regular insurance. What does an umbrella have to do with insurance — and does regular coverage actually have a limit?",
+        "qIndices": []
+      },
+      {
+        "title": "Reading a Policy Before You Need It",
+        "hook": "You are signing up for a new renter policy and, like every terms-of-service page ever, you are tempted to scroll to the bottom and click accept. What are you actually supposed to be looking for first?",
+        "qIndices": []
+      },
+      {
+        "title": "Enrolling in a Health Insurance Plan: A Step-by-Step Guide",
+        "hook": "Your school just emailed: enroll in the student health plan or submit a waiver within two weeks. Understanding premiums and deductibles is one thing — actually doing the paperwork is another.",
+        "qIndices": []
       }
     ],
     "quests": [
@@ -18721,52 +18445,49 @@
     ],
     "lessons": [
       {
-        "title": "Federal Loan Types",
-        "hook": "Your financial aid offer lists Direct Subsidized and Direct Unsubsidized loans, plus a mention of private loan options from your bank. You've never had to compare loan types before — does it actually matter which one you take?",
-        "qIndices": [
-          0,
-          6
-        ]
+        "title": "Federal Loans: Subsidized vs. Unsubsidized",
+        "hook": "Your financial aid offer lists Direct Subsidized and Direct Unsubsidized loans, plus a private loan option from a bank. Are they all just \"loans,\" or does the label actually matter?",
+        "qIndices": []
       },
       {
-        "title": "PLUS Loans & Who's Responsible",
+        "title": "Parent PLUS Loans & Who's Responsible",
         "hook": "Your parent takes out a Parent PLUS loan to cover the gap in your bill. You figure you'll just pay it off yourself after graduation — but is that actually how it works?",
-        "qIndices": [
-          1,
-          10
-        ]
+        "qIndices": []
       },
       {
-        "title": "Eligibility & Paperwork",
-        "hook": "Before a single dollar of your loan shows up, studentaid.gov wants you to complete a Master Promissory Note and Entrance Counseling — and you're not sure if dropping one class this semester puts your aid at risk.",
-        "qIndices": [
-          2,
-          3
-        ]
+        "title": "FAFSA Eligibility & Loan Paperwork",
+        "hook": "You are considering dropping a class this semester, and the loan money has not disbursed yet. You already filled out the FAFSA — is that really the only paperwork that matters?",
+        "qIndices": []
       },
       {
         "title": "Borrowing Only What You Need",
         "hook": "Your financial aid offer shows $5,500 in federal loans available for the year. You only need $3,200 to cover the gap after grants. It's tempting to take it all as extra cash. Should you?",
-        "qIndices": [
-          4,
-          5
-        ]
+        "qIndices": []
       },
       {
-        "title": "Repayment Plans & Interest Capitalization",
-        "hook": "You defer your loan for a semester while between jobs, and later hear terms like \"income-driven repayment\" and \"capitalized interest\" for the first time. Do you actually know what either means for your balance?",
-        "qIndices": [
-          8,
-          9
-        ]
+        "title": "Loan Repayment Plans Explained",
+        "hook": "You graduate with $28,000 in federal loans and a modest starting salary. Are you stuck with one fixed monthly payment, or do you actually get to choose?",
+        "qIndices": []
+      },
+      {
+        "title": "Interest Capitalization: The True Cost of Waiting",
+        "hook": "You put an unsubsidized loan into deferment for a year between jobs. Interest keeps accruing the whole time — what actually happens to it the moment deferment ends?",
+        "qIndices": []
       },
       {
         "title": "Grace Periods & Planning Ahead",
         "hook": "You graduate in May with $28,000 in federal loans and a job offer that starts in July. When does your first payment actually hit — and how do you know if you can afford it?",
-        "qIndices": [
-          7,
-          11
-        ]
+        "qIndices": []
+      },
+      {
+        "title": "Private Loans: When to Consider Them",
+        "hook": "An ad for a private student loan shows a rate that looks lower than the federal loan you were already offered. Is the lower rate automatically the better deal?",
+        "qIndices": []
+      },
+      {
+        "title": "Accepting Your Loan Offer on StudentAid.gov: A Step-by-Step Guide",
+        "hook": "Your financial aid offer just arrived with $5,500 in federal loans listed. Knowing subsidized from unsubsidized is one thing — actually accepting, reducing, or declining the offer is another.",
+        "qIndices": []
       }
     ],
     "quests": [
@@ -21684,52 +21405,49 @@
     ],
     "lessons": [
       {
-        "title": "Your First Return",
-        "hook": "It's April, and you've never filed a tax return in your life. You have a W-2 from your on-campus job. Where do you even start — and what does everything on that form actually mean?",
-        "qIndices": [
-          0,
-          1
-        ]
+        "title": "Filing Your First Tax Return",
+        "hook": "It is April. You have a W-2 from an on-campus job, a 1099 from a freelance gig, and you have never filed a tax return in your life. Do you even need to file anything?",
+        "qIndices": []
       },
       {
-        "title": "1099s & Internship Income",
-        "hook": "Your friend says they got a 1099-NEC after doing freelance design work over the summer, while you had a paid internship with a normal W-2. Are you taxed the same way?",
-        "qIndices": [
-          2,
-          3
-        ]
+        "title": "W-2s vs. 1099s",
+        "hook": "Your friend did freelance design work and got a 1099-NEC. You had a paid internship and got a normal W-2. Is it basically the same thing?",
+        "qIndices": []
       },
       {
-        "title": "Education Credits & Your 1098-T",
-        "hook": "Your school sends you a Form 1098-T in January and your parents mention \"education credits\" at dinner. You have no idea what either of those means for anyone's tax bill.",
-        "qIndices": [
-          4,
-          7
-        ]
+        "title": "Education Tax Credits & Your 1098-T",
+        "hook": "A Form 1098-T shows up from your school in January, and a parent mentions \"education credits\" like it is obvious what that means. Is that actually real money off your tax bill?",
+        "qIndices": []
       },
       {
         "title": "Dependency Status & Common Mistakes",
         "hook": "Your parents still claim you as a dependent, and your friend who got $600 back after filing says you should definitely file too, even though you were \"just an intern.\" What are you both getting wrong or right?",
-        "qIndices": [
-          6,
-          5
-        ]
+        "qIndices": []
       },
       {
-        "title": "Freelance Income: Estimated Taxes & State Filing",
-        "hook": "You earned $8,000 freelancing this year with nothing withheld, and half of it came from clients in the state where you go to school — not your home state. Is April the only deadline you need to worry about?",
-        "qIndices": [
-          8,
-          9
-        ]
+        "title": "Estimated Taxes for Freelance/Gig Income",
+        "hook": "You earn $8,000 freelancing this year with nothing withheld. Is April the only deadline you need to worry about?",
+        "qIndices": []
       },
       {
-        "title": "Getting Your Withholding Right & Filing for Free",
-        "hook": "Last year's tax bill caught you off guard, and this year a friend says campus has a free clinic that'll actually file your return for you. Do either of those things sound too good to be true?",
-        "qIndices": [
-          10,
-          11
-        ]
+        "title": "Getting Withholding Right & Filing for Free",
+        "hook": "Last year tax bill caught you off guard — too little was withheld all year. A friend says campus has a free clinic that will actually file your return. Is any of this actually as complicated as it sounds?",
+        "qIndices": []
+      },
+      {
+        "title": "How Tax Brackets Actually Work (Marginal vs. Effective Rate)",
+        "hook": "You are offered extra hours at work but hesitate — won't crossing into the next tax bracket mean ALL your income gets taxed at the higher rate? Could more hours actually leave you with less money?",
+        "qIndices": []
+      },
+      {
+        "title": "Tax Deadlines, Extensions & Refunds: What to Expect",
+        "hook": "It is April 14th and you haven't filed yet. Filing an extension buys extra time either way, right?",
+        "qIndices": []
+      },
+      {
+        "title": "Filing Your Taxes for Free: A Step-by-Step Guide",
+        "hook": "You have a W-2 from a campus job and have never filed a tax return. Knowing what a W-2 means is one thing — actually filing the return is another.",
+        "qIndices": []
       }
     ],
     "quests": [
@@ -24606,190 +24324,47 @@
       {
         "title": "Why Knowing Isn't Enough",
         "hook": "You know you should be saving — you even said it out loud last week. Then a friend tags you in a group order twenty minutes later. Why does knowing what to do never seem to be enough?",
-        "qIndices": [
-          0,
-          1
-        ]
+        "qIndices": []
       },
       {
-        "title": "Lifestyle Inflation & Social Pressure",
-        "hook": "Your friend group keeps upgrading — concert tickets, new clothes, a spring break trip everyone's going on — and you feel like you have to keep up even though your income hasn't changed. Where's the line between fitting in and financial trouble?",
-        "qIndices": [
-          2,
-          6
-        ]
+        "title": "Lifestyle Inflation: Why Spending Grows With Income",
+        "hook": "Your paycheck is the same as it was six months ago, but your spending has crept up to match your friend group — concert tickets, new clothes, a spring break trip. Why does it feel so much tighter with the same income?",
+        "qIndices": []
       },
       {
-        "title": "Subscriptions & BNPL",
-        "hook": "You check out online and see \"Buy Now, Pay Later — 4 payments of $50, no interest.\" It feels harmless. Combined with the six subscriptions already on your card, is it?",
-        "qIndices": [
-          3,
-          4
-        ]
+        "title": "Social Pressure & Comparison Spending",
+        "hook": "Your friend group is planning a spring break trip you genuinely cannot afford, but it is all anyone talks about and everyone else is already in. Is saying you cannot afford it really as awkward as it feels?",
+        "qIndices": []
+      },
+      {
+        "title": "Subscription Creep & Recurring Payments",
+        "hook": "You scroll through a bank statement and count six recurring subscriptions — only two of them ring a bell. When did you even sign up for the other four?",
+        "qIndices": []
+      },
+      {
+        "title": "Buy Now, Pay Later: The Real Cost",
+        "hook": "A checkout page offers to split a $200 purchase into 4 payments of $50, no interest — and you already have two other Buy Now, Pay Later plans running. Does no interest actually mean no risk?",
+        "qIndices": []
       },
       {
         "title": "Mental Accounting & Targeted Ads",
         "hook": "You get a $400 tax refund and immediately blow it on something you'd never normally buy, then open Instagram and buy a targeted ad's product on impulse ten minutes later. Is your brain treating this money differently than a regular paycheck?",
-        "qIndices": [
-          7,
-          8
-        ]
+        "qIndices": []
       },
       {
-        "title": "Sunk Cost & Comparison Spending",
-        "hook": "You're still paying for a gym membership you've used twice in 8 months, and you just spent an hour comparing your closet to an influencer's \"haul\" video. Neither decision is really about the gym or the clothes.",
-        "qIndices": [
-          9,
-          10
-        ]
+        "title": "Sunk Cost Fallacy & Breaking Spending Triggers",
+        "hook": "You have paid for a gym membership for 8 months but only gone twice. If you cancel now, does that make the money you already spent a waste?",
+        "qIndices": []
       },
       {
-        "title": "Automating Habits & Coping With Triggers",
-        "hook": "You automated your savings transfer months ago and it's worked well — but during a stressful exam week you still found yourself online shopping at 1am for things you don't need. What's the next habit to build?",
-        "qIndices": [
-          5,
-          11
-        ]
+        "title": "Automating Good Habits & Coping With Triggers",
+        "hook": "It is 9pm, your friends just texted about a $60 concert this weekend, rent is due Monday, and everyone is waiting on an answer. Does the pressure to decide fast change the decision itself?",
+        "qIndices": []
       },
       {
-        "title": "Evaluating Tradeoffs Under Pressure",
-        "type": "decision-chain",
-        "hook": "It's 9pm, your friends just texted about a $60 concert this weekend, and you're tight on cash. Everyone's waiting on your answer. Does the pressure to decide fast change the decision itself?",
-        "activity": {
-          "intro": "Being tight on time or money changes how you decide — that's the scarcity mindset: when resources feel scarce, your brain narrows in on the immediate problem and gets worse at weighing tradeoffs. Before any purchase over $50, run it through three questions: What's the actual cost? What's the consequence if I say yes? Can I undo this if I'm wrong — is it reversible? And when the pressure is social, not financial: an honest \"not this week, but let's do something free after\" almost always lands better with real friends than a vague excuse or an overspend you'll regret.",
-          "startLabel": "See What Happens →",
-          "decisions": [
-            {
-              "prompt": "Your friends are going to a $60 concert this weekend, but you're tight on money this week — rent is due Monday. The group chat is waiting on your answer. What do you do?",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Say yes and put it on a credit card — you don't want to miss out",
-                  "cost": 60,
-                  "gaveUp": "you're now $60 closer to not covering rent, and it's on a card that charges interest if you can't pay it off in full",
-                  "good": false
-                },
-                {
-                  "id": "b",
-                  "label": "Make a vague excuse and skip it without explaining why",
-                  "cost": 0,
-                  "gaveUp": "Your money stays fine, but your friends are left guessing — and unexplained no's, repeated enough times, quietly create distance.",
-                  "good": false
-                },
-                {
-                  "id": "c",
-                  "label": "Be honest: \"I'm tight this week, but I'm in for something free after\"",
-                  "cost": 0,
-                  "gaveUp": "Nothing — rent stays covered, and most real friends respect honesty a lot more than a vague no or a $60 flex they never see repaid.",
-                  "good": true
-                }
-              ]
-            }
-          ],
-          "finalChoiceLabel": "See the Takeaway →",
-          "summaryIntro": "Here's what that choice set in motion.",
-          "takeaway": "Option C cost nothing and cascaded nothing forward — no debt, no awkwardness, no guessing games. The scarcity mindset makes \"yes\" feel like the only way to protect a friendship. It usually isn't — the cost/consequence/reversibility check and a little honesty almost always find a cheaper path.",
-          "xpOnComplete": 8
-        }
-      },
-      {
-        "title": "Boss Challenge: Resist the Pressure",
-        "type": "boss-challenge",
-        "hook": "A full day of classic spending triggers is coming at you back to back — a countdown timer, a group chat, a bad mood, a discount code. Every one is designed to make \"yes\" feel automatic.",
-        "activity": {
-          "intro": "Today's a gauntlet of the exact psychological triggers marketers and social pressure use to short-circuit good decisions: manufactured urgency, FOMO, mood spending, and fake exclusivity. Each time you resist one, that's real money that stays yours — this run tracks how much.",
-          "startLabel": "Start the Day →",
-          "dashboardLabel": "Resisted So Far",
-          "startingValue": 0,
-          "stages": [
-            {
-              "tag": "Morning",
-              "prompt": "A checkout page shows \"⏰ 2 left, offer ends in 9:58\" for a $70 jacket you weren't planning to buy.",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Buy now, before the timer runs out",
-                  "delta": 0,
-                  "isOptimal": false,
-                  "result": "That timer resets for the next visitor too — the urgency was never really about the jacket running out."
-                },
-                {
-                  "id": "b",
-                  "label": "Close the tab and give it 24 hours",
-                  "delta": 70,
-                  "isOptimal": true,
-                  "result": "Real scarcity is rare online. If it's still there tomorrow (it usually is), it was never actually about to disappear."
-                }
-              ]
-            },
-            {
-              "tag": "Afternoon",
-              "prompt": "Your group chat is planning a spontaneous $85 day trip this weekend that you can't really afford right now.",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Say yes anyway — you don't want to be \"the broke one\"",
-                  "delta": 0,
-                  "isOptimal": false,
-                  "result": "Totally normal to want in, but saying yes here means catching up on a bill later this month."
-                },
-                {
-                  "id": "b",
-                  "label": "Be honest with the group about your budget this month",
-                  "delta": 85,
-                  "isOptimal": true,
-                  "result": "The friends worth keeping don't need a fake excuse, and next time you can say yes without the guilt."
-                }
-              ]
-            },
-            {
-              "tag": "Evening",
-              "prompt": "A rough exam grade lands right as an ad for a \"$40 treat yourself\" skincare set pops up.",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Buy it, you deserve it after today",
-                  "delta": 0,
-                  "isOptimal": false,
-                  "result": "The relief from an impulse purchase fades faster than the bill does."
-                },
-                {
-                  "id": "b",
-                  "label": "Text a friend instead, revisit the idea tomorrow if you still want it",
-                  "delta": 40,
-                  "isOptimal": true,
-                  "result": "Still an option tomorrow, just without deciding while stressed."
-                }
-              ]
-            },
-            {
-              "tag": "Late Night",
-              "prompt": "An influencer posts a \"24-hours-only\" 30%-off code for a $120 haircare bundle you don't currently need.",
-              "choices": [
-                {
-                  "id": "a",
-                  "label": "Use the code, it's basically free money saved",
-                  "delta": 0,
-                  "isOptimal": false,
-                  "result": "A 30% discount on something you didn't need still costs the other 70% of $120 you didn't have to spend."
-                },
-                {
-                  "id": "b",
-                  "label": "Skip it — a sale isn't a reason to buy something you weren't already buying",
-                  "delta": 120,
-                  "isOptimal": true,
-                  "result": "That's the actual rule: a discount only saves money on something you were already going to buy."
-                }
-              ]
-            }
-          ],
-          "passThreshold": 0,
-          "endNoteAtOrAbove": "Every dollar here is money that stayed in your account instead of funding someone else's urgency tactic.",
-          "endNoteBelow": "Even $0 resisted today is data, not a verdict — notice which trigger got you, that's the one to watch for next time.",
-          "takeaway": "None of today's triggers were really about the product. A countdown timer, a group chat, a bad mood, and a discount code are all designed to make you decide fast instead of well — the fix is always the same: slow down, and the \"deal\" almost always survives a day of thinking about it.",
-          "xpOnComplete": 12,
-          "bonusXpForOptimalPath": 8
-        }
+        "title": "Setting Up Auto-Save & Spending Alerts: A Step-by-Step Guide",
+        "hook": "You know exactly why willpower alone does not stop late-night impulse spending — but the auto-save rule and spending alerts that would actually help have never been set up.",
+        "qIndices": []
       }
     ],
     "quests": [
@@ -27609,72 +27184,49 @@
     ],
     "lessons": [
       {
-        "title": "Negotiating Your First Offer",
-        "hook": "You get a job offer: $58,000. You're thrilled and about to accept on the spot. Your friend negotiated theirs from $55,000 to $60,000 with one email. Did you just leave money on the table?",
-        "qIndices": [
-          0,
-          1
-        ]
-      },
-      {
         "title": "Reading Your Offer Letter",
         "hook": "Your offer letter lists \"$70,000 total target compensation\" plus a $5,000 signing bonus with a repayment clause you almost skipped past. Do you actually know what you're agreeing to?",
-        "qIndices": [
-          11,
-          6
-        ]
+        "qIndices": []
+      },
+      {
+        "title": "Negotiating Your First Salary",
+        "hook": "You get a job offer for $58,000 and are about to accept on the spot. A friend just negotiated theirs from $55,000 to $60,000 with a single email — is silence really the safer choice?",
+        "qIndices": []
       },
       {
         "title": "Benefits & Total Compensation",
         "hook": "Two offers pay the exact same salary — one gives you 10 PTO days, the other gives you 20 plus paid holidays. Does that difference actually matter, or is pay all that counts?",
-        "qIndices": [
-          2,
-          7
-        ]
+        "qIndices": []
       },
       {
         "title": "Retirement Match & Equity",
         "hook": "Your new job offers a 401(k) match, while a startup offer instead dangles stock options rather than a higher salary. Which of these is actually real money, and which is a bet on the future?",
-        "qIndices": [
-          3,
-          8
-        ]
+        "qIndices": []
       },
       {
         "title": "Comparing Offers & Job-Hopping",
         "hook": "You have two offers on the table — one with a slightly higher salary, the other with a stronger 401(k) match and a clearer promotion path — and a friend just left their job for a 15% raise elsewhere. How should all of this factor into your decision?",
-        "qIndices": [
-          4,
-          10
-        ]
+        "qIndices": []
       },
       {
-        "title": "Building Your Network & Long-Term Impact",
-        "hook": "You're only a sophomore with no job offers yet, but the $5,000 gap between two hypothetical starting salaries keeps nagging at you. Does anything you do now actually affect that gap years from now?",
-        "qIndices": [
-          9,
-          5
-        ]
+        "title": "Building Your Network for Long-Term Impact",
+        "hook": "You are a sophomore with no internships and nothing career-related happening yet. Isn't networking something you do once you are actually job hunting?",
+        "qIndices": []
       },
       {
-        "title": "Why Negotiating Compounds",
-        "type": "callout",
+        "title": "Why Negotiating Compounds Over Your Career",
         "hook": "Negotiating $5,000 more per year sounds like it's worth exactly $5,000 more per year. It isn't — and the real number is a lot bigger.",
-        "activity": {
-          "body": "Every negotiation skill in this module doesn't just affect this year's paycheck — it changes how much you can invest every single month, and money invested young has the most time to grow. Say negotiating adds $5,000/year starting at 22, and you invest all of it monthly at a 7% average return until 65. Here's what that one negotiation is actually worth by retirement:",
-          "example": {
-            "startingAmount": 0,
-            "monthlyContribution": 416.6666666666667,
-            "annualRatePct": 7,
-            "years": 43,
-            "label": "from one negotiated $5,000/year raise, starting at 22, invested at 7% until 65"
-          },
-          "linkOut": {
-            "label": "Run your own numbers in the Compound Interest Simulator",
-            "action": "compound-interest"
-          },
-          "xpOnComplete": 5
-        }
+        "qIndices": []
+      },
+      {
+        "title": "Starting Your First Job: What to Expect in the First 90 Days",
+        "hook": "Your first day at a new full-time job comes with a huge stack of onboarding paperwork — benefits, direct deposit, retirement plan sign-up — all due at once. Can you just click through it quickly and figure out the details later?",
+        "qIndices": []
+      },
+      {
+        "title": "Negotiating Your Offer by Email: A Step-by-Step Guide",
+        "hook": "You just got a $58,000 offer and know negotiating is worth it in theory. Actually writing the email that asks for more is a different challenge entirely.",
+        "qIndices": []
       }
     ],
     "quests": [
@@ -30554,50 +30106,47 @@
       {
         "title": "Fake Job Offers",
         "hook": "A remote job posting offers $35/hour, almost no interview, and asks to talk over WhatsApp instead of email. It sounds like a huge win. What is it actually testing you on?",
-        "qIndices": [
-          0,
-          1
-        ]
+        "qIndices": []
       },
       {
-        "title": "Housing Scams",
-        "hook": "A $650/month apartment shows up near campus — half the going rate — and the \"landlord\" just needs a deposit before showing it in person. Great deal, or something else?",
-        "qIndices": [
-          2,
-          3
-        ]
+        "title": "Housing & Rental Scams",
+        "hook": "You and two roommates are hunting for a place near campus, and rent nearby is brutal — most places are well over $1,000 a month. One listing is $650 and looks amazing. Too good to be true?",
+        "qIndices": []
       },
       {
         "title": "Financial Aid & Scholarship Fraud",
         "hook": "An email says your FAFSA needs \"verification\" and links to a login page that looks exactly like studentaid.gov. Does it matter that it looks right?",
-        "qIndices": [
-          4,
-          5
-        ]
+        "qIndices": []
       },
       {
         "title": "Phishing & Identity Theft",
         "hook": "A text claims your bank account is locked, with a countdown clock and a link to fix it right now. Is the urgency the point, or a warning sign?",
-        "qIndices": [
-          6,
-          7
-        ]
+        "qIndices": []
       },
       {
         "title": "Peer-to-Peer Payment Scams",
         "hook": "A buyer on a marketplace app \"accidentally\" overpays you and asks for the difference back over Venmo, right now. What actually happens to that first payment?",
-        "qIndices": [
-          8,
-          9
-        ]
+        "qIndices": []
       },
       {
         "title": "Online Shopping & Marketplace Scams",
         "hook": "An ad promises a gadget at 80% off from a site that didn't exist a month ago, and only takes gift cards or wire transfers. Free shipping, or something else?",
-        "qIndices": [
-          10,
-          11
-        ]
+        "qIndices": []
+      },
+      {
+        "title": "Romance & Social Media Scams",
+        "hook": "Someone matched with you on a dating app a few weeks ago. They are attentive, say all the right things, and the conversation moved fast — but you have never actually video called because their camera is \"broken.\" Is that worth slowing down for?",
+        "qIndices": []
+      },
+      {
+        "title": "Tech Support & Impersonation Scams",
+        "hook": "Your laptop suddenly locks up: a full-screen red warning blares an alarm and says your computer is infected, with a phone number and a countdown before your files get deleted. Should you call before time runs out?",
+        "qIndices": []
+      },
+      {
+        "title": "Freezing Your Credit & Setting Fraud Alerts: A Step-by-Step Guide",
+        "hook": "You almost fell for a phishing text last week. Knowing identity theft is a risk is one thing — actually freezing your credit and setting up fraud alerts is another.",
+        "qIndices": []
       }
     ],
     "quests": [
