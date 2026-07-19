@@ -53,6 +53,14 @@ type ActionProps = { onAction: (action: QuestAction) => void };
 type HintGate = { onReveal: () => void } | null;
 type HintGateProps = { onHintGate: (gate: HintGate) => void };
 
+/** Reported by a chapter that wants the header-level companion Hammy hidden in favor of its
+ * own big centered Hammy — currently only the story chapter's intro beat (see StoryView).
+ * Mirrors the onHintGate pattern: set on mount, cleared on unmount/change via the effect's
+ * own cleanup, so a later chapter that never calls this can't get stuck inheriting 'intro'
+ * from whatever the previous chapter last reported. */
+type LayoutMode = 'normal' | 'intro';
+type LayoutModeProps = { onLayoutMode: (mode: LayoutMode) => void };
+
 /** Feeds the end-of-lesson report (see @/questReport, results.tsx) — mirrors what the
  * website's per-chapter handlers write into `qp.analytics`. Only the chapter types the
  * website itself tracks (knowledgecheck/mythcards/matching/decision/bossbattle/explainback)
@@ -98,11 +106,17 @@ function ReactionBubble({ message, mood }: { message: string | null; mood: 'happ
     <View style={[styles.bubbleSlot, slotHeight ? { height: slotHeight } : null]} pointerEvents="none">
       {display ? (
         <Animated.View
-          style={[styles.bubbleInner, { opacity: anim, transform: [{ translateX: anim.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) }] }]}
+          style={[styles.bubbleInner, { opacity: anim, transform: [{ translateX: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}
           onLayout={(e) => setSlotHeight((h) => Math.max(h, e.nativeEvent.layout.height))}
         >
           <View style={styles.reactionBox}>
             <Txt style={[styles.reactionTxt, { color: textColor }]} numberOfLines={4}>{display}</Txt>
+            {/* A literal speech-bubble tail pointing at Hammy (he sits just to the right of
+                this bubble) — two stacked right-pointing triangles, the outer one the box's
+                own border color and slightly larger, so a thin rim of it peeks past the
+                inner white one, matching the box's own border stroke. */}
+            <View style={styles.reactionTailBorder} />
+            <View style={styles.reactionTailFill} />
           </View>
         </Animated.View>
       ) : null}
@@ -148,6 +162,12 @@ export default function QuestPlayer() {
   const onAction = (a: QuestAction) => setAction(a);
   const [hintGate, setHintGate] = useState<HintGate>(null);
   const onHintGate = (g: HintGate) => setHintGate(g);
+  // Only the story chapter's intro beat ever reports 'intro' (see StoryView); every other
+  // chapter type leaves this at its default, and StoryView's own effect cleanup resets it
+  // back to 'normal' the moment that intro beat is left — same reset-on-cleanup pattern as
+  // hintGate above, so nothing here can get stuck showing the wrong companion layout.
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
+  const onLayoutMode = (m: LayoutMode) => setLayoutMode(m);
   // A ref, not state — analytics never drives a render in this screen, it's only read once
   // at the final chapter's onComplete to build the results-screen params. A question's
   // "report" and the quest's final onComplete can fire in the very same handler (the last
@@ -294,28 +314,34 @@ export default function QuestPlayer() {
           />
         </View>
       ) : null}
-      {/* Dialogue on the left (takes the flexible width), Hammy shifted to the right —
-          shares one row instead of stacking, so this whole area takes less vertical space. */}
-      <View style={styles.companionWrap}>
-        <ReactionBubble message={reactionMsg} mood={reactionMood} />
-        <Pressable
-          disabled={!hintGate}
-          onPress={() => {
-            hintGate?.onReveal();
-            setWobbleTick((t) => t + 1);
-          }}
-          hitSlop={10}
-        >
-          <Hammy
-            size={130}
-            bob
-            equipped={equippedMascotItems()}
-            face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
-            reaction={reactionMood ?? (wobbleTick > 0 ? 'gentle' : null)}
-            reactionKey={reactionKey + wobbleTick}
-          />
-        </Pressable>
-      </View>
+      {/* Reaction bubble hugs Hammy's left side in one shared row (not stacked above the
+          content, so this whole area takes less vertical space) — hidden during a story
+          chapter's intro beat, which shows its own big centered Hammy in the content area
+          instead (see StoryView). Padded down a bit from the header so Hammy's reaction
+          bounce/jump never visually collides with the action button above it. */}
+      {layoutMode !== 'intro' ? (
+        <View style={styles.companionWrap}>
+          <ReactionBubble message={reactionMsg} mood={reactionMood} />
+          <Pressable
+            disabled={!hintGate}
+            onPress={() => {
+              hintGate?.onReveal();
+              setWobbleTick((t) => t + 1);
+            }}
+            hitSlop={10}
+            style={styles.hammySpot}
+          >
+            <Hammy
+              size={130}
+              bob
+              equipped={equippedMascotItems()}
+              face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
+              reaction={reactionMood ?? (wobbleTick > 0 ? 'gentle' : null)}
+              reactionKey={reactionKey + wobbleTick}
+            />
+          </Pressable>
+        </View>
+      ) : null}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ChapterView
           key={chapter.id}
@@ -327,6 +353,7 @@ export default function QuestPlayer() {
           reactTo={reactTo}
           onAction={onAction}
           onHintGate={onHintGate}
+          onLayoutMode={onLayoutMode}
           {...reportProps}
         />
       </ScrollView>
@@ -335,14 +362,14 @@ export default function QuestPlayer() {
 }
 
 function ChapterView({
-  chapter, questions, moduleXpReward, charName, onComplete, reactTo, onAction, onHintGate,
+  chapter, questions, moduleXpReward, charName, onComplete, reactTo, onAction, onHintGate, onLayoutMode,
   reportKnowledgeCheck, reportMythCard, reportMatchingMistake, reportDecision, reportExplainback,
 }: {
   chapter: Chapter; questions: Question[]; moduleXpReward: number; charName: string; onComplete: Complete;
-} & ReactProps & ReportProps & ActionProps & HintGateProps) {
+} & ReactProps & ReportProps & ActionProps & HintGateProps & LayoutModeProps) {
   const reactProps: ReactProps = { reactTo };
   switch (chapter.type) {
-    case 'story': return <StoryView chapter={chapter} charName={charName} onComplete={onComplete} onAction={onAction} />;
+    case 'story': return <StoryView chapter={chapter} charName={charName} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
     case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...reactProps} reportMatchingMistake={reportMatchingMistake} />;
     case 'hint': return <HintView chapter={chapter} onComplete={onComplete} onAction={onAction} onHintGate={onHintGate} />;
@@ -441,11 +468,16 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
 /** Hammy's actual illustrated head (not an emoji) — the same SVG the rest of the app uses,
  * rendered oversized inside a small clipped circle and shifted so only the head fills it,
  * roughly matching the website's getHammyFaceMarkup crop of the same pig. */
-/** A square region of Hammy's 440x460 SVG stage containing just the ears/head (no
- * body/arms/feet) — measured directly from Hammy.tsx's own shape coordinates (head ellipse
- * cx=220,cy=198,rx=138,ry=124 → x:82-358; ears translate(*, 54), ~74 tall → top ~50), sized
- * to a square so it crops the same way the favicon does. */
-const HEAD_CROP = { x: 82, y: 50, size: 276 };
+/** A square region of Hammy's 440x460 SVG stage containing the head AND ears, cropped by a
+ * CIRCLE (the avatar's borderRadius: size/2), not the square itself — so what actually has
+ * to fit is the circle inscribed in this square, radius = size/2. The head ellipse alone
+ * (cx=220,cy=198,rx=138,ry=124) fit inside the previous tighter crop, but the ears
+ * (translate(106/270, 54), ~64x74 boxes) sit up near the square's top corners — outside
+ * that inscribed circle — so they were getting clipped off. Widened/recentered so the
+ * circle (radius 180, center 220,188) clears the ears' top corners (~176px out) with a
+ * little margin, while staying centered enough to still read as "just his head" like the
+ * favicon. */
+const HEAD_CROP = { x: 40, y: 8, size: 360 };
 
 function HammyHeadAvatar({ size = 40 }: { size?: number }) {
   const scale = size / HEAD_CROP.size;
@@ -460,35 +492,67 @@ function HammyHeadAvatar({ size = 40 }: { size?: number }) {
   );
 }
 
-function StoryView({ chapter, charName, onComplete, onAction }: { chapter: StoryChapter; charName: string; onComplete: Complete } & ActionProps) {
+function StoryView({
+  chapter, charName, onComplete, onAction, onLayoutMode,
+}: { chapter: StoryChapter; charName: string; onComplete: Complete } & ActionProps & LayoutModeProps) {
+  // Every real story chapter's first beat is a scene-setting "intro" line (not a quoted
+  // line of dialogue, unlike the beats after it) — used as the standalone intro screen's
+  // context sentence instead of being folded into the dialogue log, so it isn't shown
+  // twice. Falls back to treating every beat as dialogue (no intro screen) on the rare
+  // chapter that doesn't lead with one.
+  const hasIntro = chapter.beats.length > 0 && chapter.beats[0].speaker === 'intro';
+  const introBeat = hasIntro ? chapter.beats[0] : null;
+  const dialogueBeats = hasIntro ? chapter.beats.slice(1) : chapter.beats;
+  const [showIntro, setShowIntro] = useState(hasIntro);
   const [i, setI] = useState(0);
-  const last = i + 1 >= chapter.beats.length;
+  const last = i + 1 >= dialogueBeats.length;
+
   useEffect(() => {
-    onAction({ label: 'Next', onPress: () => (last ? onComplete(0) : setI(i + 1)) });
+    onLayoutMode(showIntro ? 'intro' : 'normal');
+    return () => onLayoutMode('normal');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [i, last]);
-  // Beats accumulate on screen as a running conversation log instead of replacing each
-  // other — ported from renderStoryChapter ("nothing disappears when the student clicks
-  // Next, so they can never lose track of what's already been said").
+  }, [showIntro]);
+
+  useEffect(() => {
+    if (showIntro) {
+      // A chapter that's nothing but its intro beat (no dialogue after it) completes
+      // straight from the intro screen instead of flashing an empty dialogue screen.
+      onAction({ label: 'Next', onPress: () => (dialogueBeats.length === 0 ? onComplete(0) : setShowIntro(false)) });
+    } else {
+      onAction({ label: 'Next', onPress: () => (last ? onComplete(0) : setI(i + 1)) });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showIntro, i, last]);
+
   return (
     <View style={{ gap: 10, flex: 1 }}>
-      {chapter.title ? <Txt variant="h2">{chapter.title}</Txt> : null}
-      {chapter.beats.slice(0, i + 1).map((beat, idx) => {
-        const isNarrator = beat.speaker === 'narrator';
-        const isHammy = beat.speaker === charName || beat.speaker === 'intro';
-        return (
-          <View key={idx} style={styles.storyBeat}>
-            {!isNarrator ? (isHammy ? <HammyHeadAvatar /> : (
-              <View style={styles.storyAvatar}>
-                <Txt style={styles.storyAvatarTxt}>{beat.speaker.charAt(0)}</Txt>
+      {chapter.title ? <Txt style={styles.storyTitle}>{chapter.title}</Txt> : null}
+      {showIntro ? (
+        <View style={styles.storyIntroStage}>
+          <Hammy size={168} bob />
+          {introBeat ? <Txt style={styles.storyIntroCaption}>{introBeat.text}</Txt> : null}
+        </View>
+      ) : (
+        // Beats accumulate on screen as a running conversation log instead of replacing
+        // each other — ported from renderStoryChapter ("nothing disappears when the
+        // student clicks Next, so they can never lose track of what's already been said").
+        dialogueBeats.slice(0, i + 1).map((beat, idx) => {
+          const isNarrator = beat.speaker === 'narrator';
+          const isHammy = beat.speaker === charName || beat.speaker === 'intro';
+          return (
+            <View key={idx} style={styles.storyBeat}>
+              {!isNarrator ? (isHammy ? <HammyHeadAvatar /> : (
+                <View style={styles.storyAvatar}>
+                  <Txt style={styles.storyAvatarTxt}>{beat.speaker.charAt(0)}</Txt>
+                </View>
+              )) : null}
+              <View style={[styles.storyBubble, isNarrator && styles.storyBubbleNarrator]}>
+                <Txt style={[styles.storyBubbleTxt, isNarrator && styles.storyBubbleNarratorTxt]}>{beat.text}</Txt>
               </View>
-            )) : null}
-            <View style={[styles.storyBubble, isNarrator && styles.storyBubbleNarrator]}>
-              <Txt style={[styles.storyBubbleTxt, isNarrator && styles.storyBubbleNarratorTxt]}>{beat.text}</Txt>
             </View>
-          </View>
-        );
-      })}
+          );
+        })
+      )}
     </View>
   );
 }
@@ -514,7 +578,7 @@ function TeachView({ chapter, onComplete, onAction, reactTo }: { chapter: TeachC
   };
 
   useEffect(() => {
-    onAction(!hasCheck || answered !== null ? { label: last ? 'Next' : 'Next concept', onPress: next } : null);
+    onAction(!hasCheck || answered !== null ? { label: last ? 'Next' : 'Got it', onPress: next } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasCheck, answered, last]);
 
@@ -844,11 +908,11 @@ function MythcardsView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolved, last]);
 
-  // Once resolved, the tilt is a fixed small value (hinting which way was swiped) instead
-  // of tracking pan.x — pan is reset to 0 on commit (see above), so this keeps a bit of
-  // the swipe's visual direction without depending on any animation actually completing.
+  // Once resolved, the card snaps straight (0deg) instead of holding a tilt — read-length
+  // text (the myth, the explanation) is meaningably harder to read at an angle, so legibility
+  // wins over keeping a visual hint of which way was swiped.
   const rotate = resolved
-    ? (resolved.guessedTrue ? '5deg' : '-5deg')
+    ? '0deg'
     : pan.x.interpolate({ inputRange: [-220, 0, 220], outputRange: ['-14deg', '0deg', '14deg'] });
   const borderColor = resolved
     ? (resolved.guessedTrue ? colors.green : '#D98A9E')
@@ -1262,17 +1326,49 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10,
   },
   tfBtnTxt: { fontFamily: font.extra, fontSize: 15 },
+  // Extra paddingTop clears space below the header/action bar so Hammy's reaction
+  // bounce/jump (see Hammy.tsx's reactY, up to -30) never visually collides with the
+  // action button above. paddingRight (well past paddingLeft) pulls Hammy in from the
+  // hard screen edge to a middle-right spot instead of flush against it.
   companionWrap: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
-    paddingHorizontal: 16, paddingTop: 4, paddingBottom: 2, gap: 10,
+    paddingLeft: 16, paddingRight: 34, paddingTop: 20, paddingBottom: 6, gap: 10,
   },
-  bubbleSlot: { flex: 1, justifyContent: 'center', minHeight: 4 },
-  bubbleInner: { alignItems: 'flex-start' },
+  hammySpot: { flexShrink: 0 },
+  // Still the full flexible width (so Hammy's own position never shifts as a reaction
+  // message comes and goes), but alignItems: 'flex-end' pins its child (bubbleInner) to
+  // this slot's right edge instead of letting it stretch from the left — hugging Hammy's
+  // side instead of sitting flush against the screen's left edge. bubbleInner's own
+  // maxWidth then caps how wide the bubble itself can grow.
+  bubbleSlot: { flex: 1, justifyContent: 'center', alignItems: 'flex-end', minHeight: 4 },
+  bubbleInner: { alignItems: 'flex-end', maxWidth: '82%' },
   reactionBox: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
-    borderRadius: 14, paddingVertical: 10, paddingHorizontal: 14,
+    borderRadius: 16, paddingVertical: 12, paddingHorizontal: 16,
   },
-  reactionTxt: { fontFamily: font.bold, fontSize: 14, lineHeight: 18.5 },
+  reactionTxt: { fontFamily: font.bold, fontSize: 15.5, lineHeight: 20 },
+  // A literal speech-bubble tail on the box's right edge, pointing at Hammy — the classic
+  // border-triangle trick (colored left border, transparent top/bottom, zero width/height).
+  // Two stacked triangles (a larger border-colored one behind, a smaller white one in
+  // front) fake the box's own 1.5px stroke carrying around the point.
+  reactionTailBorder: {
+    position: 'absolute', top: '50%', right: -9, marginTop: -7,
+    width: 0, height: 0, borderTopWidth: 7, borderBottomWidth: 7, borderLeftWidth: 9,
+    borderTopColor: 'transparent', borderBottomColor: 'transparent', borderLeftColor: colors.border,
+  },
+  reactionTailFill: {
+    position: 'absolute', top: '50%', right: -6.5, marginTop: -5.8,
+    width: 0, height: 0, borderTopWidth: 5.8, borderBottomWidth: 5.8, borderLeftWidth: 7.5,
+    borderTopColor: 'transparent', borderBottomColor: 'transparent', borderLeftColor: colors.white,
+  },
+  // Story chapter title — pink, and rendered in the exact same spot whether the intro
+  // screen or the dialogue log is showing, so it visibly stays put across the transition.
+  storyTitle: { fontFamily: font.display, fontSize: 19, color: colors.pinkDark },
+  storyIntroStage: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingVertical: 24 },
+  storyIntroCaption: {
+    fontFamily: font.semi, fontSize: 15, lineHeight: 21, color: colors.ink,
+    textAlign: 'center', maxWidth: 320,
+  },
   content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },

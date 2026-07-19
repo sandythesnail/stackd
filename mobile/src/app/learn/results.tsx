@@ -78,9 +78,18 @@ export default function Results() {
   // no real dismissable stack) can't service, which is what produced the "unmatched route"
   // error on the web build after finishing a lesson/module. replace() alone is enough to
   // land on Home on every platform.
+  //
+  // The levelup/life-event hops below used router.push (not replace) despite that same
+  // fix — that pushed a transparentModal route on top of results instead of swapping it,
+  // leaving results (and, transitively, quest — replace()d by results itself) still on the
+  // stack underneath a route the modal's own screens then replace() out from under. On the
+  // web build this mismatched push/replace pairing across a "modal" that isn't a real
+  // dismissable native-stack modal is exactly what produced "broken route" after Continue —
+  // replace() throughout keeps the stack from ever holding more than one of these screens
+  // at once, on every platform.
   const continuePress = () => {
-    if (tieredUp) { router.push('/modal/levelup'); return; }
-    if (state.pendingLifeEventId) { router.push('/modal/life-event'); return; }
+    if (tieredUp) { router.replace('/modal/levelup'); return; }
+    if (state.pendingLifeEventId) { router.replace('/modal/life-event'); return; }
     router.replace('/(tabs)/home');
   };
 

@@ -606,8 +606,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // Merge the remote snapshot, then re-run the once-per-day check against the merged
       // result — otherwise a stale cloud streak/lastPlayedDate (from before today's local
       // increment) clobbers the increment we just computed on local load.
+      // Coins/diamonds/xp are floored at whichever side is ahead (not just remote's
+      // value) — the remote read is a snapshot fetched at sign-in time, which can resolve
+      // AFTER a same-session action (e.g. tapping to collect the streak reward) has already
+      // moved these forward locally. Blindly taking `partial`'s numbers would silently wipe
+      // out that fresh local gain the moment the network response lands — this was reported
+      // as "logs in and collects the streak reward, but coins/diamonds don't update": the
+      // claim's setState really did land, then this hydrate clobbered it a moment later.
       hydrateFromRemote: (partial) => {
-        const { next, streakDiamondsEarned } = runDailyCheck({ ...state, ...partial });
+        const merged: AppState = {
+          ...state,
+          ...partial,
+          coins: Math.max(state.coins, partial.coins ?? state.coins),
+          diamonds: Math.max(state.diamonds, partial.diamonds ?? state.diamonds),
+          xp: Math.max(state.xp, partial.xp ?? state.xp),
+        };
+        const { next, streakDiamondsEarned } = runDailyCheck(merged);
         setState(next);
         if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
       },
