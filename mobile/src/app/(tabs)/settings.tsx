@@ -22,7 +22,7 @@ import { authEnabled } from '@/lib/env';
  * IS real here: the referral code and a working copy-to-clipboard. */
 export default function Settings() {
   const router = useRouter();
-  const { state, level, tierName, resetProgress } = useStore();
+  const { state, level, tierName, resetProgress, debugSimulateNewDay } = useStore();
   const [copied, setCopied] = useState(false);
   const copyReferral = async () => {
     await Clipboard.setStringAsync(user.referral);
@@ -67,6 +67,14 @@ export default function Settings() {
           <Row icon="bell" title="Notifications" />
           <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.push('/(onboarding)/survey')} />
           <Row icon="trash-2" title="Reset all progress" sub="Hammy goes back to a piglet" danger onPress={confirmReset} />
+          {__DEV__ ? (
+            <Row
+              icon="fast-forward"
+              title="Simulate next day (dev)"
+              sub={`Streak: ${state.streak}`}
+              onPress={debugSimulateNewDay}
+            />
+          ) : null}
           {authEnabled ? (
             <ClerkSignOutRow />
           ) : (

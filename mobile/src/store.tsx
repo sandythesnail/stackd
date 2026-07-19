@@ -267,6 +267,9 @@ type Ctx = {
   /** Merge a remote (cloud-synced) snapshot into local state — used by SupabaseSync after
    * translating the web's user_progress blob into mobile's AppState. */
   hydrateFromRemote: (partial: Partial<AppState>) => void;
+  /** Dev-only: backdates lastPlayedDate by one day and re-runs the daily check, so the
+   * streak/daily-login flow can be verified without waiting for a real day boundary. */
+  debugSimulateNewDay: () => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
@@ -541,6 +544,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // increment) clobbers the increment we just computed on local load.
       hydrateFromRemote: (partial) => {
         const { next, banner } = runDailyCheck({ ...state, ...partial });
+        setState(next);
+        if (banner) setDailyLoginBanner(banner);
+      },
+      debugSimulateNewDay: () => {
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        const { next, banner } = runDailyCheck({ ...state, lastPlayedDate: yesterday });
         setState(next);
         if (banner) setDailyLoginBanner(banner);
       },
