@@ -266,6 +266,13 @@ type Ctx = {
   pendingLifeEvent: () => LifeEvent | null;
   /** Applies a choice's coinDelta (if any), records the event as shown, and clears pending. */
   resolveLifeEvent: (choiceId: string) => void;
+  /** Ambient random life-event roll, ported from the website's maybeTriggerAmbientLifeEvent
+   * — checked at ordinary mid-quest "next" transitions (see quest.tsx's onComplete), not
+   * just when a whole lesson finishes (completeLesson has its own separate guaranteed-unlock
+   * + ambient roll for that). Same cooldown/chance gate as completeLesson's ambient branch.
+   * Returns whether an event actually got queued, so the caller knows to pause and wait for
+   * it to be dismissed before continuing. */
+  rollAmbientLifeEvent: () => boolean;
   /** Set when a claimed reward is worth telling the player about; null once dismissed. */
   dailyLoginBanner: { streak: number; loginCoins: number; streakDiamonds: number } | null;
   dismissDailyLoginBanner: () => void;
@@ -574,6 +581,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           coins: s.coins + (choice?.coinDelta ?? 0),
           pendingLifeEventId: null,
         }));
+      },
+
+      rollAmbientLifeEvent: () => {
+        if (state.pendingLifeEventId) return false;
+        if (state.lifeEventCooldown > 0) {
+          setState((s) => ({ ...s, lifeEventCooldown: s.lifeEventCooldown - 1 }));
+          return false;
+        }
+        if (Math.random() >= LIFE_EVENT_CHANCE) return false;
+        const pick = LIFE_EVENTS[Math.floor(Math.random() * LIFE_EVENTS.length)];
+        setState((s) => ({ ...s, pendingLifeEventId: pick.id, lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS }));
+        return true;
       },
 
       dailyLoginBanner,

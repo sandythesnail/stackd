@@ -8,6 +8,7 @@ import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
+import type { LifeEvent } from '@/lifeEvents';
 import { REACTION_FACES } from '@/hammyFaces';
 import { EMPTY_ANALYTICS, setPendingQuestAnalytics, type QuestAnalytics } from '@/questReport';
 import type {
@@ -46,18 +47,13 @@ type ReactProps = { reactTo: (isCorrect: boolean, customMsg?: string, gentlePool
 type QuestAction = { label: string; onPress: () => void; variant?: 'green' | 'pink'; disabled?: boolean } | null;
 type ActionProps = { onAction: (action: QuestAction) => void };
 
-/** Lets the 'hint' chapter (Hammy's Tip) gate its reveal behind tapping the persistent Hammy
- * mascot itself (which lives up in QuestPlayer, not inside the chapter view) — ported from
- * the website's renderHintChapter/.hammy-tappable. Registered via a mount effect with an
- * unmount cleanup, so it's never left dangling into a later, unrelated chapter. */
-type HintGate = { onReveal: () => void } | null;
-type HintGateProps = { onHintGate: (gate: HintGate) => void };
-
 /** Reported by a chapter that wants the header-level companion Hammy hidden in favor of its
- * own big centered Hammy — currently only the story chapter's intro beat (see StoryView).
- * Mirrors the onHintGate pattern: set on mount, cleared on unmount/change via the effect's
- * own cleanup, so a later chapter that never calls this can't get stuck inheriting 'intro'
- * from whatever the previous chapter last reported. */
+ * own big centered Hammy — the story chapter's intro beat, and the 'hint' chapter (Hammy's
+ * Tip), which gates its reveal behind tapping that big centered Hammy directly instead of
+ * the small side companion (ported from the website's renderHintChapter/.hammy-tappable).
+ * Set on mount, cleared on unmount/change via the effect's own cleanup, so a later chapter
+ * that never calls this can't get stuck inheriting 'intro' from whatever the previous
+ * chapter last reported. */
 type LayoutMode = 'normal' | 'intro';
 type LayoutModeProps = { onLayoutMode: (mode: LayoutMode) => void };
 
@@ -93,7 +89,6 @@ function ReactionBubble({ message, mood }: { message: string | null; mood: 'happ
   const anim = useRef(new Animated.Value(0)).current;
   const [display, setDisplay] = useState(message);
   const [displayMood, setDisplayMood] = useState(mood);
-  const [slotHeight, setSlotHeight] = useState(0);
   useEffect(() => {
     if (message) { setDisplay(message); setDisplayMood(mood); }
     Animated.timing(anim, { toValue: message ? 1 : 0, duration: 250, easing: Easing.ease, useNativeDriver: true }).start(() => {
@@ -103,11 +98,14 @@ function ReactionBubble({ message, mood }: { message: string | null; mood: 'happ
   }, [message, anim]);
   const textColor = displayMood === 'gentle' ? colors.pinkDark : displayMood ? colors.greenDark : colors.inkSoft;
   return (
-    <View style={[styles.bubbleSlot, slotHeight ? { height: slotHeight } : null]} pointerEvents="none">
+    // bubbleSlot's height is a fixed minHeight (see styles), reserved from the very first
+    // render whether or not a message is showing — it used to only grow to fit once a
+    // message's real height was measured after the fact, which visibly pushed the content
+    // below down the first time Hammy ever had something to say.
+    <View style={styles.bubbleSlot} pointerEvents="none">
       {display ? (
         <Animated.View
           style={[styles.bubbleInner, { opacity: anim, transform: [{ translateX: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}
-          onLayout={(e) => setSlotHeight((h) => Math.max(h, e.nativeEvent.layout.height))}
         >
           <View style={styles.reactionBox}>
             <Txt style={[styles.reactionTxt, { color: textColor }]} numberOfLines={4}>{display}</Txt>
@@ -131,7 +129,7 @@ function ReactionBubble({ message, mood }: { message: string | null; mood: 'happ
  * put — dialogue, questions and choices don't have to share scroll space with him. */
 export default function QuestPlayer() {
   const router = useRouter();
-  const { equippedMascotItems } = useStore();
+  const { equippedMascotItems, rollAmbientLifeEvent, pendingLifeEvent, resolveLifeEvent } = useStore();
   const { moduleId, lessonIndex, isLifeTask } = useLocalSearchParams<{ moduleId: string; lessonIndex: string; isLifeTask?: string }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
@@ -149,10 +147,6 @@ export default function QuestPlayer() {
   const [reactionMsg, setReactionMsg] = useState<string | null>(null);
   const [reactionKey, setReactionKey] = useState(0);
   const [answerStreak, setAnswerStreak] = useState(0);
-  // Bumped whenever the player taps Hammy to reveal his tip — plays the same body-wobble
-  // animation as a "gentle" reaction (a little shake) as a tap acknowledgment, decoupled
-  // from the face/mood system so tapping for a hint never changes his face.
-  const [wobbleTick, setWobbleTick] = useState(0);
   // Each chapter view remounts on chapter change (see ChapterView's key={chapter.id} below)
   // and reports its own fresh action on mount, so no separate reset-on-chapterIdx effect is
   // needed here — a sibling effect that clears `action` would fire AFTER the child's mount
@@ -160,14 +154,20 @@ export default function QuestPlayer() {
   // action a chapter reports immediately on mount.
   const [action, setAction] = useState<QuestAction>(null);
   const onAction = (a: QuestAction) => setAction(a);
-  const [hintGate, setHintGate] = useState<HintGate>(null);
-  const onHintGate = (g: HintGate) => setHintGate(g);
-  // Only the story chapter's intro beat ever reports 'intro' (see StoryView); every other
-  // chapter type leaves this at its default, and StoryView's own effect cleanup resets it
-  // back to 'normal' the moment that intro beat is left — same reset-on-cleanup pattern as
-  // hintGate above, so nothing here can get stuck showing the wrong companion layout.
+  // Only the story chapter's intro beat and the 'hint' chapter (Hammy's Tip, which now
+  // shows its own big centered/tappable Hammy instead of the small side companion) ever
+  // report 'intro'; every other chapter type leaves this at its default, and each of those
+  // views resets it back to 'normal' on its own unmount — same reset-on-cleanup pattern
+  // used elsewhere in this file — so nothing here can get stuck on the wrong layout.
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
   const onLayoutMode = (m: LayoutMode) => setLayoutMode(m);
+  // An ambient life event (see rollAmbientLifeEvent) pauses a mid-quest chapter transition
+  // the same way the website's maybeTriggerAmbientLifeEvent pauses its own "next" handlers
+  // — the chapter doesn't actually advance until the event is dismissed. pendingAdvanceRef
+  // (not state) holds that deferred transition since it's a plain callback, not something
+  // that needs to trigger a render itself.
+  const [ambientEventActive, setAmbientEventActive] = useState(false);
+  const pendingAdvanceRef = useRef<(() => void) | null>(null);
   // A ref, not state — analytics never drives a render in this screen, it's only read once
   // at the final chapter's onComplete to build the results-screen params. A question's
   // "report" and the quest's final onComplete can fire in the very same handler (the last
@@ -268,26 +268,42 @@ export default function QuestPlayer() {
         ? [...new Set([...terms, ...chapter.concepts.map((c) => c.term)])]
         : terms;
     const nextBossWon = bossWon || chapter.type === 'bossbattle';
+    const isFinalChapter = chapterIdx + 1 >= quest.chapters.length;
 
-    if (chapterIdx + 1 >= quest.chapters.length) {
-      setPendingQuestAnalytics({ ...analyticsRef.current, learnedTerms: nextTerms });
-      router.replace({
-        pathname: '/learn/results',
-        params: {
-          moduleId: mod.id, lessonIndex: String(li),
-          correctCount: String(nextCorrect), total: String(nextGraded), xpEarned: String(nextXp),
-          questId: quest.id, hintsUsed: String(hintsUsed), bossWon: nextBossWon ? '1' : '0',
-          ...(isLifeTask ? { isLifeTask } : {}),
-        },
-      });
-      return;
+    const advance = () => {
+      if (isFinalChapter) {
+        setPendingQuestAnalytics({ ...analyticsRef.current, learnedTerms: nextTerms });
+        router.replace({
+          pathname: '/learn/results',
+          params: {
+            moduleId: mod.id, lessonIndex: String(li),
+            correctCount: String(nextCorrect), total: String(nextGraded), xpEarned: String(nextXp),
+            questId: quest.id, hintsUsed: String(hintsUsed), bossWon: nextBossWon ? '1' : '0',
+            ...(isLifeTask ? { isLifeTask } : {}),
+          },
+        });
+        return;
+      }
+      setXpEarned(nextXp);
+      setCorrectCount(nextCorrect);
+      setGradedTotal(nextGraded);
+      setTerms(nextTerms);
+      setBossWon(nextBossWon);
+      setChapterIdx(chapterIdx + 1);
+    };
+
+    // Ambient random life events (ported from the website's maybeTriggerAmbientLifeEvent)
+    // interrupt ordinary mid-quest chapter transitions, same as the site checks between
+    // quiz questions / decision steps — not the final chapter though, since finishing the
+    // whole lesson already has its own guaranteed-unlock + ambient roll (store.completeLesson,
+    // surfaced via the results screen's own life-event hop); rolling here too would risk
+    // double-firing one right after the other.
+    if (!isFinalChapter && rollAmbientLifeEvent()) {
+      pendingAdvanceRef.current = advance;
+      setAmbientEventActive(true);
+    } else {
+      advance();
     }
-    setXpEarned(nextXp);
-    setCorrectCount(nextCorrect);
-    setGradedTotal(nextGraded);
-    setTerms(nextTerms);
-    setBossWon(nextBossWon);
-    setChapterIdx(chapterIdx + 1);
   };
 
   return (
@@ -316,30 +332,23 @@ export default function QuestPlayer() {
       ) : null}
       {/* Reaction bubble hugs Hammy's left side in one shared row (not stacked above the
           content, so this whole area takes less vertical space) — hidden during a story
-          chapter's intro beat, which shows its own big centered Hammy in the content area
-          instead (see StoryView). Padded down a bit from the header so Hammy's reaction
-          bounce/jump never visually collides with the action button above it. */}
+          chapter's intro beat or a 'hint' chapter, both of which show their own big
+          centered Hammy in the content area instead (see StoryView/HintView). Padded down
+          a bit from the header so Hammy's reaction bounce/jump doesn't visually collide
+          with the action button above it. */}
       {layoutMode !== 'intro' ? (
         <View style={styles.companionWrap}>
           <ReactionBubble message={reactionMsg} mood={reactionMood} />
-          <Pressable
-            disabled={!hintGate}
-            onPress={() => {
-              hintGate?.onReveal();
-              setWobbleTick((t) => t + 1);
-            }}
-            hitSlop={10}
-            style={styles.hammySpot}
-          >
+          <View style={styles.hammySpot}>
             <Hammy
               size={130}
               bob
               equipped={equippedMascotItems()}
               face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
-              reaction={reactionMood ?? (wobbleTick > 0 ? 'gentle' : null)}
-              reactionKey={reactionKey + wobbleTick}
+              reaction={reactionMood}
+              reactionKey={reactionKey}
             />
-          </Pressable>
+          </View>
         </View>
       ) : null}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -352,27 +361,38 @@ export default function QuestPlayer() {
           onComplete={onComplete}
           reactTo={reactTo}
           onAction={onAction}
-          onHintGate={onHintGate}
           onLayoutMode={onLayoutMode}
           {...reportProps}
         />
       </ScrollView>
+      {ambientEventActive ? (
+        <AmbientLifeEventModal
+          pendingLifeEvent={pendingLifeEvent}
+          resolveLifeEvent={resolveLifeEvent}
+          onDone={() => {
+            setAmbientEventActive(false);
+            const advance = pendingAdvanceRef.current;
+            pendingAdvanceRef.current = null;
+            advance?.();
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }
 
 function ChapterView({
-  chapter, questions, moduleXpReward, charName, onComplete, reactTo, onAction, onHintGate, onLayoutMode,
+  chapter, questions, moduleXpReward, charName, onComplete, reactTo, onAction, onLayoutMode,
   reportKnowledgeCheck, reportMythCard, reportMatchingMistake, reportDecision, reportExplainback,
 }: {
   chapter: Chapter; questions: Question[]; moduleXpReward: number; charName: string; onComplete: Complete;
-} & ReactProps & ReportProps & ActionProps & HintGateProps & LayoutModeProps) {
+} & ReactProps & ReportProps & ActionProps & LayoutModeProps) {
   const reactProps: ReactProps = { reactTo };
   switch (chapter.type) {
     case 'story': return <StoryView chapter={chapter} charName={charName} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
     case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...reactProps} reportMatchingMistake={reportMatchingMistake} />;
-    case 'hint': return <HintView chapter={chapter} onComplete={onComplete} onAction={onAction} onHintGate={onHintGate} />;
+    case 'hint': return <HintView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
     case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
     case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} onAction={onAction} />;
     case 'poll': return <PollView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
@@ -460,6 +480,64 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
   );
 }
 
+/** Ambient random "Life happens…" popup, ported from the website's showLifeEvent — but
+ * rendered right here as a local overlay (not a route push like the post-lesson version in
+ * app/modal/life-event.tsx) so dismissing it just resumes the quest exactly where it paused,
+ * with no "where does this route go back to" navigation to reason about. The event is
+ * captured once via useState's lazy initializer at mount (QuestPlayer only ever mounts this
+ * while ambientEventActive is true, remounting fresh each time), so it keeps showing through
+ * the choice+result even after resolveLifeEvent clears state.pendingLifeEventId. */
+function AmbientLifeEventModal({
+  onDone, pendingLifeEvent, resolveLifeEvent,
+}: { onDone: () => void; pendingLifeEvent: () => LifeEvent | null; resolveLifeEvent: (choiceId: string) => void }) {
+  const [event] = useState(() => pendingLifeEvent());
+  const [answeredId, setAnsweredId] = useState<string | null>(null);
+  const answeredChoice = event?.choices.find((c) => c.id === answeredId);
+
+  const pick = (choiceId: string) => {
+    setAnsweredId(choiceId);
+    resolveLifeEvent(choiceId);
+  };
+
+  if (!event) return null;
+
+  return (
+    <Modal visible transparent animationType="fade" onRequestClose={() => {}}>
+      <View style={styles.ambientLifeRoot}>
+        <View style={[StyleSheet.absoluteFill, styles.ambientLifeScrim]} />
+        <View style={styles.ambientLifeSheet}>
+          <View style={styles.ambientLifeHandle} />
+          <View style={{ alignItems: 'center', gap: 6 }}>
+            <View style={styles.ambientLifeEmoji}>
+              <Txt style={{ fontSize: 34 }}>{answeredChoice ? (answeredChoice.coinDelta ? '🎉' : '😬') : '⚠️'}</Txt>
+            </View>
+            <Tag tone="warm" style={{ marginTop: 4 }}>✨ {event.tag.toUpperCase()}</Tag>
+            <Txt variant="disp" style={{ fontSize: 18, marginTop: 2, textAlign: 'center' }}>{event.title}</Txt>
+            <Txt variant="lead" style={{ textAlign: 'center', fontSize: 13.5 }}>
+              {answeredChoice ? answeredChoice.result : event.scenario}
+            </Txt>
+          </View>
+          {!answeredChoice ? (
+            <View style={{ gap: 10, marginTop: 16 }}>
+              {event.choices.map((c) => (
+                <Option
+                  key={c.id}
+                  label={c.label}
+                  state="default"
+                  onPress={() => pick(c.id)}
+                  right={c.coinDelta ? <Tag tone="green">🪙 +{c.coinDelta}</Tag> : undefined}
+                />
+              ))}
+            </View>
+          ) : (
+            <Button label="Continue" onPress={onDone} style={{ marginTop: 14 }} />
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 /* ───────────────────────── story ───────────────────────── */
 /** One beat per screen, "Next" reveals the next line — ported from renderStoryChapter.
  * Speaker-styled: Hammy (or the story's protagonist/"intro" establishing beats) gets a
@@ -529,7 +607,7 @@ function StoryView({
       {chapter.title ? <Txt style={styles.storyTitle}>{chapter.title}</Txt> : null}
       {showIntro ? (
         <View style={styles.storyIntroStage}>
-          <Hammy size={168} bob />
+          <Hammy size={220} bob />
           {introBeat ? <Txt style={styles.storyIntroCaption}>{introBeat.text}</Txt> : null}
         </View>
       ) : (
@@ -634,7 +712,11 @@ function MatchingView({
       const next = new Set(matched); next.add(selTerm);
       setMatched(next);
       setSelTerm(null);
-      if (next.size === chapter.pairs.length) setTimeout(() => onComplete(chapter.xpOnComplete ?? 0), 400);
+      // Long enough for Hammy's "Nice! 🎉" reaction bubble to actually be seen (it fades in
+      // over 250ms) before the chapter transitions out from under it — at the old 400ms the
+      // final correct match could advance almost before the bubble finished appearing,
+      // reading as "Hammy didn't say anything."
+      if (next.size === chapter.pairs.length) setTimeout(() => onComplete(chapter.xpOnComplete ?? 0), 950);
     } else {
       setWrongPair(def);
       setTimeout(() => { setWrongPair(null); setSelTerm(null); }, 500);
@@ -679,35 +761,45 @@ function MatchingView({
 
 /* ───────────────────────── hint (Hammy's Tip) ───────────────────────── */
 /** Ported from renderHintChapter: the tip stays hidden behind a placeholder until the
- * player taps Hammy himself (see QuestPlayer's companionWrap Pressable, wired up via
- * onHintGate) — not a button in the content area. */
-function HintView({ chapter, onComplete, onAction, onHintGate }: { chapter: HintChapter; onComplete: Complete } & ActionProps & HintGateProps) {
+ * player taps Hammy himself — now a big centered Hammy right here in the content (same
+ * 'intro' layout StoryView's intro screen uses), not the small side companion, so tapping
+ * him reads as a deliberate, prominent gesture instead of poking at a small far-off icon. */
+function HintView({
+  chapter, onComplete, onAction, onLayoutMode,
+}: { chapter: HintChapter; onComplete: Complete } & ActionProps & LayoutModeProps) {
   const [revealed, setRevealed] = useState(false);
+  const [tapTick, setTapTick] = useState(0);
 
   useEffect(() => {
-    if (revealed) return undefined;
-    onHintGate({ onReveal: () => setRevealed(true) });
-    return () => onHintGate(null);
+    onLayoutMode('intro');
+    return () => onLayoutMode('normal');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    onAction(revealed ? { label: 'Got it', onPress: () => onComplete(chapter.xpOnComplete ?? 0) } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed]);
 
-  useEffect(() => {
-    onAction(revealed ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0) } : null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revealed]);
+  const tap = () => {
+    if (revealed) return;
+    setRevealed(true);
+    setTapTick((t) => t + 1);
+  };
 
   return (
-    <View style={{ gap: 14, flex: 1 }}>
+    <View style={styles.storyIntroStage}>
+      <Pressable onPress={tap} disabled={revealed} hitSlop={14}>
+        <Hammy size={168} bob reaction={revealed ? 'happy' : null} reactionKey={tapTick} />
+      </Pressable>
       <Tag tone="warm">{chapter.tag || "🐷 Hammy's Tip"}</Tag>
-      <Card style={{ gap: 8 }}>
-        {revealed ? (
-          <Txt variant="lead" style={{ fontSize: 14.5, color: colors.ink }}>{chapter.text}</Txt>
-        ) : (
-          <Txt variant="lead" style={{ fontSize: 14.5, color: colors.muted3, fontStyle: 'italic' }}>
-            Tap Hammy to hear what they have to say.
-          </Txt>
-        )}
-      </Card>
+      {revealed ? (
+        <Txt style={styles.storyIntroCaption}>{chapter.text}</Txt>
+      ) : (
+        <Txt style={[styles.storyIntroCaption, { color: colors.muted3, fontStyle: 'italic' }]}>
+          Tap Hammy to hear what they have to say.
+        </Txt>
+      )}
     </View>
   );
 }
@@ -1304,11 +1396,11 @@ function UrlinspectView({ chapter, onComplete, onAction, reactTo }: { chapter: U
 const styles = StyleSheet.create({
   stick: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12,
+    paddingHorizontal: 16, paddingTop: 8, paddingBottom: 9,
     borderBottomWidth: 1.5, borderBottomColor: '#EFEFE7',
   },
   step: { fontFamily: font.bold, fontSize: 12, color: colors.green },
-  actionBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 8 },
+  actionBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 6 },
   hintFab: {
     minWidth: 34, height: 30, paddingHorizontal: 8, borderRadius: 15,
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderCool,
@@ -1332,15 +1424,18 @@ const styles = StyleSheet.create({
   // hard screen edge to a middle-right spot instead of flush against it.
   companionWrap: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
-    paddingLeft: 16, paddingRight: 34, paddingTop: 20, paddingBottom: 6, gap: 10,
+    paddingLeft: 16, paddingRight: 34, paddingTop: 12, paddingBottom: 4, gap: 10,
   },
   hammySpot: { flexShrink: 0 },
   // Still the full flexible width (so Hammy's own position never shifts as a reaction
   // message comes and goes), but alignItems: 'flex-end' pins its child (bubbleInner) to
   // this slot's right edge instead of letting it stretch from the left — hugging Hammy's
   // side instead of sitting flush against the screen's left edge. bubbleInner's own
-  // maxWidth then caps how wide the bubble itself can grow.
-  bubbleSlot: { flex: 1, justifyContent: 'center', alignItems: 'flex-end', minHeight: 4 },
+  // maxWidth then caps how wide the bubble itself can grow. minHeight is fixed up front
+  // (room for a two-line message) rather than starting at 0 and growing once a message's
+  // real height gets measured — that grow-after-the-fact was what visibly pushed the
+  // content below down the first time Hammy had something to say.
+  bubbleSlot: { flex: 1, justifyContent: 'center', alignItems: 'flex-end', minHeight: 64 },
   bubbleInner: { alignItems: 'flex-end', maxWidth: '82%' },
   reactionBox: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
@@ -1364,12 +1459,25 @@ const styles = StyleSheet.create({
   // Story chapter title — pink, and rendered in the exact same spot whether the intro
   // screen or the dialogue log is showing, so it visibly stays put across the transition.
   storyTitle: { fontFamily: font.display, fontSize: 19, color: colors.pinkDark },
-  storyIntroStage: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingVertical: 24 },
+  storyIntroStage: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 18, paddingVertical: 24 },
   storyIntroCaption: {
-    fontFamily: font.semi, fontSize: 15, lineHeight: 21, color: colors.ink,
+    fontFamily: font.semi, fontSize: 17.5, lineHeight: 24, color: colors.ink,
     textAlign: 'center', maxWidth: 320,
   },
-  content: { paddingHorizontal: 22, paddingTop: 16, paddingBottom: 28, gap: 14, flexGrow: 1 },
+  // Ambient mid-quest life-event overlay — a bottom sheet, matching the post-lesson
+  // route's own life-event screen so the two read as the same feature.
+  ambientLifeRoot: { flex: 1, justifyContent: 'flex-end' },
+  ambientLifeScrim: { backgroundColor: 'rgba(22,32,23,0.62)' },
+  ambientLifeSheet: {
+    backgroundColor: colors.screen, borderTopLeftRadius: 30, borderTopRightRadius: 30,
+    paddingHorizontal: 22, paddingTop: 10, paddingBottom: 34,
+  },
+  ambientLifeHandle: { width: 44, height: 5, borderRadius: 3, backgroundColor: '#D6DFCF', alignSelf: 'center', marginBottom: 16 },
+  ambientLifeEmoji: {
+    width: 80, height: 80, borderRadius: 40, backgroundColor: '#F9E6C6',
+    alignItems: 'center', justifyContent: 'center', borderWidth: 6, borderColor: '#FBF3E4',
+  },
+  content: { paddingHorizontal: 22, paddingTop: 10, paddingBottom: 20, gap: 12, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
   // Story beats — speaker-styled: white bordered bubble + pig-head avatar for Hammy, a
