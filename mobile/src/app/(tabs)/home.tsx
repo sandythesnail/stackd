@@ -56,13 +56,18 @@ export default function Home() {
   const nextPct = nextTotal ? nextDone / nextTotal : 0;
 
   // One mood per calendar day (todaysHammyMood), unless a lesson's already been finished
-  // today — then Hammy's just happy (satisfied) about that instead.
+  // today — then Hammy's just happy (satisfied) about that instead. The copy here is
+  // deliberately a forward invitation, not a "you're done" sign-off — the CTA below should
+  // read as the obvious next step, not one option among several (no separate "come back
+  // later" button; the ambient nudge under the button carries the "see you tomorrow" idea
+  // instead of competing with the CTA for attention).
   const activeToday = hasModuleActivityToday(state.lastModuleActivityDate);
   const mood = todaysHammyMood();
   const speechMsg = activeToday
-    ? "Hammy's had a great day — you already finished a module! Come back tomorrow for more."
+    ? "Hammy's had a great day already, thanks to you! Keep it going?"
     : mood.msg;
   const moodFace = activeToday ? MOOD_FACES.satisfied : MOOD_FACES[mood.id];
+  const ctaLabel = activeToday ? 'Keep Hammy happy — do another module' : 'Continue quest';
 
   return (
     <Screen edges={['top']}>
@@ -103,12 +108,17 @@ export default function Home() {
               <ProgressBar value={nextPct} tone="pink" />
             </View>
             <Button
-              label="Continue quest"
+              label={ctaLabel}
               variant="pink"
               size="sm"
               onPress={() => router.push({ pathname: '/learn/hook', params: { moduleId: nextModule.id, lessonIndex: String(nextDone) } })}
               style={{ marginTop: 13 }}
             />
+            {activeToday ? (
+              <Txt variant="lead" style={styles.ambientNudge}>
+                🔥 {state.streak}-day streak — Hammy will be even happier tomorrow
+              </Txt>
+            ) : null}
           </Card>
         ) : null}
 
@@ -173,6 +183,7 @@ const styles = StyleSheet.create({
   questCard: { backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder },
   questTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   questMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 },
+  ambientNudge: { fontSize: 11.5, textAlign: 'center', marginTop: 9, color: colors.pinkText },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   gridItem: { width: '47.5%', flexGrow: 1 },
   tileTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
