@@ -134,19 +134,6 @@ export function Hammy({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reactionKey]);
 
-  // Swap between the default eyes/cheeks/snout and an illustrated face overlay. This used
-  // to crossfade via an Animated-driven opacity + a `displayFace` staging value, but that
-  // three-piece dance (anim value, a value-listener syncing React state, and a staged
-  // "last known face" var) had a real failure mode: whenever a new reaction interrupted an
-  // in-flight fade (very easy to do — matching fires reactions in quick succession), the
-  // opacity could end up parked at a mid-value with the listener's last update not
-  // reflecting the latest `face`, showing neither the overlay nor the base features —
-  // exactly the "face goes blank" bug. A direct swap has no intermediate state to get
-  // stuck in: `face` truthy shows only the overlay, falsy shows only the base features,
-  // full stop, on every single render.
-  const faceOpacity = face ? 1 : 0;
-  const displayFace = face;
-
   useEffect(() => {
     if (!bob) return;
     const floatLoop = Animated.loop(
@@ -200,25 +187,50 @@ export function Hammy({
   const [earLTransform, setEarLTransform] = useState('rotate(-18 32 74)');
   const [earRTransform, setEarRTransform] = useState('rotate(18 32 74)');
   const [tailTransform, setTailTransform] = useState('rotate(-5 14 26)');
+  // Rides the SAME blink cycle as eyeRy above (1 = eyes open, dips toward 0 during the
+  // ~90-120ms blink window) — used below to briefly fade the face overlay out and let the
+  // base (blinking) eyes show through, so a mood/reaction face doesn't just sit there
+  // motionless forever. Without this, blinking only ever showed up when Hammy had no face
+  // overlay active at all — which on Home (always a mood face) and results.tsx (now always
+  // the streak face) meant essentially never.
+  const [blinkDip, setBlinkDip] = useState(1);
 
   useEffect(() => {
     const eyeRyInterp = blink.interpolate({ inputRange: [0.08, 1], outputRange: [1.6, 19] });
+    const blinkDipInterp = blink.interpolate({ inputRange: [0.08, 1], outputRange: [0, 1] });
     const earLInterp = earL.interpolate({ inputRange: [0, 1], outputRange: ['rotate(-18 32 74)', 'rotate(-26 32 74)'] });
     const earRInterp = earR.interpolate({ inputRange: [0, 1], outputRange: ['rotate(18 32 74)', 'rotate(26 32 74)'] });
     const tailInterp = tail.interpolate({ inputRange: [0, 1], outputRange: ['rotate(-5 14 26)', 'rotate(8 14 26)'] });
     const ids = [
       eyeRyInterp.addListener(({ value }) => setEyeRy(value as unknown as number)),
+      blinkDipInterp.addListener(({ value }) => setBlinkDip(value as unknown as number)),
       earLInterp.addListener(({ value }) => setEarLTransform(value as unknown as string)),
       earRInterp.addListener(({ value }) => setEarRTransform(value as unknown as string)),
       tailInterp.addListener(({ value }) => setTailTransform(value as unknown as string)),
     ];
     return () => {
       eyeRyInterp.removeListener(ids[0]);
-      earLInterp.removeListener(ids[1]);
-      earRInterp.removeListener(ids[2]);
-      tailInterp.removeListener(ids[3]);
+      blinkDipInterp.removeListener(ids[1]);
+      earLInterp.removeListener(ids[2]);
+      earRInterp.removeListener(ids[3]);
+      tailInterp.removeListener(ids[4]);
     };
   }, [blink, earL, earR, tail]);
+
+  // Swap between the default eyes/cheeks/snout and an illustrated face overlay. This used
+  // to crossfade via an Animated-driven opacity + a `displayFace` staging value, but that
+  // three-piece dance (anim value, a value-listener syncing React state, and a staged
+  // "last known face" var) had a real failure mode: whenever a new reaction interrupted an
+  // in-flight fade (very easy to do — matching fires reactions in quick succession), the
+  // opacity could end up parked at a mid-value with the listener's last update not
+  // reflecting the latest `face`, showing neither the overlay nor the base features —
+  // exactly the "face goes blank" bug. A direct swap has no intermediate state to get
+  // stuck in: `face` falsy shows only the base features, full stop. When `face` IS set, its
+  // opacity rides blinkDip instead of a flat 1 — briefly dipping toward 0 on the same cycle
+  // as a real blink, letting the (also blinking) base eyes peek through underneath, so an
+  // overlay face isn't just a frozen mask the whole time it's shown.
+  const faceOpacity = face ? blinkDip : 0;
+  const displayFace = face;
 
   const aspect = STAGE_H / STAGE_W;
   const width = size;

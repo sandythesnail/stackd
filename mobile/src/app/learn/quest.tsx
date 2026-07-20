@@ -250,6 +250,11 @@ export default function QuestPlayer() {
   const reactionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (reactionTimeout.current) clearTimeout(reactionTimeout.current); }, []);
   useEffect(() => {
+    // Also clears any still-pending timeout from the previous chapter's last reactTo call
+    // — without this, a stale timeout could still be sitting there ready to fire later
+    // (harmless on its own, since it only sets already-null values back to null, but it's
+    // dead weight this effect should have owned clearing in the first place).
+    if (reactionTimeout.current) { clearTimeout(reactionTimeout.current); reactionTimeout.current = null; }
     setReactionMood(null);
     setReactionMsg(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -338,48 +343,55 @@ export default function QuestPlayer() {
         <Txt style={styles.step}>{Math.round((chapterIdx / quest.chapters.length) * 100)}%</Txt>
         <HintCorner key={chapter.id} hintText={hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       </View>
-      {/* "Look back" glossary tray — ported from the website's #glossary-tray. Hidden during
-          a big-centered-Hammy 'intro' screen (story intro / Hammy's Tip) same as the
-          companion row, and naturally absent until the first teach/matching chapter has
-          taught at least one term. */}
-      {terms.length > 0 && layoutMode !== 'intro' ? <GlossaryTray terms={terms} /> : null}
-      {/* The chapter's own primary action ("Next", "Check my answer", ...), reported up via
-          onAction — lives here, top-right, instead of trailing the chapter's scrollable
-          content, so it's never something you have to scroll to find. Always flat green
-          unless a chapter opts into a different variant. */}
-      {action ? (
-        <View style={styles.actionBar}>
-          <Button
-            label={action.label}
-            onPress={action.onPress}
-            variant={action.variant ?? 'green'}
-            disabled={action.disabled}
-            size="sm"
-            style={{ paddingHorizontal: 20 }}
-          />
-        </View>
-      ) : null}
-      {/* Reaction bubble hugs Hammy's left side in one shared row (not stacked above the
-          content, so this whole area takes less vertical space) — hidden during a story
-          chapter's intro beat or a 'hint' chapter, both of which show their own big
-          centered Hammy in the content area instead (see StoryView/HintView). Padded down
-          a bit from the header so Hammy's reaction bounce/jump doesn't visually collide
-          with the action button above it. */}
-      {layoutMode !== 'intro' ? (
-        <View style={styles.companionWrap}>
-          <ReactionBubble message={reactionMsg} mood={reactionMood} />
-          <View style={styles.hammySpot}>
-            <Hammy
-              size={130}
-              bob
-              equipped={equippedMascotItems()}
-              face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
-              reaction={reactionMood}
-              reactionKey={reactionKey}
+      {/* Everything below shares one "header zone" so the chapter's own action button can
+          float in its top-right corner (position: absolute) instead of claiming a whole
+          row of its own — reclaims a full row of vertical space on every single chapter.
+          minHeight only kicks in for the 'intro' layout (story intro / Hammy's Tip), where
+          the companion row/glossary tray are hidden and there'd otherwise be nothing in
+          this zone to reserve room for the floating button against. */}
+      <View style={[styles.headerZone, layoutMode === 'intro' && styles.headerZoneIntro]}>
+        {/* "Look back" glossary tray — ported from the website's #glossary-tray. Hidden
+            during a big-centered-Hammy 'intro' screen same as the companion row, and
+            naturally absent until the first teach/matching chapter has taught a term. */}
+        {terms.length > 0 && layoutMode !== 'intro' ? <GlossaryTray terms={terms} /> : null}
+        {/* Companion row — hidden during a story chapter's intro beat or a 'hint' chapter,
+            both of which show their own big centered Hammy in the content area instead
+            (see StoryView/HintView). hammyStage holds ONLY Hammy in normal flow, so
+            centering it centers Hammy himself; the reaction bubble is a positioned overlay
+            hugging his left side, not a flex sibling — it no longer has to fight for actual
+            centering the way a shared flex row did. */}
+        {layoutMode !== 'intro' ? (
+          <View style={styles.companionWrap}>
+            <View style={styles.hammyStage}>
+              <ReactionBubble message={reactionMsg} mood={reactionMood} />
+              <Hammy
+                size={130}
+                bob
+                equipped={equippedMascotItems()}
+                face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
+                reaction={reactionMood}
+                reactionKey={reactionKey}
+              />
+            </View>
+          </View>
+        ) : null}
+        {/* The chapter's own primary action ("Next", "Check my answer", ...), reported up
+            via onAction. Floating instead of its own row is also why it never has to
+            scroll to reach — it's always pinned to this same spot. Always flat green
+            unless a chapter opts into a different variant. */}
+        {action ? (
+          <View style={styles.actionBarFloat}>
+            <Button
+              label={action.label}
+              onPress={action.onPress}
+              variant={action.variant ?? 'green'}
+              disabled={action.disabled}
+              size="sm"
+              style={{ paddingHorizontal: 20 }}
             />
           </View>
-        </View>
-      ) : null}
+        ) : null}
+      </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ChapterView
           key={chapter.id}
@@ -1001,7 +1013,10 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
 
   // Ported from the website's lockBudget — Hammy reacts the moment the budget is locked in,
   // same as every other graded chapter type. Mobile had never actually wired this one up.
-  const submit = () => { setSubmitted(true); reactTo(tier.ok); };
+  // tier.text as the spoken message (not just a generic "Nice!"/"Not quite!") so Hammy
+  // actually explains why the split worked or didn't, matching what's shown in the card
+  // below instead of leaving the reasoning to text-only.
+  const submit = () => { setSubmitted(true); reactTo(tier.ok, tier.text); };
 
   useEffect(() => {
     onAction(submitted
@@ -1217,7 +1232,10 @@ function KnowledgecheckView({
   const pick = (idx: number) => {
     setSel(idx);
     const isCorrect = question ? idx === question.correct : false;
-    reactTo(isCorrect);
+    // A wrong answer speaks the actual explanation (also shown in the card below) instead
+    // of a generic "Not quite! Here's why:" — a right answer keeps the plain celebratory
+    // pool, since "Nice! 🎉" doesn't need anything more said about it.
+    reactTo(isCorrect, isCorrect ? undefined : question?.exp);
     if (question) reportKnowledgeCheck(question.q, isCorrect);
   };
   const next = () => {
@@ -1419,7 +1437,9 @@ function PriceisrightView({
   const diff = Math.abs(guess - chapter.actualValue);
   const close = diff <= (max - min) * 0.1;
 
-  const submit = () => { setSubmitted(true); reactTo(close); };
+  // chapter.explanation as the spoken message, same reasoning as Microsim's tier.text —
+  // Hammy actually explains the real number instead of a generic "Nice!"/"Not quite!".
+  const submit = () => { setSubmitted(true); reactTo(close, chapter.explanation); };
 
   useEffect(() => {
     onAction(submitted
@@ -1559,7 +1579,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5, borderBottomColor: '#EFEFE7',
   },
   step: { fontFamily: font.bold, fontSize: 12, color: colors.green },
-  actionBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 6 },
+  // Shared container for the glossary tray / companion row / floating action button — see
+  // the big comment at its call site. position: relative so actionBarFloat below can anchor
+  // to it. minHeight (headerZoneIntro) only applies for the 'intro' layout, where it'd
+  // otherwise be the ONLY thing determining this zone's height (everything else in it is
+  // hidden), and the floating button needs a floor to be positioned within.
+  headerZone: { position: 'relative' },
+  headerZoneIntro: { minHeight: 50 },
+  // Floats over headerZone's top-right corner instead of claiming a full row of its own —
+  // reclaims that whole row's height on every chapter (the single biggest lever pulled for
+  // "reduce scrolling" — a real ~50px back on every single screen, not just spacing trims).
+  actionBarFloat: { position: 'absolute', top: 4, right: 16 },
   hintFab: {
     minWidth: 34, height: 30, paddingHorizontal: 8, borderRadius: 15,
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderCool,
@@ -1617,27 +1647,26 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10,
   },
   tfBtnTxt: { fontFamily: font.extra, fontSize: 15 },
-  // justifyContent: 'center' centers the (bubble + Hammy) pair as a unit in the row instead
-  // of pinning it to the right edge. That only works because bubbleSlot below has a FIXED
-  // width rather than flex:1 — a flex:1 slot would still eat 100% of the leftover space and
-  // fight the centering. Extra paddingTop clears space below the header/action bar so
-  // Hammy's reaction bounce/jump (see Hammy.tsx's reactY, up to -30) never visually collides
-  // with the action button above.
-  companionWrap: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, gap: 10,
+  // alignItems: 'center' centers hammyStage — Hammy himself, truly, this time (the reaction
+  // bubble no longer shares this flex row at all, see hammyStage/bubbleSlot below, so it
+  // can't pull him off-center the way a shared row did). Extra paddingTop clears space
+  // below the header so Hammy's reaction bounce/jump (see Hammy.tsx's reactY, up to -30)
+  // never visually collides with the floating action button.
+  companionWrap: { alignItems: 'center', paddingTop: 16, paddingBottom: 4 },
+  // Holds ONLY Hammy in normal flow — its size IS Hammy's size, nothing else. The reaction
+  // bubble is positioned absolutely against it (see bubbleSlot), so it can sit right next to
+  // him without being a layout sibling that would fight his centering.
+  hammyStage: { position: 'relative' },
+  // right: '100%' parks the bubble's right edge at hammyStage's own left edge (i.e. Hammy's
+  // left edge) regardless of Hammy's exact pixel width; marginRight adds the gap. top/bottom
+  // 0 stretches it to Hammy's full height so justifyContent: 'center' vertically centers the
+  // actual bubble within that — no measuring or magic numbers needed either way. Being fully
+  // out of flow also means the bubble growing for a longer message can never shift anything
+  // else on screen, which used to be a real problem when it was a flex sibling.
+  bubbleSlot: {
+    position: 'absolute', top: 0, bottom: 0, right: '100%', marginRight: 10,
+    width: 200, justifyContent: 'center', alignItems: 'flex-end',
   },
-  hammySpot: { flexShrink: 0 },
-  // A fixed width (not flex:1) so centering the row as a whole (see companionWrap above)
-  // actually centers it, instead of the slot eating all remaining space — and Hammy's own
-  // position still never shifts as a reaction message comes and goes, since the slot's
-  // width doesn't depend on whether it currently holds one. alignItems: 'flex-end' hugs the
-  // bubble against Hammy's side within that fixed width. minHeight is fixed up front (room
-  // for a two-line message) rather than starting at 0 and growing once a message's real
-  // height gets measured — that grow-after-the-fact was what used to visibly push the
-  // content below down the first time Hammy had something to say; a longer message beyond
-  // that floor still grows the box normally, just in the same layout pass, not a later jump.
-  bubbleSlot: { width: 200, justifyContent: 'center', alignItems: 'flex-end', minHeight: 64 },
   bubbleInner: { alignItems: 'flex-end' },
   reactionBox: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
