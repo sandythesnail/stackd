@@ -75,20 +75,20 @@ export default function Results() {
   // maybeShowPostCompletionOverlays) — a numeric level-up alone doesn't get a full screen.
   // A life event (if one triggered) is deferred until after that overlay, same as the website.
   const tieredUp = tierName !== tierBefore;
-  // This screen lives inside the nested "learn" stack (app/learn/_layout.tsx) — a SEPARATE
-  // navigator from the root Stack that owns /modal/* and /(tabs)/*. replace() only reliably
-  // swaps a screen within its OWN navigator's history (that's exactly why quest.tsx's own
-  // replace() into this same results screen, another "learn" sibling, works fine); asking it
-  // to jump into a different top-level branch is what actually produced "broken
-  // route"/blank-screen after Continue, through two rounds of trying to fix this by shuffling
-  // push vs replace between results/levelup/life-event while they all stayed cross-navigator
-  // replaces. push() is the operation that reliably escapes to a sibling navigator branch —
-  // see shop.tsx's identical modal/shop-item hop, which has never had this problem.
-  // Trade-off: back-stack cleanliness (dismissAll() was tried for this and broke the web
-  // build outright, see git history) in exchange for the navigation actually working.
+  // The web build's baseUrl is "/m" (see mobile/app.json), and "/modal/..." starts with
+  // those same two characters. A bare-string push('/modal/life-event') gets misread as
+  // already carrying the base prefix, which strips the first 2 chars and lands on
+  // "/m/odal/life-event" — an actual unmatched route, not a crash. Passing an object
+  // ({ pathname: '/modal/...' }) resolves through the route tree instead of raw string
+  // matching and sidesteps the collision entirely — this is why shop.tsx's identical
+  // modal/shop-item hop (object form from day one) never had this problem, while every
+  // bare-string push to /modal/* here and in home.tsx/levelup.tsx did. The cross-navigator
+  // push-vs-replace difference from earlier fix rounds was real (replace() doesn't reliably
+  // cross from this nested "learn" stack into the root Stack) but was not the whole story —
+  // hence why the bug kept resurfacing after each of those fixes.
   const continuePress = () => {
-    if (tieredUp) { router.push('/modal/levelup'); return; }
-    if (state.pendingLifeEventId) { router.push('/modal/life-event'); return; }
+    if (tieredUp) { router.push({ pathname: '/modal/levelup' }); return; }
+    if (state.pendingLifeEventId) { router.push({ pathname: '/modal/life-event' }); return; }
     router.push('/(tabs)/home');
   };
 

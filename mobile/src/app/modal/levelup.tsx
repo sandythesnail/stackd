@@ -22,11 +22,13 @@ export default function LevelUp() {
   const router = useRouter();
   const { state, level, tierName, equippedMascotItems } = useStore();
   // /modal/life-event is a same-navigator sibling (both are root-Stack screens, see
-  // _layout.tsx), so replace() is fine there — but /(tabs)/home lives in a different nested
-  // navigator, and replace() across that boundary is unreliable (see results.tsx's
-  // continuePress for the full story of the "broken route" this caused); push() instead.
+  // _layout.tsx), so replace() is fine there — but it needs the object form, not a bare
+  // string: baseUrl is "/m" and "/modal/..." starts with those same 2 characters, so a
+  // bare-string href gets misread as already base-prefixed and corrupted (see results.tsx's
+  // continuePress for the full story). /(tabs)/home lives in a different nested navigator,
+  // where replace() across that boundary is unreliable; push() instead.
   const done = () => {
-    if (state.pendingLifeEventId) { router.replace('/modal/life-event'); return; }
+    if (state.pendingLifeEventId) { router.replace({ pathname: '/modal/life-event' }); return; }
     router.push('/(tabs)/home');
   };
   return (
