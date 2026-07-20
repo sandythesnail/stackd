@@ -686,15 +686,20 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
  * "neck" that kept coming back no matter how the numbers were tuned, at the expense of
  * clipping the ears when tuned the other way. The app's own logo/favicon
  * (favicon-512.png at the repo root, copied in as hammy-head-icon.png) is a SEPARATE
- * illustration purpose-drawn as a head-only icon — the ears are drawn outside the face
- * circle with no body behind them at all, so there's nothing to leak. Using that image
- * directly is an exact, guaranteed match instead of another approximation. */
+ * illustration purpose-drawn as a head-only icon with no body behind it at all, so there's
+ * nothing to leak — but its ears are drawn out near the corners of their own square canvas,
+ * which is exactly where a CIRCULAR mask (borderRadius: size/2, what this used at first)
+ * cuts hardest, clipping them right back off even though the source image itself never
+ * touches them. Fixed by dropping the circular mask for a much gentler rounded-square one —
+ * the logo was never actually a circle to begin with, so this is closer to "exactly like
+ * the logo" anyway, not a compromise — with resizeMode "contain" (not "cover") so the full
+ * image, ears included, is guaranteed to always be in frame regardless of size. */
 function HammyHeadAvatar({ size = 40 }: { size?: number }) {
   return (
     <Image
       source={require('../../../assets/images/hammy-head-icon.png')}
-      style={{ width: size, height: size, borderRadius: size / 2, flexShrink: 0 }}
-      resizeMode="cover"
+      style={{ width: size, height: size, borderRadius: size * 0.22, flexShrink: 0 }}
+      resizeMode="contain"
     />
   );
 }
