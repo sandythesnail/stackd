@@ -682,29 +682,29 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
 /** Hammy's actual illustrated head (not an emoji) — the same SVG the rest of the app uses,
  * rendered oversized inside a small clipped circle and shifted so only the head fills it,
  * roughly matching the website's getHammyFaceMarkup crop of the same pig. */
-/** A square region of Hammy's 440x460 SVG stage containing his head AND some ear — cropped
- * by a CIRCLE (the avatar's borderRadius: size/2), not the square itself, so what actually
- * has to fit is the circle inscribed in this square (center = x+size/2,y+size/2; radius =
- * size/2).
+/** A square region of Hammy's 440x460 SVG stage containing his head AND ears — cropped by a
+ * CIRCLE (the avatar's borderRadius: size/2), not the square itself, so what actually has to
+ * fit is the circle inscribed in this square (center = x+size/2,y+size/2; radius = size/2).
  *
  * Full ear tips and zero neck-leak turn out to be mutually exclusive with a plain circular
- * mask: the ears' topmost points sit ~140px out from the head ellipse's own center (220,198)
- * — farther than the largest circle (radius 124, limited by the head's shorter ry axis) that
- * fits inside the head without ever exceeding it. Reaching the ears means shifting the
- * circle's center upward, which necessarily lets its lower arc swing through the zone
- * (roughly y=230 down to 322) where the body ellipse — drawn BEHIND the head, and WIDER than
- * it there — starts poking out past the head's own silhouette on the sides. That's the
- * "neck" from prior attempts; a plain circle centered low enough to graze it can't avoid the
- * body zone AND reach the ears at the same time.
+ * mask: the ears sit farther from the head ellipse's own center (220,198) than the largest
+ * circle (radius 124, limited by the head's shorter ry axis) that fits inside the head
+ * without ever exceeding it anywhere. Reaching the ears means shifting the circle's center
+ * upward and growing its radius past 124, which necessarily lets its lower arc swing through
+ * the zone (roughly y=230 down to 322) where the body ellipse — drawn BEHIND the head, and
+ * WIDER than it there — starts poking out past the head's own silhouette on the sides.
  *
- * This is the actual best compromise: center (220,175), radius 140 — verified point-by-point
- * against the body ellipse's width at every y down to the head's own center, where the
- * worst-case gap is a sub-pixel ~0.1px (i.e. not actually visible), while comfortably
- * clearing both key ear reference points (the tip and the outer edge, both measured at their
- * -18° resting rotation — Hammy.tsx's ears never stop idly wiggling, even here with bob
- * turned off) with 5-8px of margin. The ear's OWN wiggle can still carry its tip outside the
- * frame at its brief, extreme +/-8° swing — a small, momentary clip beats a permanent neck. */
-const HEAD_CROP = { x: 80, y: 35, size: 280 };
+ * Zoomed out further from the previous attempt (radius 140 -> 148, center 175 -> 170) for
+ * real margin around both ears instead of just barely clearing them — worth it even though
+ * the body-overlap this lets through grows from a sub-pixel sliver to a real few px at the
+ * worst point (y=198, the head's own widest line). In practice that's much less visible than
+ * it sounds: the body's gradient (#FFD4E4->#FFB4CE) and the head's (#FFD9E7->#FFB8D0) are
+ * close enough in tone that a few px of one bleeding past the other reads as soft shading,
+ * not a hard "wrong shape" edge — unlike the very first crop, which was loose enough to show
+ * a much larger, unambiguous slice of tummy. The ears' own idle wiggle (Hammy.tsx never
+ * stops it, even with bob off here) can still carry a tip outside the frame at its brief,
+ * extreme swing — a small, momentary clip is fine. */
+const HEAD_CROP = { x: 72, y: 22, size: 296 };
 
 function HammyHeadAvatar({ size = 40 }: { size?: number }) {
   const scale = size / HEAD_CROP.size;
