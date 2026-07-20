@@ -37,7 +37,11 @@ export default function Survey() {
 
   const finish = () => {
     setOnboardingTrack(activeTrack.id);
-    router.replace('/(tabs)/home');
+    // push, not replace — this screen lives in the (onboarding) nested navigator, and
+    // replace() doesn't reliably cross into a different top-level branch like (tabs) (see
+    // results.tsx's continuePress for the full story of the "route doesn't exist"/
+    // blank-screen crash this causes).
+    router.push('/(tabs)/home');
   };
 
   const back = () => {

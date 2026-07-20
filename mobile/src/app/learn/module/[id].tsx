@@ -31,10 +31,13 @@ export default function ModuleDetail() {
   const goToGuide = () => router.push({ pathname: '/learn/hook', params: { moduleId: mod.id, lessonIndex: String(guideIndex), isLifeTask: '1' } });
 
   // router.back() no-ops with no in-app history (e.g. a direct/reloaded web URL) — fall
-  // back to the modules list so the back chevron always goes somewhere.
+  // back to the modules list so the back chevron always goes somewhere. push, not replace —
+  // this screen lives in the "learn" nested navigator, and replace() doesn't reliably cross
+  // into a different top-level branch like (tabs) (see results.tsx's continuePress for the
+  // full story of the "route doesn't exist"/blank-screen crash this causes).
   const goBack = () => {
     if (router.canGoBack()) router.back();
-    else router.replace('/(tabs)/modules');
+    else router.push('/(tabs)/modules');
   };
 
   return (

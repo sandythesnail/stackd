@@ -32,7 +32,11 @@ function ClerkSignIn() {
       const res = await signIn.create({ identifier: email.trim(), password });
       if (res.status === 'complete') {
         await setActive({ session: res.createdSessionId });
-        router.replace('/(tabs)/home');
+        // push, not replace — this screen lives in the (onboarding) nested navigator, and
+        // replace() doesn't reliably cross into a different top-level branch like (tabs)
+        // (see results.tsx's continuePress for the full story of the "route doesn't
+        // exist"/blank-screen crash this causes).
+        router.push('/(tabs)/home');
       } else {
         setError('Additional verification needed. Try again or reset your password.');
       }
@@ -98,7 +102,7 @@ function StubSignIn() {
         label="Continue with UConn NetID"
         variant="dark"
         left={<MsLogo />}
-        onPress={() => router.replace('/(tabs)/home')}
+        onPress={() => router.push('/(tabs)/home')}
         style={{ marginTop: 6 }}
       />
 
@@ -115,7 +119,7 @@ function StubSignIn() {
         <Txt style={styles.link}>Forgot password?</Txt>
       </View>
 
-      <Button label="Sign in" onPress={() => router.replace('/(tabs)/home')} style={{ marginTop: 10 }} />
+      <Button label="Sign in" onPress={() => router.push('/(tabs)/home')} style={{ marginTop: 10 }} />
 
       <Spacer />
       <View style={styles.footer}>

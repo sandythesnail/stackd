@@ -32,7 +32,11 @@ export default function Settings() {
         style: 'destructive',
         onPress: () => {
           resetProgress();
-          router.replace('/(onboarding)/welcome');
+          // push, not replace — this screen lives in the (tabs) nested navigator, and
+          // replace() doesn't reliably cross into a different top-level branch like
+          // (onboarding) (see results.tsx's continuePress for the full story of the "route
+          // doesn't exist"/blank-screen crash this causes).
+          router.push('/(onboarding)/welcome');
         },
       },
     ]);
@@ -60,7 +64,7 @@ export default function Settings() {
           {authEnabled ? (
             <ClerkSignOutRow />
           ) : (
-            <Row icon="log-out" title="Sign out" last onPress={() => router.replace('/(onboarding)/signin')} />
+            <Row icon="log-out" title="Sign out" last onPress={() => router.push('/(onboarding)/signin')} />
           )}
         </View>
 
@@ -186,7 +190,11 @@ function ClerkSignOutRow() {
         style: 'destructive',
         onPress: async () => {
           await signOut();
-          router.replace('/(onboarding)/welcome');
+          // push, not replace — this screen lives in the (tabs) nested navigator, and
+          // replace() doesn't reliably cross into a different top-level branch like
+          // (onboarding) (see results.tsx's continuePress for the full story of the "route
+          // doesn't exist"/blank-screen crash this causes).
+          router.push('/(onboarding)/welcome');
         },
       },
     ]);
