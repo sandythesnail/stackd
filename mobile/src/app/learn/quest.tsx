@@ -694,17 +694,17 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
  * the zone (roughly y=230 down to 322) where the body ellipse — drawn BEHIND the head, and
  * WIDER than it there — starts poking out past the head's own silhouette on the sides.
  *
- * Zoomed out further from the previous attempt (radius 140 -> 148, center 175 -> 170) for
- * real margin around both ears instead of just barely clearing them — worth it even though
- * the body-overlap this lets through grows from a sub-pixel sliver to a real few px at the
- * worst point (y=198, the head's own widest line). In practice that's much less visible than
- * it sounds: the body's gradient (#FFD4E4->#FFB4CE) and the head's (#FFD9E7->#FFB8D0) are
- * close enough in tone that a few px of one bleeding past the other reads as soft shading,
- * not a hard "wrong shape" edge — unlike the very first crop, which was loose enough to show
- * a much larger, unambiguous slice of tummy. The ears' own idle wiggle (Hammy.tsx never
- * stops it, even with bob off here) can still carry a tip outside the frame at its brief,
- * extreme swing — a small, momentary clip is fine. */
-const HEAD_CROP = { x: 72, y: 22, size: 296 };
+ * Zoomed out again (radius 148 -> 155) with real margin around both ears (~20px of slack
+ * at their closest reference points, not just barely clearing them), and re-centered
+ * closer to the head's own true center (170 -> 178, cutting the offset that made the head
+ * look pushed toward the bottom of the frame — "not centered" — nearly in half) at the cost
+ * of a more visible body-overlap at the head's widest line (y=198) than before. That's the
+ * real trade being made here: ears clearly in frame and the head sitting where it visually
+ * should, versus a softer edge at the sides. The body/head gradients are close enough in
+ * tone (#FFD4E4->#FFB4CE vs #FFD9E7->#FFB8D0) that this reads as shading rather than a hard
+ * "wrong shape" line, but it's a real trade, not a free lunch — if it reads as a neck again,
+ * that's this specific choice, and the fix is pulling the center back down/radius back in. */
+const HEAD_CROP = { x: 65, y: 23, size: 310 };
 
 function HammyHeadAvatar({ size = 40 }: { size?: number }) {
   const scale = size / HEAD_CROP.size;
