@@ -682,29 +682,29 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
 /** Hammy's actual illustrated head (not an emoji) — the same SVG the rest of the app uses,
  * rendered oversized inside a small clipped circle and shifted so only the head fills it,
  * roughly matching the website's getHammyFaceMarkup crop of the same pig. */
-/** A square region of Hammy's 440x460 SVG stage containing just his head — cropped by a
- * CIRCLE (the avatar's borderRadius: size/2), not the square itself, so what actually has to
- * fit is the circle inscribed in this square (center = x+size/2,y+size/2; radius = size/2).
+/** A square region of Hammy's 440x460 SVG stage containing his head AND some ear — cropped
+ * by a CIRCLE (the avatar's borderRadius: size/2), not the square itself, so what actually
+ * has to fit is the circle inscribed in this square (center = x+size/2,y+size/2; radius =
+ * size/2).
  *
- * The previous two attempts both got the bottom edge wrong the same way: they only checked
- * whether the crop's bottom STAYED ABOVE the head ellipse's own bottom pole (y=322,
- * cy=198+ry=124) and treated that as "safe." It isn't — the body ellipse (cy=287, rx=150,
- * drawn BEHIND the head) is measurably WIDER than the head at every y from roughly 250
- * down to 322 (e.g. at y=280 the body already reaches 150px out from center vs. the head's
- * 104px), so it pokes out on the SIDES of the head well before the head's own silhouette
- * ends — that's the "neck" that kept showing even with the crop's bottom edge nominally
- * inside the head's y-range.
+ * Full ear tips and zero neck-leak turn out to be mutually exclusive with a plain circular
+ * mask: the ears' topmost points sit ~140px out from the head ellipse's own center (220,198)
+ * — farther than the largest circle (radius 124, limited by the head's shorter ry axis) that
+ * fits inside the head without ever exceeding it. Reaching the ears means shifting the
+ * circle's center upward, which necessarily lets its lower arc swing through the zone
+ * (roughly y=230 down to 322) where the body ellipse — drawn BEHIND the head, and WIDER than
+ * it there — starts poking out past the head's own silhouette on the sides. That's the
+ * "neck" from prior attempts; a plain circle centered low enough to graze it can't avoid the
+ * body zone AND reach the ears at the same time.
  *
- * Fixed by centering the crop circle on the head ellipse's own center (220,198) instead of
- * shifting it upward, with a radius (118) comfortably inside the head's shorter axis
- * (ry=124) rather than sized to the wider one (rx=138) — verified against the body's actual
- * width at every relevant y, not just its bottom pole, so the margin only grows moving
- * down, never shrinks to zero. This crops tighter than "the whole head" (matching the
- * favicon reference exactly — assets/images/favicon.png — which shows a full round head
- * with only small ear nubs at the corners, not full ear tips or any hint of a neck), at the
- * cost of the ear tips no longer being fully in frame — an actual improvement given nobody
- * has ever asked for MORE ear and several rounds have asked for LESS neck. */
-const HEAD_CROP = { x: 102, y: 80, size: 236 };
+ * This is the actual best compromise: center (220,175), radius 140 — verified point-by-point
+ * against the body ellipse's width at every y down to the head's own center, where the
+ * worst-case gap is a sub-pixel ~0.1px (i.e. not actually visible), while comfortably
+ * clearing both key ear reference points (the tip and the outer edge, both measured at their
+ * -18° resting rotation — Hammy.tsx's ears never stop idly wiggling, even here with bob
+ * turned off) with 5-8px of margin. The ear's OWN wiggle can still carry its tip outside the
+ * frame at its brief, extreme +/-8° swing — a small, momentary clip beats a permanent neck. */
+const HEAD_CROP = { x: 80, y: 35, size: 280 };
 
 function HammyHeadAvatar({ size = 40 }: { size?: number }) {
   const scale = size / HEAD_CROP.size;
@@ -1275,7 +1275,7 @@ function KnowledgecheckView({
   };
 
   useEffect(() => {
-    onAction(answered ? { label: last ? 'Next' : 'Next question', onPress: next } : null);
+    onAction(answered ? { label: 'Next', onPress: next } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answered, last]);
 
@@ -1681,10 +1681,11 @@ const styles = StyleSheet.create({
   // bubble no longer shares this flex row at all, see hammyStage/bubbleSlot below, so it
   // can't pull him off-center the way a shared row did). paddingHorizontal is the hard
   // safety margin the bubble's width is sized against (see bubbleSlot) so it can never run
-  // off the left edge of the screen. Extra paddingTop clears space below the header so
-  // Hammy's reaction bounce/jump (see Hammy.tsx's reactY, up to -30) never visually
-  // collides with the floating action button.
-  companionWrap: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 },
+  // off the left edge of the screen. paddingTop clears space below the floating action
+  // button — at 16 it wasn't enough: at size 130, Hammy's ear sits only ~16px into his own
+  // render, which put it inside the button's own vertical span (top:4, ~48 tall) even at
+  // rest, before any reaction bounce (see Hammy.tsx's reactY, up to -30) made it worse.
+  companionWrap: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 54, paddingBottom: 4 },
   // Holds ONLY Hammy in normal flow — its size IS Hammy's size, nothing else. The reaction
   // bubble is positioned absolutely against it (see bubbleSlot), so it can sit right next to
   // him without being a layout sibling that would fight his centering.
