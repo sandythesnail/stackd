@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet } from 'react-native';
+import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
@@ -679,43 +679,23 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
  * Speaker-styled: Hammy (or the story's protagonist/"intro" establishing beats) gets a
  * pig-head avatar and a white bordered bubble; the narrator gets no avatar at all and a
  * plain, muted, italic box — so it never reads as Hammy narrating. */
-/** Hammy's actual illustrated head (not an emoji) — the same SVG the rest of the app uses,
- * rendered oversized inside a small clipped circle and shifted so only the head fills it,
- * roughly matching the website's getHammyFaceMarkup crop of the same pig. */
-/** A square region of Hammy's 440x460 SVG stage containing his head AND ears — cropped by a
- * CIRCLE (the avatar's borderRadius: size/2), not the square itself, so what actually has to
- * fit is the circle inscribed in this square (center = x+size/2,y+size/2; radius = size/2).
- *
- * Full ear tips and zero neck-leak turn out to be mutually exclusive with a plain circular
- * mask: the ears sit farther from the head ellipse's own center (220,198) than the largest
- * circle (radius 124, limited by the head's shorter ry axis) that fits inside the head
- * without ever exceeding it anywhere. Reaching the ears means shifting the circle's center
- * upward and growing its radius past 124, which necessarily lets its lower arc swing through
- * the zone (roughly y=230 down to 322) where the body ellipse — drawn BEHIND the head, and
- * WIDER than it there — starts poking out past the head's own silhouette on the sides.
- *
- * Zoomed out again (radius 148 -> 155) with real margin around both ears (~20px of slack
- * at their closest reference points, not just barely clearing them), and re-centered
- * closer to the head's own true center (170 -> 178, cutting the offset that made the head
- * look pushed toward the bottom of the frame — "not centered" — nearly in half) at the cost
- * of a more visible body-overlap at the head's widest line (y=198) than before. That's the
- * real trade being made here: ears clearly in frame and the head sitting where it visually
- * should, versus a softer edge at the sides. The body/head gradients are close enough in
- * tone (#FFD4E4->#FFB4CE vs #FFD9E7->#FFB8D0) that this reads as shading rather than a hard
- * "wrong shape" line, but it's a real trade, not a free lunch — if it reads as a neck again,
- * that's this specific choice, and the fix is pulling the center back down/radius back in. */
-const HEAD_CROP = { x: 65, y: 23, size: 310 };
-
+/** Hammy's actual head — not cropped out of the full-body SVG (Hammy.tsx) at all anymore.
+ * Every crop tried here ran into the same wall: the illustrated body sits directly behind
+ * the head with no gap, so any circular window wide enough to include the ears is also wide
+ * enough to let a sliver of body show past the head's own silhouette at the sides — the
+ * "neck" that kept coming back no matter how the numbers were tuned, at the expense of
+ * clipping the ears when tuned the other way. The app's own logo/favicon
+ * (favicon-512.png at the repo root, copied in as hammy-head-icon.png) is a SEPARATE
+ * illustration purpose-drawn as a head-only icon — the ears are drawn outside the face
+ * circle with no body behind them at all, so there's nothing to leak. Using that image
+ * directly is an exact, guaranteed match instead of another approximation. */
 function HammyHeadAvatar({ size = 40 }: { size?: number }) {
-  const scale = size / HEAD_CROP.size;
   return (
-    <View style={[styles.storyAvatar, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Hammy
-        size={440 * scale}
-        bob={false}
-        style={{ position: 'absolute', left: -HEAD_CROP.x * scale, top: -HEAD_CROP.y * scale }}
-      />
-    </View>
+    <Image
+      source={require('../../../assets/images/hammy-head-icon.png')}
+      style={{ width: size, height: size, borderRadius: size / 2, flexShrink: 0 }}
+      resizeMode="cover"
+    />
   );
 }
 
