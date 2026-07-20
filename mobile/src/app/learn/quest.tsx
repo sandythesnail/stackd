@@ -387,6 +387,7 @@ export default function QuestPlayer() {
                 face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
                 reaction={reactionMood}
                 reactionKey={reactionKey}
+                blinkThroughFace={false}
               />
             </View>
           </View>
@@ -394,9 +395,12 @@ export default function QuestPlayer() {
         {/* The chapter's own primary action ("Next", "Check my answer", ...), reported up
             via onAction. Floating instead of its own row is also why it never has to
             scroll to reach — it's always pinned to this same spot. Always flat green
-            unless a chapter opts into a different variant. */}
+            unless a chapter opts into a different variant. Shifted further down whenever
+            the glossary tray is also showing above it (a normal-flow sibling near the same
+            top edge) so the two can never overlap — automatic, not something that has to be
+            re-tuned by hand per chapter. */}
         {action ? (
-          <View style={styles.actionBarFloat}>
+          <View style={[styles.actionBarFloat, terms.length > 0 && layoutMode !== 'intro' && styles.actionBarFloatBelowTray]}>
             <Button
               label={action.label}
               onPress={action.onPress}
@@ -678,22 +682,29 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
 /** Hammy's actual illustrated head (not an emoji) — the same SVG the rest of the app uses,
  * rendered oversized inside a small clipped circle and shifted so only the head fills it,
  * roughly matching the website's getHammyFaceMarkup crop of the same pig. */
-/** A square region of Hammy's 440x460 SVG stage containing the head AND ears — cropped by a
+/** A square region of Hammy's 440x460 SVG stage containing just his head — cropped by a
  * CIRCLE (the avatar's borderRadius: size/2), not the square itself, so what actually has to
  * fit is the circle inscribed in this square (center = x+size/2,y+size/2; radius = size/2).
- * Two constraints, both against Hammy.tsx's own shape coordinates:
- *  - top: the ears (translate(106/270, 54), ~64x74 boxes) sit near the square's top
- *    corners, which the previous crop's circle didn't reach — clipping them off.
- *  - bottom: the head ellipse (cx=220,cy=198,rx=138,ry=124) ends at y=322; the body ellipse
- *    (cy=287,ry=125, drawn BEHIND the head in z-order) is visible everywhere below that —
- *    the previous crop's circle bottom (y=326) reached past it, showing a sliver of
- *    body/tummy that read as a visible "neck". No amount of shifting fixes both at once with
- *    the OLD crop's radius — it has to shrink until the whole circle sits inside [ears-top,
- *    head-bottom]: center (220,158), radius 158 clears the ears' top corners (~154px out)
- *    with a few px of margin, and its bottom edge (y=316) stays a few px above the head's
- *    own bottom edge (y=322) — the head ellipse itself fully occludes the body up to y=322,
- *    so nothing below the chin is ever in frame. */
-const HEAD_CROP = { x: 62, y: 0, size: 316 };
+ *
+ * The previous two attempts both got the bottom edge wrong the same way: they only checked
+ * whether the crop's bottom STAYED ABOVE the head ellipse's own bottom pole (y=322,
+ * cy=198+ry=124) and treated that as "safe." It isn't — the body ellipse (cy=287, rx=150,
+ * drawn BEHIND the head) is measurably WIDER than the head at every y from roughly 250
+ * down to 322 (e.g. at y=280 the body already reaches 150px out from center vs. the head's
+ * 104px), so it pokes out on the SIDES of the head well before the head's own silhouette
+ * ends — that's the "neck" that kept showing even with the crop's bottom edge nominally
+ * inside the head's y-range.
+ *
+ * Fixed by centering the crop circle on the head ellipse's own center (220,198) instead of
+ * shifting it upward, with a radius (118) comfortably inside the head's shorter axis
+ * (ry=124) rather than sized to the wider one (rx=138) — verified against the body's actual
+ * width at every relevant y, not just its bottom pole, so the margin only grows moving
+ * down, never shrinks to zero. This crops tighter than "the whole head" (matching the
+ * favicon reference exactly — assets/images/favicon.png — which shows a full round head
+ * with only small ear nubs at the corners, not full ear tips or any hint of a neck), at the
+ * cost of the ear tips no longer being fully in frame — an actual improvement given nobody
+ * has ever asked for MORE ear and several rounds have asked for LESS neck. */
+const HEAD_CROP = { x: 102, y: 80, size: 236 };
 
 function HammyHeadAvatar({ size = 40 }: { size?: number }) {
   const scale = size / HEAD_CROP.size;
@@ -1606,6 +1617,9 @@ const styles = StyleSheet.create({
   // reclaims that whole row's height on every chapter (the single biggest lever pulled for
   // "reduce scrolling" — a real ~50px back on every single screen, not just spacing trims).
   actionBarFloat: { position: 'absolute', top: 4, right: 16 },
+  // Matches glossaryTray's own maxHeight (34) plus a little clearance, so the button sits
+  // just below the tray's chip row instead of on top of it whenever both are showing.
+  actionBarFloatBelowTray: { top: 42 },
   hintFab: {
     minWidth: 34, height: 30, paddingHorizontal: 8, borderRadius: 15,
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderCool,

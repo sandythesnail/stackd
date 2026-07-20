@@ -59,6 +59,7 @@ export function Hammy({
   pig: _pig = '#E27EA0',
   equipped = [],
   face,
+  blinkThroughFace = true,
   reaction,
   reactionKey,
   style,
@@ -71,6 +72,14 @@ export function Hammy({
   /** Illustrated mood/reaction face (see @/hammyFaces) — replaces the default eyes/cheeks/
    * snout with a cropped PNG overlay, matching the website's .hammy-face-overlay behavior. */
   face?: FaceOverlay;
+  /** Whether `face` briefly fades out on the ambient blink cycle to let the (also blinking)
+   * base eyes peek through underneath, instead of sitting there as a frozen mask. Good for
+   * an at-rest mood/streak face (Home, results.tsx) that's on screen for a while — bad for
+   * the quest companion's transient reaction faces, where the ambient cycle coinciding with
+   * an active "happy!" moment made his face flicker to neutral mid-celebration, easy to
+   * mistake for the face "going blank" or not reacting at all. Default true; the quest
+   * companion passes false. */
+  blinkThroughFace?: boolean;
   /** Ported from the website's hammyBounce/hammyWobble/hammyCelebrate keyframes — a one-shot
    * body animation on top of the idle float, played whenever reactionKey changes. */
   reaction?: 'happy' | 'gentle' | 'streak' | null;
@@ -229,7 +238,7 @@ export function Hammy({
   // opacity rides blinkDip instead of a flat 1 — briefly dipping toward 0 on the same cycle
   // as a real blink, letting the (also blinking) base eyes peek through underneath, so an
   // overlay face isn't just a frozen mask the whole time it's shown.
-  const faceOpacity = face ? blinkDip : 0;
+  const faceOpacity = face ? (blinkThroughFace ? blinkDip : 1) : 0;
   const displayFace = face;
 
   const aspect = STAGE_H / STAGE_W;
