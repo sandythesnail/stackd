@@ -98,6 +98,19 @@ const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn fro
 const HAMMY_TRYAGAIN_MSGS = ['Not quite, try again!', 'Close, give it another shot!', "Not quite, look at the definitions above if you're stuck."];
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
+/** Keeps a spoken reaction message short enough to never need truncating — the reaction
+ * bubble is a small transient toast next to Hammy, not a place for a full paragraph (the
+ * fuller explanation is always shown in the chapter's own content too). Takes just the
+ * first sentence, then hard-caps it at a word boundary with no "…" if that's still too
+ * long — an ellipsis reads as "there's more, go look elsewhere," which isn't true here;
+ * this is the whole message, just shortened. */
+function shortFeedback(text: string, maxLen = 60): string {
+  const firstSentence = text.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? text;
+  const trimmed = firstSentence.trim();
+  if (trimmed.length <= maxLen) return trimmed;
+  return trimmed.slice(0, maxLen).replace(/\s+\S*$/, '');
+}
+
 /** Hammy's reaction speech bubble, in the side column below him — ported from the website's
  * .hammy-side-msg (fades in/out with a small rise instead of popping instantly, and colors
  * green for a right answer / pink for wrong). Keeps showing the last message+mood while
@@ -126,7 +139,10 @@ function ReactionBubble({ message, mood }: { message: string | null; mood: 'happ
           style={[styles.bubbleInner, { opacity: anim, transform: [{ translateX: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}
         >
           <View style={styles.reactionBox}>
-            <Txt style={[styles.reactionTxt, { color: textColor }]} numberOfLines={4}>{display}</Txt>
+            {/* No numberOfLines/truncation here on purpose — every message that reaches
+                this bubble is already kept short at the source (see shortFeedback), so
+                there's nothing left that should ever need an ellipsis. */}
+            <Txt style={[styles.reactionTxt, { color: textColor }]}>{display}</Txt>
             {/* A literal speech-bubble tail pointing at Hammy (he sits just to the right of
                 this bubble) — two stacked right-pointing triangles, the outer one the box's
                 own border color and slightly larger, so a thin rim of it peeks past the
@@ -1016,7 +1032,7 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
   // tier.text as the spoken message (not just a generic "Nice!"/"Not quite!") so Hammy
   // actually explains why the split worked or didn't, matching what's shown in the card
   // below instead of leaving the reasoning to text-only.
-  const submit = () => { setSubmitted(true); reactTo(tier.ok, tier.text); };
+  const submit = () => { setSubmitted(true); reactTo(tier.ok, shortFeedback(tier.text)); };
 
   useEffect(() => {
     onAction(submitted
@@ -1235,7 +1251,7 @@ function KnowledgecheckView({
     // A wrong answer speaks the actual explanation (also shown in the card below) instead
     // of a generic "Not quite! Here's why:" — a right answer keeps the plain celebratory
     // pool, since "Nice! 🎉" doesn't need anything more said about it.
-    reactTo(isCorrect, isCorrect ? undefined : question?.exp);
+    reactTo(isCorrect, isCorrect || !question ? undefined : shortFeedback(question.exp));
     if (question) reportKnowledgeCheck(question.q, isCorrect);
   };
   const next = () => {
@@ -1315,7 +1331,7 @@ function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: Si
     setUsed((prev) => new Set(prev).add(d.id));
     // Hammy narrates the actual explanation for this decision (ported from
     // showHammyMessage) instead of a generic "Nice!"/"Not quite".
-    reactTo(d.scoreDelta >= 0, d.note);
+    reactTo(d.scoreDelta >= 0, shortFeedback(d.note));
   };
   const pct = (meter - meterMin) / (meterMax - meterMin);
 
@@ -1439,7 +1455,7 @@ function PriceisrightView({
 
   // chapter.explanation as the spoken message, same reasoning as Microsim's tier.text —
   // Hammy actually explains the real number instead of a generic "Nice!"/"Not quite!".
-  const submit = () => { setSubmitted(true); reactTo(close, chapter.explanation); };
+  const submit = () => { setSubmitted(true); reactTo(close, shortFeedback(chapter.explanation)); };
 
   useEffect(() => {
     onAction(submitted
@@ -1649,30 +1665,41 @@ const styles = StyleSheet.create({
   tfBtnTxt: { fontFamily: font.extra, fontSize: 15 },
   // alignItems: 'center' centers hammyStage — Hammy himself, truly, this time (the reaction
   // bubble no longer shares this flex row at all, see hammyStage/bubbleSlot below, so it
-  // can't pull him off-center the way a shared row did). Extra paddingTop clears space
-  // below the header so Hammy's reaction bounce/jump (see Hammy.tsx's reactY, up to -30)
-  // never visually collides with the floating action button.
-  companionWrap: { alignItems: 'center', paddingTop: 16, paddingBottom: 4 },
+  // can't pull him off-center the way a shared row did). paddingHorizontal is the hard
+  // safety margin the bubble's width is sized against (see bubbleSlot) so it can never run
+  // off the left edge of the screen. Extra paddingTop clears space below the header so
+  // Hammy's reaction bounce/jump (see Hammy.tsx's reactY, up to -30) never visually
+  // collides with the floating action button.
+  companionWrap: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 },
   // Holds ONLY Hammy in normal flow — its size IS Hammy's size, nothing else. The reaction
   // bubble is positioned absolutely against it (see bubbleSlot), so it can sit right next to
   // him without being a layout sibling that would fight his centering.
-  hammyStage: { position: 'relative' },
+  // Shifted a smidge right of dead-center — centered exactly left the bubble with nowhere
+  // to go on its left before running into the screen edge (or companionWrap's padding) and
+  // cutting the text off. The bubble is anchored to (and moves with) this same box, so
+  // shifting Hammy reclaims room for it. Sized together with bubbleSlot's width below so
+  // even a full-width bubble clears the left edge on a ~375px-wide phone (iPhone SE), the
+  // narrowest common target.
+  hammyStage: { position: 'relative', transform: [{ translateX: 40 }] },
   // right: '100%' parks the bubble's right edge at hammyStage's own left edge (i.e. Hammy's
   // left edge) regardless of Hammy's exact pixel width; marginRight adds the gap. top/bottom
   // 0 stretches it to Hammy's full height so justifyContent: 'center' vertically centers the
   // actual bubble within that — no measuring or magic numbers needed either way. Being fully
   // out of flow also means the bubble growing for a longer message can never shift anything
-  // else on screen, which used to be a real problem when it was a flex sibling.
+  // else on screen, which used to be a real problem when it was a flex sibling. Narrower
+  // than before (was 200) since the feedback text itself is now kept short — see
+  // shortFeedback — so it doesn't need nearly as much room, and leaves more margin against
+  // running off the left edge of the screen.
   bubbleSlot: {
     position: 'absolute', top: 0, bottom: 0, right: '100%', marginRight: 10,
-    width: 200, justifyContent: 'center', alignItems: 'flex-end',
+    width: 125, justifyContent: 'center', alignItems: 'flex-end',
   },
   bubbleInner: { alignItems: 'flex-end' },
   reactionBox: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
-    borderRadius: 16, paddingVertical: 12, paddingHorizontal: 16,
+    borderRadius: 16, paddingVertical: 10, paddingHorizontal: 13,
   },
-  reactionTxt: { fontFamily: font.bold, fontSize: 15.5, lineHeight: 20 },
+  reactionTxt: { fontFamily: font.bold, fontSize: 14.5, lineHeight: 19 },
   // A literal speech-bubble tail on the box's right edge, pointing at Hammy — the classic
   // border-triangle trick (colored left border, transparent top/bottom, zero width/height).
   // Two stacked triangles (a larger border-colored one behind, a smaller white one in

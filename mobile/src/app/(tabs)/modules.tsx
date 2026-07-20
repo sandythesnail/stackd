@@ -84,12 +84,12 @@ export default function Modules() {
                       lessons={lessons}
                       done={done}
                       status={status}
-                      onPressLesson={(i) => router.push({ pathname: '/learn/hook', params: { moduleId: m.id, lessonIndex: String(i) } })}
+                      onPressLesson={(i) => router.push({ pathname: '/learn/quest', params: { moduleId: m.id, lessonIndex: String(i) } })}
                     />
                     {guideIndex >= 0 ? (
                       <RealLifeSubQuestRow
                         moduleId={m.id}
-                        onPress={() => router.push({ pathname: '/learn/hook', params: { moduleId: m.id, lessonIndex: String(guideIndex), isLifeTask: '1' } })}
+                        onPress={() => router.push({ pathname: '/learn/quest', params: { moduleId: m.id, lessonIndex: String(guideIndex), isLifeTask: '1' } })}
                       />
                     ) : null}
                   </View>

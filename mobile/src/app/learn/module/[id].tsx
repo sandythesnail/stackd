@@ -27,8 +27,8 @@ export default function ModuleDetail() {
   const status = moduleStatus(mod.id);
   const pct = lessons.length ? done / lessons.length : 0;
 
-  const goToLesson = (i: number) => router.push({ pathname: '/learn/hook', params: { moduleId: mod.id, lessonIndex: String(i) } });
-  const goToGuide = () => router.push({ pathname: '/learn/hook', params: { moduleId: mod.id, lessonIndex: String(guideIndex), isLifeTask: '1' } });
+  const goToLesson = (i: number) => router.push({ pathname: '/learn/quest', params: { moduleId: mod.id, lessonIndex: String(i) } });
+  const goToGuide = () => router.push({ pathname: '/learn/quest', params: { moduleId: mod.id, lessonIndex: String(guideIndex), isLifeTask: '1' } });
 
   // router.back() no-ops with no in-app history (e.g. a direct/reloaded web URL) — fall
   // back to the modules list so the back chevron always goes somewhere. push, not replace —

@@ -112,7 +112,7 @@ export default function Home() {
               label={ctaLabel}
               variant="pink"
               size="sm"
-              onPress={() => router.push({ pathname: '/learn/hook', params: { moduleId: nextModule.id, lessonIndex: String(nextDone) } })}
+              onPress={() => router.push({ pathname: '/learn/quest', params: { moduleId: nextModule.id, lessonIndex: String(nextDone) } })}
               style={{ marginTop: 13 }}
             />
             {activeToday ? (
