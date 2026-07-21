@@ -170,62 +170,30 @@ body { background: var(--bg); min-height: 100vh; }
    wrapping. Zeroing it out here fixes that for every page uniformly. */
 .page-body > * { min-width: 0; }
 
-/* ─── HOME STATS ─── */
-.home-stats-row {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; min-width: 0;
-}
-.hs-card {
-  background: #fff; border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 1.4rem 1.5rem;
-  min-width: 0;
-}
-.hs-num {
-  font-family: var(--font-display); font-size: 2.2rem; font-weight: 700;
-  letter-spacing: -1.5px; color: var(--text); line-height: 1; margin-bottom: 0.35rem;
-}
-.hs-label {
-  font-size: 0.78rem; font-weight: 700; color: var(--text-soft);
-  text-transform: uppercase; letter-spacing: 0.08em;
-}
-.hs-card-streak {
-  position: relative; text-align: left; cursor: pointer; font-family: inherit;
-  appearance: none; -webkit-appearance: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.hs-card-streak.hs-card-reward {
-  border-color: #F0C22E; box-shadow: 0 0 0 3px rgba(240, 194, 46, 0.18);
-  animation: hsRewardPulse 1.8s ease-in-out infinite;
-}
 @keyframes hsRewardPulse {
   0%, 100% { box-shadow: 0 0 0 3px rgba(240, 194, 46, 0.18); }
   50% { box-shadow: 0 0 0 6px rgba(240, 194, 46, 0.1); }
 }
-.hs-reward-dot {
-  position: absolute; top: 0.9rem; right: 0.9rem;
-  width: 10px; height: 10px; border-radius: 50%;
-  background: #F0C22E; border: 2px solid #fff;
-}
 
 /* ─── MASCOT CARD ─── */
+/* Always the quest-top-style row layout now (pig + message side by side), whether or not
+   there's an active module — the old plain state used a taller centered column, which was
+   most of what made this whole card read as full of blank space. .quest-card just adds the
+   pink tint on top when there's a module to resume. */
 .mascot-card {
   background: #fff; border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 2rem 2rem 1.8rem;
-  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.9rem;
+  border-radius: var(--radius); padding: 1.5rem 1.75rem;
+  display: flex; flex-direction: column; align-items: stretch; text-align: left; gap: 1rem;
 }
+.mascot-card.quest-card { background: var(--pink-pale); border-color: var(--pink-light); }
 .mascot-pig-wrap { flex-shrink: 0; }
 .mascot-mood-label {
   font-family: var(--font-display);
-  font-size: 1.15rem; font-weight: 700; color: var(--text);
+  font-size: 1.05rem; font-weight: 700; color: var(--text);
 }
 .mascot-mood-label strong { color: var(--pink-dark); text-transform: capitalize; }
-.mascot-mood-msg { font-size: 0.92rem; color: var(--text-mid); max-width: 440px; line-height: 1.5; }
+.mascot-mood-msg { font-size: 0.88rem; color: var(--text-mid); line-height: 1.45; margin-top: 0.15rem; }
 
-/* Ported directly from the mobile app's Home "Continue quest" card (see mobile's
-   home.tsx) — replaces the plain mood-only card above whenever there's an unfinished
-   module to resume. Falls back to the plain .mascot-mood-* markup once every module is
-   done (mobile just hides its card entirely there; keeping Hammy's mood visible even
-   after "graduating" is existing web behavior this port doesn't otherwise touch). */
-.mascot-card.quest-card { background: var(--pink-pale); border-color: var(--pink-light); align-items: stretch; text-align: left; gap: 1rem; }
 .quest-top { display: flex; align-items: center; gap: 0.9rem; }
 .quest-speech { margin-bottom: 0; flex: 1; }
 .quest-meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; margin-bottom: 0.5rem; }
@@ -241,9 +209,46 @@ body { background: var(--bg); min-height: 100vh; }
 .quest-cta-btn:hover { background: var(--pink-dark); }
 .quest-nudge { font-size: 0.8rem; text-align: center; color: var(--pink-dark); }
 
+/* The 4 stat chips (XP, Level, Streak, Modules) — folded into the mascot card itself
+   instead of a separate full-width row above it (was the old .home-stats-row/.hs-card),
+   which just meant two thinly-filled cards stacked on top of each other. Much more compact
+   than the old cards: smaller numbers, tighter padding. */
+.quest-stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; min-width: 0;
+}
+.quest-stat {
+  background: rgba(255,255,255,0.7); border: 1px solid rgba(44,62,45,0.08);
+  border-radius: var(--radius-sm); padding: 0.55rem 0.4rem; text-align: center; min-width: 0;
+}
+.mascot-card:not(.quest-card) .quest-stat { background: var(--bg); }
+.quest-stat-num {
+  font-family: var(--font-display); font-size: 1.2rem; font-weight: 700;
+  color: var(--text); line-height: 1.15;
+}
+.quest-stat-den { font-size: 0.68rem; font-weight: 700; letter-spacing: 0; color: var(--text-soft); }
+.quest-stat-label {
+  font-size: 0.62rem; font-weight: 700; color: var(--text-soft);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.1rem;
+}
+.quest-stat-streak {
+  position: relative; cursor: pointer; font-family: inherit; width: 100%;
+  appearance: none; -webkit-appearance: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.quest-stat-streak.quest-stat-reward {
+  border-color: #F0C22E; box-shadow: 0 0 0 3px rgba(240, 194, 46, 0.18);
+  animation: hsRewardPulse 1.8s ease-in-out infinite;
+}
+.quest-stat-reward-dot {
+  position: absolute; top: 3px; right: 3px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #F0C22E; border: 1.5px solid #fff;
+}
+
 @media (max-width: 600px) {
   .quest-top { flex-direction: column; align-items: flex-start; }
   .quest-speech::before, .quest-speech::after { display: none; }
+  .quest-stats-row { grid-template-columns: 1fr 1fr; }
 }
 
 /* Daily mood face swapped onto the big Home mascot (see todaysHammyMood()/renderHome() in
@@ -2150,7 +2155,6 @@ select.budget-input { cursor: pointer; }
   .modules-grid { grid-template-columns: 1fr; }
   .header-stats-col { display: none; }
   .pg-stats-row { grid-template-columns: 1fr 1fr; }
-  .home-stats-row { grid-template-columns: 1fr 1fr; }
   /* On the narrowest phones (iPhone SE etc.) the "Begin Quest →" / "Start →"
      button's fixed width plus the lesson text's minimum wrap width together
      exceed the tile's available space by a few px, clipping the button.

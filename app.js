@@ -16692,14 +16692,6 @@ function lessonMaxXP(lesson, mod) {
   return Math.round(mod.xpReward * 1.25);
 }
 
-// Total XP shown next to a module — always the sum of whichever per-lesson figures are
-// actually displayed below it (main quests, or plain lessons), so the two numbers can never
-// drift apart.
-function moduleTotalXP(mod) {
-  if (hasQuest(mod)) return moduleUnits(mod).reduce((sum, q) => sum + questMaxXP(q, mod), 0);
-  return mod.lessons.reduce((sum, lesson) => sum + lessonMaxXP(lesson, mod), 0);
-}
-
 // Purely presentational reading aid: breaks a module's flat 8-lesson grid into a couple of
 // short, labeled clusters (matching the narrative arc the lessons already follow in order)
 // instead of one undifferentiated wall of tiles. Never reorders or gates lessons — a module
@@ -16787,17 +16779,20 @@ function renderModuleList(containerId) {
     row.className = 'module-row' + (allDone ? ' completed' : '') + (isRecommended ? ' recommended' : '');
 
     // A module with at least one lesson done but not all of them shows its actual lesson
-    // count instead of the XP/Recommended badge — that in-progress state used to be
-    // indistinguishable from "not started" (both showed the same "Up to XXX XP" badge), which
-    // is what let a single finished lesson look identical to a fully finished module elsewhere
-    // (the aggregate "modules done" stat had the same underlying bug — see modulesCompletedCount).
+    // count instead of the Recommended/percent badge — that in-progress state used to be
+    // indistinguishable from "not started" (both showed the same badge), which is what let
+    // a single finished lesson look identical to a fully finished module elsewhere (the
+    // aggregate "modules done" stat had the same underlying bug — see modulesCompletedCount).
+    const donePct = totalUnits ? Math.round((unitsDone / totalUnits) * 100) : 0;
     const badge = allDone
       ? `<span class="card-badge badge-done">✓ Complete</span>`
       : unitsDone > 0
         ? `<span class="card-badge badge-progress">${unitsDone}/${totalUnits} lessons</span>`
         : isRecommended
           ? `<span class="card-badge badge-recommend">★ Recommended</span>`
-          : `<span class="card-badge badge-xp">Up to ${moduleTotalXP(m).toLocaleString()} XP</span>`;
+          // Was "Up to XXX XP" — percent complete instead, matching the percent-based
+          // language used everywhere else progress shows up (Modules Done, Progress page).
+          : `<span class="card-badge badge-progress">${donePct}% done</span>`;
 
     let bodyHtml;
     if (quest) {
@@ -18146,28 +18141,43 @@ function renderHome() {
   document.getElementById('h-tier').textContent = tier.name;
   document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
 
-  renderHomeMascotCard();
+  renderHomeMascotCard(done);
 
+  renderModuleList('home-modules-grid');
+  renderAchievementBadges('home-achievements-row', 'home-achieve-sub', { onlyUnlocked: true });
+}
+
+// The 4 stat chips (XP, Level, Streak, Modules) used to be their own full-width row above
+// the mascot card — two separately-padded cards stacked on top of each other read as a lot
+// of dead space for how little was actually in either one. Folded into one compact row
+// inside the SAME card as Hammy instead. Keeps the id="home-stats-row" the onboarding
+// tour's XP step already targets as its mobile-layout fallback (see ONBOARDING_TOUR_STEPS)
+// — that selector didn't need to change, just what it now points at.
+function questStatsRowHtml(done) {
   const loginBonusPending = dailyLoginBonusPending() || pendingStreakDiamonds > 0;
-  document.getElementById('home-stats-row').innerHTML = `
-    <div class="hs-card">
-      <div class="hs-num">${state.xp.toLocaleString()}</div>
-      <div class="hs-label">XP Earned</div>
-    </div>
-    <div class="hs-card">
-      <div class="hs-num">${state.level}</div>
-      <div class="hs-label">Level</div>
-    </div>
-    <button type="button" class="hs-card hs-card-streak${loginBonusPending ? ' hs-card-reward' : ''}" id="hs-streak-card">
-      <div class="hs-num">${state.streak}</div>
-      <div class="hs-label">Day Streak</div>
-      ${loginBonusPending ? '<span class="hs-reward-dot" title="A bonus is waiting"></span>' : ''}
-    </button>
-    <div class="hs-card">
-      <div class="hs-num">${done}<span style="font-size:1rem;letter-spacing:0;color:var(--text-soft)">/${MODULES.length}</span></div>
-      <div class="hs-label">Modules Done</div>
+  return `
+    <div class="quest-stats-row" id="home-stats-row">
+      <div class="quest-stat">
+        <div class="quest-stat-num">${state.xp.toLocaleString()}</div>
+        <div class="quest-stat-label">XP</div>
+      </div>
+      <div class="quest-stat">
+        <div class="quest-stat-num">${state.level}</div>
+        <div class="quest-stat-label">Level</div>
+      </div>
+      <button type="button" class="quest-stat quest-stat-streak${loginBonusPending ? ' quest-stat-reward' : ''}" id="hs-streak-card">
+        <div class="quest-stat-num">${state.streak}</div>
+        <div class="quest-stat-label">Streak</div>
+        ${loginBonusPending ? '<span class="quest-stat-reward-dot" title="A bonus is waiting"></span>' : ''}
+      </button>
+      <div class="quest-stat">
+        <div class="quest-stat-num">${done}<span class="quest-stat-den">/${MODULES.length}</span></div>
+        <div class="quest-stat-label">Modules</div>
+      </div>
     </div>`;
+}
 
+function wireHomeStreakCard() {
   document.getElementById('hs-streak-card').addEventListener('click', () => {
     const coins = claimDailyLoginBonus();
     const diamonds = pendingStreakDiamonds;
@@ -18178,17 +18188,15 @@ function renderHome() {
       renderHome();
     }
   });
-
-  renderModuleList('home-modules-grid');
-  renderAchievementBadges('home-achievements-row', 'home-achieve-sub', { onlyUnlocked: true });
 }
 
 // Ported directly from the mobile app's Home "Continue quest" card (see mobile's
 // home.tsx) — same mood-based speech line, same "Keep Hammy happy — do another module"
-// CTA copy, same pink progress card. Falls back to the plain mood-only card once every
-// module is done (mobile just hides its card there; keeping Hammy's mood visible even
-// after "graduating" is existing web behavior this port doesn't otherwise touch).
-function renderHomeMascotCard() {
+// CTA copy, same pink progress card, now with the 4 stat chips folded in too (see
+// questStatsRowHtml). Falls back to the plain mood-only layout once every module is done
+// (mobile just hides its card there; keeping Hammy's mood visible even after "graduating"
+// is existing web behavior this port doesn't otherwise touch).
+function renderHomeMascotCard(done) {
   const satisfiedToday = hasModuleActivityToday();
   const mood = todaysHammyMood();
   const moodClass = satisfiedToday ? 'mood-satisfied' : `mood-${mood.id}`;
@@ -18200,9 +18208,15 @@ function renderHomeMascotCard() {
 
   if (!nextModule) {
     card.innerHTML = `
-      ${pigMarkup(0.34)}
-      <div class="mascot-mood-label">Hammy is feeling <strong>${satisfiedToday ? 'happy' : mood.label}</strong> today</div>
-      <div class="mascot-mood-msg">${satisfiedToday ? "Thanks for working on a module today — Hammy's mood is lifted!" : mood.msg}</div>`;
+      <div class="quest-top">
+        ${pigMarkup(0.3)}
+        <div>
+          <div class="mascot-mood-label">Hammy is feeling <strong>${satisfiedToday ? 'happy' : mood.label}</strong> today</div>
+          <div class="mascot-mood-msg">${satisfiedToday ? "Thanks for working on a module today — Hammy's mood is lifted!" : mood.msg}</div>
+        </div>
+      </div>
+      ${questStatsRowHtml(done)}`;
+    wireHomeStreakCard();
     return;
   }
 
@@ -18228,6 +18242,7 @@ function renderHomeMascotCard() {
       ${pigMarkup(0.24)}
       <div class="speech-bubble quest-speech">${speechMsg}</div>
     </div>
+    ${questStatsRowHtml(done)}
     <div>
       <div class="quest-meta-row">
         <span class="quest-module-name">${nextModule.title}</span>
@@ -18239,6 +18254,7 @@ function renderHomeMascotCard() {
     ${satisfiedToday ? `<div class="quest-nudge">🔥 ${state.streak}-day streak — Hammy will be even happier tomorrow</div>` : ''}`;
 
   document.getElementById('quest-cta-btn').addEventListener('click', () => startNextLessonFor(nextModule));
+  wireHomeStreakCard();
 }
 
 // Resumes (or, if every lesson/quest is already done, replays the last one — defensive
