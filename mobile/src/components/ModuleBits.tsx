@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
 import { View, Pressable, StyleSheet, ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SvgXml } from 'react-native-svg';
 import { colors, font, radius } from '@/theme';
+import { mixHex, hexToRgba } from '@/colorMix';
 import { Txt } from './Txt';
 
 /** Rounded module icon badge — a pale background with its paired darker foreground number
@@ -72,43 +73,56 @@ export function ListRow({
   );
 }
 
-/** Circular badge medal. */
-export function BadgeMedal({
-  char,
-  grad,
-  size = 64,
-  fontSize = 22,
-  locked,
-}: {
-  char: string;
-  grad: [string, string];
-  size?: number;
-  fontSize?: number;
-  locked?: boolean;
-}) {
-  return (
-    <LinearGradient
-      colors={grad}
-      start={{ x: 0.2, y: 0.1 }}
-      end={{ x: 0.8, y: 1 }}
-      style={[
-        styles.medal,
-        { width: size, height: size, borderRadius: size / 2 },
-        locked && { opacity: 0.4 },
-      ]}
-    >
-      <Txt style={{ fontSize, color: colors.white }}>{char}</Txt>
-    </LinearGradient>
-  );
+/** A single achievement icon — the exact Feather-style SVG geometry ported from the
+ * website's ACHIEVEMENTS (see @/achievements), rendered via react-native-svg's SvgXml so the
+ * path/circle/line markup is used as-is rather than hand-converted per icon. */
+export function BadgeIcon({ icon, color, size = 24 }: { icon: string; color: string; size?: number }) {
+  const xml = `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icon}</svg>`;
+  return <SvgXml xml={xml} width={size} height={size} />;
 }
 
-export const MEDAL_GRAD: Record<string, [string, string]> = {
-  gold: ['#EFC85A', '#E0961B'],
-  bronze: ['#D89B6A', '#B87333'],
-  silver: ['#BFC6CC', '#8B949C'],
-  diamond: ['#7ED0EC', '#46A8D6'],
-  orange: ['#F0994C', '#D97534'],
-};
+/** Circular badge medal — ported from the website's .ach-icon: a pale tint of the badge's
+ * own color as the circle fill (not a per-tier gradient), a darkened tone of that same color
+ * for the icon stroke, and the raw color as the border; locked badges go flat gray. Diamond
+ * tier gets a soft glow ring when unlocked (the website's animated shine sweep is skipped —
+ * a static glow reads as "rare" without pulling in an animation dependency). */
+export function BadgeMedal({
+  icon,
+  color,
+  tier,
+  size = 64,
+  locked,
+}: {
+  icon: string;
+  color: string;
+  tier: 'bronze' | 'silver' | 'gold' | 'diamond';
+  size?: number;
+  locked?: boolean;
+}) {
+  const bg = locked ? '#F2F2F2' : mixHex(color, '#FFFFFF', 20);
+  const iconColor = locked ? '#C2C2C2' : mixHex(color, '#000000', 75);
+  const border = locked ? mixHex(color, '#E8E8E8', 40) : color;
+  const glow = tier === 'diamond' && !locked;
+  return (
+    <View
+      style={[
+        glow && { padding: 3, borderRadius: (size + 6) / 2, backgroundColor: hexToRgba(color, 0.18) },
+      ]}
+    >
+      <View
+        style={[
+          styles.medal,
+          {
+            width: size, height: size, borderRadius: size / 2,
+            backgroundColor: bg, borderWidth: locked ? 1.5 : 1.5, borderColor: border,
+          },
+        ]}
+      >
+        <BadgeIcon icon={icon} color={iconColor} size={size * 0.42} />
+      </View>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   micon: { alignItems: 'center', justifyContent: 'center' },

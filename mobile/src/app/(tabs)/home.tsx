@@ -2,7 +2,7 @@ import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   Screen, Header, Txt, Card, Button, ProgressBar, Tag, Stat, Speech, Hammy,
-  SectionHead, MIcon, ModuleTile, BadgeMedal, MEDAL_GRAD, Flame, Coin, Diamond, CurrencyChip,
+  SectionHead, MIcon, ModuleTile, BadgeMedal, Flame, Coin, Diamond, CurrencyChip,
 } from '@/components';
 import { useUser } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
@@ -141,7 +141,7 @@ export default function Home() {
         <View style={styles.badgeRow}>
           {earnedBadges.length ? earnedBadges.map((b) => (
             <View key={b.id} style={styles.badgeCell}>
-              <BadgeMedal char={b.char} grad={MEDAL_GRAD[b.tier]} size={54} fontSize={20} />
+              <BadgeMedal icon={b.icon} color={b.color} tier={b.tier} size={54} />
               <Txt style={styles.badgeLbl}>{b.label}</Txt>
             </View>
           )) : (

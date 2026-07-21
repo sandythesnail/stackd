@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, font } from '@/theme';
 import { useStore } from '@/store';
 import { Txt } from './Txt';
-import { BadgeMedal, MEDAL_GRAD } from './ModuleBits';
+import { BadgeMedal } from './ModuleBits';
 
 /** Global "Achievement unlocked!" toast — appears over whatever screen is active whenever
  * the store reports a newly-unlocked badge (mirrors the website's toast on achievement
@@ -29,7 +29,7 @@ export function AchievementToast() {
     <SafeAreaView pointerEvents="box-none" style={styles.root}>
       <Animated.View style={[styles.toastWrap, { transform: [{ translateY: y }] }]}>
         <Pressable style={styles.toast} onPress={dismissNewAchievements}>
-          <BadgeMedal char={first.char} grad={MEDAL_GRAD[first.tier]} size={44} fontSize={16} />
+          <BadgeMedal icon={first.icon} color={first.color} tier={first.tier} size={44} />
           <View style={{ flex: 1 }}>
             <Txt style={styles.eyebrow}>ACHIEVEMENT UNLOCKED</Txt>
             <Txt style={styles.label}>{first.label}</Txt>

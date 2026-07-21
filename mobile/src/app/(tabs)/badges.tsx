@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
-import { Screen, Header, Txt, BadgeMedal, MEDAL_GRAD } from '@/components';
+import { Screen, Header, Txt, BadgeMedal } from '@/components';
 import { colors, font } from '@/theme';
 import { useStore } from '@/store';
 
@@ -39,7 +39,7 @@ export default function Badges() {
         <View style={styles.grid}>
           {shown.map((b) => (
             <View key={b.id} style={styles.cell}>
-              <BadgeMedal char={b.char} grad={MEDAL_GRAD[b.tier]} size={64} fontSize={20} locked={!b.earned} />
+              <BadgeMedal icon={b.icon} color={b.color} tier={b.tier} size={64} locked={!b.earned} />
               <Txt style={[styles.lbl, !b.earned && { color: '#A8A296' }]}>{b.label}</Txt>
             </View>
           ))}
