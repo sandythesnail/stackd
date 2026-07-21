@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Screen, Header, Txt, Button, Hammy, ItemArt, Wallpaper, ListRow } from '@/components';
+import { Screen, Header, Txt, Hammy, ItemArt, Wallpaper, ListRow } from '@/components';
 import { colors, font } from '@/theme';
 import { useStore } from '@/store';
 import { shopItemsReal } from '@/content';
@@ -53,7 +53,6 @@ export default function Room() {
   const bySlot = (slot: RoomSlot) => roomItems.find((i) => i.slot === slot);
 
   const goToRoomShop = () => router.push({ pathname: '/(tabs)/shop', params: { category: 'room' } });
-  const goToWardrobeShop = () => router.push({ pathname: '/(tabs)/shop', params: { category: wardrobeCat } });
 
   const wardrobeLabel = WARDROBE_CATEGORIES.find((c) => c.key === wardrobeCat)!.label;
   const wardrobeItems = shopItemsReal.filter(
@@ -148,17 +147,6 @@ export default function Room() {
             )}
           </ScrollView>
         )}
-
-        <View style={styles.actions}>
-          {tab === 'room' ? (
-            <>
-              <Button label="Decorate room" variant="ghost" size="sm" onPress={goToRoomShop} style={{ flex: 1 }} />
-              <Button label="Visit shop →" variant="pink" size="sm" onPress={() => router.push('/(tabs)/shop')} style={{ flex: 1 }} />
-            </>
-          ) : (
-            <Button label="Visit shop →" variant="pink" size="sm" onPress={goToWardrobeShop} style={{ flex: 1 }} />
-          )}
-        </View>
       </View>
     </Screen>
   );
@@ -298,5 +286,4 @@ const styles = StyleSheet.create({
   },
   wornTagOn: { backgroundColor: colors.green },
   wornTagTxt: { fontFamily: font.extra, fontSize: 12, color: colors.tagGreenText },
-  actions: { flexDirection: 'row', gap: 10, paddingVertical: 14 },
 });
