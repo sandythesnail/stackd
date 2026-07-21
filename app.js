@@ -178,7 +178,7 @@ const MODULES = [
                 term: 'Withholding',
                 plain: "Beyond FICA, your employer also withholds federal (and often state) income tax, an estimate of what you'll owe in April, taken out a little at a time instead of all at once. How much gets withheld depends on the W-4 form you filled out when you were hired.",
                 analogy: "It's like paying off a big bill in small installments throughout the year instead of one lump sum, so April doesn't blindside you.",
-                check: { statement: "How much income tax gets withheld from each paycheck depends on the W-4 form filled out when you were hired.", isTrue: true }
+                check: { statement: "If nothing were withheld from each paycheck, the entire year's income tax bill would come due all at once in April.", isTrue: true }
               }
             ],
             xpOnComplete: 3
@@ -1799,7 +1799,7 @@ const MODULES = [
                 term: 'Savings & Debt Repayment',
                 plain: "The 20% slice covers BOTH building savings and paying down debt beyond the minimum, credit card balances, student loan extra payments, and more. If you're carrying debt, extra payments toward it count as part of your 20%, not as a \"want.\"",
                 analogy: "It's like one shared lane for two kinds of traffic, both savings deposits and extra debt payments are heading the same direction: a stronger financial position.",
-                check: { statement: "Extra payments toward paying down debt faster count as part of the 20% savings/debt slice.", isTrue: true }
+                check: { statement: "On an $800/month budget using the 50/30/20 split, an extra $50 payment toward a credit card balance belongs in the same 20% slice as savings, not lumped in with \"wants\" spending.", isTrue: true }
               }
             ],
             xpOnComplete: 3
@@ -3325,7 +3325,7 @@ const MODULES = [
                 term: 'APY (Annual Percentage Yield)',
                 plain: "APY is the rate your balance actually grows over a year, including compounding. A traditional big-bank savings account might pay 0.01% APY, a HYSA might pay 4-5%, on the same $1,000, that's the difference between about 10 cents and about $45 a year.",
                 analogy: "It's like two gardens with the exact same seed, one gets almost no sunlight, the other gets full sun, same starting point, very different growth.",
-                check: { statement: "APY measures how much your savings balance actually grows over a year.", isTrue: true }
+                check: { statement: "On the same $1,000 balance, a traditional savings account paying 0.01% APY and a HYSA paying 4-5% APY would earn roughly the same amount of interest in a year.", isTrue: false }
               }
             ],
             xpOnComplete: 2
@@ -4653,7 +4653,7 @@ const MODULES = [
                 term: 'Time in the Market',
                 plain: "Trying to perfectly predict market ups and downs (timing the market) is extremely difficult, even for professionals. Staying invested consistently over a long time horizon (time IN the market) has historically outperformed trying to guess the perfect moments to buy and sell.",
                 analogy: "It's like trying to catch every green light across a whole city versus just consistently driving the route, one is nearly impossible, the other reliably gets you there.",
-                check: { statement: "Historically, consistently staying invested over time has tended to outperform trying to perfectly time the market.", isTrue: true }
+                check: { statement: "Selling investments during a 15% market dip to avoid further losses is generally a better move than staying invested and waiting for a recovery.", isTrue: false }
               }
             ],
             xpOnComplete: 3
@@ -6948,7 +6948,7 @@ const MODULES = [
                 term: 'Avalanche Method',
                 plain: "The avalanche method puts extra payments toward the HIGHEST-interest debt first, while paying minimums on everything else. Mathematically, this saves the most money overall, since the most expensive debt gets paid down fastest.",
                 analogy: "It's like patching the leak that's losing water the fastest, not the leak that's closest to being empty.",
-                check: { statement: "The avalanche method prioritizes extra payments toward the debt with the highest interest rate.", isTrue: true }
+                check: { statement: "With $200 owed at 24% APR and $80 owed at 15% APR, the avalanche method would put an extra payment toward the $200 balance first.", isTrue: true }
               }
             ],
             xpOnComplete: 2
@@ -7255,7 +7255,7 @@ const MODULES = [
                 term: 'Copay',
                 plain: "A copay is a flat fee you pay per visit or service, often after your deductible is met, like $30 for a doctor's visit. It's predictable and separate from the deductible.",
                 analogy: "It's like a flat cover charge every time you go out, regardless of how much you actually spend once you're inside.",
-                check: { statement: "A copay is a flat fee paid per visit, separate from the deductible.", isTrue: true }
+                check: { statement: "After meeting a $500 deductible, a visit with a $30 copay costs the same $30 whether the visit's total bill is $100 or $400.", isTrue: true }
               }
             ],
             xpOnComplete: 3
@@ -9610,7 +9610,7 @@ const MODULES = [
                 term: 'Working Backward From the Due Date',
                 plain: "Knowing the exact date the grace period ends makes it possible to plan backward: when to choose a repayment plan, when to build the payment into a budget, when to set up autopay. A known deadline turns an abstract future cost into a concrete plan.",
                 analogy: "It's like planning backward from a flight departure time, working out exactly when everything else needs to happen before it.",
-                check: { statement: "Knowing the exact grace period end date makes it possible to plan the budget and repayment choice in advance.", isTrue: true }
+                check: { statement: "If a grace period is known to end in six months, waiting until payments actually start to pick a repayment plan is the most effective approach.", isTrue: false }
               }
             ],
             xpOnComplete: 3
@@ -10157,7 +10157,7 @@ const MODULES = [
                 term: 'Self-Employment Tax',
                 plain: "Beyond regular income tax, 1099 earners may owe self-employment tax, roughly 15.3%, covering the same Social Security and Medicare that a W-2 employer would normally split with you. This kicks in once net 1099 earnings pass $400.",
                 analogy: "As a W-2 employee, your employer covers half of this cost automatically. As a 1099 earner, you're covering both halves yourself.",
-                check: { statement: "1099 earners may owe self-employment tax on top of regular income tax.", isTrue: true }
+                check: { statement: "A student who earns $250 in net 1099 freelance income for the year would owe self-employment tax on it.", isTrue: false }
               }
             ],
             xpOnComplete: 3
@@ -11523,7 +11523,7 @@ const MODULES = [
                 term: 'Lifestyle Inflation',
                 plain: "This is when spending rises to match perceived social norms or income increases, often without a matching rise in savings. It happens gradually, each individual \"yes\" feels small, but they add up fast over months.",
                 analogy: "It's like a balloon that slowly fills to match whatever container it's in, spending naturally expands to meet whatever room feels available.",
-                check: { statement: "Lifestyle inflation is when spending increases to match income or social norms, without a matching rise in savings.", isTrue: true }
+                check: { statement: "Lifestyle inflation can happen even when income hasn't increased at all, driven by spending creeping up to match the people around you.", isTrue: true }
               }
             ],
             xpOnComplete: 2
@@ -12825,7 +12825,7 @@ const MODULES = [
                 term: 'Compounding Salary Gaps',
                 plain: "Future raises, bonuses, and even new job offers are often calculated as a percentage of your current salary. A $5,000 gap at your first job doesn't stay $5,000, it widens every year raises get calculated as a percentage, similar to compound interest.",
                 analogy: "It's like two savings accounts starting at slightly different balances, both earning the same percentage return, the gap between them keeps growing every year, not shrinking.",
-                check: { statement: "An early salary gap tends to widen over a career because future raises are often a percentage of current salary.", isTrue: true }
+                check: { statement: "Two coworkers start $5,000 apart in salary. If both get identical percentage raises every year, that dollar gap will shrink over time.", isTrue: false }
               }
             ],
             xpOnComplete: 3
@@ -14371,7 +14371,7 @@ const MODULES = [
                 term: 'Two Habits Cover Most of This',
                 plain: "Almost every financial aid scam is caught by two simple habits: check the actual domain a link points to, and remember that real aid never requires payment to receive it. Together, they catch the phishing link AND the processing-fee scam in one pass.",
                 analogy: "It's like checking both the lock and the ID before letting someone in, one habit alone leaves a gap the other one closes.",
-                check: { statement: "Checking the real domain and remembering that aid never requires payment together catch most financial aid scams.", isTrue: true }
+                check: { statement: "An email offering a scholarship from a lookalike domain that also asks for a small \"processing fee\" before releasing the funds would pass both of the two key checks.", isTrue: false }
               }
             ],
             xpOnComplete: 3
@@ -16215,7 +16215,7 @@ function maybeShowPostCompletionOverlays(mod, leveled) {
     // once without the tier changing, since tier tracks modules completed, not level. That
     // used to mean seeing the same "You're a Broke Freshman!" overlay repeatedly. A level-up
     // that doesn't change tier now gets a quick toast instead of re-showing the big banner.
-    const tier = getTier(Object.keys(state.completedModules).length);
+    const tier = getTier(modulesCompletedCount());
     if (tier.name !== state.lastSeenTier) {
       state.lastSeenTier = tier.name;
       saveState();
@@ -16242,7 +16242,7 @@ let state = {
   coins: 0, diamonds: 0, ownedItems: [], equippedItems: [],
   dailyLoginLog: {}, claimedBadgeRewards: [], referralClaimAttempted: false,
   ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null },
-  metHammy: false,
+  metHammy: false, hasSeenOnboardingTour: false,
   questProgress: {}, questBossesWon: [],
   onboardingSurvey: { completed: false, moduleFamiliarity: {}, focusGoals: [], trackId: null, completedAt: null },
   budgetPlan: {
@@ -16274,8 +16274,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, lastSeenTier, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
-  const snapshot = { level, xp, streak, lastPlayedDate, lastSeenTier, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
+  const { level, xp, streak, lastPlayedDate, lastSeenTier, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
+  const snapshot = { level, xp, streak, lastPlayedDate, lastSeenTier, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
   localStorage.setItem('stackd_v2', JSON.stringify(snapshot));
   scheduleSupabaseSync(snapshot);
 }
@@ -16644,7 +16644,7 @@ function updateShopNavHighlight() {
 }
 
 function updateSidebarStats() {
-  const tier = getTier(Object.keys(state.completedModules).length);
+  const tier = getTier(modulesCompletedCount());
   document.getElementById('sf-tier').textContent = tier.name;
   document.getElementById('sf-level').textContent = state.level;
   document.getElementById('sf-xp').textContent = state.xp.toLocaleString();
@@ -16761,20 +16761,28 @@ function renderModuleList(containerId) {
 
   MODULES.forEach(m => {
     const quest = hasQuest(m);
-    const lessonsDone = quest ? 0 : m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
-    const allDone = quest
-      ? mainQuests(m).every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
-      : lessonsDone === m.lessons.length;
+    const totalUnits = quest ? mainQuests(m).length : m.lessons.length;
+    const unitsDone = quest
+      ? mainQuests(m).filter(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); }).length
+      : m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
+    const allDone = unitsDone === totalUnits;
 
     const isRecommended = !allDone && trackModuleIds.includes(m.id);
     const row = document.createElement('div');
     row.className = 'module-row' + (allDone ? ' completed' : '') + (isRecommended ? ' recommended' : '');
 
+    // A module with at least one lesson done but not all of them shows its actual lesson
+    // count instead of the XP/Recommended badge — that in-progress state used to be
+    // indistinguishable from "not started" (both showed the same "Up to XXX XP" badge), which
+    // is what let a single finished lesson look identical to a fully finished module elsewhere
+    // (the aggregate "modules done" stat had the same underlying bug — see modulesCompletedCount).
     const badge = allDone
       ? `<span class="card-badge badge-done">✓ Complete</span>`
-      : isRecommended
-        ? `<span class="card-badge badge-recommend">★ Recommended</span>`
-        : `<span class="card-badge badge-xp">Up to ${moduleTotalXP(m).toLocaleString()} XP</span>`;
+      : unitsDone > 0
+        ? `<span class="card-badge badge-progress">${unitsDone}/${totalUnits} lessons</span>`
+        : isRecommended
+          ? `<span class="card-badge badge-recommend">★ Recommended</span>`
+          : `<span class="card-badge badge-xp">Up to ${moduleTotalXP(m).toLocaleString()} XP</span>`;
 
     let bodyHtml;
     if (quest) {
@@ -16946,6 +16954,17 @@ function isModuleFullyDone(m) {
     : m.lessons.every((_, i) => !!state.completedLessons[`${m.id}_${i}`]);
 }
 
+// The "X/11 modules complete" stat (home, modules page, progress page, tier, sidebar) needs
+// to count modules that are ACTUALLY fully finished, not just started. state.completedModules
+// is a different, looser bookkeeping map — it gets a key written the moment the very first
+// lesson/quest in a module finishes (see finishQuiz/finishQuest/finishBonusActivity), which
+// used to make Object.keys(state.completedModules).length pass for "modules done" and count a
+// module as complete after just its first lesson. isModuleFullyDone (already used by the
+// per-module list/badge logic and the survey's recommendation scoring) is the real signal.
+function modulesCompletedCount() {
+  return MODULES.filter(isModuleFullyDone).length;
+}
+
 // Lower familiarity (0-100, 0 = "never heard of it") and goal-matched modules score higher;
 // finished modules always score 0 so they're never pulled to the top or badged "Recommended"
 // once they're already done.
@@ -17019,8 +17038,9 @@ function finishOnboardingSurvey(skipped) {
 }
 
 // Runs on every load and after each step of the first-time flow completes, so the sequence
-// is always: onboarding survey, then meeting Hammy, in that fixed order, never both stacked
-// on screen at once. A returning user who's already done both just falls through immediately.
+// is always: onboarding survey, then meeting Hammy, then the spotlight tour, in that fixed
+// order, never more than one stacked on screen at once. A returning user who's already done
+// all three just falls through immediately.
 function runFirstLoadSequence() {
   if (!state.onboardingSurvey.completed) {
     showOnboardingSurvey();
@@ -17029,7 +17049,111 @@ function runFirstLoadSequence() {
   if (!state.metHammy) {
     document.getElementById('birth-pig-wrap').innerHTML = getPigMarkup(0.22);
     document.getElementById('birth-overlay').classList.add('visible');
+    return;
   }
+  if (!state.hasSeenOnboardingTour) {
+    startOnboardingTour();
+  }
+}
+
+// ── ONBOARDING TOUR (SPOTLIGHT WALKTHROUGH) ─────
+// A short, lightweight "highlight one real UI element, explain it, Next" tour — not a wall
+// of text — shown once, right after a first-time user meets Hammy. Deliberately just two
+// stops for now (XP, the Shop): the tools tab is left out on purpose since its UI is still
+// changing, and a "what does this do" step for a screen that's about to be redesigned would
+// go stale fast. Add a `tools` stop here once that UI settles.
+const ONBOARDING_TOUR_STEPS = [
+  {
+    target: () => document.getElementById('home-stats-row'),
+    title: 'Earn XP as you go',
+    body: "Finishing lessons and quests earns XP. Level up to climb the tiers, from Broke Freshman up to Financially Literate Graduate, and watch Hammy grow alongside you.",
+  },
+  {
+    target: () => document.getElementById('nav-shop-btn'),
+    title: 'Spend coins & diamonds in the Shop',
+    body: "Coins come from everyday lessons; diamonds come from bigger milestones like login streaks. Head into the Shop to spend either on outfits for Hammy or decor for their room.",
+    beforeShow: () => {
+      // On the mobile layout the nav is a hidden drawer behind the hamburger button, so the
+      // Shop link isn't actually on screen to spotlight until that drawer is open.
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth <= 768 && !sidebar.classList.contains('collapsed')) {
+        sidebar.classList.add('collapsed');
+        tourOpenedMobileNav = true;
+      }
+    },
+  },
+];
+let tourStepIdx = 0;
+let tourOpenedMobileNav = false;
+
+function startOnboardingTour() {
+  tourStepIdx = 0;
+  tourOpenedMobileNav = false;
+  window.scrollTo(0, 0);
+  document.getElementById('tour-overlay').classList.add('visible');
+  window.addEventListener('resize', positionTourStep);
+  renderTourStep();
+}
+
+function renderTourStep() {
+  const step = ONBOARDING_TOUR_STEPS[tourStepIdx];
+  if (step.beforeShow) step.beforeShow();
+  document.getElementById('tour-step-label').textContent = `Step ${tourStepIdx + 1} of ${ONBOARDING_TOUR_STEPS.length}`;
+  document.getElementById('tour-title').textContent = step.title;
+  document.getElementById('tour-body').textContent = step.body;
+  document.getElementById('tour-next').textContent = tourStepIdx === ONBOARDING_TOUR_STEPS.length - 1 ? 'Got it →' : 'Next →';
+  // requestAnimationFrame gives beforeShow's DOM changes (e.g. opening the mobile drawer)
+  // one paint to settle before the target element's rect is measured.
+  requestAnimationFrame(positionTourStep);
+}
+
+function positionTourStep() {
+  if (!document.getElementById('tour-overlay').classList.contains('visible')) return;
+  const step = ONBOARDING_TOUR_STEPS[tourStepIdx];
+  const targetEl = step.target();
+  const spotlight = document.getElementById('tour-spotlight');
+  const tooltip = document.getElementById('tour-tooltip');
+  if (!targetEl) { spotlight.style.display = 'none'; tooltip.style.display = 'none'; return; }
+  spotlight.style.display = '';
+  tooltip.style.display = '';
+
+  const pad = 8;
+  const r = targetEl.getBoundingClientRect();
+  spotlight.style.top = (r.top - pad) + 'px';
+  spotlight.style.left = (r.left - pad) + 'px';
+  spotlight.style.width = (r.width + pad * 2) + 'px';
+  spotlight.style.height = (r.height + pad * 2) + 'px';
+
+  // Prefer below the spotlight; flip above it if there's not enough room under it. Clamped
+  // horizontally so it never runs off either edge of a narrow viewport.
+  const margin = 14;
+  const tooltipW = tooltip.offsetWidth || 300;
+  const tooltipH = tooltip.offsetHeight || 150;
+  let top = r.bottom + pad + margin;
+  if (top + tooltipH > window.innerHeight - margin) top = Math.max(margin, r.top - pad - margin - tooltipH);
+  const left = Math.min(Math.max(margin, r.left), window.innerWidth - tooltipW - margin);
+  tooltip.style.top = top + 'px';
+  tooltip.style.left = left + 'px';
+}
+
+function advanceOnboardingTour() {
+  if (tourStepIdx < ONBOARDING_TOUR_STEPS.length - 1) {
+    tourStepIdx++;
+    renderTourStep();
+  } else {
+    endOnboardingTour();
+  }
+}
+
+function endOnboardingTour() {
+  document.getElementById('tour-overlay').classList.remove('visible');
+  window.removeEventListener('resize', positionTourStep);
+  if (tourOpenedMobileNav) {
+    document.getElementById('sidebar').classList.remove('collapsed');
+    tourOpenedMobileNav = false;
+  }
+  state.hasSeenOnboardingTour = true;
+  saveState();
 }
 
 function renderSurveyStep() {
@@ -17882,7 +18006,7 @@ function renderWardrobeScene() {
 function renderHome() {
   showPage('home');
   updateSidebarStats();
-  const done = Object.keys(state.completedModules).length;
+  const done = modulesCompletedCount();
   const tier = getTier(done);
   document.getElementById('h-tier').textContent = tier.name;
   document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
@@ -17933,7 +18057,7 @@ function renderHome() {
 // ── MODULES PAGE ───────────────────────────────
 function renderModulesPage() {
   updateSidebarStats();
-  const done = Object.keys(state.completedModules).length;
+  const done = modulesCompletedCount();
   document.getElementById('modules-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
   renderModuleList('modules-grid');
 }
@@ -17956,7 +18080,7 @@ function renderBadgesPage() {
 // ── PROGRESS PAGE ──────────────────────────────
 function renderProgressPage() {
   updateSidebarStats();
-  const done = Object.keys(state.completedModules).length;
+  const done = modulesCompletedCount();
   const tier = getTier(done);
   const unlocked = state.unlockedAchievements.length;
   const pct = xpProgressPct();
@@ -18122,6 +18246,17 @@ function renderSettingsPage() {
       state.onboardingSurvey = { completed: false, moduleFamiliarity: {}, focusGoals: [], trackId: null, completedAt: null };
       saveState();
       showOnboardingSurvey();
+    };
+  }
+  const replayTourBtn = document.getElementById('replay-tour-btn');
+  if (replayTourBtn) {
+    // Deliberately doesn't touch state.hasSeenOnboardingTour — a manual replay from Settings
+    // shouldn't reset the "seen it" flag, or the tour would just auto-play again on the very
+    // next login too.
+    replayTourBtn.onclick = () => {
+      showPage('home');
+      renderHome();
+      startOnboardingTour();
     };
   }
 
@@ -19472,7 +19607,7 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
     <div class="results-rewards-row">
       <div class="results-xp-card">
         <div class="results-xp-num">+${xpEarned} XP</div>
-        <div class="results-xp-label">${getTier(Object.keys(state.completedModules).length).name} · ${state.xp.toLocaleString()} total</div>
+        <div class="results-xp-label">${getTier(modulesCompletedCount()).name} · ${state.xp.toLocaleString()} total</div>
       </div>
       <div class="results-coins-card">
         <div class="results-coins-num">+${coinsEarned || 0} 🪙</div>
@@ -19717,7 +19852,7 @@ function renderSubQuestResults(mod, qp, newAchs) {
     <div class="results-rewards-row">
       <div class="results-xp-card">
         <div class="results-xp-num">+${xpEarned} XP</div>
-        <div class="results-xp-label">${getTier(Object.keys(state.completedModules).length).name} · ${state.xp.toLocaleString()} total</div>
+        <div class="results-xp-label">${getTier(modulesCompletedCount()).name} · ${state.xp.toLocaleString()} total</div>
       </div>
     </div>
     ${achHtml}
@@ -21017,7 +21152,7 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
     <div class="results-rewards-row">
       <div class="results-xp-card">
         <div class="results-xp-num">+${xpEarned} XP</div>
-        <div class="results-xp-label">${getTier(Object.keys(state.completedModules).length).name} · ${state.xp.toLocaleString()} total</div>
+        <div class="results-xp-label">${getTier(modulesCompletedCount()).name} · ${state.xp.toLocaleString()} total</div>
       </div>
       <div class="results-coins-card">
         <div class="results-coins-num">+${coinsEarned || 0} 🪙</div>
@@ -21207,6 +21342,8 @@ document.addEventListener('DOMContentLoaded', () => {
     runFirstLoadSequence();
   });
   document.getElementById('onboarding-skip').addEventListener('click', () => finishOnboardingSurvey(true));
+  document.getElementById('tour-next').addEventListener('click', advanceOnboardingTour);
+  document.getElementById('tour-skip').addEventListener('click', endOnboardingTour);
 
   // Sidebar expand/collapse
   const sidebar = document.getElementById('sidebar');

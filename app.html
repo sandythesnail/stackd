@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="app.css?v=11">
+  <link rel="stylesheet" href="app.css?v=12">
   <script
     defer
     crossorigin="anonymous"
@@ -284,6 +284,13 @@
               <div class="settings-val">Retake the "what's already in your toolkit" survey</div>
             </div>
             <button class="btn-secondary" id="retake-survey-btn">Retake</button>
+          </div>
+          <div class="settings-item">
+            <div>
+              <div class="settings-label">Welcome tour</div>
+              <div class="settings-val">Replay the quick tour of XP and the Shop</div>
+            </div>
+            <button class="btn-secondary" id="replay-tour-btn">Replay</button>
           </div>
           <div class="settings-item">
             <div>
@@ -603,7 +610,21 @@
     </div>
   </div>
 
+  <!-- ONBOARDING TOUR (SPOTLIGHT WALKTHROUGH) -->
+  <div class="tour-overlay" id="tour-overlay">
+    <div class="tour-spotlight" id="tour-spotlight"></div>
+    <div class="tour-tooltip" id="tour-tooltip">
+      <div class="tour-step-label" id="tour-step-label">Step 1 of 2</div>
+      <h3 id="tour-title"></h3>
+      <p id="tour-body"></p>
+      <div class="tour-footer">
+        <button class="tour-skip" id="tour-skip" type="button">Skip tour</button>
+        <button class="btn-primary tour-next" id="tour-next" type="button">Next →</button>
+      </div>
+    </div>
+  </div>
+
 </div>
-<script src="app.js?v=11"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
