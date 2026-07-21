@@ -32,7 +32,7 @@ const RARITY_WEIGHT: Record<string, number> = { common: 8, rare: 4, epic: 2, leg
 /** LEVEL_THRESHOLDS ported verbatim from app.js — xp needed to REACH each level (index = level). */
 const LEVEL_THRESHOLDS = [0, 90, 200, 330, 480, 660, 880, 1150, 1450, 1800, 2200];
 
-function xpForLevel(l: number) {
+export function xpForLevel(l: number) {
   return LEVEL_THRESHOLDS[Math.min(l, LEVEL_THRESHOLDS.length - 1)];
 }
 
@@ -82,6 +82,13 @@ export type AppState = {
   /** Lessons completed per module id — the real source of truth for module progress,
    * replacing the old static mock done/quests fields. */
   moduleProgress: Record<string, number>;
+  /** Per-module XP earned and cumulative graded-question accuracy, accumulated once per
+   * lesson the first time it's completed (mirrors the `advanced`-gated coin payout below, so
+   * replaying an already-completed lesson doesn't re-count or skew the accuracy) — powers the
+   * Progress page's per-module XP/score charts (ported from the website's
+   * state.completedModules[id].xpEarned/score/total, adapted to accumulate across every
+   * lesson in the module rather than a single snapshot). */
+  moduleStats: Record<string, { xp: number; correct: number; total: number }>;
   unlockedAchievementIds: string[];
   /** Guaranteed-unlock life events (LIFE_EVENT_UNLOCKS) already shown, so each fires once. */
   shownLifeEventIds: string[];
@@ -127,6 +134,7 @@ const DEFAULT_STATE: AppState = {
     earning: 6, spending: 5, saving: 2, investing: 0, credit: 1, risk: 0,
     loans: 0, taxes: 6, psychology: 0, career: 7, scams: 0,
   },
+  moduleStats: {},
   unlockedAchievementIds: [],
   shownLifeEventIds: [],
   pendingLifeEventId: null,
@@ -154,7 +162,7 @@ function mysteryPoolAll(poolKey: string) {
   return shopItemsReal.filter((i) => i.mysteryPool === poolKey && !i.isMysteryBox);
 }
 
-function mysteryPoolUnowned(poolKey: string, ownedItems: string[]) {
+export function mysteryPoolUnowned(poolKey: string, ownedItems: string[]) {
   return mysteryPoolAll(poolKey).filter((i) => !ownedItems.includes(i.id));
 }
 
@@ -186,6 +194,17 @@ const ALL_MODULE_IDS = Object.keys(MODULE_MASTERY_ACHIEVEMENT);
  * separately (completedLifeTaskIds), not counted toward module progress/mastery. */
 function moduleTotal(moduleId: string) {
   return moduleContentById(moduleId)?.lessons.filter((l) => !l.isLifeTask).length ?? 0;
+}
+
+/** Adds one lesson's XP/graded results onto a module's running totals — see moduleStats. */
+function accumulateModuleStats(
+  moduleStats: AppState['moduleStats'], moduleId: string, xpEarned: number, correctCount: number, gradedTotal: number,
+): AppState['moduleStats'] {
+  const prev = moduleStats[moduleId] ?? { xp: 0, correct: 0, total: 0 };
+  return {
+    ...moduleStats,
+    [moduleId]: { xp: prev.xp + xpEarned, correct: prev.correct + correctCount, total: prev.total + gradedTotal },
+  };
 }
 
 function isModuleMastered(moduleProgress: Record<string, number>, moduleId: string) {
@@ -522,6 +541,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             xp: s.xp + xpEarned,
             coins: s.coins + (advanced ? coinsEarned : 0),
             moduleProgress: nextProgress,
+            moduleStats: advanced
+              ? accumulateModuleStats(s.moduleStats, moduleId, xpEarned, correctCount, gradedTotal)
+              : s.moduleStats,
             lastModuleActivityDate: new Date().toDateString(),
             questBossesWon: bossWon && !s.questBossesWon.includes(moduleId)
               ? [...s.questBossesWon, moduleId] : s.questBossesWon,
@@ -558,6 +580,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ...s,
             xp: s.xp + (firstTime ? xpEarned : 0),
             coins: s.coins + (firstTime ? coinsEarned : 0),
+            moduleStats: firstTime
+              ? accumulateModuleStats(s.moduleStats, moduleId, xpEarned, correctCount, gradedTotal)
+              : s.moduleStats,
             completedLifeTaskIds: firstTime ? [...s.completedLifeTaskIds, moduleId] : s.completedLifeTaskIds,
             lastModuleActivityDate: new Date().toDateString(),
             questHintsUsed: firstTime && questId && hintsUsed !== undefined
