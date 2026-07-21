@@ -144,16 +144,32 @@ export default function Home() {
 
         <SectionHead title="Keep learning" action="See all →" onAction={() => router.push('/(tabs)/modules')} />
         <View style={styles.grid}>
-          {homeModules.map((m) => (
-            <ModuleTile key={m.id} recommended={m.recommended} onPress={() => router.push(`/learn/module/${m.id}`)} style={styles.gridItem}>
-              <View style={styles.tileTop}>
-                <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} />
-                <Tag tone={m.tone} style={styles.miniTag}>{m.tag}</Tag>
-              </View>
-              <Txt style={styles.tileName}>{m.name}</Txt>
-              <ProgressBar value={m.pct} tone={m.tone === 'pink' ? 'pink' : 'green'} height={7} />
-            </ModuleTile>
-          ))}
+          {homeModules.map((m, i) => {
+            const isFirst = i === 0;
+            const tile = (
+              <ModuleTile
+                key={m.id}
+                recommended={m.recommended}
+                onPress={() => router.push(`/learn/module/${m.id}`)}
+                // The width/flexGrow that size this tile within the row move to the
+                // TourTarget wrapper for the first tile — a percentage width on BOTH the
+                // wrapper and its child would resolve against each other instead of the
+                // row, shrinking the tile instead of just sizing it once.
+                style={isFirst ? { flex: 1 } : styles.gridItem}
+              >
+                <View style={styles.tileTop}>
+                  <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} />
+                  <Tag tone={m.tone} style={styles.miniTag}>{m.tag}</Tag>
+                </View>
+                <Txt style={styles.tileName}>{m.name}</Txt>
+                <ProgressBar value={m.pct} tone={m.tone === 'pink' ? 'pink' : 'green'} height={7} />
+              </ModuleTile>
+            );
+            // Only the first tile is a tour stop (see OnboardingTour.tsx's "Start a
+            // module" step) — same "point at a real, already-on-screen element" approach
+            // as the XP/Shop steps.
+            return isFirst ? <TourTarget key={m.id} id="tour-module" style={styles.gridItem}>{tile}</TourTarget> : tile;
+          })}
         </View>
 
         <SectionHead title="Recent badges" action={`All ${achievements().length} →`} onAction={() => router.push('/(tabs)/badges')} style={{ marginTop: 2 }} />

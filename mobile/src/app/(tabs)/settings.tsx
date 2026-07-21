@@ -61,7 +61,7 @@ export default function Settings() {
         <View style={{ marginTop: 2 }}>
           {authEnabled ? <ClerkAccountRow /> : <Row icon="user" title="Account" sub={user.email} />}
           <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.push('/(onboarding)/survey')} />
-          <Row icon="compass" title="Replay welcome tour" sub="XP and the Shop, quick refresher" onPress={replayTour} />
+          <Row icon="compass" title="Replay welcome tour" sub="XP, the Shop & modules, quick refresher" onPress={replayTour} />
           <Row icon="trash-2" title="Reset all progress" sub="Clears all XP, modules, and badges permanently." danger onPress={confirmReset} />
           {__DEV__ ? (
             <Row

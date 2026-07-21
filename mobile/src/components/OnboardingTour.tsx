@@ -10,20 +10,26 @@ import { Txt } from './Txt';
 import { Button } from './Button';
 
 /** Mirrors the website's onboarding spotlight tour (see app.js's ONBOARDING_TOUR_STEPS) —
- * two stops, XP then the Shop, shown once right after a first-time user finishes the
- * onboarding survey. The Tools tab is left out on purpose, same reasoning as web: its UI is
- * still changing, so a "what does this do" step would go stale fast.
+ * three stops (XP, the Shop, starting a module), shown once right after a first-time user
+ * finishes the onboarding survey. Copy stays as tight as possible on purpose — this is a
+ * quick "point at a real element, explain it, Next" tour, not a wall of text. No Tools
+ * stop: that UI is still changing, so a "what does this do" step would go stale fast.
  */
 const TOUR_STEPS: { targetId: string; title: string; body: string }[] = [
   {
     targetId: 'tour-xp',
     title: 'Earn XP as you go',
-    body: "Finishing lessons and quests earns XP. Level up to climb the tiers, from Broke Freshman up to Financially Literate Graduate, and watch Hammy grow alongside you.",
+    body: 'Finish lessons and quests to earn XP and level up through the tiers.',
   },
   {
     targetId: 'tour-shop-tab',
     title: 'Spend coins & diamonds in the Shop',
-    body: "Coins come from everyday lessons; diamonds come from bigger milestones like login streaks. Head into the Shop to spend either on outfits for Hammy or decor for their room.",
+    body: 'Coins come from lessons, diamonds from bigger streak milestones. Spend either on outfits or room decor for Hammy.',
+  },
+  {
+    targetId: 'tour-module',
+    title: 'Start a module',
+    body: 'Each module is a set of short lessons — finish them in order to complete it and earn XP.',
   },
 ];
 
