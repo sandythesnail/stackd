@@ -5,7 +5,7 @@ export { Card } from './Card';
 export { ProgressBar } from './ProgressBar';
 export { Tag } from './Tag';
 export { Header, CurrencyChip, TierBadge } from './Header';
-export { Coin, Diamond, Flame } from './Currency';
+export { Coin, Diamond, Flame, Gift } from './Currency';
 export { IconButton } from './IconButton';
 export { Field } from './Field';
 export { Option, CheckBox, LetterBadge } from './Option';

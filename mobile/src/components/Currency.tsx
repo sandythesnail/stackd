@@ -1,4 +1,4 @@
-import Svg, { Circle, Text as SvgText, Polygon, Line, Path } from 'react-native-svg';
+import Svg, { Circle, Text as SvgText, Polygon, Line, Path, Rect } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme';
 
@@ -28,6 +28,21 @@ export function Diamond({ size = 16 }: { size?: number }) {
       <Line x1={8} y1={6} x2={9.2} y2={10.5} stroke="#0A4A6E" strokeWidth={0.5} opacity={0.4} />
       <Line x1={16} y1={6} x2={14.8} y2={10.5} stroke="#0A4A6E" strokeWidth={0.5} opacity={0.4} />
       <Path d="M18.5 4.5l0.6 1.5 1.5 0.6-1.5 0.6-0.6 1.5-0.6-1.5-1.5-0.6 1.5-0.6z" fill="#ffffff" opacity={0.85} />
+    </Svg>
+  );
+}
+
+/** Wrapped-gift token — ported verbatim from the website's ICON_GIFT inline SVG (app.js),
+ * used for mystery box status/ribbons instead of a 🎁 emoji. */
+export function Gift({ size = 16 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Rect x={4} y={11} width={16} height={8.5} rx={1} fill="#FF6FA0" stroke="#8A2646" strokeWidth={1.4} />
+      <Rect x={3} y={8} width={18} height={3.4} rx={0.9} fill="#FF4F8A" stroke="#8A2646" strokeWidth={1.4} />
+      <Rect x={10.7} y={8} width={2.6} height={11.5} fill="#FFD23F" stroke="#8A5A00" strokeWidth={0.8} />
+      <Path d="M12 8c-1.6-3.2-5.4-3.2-5.4-0.2 0 1.7 2.5 1 5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" strokeWidth={0.8} strokeLinejoin="round" />
+      <Path d="M12 8c1.6-3.2 5.4-3.2 5.4-0.2 0 1.7-2.5 1-5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" strokeWidth={0.8} strokeLinejoin="round" />
+      <Rect x={4} y={11} width={16} height={1.6} fill="#ffffff" opacity={0.25} />
     </Svg>
   );
 }

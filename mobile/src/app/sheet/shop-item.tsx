@@ -14,7 +14,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 const RARITY_LABEL: Record<string, string> = { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
-const RARITY_COLOR: Record<string, string> = { common: colors.muted3, rare: '#2E6FE0', epic: '#9B3FD6', legendary: '#C9781A' };
+const RARITY_COLOR: Record<string, string> = { common: '#2F9E44', rare: '#2E6FE0', epic: '#9B3FD6', legendary: '#C9781A' };
 
 function mysteryBoxNameFor(poolKey: string) {
   return shopItemsReal.find((i) => i.isMysteryBox && i.mysteryPool === poolKey)?.name ?? 'a Mystery Box';
