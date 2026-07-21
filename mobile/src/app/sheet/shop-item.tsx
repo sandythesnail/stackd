@@ -152,29 +152,28 @@ export default function ShopItemModal() {
                 <View style={{ flex: 1 }}>
                   <Txt variant="h1">{item.name}</Txt>
                   <Txt variant="lead" style={{ fontSize: 13 }}>{item.desc}</Txt>
+                  {/* Ported exactly from the website's showAchievementDetail-equivalent
+                      (refreshShopModal): the odds are a plain colored line appended after
+                      the description — not a separate pill duplicating the rarity — and only
+                      pool items (not the box itself) show odds at all. */}
+                  {item.mysteryPool && !item.isMysteryBox ? (
+                    <Txt style={[styles.oddsLine, { color: RARITY_COLOR[itemRarity(item)] }]}>
+                      {RARITY_LABEL[itemRarity(item)]} · {formatPct(mysteryDropChance(item))}%
+                    </Txt>
+                  ) : null}
                 </View>
                 <Tag tone="green">{CATEGORY_LABEL[item.category] ?? item.category}</Tag>
               </View>
 
-              {item.rarity || item.mysteryPool ? (
-                <View style={{ flexDirection: 'row', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                  {item.rarity ? <Tag tone="pink">{item.rarity}</Tag> : null}
-                  {item.isMysteryBox ? <Tag tone="warm">Mystery box</Tag> : null}
-                  {item.mysteryPool && !item.isMysteryBox ? (
-                    <Tag textColor={RARITY_COLOR[itemRarity(item)]} tone="warm">
-                      {RARITY_LABEL[itemRarity(item)]} · {formatPct(mysteryDropChance(item))}% odds
-                    </Tag>
-                  ) : null}
-                </View>
+              {!item.reward ? (
+                <Card style={styles.balance}>
+                  <Txt variant="lead" style={{ fontSize: 13 }}>Your balance</Txt>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <CurrencyChip kind="coin" value={state.coins} />
+                    <CurrencyChip kind="diamond" value={state.diamonds} />
+                  </View>
+                </Card>
               ) : null}
-
-              <Card style={styles.balance}>
-                <Txt variant="lead" style={{ fontSize: 13 }}>Your balance</Txt>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <CurrencyChip kind="coin" value={state.coins} />
-                  <CurrencyChip kind="diamond" value={state.diamonds} />
-                </View>
-              </Card>
 
               <Button
                 label={buttonLabel}
@@ -209,8 +208,11 @@ const styles = StyleSheet.create({
     paddingBottom: 22,
   },
   topRow: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 6 },
-  preview: { height: 210, borderRadius: 22, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  // Bottom-anchored, not centered — see shop.tsx's preview style for why (matches the
+  // website's .shop-preview: centering left tall hats no headroom and they clipped at the top).
+  preview: { height: 210, borderRadius: 22, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },
   spinIcon: { fontSize: 72 },
   head: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 10 },
   balance: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingVertical: 14, paddingHorizontal: 16 },
+  oddsLine: { fontFamily: font.extra, fontSize: 15, marginTop: 6 },
 });

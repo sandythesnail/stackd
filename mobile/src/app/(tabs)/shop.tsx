@@ -117,31 +117,40 @@ export default function Shop() {
         {categories.map((cat) => {
           const items = sortItems(shopItemsReal.filter((i) => i.category === cat.key));
           const icon = CATEGORY_ICON[cat.key];
-          const open = isOpen(cat.key);
+          // Room Decor is the only category on its tab, and it's what a tapped room slot
+          // deep-links into — collapsing it would hide the very thing that navigation was
+          // for, so it's always open and its header isn't a toggle at all.
+          const collapsible = cat.key !== 'room';
+          const open = !collapsible || isOpen(cat.key);
+          const HeadWrap = collapsible ? Pressable : View;
           return (
             <View key={cat.key} style={styles.section}>
-              <Pressable style={styles.sectionHead} onPress={() => toggle(cat.key)}>
-                {icon ? (
-                  <MaterialCommunityIcons name={icon} size={18} color={colors.muted2} />
-                ) : (
-                  <Diamond size={17} />
-                )}
-                <Txt variant="h2" style={{ fontSize: 16 }}>{cat.label}</Txt>
-                <View style={styles.sectionCount}>
-                  <Txt style={styles.sectionCountTxt}>{items.length}</Txt>
+              <HeadWrap
+                style={[styles.sectionHead, open && collapsible && styles.sectionHeadOpen]}
+                {...(collapsible ? { onPress: () => toggle(cat.key) } : {})}
+              >
+                <View style={styles.sectionIconWrap}>
+                  {icon ? (
+                    <MaterialCommunityIcons name={icon} size={17} color={colors.greenDark} />
+                  ) : (
+                    <Diamond size={16} />
+                  )}
                 </View>
-                {cat.tag ? (
-                  <View style={styles.sectionTag}>
-                    <Txt style={styles.sectionTagTxt}>{cat.tag}</Txt>
+                <View style={{ flex: 1, gap: 3 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+                    <Txt variant="h2" style={{ fontSize: 15.5 }}>{cat.label}</Txt>
+                    <View style={styles.sectionCount}>
+                      <Txt style={styles.sectionCountTxt}>{items.length}</Txt>
+                    </View>
                   </View>
+                  {cat.tag ? (
+                    <Txt style={styles.sectionTagTxt} numberOfLines={1}>{cat.tag}</Txt>
+                  ) : null}
+                </View>
+                {collapsible ? (
+                  <MaterialCommunityIcons name={open ? 'chevron-up' : 'chevron-down'} size={22} color={colors.muted4} />
                 ) : null}
-                <MaterialCommunityIcons
-                  name={open ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color={colors.muted4}
-                  style={{ marginLeft: 'auto' }}
-                />
-              </Pressable>
+              </HeadWrap>
               {open ? (
                 items.length === 0 ? (
                   <Txt variant="lead" style={{ fontSize: 13 }}>Nothing here yet — check back soon!</Txt>
@@ -201,6 +210,9 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
   // treatment; the website only glows the Diamond Exclusives category, but the ask here is
   // for every mystery box — hat/accessory boxes included — to stand out the same way.
   const glow = isBox || isDiamond;
+  // Ported from the website's .shop-card.shop-reward-card: a gold-tinted gradient card,
+  // slightly dimmed overall, until the milestone reward is actually earned.
+  const rewardCard = isReward && !owned;
 
   const ribbon = isBox || (isDiamond && !isBox) || (isLocked && !isDiamond)
     ? <CornerRibbon text="Mystery" tone="mystery" />
@@ -226,7 +238,10 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
       <View style={dimStatus ? { opacity: 0.55 } : undefined}>
         {isBox ? (
           boxRemaining ? (
-            <View style={styles.statusRow}><Gift size={13} /><Txt style={styles.statusTxt}>{item.price}</Txt></View>
+            <View style={styles.statusRow}>
+              {isDiamond ? <Diamond size={13} /> : <Coin size={13} />}
+              <Txt style={styles.statusTxt}>{item.price}</Txt>
+            </View>
           ) : (
             <View style={[styles.statusRow, styles.statusOwned]}><Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ All collected!</Txt></View>
           )
@@ -268,6 +283,15 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
       </Pressable>
     );
   }
+  if (rewardCard) {
+    return (
+      <Pressable onPress={onPress} style={[styles.cardRewardWrap, { opacity: 0.85 }]}>
+        <LinearGradient colors={['#FFFFFF', '#FFFAEE']} style={styles.cardGlowInner}>
+          {cardContent}
+        </LinearGradient>
+      </Pressable>
+    );
+  }
   return (
     <Pressable style={styles.card} onPress={onPress}>
       {cardContent}
@@ -302,11 +326,25 @@ const styles = StyleSheet.create({
   storefrontSub: { fontFamily: font.semi, fontSize: 12, color: colors.pinkText, marginTop: 2 },
 
   section: { gap: 10 },
-  sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', paddingVertical: 4 },
+  sectionHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.white,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 13,
+  },
+  sectionHeadOpen: { borderColor: colors.greenSoft, backgroundColor: colors.tagGreenBg },
+  sectionIconWrap: {
+    width: 34, height: 34, borderRadius: 11,
+    backgroundColor: colors.screen, alignItems: 'center', justifyContent: 'center',
+  },
   sectionCount: { backgroundColor: colors.screen, borderRadius: 10, paddingVertical: 2, paddingHorizontal: 7 },
   sectionCountTxt: { fontFamily: font.extra, fontSize: 10.5, color: colors.muted4 },
-  sectionTag: { backgroundColor: colors.tagWarmBg, borderRadius: 10, paddingVertical: 3, paddingHorizontal: 8 },
-  sectionTagTxt: { fontFamily: font.bold, fontSize: 10, color: colors.tagWarmText },
+  sectionTagTxt: { fontFamily: font.bold, fontSize: 10.5, color: colors.tagWarmText },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   card: {
@@ -332,6 +370,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     elevation: 4,
   },
+  cardRewardWrap: {
+    width: '47.5%',
+    flexGrow: 1,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#E8C468',
+  },
   cardGlowInner: {
     flex: 1,
     borderRadius: 18,
@@ -343,7 +388,10 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     height: 92,
     alignItems: 'center',
-    justifyContent: 'center',
+    // Bottom-anchored, not centered — ported from the website's own .shop-preview fix (its
+    // CSS comment explains centering left tall hats no headroom above the pig's head and
+    // they clipped at the top; anchoring the pig to the bottom instead gives them room).
+    justifyContent: 'flex-end',
     overflow: 'hidden',
     backgroundColor: colors.screen,
     padding: 8,
