@@ -2,12 +2,18 @@ import {
   createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
   type ReactNode, type RefObject,
 } from 'react';
-import { View, Pressable, StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native';
+import { Animated, Easing, View, Pressable, StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native';
 import Svg, { Defs, Mask, Rect } from 'react-native-svg';
 import { colors, font, radius } from '@/theme';
 import { useStore } from '@/store';
 import { Txt } from './Txt';
 import { Button } from './Button';
+
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
+// Matches the website's `.tour-spotlight`/`.tour-tooltip` transition (0.25s ease) — same
+// duration and a comparable curve, so the tour feels the same on both platforms.
+const TOUR_TRANSITION_MS = 250;
+const TOUR_EASING = Easing.inOut(Easing.ease);
 
 /** Mirrors the website's onboarding spotlight tour (see app.js's ONBOARDING_TOUR_STEPS) —
  * four stops (XP, the Shop, tapping into Modules, starting a lesson), shown once right
@@ -221,6 +227,33 @@ function TourOverlay({
     tooltipLeft = (winW - tooltipW) / 2;
   }
 
+  // Animates the spotlight ring/mask-hole and tooltip smoothly between positions instead of
+  // snapping — matches the website's `transition: top/left/width/height 0.25s ease` on
+  // .tour-spotlight/.tour-tooltip. Lazily initialized from the CURRENT values so the very
+  // first render (TourOverlay mounts fresh each time a tour starts) doesn't animate in from
+  // some arbitrary default — only step-to-step changes after that actually animate.
+  const animX = useRef(new Animated.Value(spotlight?.x ?? 0)).current;
+  const animY = useRef(new Animated.Value(spotlight?.y ?? 0)).current;
+  const animW = useRef(new Animated.Value(spotlight?.width ?? 0)).current;
+  const animH = useRef(new Animated.Value(spotlight?.height ?? 0)).current;
+  const animOpacity = useRef(new Animated.Value(spotlight ? 1 : 0)).current;
+  const animTooltipTop = useRef(new Animated.Value(tooltipTop)).current;
+  const animTooltipLeft = useRef(new Animated.Value(tooltipLeft)).current;
+
+  useEffect(() => {
+    const timing = (value: Animated.Value, toValue: number) => Animated.timing(value, { toValue, duration: TOUR_TRANSITION_MS, easing: TOUR_EASING, useNativeDriver: false });
+    const animations = [
+      timing(animTooltipTop, tooltipTop),
+      timing(animTooltipLeft, tooltipLeft),
+      timing(animOpacity, spotlight ? 1 : 0),
+    ];
+    if (spotlight) {
+      animations.push(timing(animX, spotlight.x), timing(animY, spotlight.y), timing(animW, spotlight.width), timing(animH, spotlight.height));
+    }
+    Animated.parallel(animations).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spotlight?.x, spotlight?.y, spotlight?.width, spotlight?.height, tooltipTop, tooltipLeft]);
+
   // requiresRealClick needs the real element underneath genuinely tappable, not just
   // visually not-covered — a single full-screen Pressable (used for every other step)
   // would swallow that tap same as anywhere else. Framing the hole with four separate
@@ -230,6 +263,9 @@ function TourOverlay({
   // stacking-context nuance here, but it also has no clip-path; this is the RN-native way
   // to get the same "real hole" result). Falls back to full blocking (like every other
   // step) until a valid rect exists — better to block everything briefly than guess wrong.
+  // Unlike the visual ring/mask above, these snap immediately rather than animating — they
+  // only matter for the one static requiresRealClick step, so tracking the animation in
+  // progress isn't worth the extra Animated-arithmetic complexity.
   const punchHole = !!step.requiresRealClick && !!spotlight;
 
   return (
@@ -240,9 +276,7 @@ function TourOverlay({
         <Defs>
           <Mask id="tour-mask" maskUnits="userSpaceOnUse" x={0} y={0} width={winW} height={winH}>
             <Rect x={0} y={0} width={winW} height={winH} fill="#fff" />
-            {spotlight ? (
-              <Rect x={spotlight.x} y={spotlight.y} width={spotlight.width} height={spotlight.height} rx={14} fill="#000" />
-            ) : null}
+            <AnimatedRect x={animX} y={animY} width={animW} height={animH} rx={14} fill="#000" opacity={animOpacity} />
           </Mask>
         </Defs>
         <Rect x={0} y={0} width={winW} height={winH} fill="rgba(20,26,20,0.62)" mask="url(#tour-mask)" />
@@ -259,16 +293,14 @@ function TourOverlay({
         <Pressable style={StyleSheet.absoluteFill} onPress={() => {}} />
       )}
 
-      {spotlight ? (
-        <View
-          pointerEvents="none"
-          style={[styles.spotlightRing, {
-            top: spotlight.y, left: spotlight.x, width: spotlight.width, height: spotlight.height,
-          }]}
-        />
-      ) : null}
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.spotlightRing, {
+          top: animY, left: animX, width: animW, height: animH, opacity: animOpacity,
+        }]}
+      />
 
-      <View style={[styles.tooltip, { top: tooltipTop, left: tooltipLeft, width: tooltipW }]}>
+      <Animated.View style={[styles.tooltip, { top: animTooltipTop, left: animTooltipLeft, width: tooltipW }]}>
         <Txt style={styles.stepLabel}>{`STEP ${stepNum} OF ${totalSteps}`}</Txt>
         <Txt style={styles.title}>{step.title}</Txt>
         <Txt style={styles.body}>{step.body}</Txt>
@@ -283,7 +315,7 @@ function TourOverlay({
             <Button label={isLast ? 'Got it →' : 'Next →'} size="sm" onPress={onNext} style={styles.nextBtn} />
           )}
         </View>
-      </View>
+      </Animated.View>
     </View>
   );
 }
