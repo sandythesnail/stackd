@@ -88,7 +88,7 @@ export default function Results() {
   const continuePress = () => {
     if (tieredUp) { router.push({ pathname: '/sheet/levelup' }); return; }
     if (state.pendingLifeEventId) { router.push({ pathname: '/sheet/life-event' }); return; }
-    router.push('/(tabs)/home');
+    router.push('/(tabs)/modules');
   };
 
   return (
