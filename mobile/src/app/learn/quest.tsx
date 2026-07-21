@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, Image } from 'react-native';
+import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
@@ -657,29 +657,18 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
  * Speaker-styled: Hammy (or the story's protagonist/"intro" establishing beats) gets a
  * pig-head avatar and a white bordered bubble; the narrator gets no avatar at all and a
  * plain, muted, italic box — so it never reads as Hammy narrating. */
-/** Hammy's actual head — not cropped out of the full-body SVG (Hammy.tsx) at all anymore.
- * Every crop tried here ran into the same wall: the illustrated body sits directly behind
- * the head with no gap, so any circular window wide enough to include the ears is also wide
- * enough to let a sliver of body show past the head's own silhouette at the sides — the
- * "neck" that kept coming back no matter how the numbers were tuned, at the expense of
- * clipping the ears when tuned the other way. The app's own logo/favicon
- * (favicon-512.png at the repo root, copied in as hammy-head-icon.png) is a SEPARATE
- * illustration purpose-drawn as a head-only icon with no body behind it at all, so there's
- * nothing to leak — but its ears are drawn out near the corners of their own square canvas,
- * which is exactly where a CIRCULAR mask (borderRadius: size/2, what this used at first)
- * cuts hardest, clipping them right back off even though the source image itself never
- * touches them. Fixed by dropping the circular mask for a much gentler rounded-square one —
- * the logo was never actually a circle to begin with, so this is closer to "exactly like
- * the logo" anyway, not a compromise — with resizeMode "contain" (not "cover") so the full
- * image, ears included, is guaranteed to always be in frame regardless of size. */
+/** Hammy's head for the dialogue log — ported from the website's getHammyFaceMarkup /
+ * .pig-head-stage: the SAME live pig, windowed to just the head with every body part
+ * hidden (Hammy's `headOnly` mode). This replaces the old static hammy-head-icon.png,
+ * whose long history of crop attempts only existed because cropping the FULL-body art
+ * always leaked body slivers past the head silhouette — headOnly simply never draws the
+ * body, so there's nothing to leak, ears are never clipped (the head window + SVG
+ * overflow:visible, matching `.story-avatar.has-character { overflow: visible }`), and —
+ * the actual point — equipped hats/glasses/neckwear show up in the dialogue picture too,
+ * exactly like the website's story avatar. */
 function HammyHeadAvatar({ size = 40 }: { size?: number }) {
-  return (
-    <Image
-      source={require('../../../assets/images/hammy-head-icon.png')}
-      style={{ width: size, height: size, borderRadius: size * 0.22, flexShrink: 0 }}
-      resizeMode="contain"
-    />
-  );
+  const { equippedMascotItems } = useStore();
+  return <Hammy headOnly size={size} bob={false} equipped={equippedMascotItems()} style={{ flexShrink: 0 }} />;
 }
 
 function StoryView({

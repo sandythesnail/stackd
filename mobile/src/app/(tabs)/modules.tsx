@@ -15,7 +15,7 @@ import { SURVEY_TRACKS } from '@/survey';
  * lesson content, not static mock fields. */
 export default function Modules() {
   const router = useRouter();
-  const { state, level, tierName, moduleDoneIndices, moduleStatus, moduleDisplayTotal, moduleDisplayDone } = useStore();
+  const { state, level, tierName, moduleDone, moduleDoneIndices, moduleTotal, moduleStatus } = useStore();
   const doneCount = modules.filter((m) => moduleStatus(m.id) === 'done').length;
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
   const trackModuleIds = activeTrack?.moduleIds ?? [];
@@ -49,40 +49,31 @@ export default function Modules() {
             // a module's main quests and its real-life sub-quest.
             const lessons = content?.lessons.filter((l) => !l.isLifeTask) ?? [];
             const guideIndex = content?.lessons.findIndex((l) => l.isLifeTask) ?? -1;
-            // Display total/done cover all 9 real lessons (8 main quests + the real-life
-            // sub-quest) — matches the website's actual lesson count for a module. Mastery
-            // status (status/recommended below) still keys off the main-quests-only mastery
-            // check (moduleStatus), which is unaffected by this.
-            const displayTotal = moduleDisplayTotal(m.id);
-            const displayDone = moduleDisplayDone(m.id);
-            const pct = displayTotal ? displayDone / displayTotal : 0;
+            const done = moduleDone(m.id);
+            const total = moduleTotal(m.id);
+            const pct = total ? done / total : 0;
             const status = moduleStatus(m.id);
             const recommended = status === 'active' && trackModuleIds.includes(m.id);
             const isOpen = expanded.has(m.id);
             return (
               <View key={m.id} style={[styles.row, status === 'done' && styles.rowDone, recommended && styles.rowRecommended]}>
                 <Pressable onPress={() => toggle(m.id)} style={[styles.rowHead, recommended && styles.rowHeadRecommended]}>
-                  {/* Name gets its own full-width row (icon + chevron sharing it, name free
-                      to wrap to 2 lines) instead of squeezing against the status tag — the
-                      tag/mini-bar move to a second row below so long names like "Scams &
-                      Fraud Prevention" always have room. */}
-                  <View style={styles.rowHeadTop}>
+                  <View style={styles.rowHeadLeft}>
                     <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} />
-                    <Txt style={styles.rowTitle}>{m.name}</Txt>
-                    <Txt style={styles.chevron}>{isOpen ? '▾' : '▸'}</Txt>
+                    <View style={{ flex: 1 }}>
+                      <Txt style={styles.rowTitle}>{m.name}</Txt>
+                      <Txt style={styles.rowDesc} numberOfLines={1}>{content?.desc ?? `${total} real quests`}</Txt>
+                    </View>
                   </View>
-                  <Txt style={styles.rowDesc} numberOfLines={1}>{content?.desc ?? `${displayTotal} real quests`}</Txt>
-                  <View style={styles.rowHeadBottom}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     {status === 'done' ? (
                       <Tag tone="green" style={styles.tag}>✓ Complete</Tag>
                     ) : recommended ? (
                       <Tag tone="gold" style={styles.tag}>★ Recommended</Tag>
                     ) : (
-                      <Tag tone="pink" style={styles.tag}>{displayDone} out of {displayTotal}</Tag>
+                      <Tag tone="pink" style={styles.tag}>{Math.round(pct * 100)}%</Tag>
                     )}
-                    {status !== 'done' ? (
-                      <ProgressBar value={pct} tone="pink" height={6} style={{ flex: 1 }} />
-                    ) : null}
+                    <Txt style={styles.chevron}>{isOpen ? '▾' : '▸'}</Txt>
                   </View>
                 </Pressable>
                 {isOpen ? (
@@ -125,16 +116,16 @@ const styles = StyleSheet.create({
   rowDone: { borderColor: colors.greenSoft },
   rowRecommended: { borderWidth: 2, borderColor: colors.reward },
   rowHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
     padding: 15,
   },
   rowHeadRecommended: { backgroundColor: colors.rewardBg },
-  rowHeadTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  // flex:1 + minWidth:0 lets the name actually shrink/wrap within the row instead of
-  // pushing the chevron out — a flex child's default min-width is its own content width,
-  // which is exactly what let long names like "Scams & Fraud Prevention" refuse to wrap.
-  rowTitle: { fontFamily: font.extra, fontSize: 14.5, color: colors.ink, flex: 1, minWidth: 0 },
-  rowDesc: { fontFamily: font.medium, fontSize: 11.5, color: colors.muted4, marginTop: 4, marginLeft: 54 },
-  rowHeadBottom: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10, marginLeft: 54 },
+  rowHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
+  rowTitle: { fontFamily: font.extra, fontSize: 14.5, color: colors.ink },
+  rowDesc: { fontFamily: font.medium, fontSize: 11.5, color: colors.muted4, marginTop: 2 },
   tag: { paddingVertical: 4, paddingHorizontal: 9 },
   chevron: { fontFamily: font.bold, fontSize: 15, color: colors.muted4 },
   rowBody: { paddingHorizontal: 15, paddingBottom: 16, paddingTop: 2 },

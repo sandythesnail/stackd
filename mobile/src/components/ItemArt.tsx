@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { ViewStyle } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import type { ShopItemReal } from '@/content';
@@ -16,7 +17,16 @@ const CAT_VIEWBOX: Record<string, string> = {
 export function ItemArt({
   item, size = 92, fill, style,
 }: { item: ShopItemReal; size?: number; fill?: boolean; style?: ViewStyle }) {
+  // Per-instance id namespacing, same reasoning as Hammy's EquippedItem: the raw item
+  // markup ships literal defs ids (e.g. the Santa hat's "sh-g" red gradient), so the same
+  // item drawn on two mounted screens at once (shop card + wardrobe tile behind it)
+  // duplicates DOM ids on web and blanks every gradient-filled shape in later copies.
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const ns = `${item.id}-${uid}`;
+  const svg = item.svg
+    .replace(/id="([^"]+)"/g, (_, id) => `id="${id}-${ns}"`)
+    .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${id}-${ns})`);
   const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
-  const xml = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
+  const xml = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${svg}</svg>`;
   return <SvgXml xml={xml} width={fill ? '100%' : size} height={fill ? '100%' : size} style={style} />;
 }

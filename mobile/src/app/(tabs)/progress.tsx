@@ -11,7 +11,10 @@ import { useStore, xpForLevel } from '@/store';
  * version only ever rendered 5, and had no per-module XP/score data to chart with; see
  * store.tsx's moduleStats). */
 export default function Progress() {
-  const { state, level, tierName, achievements, moduleDone, moduleTotal, moduleStatus } = useStore();
+  const {
+    state, level, tierName, achievements, moduleDone, moduleTotal, moduleStatus,
+    moduleDisplayTotal, moduleDisplayDone,
+  } = useStore();
 
   const totalDone = modules.reduce((sum, m) => sum + moduleDone(m.id), 0);
   const totalQuests = modules.reduce((sum, m) => sum + moduleTotal(m.id), 0);
@@ -53,6 +56,27 @@ export default function Progress() {
               <View style={[styles.legendDot, { backgroundColor: colors.track2 }]} />
               <Txt style={styles.legendTxt}>Remaining ({modules.length - masteredCount})</Txt>
             </View>
+          </View>
+        </Card>
+
+        {/* Per-module lesson progress — "X out of 9" over every real lesson (8 main quests
+            + the real-life sub-quest, via moduleDisplayDone/Total in store.tsx). This is the
+            one place that count lives; the Modules tab keeps its original percent tags. */}
+        <Card style={{ gap: 12 }}>
+          <Txt variant="h2">Module Progress</Txt>
+          <View style={{ gap: 10 }}>
+            {modules.map((m) => {
+              const done = moduleDisplayDone(m.id);
+              const total = moduleDisplayTotal(m.id);
+              return (
+                <View key={m.id} style={styles.scoreRow}>
+                  <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} size={28} r={9} fontSize={11} />
+                  <Txt style={styles.scoreLabel} numberOfLines={1}>{m.name}</Txt>
+                  <ProgressBar value={total ? done / total : 0} height={7} style={styles.scoreBar} />
+                  <Txt style={styles.lessonVal}>{done} out of {total}</Txt>
+                </View>
+              );
+            })}
           </View>
         </Card>
 
@@ -170,6 +194,8 @@ const styles = StyleSheet.create({
   scoreLabel: { fontFamily: font.bold, fontSize: 12.5, color: colors.ink, width: 68 },
   scoreBar: { flex: 1 },
   scoreVal: { fontFamily: font.bold, fontSize: 11.5, color: colors.muted4, width: 40, textAlign: 'right' },
+  // Wider than scoreVal — "9 out of 9" needs the room that a "23/24" score never does.
+  lessonVal: { fontFamily: font.bold, fontSize: 11.5, color: colors.muted4, width: 64, textAlign: 'right' },
 
   colScroll: { gap: 16, paddingRight: 8, alignItems: 'flex-end' },
   col: { alignItems: 'center', width: 40, gap: 4 },

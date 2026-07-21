@@ -22,14 +22,21 @@ const CSS_EASE = Easing.bezier(0.42, 0, 0.58, 1);
 const DEFAULT_ITEM_FIT = { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 };
 
 /** One equipped cosmetic, matrix-transformed onto Hammy's 440x460 stage — mirrors the
- * website's getPigWithItemMarkup. Namespaced by item id so multiple equipped items (or the
- * same item rendered elsewhere on screen) don't collide over shared <defs> ids. */
+ * website's getPigWithItemMarkup. Ids are namespaced per item AND per mounted instance:
+ * item-only namespacing still collided whenever the same item was worn by two Hammys
+ * mounted at once (a tab screen kept alive behind the pushed quest screen, the story
+ * intro + companion row, …) — the same duplicate-DOM-id failure documented on the pig's
+ * own gradients below, which silently blanks every gradient-filled shape in later-mounted
+ * copies. The Santa hat losing its entire red body (all gradient fills; only the solid
+ * white trim survived) was exactly this. */
 function EquippedItem({ item }: { item: ShopItemReal }) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const ns = `${item.id}-${uid}`;
   const fit = item.fit ?? DEFAULT_ITEM_FIT;
   const matrix = `matrix(${fit.a},${fit.b},${fit.c},${fit.d},${fit.e},${fit.f})`;
   const namespaced = item.svg
-    .replace(/id="([^"]+)"/g, (_, id) => `id="${id}-${item.id}"`)
-    .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${id}-${item.id})`);
+    .replace(/id="([^"]+)"/g, (_, id) => `id="${id}-${ns}"`)
+    .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${id}-${ns})`);
   return (
     <G transform={matrix}>
       <SvgXml xml={`<svg xmlns="http://www.w3.org/2000/svg" width="${STAGE_W}" height="${STAGE_H}">${namespaced}</svg>`} width={STAGE_W} height={STAGE_H} />
@@ -81,6 +88,7 @@ export function Hammy({
   bob = true,
   pig: _pig = '#E27EA0',
   equipped = [],
+  headOnly = false,
   face,
   reaction,
   reactionKey,
@@ -91,6 +99,12 @@ export function Hammy({
   pig?: string;
   /** Currently-worn shop items, matrix-transformed onto the mascot (see EquippedItem). */
   equipped?: ShopItemReal[];
+  /** Ported from the website's .pig-head-stage (styles.css): the same full pig, windowed
+   * to the head — a (80,40)→280x290 slice of the 440x460 stage — with body/tummy/arms/
+   * feet/tail/ground-shadow hidden. Ears, face, face overlays, and equipped items all
+   * still render, so a worn hat shows up in head-only contexts (the dialogue avatar)
+   * exactly like the website's getHammyFaceMarkup. `size` stays the rendered width. */
+  headOnly?: boolean;
   /** Illustrated mood/reaction face (see @/hammyFaces) — replaces the default eyes/cheeks/
    * snout with a cropped PNG overlay, matching the website's .hammy-face-overlay behavior.
    * Shown at full opacity for as long as it's set (same as the website's static face masks);
@@ -258,7 +272,10 @@ export function Hammy({
   const faceOpacity = face ? 1 : 0;
   const displayFace = face;
 
-  const aspect = STAGE_H / STAGE_W;
+  // Head-only mode swaps the viewBox for the website's .pig-head-stage window instead of
+  // scaling anything — coordinates inside stay in the same 440x460 space either way.
+  const viewBox = headOnly ? '80 40 280 290' : `0 0 ${STAGE_W} ${STAGE_H}`;
+  const aspect = headOnly ? 290 / 280 : STAGE_H / STAGE_W;
   const width = size;
   const height = size * aspect;
   const reactRotDeg = reactRot.interpolate({ inputRange: [-30, 30], outputRange: ['-30deg', '30deg'] });
@@ -283,16 +300,18 @@ export function Hammy({
           so it stays put while the pig bobs/bounces above it. Rendered in its own static
           Svg behind the animated one for the same effect. rgba(214,120,160,.22) with a 7px
           blur ≈ flat fill to ~82% then a quick fade at the rim. */}
-      <Svg width={width} height={height} viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible' }}>
-        <Defs>
-          <RadialGradient id={gid('hm-shadow')} cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor="#D678A0" stopOpacity={0.22} />
-            <Stop offset="82%" stopColor="#D678A0" stopOpacity={0.22} />
-            <Stop offset="100%" stopColor="#D678A0" stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        <Ellipse cx={220} cy={417} rx={150} ry={23} fill={gidUrl('hm-shadow')} />
-      </Svg>
+      {!headOnly ? (
+        <Svg width={width} height={height} viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible' }}>
+          <Defs>
+            <RadialGradient id={gid('hm-shadow')} cx="50%" cy="50%" r="50%">
+              <Stop offset="0%" stopColor="#D678A0" stopOpacity={0.22} />
+              <Stop offset="82%" stopColor="#D678A0" stopOpacity={0.22} />
+              <Stop offset="100%" stopColor="#D678A0" stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Ellipse cx={220} cy={417} rx={150} ry={23} fill={gidUrl('hm-shadow')} />
+        </Svg>
+      ) : null}
 
       <Animated.View
         style={{
@@ -310,7 +329,7 @@ export function Hammy({
             (party hat, santa hat) and wide capes/halos that legitimately draw above y=0 or past
             the 440x460 stage edges. overflow:visible here matches the website's real behavior:
             nothing about the pig itself changes size, equipped items just aren't clipped. */}
-        <Svg width={width} height={height} viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} style={{ overflow: 'visible' }}>
+        <Svg width={width} height={height} viewBox={viewBox} style={{ overflow: 'visible' }}>
           <Defs>
             {/* Base fills — each CSS linear-gradient converted to an exact userSpaceOnUse
                 line (CSS center/angle/line-length math), so both the tilt and where the
@@ -410,6 +429,9 @@ export function Hammy({
           {/* back-layer equipped items (e.g. capes) — drawn behind body/arms/head */}
           {backItems.map((item) => <EquippedItem key={item.id} item={item} />)}
 
+          {/* Everything below the head — hidden entirely in headOnly mode, mirroring the
+              website's `.pig-head-stage .pig-body/…/.pig-tail { display: none }`. */}
+          {!headOnly ? <>
           {/* feet — .pig-foot's shading is `inset 0 -6px 0` (zero blur): an exact hard-edged
               6px band along the bottom, clipped to the foot silhouette. */}
           <G transform="translate(120 374)">
@@ -452,6 +474,7 @@ export function Hammy({
             <Path d={ARM_PATH} fill={gidUrl('hm-arm')} />
             <Path d={ARM_PATH} fill={gidUrl('hm-arm-shadow')} />
           </G>
+          </> : null}
 
           {/* ears — right ear mirrors the left (flipped gradient/shadow/wiggle in one
               transform, exactly the earWiggleL/earWiggleR ±18→±26 pair). */}
