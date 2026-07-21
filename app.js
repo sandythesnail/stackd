@@ -17058,10 +17058,9 @@ function runFirstLoadSequence() {
 
 // ── ONBOARDING TOUR (SPOTLIGHT WALKTHROUGH) ─────
 // A short, lightweight "highlight one real UI element, explain it, Next" tour — not a wall
-// of text — shown once, right after a first-time user meets Hammy. Deliberately just two
-// stops for now (XP, the Shop): the tools tab is left out on purpose since its UI is still
-// changing, and a "what does this do" step for a screen that's about to be redesigned would
-// go stale fast. Add a `tools` stop here once that UI settles.
+// of text, so copy here stays as tight as possible — shown once, right after a first-time
+// user meets Hammy. Deliberately no `tools` stop: that UI is still changing, and a "what
+// does this do" step for a screen about to be redesigned would go stale fast.
 const ONBOARDING_TOUR_STEPS = [
   {
     // The sidebar's own Level/XP bar (.sidebar-footer) is the more specific, always-in-the-
@@ -17074,12 +17073,12 @@ const ONBOARDING_TOUR_STEPS = [
       return document.getElementById('home-stats-row');
     },
     title: 'Earn XP as you go',
-    body: "Finishing lessons and quests earns XP. Level up to climb the tiers, from Broke Freshman up to Financially Literate Graduate, and watch Hammy grow alongside you.",
+    body: 'Finish lessons and quests to earn XP and level up through the tiers.',
   },
   {
     target: () => document.getElementById('nav-shop-btn'),
     title: 'Spend coins & diamonds in the Shop',
-    body: "Coins come from everyday lessons; diamonds come from bigger milestones like login streaks. Head into the Shop to spend either on outfits for Hammy or decor for their room.",
+    body: 'Coins come from lessons, diamonds from bigger streak milestones. Spend either on outfits or room decor for Hammy.',
     beforeShow: () => {
       // On the mobile layout the nav is a hidden drawer behind the hamburger button, so the
       // Shop link isn't actually on screen to spotlight until that drawer is open.
@@ -17089,6 +17088,13 @@ const ONBOARDING_TOUR_STEPS = [
         tourOpenedMobileNav = true;
       }
     },
+  },
+  {
+    // The first card in Home's own module grid — already on screen, no navigation needed,
+    // same "point at a real element" approach as the other two steps.
+    target: () => document.querySelector('#home-modules-grid .module-row'),
+    title: 'Start a module',
+    body: 'Each module is a set of short lessons — finish them in order to complete it and earn XP.',
   },
 ];
 let tourStepIdx = 0;
