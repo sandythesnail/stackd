@@ -202,6 +202,12 @@ export default function QuestPlayer() {
   // that needs to trigger a render itself.
   const [ambientEventActive, setAmbientEventActive] = useState(false);
   const pendingAdvanceRef = useRef<(() => void) | null>(null);
+  // The store's cooldown counts down per roll ATTEMPT (chapter transition), not per real app
+  // session like the website's does — a long quest (13-15 chapters) can burn through that
+  // 2-transition cooldown and roll a second popup in the same lesson. This ref caps it at
+  // one fire per QuestPlayer mount, i.e. one per lesson, regardless of how many chapters
+  // remain after that.
+  const hasFiredAmbientRef = useRef(false);
   // A ref, not state — analytics never drives a render in this screen, it's only read once
   // at the final chapter's onComplete to build the results-screen params. A question's
   // "report" and the quest's final onComplete can fire in the very same handler (the last
@@ -345,7 +351,9 @@ export default function QuestPlayer() {
     // double-firing one right after the other. Real-life sub-quests (isLifeTask, the
     // step-by-step guides in the Real Life tab) are excluded entirely — they're already a
     // real-world scenario walkthrough, so a random life-event popup mid-way doesn't fit.
-    if (!isLifeTask && !isFinalChapter && rollAmbientLifeEvent()) {
+    // hasFiredAmbientRef caps it at one popup per lesson (see its declaration above).
+    if (!isLifeTask && !isFinalChapter && !hasFiredAmbientRef.current && rollAmbientLifeEvent()) {
+      hasFiredAmbientRef.current = true;
       pendingAdvanceRef.current = advance;
       setAmbientEventActive(true);
     } else {
