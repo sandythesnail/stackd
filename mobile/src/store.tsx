@@ -200,6 +200,15 @@ function moduleTotal(moduleId: string) {
   return moduleContentById(moduleId)?.lessons.filter((l) => !l.isLifeTask).length ?? 0;
 }
 
+/** Every real lesson in the module, main quests AND the real-life sub-quest together (8 + 1
+ * = 9 for every module) — for DISPLAY only ("3 out of 9"). Mastery/achievements still key
+ * off moduleTotal/moduleDone (main quests only) via completedLifeTaskIds separately, since
+ * the sub-quest was never meant to gate a module's "done" badge — this is purely the
+ * player-facing lesson count, which should read as the module's real total. */
+function moduleDisplayTotal(moduleId: string) {
+  return moduleContentById(moduleId)?.lessons.length ?? 0;
+}
+
 /** Adds one lesson's XP/graded results onto a module's running totals — see moduleStats. */
 function accumulateModuleStats(
   moduleStats: AppState['moduleStats'], moduleId: string, xpEarned: number, correctCount: number, gradedTotal: number,
@@ -296,6 +305,13 @@ type Ctx = {
   /** First not-yet-completed lesson index (the one to open for "continue"), or -1 if all done. */
   nextLessonIndex: (moduleId: string) => number;
   moduleTotal: (moduleId: string) => number;
+  /** Display-only total (9 = 8 main quests + the real-life sub-quest) — use this for any
+   * player-facing "X out of Y lessons" count; moduleTotal/moduleDone stay main-quests-only
+   * for mastery/achievement logic. */
+  moduleDisplayTotal: (moduleId: string) => number;
+  /** Display-only done count matching moduleDisplayTotal — main lessons done, plus 1 more
+   * if the module's real-life sub-quest is also finished. */
+  moduleDisplayDone: (moduleId: string) => number;
   moduleMastered: (moduleId: string) => boolean;
   /** 'done' once every lesson is complete, else 'active'. Nothing is level-gated —
    * every module is reachable from the start (matches the website's no-gating behavior). */
@@ -483,6 +499,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return -1;
       },
       moduleTotal,
+      moduleDisplayTotal,
+      moduleDisplayDone: (moduleId) =>
+        moduleDoneCount(state.moduleProgress, moduleId) + (state.completedLifeTaskIds.includes(moduleId) ? 1 : 0),
       moduleMastered: (moduleId) => isModuleMastered(state.moduleProgress, moduleId),
       moduleStatus: (moduleId) => (isModuleMastered(state.moduleProgress, moduleId) ? 'done' : 'active'),
       achievements: () => {

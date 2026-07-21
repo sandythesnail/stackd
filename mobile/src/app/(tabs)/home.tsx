@@ -31,6 +31,7 @@ export default function Home() {
   const router = useRouter();
   const {
     state, level, tierName, moduleDone, moduleTotal, moduleStatus, nextLessonIndex, achievements,
+    moduleDisplayTotal, moduleDisplayDone,
     equippedMascotItems, dailyLoginBanner, dismissDailyLoginBanner,
     loginBonusPending, claimDailyLoginBonus,
   } = useStore();
@@ -41,13 +42,16 @@ export default function Home() {
 
   const homeModules = modules.slice(0, 4).map((m) => {
     const status = moduleStatus(m.id);
-    const total = moduleTotal(m.id);
-    const done = moduleDone(m.id);
-    const pct = total ? done / total : 0;
+    // Display total/done cover all 9 real lessons (8 main quests + the real-life
+    // sub-quest) — the tile's mini progress bar and "X out of 9" tag should match the
+    // module's actual lesson count, same reasoning as the Modules tab (see modules.tsx).
+    const displayTotal = moduleDisplayTotal(m.id);
+    const displayDone = moduleDisplayDone(m.id);
+    const pct = displayTotal ? displayDone / displayTotal : 0;
     const recommended = status === 'active' && trackModuleIds.includes(m.id);
     const tone = status === 'done' ? ('green' as const) : recommended ? ('gold' as const) : ('pink' as const);
-    const tag = status === 'done' ? '✓ Done' : recommended ? '★ Recommended' : `${Math.round(pct * 100)}%`;
-    return { ...m, status, total, done, pct, tone, tag, recommended };
+    const tag = status === 'done' ? '✓ Done' : recommended ? '★ Recommended' : `${displayDone} out of ${displayTotal}`;
+    return { ...m, status, total: displayTotal, done: displayDone, pct, tone, tag, recommended };
   });
 
   const earnedBadges = achievements().filter((b) => b.earned).slice(0, 4);

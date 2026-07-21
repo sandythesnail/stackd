@@ -20,6 +20,9 @@ export const colors = {
   greenBright: '#84AB7B',
   greenSoft: '#B2C9AE',
   greenLeaf: '#5C7A56',
+  // Exact hex behind the website's --green-pale (styles.css) — the equipped-item ring
+  // color (box-shadow 0 0 0 3px var(--green-pale) in .shop-card.shop-equipped).
+  greenPale: '#E0EAE0',
 
   // muted green text scale
   muted1: '#5C6E58',

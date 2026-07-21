@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -107,12 +107,9 @@ export default function Room() {
           </View>
         ) : (
           <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
-            <View style={styles.wardrobeStage}>
+            <WardrobeBackdrop>
               <Hammy size={190} equipped={equipped} />
-              <View style={styles.wearingInline}>
-                <Txt style={styles.wearingTxt}>Wearing: {wearingLabel} 🐷</Txt>
-              </View>
-            </View>
+            </WardrobeBackdrop>
 
             <View style={styles.filters}>
               {WARDROBE_CATEGORIES.map((c) => {
@@ -149,6 +146,40 @@ export default function Room() {
         )}
       </View>
     </Screen>
+  );
+}
+
+// Ported from the website's `.wardrobe-backdrop`/`.wardrobe-pig-backdrop` (app.css) —
+// the wardrobe's stage was a plain pink card here before, which doesn't match the
+// website's actual wardrobe scene. Two exact layers:
+//  1. A vertical wood-plank texture: `repeating-linear-gradient(90deg, #7A5A44 0,
+//     #7A5A44 68px, #6B4C38 68px, #6B4C38 72px)` — 68px planks separated by a 4px darker
+//     seam, tiled edge to edge. (The CSS also declares a second, vertically-shifting
+//     linear-gradient layer underneath, but since the plank texture above it is fully
+//     opaque with hard color stops, that second layer never actually shows through in a
+//     browser either — this reproduces what's actually rendered, not the unused layer.)
+//  2. A centered white circle (`rgba(255,255,255.96)`, aspect-ratio 1.15/1, capped at
+//     620px) that Hammy sits on top of, same as the website's pig-backdrop.
+// RN has no repeating-linear-gradient, so the plank texture is measured layout width
+// (onLayout) and rebuilt as literal 72px-wide plank Views — same pixel widths/colors as
+// the CSS, just generated instead of tiled by the renderer.
+const PLANK_WIDTH = 72;
+const PLANK_SOLID_WIDTH = 68;
+function WardrobeBackdrop({ children }: { children: ReactNode }) {
+  const [width, setWidth] = useState(0);
+  const plankCount = width > 0 ? Math.ceil(width / PLANK_WIDTH) + 1 : 0;
+  return (
+    <View style={styles.wardrobeStage} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        {Array.from({ length: plankCount }).map((_, i) => (
+          <View key={i} style={[styles.wardrobePlank, { left: i * PLANK_WIDTH }]} />
+        ))}
+      </View>
+      <View style={styles.wardrobeCircleWrap} pointerEvents="none">
+        <View style={styles.wardrobeCircle} />
+      </View>
+      {children}
+    </View>
   );
 }
 
@@ -246,24 +277,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   wearingTxt: { fontFamily: font.extra, fontSize: 12, color: colors.pinkDark },
+  // Ported layer colors from the website's .wardrobe-backdrop/.wardrobe-pig-backdrop —
+  // see the WardrobeBackdrop component above for the full breakdown. overflow:'hidden'
+  // clips the generated plank strip to the card's own rounded corners.
   wardrobeStage: {
     alignItems: 'center',
-    backgroundColor: colors.pinkBg,
-    borderWidth: 1.5,
-    borderColor: colors.pinkBorder,
+    justifyContent: 'center',
     borderRadius: 24,
-    paddingTop: 14,
-    paddingBottom: 12,
-    gap: 10,
+    paddingTop: 22,
+    paddingBottom: 22,
+    minHeight: 240,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  wearingInline: {
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: '#EFE4D6',
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+  wardrobePlank: {
+    position: 'absolute', top: 0, bottom: 0, width: PLANK_SOLID_WIDTH, backgroundColor: '#7A5A44',
+    borderRightWidth: PLANK_WIDTH - PLANK_SOLID_WIDTH, borderRightColor: '#6B4C38',
   },
+  wardrobeCircleWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  wardrobeCircle: { width: '100%', maxWidth: 620, aspectRatio: 1.15, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.96)' },
   filters: { flexDirection: 'row', gap: 7, marginTop: 14 },
   fchip: {
     flex: 1,

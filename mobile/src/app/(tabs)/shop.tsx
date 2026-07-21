@@ -210,9 +210,12 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
   // treatment; the website only glows the Diamond Exclusives category, but the ask here is
   // for every mystery box — hat/accessory boxes included — to stand out the same way.
   const glow = isBox || isDiamond;
-  // Ported from the website's .shop-card.shop-reward-card: a gold-tinted gradient card,
-  // slightly dimmed overall, until the milestone reward is actually earned.
-  const rewardCard = isReward && !owned;
+  // Ported from the website's renderShopPage: `(isReward || isLocked) && !owned` both get
+  // the gold-tinted, dimmed `.shop-reward-card` treatment — a mystery-only item the player
+  // hasn't unlocked yet reads exactly like an unearned reward, not just an unequipped item.
+  // Mobile previously only applied this to isReward, which is why locked items showed at
+  // full strength instead of greyed out.
+  const rewardCard = (isReward || isLocked) && !owned;
 
   // Blue for Diamond Exclusives (box or locked), gold for every other mystery-linked item
   // (the hat/accessory boxes and their locked pool items), red for milestone rewards.
@@ -225,7 +228,7 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
   const cardContent = (
     <>
       {ribbon}
-      <View style={[styles.preview, isReward && !owned && styles.previewFaded]}>
+      <View style={[styles.preview, rewardCard && styles.previewFaded]}>
         {isWallpaper ? (
           <Wallpaper item={item} style={StyleSheet.absoluteFill} />
         ) : isRoom || isBox ? (
@@ -276,9 +279,17 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
     </>
   );
 
+  // Ported from the website's `.shop-card.shop-equipped` (border-color green, border-width
+  // 2px, box-shadow 0 0 0 3px var(--green-pale)) — applies on top of ANY card variant,
+  // exactly like `.shop-exclusive-card.shop-equipped` overrides only the border/ring while
+  // keeping the exclusive gradient underneath. rewardCard/equipped never co-occur (equipped
+  // implies owned, which excludes the reward/locked treatment), so this never has to
+  // resolve a conflict between the two.
+  const equippedRing = equipped ? styles.cardEquipped : undefined;
+
   if (glow) {
     return (
-      <Pressable onPress={onPress} style={styles.cardGlowWrap}>
+      <Pressable onPress={onPress} style={[styles.cardGlowWrap, equippedRing]}>
         <LinearGradient colors={['#FFFFFF', '#F0FBFF']} style={styles.cardGlowInner}>
           {cardContent}
         </LinearGradient>
@@ -295,7 +306,7 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
     );
   }
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable style={[styles.card, equippedRing]} onPress={onPress}>
       {cardContent}
     </Pressable>
   );
@@ -379,6 +390,15 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#E8C468',
   },
+  // Ported verbatim from the website's `.shop-card.shop-equipped`: border-color var(--green),
+  // border-width 2px, box-shadow 0 0 0 3px var(--green-pale) — a solid (unblurred) ring
+  // outside the border, not a soft drop shadow, hence the boxShadow spread syntax rather
+  // than shadowRadius/elevation.
+  cardEquipped: {
+    borderColor: colors.green,
+    borderWidth: 2,
+    boxShadow: `0 0 0 3px ${colors.greenPale}`,
+  },
   cardGlowInner: {
     flex: 1,
     borderRadius: 18,
@@ -398,7 +418,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.screen,
     padding: 8,
   },
-  previewFaded: { opacity: 0.75 },
+  // Ported verbatim from `.shop-card.shop-reward-card .shop-preview { filter: grayscale(0.6);
+  // opacity: 0.75; }` — applies to unearned reward items AND locked (mystery-only, not yet
+  // owned) items alike, see the `rewardCard` definition above.
+  previewFaded: { opacity: 0.75, filter: 'grayscale(0.6)' },
   ribbonClip: {
     position: 'absolute', top: 0, right: 0, width: 90, height: 90, overflow: 'hidden', zIndex: 1,
   },

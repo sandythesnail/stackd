@@ -685,6 +685,11 @@ function HammyHeadAvatar({ size = 40 }: { size?: number }) {
 function StoryView({
   chapter, charName, onComplete, onAction, onLayoutMode,
 }: { chapter: StoryChapter; charName: string; onComplete: Complete } & ActionProps & LayoutModeProps) {
+  // Equipped cosmetics were missing from every big centered "intro" Hammy in the quest
+  // player (this story intro, HintView's Hammy's Tip, and the companion row at line ~393
+  // already had it) — the website renders equipped items on every pig instance via
+  // withFaceOverlay/getPigWithItemMarkup regardless of context, so mobile should too.
+  const { equippedMascotItems } = useStore();
   // Every real story chapter's first beat is a scene-setting "intro" line (not a quoted
   // line of dialogue, unlike the beats after it) — used as the standalone intro screen's
   // context sentence instead of being folded into the dialogue log, so it isn't shown
@@ -719,7 +724,7 @@ function StoryView({
       {chapter.title ? <Txt style={styles.storyTitle}>{chapter.title}</Txt> : null}
       {showIntro ? (
         <View style={styles.storyIntroStage}>
-          <Hammy size={220} bob />
+          <Hammy size={220} bob equipped={equippedMascotItems()} />
           {introBeat ? <Txt style={styles.storyIntroCaption}>{introBeat.text}</Txt> : null}
         </View>
       ) : (
@@ -884,6 +889,7 @@ function MatchingView({
 function HintView({
   chapter, onComplete, onAction, onLayoutMode,
 }: { chapter: HintChapter; onComplete: Complete } & ActionProps & LayoutModeProps) {
+  const { equippedMascotItems } = useStore();
   const [revealed, setRevealed] = useState(false);
   const [tapTick, setTapTick] = useState(0);
 
@@ -907,7 +913,7 @@ function HintView({
   return (
     <View style={styles.storyIntroStage}>
       <Pressable onPress={tap} disabled={revealed} hitSlop={14}>
-        <Hammy size={168} bob reaction={revealed ? 'happy' : null} reactionKey={tapTick} />
+        <Hammy size={168} bob equipped={equippedMascotItems()} reaction={revealed ? 'happy' : null} reactionKey={tapTick} />
       </Pressable>
       {/* A literal speech bubble pointing up at Hammy — same border-triangle tail trick as
           the in-quest reaction bubble, just rotated to point up instead of sideways since
