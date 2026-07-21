@@ -25,14 +25,19 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   window: { label: 'Window', top: '10%', left: '28%', width: '42%', height: '34%' },
   wall: { label: 'Wall art', top: '4%', left: '3%', width: '24%', height: '46%' },
   lamp: { label: 'Lamp', top: '3%', right: '3%', width: '16%', height: '48%', floorStanding: true },
-  plant: { label: 'Plant', bottom: '5%', left: '32%', width: '13%', height: '24%', floorStanding: true },
+  // Moved off dead-center (where it used to sit right on top of both the rug and Hammy) to
+  // the right, tucked in beside the bed instead — clear of Hammy's own footprint, and a
+  // plant next to a bed is a normal enough pairing that the modest overlap with the bed's
+  // edge reads as intentional rather than a collision.
+  plant: { label: 'Plant', bottom: '4%', left: '62%', width: '18%', height: '36%', floorStanding: true },
   bed: { label: 'Bed', bottom: '4%', right: '1%', width: '36%', height: '36%', floorStanding: true },
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') and tall enough to
   // reach up well past where Hammy's feet actually land (bottom: '12%') — the point being
   // asked for here is the rug visibly extending up BEHIND Hammy, not just sitting further
   // down the floor on its own, so the two read as "standing on it" rather than two separate
-  // unrelated floor items.
-  rug: { label: 'Rug', bottom: '0%', left: '18%', width: '64%', height: '34%', floorStanding: true },
+  // unrelated floor items. height bumped further so it reaches up even more of the way
+  // behind Hammy than the previous pass did.
+  rug: { label: 'Rug', bottom: '0%', left: '18%', width: '64%', height: '46%', floorStanding: true },
   desk: { label: 'Desk', bottom: '3%', left: '2%', width: '28%', height: '34%', floorStanding: true },
 };
 
@@ -40,7 +45,10 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
 // no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND
 // everything else that legitimately overlaps it: the furniture that can sit partway onto a
 // rug (normal), and Hammy standing on it (the whole point of the rug reaching up that far).
-const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'rug', 'lamp', 'plant', 'bed', 'desk'];
+// plant renders AFTER bed on purpose too — its box overlaps most of the bed's own footprint
+// (see the plant entry above), and a plant tucked in front of the bed reads right; a bed
+// painted on top would instead hide almost the entire plant behind it.
+const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'rug', 'lamp', 'bed', 'plant', 'desk'];
 
 /** Ported from the website's wardrobeTabLabels (app.js) — the wardrobe only manages
  * equippable cosmetics, not room decor or auto-awarded "reward" items. */
