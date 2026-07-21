@@ -18042,10 +18042,7 @@ function renderRoomPage() {
         <svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>
       </div>`;
     }
-    return `<div class="room-slot room-slot-${slotKey} empty" data-slot="${slotKey}">
-      <span class="room-slot-plus">+</span>
-      <span class="room-slot-label">${emptyLabel}</span>
-    </div>`;
+    return `<div class="room-slot room-slot-${slotKey} empty" data-slot="${slotKey}" aria-label="${emptyLabel}"></div>`;
   }
 
   const wallpaperId = room.wallpaper;

@@ -1963,29 +1963,14 @@ select.budget-input { cursor: pointer; }
 .room-slot-rug   { bottom: 3%; left: 50%; transform: translateX(-50%); width: 34%; height: 16%; z-index: 1; }
 .room-slot-desk  { bottom: 5%; left: 6%; width: 18%; height: 24%; z-index: 1; }
 
-/* A dashed rectangle per empty slot, all visible at once across the whole
-   scene, read as cluttered — especially at mobile scale. A small round
-   button plus a pill label marks the same tappable spot without covering
-   the slot's full footprint in a border. */
+/* A quiet dashed outline per empty slot instead of the small round "+" button + pill label
+   this used to be — matches the mobile app's equivalent room-slot treatment. Still fully
+   tappable (see the click handler in renderRoomPage), just without a text/icon callout. */
 .room-slot.empty {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem;
-  border: none; background: none; cursor: pointer;
+  border: 1.5px dashed rgba(44,62,45,0.22); border-radius: 10px;
+  background: none; cursor: pointer; transition: border-color 0.18s;
 }
-.room-slot-plus {
-  width: 2.3rem; height: 2.3rem; border-radius: 50%; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.92); border: 1.5px solid rgba(44,62,45,0.16);
-  font-size: 1.15rem; font-weight: 700; color: var(--text-soft); line-height: 1;
-  box-shadow: 0 2px 8px rgba(44,62,45,0.1);
-  transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.18s;
-}
-.room-slot.empty:hover .room-slot-plus {
-  background: #fff; border-color: var(--green-dark); color: var(--green-dark); transform: scale(1.08);
-}
-.room-slot-label {
-  font-size: 0.6rem; font-weight: 700; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.04em;
-  background: rgba(255,255,255,0.85); padding: 0.1rem 0.5rem; border-radius: 999px;
-}
+.room-slot.empty:hover { border-color: var(--green-dark); }
 
 .wallpaper-swatch { width: 100%; height: 100%; border-radius: var(--radius-sm); }
 
