@@ -58,7 +58,7 @@ export default function Shop() {
                 item={item}
                 owned={isOwned(item.id)}
                 equipped={isEquipped(item.id)}
-                onPress={() => router.push({ pathname: '/modal/shop-item', params: { id: item.id } })}
+                onPress={() => router.push({ pathname: '/sheet/shop-item', params: { id: item.id } })}
               />
             ))}
           </View>

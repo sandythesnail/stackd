@@ -3,21 +3,24 @@
  * Regression guard for the recurring "post-lesson unmatched route" crash.
  *
  * The web build sets baseUrl "/m" (see app.json). Expo Router's stripBaseUrl()
- * removes that base as a RAW STRING PREFIX, so a *string* navigation to a route
- * that itself starts with "/m" gets its "m" eaten:
+ * removes that base as a RAW STRING PREFIX (no segment-boundary check), so any
+ * route whose path itself starts with "/m" has its "m" eaten during path
+ * resolution:
  *
- *     router.push('/modal/life-event')  ->  parsed as  '/odal/life-event'
- *                                       ->  re-based to '/m/odal/life-event'  (unmatched route)
+ *     '/modal/life-event'  --stripBaseUrl('/m')-->  'odal/life-event'  (unmatched)
+ *                          --then re-based-->        '/m/odal/life-event'
  *
- * Object-form navigation resolves the pathname against the route tree instead of
- * string-matching, so it is immune:
+ * This is FORM-INDEPENDENT. resolveHref({ pathname: '/modal/x' }) with no params
+ * returns the same bare string '/modal/x' as a plain string push, and both are
+ * handed to getStateFromPath() -> stripBaseUrl(). Object form is NOT immune. It
+ * also only bites in the production web export (stripBaseUrl no-ops when
+ * NODE_ENV=development), which is why it never reproduces with `expo start`.
  *
- *     router.push({ pathname: '/modal/life-event' })   // safe
- *
- * This fix keeps getting reverted because a bare string *looks* correct. This
- * script fails the build if any string-literal navigation or <Link>/<Redirect>
- * href targets a route beginning with "/m" (i.e. anything under /modal/*). Wire
- * it into the build so a regression can never ship.
+ * The only robust fix is to keep route segments off the letter "m" so they can't
+ * collide with the "/m" baseUrl (the modal/* routes were renamed to sheet/*).
+ * This script fails the build if any navigation or <Link>/<Redirect> href — in
+ * EITHER string or object form — targets a "/m*" route. Wire it into the build so
+ * a regression can never ship.
  *
  * Zero dependencies — runs on plain Node.
  */
@@ -44,21 +47,25 @@ function walk(dir) {
 }
 
 /** Blank out // line comments and block comments so guidance text that mentions
- *  the bad pattern (e.g. the explanatory comment in results.tsx) is not flagged.
- *  Replaces comment chars with spaces to preserve line/column numbers. */
+ *  the bad pattern (e.g. the explanatory comments in results.tsx / _layout.tsx)
+ *  is not flagged. Replaces comment chars with spaces to preserve line/columns. */
 function stripComments(src) {
   return src
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
     .replace(/\/\/[^\n]*/g, (m) => m.replace(/./g, ' '));
 }
 
-// A string literal beginning with "/m" passed straight to a navigation call, or
-// used as a Link/Redirect href. Object form (push({ pathname: ... }), href={{...}})
-// never matches because the char after "(" / "href=" is "{", not a quote.
+// Any navigation target beginning with "/m" collides with baseUrl "/m". These
+// patterns catch it in both string and object form:
 const PATTERNS = [
   {
     re: /\b(?:router|navigation)\s*\.\s*(?:push|replace|navigate)\s*\(\s*(['"`])\/m/g,
     what: 'string-form router navigation to a /m* route',
+  },
+  {
+    // Object form: push({ pathname: '/m…' }), <Redirect href={{ pathname: '/m…' }}>, etc.
+    re: /\bpathname\s*:\s*(['"`])\/m/g,
+    what: 'object-form navigation (pathname) to a /m* route',
   },
   {
     re: /\bhref\s*=\s*\{?\s*(['"`])\/m/g,
@@ -92,11 +99,13 @@ if (violations.length) {
     console.error(`      ${v.text}`);
   }
   console.error(
-    '\n  Use object form so the "m" of "modal" is not eaten by the "/m" baseUrl:\n' +
-      "      router.push({ pathname: '/modal/life-event' })\n" +
-      "  not router.push('/modal/life-event').\n"
+    '\n  The web baseUrl is "/m", and Expo Router strips it as a raw string prefix, so a\n' +
+      '  route like "/modal/*" resolves to the unmatched "/m/odal/*" in the production web\n' +
+      '  build (both string and object form). Route it under a segment that does not start\n' +
+      '  with "m" (the modal screens live under /sheet/*), e.g.:\n' +
+      "      router.push({ pathname: '/sheet/life-event' })\n"
   );
   process.exit(1);
 }
 
-console.log('✓ check-modal-routes: no unsafe string navigations to /m* routes.');
+console.log('✓ check-modal-routes: no navigation targets a /m* route (baseUrl "/m" is safe).');

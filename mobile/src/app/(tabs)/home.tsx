@@ -96,7 +96,7 @@ export default function Home() {
         {nextModule ? (
           <Card style={styles.questCard}>
             <View style={styles.questTop}>
-              <Pressable onPress={() => router.push({ pathname: '/modal/life-event' })}>
+              <Pressable onPress={() => router.push({ pathname: '/sheet/life-event' })}>
                 <Hammy size={76} bob equipped={equippedMascotItems()} face={moodFace} />
               </Pressable>
               <Speech>{speechMsg}</Speech>

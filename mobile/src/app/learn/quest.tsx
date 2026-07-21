@@ -544,7 +544,7 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
 
 /** Ambient random "Life happens…" popup, ported from the website's showLifeEvent — but
  * rendered right here as a local overlay (not a route push like the post-lesson version in
- * app/modal/life-event.tsx) so dismissing it just resumes the quest exactly where it paused,
+ * app/sheet/life-event.tsx) so dismissing it just resumes the quest exactly where it paused,
  * with no "where does this route go back to" navigation to reason about. The event is
  * captured once via useState's lazy initializer at mount (QuestPlayer only ever mounts this
  * while ambientEventActive is true, remounting fresh each time), so it keeps showing through

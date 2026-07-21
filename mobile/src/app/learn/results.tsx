@@ -75,20 +75,19 @@ export default function Results() {
   // maybeShowPostCompletionOverlays) — a numeric level-up alone doesn't get a full screen.
   // A life event (if one triggered) is deferred until after that overlay, same as the website.
   const tieredUp = tierName !== tierBefore;
-  // The web build's baseUrl is "/m" (see mobile/app.json), and "/modal/..." starts with
-  // those same two characters. A bare-string push('/modal/life-event') gets misread as
-  // already carrying the base prefix, which strips the first 2 chars and lands on
-  // "/m/odal/life-event" — an actual unmatched route, not a crash. Passing an object
-  // ({ pathname: '/modal/...' }) resolves through the route tree instead of raw string
-  // matching and sidesteps the collision entirely — this is why shop.tsx's identical
-  // modal/shop-item hop (object form from day one) never had this problem, while every
-  // bare-string push to /modal/* here and in home.tsx/levelup.tsx did. The cross-navigator
-  // push-vs-replace difference from earlier fix rounds was real (replace() doesn't reliably
-  // cross from this nested "learn" stack into the root Stack) but was not the whole story —
-  // hence why the bug kept resurfacing after each of those fixes.
+  // These overlays live under /sheet, not /modal. The web build's baseUrl is "/m"
+  // (mobile/app.json) and Expo Router's stripBaseUrl() removes it as a raw *string* prefix,
+  // so ANY route beginning with "/m" (i.e. "/modal/*") gets its "m" eaten during path
+  // resolution and lands on the unmatched "/m/odal/life-event" route — in the production
+  // web export only (stripBaseUrl no-ops in dev, which is why it never reproduced locally).
+  // This is form-independent: object-form { pathname } with no params resolves to the same
+  // bare string as a plain push, so it does NOT dodge the collision. The only robust fix is
+  // to keep the segment off the letter "m"; `npm run check:routes` guards against /m* routes.
+  // (push() is still required for the cross-navigator hops below: replace() doesn't reliably
+  // cross from this nested "learn" stack into the root Stack.)
   const continuePress = () => {
-    if (tieredUp) { router.push({ pathname: '/modal/levelup' }); return; }
-    if (state.pendingLifeEventId) { router.push({ pathname: '/modal/life-event' }); return; }
+    if (tieredUp) { router.push({ pathname: '/sheet/levelup' }); return; }
+    if (state.pendingLifeEventId) { router.push({ pathname: '/sheet/life-event' }); return; }
     router.push('/(tabs)/home');
   };
 
