@@ -54,23 +54,16 @@ function formatPct(pct: number) {
 
 /** Screen 13 — Shop. Ported from the website's renderShopPage: a Boutique tab (Diamond
  * Exclusives, Hats, Accessories, Rewards) and a Room tab (Room Decor), each rendered as
- * stacked, titled, collapsible sections. Every item's image, price, rarity, and mystery-pool
- * odds come straight from the ported SHOP_ITEMS catalog — same pictures, same numbers, same
- * "buy the box to spin for one" mechanic as the website. */
+ * stacked, titled sections — no collapse/expand affordance, every section is always fully
+ * shown. Every item's image, price, rarity, and mystery-pool odds come straight from the
+ * ported SHOP_ITEMS catalog — same pictures, same numbers, same "buy the box to spin for
+ * one" mechanic as the website. */
 export default function Shop() {
   const router = useRouter();
   const { category } = useLocalSearchParams<{ category?: string }>();
   const { state, equippedMascotItems, equippedRoomItems } = useStore();
   const initialTab: ShopTab = SHOP_CATEGORIES.find((c) => c.key === category)?.tab ?? 'boutique';
   const [tab, setTab] = useState<ShopTab>(initialTab);
-  // Collapsed by default (undefined -> true) so the page opens short instead of one long
-  // scroll through every category; the section a deep-link landed on (via ?category=) starts
-  // open so tapping a room slot / a "See all" link doesn't dump you on a collapsed section.
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>(
-    category ? { [category]: true } : {},
-  );
-  const isOpen = (key: string) => openSections[key] ?? false;
-  const toggle = (key: string) => setOpenSections((s) => ({ ...s, [key]: !isOpen(key) }));
 
   const categories = SHOP_CATEGORIES.filter((c) => c.tab === tab);
   const wornItems = equippedMascotItems();
@@ -114,58 +107,45 @@ export default function Shop() {
           </View>
         </View>
 
-        {categories.map((cat) => {
+        {categories.map((cat, idx) => {
           const items = sortItems(shopItemsReal.filter((i) => i.category === cat.key));
           const icon = CATEGORY_ICON[cat.key];
-          // Room Decor is the only category on its tab, and it's what a tapped room slot
-          // deep-links into — collapsing it would hide the very thing that navigation was
-          // for, so it's always open and its header isn't a toggle at all.
-          const collapsible = cat.key !== 'room';
-          const open = !collapsible || isOpen(cat.key);
-          const HeadWrap = collapsible ? Pressable : View;
+          // Room Decor is the only category on its tab — a titled header above it would
+          // just repeat what the storefront banner above already says ("The Furniture
+          // Farm"), so the Room tab skips straight to the grid instead.
+          const showHeader = cat.key !== 'room';
           return (
-            <View key={cat.key} style={styles.section}>
-              <HeadWrap
-                style={[styles.sectionHead, open && collapsible && styles.sectionHeadOpen]}
-                {...(collapsible ? { onPress: () => toggle(cat.key) } : {})}
-              >
-                <View style={styles.sectionIconWrap}>
-                  {icon ? (
-                    <MaterialCommunityIcons name={icon} size={17} color={colors.greenDark} />
-                  ) : (
-                    <Diamond size={16} />
-                  )}
-                </View>
-                <View style={{ flex: 1, gap: 3 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-                    <Txt variant="h2" style={{ fontSize: 15.5 }}>{cat.label}</Txt>
-                    <View style={styles.sectionCount}>
-                      <Txt style={styles.sectionCountTxt}>{items.length}</Txt>
-                    </View>
+            <View key={cat.key} style={[styles.section, idx > 0 && styles.sectionDivider]}>
+              {showHeader ? (
+                <View style={styles.sectionHead}>
+                  <View style={styles.sectionIconWrap}>
+                    {icon ? (
+                      <MaterialCommunityIcons name={icon} size={16} color={colors.greenDark} />
+                    ) : (
+                      <Diamond size={15} />
+                    )}
                   </View>
-                  {cat.tag ? (
-                    <Txt style={styles.sectionTagTxt} numberOfLines={1}>{cat.tag}</Txt>
-                  ) : null}
-                </View>
-                {collapsible ? (
-                  <MaterialCommunityIcons name={open ? 'chevron-up' : 'chevron-down'} size={22} color={colors.muted4} />
-                ) : null}
-              </HeadWrap>
-              {open ? (
-                items.length === 0 ? (
-                  <Txt variant="lead" style={{ fontSize: 13 }}>Nothing here yet — check back soon!</Txt>
-                ) : (
-                  <View style={styles.grid}>
-                    {items.map((item) => (
-                      <ShopCard
-                        key={item.id}
-                        item={item}
-                        onPress={() => router.push({ pathname: '/sheet/shop-item', params: { id: item.id } })}
-                      />
-                    ))}
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Txt variant="h2" style={styles.sectionTitle}>{cat.label}</Txt>
+                    {cat.tag ? (
+                      <Txt style={styles.sectionTagTxt} numberOfLines={1}>{cat.tag}</Txt>
+                    ) : null}
                   </View>
-                )
+                </View>
               ) : null}
+              {items.length === 0 ? (
+                <Txt variant="lead" style={{ fontSize: 13 }}>Nothing here yet — check back soon!</Txt>
+              ) : (
+                <View style={styles.grid}>
+                  {items.map((item) => (
+                    <ShopCard
+                      key={item.id}
+                      item={item}
+                      onPress={() => router.push({ pathname: '/sheet/shop-item', params: { id: item.id } })}
+                    />
+                  ))}
+                </View>
+              )}
             </View>
           );
         })}
@@ -338,31 +318,26 @@ const styles = StyleSheet.create({
   storefrontSign: { fontFamily: font.display, fontSize: 16, color: colors.ink },
   storefrontSub: { fontFamily: font.semi, fontSize: 12, color: colors.pinkText, marginTop: 2 },
 
-  section: { gap: 10 },
+  section: { gap: 14 },
+  // A hairline rule above every section after the first — replaces the old bordered,
+  // card-like header (which read as a pressable button even once the toggle behavior was
+  // removed) with a quieter, purely typographic divider.
+  sectionDivider: { paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border },
   sectionHead: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 13,
+    gap: 10,
   },
-  sectionHeadOpen: { borderColor: colors.greenSoft, backgroundColor: colors.tagGreenBg },
   sectionIconWrap: {
-    width: 34, height: 34, borderRadius: 11,
+    width: 30, height: 30, borderRadius: 10,
     backgroundColor: colors.screen, alignItems: 'center', justifyContent: 'center',
   },
-  sectionCount: { backgroundColor: colors.screen, borderRadius: 10, paddingVertical: 2, paddingHorizontal: 7 },
-  sectionCountTxt: { fontFamily: font.extra, fontSize: 10.5, color: colors.muted4 },
+  sectionTitle: { fontSize: 16 },
   sectionTagTxt: { fontFamily: font.bold, fontSize: 10.5, color: colors.tagWarmText },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   card: {
     width: '47.5%',
-    flexGrow: 1,
     backgroundColor: colors.white,
     borderWidth: 1.5,
     borderColor: colors.border,
@@ -370,10 +345,14 @@ const styles = StyleSheet.create({
     padding: 11,
     gap: 8,
     overflow: 'hidden',
+    shadowColor: '#2C3E2D',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
   cardGlowWrap: {
     width: '47.5%',
-    flexGrow: 1,
     borderRadius: 18,
     borderWidth: 1.5,
     borderColor: '#8FE3F5',
@@ -385,10 +364,14 @@ const styles = StyleSheet.create({
   },
   cardRewardWrap: {
     width: '47.5%',
-    flexGrow: 1,
     borderRadius: 18,
     borderWidth: 1.5,
     borderColor: '#E8C468',
+    shadowColor: '#C9781A',
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
   // Ported verbatim from the website's `.shop-card.shop-equipped`: border-color var(--green),
   // border-width 2px, box-shadow 0 0 0 3px var(--green-pale) — a solid (unblurred) ring
