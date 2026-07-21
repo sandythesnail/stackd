@@ -769,6 +769,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           coins: Math.max(state.coins, partial.coins ?? state.coins),
           diamonds: Math.max(state.diamonds, partial.diamonds ?? state.diamonds),
           xp: Math.max(state.xp, partial.xp ?? state.xp),
+          // Same race the comment above describes: a stale remote snapshot resolving after
+          // this device already finished/skipped the tour this session would otherwise flip
+          // it back to false and show the tour again next launch. Once seen locally, it
+          // stays seen no matter what a stale remote read says.
+          hasSeenOnboardingTour: state.hasSeenOnboardingTour || !!partial.hasSeenOnboardingTour,
         };
         const { next, streakDiamondsEarned } = runDailyCheck(merged);
         setState(next);
