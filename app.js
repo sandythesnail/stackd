@@ -16330,6 +16330,7 @@ function applyRemoteState(remote) {
   const localStreak = state.streak;
   const localLastPlayed = state.lastPlayedDate;
   const localLastSeenTier = state.lastSeenTier;
+  const localHasSeenTour = state.hasSeenOnboardingTour;
   Object.assign(state, remote);
   if (localLastPlayed && new Date(localLastPlayed) >= new Date(state.lastPlayedDate || 0)) {
     state.streak = Math.max(state.streak || 0, localStreak || 0);
@@ -16341,6 +16342,12 @@ function applyRemoteState(remote) {
   if (localLastSeenTier && TIERS.findIndex(t => t.name === localLastSeenTier) >= TIERS.findIndex(t => t.name === state.lastSeenTier)) {
     state.lastSeenTier = localLastSeenTier;
   }
+  // Same race again: skipping/finishing the tour writes hasSeenOnboardingTour:true locally
+  // right away, but the debounced Supabase sync can lose the race against closing the tab
+  // (see the comment above scheduleSupabaseSync) — a stale remote row would otherwise flip
+  // this back to false on the very next load and show the tour again. Once seen locally, it
+  // stays seen regardless of what a stale remote snapshot says.
+  if (localHasSeenTour) state.hasSeenOnboardingTour = true;
   saveState();
   renderHome();
 }
