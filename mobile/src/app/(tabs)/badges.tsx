@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
-import { Screen, Header, Txt, BadgeMedal } from '@/components';
+import { Screen, Header, Txt, BadgeMedal, AchievementDetailModal } from '@/components';
 import { colors, font } from '@/theme';
-import { useStore } from '@/store';
+import { useStore, type AchievementView } from '@/store';
 
 const FILTERS = ['All', 'Bronze', 'Silver', 'Gold', 'Diamond'] as const;
 
 /** Screen 11 — Badges (filter by tier & status). Real 23-achievement list ported from the
- * website's ACHIEVEMENTS, with earned status computed from real app state where available. */
+ * website's ACHIEVEMENTS, with earned status computed from real app state where available.
+ * Every badge is shown and tappable — locked ones open the same detail modal as earned ones,
+ * previewing how to unlock them (ported from the website's showAchievementDetail). */
 export default function Badges() {
   const { level, tierName, state, achievements } = useStore();
   const [filter, setFilter] = useState(0);
+  const [selected, setSelected] = useState<AchievementView | null>(null);
   const active = FILTERS[filter];
   const all = achievements();
   const shown = active === 'All' ? all : all.filter((b) => b.tier === active.toLowerCase());
@@ -38,13 +41,14 @@ export default function Badges() {
 
         <View style={styles.grid}>
           {shown.map((b) => (
-            <View key={b.id} style={styles.cell}>
+            <Pressable key={b.id} style={styles.cell} onPress={() => setSelected(b)}>
               <BadgeMedal icon={b.icon} color={b.color} tier={b.tier} size={64} locked={!b.earned} />
               <Txt style={[styles.lbl, !b.earned && { color: '#A8A296' }]}>{b.label}</Txt>
-            </View>
+            </Pressable>
           ))}
         </View>
       </ScrollView>
+      <AchievementDetailModal achievement={selected} onClose={() => setSelected(null)} />
     </Screen>
   );
 }

@@ -1,13 +1,14 @@
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import {
   Screen, Header, Txt, Card, Button, ProgressBar, Tag, Stat, Speech, Hammy,
-  SectionHead, MIcon, ModuleTile, BadgeMedal, Flame, Coin, Diamond, CurrencyChip,
+  SectionHead, MIcon, ModuleTile, BadgeMedal, AchievementDetailModal, Flame, Coin, Diamond, CurrencyChip,
 } from '@/components';
 import { useUser } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
 import { user, modules } from '@/data';
-import { useStore } from '@/store';
+import { useStore, type AchievementView } from '@/store';
 import { authEnabled } from '@/lib/env';
 import { SURVEY_TRACKS } from '@/survey';
 import { todaysHammyMood, hasModuleActivityToday } from '@/hammyMood';
@@ -33,6 +34,7 @@ export default function Home() {
     equippedMascotItems, dailyLoginBanner, dismissDailyLoginBanner,
     loginBonusPending, claimDailyLoginBonus,
   } = useStore();
+  const [selectedBadge, setSelectedBadge] = useState<AchievementView | null>(null);
 
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
   const trackModuleIds = activeTrack?.moduleIds ?? [];
@@ -140,10 +142,10 @@ export default function Home() {
         <SectionHead title="Recent badges" action={`All ${achievements().length} →`} onAction={() => router.push('/(tabs)/badges')} style={{ marginTop: 2 }} />
         <View style={styles.badgeRow}>
           {earnedBadges.length ? earnedBadges.map((b) => (
-            <View key={b.id} style={styles.badgeCell}>
+            <Pressable key={b.id} style={styles.badgeCell} onPress={() => setSelectedBadge(b)}>
               <BadgeMedal icon={b.icon} color={b.color} tier={b.tier} size={54} />
               <Txt style={styles.badgeLbl}>{b.label}</Txt>
-            </View>
+            </Pressable>
           )) : (
             <Txt variant="lead" style={{ fontSize: 13 }}>No badges yet — finish a lesson to earn your first one!</Txt>
           )}
@@ -167,6 +169,7 @@ export default function Home() {
           </View>
         </View>
       ) : null}
+      <AchievementDetailModal achievement={selectedBadge} onClose={() => setSelectedBadge(null)} />
     </Screen>
   );
 }
