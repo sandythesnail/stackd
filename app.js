@@ -17187,6 +17187,16 @@ function renderTourStep() {
   setTimeout(positionTourStep, 120);
 }
 
+// SVG path for a rounded rectangle, traced with arc commands — used to clip a rounded hole
+// out of .tour-overlay (see positionTourStep) that actually matches .tour-spotlight's own
+// rounded visual ring, instead of clip-path's plain H/V-only rectangle.
+function roundedRectPath(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  return `M${x + r},${y} H${x + w - r} A${r},${r} 0 0 1 ${x + w},${y + r} V${y + h - r} `
+    + `A${r},${r} 0 0 1 ${x + w - r},${y + h} H${x + r} A${r},${r} 0 0 1 ${x},${y + h - r} `
+    + `V${y + r} A${r},${r} 0 0 1 ${x + r},${y} Z`;
+}
+
 function positionTourStep() {
   const overlay = document.getElementById('tour-overlay');
   if (!overlay || !overlay.classList.contains('visible')) return;
@@ -17228,7 +17238,10 @@ function positionTourStep() {
   if (step.requiresRealClick) {
     const hx = r.left - pad, hy = r.top - pad, hw = r.width + pad * 2, hh = r.height + pad * 2;
     const outer = `M0,0 H${window.innerWidth} V${window.innerHeight} H0 Z`;
-    const hole = `M${hx},${hy} H${hx + hw} V${hy + hh} H${hx} Z`;
+    // Rounded to match .tour-spotlight's own border-radius (14px) — a sharp-cornered hole
+    // clipped under a rounded visual ring left a small sharp-vs-round mismatch right at the
+    // corners.
+    const hole = roundedRectPath(hx, hy, hw, hh, 14);
     overlay.style.clipPath = `path(evenodd, "${outer} ${hole}")`;
   } else {
     overlay.style.clipPath = '';
