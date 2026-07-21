@@ -17064,7 +17064,15 @@ function runFirstLoadSequence() {
 // go stale fast. Add a `tools` stop here once that UI settles.
 const ONBOARDING_TOUR_STEPS = [
   {
-    target: () => document.getElementById('home-stats-row'),
+    // The sidebar's own Level/XP bar (.sidebar-footer) is the more specific, always-in-the-
+    // same-spot target for "here's your XP" — it's what actually moves every time XP is
+    // earned. It's hidden on the mobile layout though (.sidebar-footer{display:none}), so
+    // this falls back to the Home page's stat row there instead of pointing at nothing.
+    target: () => {
+      const footer = document.querySelector('.sidebar-footer');
+      if (footer && footer.offsetParent !== null) return footer;
+      return document.getElementById('home-stats-row');
+    },
     title: 'Earn XP as you go',
     body: "Finishing lessons and quests earns XP. Level up to climb the tiers, from Broke Freshman up to Financially Literate Graduate, and watch Hammy grow alongside you.",
   },
@@ -17103,22 +17111,37 @@ function renderTourStep() {
   document.getElementById('tour-body').textContent = step.body;
   document.getElementById('tour-next').textContent = tourStepIdx === ONBOARDING_TOUR_STEPS.length - 1 ? 'Got it →' : 'Next →';
   // requestAnimationFrame gives beforeShow's DOM changes (e.g. opening the mobile drawer)
-  // one paint to settle before the target element's rect is measured.
+  // one paint to settle before the target element's rect is measured; a second, delayed
+  // re-measure catches anything that shifts layout a beat later (e.g. a web font swap).
   requestAnimationFrame(positionTourStep);
+  setTimeout(positionTourStep, 120);
 }
 
 function positionTourStep() {
-  if (!document.getElementById('tour-overlay').classList.contains('visible')) return;
+  const overlay = document.getElementById('tour-overlay');
+  if (!overlay || !overlay.classList.contains('visible')) return;
   const step = ONBOARDING_TOUR_STEPS[tourStepIdx];
   const targetEl = step.target();
   const spotlight = document.getElementById('tour-spotlight');
   const tooltip = document.getElementById('tour-tooltip');
-  if (!targetEl) { spotlight.style.display = 'none'; tooltip.style.display = 'none'; return; }
+  const r = targetEl ? targetEl.getBoundingClientRect() : null;
+  // offsetParent is null for anything not actually rendered (display:none, or an ancestor
+  // that is) — a target in that state still returns a technically-valid all-zero rect from
+  // getBoundingClientRect, which would otherwise draw a broken sliver of a spotlight pinned
+  // to the viewport's top-left corner instead of visibly failing. Treat both cases (missing
+  // element, unrendered element) the same way: no spotlight, tooltip centered so the step's
+  // text is still readable instead of silently disappearing.
+  if (!targetEl || targetEl.offsetParent === null || (r.width === 0 && r.height === 0)) {
+    spotlight.style.display = 'none';
+    tooltip.style.top = '50%';
+    tooltip.style.left = '50%';
+    tooltip.style.transform = 'translate(-50%, -50%)';
+    return;
+  }
   spotlight.style.display = '';
-  tooltip.style.display = '';
+  tooltip.style.transform = 'none';
 
   const pad = 8;
-  const r = targetEl.getBoundingClientRect();
   spotlight.style.top = (r.top - pad) + 'px';
   spotlight.style.left = (r.left - pad) + 'px';
   spotlight.style.width = (r.width + pad * 2) + 'px';
