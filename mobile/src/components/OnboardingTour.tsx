@@ -10,12 +10,13 @@ import { Txt } from './Txt';
 import { Button } from './Button';
 
 /** Mirrors the website's onboarding spotlight tour (see app.js's ONBOARDING_TOUR_STEPS) —
- * three stops (XP, the Shop, starting a module), shown once right after a first-time user
- * finishes the onboarding survey. Copy stays as tight as possible on purpose — this is a
- * quick "point at a real element, explain it, Next" tour, not a wall of text. No Tools
- * stop: that UI is still changing, so a "what does this do" step would go stale fast.
+ * four stops (XP, the Shop, tapping into Modules, starting a lesson), shown once right
+ * after a first-time user finishes the onboarding survey. Copy stays as tight as possible
+ * on purpose — this is a quick "point at a real element, explain it, Next" tour, not a
+ * wall of text. No Tools stop: that UI is still changing, so a "what does this do" step
+ * would go stale fast.
  */
-const TOUR_STEPS: { targetId: string; title: string; body: string }[] = [
+const TOUR_STEPS: { targetId: string; title: string; body: string; requiresRealClick?: boolean }[] = [
   {
     targetId: 'tour-xp',
     title: 'Earn XP as you go',
@@ -27,9 +28,22 @@ const TOUR_STEPS: { targetId: string; title: string; body: string }[] = [
     body: 'Coins come from lessons, diamonds from bigger streak milestones. Spend either on outfits or room decor for Hammy.',
   },
   {
-    targetId: 'tour-module',
-    title: 'Start a module',
-    body: 'Each module is a set of short lessons — finish them in order to complete it and earn XP.',
+    // Advanced by the real tap itself, not the Next button (see requiresRealClick handling
+    // below and TabBar.tsx's advanceIfWaitingOn call) — the user practices the actual
+    // navigation instead of reading about it.
+    targetId: 'tour-modules-tab',
+    title: 'Head to Modules',
+    body: 'Tap Modules to see everything you can learn.',
+    requiresRealClick: true,
+  },
+  {
+    // The Modules screen starts with the active (for a first-time user, the first) module
+    // already expanded by default — see (tabs)/modules.tsx's initial `expanded` state — so
+    // this is measurable the moment the screen mounts, no forced-open step needed the way
+    // the website's equivalent step has to force its module row open.
+    targetId: 'tour-lesson-tile',
+    title: 'Start a lesson',
+    body: 'Tap a lesson to start it — finish them in order to complete the module.',
   },
 ];
 
@@ -39,6 +53,11 @@ type TourCtx = {
   registerTarget: (id: string, ref: RefObject<View | null>) => void;
   unregisterTarget: (id: string) => void;
   startTour: () => void;
+  /** Screens call this from their OWN onPress handler when they ARE the real element a
+   * requiresRealClick step is currently waiting on — advances the tour if (and only if)
+   * that's actually the case right now, a no-op otherwise, so it's always safe to call
+   * unconditionally alongside the element's normal onPress behavior. */
+  advanceIfWaitingOn: (targetId: string) => void;
 };
 
 const TourContext = createContext<TourCtx | null>(null);
@@ -61,6 +80,15 @@ export function TourTarget({ id, children, style }: { id: string; children: Reac
     return () => unregisterTarget(id);
   }, [id, registerTarget, unregisterTarget]);
   return <View ref={ref} collapsable={false} style={style}>{children}</View>;
+}
+
+/** TourTarget, but skippable — for a list where only ONE item (e.g. the first) should ever
+ * be a tour stop. Passing `id={undefined}` (every other item) renders children plain,
+ * un-wrapped; this is a conditional render, not a conditionally-called hook, so it's safe
+ * for different items in the same list to take different branches. */
+export function MaybeTourTarget({ id, children, style }: { id?: string; children: ReactNode; style?: ViewStyle }) {
+  if (!id) return <>{children}</>;
+  return <TourTarget id={id} style={style}>{children}</TourTarget>;
 }
 
 export function OnboardingTourProvider({ children }: { children: ReactNode }) {
@@ -109,12 +137,24 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
     });
   }, [finish, goToStep]);
 
+  const advanceIfWaitingOn = useCallback((targetId: string) => {
+    setStepIdx((i) => {
+      if (i === null) return i;
+      const step = TOUR_STEPS[i];
+      if (!step.requiresRealClick || step.targetId !== targetId) return i;
+      if (i + 1 >= TOUR_STEPS.length) { finish(); return null; }
+      goToStep(i + 1);
+      return i + 1;
+    });
+  }, [finish, goToStep]);
+
   const registerTarget = useCallback((id: string, ref: RefObject<View | null>) => {
     targets.set(id, ref);
-    // The Shop tab (inside the always-mounted TabBar) is present from the very first
-    // render, but the Home screen's XP stat mounts/unmounts as the user navigates tabs —
-    // if it registers itself WHILE step 1 is already active and waiting, take the
-    // opportunity to measure it immediately instead of leaving a stale/missing spotlight.
+    // The Shop/Modules tabs (inside the always-mounted TabBar) are present from the very
+    // first render, but a tab SCREEN's own targets (the Home stat row, a Modules lesson
+    // tile) mount/unmount as the user navigates — if one registers itself WHILE its step is
+    // already active and waiting, take the opportunity to measure it immediately instead of
+    // leaving a stale/missing spotlight.
     if (stepIdx !== null && TOUR_STEPS[stepIdx].targetId === id) {
       requestAnimationFrame(() => measure(stepIdx));
     }
@@ -122,17 +162,19 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
   const unregisterTarget = useCallback((id: string) => { targets.delete(id); }, [targets]);
 
   const ctxValue = useMemo<TourCtx>(
-    () => ({ registerTarget, unregisterTarget, startTour }),
-    [registerTarget, unregisterTarget, startTour],
+    () => ({ registerTarget, unregisterTarget, startTour, advanceIfWaitingOn }),
+    [registerTarget, unregisterTarget, startTour, advanceIfWaitingOn],
   );
+
+  const activeStep = stepIdx !== null ? TOUR_STEPS[stepIdx] : null;
 
   return (
     <TourContext.Provider value={ctxValue}>
       {children}
-      {stepIdx !== null ? (
+      {activeStep ? (
         <TourOverlay
-          step={TOUR_STEPS[stepIdx]}
-          stepNum={stepIdx + 1}
+          step={activeStep}
+          stepNum={stepIdx! + 1}
           totalSteps={TOUR_STEPS.length}
           rect={rect}
           isLast={stepIdx === TOUR_STEPS.length - 1}
@@ -147,7 +189,7 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
 function TourOverlay({
   step, stepNum, totalSteps, rect, isLast, onNext, onSkip,
 }: {
-  step: { title: string; body: string };
+  step: { title: string; body: string; requiresRealClick?: boolean };
   stepNum: number;
   totalSteps: number;
   rect: MeasuredRect | null;
@@ -179,25 +221,43 @@ function TourOverlay({
     tooltipLeft = (winW - tooltipW) / 2;
   }
 
+  // requiresRealClick needs the real element underneath genuinely tappable, not just
+  // visually not-covered — a single full-screen Pressable (used for every other step)
+  // would swallow that tap same as anywhere else. Framing the hole with four separate
+  // blocking rectangles instead, with NOTHING covering the spotlight rect itself, means a
+  // tap there simply never reaches a blocking view at all and falls through to the real
+  // TabBar tab underneath — no z-index trick needed (React Native doesn't have web's
+  // stacking-context nuance here, but it also has no clip-path; this is the RN-native way
+  // to get the same "real hole" result). Falls back to full blocking (like every other
+  // step) until a valid rect exists — better to block everything briefly than guess wrong.
+  const punchHole = !!step.requiresRealClick && !!spotlight;
+
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      {/* Dark scrim with a cut-out hole over the spotlighted element, via an SVG mask —
-          RN has no equivalent of the web's oversized box-shadow trick. Also the one thing
-          in this whole overlay that intercepts touches, so a stray tap on the real app
-          underneath can't navigate away mid-tour; Next/Skip are the only way through. */}
-      <Pressable style={StyleSheet.absoluteFill} onPress={() => {}}>
-        <Svg width={winW} height={winH}>
-          <Defs>
-            <Mask id="tour-mask" maskUnits="userSpaceOnUse" x={0} y={0} width={winW} height={winH}>
-              <Rect x={0} y={0} width={winW} height={winH} fill="#fff" />
-              {spotlight ? (
-                <Rect x={spotlight.x} y={spotlight.y} width={spotlight.width} height={spotlight.height} rx={14} fill="#000" />
-              ) : null}
-            </Mask>
-          </Defs>
-          <Rect x={0} y={0} width={winW} height={winH} fill="rgba(20,26,20,0.62)" mask="url(#tour-mask)" />
-        </Svg>
-      </Pressable>
+      {/* Dark scrim — visual only, via an SVG mask (RN has no equivalent of the web's
+          oversized box-shadow trick); never intercepts touches itself. */}
+      <Svg width={winW} height={winH} style={StyleSheet.absoluteFill} pointerEvents="none">
+        <Defs>
+          <Mask id="tour-mask" maskUnits="userSpaceOnUse" x={0} y={0} width={winW} height={winH}>
+            <Rect x={0} y={0} width={winW} height={winH} fill="#fff" />
+            {spotlight ? (
+              <Rect x={spotlight.x} y={spotlight.y} width={spotlight.width} height={spotlight.height} rx={14} fill="#000" />
+            ) : null}
+          </Mask>
+        </Defs>
+        <Rect x={0} y={0} width={winW} height={winH} fill="rgba(20,26,20,0.62)" mask="url(#tour-mask)" />
+      </Svg>
+
+      {punchHole ? (
+        <>
+          <BlockRect x={0} y={0} width={winW} height={spotlight!.y} />
+          <BlockRect x={0} y={spotlight!.y + spotlight!.height} width={winW} height={winH - (spotlight!.y + spotlight!.height)} />
+          <BlockRect x={0} y={spotlight!.y} width={spotlight!.x} height={spotlight!.height} />
+          <BlockRect x={spotlight!.x + spotlight!.width} y={spotlight!.y} width={winW - (spotlight!.x + spotlight!.width)} height={spotlight!.height} />
+        </>
+      ) : (
+        <Pressable style={StyleSheet.absoluteFill} onPress={() => {}} />
+      )}
 
       {spotlight ? (
         <View
@@ -216,11 +276,22 @@ function TourOverlay({
           <Pressable onPress={onSkip} hitSlop={8}>
             <Txt style={styles.skip}>Skip tour</Txt>
           </Pressable>
-          <Button label={isLast ? 'Got it →' : 'Next →'} size="sm" onPress={onNext} style={styles.nextBtn} />
+          {/* requiresRealClick steps advance only via the real element itself — Next would
+              just be a redundant second way to skip past actually tapping the thing being
+              taught, so it's left out entirely rather than shown disabled. */}
+          {step.requiresRealClick ? null : (
+            <Button label={isLast ? 'Got it →' : 'Next →'} size="sm" onPress={onNext} style={styles.nextBtn} />
+          )}
         </View>
       </View>
     </View>
   );
+}
+
+/** One opaque, touch-blocking strip of the "frame" around a punched-through spotlight hole. */
+function BlockRect({ x, y, width, height }: { x: number; y: number; width: number; height: number }) {
+  if (width <= 0 || height <= 0) return null;
+  return <Pressable onPress={() => {}} style={{ position: 'absolute', left: x, top: y, width, height }} />;
 }
 
 const styles = StyleSheet.create({

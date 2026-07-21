@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow } from '@/components';
+import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow, MaybeTourTarget } from '@/components';
 import { colors, font, radius } from '@/theme';
 import { modules } from '@/data';
 import { moduleContentById } from '@/content';
@@ -42,7 +42,7 @@ export default function Modules() {
         </View>
 
         <View style={{ gap: 12 }}>
-          {modules.map((m) => {
+          {modules.map((m, idx) => {
             const content = moduleContentById(m.id);
             // The real-life step-by-step guide lesson is surfaced separately, right below
             // the main list, via RealLifeSubQuestRow — same split the website makes between
@@ -79,13 +79,20 @@ export default function Modules() {
                 {isOpen ? (
                   <View style={styles.rowBody}>
                     <ProgressBar value={pct} tone={status === 'done' ? 'green' : 'pink'} height={7} style={{ marginBottom: 12 }} />
-                    <ModuleLessonList
-                      moduleId={m.id}
-                      lessons={lessons}
-                      doneIndices={moduleDoneIndices(m.id)}
-                      status={status}
-                      onPressLesson={(i) => router.push({ pathname: '/learn/quest', params: { moduleId: m.id, lessonIndex: String(i) } })}
-                    />
+                    {/* The first module's lesson list is the onboarding tour's "Start a
+                        lesson" stop (see OnboardingTour.tsx) — a fresh user's active module
+                        starts expanded (see the `expanded` initializer above), so this is
+                        already measurable the moment the tour reaches it, no forced-open
+                        step needed. */}
+                    <MaybeTourTarget id={idx === 0 ? 'tour-lesson-tile' : undefined}>
+                      <ModuleLessonList
+                        moduleId={m.id}
+                        lessons={lessons}
+                        doneIndices={moduleDoneIndices(m.id)}
+                        status={status}
+                        onPressLesson={(i) => router.push({ pathname: '/learn/quest', params: { moduleId: m.id, lessonIndex: String(i) } })}
+                      />
+                    </MaybeTourTarget>
                     {guideIndex >= 0 ? (
                       <RealLifeSubQuestRow
                         moduleId={m.id}

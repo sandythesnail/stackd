@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, font } from '@/theme';
 import { Txt } from './Txt';
-import { TourTarget } from './OnboardingTour';
+import { TourTarget, useOnboardingTour } from './OnboardingTour';
 
 /** Minimal structural subset of the props expo-router's Tabs passes to `tabBar`. */
 type TabBarProps = {
@@ -29,6 +29,7 @@ const ICONS: Record<
 
 export function TabBar({ state, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
+  const { advanceIfWaitingOn } = useOnboardingTour();
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
       {state.routes.map((route, i) => {
@@ -43,17 +44,23 @@ export function TabBar({ state, navigation }: TabBarProps) {
             onPress={() => {
               const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
               if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
+              // A no-op unless the tour is actually on the "tap Modules" step waiting for
+              // exactly this tap (see OnboardingTour.tsx) — always safe to call.
+              if (route.name === 'modules') advanceIfWaitingOn('tour-modules-tab');
             }}
           >
             {meta.render(color)}
             <Txt style={[styles.label, { color }]}>{meta.label}</Txt>
           </Pressable>
         );
-        // The Shop tab is the one spotlighted by the onboarding tour (see
-        // OnboardingTour.tsx) — wrapped only for that route so every other tab stays a
+        // The Shop and Modules tabs are the ones spotlighted by the onboarding tour (see
+        // OnboardingTour.tsx) — wrapped only for those routes so every other tab stays a
         // plain Pressable.
         if (route.name === 'shop') {
           return <TourTarget key={route.key} id="tour-shop-tab" style={styles.tab}>{tab}</TourTarget>;
+        }
+        if (route.name === 'modules') {
+          return <TourTarget key={route.key} id="tour-modules-tab" style={styles.tab}>{tab}</TourTarget>;
         }
         return tab;
       })}
