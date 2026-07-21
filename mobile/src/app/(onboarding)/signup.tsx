@@ -98,7 +98,7 @@ function ClerkSignUp() {
 
       <View style={{ gap: 5, marginTop: 8 }}>
         <Txt variant="disp">Create your account</Txt>
-        <Txt variant="lead">Free while Stackd is piloting at UConn.</Txt>
+        <Txt variant="lead">Free while Stacked is piloting at UConn.</Txt>
       </View>
 
       <View style={{ gap: 14, marginTop: 20 }}>
@@ -151,7 +151,7 @@ function StubSignUp() {
 
       <View style={{ gap: 5, marginTop: 8 }}>
         <Txt variant="disp">Create your account</Txt>
-        <Txt variant="lead">Free while Stackd is piloting at UConn.</Txt>
+        <Txt variant="lead">Free while Stacked is piloting at UConn.</Txt>
       </View>
 
       <View style={{ gap: 14, marginTop: 20 }}>

@@ -1,5 +1,5 @@
 /**
- * Stackd design tokens — ported from the "Stackd Mobile UI System" Claude design.
+ * Stacked design tokens — ported from the "Stackd Mobile UI System" Claude design.
  * Warm, encouraging, gamified. Fredoka for display, Nunito for body.
  */
 

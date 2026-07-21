@@ -1,5 +1,5 @@
 /**
- * Mock content for the Stackd prototype. 11 financial-literacy modules,
+ * Mock content for the Stacked prototype. 11 financial-literacy modules,
  * badges, shop items, and the sample learner (Maya). Mirrors the design mockups.
  * Swap for Sandra's web content / Supabase later.
  */

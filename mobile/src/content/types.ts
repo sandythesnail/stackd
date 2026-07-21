@@ -1,5 +1,5 @@
 /**
- * Types for the real Stackd content ported from the web app (app.js MODULES / SHOP_ITEMS).
+ * Types for the real Stacked content ported from the web app (app.js MODULES / SHOP_ITEMS).
  * modules.json / shopItems.json are extracted verbatim from the website's own data — see
  * mobile/src/content/index.ts for the loader. Chapter types here cover all 15 quest-chapter
  * variants that exist in the extracted data; renderers for them land in later phases.

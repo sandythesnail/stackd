@@ -82,7 +82,7 @@ function ClerkSignIn() {
 
       <Spacer />
       <View style={styles.footer}>
-        <Txt style={styles.footTxt}>New to Stackd? </Txt>
+        <Txt style={styles.footTxt}>New to Stacked? </Txt>
         <Txt style={styles.link} onPress={() => router.push('/(onboarding)/signup')}>Create account</Txt>
       </View>
     </Screen>
@@ -123,7 +123,7 @@ function StubSignIn() {
 
       <Spacer />
       <View style={styles.footer}>
-        <Txt style={styles.footTxt}>New to Stackd? </Txt>
+        <Txt style={styles.footTxt}>New to Stacked? </Txt>
         <Txt style={styles.link} onPress={() => router.push('/(onboarding)/signup')}>Create account</Txt>
       </View>
     </Screen>

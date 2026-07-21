@@ -104,7 +104,7 @@ export default function Survey() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
           <View style={{ gap: 6, marginTop: 8 }}>
             <Txt style={styles.eyebrow}>YOUR FINANCIAL TOOLKIT</Txt>
-            <Txt variant="h1">What are you hoping to get out of Stackd?</Txt>
+            <Txt variant="h1">What are you hoping to get out of Stacked?</Txt>
             <Txt variant="lead">Select all that apply — this helps us recommend where to start.</Txt>
           </View>
 
