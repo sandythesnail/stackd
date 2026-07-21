@@ -3,7 +3,7 @@ import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput,
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
-import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy } from '@/components';
+import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, LifeEventCard } from '@/components';
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
@@ -342,8 +342,10 @@ export default function QuestPlayer() {
     // quiz questions / decision steps — not the final chapter though, since finishing the
     // whole lesson already has its own guaranteed-unlock + ambient roll (store.completeLesson,
     // surfaced via the results screen's own life-event hop); rolling here too would risk
-    // double-firing one right after the other.
-    if (!isFinalChapter && rollAmbientLifeEvent()) {
+    // double-firing one right after the other. Real-life sub-quests (isLifeTask, the
+    // step-by-step guides in the Real Life tab) are excluded entirely — they're already a
+    // real-world scenario walkthrough, so a random life-event popup mid-way doesn't fit.
+    if (!isLifeTask && !isFinalChapter && rollAmbientLifeEvent()) {
       pendingAdvanceRef.current = advance;
       setAmbientEventActive(true);
     } else {
@@ -553,13 +555,6 @@ function AmbientLifeEventModal({
   onDone, pendingLifeEvent, resolveLifeEvent,
 }: { onDone: () => void; pendingLifeEvent: () => LifeEvent | null; resolveLifeEvent: (choiceId: string) => void }) {
   const [event] = useState(() => pendingLifeEvent());
-  const [answeredId, setAnsweredId] = useState<string | null>(null);
-  const answeredChoice = event?.choices.find((c) => c.id === answeredId);
-
-  const pick = (choiceId: string) => {
-    setAnsweredId(choiceId);
-    resolveLifeEvent(choiceId);
-  };
 
   if (!event) return null;
 
@@ -569,31 +564,7 @@ function AmbientLifeEventModal({
         <View style={[StyleSheet.absoluteFill, styles.ambientLifeScrim]} />
         <View style={styles.ambientLifeSheet}>
           <View style={styles.ambientLifeHandle} />
-          <View style={{ alignItems: 'center', gap: 6 }}>
-            <View style={styles.ambientLifeEmoji}>
-              <Txt style={{ fontSize: 34 }}>{answeredChoice ? (answeredChoice.coinDelta ? '🎉' : '😬') : '⚠️'}</Txt>
-            </View>
-            <Tag tone="warm" style={{ marginTop: 4 }}>✨ {event.tag.toUpperCase()}</Tag>
-            <Txt variant="disp" style={{ fontSize: 18, marginTop: 2, textAlign: 'center' }}>{event.title}</Txt>
-            <Txt variant="lead" style={{ textAlign: 'center', fontSize: 13.5 }}>
-              {answeredChoice ? answeredChoice.result : event.scenario}
-            </Txt>
-          </View>
-          {!answeredChoice ? (
-            <View style={{ gap: 10, marginTop: 16 }}>
-              {event.choices.map((c) => (
-                <Option
-                  key={c.id}
-                  label={c.label}
-                  state="default"
-                  onPress={() => pick(c.id)}
-                  right={c.coinDelta ? <Tag tone="green">🪙 +{c.coinDelta}</Tag> : undefined}
-                />
-              ))}
-            </View>
-          ) : (
-            <Button label="Continue" onPress={onDone} style={{ marginTop: 14 }} />
-          )}
+          <LifeEventCard event={event} onResolve={resolveLifeEvent} onDone={onDone} />
         </View>
       </View>
     </Modal>
@@ -1742,16 +1713,12 @@ const styles = StyleSheet.create({
   // Ambient mid-quest life-event overlay — a bottom sheet, matching the post-lesson
   // route's own life-event screen so the two read as the same feature.
   ambientLifeRoot: { flex: 1, justifyContent: 'flex-end' },
-  ambientLifeScrim: { backgroundColor: 'rgba(22,32,23,0.62)' },
+  ambientLifeScrim: { backgroundColor: 'rgba(22,32,23,0.55)' },
   ambientLifeSheet: {
-    backgroundColor: colors.screen, borderTopLeftRadius: 30, borderTopRightRadius: 30,
-    paddingHorizontal: 22, paddingTop: 10, paddingBottom: 34,
+    backgroundColor: colors.white, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    paddingHorizontal: 22, paddingTop: 12, paddingBottom: 34,
   },
-  ambientLifeHandle: { width: 44, height: 5, borderRadius: 3, backgroundColor: '#D6DFCF', alignSelf: 'center', marginBottom: 16 },
-  ambientLifeEmoji: {
-    width: 80, height: 80, borderRadius: 40, backgroundColor: '#F9E6C6',
-    alignItems: 'center', justifyContent: 'center', borderWidth: 6, borderColor: '#FBF3E4',
-  },
+  ambientLifeHandle: { width: 44, height: 5, borderRadius: 3, backgroundColor: '#D6DFCF', alignSelf: 'center', marginBottom: 18 },
   content: { paddingHorizontal: 22, paddingTop: 10, paddingBottom: 20, gap: 12, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },

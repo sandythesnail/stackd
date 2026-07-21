@@ -17,4 +17,5 @@ export { TabBar } from './TabBar';
 export { Stat, SectionHead, Speech, Callout, Segmented, Dots, Divider } from './bits';
 export { MIcon, ModuleTile, ListRow, BadgeMedal, MEDAL_GRAD } from './ModuleBits';
 export { ModuleLessonList, RealLifeSubQuestRow } from './ModuleLessonList';
+export { LifeEventCard } from './LifeEventCard';
 export { StackedAreaChart } from './Chart';
