@@ -3,7 +3,7 @@ import { View, Pressable, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Txt, Button, Tag, Card, IconButton, CurrencyChip, Coin, Diamond, ItemArt, Hammy } from '@/components';
+import { Txt, Button, Tag, Card, IconButton, CurrencyChip, Coin, Diamond, ItemArt, Hammy, Wallpaper } from '@/components';
 import { colors, font } from '@/theme';
 import { shopItemById, shopItemsReal } from '@/content';
 import type { ShopItemReal } from '@/content';
@@ -120,7 +120,18 @@ export default function ShopItemModal() {
             {opening ? (
               <Animated.Text style={[styles.spinIcon, { transform: [{ rotate }, { scale }] }]}>🎁</Animated.Text>
             ) : reveal ? (
-              <ItemArt item={reveal.item} size={150} />
+              // Wallpaper items have no `svg` field at all (they're a bg/pattern lookup,
+              // not raw item art — see Wallpaper.tsx) — ItemArt.tsx calls item.svg.replace(...)
+              // unconditionally, which crashed ("Cannot read properties of undefined
+              // (reading 'replace')") the moment a wallpaper's own detail sheet tried to
+              // render a preview for it.
+              reveal.item.slot === 'wallpaper' ? (
+                <Wallpaper item={reveal.item} style={StyleSheet.absoluteFill} />
+              ) : (
+                <ItemArt item={reveal.item} size={150} />
+              )
+            ) : item.slot === 'wallpaper' ? (
+              <Wallpaper item={item} style={StyleSheet.absoluteFill} />
             ) : item.category === 'room' || item.isMysteryBox ? (
               <ItemArt item={item} size={150} />
             ) : (

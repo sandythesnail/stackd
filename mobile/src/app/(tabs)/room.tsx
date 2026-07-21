@@ -2,32 +2,40 @@ import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Screen, Header, Txt, Hammy, ItemArt, Wallpaper, ListRow } from '@/components';
+import { Screen, Txt, Hammy, ItemArt, Wallpaper, ListRow } from '@/components';
 import { colors, font } from '@/theme';
 import { useStore } from '@/store';
 import { shopItemsReal } from '@/content';
 import type { RoomSlot, ShopItemReal } from '@/content';
 
-type SlotLayout = { label: string } & ViewStyle;
+type SlotLayout = { label: string; floorStanding?: boolean } & ViewStyle;
 
 type FurnitureSlot = Exclude<RoomSlot, 'wallpaper'>;
 type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
 
-/** Ported from the website's room-slot-* CSS rules (app.css) — percentages of the full
- * scene box, not just the wall/floor sub-zone, which is why window/wall/lamp (top-anchored)
- * and plant/bed/rug/desk (bottom-anchored) both work out to land in the right zone.
- * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
+/** Ported from the website's room-slot-* CSS rules (app.css), then sized up further —
+ * matching the website's exact percentages left every item rendering tiny inside the much
+ * smaller mobile scene. `floorStanding` marks furniture that should sit ON something (the
+ * floor, a desk) rather than hang on the wall — see RoomSlotBox's `align="bottom"` below,
+ * which anchors the item's own art to the bottom of its box instead of dead-center, so a
+ * lamp's actual base lands at the bottom of its slot instead of floating in the middle of
+ * empty letterboxed space above the visual floor line. Wallpaper isn't here — it's rendered
+ * as the wall zone itself, not a positioned slot. */
 const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
-  window: { label: 'Window', top: '17%', left: '35%', width: '30%', height: '24%' },
-  wall: { label: 'Wall art', top: '6%', left: '6%', width: '15%', height: '40%' },
-  lamp: { label: 'Lamp', top: '5%', right: '6%', width: '9%', height: '38%' },
-  plant: { label: 'Plant', bottom: '6%', left: '31%', width: '6%', height: '14%' },
-  bed: { label: 'Bed', bottom: '6%', right: '4%', width: '24%', height: '26%' },
-  rug: { label: 'Rug', bottom: '3%', left: '33%', width: '34%', height: '16%' },
-  desk: { label: 'Desk', bottom: '5%', left: '6%', width: '18%', height: '24%' },
+  window: { label: 'Window', top: '14%', left: '33%', width: '34%', height: '28%' },
+  wall: { label: 'Wall art', top: '5%', left: '5%', width: '18%', height: '44%' },
+  lamp: { label: 'Lamp', top: '4%', right: '5%', width: '11%', height: '42%', floorStanding: true },
+  plant: { label: 'Plant', bottom: '5%', left: '30%', width: '8%', height: '18%', floorStanding: true },
+  bed: { label: 'Bed', bottom: '5%', right: '3%', width: '28%', height: '30%', floorStanding: true },
+  rug: { label: 'Rug', bottom: '2%', left: '32%', width: '36%', height: '19%', floorStanding: true },
+  desk: { label: 'Desk', bottom: '4%', left: '5%', width: '21%', height: '28%', floorStanding: true },
 };
 
-const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'lamp', 'plant', 'bed', 'rug', 'desk'];
+// Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
+// no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND the
+// furniture that legitimately overlaps it (a plant or bed sitting partway onto a rug is
+// normal; a rug drawn on top of them covering their base would look wrong).
+const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'rug', 'lamp', 'plant', 'bed', 'desk'];
 
 /** Ported from the website's wardrobeTabLabels (app.js) — the wardrobe only manages
  * equippable cosmetics, not room decor or auto-awarded "reward" items. */
@@ -42,7 +50,7 @@ const WARDROBE_CATEGORIES: { key: WardrobeCategory; label: string }[] = [
  * website's "Hammy's Wardrobe" sub-tab for browsing/equipping owned cosmetics by category. */
 export default function Room() {
   const router = useRouter();
-  const { state, level, equippedMascotItems, equippedRoomItems, isEquipped, buyOrEquipItem } = useStore();
+  const { state, equippedMascotItems, equippedRoomItems, isEquipped, buyOrEquipItem } = useStore();
   const [tab, setTab] = useState<'room' | 'wardrobe'>('room');
   const [wardrobeCat, setWardrobeCat] = useState<WardrobeCategory>('hat');
 
@@ -59,92 +67,89 @@ export default function Room() {
     (i) => i.category === wardrobeCat && !i.isMysteryBox && state.ownedItems.includes(i.id),
   );
 
+  // No Header here on purpose — the level/coins/diamonds bar just ate space from an already
+  // small room scene for no real benefit on this screen; the bottom tab bar and this
+  // Room/Wardrobe toggle are the only navigation this screen needs.
   return (
     <Screen edges={['top']}>
-      <Header
-        level={level}
-        name={tab === 'room' ? "Hammy's Room" : "Hammy's Wardrobe"}
-        coins={state.coins}
-        diamonds={state.diamonds}
-      />
-      <View style={styles.wrap}>
-        <View style={styles.sceneTabs}>
-          {(['room', 'wardrobe'] as const).map((t) => {
-            const on = t === tab;
+      <View style={styles.sceneTabs}>
+        {(['room', 'wardrobe'] as const).map((t) => {
+          const on = t === tab;
+          return (
+            <Pressable key={t} onPress={() => setTab(t)} style={[styles.tchip, on && styles.tchipOn]}>
+              <Txt style={[styles.tchipTxt, on && { color: colors.white }]}>{t === 'room' ? 'Room' : 'Wardrobe'}</Txt>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {tab === 'room' ? (
+        // Full-bleed, edge to edge (no side padding, no card border/radius) — fills every
+        // bit of space down to the tab bar instead of sitting in a small inset card.
+        <View style={styles.scene}>
+          <View style={styles.wallZone}>
+            <Wallpaper item={wallpaperItem} style={StyleSheet.absoluteFill} />
+          </View>
+          <LinearGradient colors={['#D7A968', '#B9834C']} style={styles.floorZone} />
+
+          {FURNITURE_SLOTS.map((slot) => {
+            const item = bySlot(slot);
+            const layout = SLOT_LAYOUT[slot];
             return (
-              <Pressable key={t} onPress={() => setTab(t)} style={[styles.tchip, on && styles.tchipOn]}>
-                <Txt style={[styles.tchipTxt, on && { color: colors.white }]}>{t === 'room' ? 'Room' : 'Wardrobe'}</Txt>
-              </Pressable>
+              <RoomSlotBox
+                key={slot}
+                layout={layout}
+                item={item}
+                onPress={goToRoomShop}
+              />
             );
           })}
+
+          <Hammy size={218} equipped={equipped} style={styles.hammy} />
+
+          <View style={styles.wearing}>
+            <Txt style={styles.wearingTxt}>Wearing: {wearingLabel} 🐷</Txt>
+          </View>
         </View>
+      ) : (
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.wardrobeContent}>
+          <View style={styles.wardrobeStage}>
+            <Hammy size={190} equipped={equipped} />
+          </View>
 
-        {tab === 'room' ? (
-          <View style={styles.scene}>
-            <View style={styles.wallZone}>
-              <Wallpaper item={wallpaperItem} style={StyleSheet.absoluteFill} />
-            </View>
-            <LinearGradient colors={['#D7A968', '#B9834C']} style={styles.floorZone} />
-
-            {FURNITURE_SLOTS.map((slot) => {
-              const item = bySlot(slot);
-              const layout = SLOT_LAYOUT[slot];
+          <View style={styles.filters}>
+            {WARDROBE_CATEGORIES.map((c) => {
+              const on = c.key === wardrobeCat;
               return (
-                <RoomSlotBox
-                  key={slot}
-                  layout={layout}
-                  item={item}
-                  onPress={goToRoomShop}
-                />
+                <Pressable key={c.key} onPress={() => setWardrobeCat(c.key)} style={[styles.fchip, on && styles.fchipOn]}>
+                  <Txt style={[styles.fchipTxt, on && { color: colors.white }]}>{c.label}</Txt>
+                </Pressable>
               );
             })}
-
-            <Hammy size={218} equipped={equipped} style={styles.hammy} />
-
-            <View style={styles.wearing}>
-              <Txt style={styles.wearingTxt}>Wearing: {wearingLabel} 🐷</Txt>
-            </View>
           </View>
-        ) : (
-          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
-            <View style={styles.wardrobeStage}>
-              <Hammy size={190} equipped={equipped} />
-            </View>
 
-            <View style={styles.filters}>
-              {WARDROBE_CATEGORIES.map((c) => {
-                const on = c.key === wardrobeCat;
+          {wardrobeItems.length === 0 ? (
+            <Txt variant="lead" style={{ fontSize: 13, marginTop: 16 }}>
+              No {wardrobeLabel.toLowerCase()} yet, visit the Shop to get some.
+            </Txt>
+          ) : (
+            <View style={{ gap: 10, marginTop: 16 }}>
+              {wardrobeItems.map((item) => {
+                const worn = isEquipped(item.id);
                 return (
-                  <Pressable key={c.key} onPress={() => setWardrobeCat(c.key)} style={[styles.fchip, on && styles.fchipOn]}>
-                    <Txt style={[styles.fchipTxt, on && { color: colors.white }]}>{c.label}</Txt>
-                  </Pressable>
+                  <ListRow key={item.id} onPress={() => buyOrEquipItem(item.id)}>
+                    <ItemArt item={item} size={40} />
+                    <Txt style={styles.itemName} numberOfLines={1}>{item.name}</Txt>
+                    <View style={[styles.wornTag, worn && styles.wornTagOn]}>
+                      <Txt style={[styles.wornTagTxt, worn && { color: colors.white }]}>{worn ? '✓ Worn' : 'Wear'}</Txt>
+                    </View>
+                  </ListRow>
                 );
               })}
             </View>
-
-            {wardrobeItems.length === 0 ? (
-              <Txt variant="lead" style={{ fontSize: 13, marginTop: 16 }}>
-                No {wardrobeLabel.toLowerCase()} yet, visit the Shop to get some.
-              </Txt>
-            ) : (
-              <View style={{ gap: 10, marginTop: 16 }}>
-                {wardrobeItems.map((item) => {
-                  const worn = isEquipped(item.id);
-                  return (
-                    <ListRow key={item.id} onPress={() => buyOrEquipItem(item.id)}>
-                      <ItemArt item={item} size={40} />
-                      <Txt style={styles.itemName} numberOfLines={1}>{item.name}</Txt>
-                      <View style={[styles.wornTag, worn && styles.wornTagOn]}>
-                        <Txt style={[styles.wornTagTxt, worn && { color: colors.white }]}>{worn ? '✓ Worn' : 'Wear'}</Txt>
-                      </View>
-                    </ListRow>
-                  );
-                })}
-              </View>
-            )}
-          </ScrollView>
-        )}
-      </View>
+          )}
+        </ScrollView>
+      )}
     </Screen>
   );
 }
@@ -156,26 +161,24 @@ function RoomSlotBox({
   item?: ShopItemReal;
   onPress: () => void;
 }) {
-  const { label, ...position } = layout;
+  const { label: _label, floorStanding, ...position } = layout;
   return (
     <View style={[styles.slot, position]}>
       {item ? (
         <Pressable style={styles.slotFilled} onPress={onPress}>
-          <ItemArt item={item} fill />
+          <ItemArt item={item} fill align={floorStanding ? 'bottom' : 'mid'} />
         </Pressable>
       ) : (
-        <Pressable style={styles.slotEmpty} onPress={onPress}>
-          <Txt style={styles.slotPlus}>+</Txt>
-          <Txt style={styles.slotLabel}>{label}</Txt>
-        </Pressable>
+        // No "+ Label" chip — just a soft dashed outline, still tappable, without a text
+        // callout cluttering an otherwise-empty scene.
+        <Pressable style={styles.slotEmpty} onPress={onPress} />
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, paddingHorizontal: 16, paddingTop: 6 },
-  sceneTabs: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+  sceneTabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingTop: 6, marginBottom: 10 },
   tchip: {
     flex: 1,
     alignItems: 'center',
@@ -187,48 +190,22 @@ const styles = StyleSheet.create({
   },
   tchipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   tchipTxt: { fontFamily: font.extra, fontSize: 13.5, color: colors.muted3 },
-  scene: {
-    flex: 1,
-    borderRadius: 26,
-    overflow: 'hidden',
-    borderWidth: 1.5,
-    borderColor: '#EFE4D6',
-  },
+  // Full-bleed: no border/radius/side padding — the scene runs edge to edge and fills
+  // every bit of vertical space down to the tab bar instead of sitting in an inset card.
+  scene: { flex: 1 },
   wallZone: { position: 'absolute', top: 0, left: 0, right: 0, height: '48%' },
   floorZone: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '52%' },
   slot: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   slotFilled: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  // A quiet dashed outline instead of a "+ Label" chip — still tappable, without a text
+  // callout cluttering an otherwise-empty scene.
   slotEmpty: {
     width: '100%',
     height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-  },
-  slotPlus: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: 'rgba(44,62,45,0.16)',
-    textAlign: 'center',
-    lineHeight: 24,
-    fontFamily: font.extra,
-    fontSize: 14,
-    color: colors.muted3,
-    overflow: 'hidden',
-  },
-  slotLabel: {
-    fontFamily: font.extra,
-    fontSize: 8,
-    color: colors.muted1,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 8,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(44,62,45,0.22)',
   },
   hammy: { position: 'absolute', bottom: '12%', alignSelf: 'center' },
   wearing: {
@@ -243,6 +220,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   wearingTxt: { fontFamily: font.extra, fontSize: 12, color: colors.pinkDark },
+  wardrobeContent: { paddingHorizontal: 16, paddingBottom: 8 },
   wardrobeStage: {
     alignItems: 'center',
     justifyContent: 'center',
