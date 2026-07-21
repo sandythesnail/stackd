@@ -71,6 +71,10 @@ export default function Home() {
   // First lesson not yet completed — progress is per-lesson now, so this can differ from
   // the done COUNT whenever lessons were finished out of order.
   const nextLesson = nextModule ? Math.max(0, nextLessonIndex(nextModule.id)) : 0;
+  // The real-life sub-quest is always a module's LAST lesson (see mainLessonCount in
+  // store.tsx) — its own route param quest.tsx needs, same as modules.tsx/module/[id].tsx's
+  // "Real-life guide" row already passes.
+  const nextIsLifeTask = nextModule ? nextLesson === nextTotal - 1 : false;
 
   // One mood per calendar day (todaysHammyMood), unless a lesson's already been finished
   // today — then Hammy's just happy (satisfied) about that instead. The copy here is
@@ -131,7 +135,13 @@ export default function Home() {
               label={ctaLabel}
               variant="pink"
               size="sm"
-              onPress={() => router.push({ pathname: '/learn/quest', params: { moduleId: nextModule.id, lessonIndex: String(nextLesson) } })}
+              onPress={() => router.push({
+                pathname: '/learn/quest',
+                params: {
+                  moduleId: nextModule.id, lessonIndex: String(nextLesson),
+                  ...(nextIsLifeTask ? { isLifeTask: '1' } : {}),
+                },
+              })}
               style={{ marginTop: 13 }}
             />
             {activeToday ? (

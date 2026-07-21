@@ -15,17 +15,20 @@ import { useStore } from '@/store';
 export default function ModuleDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { moduleDone, moduleDoneIndices, moduleStatus } = useStore();
+  const { moduleDone, moduleDoneIndices, moduleTotal, moduleStatus } = useStore();
   const mod = moduleById(id ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
   // The real-life step-by-step guide lesson is surfaced separately, right below the main
   // list, via RealLifeSubQuestRow — same split the website makes between a module's main
-  // quests and its real-life sub-quest.
+  // quests and its real-life sub-quest. It's still a required lesson for done/pct though
+  // (moduleDone/moduleTotal both count it) — lessons.length below is deliberately only the
+  // 8 main ones, just for ModuleLessonList's own rendering.
   const lessons = content?.lessons.filter((l) => !l.isLifeTask) ?? [];
   const guideIndex = content?.lessons.findIndex((l) => l.isLifeTask) ?? -1;
   const done = moduleDone(mod.id);
+  const total = moduleTotal(mod.id);
   const status = moduleStatus(mod.id);
-  const pct = lessons.length ? done / lessons.length : 0;
+  const pct = total ? done / total : 0;
 
   const goToLesson = (i: number) => router.push({ pathname: '/learn/quest', params: { moduleId: mod.id, lessonIndex: String(i) } });
   const goToGuide = () => router.push({ pathname: '/learn/quest', params: { moduleId: mod.id, lessonIndex: String(guideIndex), isLifeTask: '1' } });
@@ -54,7 +57,7 @@ export default function ModuleDetail() {
           <View style={{ flex: 1 }}>
             <Txt variant="h2">{content?.desc ?? mod.name}</Txt>
             <View style={styles.heroMeta}>
-              <Txt style={styles.heroTiny}>{done} of {lessons.length} lessons</Txt>
+              <Txt style={styles.heroTiny}>{done} of {total} lessons</Txt>
               <Txt style={styles.heroTiny}>{content?.xpReward ?? 0} XP each</Txt>
             </View>
             <ProgressBar value={pct} height={9} fillColors={['#68B7C9', '#4FA3B8']} style={{ marginTop: 6 }} />

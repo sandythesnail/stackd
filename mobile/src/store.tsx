@@ -198,18 +198,18 @@ export function mysteryDropChance(item: ShopItemReal): number {
 
 const ALL_MODULE_IDS = Object.keys(MODULE_MASTERY_ACHIEVEMENT);
 
-/** Excludes the module's real-life step-by-step-guide lesson — that one is tracked
- * separately (completedLifeTaskIds), not counted toward module progress/mastery. */
-function moduleTotal(moduleId: string) {
+/** Main-quest count only (excludes the real-life sub-quest) — used internally to validate
+ * moduleProgress indices, which only ever record main-quest completions. The sub-quest's
+ * own completion lives separately, in completedLifeTaskIds (see moduleDoneCount) — it's
+ * always the module's last lesson (guaranteed by content, see LessonSummary.isLifeTask). */
+function mainLessonCount(moduleId: string) {
   return moduleContentById(moduleId)?.lessons.filter((l) => !l.isLifeTask).length ?? 0;
 }
 
-/** Every real lesson in the module, main quests AND the real-life sub-quest together (8 + 1
- * = 9 for every module) — for DISPLAY only ("3 out of 9"). Mastery/achievements still key
- * off moduleTotal/moduleDone (main quests only) via completedLifeTaskIds separately, since
- * the sub-quest was never meant to gate a module's "done" badge — this is purely the
- * player-facing lesson count, which should read as the module's real total. */
-function moduleDisplayTotal(moduleId: string) {
+/** Every real lesson in a module: 8 main quests + the real-life sub-quest = 9. The
+ * sub-quest is a required 9th lesson — a module isn't "done"/mastered until it's finished
+ * too, same as any other lesson. */
+function moduleTotal(moduleId: string) {
   return moduleContentById(moduleId)?.lessons.length ?? 0;
 }
 
@@ -224,19 +224,20 @@ function accumulateModuleStats(
   };
 }
 
-/** How many of this module's real lessons are done — distinct valid indices only. */
-function moduleDoneCount(moduleProgress: Record<string, number[]>, moduleId: string) {
-  const total = moduleTotal(moduleId);
-  return new Set((moduleProgress[moduleId] ?? []).filter((i) => i >= 0 && i < total)).size;
+/** How many of this module's 9 real lessons are done — the 8 main quests (distinct valid
+ * indices in moduleProgress) plus the real-life sub-quest (completedLifeTaskIds). */
+function moduleDoneCount(moduleProgress: Record<string, number[]>, completedLifeTaskIds: string[], moduleId: string) {
+  const mainDone = new Set((moduleProgress[moduleId] ?? []).filter((i) => i >= 0 && i < mainLessonCount(moduleId))).size;
+  return mainDone + (completedLifeTaskIds.includes(moduleId) ? 1 : 0);
 }
 
-function isModuleMastered(moduleProgress: Record<string, number[]>, moduleId: string) {
+function isModuleMastered(moduleProgress: Record<string, number[]>, completedLifeTaskIds: string[], moduleId: string) {
   const total = moduleTotal(moduleId);
-  return total > 0 && moduleDoneCount(moduleProgress, moduleId) >= total;
+  return total > 0 && moduleDoneCount(moduleProgress, completedLifeTaskIds, moduleId) >= total;
 }
 
-function masteredCount(moduleProgress: Record<string, number[]>) {
-  return ALL_MODULE_IDS.filter((id) => isModuleMastered(moduleProgress, id)).length;
+function masteredCount(moduleProgress: Record<string, number[]>, completedLifeTaskIds: string[]) {
+  return ALL_MODULE_IDS.filter((id) => isModuleMastered(moduleProgress, completedLifeTaskIds, id)).length;
 }
 
 /** The old DEFAULT_STATE shipped Maya's mock-story progress counts baked into every fresh
@@ -272,13 +273,13 @@ function normalizeModuleProgress(raw: unknown): Record<string, number[]> {
 function computeMetAchievementIds(s: AppState): string[] {
   const met = new Set<string>();
   for (const [moduleId, achievementId] of Object.entries(MODULE_MASTERY_ACHIEVEMENT)) {
-    if (isModuleMastered(s.moduleProgress, moduleId)) met.add(achievementId);
+    if (isModuleMastered(s.moduleProgress, s.completedLifeTaskIds, moduleId)) met.add(achievementId);
   }
   if (s.streak >= 7) met.add('on_fire');
   if (s.streak >= 30) met.add('marathoner');
   const roomFull = ROOM_SLOTS.every((slot) => !!s.equippedRoom[slot]);
   if (roomFull) met.add('homebody');
-  if (masteredCount(s.moduleProgress) === ALL_MODULE_IDS.length) met.add('stackd_star');
+  if (masteredCount(s.moduleProgress, s.completedLifeTaskIds) === ALL_MODULE_IDS.length) met.add('stackd_star');
   if (s.questBossesWon.includes('credit')) met.add('crisis_averted');
   if (s.questBossesWon.includes('scams')) met.add('fraud_fighter');
   if (s.questHintsUsed['credit::maya'] === 0) met.add('no_hints');
@@ -308,14 +309,10 @@ type Ctx = {
   moduleDoneIndices: (moduleId: string) => number[];
   /** First not-yet-completed lesson index (the one to open for "continue"), or -1 if all done. */
   nextLessonIndex: (moduleId: string) => number;
+  /** Total real lessons in the module: 8 main quests + the real-life sub-quest = 9. The
+   * same number for both display ("X out of 9") and mastery/achievement gating — the
+   * sub-quest is a required 9th lesson, not a bonus extra. */
   moduleTotal: (moduleId: string) => number;
-  /** Display-only total (9 = 8 main quests + the real-life sub-quest) — use this for any
-   * player-facing "X out of Y lessons" count; moduleTotal/moduleDone stay main-quests-only
-   * for mastery/achievement logic. */
-  moduleDisplayTotal: (moduleId: string) => number;
-  /** Display-only done count matching moduleDisplayTotal — main lessons done, plus 1 more
-   * if the module's real-life sub-quest is also finished. */
-  moduleDisplayDone: (moduleId: string) => number;
   moduleMastered: (moduleId: string) => boolean;
   /** 'done' once every lesson is complete, else 'active'. Nothing is level-gated —
    * every module is reachable from the start (matches the website's no-gating behavior). */
@@ -482,7 +479,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const isEquipped = (id: string) =>
       state.equippedItems.includes(id) || Object.values(state.equippedRoom).includes(id);
     const level = levelForXp(state.xp);
-    const tierName = tierForMasteredCount(masteredCount(state.moduleProgress));
+    const tierName = tierForMasteredCount(masteredCount(state.moduleProgress, state.completedLifeTaskIds));
     const loginBonusPending = !hasClaimedToday(state) || pendingStreakDiamonds > 0;
 
     return {
@@ -498,19 +495,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           .filter((i): i is ShopItemReal => !!i),
       equippedMascotItems: () =>
         state.equippedItems.map((id) => shopItemsReal.find((i) => i.id === id)).filter((i): i is ShopItemReal => !!i),
-      moduleDone: (moduleId) => moduleDoneCount(state.moduleProgress, moduleId),
-      moduleDoneIndices: (moduleId) => (state.moduleProgress[moduleId] ?? []).filter((i) => i >= 0 && i < moduleTotal(moduleId)),
+      moduleDone: (moduleId) => moduleDoneCount(state.moduleProgress, state.completedLifeTaskIds, moduleId),
+      // Indices only ever cover the 8 main quests — the sub-quest's own completion lives in
+      // completedLifeTaskIds, not as an index here (see moduleDoneCount).
+      moduleDoneIndices: (moduleId) => (state.moduleProgress[moduleId] ?? []).filter((i) => i >= 0 && i < mainLessonCount(moduleId)),
       nextLessonIndex: (moduleId) => {
         const done = new Set(state.moduleProgress[moduleId] ?? []);
-        for (let i = 0; i < moduleTotal(moduleId); i++) if (!done.has(i)) return i;
-        return -1;
+        const mainCount = mainLessonCount(moduleId);
+        for (let i = 0; i < mainCount; i++) if (!done.has(i)) return i;
+        // Every main quest is done — the real-life sub-quest (always the module's last
+        // lesson) is next, unless it's already finished too, in which case nothing's left.
+        return state.completedLifeTaskIds.includes(moduleId) ? -1 : mainCount;
       },
       moduleTotal,
-      moduleDisplayTotal,
-      moduleDisplayDone: (moduleId) =>
-        moduleDoneCount(state.moduleProgress, moduleId) + (state.completedLifeTaskIds.includes(moduleId) ? 1 : 0),
-      moduleMastered: (moduleId) => isModuleMastered(state.moduleProgress, moduleId),
-      moduleStatus: (moduleId) => (isModuleMastered(state.moduleProgress, moduleId) ? 'done' : 'active'),
+      moduleMastered: (moduleId) => isModuleMastered(state.moduleProgress, state.completedLifeTaskIds, moduleId),
+      moduleStatus: (moduleId) => (isModuleMastered(state.moduleProgress, state.completedLifeTaskIds, moduleId) ? 'done' : 'active'),
       achievements: () => {
         const met = new Set(computeMetAchievementIds(state));
         return ACHIEVEMENTS.map((a) => ({ ...a, earned: met.has(a.id) }));
@@ -610,12 +609,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const coinsEarned = gradedTotal > 0 ? correctCount * QUEST_COIN_PER_CORRECT : QUEST_COIN_FLAT_FALLBACK;
 
         setState((s) => {
-          const wasMastered = isModuleMastered(s.moduleProgress, moduleId);
+          const wasMastered = isModuleMastered(s.moduleProgress, s.completedLifeTaskIds, moduleId);
           const completed = s.moduleProgress[moduleId] ?? [];
-          const total = moduleTotal(moduleId);
-          // "New progress" = THIS specific lesson hasn't been finished before — one lesson
-          // finished marks exactly one lesson done, never any earlier siblings.
-          const advanced = lessonIndex >= 0 && lessonIndex < total && !completed.includes(lessonIndex);
+          // Bounded against the 8 main quests, not moduleTotal's 9 — completeLesson only
+          // ever tracks main-quest indices here; the real-life sub-quest's completion goes
+          // through completeLifeTask/completedLifeTaskIds instead (see moduleDoneCount).
+          const advanced = lessonIndex >= 0 && lessonIndex < mainLessonCount(moduleId) && !completed.includes(lessonIndex);
           const nextProgress = advanced
             ? { ...s.moduleProgress, [moduleId]: [...completed, lessonIndex].sort((a, b) => a - b) }
             : s.moduleProgress;
@@ -638,7 +637,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           next = applyAndReport(s, next, setNewAchievementIds);
 
           // Life events: a guaranteed module-unlock event takes priority over an ambient roll.
-          const justMastered = !wasMastered && isModuleMastered(next.moduleProgress, moduleId);
+          const justMastered = !wasMastered && isModuleMastered(next.moduleProgress, next.completedLifeTaskIds, moduleId);
           const unlockEvent = justMastered ? LIFE_EVENT_UNLOCKS[moduleId] : undefined;
           if (unlockEvent && !next.shownLifeEventIds.includes(unlockEvent.id)) {
             next = { ...next, pendingLifeEventId: unlockEvent.id, shownLifeEventIds: [...next.shownLifeEventIds, unlockEvent.id] };
@@ -659,6 +658,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         setState((s) => {
           const firstTime = !s.completedLifeTaskIds.includes(moduleId);
+          // Now that the real-life sub-quest is a required 9th lesson, finishing it can
+          // itself be what pushes a module from not-mastered to mastered — same check
+          // completeLesson does, just keyed off completedLifeTaskIds instead of moduleProgress.
+          const wasMastered = isModuleMastered(s.moduleProgress, s.completedLifeTaskIds, moduleId);
           let next: AppState = {
             ...s,
             xp: s.xp + (firstTime ? xpEarned : 0),
@@ -674,6 +677,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               ? [...new Set([...s.termsLearned, ...newTerms])] : s.termsLearned,
           };
           next = applyAndReport(s, next, setNewAchievementIds);
+
+          // Life events: a guaranteed module-unlock event takes priority over an ambient roll
+          // — mirrors completeLesson's identical block.
+          const justMastered = !wasMastered && isModuleMastered(next.moduleProgress, next.completedLifeTaskIds, moduleId);
+          const unlockEvent = justMastered ? LIFE_EVENT_UNLOCKS[moduleId] : undefined;
+          if (unlockEvent && !next.shownLifeEventIds.includes(unlockEvent.id)) {
+            next = { ...next, pendingLifeEventId: unlockEvent.id, shownLifeEventIds: [...next.shownLifeEventIds, unlockEvent.id] };
+          } else if (next.lifeEventCooldown > 0) {
+            next = { ...next, lifeEventCooldown: next.lifeEventCooldown - 1 };
+          } else if (Math.random() < LIFE_EVENT_CHANCE) {
+            const pick = LIFE_EVENTS[Math.floor(Math.random() * LIFE_EVENTS.length)];
+            next = { ...next, pendingLifeEventId: pick.id, lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS };
+          }
           return next;
         });
         return coinsEarned;
