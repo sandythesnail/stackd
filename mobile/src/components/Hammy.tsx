@@ -145,9 +145,15 @@ export function Hammy({
 
   useEffect(() => {
     if (!bob) return;
+    // Ported verbatim from the website's @keyframes pigFloat (4.2s, ease-in-out): the peak
+    // isn't just -14px up, it's translateY(-14px) rotate(1deg) — a whole-body tilt synced
+    // with the rise, from rotate(-1deg) at rest. Missing that tilt (mobile previously only
+    // bobbed -5px with no rotation at all) is why the figure — arms/feet/ears included, since
+    // they're all children of this same root transform — read as moving subtly differently
+    // from the web version.
     const floatLoop = Animated.loop(
       Animated.sequence([
-        Animated.timing(floatY, { toValue: -5, duration: 2100, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(floatY, { toValue: -14, duration: 2100, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         Animated.timing(floatY, { toValue: 0, duration: 2100, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ])
     );
@@ -245,15 +251,32 @@ export function Hammy({
   const width = size;
   const height = size * aspect;
   const reactRotDeg = reactRot.interpolate({ inputRange: [-30, 30], outputRange: ['-30deg', '30deg'] });
+  // The idle float's own tilt (see the floatY loop above) — a separate transform entry from
+  // reactRotDeg so the two compose (idle tilt, then any one-shot reaction wobble on top)
+  // instead of one overwriting the other.
+  const floatRotDeg = floatY.interpolate({ inputRange: [-14, 0], outputRange: ['1deg', '-1deg'] });
 
   return (
     <Animated.View
       style={[
-        { width, height, transform: [{ translateY: Animated.add(floatY, reactY) }, { rotate: reactRotDeg }] },
+        {
+          width,
+          height,
+          transform: [
+            { translateY: Animated.add(floatY, reactY) },
+            { rotate: floatRotDeg },
+            { rotate: reactRotDeg },
+          ],
+        },
         style,
       ]}
     >
-      <Svg width={width} height={height} viewBox={`0 0 ${STAGE_W} ${STAGE_H}`}>
+      {/* A root <svg> defaults to clipping anything outside its viewBox (unlike a plain div,
+          which is what the website actually uses) — that's what was cutting off tall hats
+          (party hat, santa hat) and wide capes/halos that legitimately draw above y=0 or past
+          the 440x460 stage edges. overflow:visible here matches the website's real behavior:
+          nothing about the pig itself changes size, equipped items just aren't clipped. */}
+      <Svg width={width} height={height} viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} style={{ overflow: 'visible' }}>
         <Defs>
           {/* Base fills — gradient stop angles converted from the website's CSS
               (linear-gradient(165deg,...) etc.) to precise SVG x1/y1/x2/y2 so the tilt matches. */}
