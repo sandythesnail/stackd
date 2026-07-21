@@ -151,26 +151,21 @@ export default function Room() {
 }
 
 // The wardrobe's stage used to be a brown wood-plank texture (ported from the website's
-// `.wardrobe-backdrop`) — swapped for a soft white diagonal-stripe backdrop instead, same
-// tiled-SVG-pattern technique as Wallpaper.tsx's `wallpaper_stripes`, just in near-white
-// tones so it reads as a bright, neutral stage rather than a themed room wall. The centered
-// white circle that Hammy sits on top of is kept, with a hairline border now so it still
-// reads as a distinct stage against the equally-light backdrop behind it.
+// `.wardrobe-backdrop`) — swapped for plain vertical white stripes instead, same up-and-down
+// banding as the old planks, just white/off-white instead of brown, and with no circle
+// staging Hammy — Hammy sits directly on the striped backdrop.
 function WardrobeBackdrop({ children }: { children: ReactNode }) {
   return (
     <View style={styles.wardrobeStage}>
       <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
         <Defs>
-          <Pattern id="wardrobe-stripe" patternUnits="userSpaceOnUse" width={24} height={24} patternTransform="rotate(45)">
+          <Pattern id="wardrobe-stripe" patternUnits="userSpaceOnUse" width={24} height={24}>
             <Rect x={0} y={0} width={12} height={24} fill="#FFFFFF" />
             <Rect x={12} y={0} width={12} height={24} fill="#F2EEE2" />
           </Pattern>
         </Defs>
         <Rect x={0} y={0} width="100%" height="100%" fill="url(#wardrobe-stripe)" />
       </Svg>
-      <View style={styles.wardrobeCircleWrap} pointerEvents="none">
-        <View style={styles.wardrobeCircle} />
-      </View>
       {children}
     </View>
   );
@@ -281,16 +276,6 @@ const styles = StyleSheet.create({
     minHeight: 240,
     overflow: 'hidden',
     position: 'relative',
-  },
-  wardrobeCircleWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
-  wardrobeCircle: {
-    width: '100%',
-    maxWidth: 620,
-    aspectRatio: 1.15,
-    borderRadius: 999,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: colors.borderOpt,
   },
   filters: { flexDirection: 'row', gap: 7, marginTop: 14 },
   fchip: {
