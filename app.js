@@ -15973,7 +15973,9 @@ function questWasFlawless(qp) {
 function moduleQuestsFlawless(s, modId) {
   const mod = MODULES.find(m => m.id === modId);
   if (!mod || !hasQuest(mod)) return false;
-  return mainQuests(mod).every(q => questWasFlawless(s.questProgress[questKey(modId, q.id)]));
+  // Includes the real-life sub-quest — it's a required 9th lesson now, so a module isn't
+  // truly flawless if that one wasn't either.
+  return moduleUnits(mod).every(q => questWasFlawless(s.questProgress[questKey(modId, q.id)]));
 }
 
 // Sums every vocab term learned across every quest ever played (both Credit quests + Scams).
@@ -16687,7 +16689,7 @@ function lessonMaxXP(lesson, mod) {
 // actually displayed below it (main quests, or plain lessons), so the two numbers can never
 // drift apart.
 function moduleTotalXP(mod) {
-  if (hasQuest(mod)) return mainQuests(mod).reduce((sum, q) => sum + questMaxXP(q, mod), 0);
+  if (hasQuest(mod)) return moduleUnits(mod).reduce((sum, q) => sum + questMaxXP(q, mod), 0);
   return mod.lessons.reduce((sum, lesson) => sum + lessonMaxXP(lesson, mod), 0);
 }
 
@@ -16716,10 +16718,14 @@ const MODULE_LESSON_SECTIONS = {
 // module lands on "what to do next" instead of a wall of 8 tiles, or a wall of empty headers).
 // Never reorders or gates lessons — a module left out of the map (or whose counts don't add
 // up to its actual lesson count) just falls back to the old flat, always-visible grid.
-function groupLessonTiles(moduleId, tiles) {
+// extraHtml (the real-life sub-quest tile, see renderModuleList) is appended INSIDE the
+// same max-height-collapsed .module-row-lessons wrapper the tiles/sections live in — as a
+// bare sibling of that wrapper it would sit outside the collapse mechanism entirely and
+// stay visible even while the module card is collapsed.
+function groupLessonTiles(moduleId, tiles, extraHtml = '') {
   const sections = MODULE_LESSON_SECTIONS[moduleId];
   if (!sections || sections.reduce((sum, s) => sum + s.count, 0) !== tiles.length) {
-    return `<div class="module-row-lessons">${tiles.map(t => t.html).join('')}</div>`;
+    return `<div class="module-row-lessons">${tiles.map(t => t.html).join('')}${extraHtml}</div>`;
   }
   const firstIncompleteIdx = tiles.findIndex(t => !t.done);
   let cursor = 0;
@@ -16741,7 +16747,7 @@ function groupLessonTiles(moduleId, tiles) {
       <div class="lesson-section-tiles">${group.map(t => t.html).join('')}</div>
     </div>`;
   }).join('');
-  return `<div class="module-row-lessons module-row-lessons-grouped">${sectionsHtml}</div>`;
+  return `<div class="module-row-lessons module-row-lessons-grouped">${sectionsHtml}${extraHtml}</div>`;
 }
 
 function renderModuleList(containerId) {
@@ -16761,9 +16767,11 @@ function renderModuleList(containerId) {
 
   MODULES.forEach(m => {
     const quest = hasQuest(m);
-    const totalUnits = quest ? mainQuests(m).length : m.lessons.length;
+    // moduleUnits includes the real-life sub-quest as the 9th entry — it's a required
+    // lesson now, not bonus content, so it counts toward every total/done figure below.
+    const totalUnits = quest ? moduleUnits(m).length : m.lessons.length;
     const unitsDone = quest
-      ? mainQuests(m).filter(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); }).length
+      ? moduleUnits(m).filter(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); }).length
       : m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
     const allDone = unitsDone === totalUnits;
 
@@ -16791,21 +16799,35 @@ function renderModuleList(containerId) {
         const qp = state.questProgress[questKey(m.id, q.id)];
         const done = !!(qp && qp.done);
         const cta = done ? '↻ Replay Quest' : (qp && qp.chapterIdx > 0 ? `Resume — ${questLabel(m, q)} →` : 'Begin Quest →');
-        const sub = subQuestFor(m, q.id);
-        const subDone = sub && !!state.questProgress[questKey(m.id, sub.id)]?.done;
-        const subHtml = sub ? `<div class="lt-subquest${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">${subDone ? '✓' : '🎯'} Real-life sub-quest: ${sub.topic} →</div>` : '';
         const html = `<div class="lesson-tile quest-tile${done ? ' done' : ''}" data-module="${m.id}" data-quest="${q.id}">
           <div class="lt-body">
             <div class="lt-num"><span class="lt-num-label">Lesson ${idx + 1}</span> <span class="card-badge badge-xp">Up to ${questMaxXP(q, m)} XP</span></div>
             <div class="lt-title">${q.topic || q.character.name}</div>
             <div class="lt-meta">${q.character.tagline}</div>
-            ${subHtml}
           </div>
           <span class="lt-cta">${cta}</span>
         </div>`;
         return { html, done };
       });
-      bodyHtml = groupLessonTiles(m.id, tiles);
+      // The real-life sub-quest — a full, separate lesson tile (Lesson 9), matching how the
+      // mobile app surfaces it (RealLifeSubQuestRow, appended after the main list rather
+      // than nested inside whichever quest it's thematically attached to).
+      const sub = moduleSubQuest(m);
+      let subHtml = '';
+      if (sub) {
+        const subQp = state.questProgress[questKey(m.id, sub.id)];
+        const subDone = !!(subQp && subQp.done);
+        const subCta = subDone ? '↻ Replay Guide' : (subQp && subQp.chapterIdx > 0 ? `Resume — ${questLabel(m, sub)} →` : 'Begin Guide →');
+        subHtml = `<div class="lesson-tile quest-tile subquest-tile${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">
+          <div class="lt-body">
+            <div class="lt-num"><span class="lt-num-label">Lesson ${quests.length + 1}</span> <span class="card-badge badge-xp">Up to ${questMaxXP(sub, m)} XP</span></div>
+            <div class="lt-title">🎯 Real-life guide: ${sub.topic}</div>
+            <div class="lt-meta">${sub.character.tagline}</div>
+          </div>
+          <span class="lt-cta">${subCta}</span>
+        </div>`;
+      }
+      bodyHtml = groupLessonTiles(m.id, tiles, subHtml);
     } else {
       const tiles = m.lessons.map((lesson, idx) => {
         const key = `${m.id}_${idx}`;
@@ -16863,14 +16885,10 @@ function renderModuleList(containerId) {
     });
 
     if (quest) {
+      // Covers both the 8 main-quest tiles and the real-life sub-quest tile (also a
+      // .quest-tile — see the subquest-tile markup above).
       row.querySelectorAll('.quest-tile').forEach(tile => {
         tile.addEventListener('click', () => startQuest(tile.dataset.module, tile.dataset.quest));
-      });
-      row.querySelectorAll('.lt-subquest').forEach(hint => {
-        hint.addEventListener('click', (e) => {
-          e.stopPropagation();
-          startQuest(hint.dataset.module, hint.dataset.quest);
-        });
       });
     } else {
       row.querySelectorAll('.lesson-tile').forEach(tile => {
@@ -16950,7 +16968,8 @@ let surveyDraft = { moduleFamiliarity: {}, focusGoals: [], trackId: null };
 
 function isModuleFullyDone(m) {
   return hasQuest(m)
-    ? mainQuests(m).every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
+    // Includes the real-life sub-quest (moduleUnits' 9th entry) — it's a required lesson now.
+    ? moduleUnits(m).every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
     : m.lessons.every((_, i) => !!state.completedLessons[`${m.id}_${i}`]);
 }
 
@@ -18101,14 +18120,15 @@ function renderHomeMascotCard() {
   }
 
   const quest = hasQuest(nextModule);
-  const totalUnits = quest ? mainQuests(nextModule).length : nextModule.lessons.length;
+  // moduleUnits includes the real-life sub-quest as the 9th (and required) lesson.
+  const totalUnits = quest ? moduleUnits(nextModule).length : nextModule.lessons.length;
   const doneUnits = quest
-    ? mainQuests(nextModule).filter(q => state.questProgress[questKey(nextModule.id, q.id)]?.done).length
+    ? moduleUnits(nextModule).filter(q => state.questProgress[questKey(nextModule.id, q.id)]?.done).length
     : nextModule.lessons.filter((_, i) => !!state.completedLessons[`${nextModule.id}_${i}`]).length;
   // The NEXT lesson to do, by index — not the done COUNT above, which can differ once
   // lessons are finished out of order (mirrors mobile's nextLessonIndex vs moduleDone split).
   const nextIdx = quest
-    ? mainQuests(nextModule).findIndex(q => !state.questProgress[questKey(nextModule.id, q.id)]?.done)
+    ? moduleUnits(nextModule).findIndex(q => !state.questProgress[questKey(nextModule.id, q.id)]?.done)
     : nextModule.lessons.findIndex((_, i) => !state.completedLessons[`${nextModule.id}_${i}`]);
   const nextLessonNum = Math.max(0, nextIdx) + 1;
   const nextPct = totalUnits ? Math.round((doneUnits / totalUnits) * 100) : 0;
@@ -18140,8 +18160,9 @@ function renderHomeMascotCard() {
 // next, exactly matching what clicking that same tile in the module list itself would do.
 function startNextLessonFor(mod) {
   if (hasQuest(mod)) {
-    const quests = mainQuests(mod);
-    const target = quests.find(q => !state.questProgress[questKey(mod.id, q.id)]?.done) || quests[quests.length - 1];
+    // Includes the real-life sub-quest — once the 8 main quests are done, it's next.
+    const units = moduleUnits(mod);
+    const target = units.find(q => !state.questProgress[questKey(mod.id, q.id)]?.done) || units[units.length - 1];
     startQuest(mod.id, target.id);
   } else {
     const idx = mod.lessons.findIndex((_, i) => !state.completedLessons[`${mod.id}_${i}`]);
@@ -19730,11 +19751,23 @@ function renderResults(mod, score, total, xpEarned, wasReplay, newAchs, coinsEar
 // ══════════════════════════════════════════════
 
 function hasQuest(mod) { return Array.isArray(mod.quests) && mod.quests.length > 0; }
-// Core lesson quests only — excludes "real-life" sub-quests (bonus practical walkthroughs
-// attached to a parent quest via parentQuestId), so module completion/mastery and the tile
-// grid don't require the bonus content to be counted as one of the module's lessons.
+// Core lesson quests only — excludes the module's real-life sub-quest (the one quest with
+// a parentQuestId set). Used where the sub-quest needs handling separately from the other
+// 8 (its own tile position, its own "Lesson 9" label) — for anything that should just see
+// "every lesson in the module," use moduleUnits below instead.
 function mainQuests(mod) { return (mod.quests || []).filter(q => !q.parentQuestId); }
 function subQuestFor(mod, questId) { return (mod.quests || []).find(q => q.parentQuestId === questId); }
+// The module's one real-life "step-by-step guide" quest, regardless of which main quest
+// it's thematically attached to (parentQuestId) — every module has exactly one.
+function moduleSubQuest(mod) { return (mod.quests || []).find(q => q.parentQuestId); }
+// Every real lesson in a quest-type module, in display order: the 8 main quests, then the
+// real-life sub-quest last — 9 total. The sub-quest is a required 9th lesson (module
+// completion/mastery, the "X/9" progress everywhere, and the "Continue quest" card's next-
+// lesson pointer all key off this), not bonus/optional content.
+function moduleUnits(mod) {
+  const sub = moduleSubQuest(mod);
+  return sub ? [...mainQuests(mod), sub] : mainQuests(mod);
+}
 function questKey(moduleId, questId) { return `${moduleId}::${questId}`; }
 function getActiveQuest(mod) { return mod.quests.find(q => q.id === state.activeQuestId); }
 function getQP(mod) { return state.questProgress[questKey(mod.id, state.activeQuestId)]; }

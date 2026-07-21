@@ -2349,13 +2349,11 @@ select.budget-input { cursor: pointer; }
   font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.15rem;
 }
 .lt-meta { font-size: 0.8rem; color: var(--text-mid); }
-.lt-subquest {
-  font-size: 0.78rem; font-weight: 700; color: var(--green-dark);
-  margin-top: 0.4rem; max-height: 0; opacity: 0; overflow: hidden;
-  transition: max-height 0.2s ease, opacity 0.2s ease, margin-top 0.2s ease;
-}
-.lesson-tile:hover .lt-subquest { max-height: 2.5rem; opacity: 1; }
-.lt-subquest:hover { text-decoration: underline; }
+/* The real-life sub-quest is now its own full lesson tile (see subquest-tile below) rather
+   than a small nested link inside another quest's tile — .lt-subquest is retired. As the
+   9th (odd, last) tile in the ungrouped 2-col grid it already gets the existing
+   :last-child:nth-child(odd) treatment above (spans both columns, no stray empty cell). */
+.subquest-tile .lt-title { color: var(--pink-dark); }
 .lt-cta {
   flex-shrink: 0; font-size: 0.78rem; font-weight: 700;
   padding: 0.3rem 0.75rem; border-radius: var(--radius-sm);
