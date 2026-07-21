@@ -6,7 +6,7 @@ import { modules } from '@/data';
 import { useStore, xpForLevel } from '@/store';
 
 /** Screen 8 — Progress. Ported from the website's renderProgressPage: 4 stat cards, a
- * "Modules Done" donut with legend, a "Module Scores" accuracy chart, an "XP Earned by
+ * "Modules Done" donut with legend, a Module Progress chart, an "XP Earned by
  * Module" column chart, and a Level Progress detail card — covering all 11 modules (the old
  * version only ever rendered 5, and had no per-module XP/score data to chart with; see
  * store.tsx's moduleStats). */
@@ -74,25 +74,6 @@ export default function Progress() {
                   <Txt style={styles.scoreLabel} numberOfLines={1}>{m.name}</Txt>
                   <ProgressBar value={total ? done / total : 0} height={7} style={styles.scoreBar} />
                   <Txt style={styles.lessonVal}>{done} out of {total}</Txt>
-                </View>
-              );
-            })}
-          </View>
-        </Card>
-
-        <Card style={{ gap: 12 }}>
-          <Txt variant="h2">Module Scores</Txt>
-          <View style={{ gap: 10 }}>
-            {modules.map((m) => {
-              const stats = state.moduleStats[m.id];
-              const hasScore = !!stats && stats.total > 0;
-              const pct = hasScore ? stats.correct / stats.total : 0;
-              return (
-                <View key={m.id} style={styles.scoreRow}>
-                  <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} size={28} r={9} fontSize={11} />
-                  <Txt style={styles.scoreLabel} numberOfLines={1}>{m.name}</Txt>
-                  <ProgressBar value={pct} height={7} style={styles.scoreBar} />
-                  <Txt style={styles.scoreVal}>{hasScore ? `${stats.correct}/${stats.total}` : '—'}</Txt>
                 </View>
               );
             })}
@@ -193,8 +174,6 @@ const styles = StyleSheet.create({
   scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   scoreLabel: { fontFamily: font.bold, fontSize: 12.5, color: colors.ink, width: 68 },
   scoreBar: { flex: 1 },
-  scoreVal: { fontFamily: font.bold, fontSize: 11.5, color: colors.muted4, width: 40, textAlign: 'right' },
-  // Wider than scoreVal — "9 out of 9" needs the room that a "23/24" score never does.
   lessonVal: { fontFamily: font.bold, fontSize: 11.5, color: colors.muted4, width: 64, textAlign: 'right' },
 
   colScroll: { gap: 16, paddingRight: 8, alignItems: 'flex-end' },
