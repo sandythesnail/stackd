@@ -164,7 +164,7 @@ function RoomSlotBox({
     <View style={[styles.slot, position]}>
       {item ? (
         <Pressable style={styles.slotFilled} onPress={onPress}>
-          <ItemArt item={item} size={60} />
+          <ItemArt item={item} fill />
         </Pressable>
       ) : (
         <Pressable style={styles.slotEmpty} onPress={onPress}>

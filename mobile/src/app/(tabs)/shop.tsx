@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Header, Txt, Coin, Diamond, Gift, Hammy, ItemArt, Wallpaper } from '@/components';
@@ -53,15 +54,23 @@ function formatPct(pct: number) {
 
 /** Screen 13 — Shop. Ported from the website's renderShopPage: a Boutique tab (Diamond
  * Exclusives, Hats, Accessories, Rewards) and a Room tab (Room Decor), each rendered as
- * stacked, titled sections rather than a single filterable grid. Every item's image, price,
- * rarity, and mystery-pool odds come straight from the ported SHOP_ITEMS catalog — same
- * pictures, same numbers, same "buy the box to spin for one" mechanic as the website. */
+ * stacked, titled, collapsible sections. Every item's image, price, rarity, and mystery-pool
+ * odds come straight from the ported SHOP_ITEMS catalog — same pictures, same numbers, same
+ * "buy the box to spin for one" mechanic as the website. */
 export default function Shop() {
   const router = useRouter();
   const { category } = useLocalSearchParams<{ category?: string }>();
   const { state, equippedMascotItems, equippedRoomItems } = useStore();
   const initialTab: ShopTab = SHOP_CATEGORIES.find((c) => c.key === category)?.tab ?? 'boutique';
   const [tab, setTab] = useState<ShopTab>(initialTab);
+  // Collapsed by default (undefined -> true) so the page opens short instead of one long
+  // scroll through every category; the section a deep-link landed on (via ?category=) starts
+  // open so tapping a room slot / a "See all" link doesn't dump you on a collapsed section.
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(
+    category ? { [category]: true } : {},
+  );
+  const isOpen = (key: string) => openSections[key] ?? false;
+  const toggle = (key: string) => setOpenSections((s) => ({ ...s, [key]: !isOpen(key) }));
 
   const categories = SHOP_CATEGORIES.filter((c) => c.tab === tab);
   const wornItems = equippedMascotItems();
@@ -101,13 +110,6 @@ export default function Shop() {
                   ? (filledRoomSlots ? `${filledRoomSlots} piece${filledRoomSlots === 1 ? '' : 's'} furnished so far` : "Furnish Hammy's room — every cozy upgrade compounds!")
                   : (wornItems.length ? `Currently wearing: ${wornItems.map((i) => i.name).join(', ')}` : 'Pick something cute for your pig!')}
               </Txt>
-              <View style={styles.earnTip}>
-                <Coin size={12} />
-                <Txt style={styles.earnTipTxt}>lessons</Txt>
-                <Txt style={styles.earnTipDot}>·</Txt>
-                <Diamond size={12} />
-                <Txt style={styles.earnTipTxt}>3-day streaks</Txt>
-              </View>
             </View>
           </View>
         </View>
@@ -115,39 +117,65 @@ export default function Shop() {
         {categories.map((cat) => {
           const items = sortItems(shopItemsReal.filter((i) => i.category === cat.key));
           const icon = CATEGORY_ICON[cat.key];
+          const open = isOpen(cat.key);
           return (
             <View key={cat.key} style={styles.section}>
-              <View style={styles.sectionHead}>
+              <Pressable style={styles.sectionHead} onPress={() => toggle(cat.key)}>
                 {icon ? (
                   <MaterialCommunityIcons name={icon} size={18} color={colors.muted2} />
                 ) : (
                   <Diamond size={17} />
                 )}
                 <Txt variant="h2" style={{ fontSize: 16 }}>{cat.label}</Txt>
+                <View style={styles.sectionCount}>
+                  <Txt style={styles.sectionCountTxt}>{items.length}</Txt>
+                </View>
                 {cat.tag ? (
                   <View style={styles.sectionTag}>
                     <Txt style={styles.sectionTagTxt}>{cat.tag}</Txt>
                   </View>
                 ) : null}
-              </View>
-              {items.length === 0 ? (
-                <Txt variant="lead" style={{ fontSize: 13 }}>Nothing here yet — check back soon!</Txt>
-              ) : (
-                <View style={styles.grid}>
-                  {items.map((item) => (
-                    <ShopCard
-                      key={item.id}
-                      item={item}
-                      onPress={() => router.push({ pathname: '/sheet/shop-item', params: { id: item.id } })}
-                    />
-                  ))}
-                </View>
-              )}
+                <MaterialCommunityIcons
+                  name={open ? 'chevron-up' : 'chevron-down'}
+                  size={20}
+                  color={colors.muted4}
+                  style={{ marginLeft: 'auto' }}
+                />
+              </Pressable>
+              {open ? (
+                items.length === 0 ? (
+                  <Txt variant="lead" style={{ fontSize: 13 }}>Nothing here yet — check back soon!</Txt>
+                ) : (
+                  <View style={styles.grid}>
+                    {items.map((item) => (
+                      <ShopCard
+                        key={item.id}
+                        item={item}
+                        onPress={() => router.push({ pathname: '/sheet/shop-item', params: { id: item.id } })}
+                      />
+                    ))}
+                  </View>
+                )
+              ) : null}
             </View>
           );
         })}
       </ScrollView>
     </Screen>
+  );
+}
+
+/** Diagonal corner banner, ported from the website's .shop-exclusive-ribbon /
+ * .shop-reward-ribbon (a rotated strip clipped by the card's own rounded corner) — replaces
+ * the small top-left pill this screen used before, which isn't how the site does it. */
+function CornerRibbon({ text, tone }: { text: string; tone: 'mystery' | 'reward' }) {
+  const grad: [string, string] = tone === 'mystery' ? ['#2AA8C4', '#8FE3F5'] : ['#B8860B', '#E8C468'];
+  return (
+    <View style={styles.ribbonClip} pointerEvents="none">
+      <LinearGradient colors={grad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ribbonStrip}>
+        <Txt style={styles.ribbonTxt}>{text}</Txt>
+      </LinearGradient>
+    </View>
   );
 }
 
@@ -166,63 +194,83 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
   const balance = isDiamond ? state.diamonds : state.coins;
   const canAfford = isReward ? false : isLocked ? false : (isBox && !boxRemaining) ? false : balance >= item.price;
   // Matches the website's .shop-broke rule exactly: reward/mystery-only items always read
-  // canAfford=false structurally, so they stay dimmed until owned/earned — not a bug, this is
-  // how the site visually distinguishes "preview of what the box/milestone can give you" from
-  // "buy this directly right now".
-  const dim = !owned && !canAfford;
+  // canAfford=false structurally, so their status label stays dimmed until owned/earned — the
+  // rest of the card (art, name) stays full-strength, only .shop-item-price fades on the site.
+  const dimStatus = !owned && !canAfford;
+  // Mystery boxes (the actual "buy this, then spin" items) always get the premium glow
+  // treatment; the website only glows the Diamond Exclusives category, but the ask here is
+  // for every mystery box — hat/accessory boxes included — to stand out the same way.
+  const glow = isBox || isDiamond;
 
-  return (
-    <Pressable style={[styles.card, dim && { opacity: 0.55 }]} onPress={onPress}>
-      <View style={styles.preview}>
+  const ribbon = isBox || (isDiamond && !isBox) || (isLocked && !isDiamond)
+    ? <CornerRibbon text="Mystery" tone="mystery" />
+    : isReward && !owned
+      ? <CornerRibbon text="Reward" tone="reward" />
+      : null;
+
+  const cardContent = (
+    <>
+      {ribbon}
+      <View style={[styles.preview, isReward && !owned && styles.previewFaded]}>
         {isWallpaper ? (
           <Wallpaper item={item} style={StyleSheet.absoluteFill} />
         ) : isRoom || isBox ? (
-          <ItemArt item={item} size={64} />
+          <ItemArt item={item} fill />
         ) : (
-          <Hammy size={64} bob={false} equipped={[item]} />
+          <Hammy size={68} bob={false} equipped={[item]} />
         )}
-        {isBox || (isDiamond && !isBox) ? (
-          <View style={styles.ribbon}><Txt style={styles.ribbonTxt}>Mystery</Txt></View>
-        ) : isLocked && !isDiamond ? (
-          <View style={styles.ribbon}><Txt style={styles.ribbonTxt}>Mystery</Txt></View>
-        ) : isReward && !owned ? (
-          <View style={[styles.ribbon, styles.ribbonReward]}><Txt style={styles.ribbonTxt}>Reward</Txt></View>
-        ) : null}
       </View>
 
       <Txt style={styles.cardName} numberOfLines={1}>{item.name}</Txt>
 
-      {isBox ? (
-        boxRemaining ? (
-          <View style={styles.statusRow}><Gift size={13} /><Txt style={styles.statusTxt}>{item.price}</Txt></View>
+      <View style={dimStatus ? { opacity: 0.55 } : undefined}>
+        {isBox ? (
+          boxRemaining ? (
+            <View style={styles.statusRow}><Gift size={13} /><Txt style={styles.statusTxt}>{item.price}</Txt></View>
+          ) : (
+            <View style={[styles.statusRow, styles.statusOwned]}><Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ All collected!</Txt></View>
+          )
+        ) : equipped ? (
+          <View style={[styles.statusRow, styles.statusOwned]}>
+            <Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ {isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'}</Txt>
+          </View>
+        ) : owned ? (
+          <View style={[styles.statusRow, styles.statusOwned]}><Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>Owned</Txt></View>
+        ) : isLocked ? (
+          <View style={styles.statusRow}><Gift size={13} /><Txt style={styles.statusTxt} numberOfLines={1}>{mysteryBoxNameFor(item.mysteryPool!)}</Txt></View>
+        ) : isReward ? (
+          <View style={[styles.statusRow, styles.statusLock]}>
+            <MaterialCommunityIcons name="lock-outline" size={13} color={colors.tagLockText} />
+            <Txt style={[styles.statusTxt, { color: colors.tagLockText }]}>Locked</Txt>
+          </View>
         ) : (
-          <View style={[styles.statusRow, styles.statusOwned]}><Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ All collected!</Txt></View>
-        )
-      ) : equipped ? (
-        <View style={[styles.statusRow, styles.statusOwned]}>
-          <Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ {isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'}</Txt>
-        </View>
-      ) : owned ? (
-        <View style={[styles.statusRow, styles.statusOwned]}><Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>Owned</Txt></View>
-      ) : isLocked ? (
-        <View style={styles.statusRow}><Gift size={13} /><Txt style={styles.statusTxt} numberOfLines={1}>{mysteryBoxNameFor(item.mysteryPool!)}</Txt></View>
-      ) : isReward ? (
-        <View style={[styles.statusRow, styles.statusLock]}>
-          <MaterialCommunityIcons name="lock-outline" size={13} color={colors.tagLockText} />
-          <Txt style={[styles.statusTxt, { color: colors.tagLockText }]}>Locked</Txt>
-        </View>
-      ) : (
-        <View style={styles.statusRow}>
-          {isDiamond ? <Diamond size={13} /> : <Coin size={13} />}
-          <Txt style={styles.statusTxt}>{item.price}</Txt>
-        </View>
-      )}
+          <View style={styles.statusRow}>
+            {isDiamond ? <Diamond size={13} /> : <Coin size={13} />}
+            <Txt style={styles.statusTxt}>{item.price}</Txt>
+          </View>
+        )}
+      </View>
 
       {isPoolItem ? (
         <Txt style={[styles.odds, { color: RARITY_COLOR[itemRarity(item)] }]}>
           {RARITY_LABEL[itemRarity(item)]} · {formatPct(mysteryDropChance(item))}%
         </Txt>
       ) : null}
+    </>
+  );
+
+  if (glow) {
+    return (
+      <Pressable onPress={onPress} style={styles.cardGlowWrap}>
+        <LinearGradient colors={['#FFFFFF', '#F0FBFF']} style={styles.cardGlowInner}>
+          {cardContent}
+        </LinearGradient>
+      </Pressable>
+    );
+  }
+  return (
+    <Pressable style={styles.card} onPress={onPress}>
+      {cardContent}
     </Pressable>
   );
 }
@@ -252,12 +300,11 @@ const styles = StyleSheet.create({
   },
   storefrontSign: { fontFamily: font.display, fontSize: 16, color: colors.ink },
   storefrontSub: { fontFamily: font.semi, fontSize: 12, color: colors.pinkText, marginTop: 2 },
-  earnTip: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  earnTipTxt: { fontFamily: font.bold, fontSize: 10.5, color: colors.muted3 },
-  earnTipDot: { fontFamily: font.bold, fontSize: 10.5, color: colors.muted5, marginHorizontal: 1 },
 
   section: { gap: 10 },
-  sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', paddingVertical: 4 },
+  sectionCount: { backgroundColor: colors.screen, borderRadius: 10, paddingVertical: 2, paddingHorizontal: 7 },
+  sectionCountTxt: { fontFamily: font.extra, fontSize: 10.5, color: colors.muted4 },
   sectionTag: { backgroundColor: colors.tagWarmBg, borderRadius: 10, paddingVertical: 3, paddingHorizontal: 8 },
   sectionTagTxt: { fontFamily: font.bold, fontSize: 10, color: colors.tagWarmText },
 
@@ -271,21 +318,45 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 11,
     gap: 8,
+    overflow: 'hidden',
+  },
+  cardGlowWrap: {
+    width: '47.5%',
+    flexGrow: 1,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#8FE3F5',
+    shadowColor: '#2AA8C4',
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  cardGlowInner: {
+    flex: 1,
+    borderRadius: 18,
+    padding: 11,
+    gap: 8,
+    overflow: 'hidden',
   },
   preview: {
     borderRadius: 13,
-    height: 88,
+    height: 92,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     backgroundColor: colors.screen,
+    padding: 8,
   },
-  ribbon: {
-    position: 'absolute', top: 6, left: 6,
-    backgroundColor: colors.pinkDark, borderRadius: 10, paddingVertical: 2, paddingHorizontal: 7,
+  previewFaded: { opacity: 0.75 },
+  ribbonClip: {
+    position: 'absolute', top: 0, right: 0, width: 90, height: 90, overflow: 'hidden', zIndex: 1,
   },
-  ribbonReward: { backgroundColor: colors.reward },
-  ribbonTxt: { fontFamily: font.extra, fontSize: 9, color: colors.white, textTransform: 'uppercase' },
+  ribbonStrip: {
+    position: 'absolute', top: 12, right: -32, width: 130,
+    paddingVertical: 4, alignItems: 'center', transform: [{ rotate: '38deg' }],
+  },
+  ribbonTxt: { fontFamily: font.extra, fontSize: 9, color: colors.white, textTransform: 'uppercase', letterSpacing: 0.4 },
   cardName: { fontFamily: font.extra, fontSize: 13, color: colors.ink },
   statusRow: {
     flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start',
