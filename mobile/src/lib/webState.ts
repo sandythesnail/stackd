@@ -91,6 +91,7 @@ const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is str
 const MOBILE_ONLY_KEYS = [
   'shownLifeEventIds', 'pendingLifeEventId', 'lifeEventCooldown', 'onboardingTrackId',
   'questHintsUsed', 'termsLearned', 'lastModuleActivityDate', 'completedLifeTaskIds',
+  'hasSeenOnboardingTour',
 ] as const;
 
 function extractMobileOnly(m: AppState): Partial<AppState> {

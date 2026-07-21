@@ -1,9 +1,10 @@
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Screen, Header, Txt, Card, Button, ProgressBar, Tag, Stat, Speech, Hammy,
   SectionHead, MIcon, ModuleTile, BadgeMedal, AchievementDetailModal, Flame, Coin, Diamond, CurrencyChip,
+  TourTarget, useOnboardingTour,
 } from '@/components';
 import { useUser } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
@@ -35,6 +36,17 @@ export default function Home() {
     loginBonusPending, claimDailyLoginBonus,
   } = useStore();
   const [selectedBadge, setSelectedBadge] = useState<AchievementView | null>(null);
+  const { startTour } = useOnboardingTour();
+
+  // First-login spotlight tour (XP, then Shop) — fires once, gated on the persisted flag,
+  // right after a new user lands here from the onboarding survey. The delay gives the
+  // survey->home screen transition a beat to finish before measuring anything on screen.
+  useEffect(() => {
+    if (state.hasSeenOnboardingTour) return;
+    const t = setTimeout(startTour, 450);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
   const trackModuleIds = activeTrack?.moduleIds ?? [];
@@ -81,7 +93,9 @@ export default function Home() {
         <Greeting />
 
         <View style={styles.statRow}>
-          <Stat value={state.xp.toLocaleString()} label="XP" />
+          <TourTarget id="tour-xp" style={{ flex: 1 }}>
+            <Stat value={state.xp.toLocaleString()} label="XP" />
+          </TourTarget>
           {loginBonusPending ? (
             <Pressable style={{ flex: 1 }} onPress={claimDailyLoginBonus}>
               <Stat

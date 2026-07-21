@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, font } from '@/theme';
 import { Txt } from './Txt';
+import { TourTarget } from './OnboardingTour';
 
 /** Minimal structural subset of the props expo-router's Tabs passes to `tabBar`. */
 type TabBarProps = {
@@ -35,7 +36,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
         if (!meta) return null;
         const focused = state.index === i;
         const color = focused ? colors.green : colors.muted6;
-        return (
+        const tab = (
           <Pressable
             key={route.key}
             style={styles.tab}
@@ -48,6 +49,13 @@ export function TabBar({ state, navigation }: TabBarProps) {
             <Txt style={[styles.label, { color }]}>{meta.label}</Txt>
           </Pressable>
         );
+        // The Shop tab is the one spotlighted by the onboarding tour (see
+        // OnboardingTour.tsx) — wrapped only for that route so every other tab stays a
+        // plain Pressable.
+        if (route.name === 'shop') {
+          return <TourTarget key={route.key} id="tour-shop-tab" style={styles.tab}>{tab}</TourTarget>;
+        }
+        return tab;
       })}
     </View>
   );

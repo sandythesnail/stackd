@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useUser, useClerk } from '@clerk/clerk-expo';
-import { Screen, Header, Txt, Button, Coin, Diamond } from '@/components';
+import { Screen, Header, Txt, Button, Coin, Diamond, useOnboardingTour } from '@/components';
 import { colors, font } from '@/theme';
 import { user, modules } from '@/data';
 import { useStore } from '@/store';
@@ -23,6 +23,15 @@ import { MODULE_SOURCES } from '@/references';
 export default function Settings() {
   const router = useRouter();
   const { state, level, tierName, resetProgress, debugSimulateNewDay } = useStore();
+  const { startTour } = useOnboardingTour();
+
+  const replayTour = () => {
+    // Doesn't touch hasSeenOnboardingTour — a manual replay shouldn't reset the "seen it"
+    // flag, or the tour would just auto-play again on the very next app open too. Switches
+    // to Home first since that's where both spotlighted elements actually live/are visible.
+    router.push('/(tabs)/home');
+    setTimeout(startTour, 300);
+  };
 
   const confirmReset = () => {
     Alert.alert('Reset all progress?', 'This cannot be undone.', [
@@ -52,6 +61,7 @@ export default function Settings() {
         <View style={{ marginTop: 2 }}>
           {authEnabled ? <ClerkAccountRow /> : <Row icon="user" title="Account" sub={user.email} />}
           <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.push('/(onboarding)/survey')} />
+          <Row icon="compass" title="Replay welcome tour" sub="XP and the Shop, quick refresher" onPress={replayTour} />
           <Row icon="trash-2" title="Reset all progress" sub="Clears all XP, modules, and badges permanently." danger onPress={confirmReset} />
           {__DEV__ ? (
             <Row

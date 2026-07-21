@@ -121,6 +121,9 @@ export type AppState = {
    * has been completed — tracked separately from moduleProgress/mastery, see
    * RealLifeSubQuestRow and completeLifeTask below. */
   completedLifeTaskIds: string[];
+  /** Whether the first-login spotlight tour (XP, then the Shop tab) has already played —
+   * mirrors the website's state.hasSeenOnboardingTour, see components/OnboardingTour.tsx. */
+  hasSeenOnboardingTour: boolean;
 };
 
 const DEFAULT_STATE: AppState = {
@@ -153,6 +156,7 @@ const DEFAULT_STATE: AppState = {
   termsLearned: [],
   lastModuleActivityDate: null,
   completedLifeTaskIds: [],
+  hasSeenOnboardingTour: false,
 };
 
 export type MysteryResult = {
@@ -362,6 +366,9 @@ type Ctx = {
    * website's click-to-collect streak card (see hs-streak-card in app.js). */
   claimDailyLoginBonus: () => void;
   setOnboardingTrack: (trackId: string) => void;
+  /** Marks the first-login spotlight tour as seen, whether it finished or was skipped —
+   * see components/OnboardingTour.tsx. */
+  markOnboardingTourSeen: () => void;
   /** Achievements newly unlocked since the last dismissal — drives the global unlock toast. */
   newAchievements: () => AchievementView[];
   dismissNewAchievements: () => void;
@@ -715,6 +722,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setDailyLoginBanner({ streak: state.streak, loginCoins: coins, streakDiamonds: diamonds });
       },
       setOnboardingTrack: (trackId) => setState((s) => ({ ...s, onboardingTrackId: trackId })),
+      markOnboardingTourSeen: () => setState((s) => (s.hasSeenOnboardingTour ? s : { ...s, hasSeenOnboardingTour: true })),
       newAchievements: () => ACHIEVEMENTS.filter((a) => newAchievementIds.includes(a.id)).map((a) => ({ ...a, earned: true })),
       dismissNewAchievements: () => setNewAchievementIds([]),
       resetProgress: () => {

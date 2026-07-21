@@ -22,7 +22,7 @@ import {
 import { ClerkProvider } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
 import { StoreProvider } from '@/store';
-import { AchievementToast, Txt, Button } from '@/components';
+import { AchievementToast, OnboardingTourProvider, Txt, Button } from '@/components';
 import { authEnabled, env } from '@/lib/env';
 import { tokenCache } from '@/lib/tokenCache';
 import { SupabaseSync } from '@/lib/SupabaseSync';
@@ -101,36 +101,38 @@ export default function RootLayout() {
         <StoreProvider>
           {authEnabled ? <SupabaseSync /> : null}
           <StatusBar style="dark" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.screen },
-              animation: 'slide_from_right',
-            }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(onboarding)" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="learn" />
-            {/* These live under /sheet, not /modal: the web build's baseUrl is "/m"
-                (app.json) and Expo Router's stripBaseUrl() removes it as a raw string
-                prefix, so any route starting with "/m" (i.e. "/modal/*") gets its "m"
-                eaten and lands on the unmatched "/m/odal/*" route in production. Keeping
-                the segment off the letter "m" sidesteps the collision entirely. */}
-            <Stack.Screen
-              name="sheet/levelup"
-              options={{ presentation: 'transparentModal', animation: 'fade' }}
-            />
-            <Stack.Screen
-              name="sheet/life-event"
-              options={{ presentation: 'transparentModal', animation: 'fade' }}
-            />
-            <Stack.Screen
-              name="sheet/shop-item"
-              options={{ presentation: 'transparentModal', animation: 'fade' }}
-            />
-          </Stack>
-          <AchievementToast />
+          <OnboardingTourProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.screen },
+                animation: 'slide_from_right',
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(onboarding)" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="learn" />
+              {/* These live under /sheet, not /modal: the web build's baseUrl is "/m"
+                  (app.json) and Expo Router's stripBaseUrl() removes it as a raw string
+                  prefix, so any route starting with "/m" (i.e. "/modal/*") gets its "m"
+                  eaten and lands on the unmatched "/m/odal/*" route in production. Keeping
+                  the segment off the letter "m" sidesteps the collision entirely. */}
+              <Stack.Screen
+                name="sheet/levelup"
+                options={{ presentation: 'transparentModal', animation: 'fade' }}
+              />
+              <Stack.Screen
+                name="sheet/life-event"
+                options={{ presentation: 'transparentModal', animation: 'fade' }}
+              />
+              <Stack.Screen
+                name="sheet/shop-item"
+                options={{ presentation: 'transparentModal', animation: 'fade' }}
+              />
+            </Stack>
+            <AchievementToast />
+          </OnboardingTourProvider>
         </StoreProvider>
         </AuthGate>
       </SafeAreaProvider>

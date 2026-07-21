@@ -14,6 +14,7 @@ export { ItemArt } from './ItemArt';
 export { Wallpaper } from './Wallpaper';
 export { AchievementToast } from './AchievementToast';
 export { TabBar } from './TabBar';
+export { OnboardingTourProvider, TourTarget, useOnboardingTour } from './OnboardingTour';
 export { Stat, SectionHead, Speech, Callout, Segmented, Dots, Divider } from './bits';
 export { MIcon, ModuleTile, ListRow, BadgeMedal, BadgeIcon } from './ModuleBits';
 export { ModuleLessonList, RealLifeSubQuestRow } from './ModuleLessonList';
