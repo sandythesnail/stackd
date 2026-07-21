@@ -1878,10 +1878,13 @@ select.budget-input { cursor: pointer; }
    highlighted in place with a short tooltip, not a static wall of text. No full-screen scrim
    element of its own — .tour-spotlight's own oversized box-shadow doubles as the dark
    backdrop everywhere OUTSIDE the highlighted rect, which is what actually punches the
-   "hole" over the real element rather than a separate cutout layer. The overlay itself still
-   captures every click (the spotlighted element only looks clickable, isn't) so a stray tap
-   on a nav item can't navigate the page out from under the tour mid-walkthrough — Next/Skip
-   are the only way through. */
+   VISUAL "hole" over the real element rather than a separate cutout layer. .tour-overlay
+   itself still captures every click (the spotlighted element only looks clickable by
+   default, isn't) so a stray tap elsewhere can't navigate the page out from under the tour
+   mid-walkthrough — Next/Skip are the only way through, except a requiresRealClick step
+   (see positionTourStep in app.js), which clips an actual click-through hole out of
+   .tour-overlay over the real element via clip-path, since clicking it for real (not Next)
+   is how that step advances. */
 .tour-overlay { position: fixed; inset: 0; z-index: 290; display: none; }
 .tour-overlay.visible { display: block; }
 .tour-spotlight {

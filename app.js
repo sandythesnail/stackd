@@ -17109,15 +17109,55 @@ const ONBOARDING_TOUR_STEPS = [
     },
   },
   {
-    // The first card in Home's own module grid — already on screen, no navigation needed,
-    // same "point at a real element" approach as the other two steps.
-    target: () => document.querySelector('#home-modules-grid .module-row'),
-    title: 'Start a module',
-    body: 'Each module is a set of short lessons — finish them in order to complete it and earn XP.',
+    // Unlike every other step, this one is advanced by the real click itself, not the Next
+    // button (see requiresRealClick handling in renderTourStep/positionTourStep) — the user
+    // practices the actual navigation instead of reading about it.
+    target: () => document.getElementById('nav-modules-btn'),
+    title: 'Head to Modules',
+    body: 'Tap Modules to see everything you can learn.',
+    requiresRealClick: true,
+    beforeShow: () => {
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth <= 768 && !sidebar.classList.contains('collapsed')) {
+        sidebar.classList.add('collapsed');
+        tourOpenedMobileNav = true;
+      }
+      // The overlay gets a real click-through hole clipped over this button in
+      // positionTourStep (see requiresRealClick there) — this just listens for the actual
+      // click to advance the tour once it lands.
+      const btn = document.getElementById('nav-modules-btn');
+      tourModulesClickHandler = () => {
+        btn.removeEventListener('click', tourModulesClickHandler);
+        tourModulesClickHandler = null;
+        advanceOnboardingTour();
+      };
+      btn.addEventListener('click', tourModulesClickHandler);
+    },
+  },
+  {
+    // The first lesson tile of the first module row on the Modules page — forced open in
+    // beforeShow below, since a collapsed module row's tiles are all max-height:0 (nothing
+    // real to measure/spotlight) until expanded.
+    target: () => document.querySelector('#modules-grid .module-row .lesson-tile'),
+    title: 'Start a lesson',
+    body: 'Tap a lesson to start it — finish them in order to complete the module.',
+    beforeShow: () => {
+      const row = document.querySelector('#modules-grid .module-row');
+      if (row && !row.classList.contains('expanded')) {
+        const lessons = row.querySelector('.module-row-lessons');
+        // Skips the row's own 0.3s expand transition so the tile is immediately full-size
+        // and measurable instead of racing the animation.
+        if (lessons) lessons.style.transition = 'none';
+        row.classList.add('expanded');
+        row.querySelector('.module-row-header')?.setAttribute('aria-expanded', 'true');
+        if (lessons) requestAnimationFrame(() => { lessons.style.transition = ''; });
+      }
+    },
   },
 ];
 let tourStepIdx = 0;
 let tourOpenedMobileNav = false;
+let tourModulesClickHandler = null;
 
 function startOnboardingTour() {
   tourStepIdx = 0;
@@ -17134,7 +17174,12 @@ function renderTourStep() {
   document.getElementById('tour-step-label').textContent = `Step ${tourStepIdx + 1} of ${ONBOARDING_TOUR_STEPS.length}`;
   document.getElementById('tour-title').textContent = step.title;
   document.getElementById('tour-body').textContent = step.body;
-  document.getElementById('tour-next').textContent = tourStepIdx === ONBOARDING_TOUR_STEPS.length - 1 ? 'Got it →' : 'Next →';
+  const nextBtn = document.getElementById('tour-next');
+  // requiresRealClick steps advance only via the real element itself (see that step's
+  // beforeShow) — Next has nothing to do here, so it's hidden rather than a redundant
+  // second way to skip past actually clicking the thing being taught.
+  nextBtn.style.display = step.requiresRealClick ? 'none' : '';
+  nextBtn.textContent = tourStepIdx === ONBOARDING_TOUR_STEPS.length - 1 ? 'Got it →' : 'Next →';
   // requestAnimationFrame gives beforeShow's DOM changes (e.g. opening the mobile drawer)
   // one paint to settle before the target element's rect is measured; a second, delayed
   // re-measure catches anything that shifts layout a beat later (e.g. a web font swap).
@@ -17161,6 +17206,7 @@ function positionTourStep() {
     tooltip.style.top = '50%';
     tooltip.style.left = '50%';
     tooltip.style.transform = 'translate(-50%, -50%)';
+    overlay.style.clipPath = '';
     return;
   }
   spotlight.style.display = '';
@@ -17171,6 +17217,22 @@ function positionTourStep() {
   spotlight.style.left = (r.left - pad) + 'px';
   spotlight.style.width = (r.width + pad * 2) + 'px';
   spotlight.style.height = (r.height + pad * 2) + 'px';
+
+  // requiresRealClick steps need the real element underneath genuinely clickable, not just
+  // visually not-covered — .tour-overlay still captures clicks everywhere else, but here a
+  // literal hole is clipped out of it (evenodd fill rule: outer full-viewport rect minus the
+  // spotlight rect) so a click there falls straight through to the real DOM element instead
+  // of the overlay. A z-index trick on the target itself doesn't work here: .sidebar (z-index
+  // 50) is its own stacking context below .tour-overlay's 290, so no z-index a descendant of
+  // it sets can ever paint above the overlay — this sidesteps that entirely.
+  if (step.requiresRealClick) {
+    const hx = r.left - pad, hy = r.top - pad, hw = r.width + pad * 2, hh = r.height + pad * 2;
+    const outer = `M0,0 H${window.innerWidth} V${window.innerHeight} H0 Z`;
+    const hole = `M${hx},${hy} H${hx + hw} V${hy + hh} H${hx} Z`;
+    overlay.style.clipPath = `path(evenodd, "${outer} ${hole}")`;
+  } else {
+    overlay.style.clipPath = '';
+  }
 
   // Prefer below the spotlight; flip above it if there's not enough room under it. Clamped
   // horizontally so it never runs off either edge of a narrow viewport.
@@ -17194,11 +17256,19 @@ function advanceOnboardingTour() {
 }
 
 function endOnboardingTour() {
-  document.getElementById('tour-overlay').classList.remove('visible');
+  const overlay = document.getElementById('tour-overlay');
+  overlay.classList.remove('visible');
+  overlay.style.clipPath = '';
   window.removeEventListener('resize', positionTourStep);
   if (tourOpenedMobileNav) {
     document.getElementById('sidebar').classList.remove('collapsed');
     tourOpenedMobileNav = false;
+  }
+  // Defensive: only actually pending if the tour ends (e.g. Skip) while the "click Modules"
+  // step is still active and waiting — a real click already removes this itself.
+  if (tourModulesClickHandler) {
+    document.getElementById('nav-modules-btn').removeEventListener('click', tourModulesClickHandler);
+    tourModulesClickHandler = null;
   }
   state.hasSeenOnboardingTour = true;
   saveState();
