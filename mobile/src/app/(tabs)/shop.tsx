@@ -177,8 +177,8 @@ export default function Shop() {
 /** Diagonal corner banner, ported from the website's .shop-exclusive-ribbon /
  * .shop-reward-ribbon (a rotated strip clipped by the card's own rounded corner) — replaces
  * the small top-left pill this screen used before, which isn't how the site does it. */
-function CornerRibbon({ text, tone }: { text: string; tone: 'mystery' | 'reward' }) {
-  const grad: [string, string] = tone === 'mystery' ? ['#2AA8C4', '#8FE3F5'] : ['#B8860B', '#E8C468'];
+function CornerRibbon({ text, tone }: { text: string; tone: 'blue' | 'gold' | 'red' }) {
+  const grad: [string, string] = tone === 'blue' ? ['#2AA8C4', '#8FE3F5'] : tone === 'red' ? ['#C0453A', '#E8837A'] : ['#B8860B', '#E8C468'];
   return (
     <View style={styles.ribbonClip} pointerEvents="none">
       <LinearGradient colors={grad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ribbonStrip}>
@@ -214,10 +214,12 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
   // slightly dimmed overall, until the milestone reward is actually earned.
   const rewardCard = isReward && !owned;
 
+  // Blue for Diamond Exclusives (box or locked), gold for every other mystery-linked item
+  // (the hat/accessory boxes and their locked pool items), red for milestone rewards.
   const ribbon = isBox || (isDiamond && !isBox) || (isLocked && !isDiamond)
-    ? <CornerRibbon text="Mystery" tone="mystery" />
+    ? <CornerRibbon text="Mystery" tone={isDiamond ? 'blue' : 'gold'} />
     : isReward && !owned
-      ? <CornerRibbon text="Reward" tone="reward" />
+      ? <CornerRibbon text="Reward" tone="red" />
       : null;
 
   const cardContent = (
