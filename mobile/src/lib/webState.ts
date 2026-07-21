@@ -4,8 +4,8 @@
  * source of truth for the schema and is never changed, so mobile must speak its shape.
  *
  * Design:
- *  - webToMobile: read the web blob into mobile's AppState (derive moduleProgress counts
- *    from the web's questProgress map, map field-name differences).
+ *  - webToMobile: read the web blob into mobile's AppState (derive moduleProgress
+ *    per-lesson index arrays from the web's questProgress map, map field-name differences).
  *  - mobileToWeb: write mobile's AppState back, MERGING onto the last-seen remote blob so
  *    web-only fields (budgetPlan, onboardingSurvey, financialState, …) are preserved,
  *    never clobbered. Mobile-only fields are stashed under `_mobile`.
@@ -102,16 +102,20 @@ function extractMobileOnly(m: AppState): Partial<AppState> {
 /** Read the web blob into a partial mobile AppState (callers spread it over DEFAULT_STATE). */
 export function webToMobile(web: WebState): Partial<AppState> {
   const questProgress = web.questProgress ?? {};
-  // Real per-module lesson counts, derived from questProgress (see file header) — a
-  // module's 8 real lessons are its quests without a parentQuestId; the 9th, the
-  // real-life step-by-step-guide subquest, is tracked separately (completedLifeTaskIds),
-  // same split store.tsx's moduleTotal/completeLifeTask make locally.
-  const moduleProgress: Record<string, number> = {};
+  // Real per-module completed lesson INDICES, derived from questProgress (see file
+  // header) — a module's 8 real lessons are its quests without a parentQuestId; the 9th,
+  // the real-life step-by-step-guide subquest, is tracked separately
+  // (completedLifeTaskIds), same split store.tsx's moduleTotal/completeLifeTask make
+  // locally. Indices, not a count: the web's questProgress is itself per-quest, so this
+  // is a lossless mapping — lesson 3 done on the web is exactly [2] here, never [0,1,2].
+  const moduleProgress: Record<string, number[]> = {};
   const webLifeTaskIds: string[] = [];
   for (const m of moduleContent) {
     const mainQuestIds = m.quests.filter((q) => !q.parentQuestId).map((q) => q.id);
-    const doneCount = mainQuestIds.filter((qid) => questProgress[`${m.id}::${qid}`]?.done).length;
-    if (doneCount) moduleProgress[m.id] = doneCount;
+    const doneIdxs = mainQuestIds
+      .map((qid, i) => (questProgress[`${m.id}::${qid}`]?.done ? i : -1))
+      .filter((i) => i >= 0);
+    if (doneIdxs.length) moduleProgress[m.id] = doneIdxs;
 
     const subQuest = m.quests.find((q) => q.parentQuestId);
     if (subQuest && questProgress[`${m.id}::${subQuest.id}`]?.done) webLifeTaskIds.push(m.id);
@@ -183,11 +187,12 @@ export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState
   const completedModules: Record<string, LessonRecord> = { ...(base.completedModules ?? {}) };
   const questProgress: Record<string, QuestProgressRecord> = { ...(base.questProgress ?? {}) };
 
-  for (const [modId, count] of Object.entries(mobile.moduleProgress)) {
+  for (const [modId, doneIdxs] of Object.entries(mobile.moduleProgress)) {
     const content = moduleContentById(modId);
     const mainQuests = content?.quests.filter((q) => !q.parentQuestId) ?? [];
     const total = mainQuests.length;
-    for (let i = 0; i < count && i < mainQuests.length; i++) {
+    const validIdxs = doneIdxs.filter((i) => i >= 0 && i < mainQuests.length);
+    for (const i of validIdxs) {
       const quest = mainQuests[i];
       const key = `${modId}::${quest.id}`;
       if (!questProgress[key]?.done) questProgress[key] = finishedQuestRecord(quest.chapters.length, quest.initialState);
@@ -196,7 +201,7 @@ export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState
       const legacyKey = `${modId}_${i}`;
       if (!completedLessons[legacyKey]) completedLessons[legacyKey] = { score: 1, total: 1, xpEarned: 0 };
     }
-    if (total && count >= total && !completedModules[modId]) {
+    if (total && new Set(validIdxs).size >= total && !completedModules[modId]) {
       completedModules[modId] = { score: total, total, xpEarned: 0 };
     }
   }

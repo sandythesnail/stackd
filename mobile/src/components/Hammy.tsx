@@ -82,7 +82,6 @@ export function Hammy({
   pig: _pig = '#E27EA0',
   equipped = [],
   face,
-  blinkThroughFace = true,
   reaction,
   reactionKey,
   style,
@@ -93,16 +92,11 @@ export function Hammy({
   /** Currently-worn shop items, matrix-transformed onto the mascot (see EquippedItem). */
   equipped?: ShopItemReal[];
   /** Illustrated mood/reaction face (see @/hammyFaces) — replaces the default eyes/cheeks/
-   * snout with a cropped PNG overlay, matching the website's .hammy-face-overlay behavior. */
+   * snout with a cropped PNG overlay, matching the website's .hammy-face-overlay behavior.
+   * Shown at full opacity for as long as it's set (same as the website's static face masks);
+   * an earlier "blink-through" variant dipped the overlay out on the ambient blink cycle,
+   * which read as Hammy's face going blank for a beat — removed on purpose. */
   face?: FaceOverlay;
-  /** Whether `face` briefly fades out on the ambient blink cycle to let the (also blinking)
-   * base eyes peek through underneath, instead of sitting there as a frozen mask. Good for
-   * an at-rest mood/streak face (Home, results.tsx) that's on screen for a while — bad for
-   * the quest companion's transient reaction faces, where the ambient cycle coinciding with
-   * an active "happy!" moment made his face flicker to neutral mid-celebration, easy to
-   * mistake for the face "going blank" or not reacting at all. Default true; the quest
-   * companion passes false. */
-  blinkThroughFace?: boolean;
   /** Ported from the website's hammyBounce/hammyWobble/hammyCelebrate keyframes — a one-shot
    * body animation on top of the idle float, played whenever reactionKey changes. */
   reaction?: 'happy' | 'gentle' | 'streak' | null;
@@ -233,30 +227,20 @@ export function Hammy({
   const [eyeScaleY, setEyeScaleY] = useState(1);
   const [earLTransform, setEarLTransform] = useState('rotate(-18 32 74)');
   const [tailTransform, setTailTransform] = useState('rotate(-5 7.04 24.2)');
-  // Rides the SAME blink cycle as eyeScaleY above (1 = eyes open, dips toward 0 during the
-  // 200ms blink window) — used below to briefly fade the face overlay out and let the
-  // base (blinking) eyes show through, so a mood/reaction face doesn't just sit there
-  // motionless forever. Without this, blinking only ever showed up when Hammy had no face
-  // overlay active at all — which on Home (always a mood face) and results.tsx (now always
-  // the streak face) meant essentially never.
-  const [blinkDip, setBlinkDip] = useState(1);
 
   useEffect(() => {
-    const blinkDipInterp = blink.interpolate({ inputRange: [0.1, 1], outputRange: [0, 1] });
     const earLInterp = earL.interpolate({ inputRange: [0, 1], outputRange: ['rotate(-18 32 74)', 'rotate(-26 32 74)'] });
     // .pig-tail transform-origin is 16% 55% of its 44×44 box → (7.04, 24.2).
     const tailInterp = tail.interpolate({ inputRange: [0, 1], outputRange: ['rotate(-5 7.04 24.2)', 'rotate(8 7.04 24.2)'] });
     const ids = [
       blink.addListener(({ value }) => setEyeScaleY(value)),
-      blinkDipInterp.addListener(({ value }) => setBlinkDip(value as unknown as number)),
       earLInterp.addListener(({ value }) => setEarLTransform(value as unknown as string)),
       tailInterp.addListener(({ value }) => setTailTransform(value as unknown as string)),
     ];
     return () => {
       blink.removeListener(ids[0]);
-      blinkDipInterp.removeListener(ids[1]);
-      earLInterp.removeListener(ids[2]);
-      tailInterp.removeListener(ids[3]);
+      earLInterp.removeListener(ids[1]);
+      tailInterp.removeListener(ids[2]);
     };
   }, [blink, earL, tail]);
 
@@ -268,11 +252,10 @@ export function Hammy({
   // opacity could end up parked at a mid-value with the listener's last update not
   // reflecting the latest `face`, showing neither the overlay nor the base features —
   // exactly the "face goes blank" bug. A direct swap has no intermediate state to get
-  // stuck in: `face` falsy shows only the base features, full stop. When `face` IS set, its
-  // opacity rides blinkDip instead of a flat 1 — briefly dipping toward 0 on the same cycle
-  // as a real blink, letting the (also blinking) base eyes peek through underneath, so an
-  // overlay face isn't just a frozen mask the whole time it's shown.
-  const faceOpacity = face ? (blinkThroughFace ? blinkDip : 1) : 0;
+  // stuck in: `face` falsy shows only the base features, full stop; `face` set shows the
+  // overlay at a flat 1 for its whole lifetime, exactly like the website's static face
+  // masks — it never dips out mid-display, so Hammy's face can never read as blank.
+  const faceOpacity = face ? 1 : 0;
   const displayFace = face;
 
   const aspect = STAGE_H / STAGE_W;

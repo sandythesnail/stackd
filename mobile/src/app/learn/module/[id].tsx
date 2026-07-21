@@ -15,7 +15,7 @@ import { useStore } from '@/store';
 export default function ModuleDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { moduleDone, moduleStatus } = useStore();
+  const { moduleDone, moduleDoneIndices, moduleStatus } = useStore();
   const mod = moduleById(id ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
   // The real-life step-by-step guide lesson is surfaced separately, right below the main
@@ -61,7 +61,7 @@ export default function ModuleDetail() {
           </View>
         </LinearGradient>
 
-        <ModuleLessonList moduleId={mod.id} lessons={lessons} done={done} status={status} onPressLesson={goToLesson} />
+        <ModuleLessonList moduleId={mod.id} lessons={lessons} doneIndices={moduleDoneIndices(mod.id)} status={status} onPressLesson={goToLesson} />
         {guideIndex >= 0 ? <RealLifeSubQuestRow moduleId={mod.id} onPress={goToGuide} /> : null}
       </ScrollView>
     </Screen>

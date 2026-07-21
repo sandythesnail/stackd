@@ -23,17 +23,23 @@ const QNODE: Record<string, { bg: string }> = {
 export function ModuleLessonList({
   moduleId,
   lessons,
-  done,
+  doneIndices,
   status,
   onPressLesson,
 }: {
   moduleId: string;
   lessons: LessonSummary[];
-  done: number;
+  /** Exact completed lesson indices (store.moduleDoneIndices) — per-lesson, not a count,
+   * so finishing lesson 3 alone marks ONLY lesson 3 done. */
+  doneIndices: number[];
   status: 'done' | 'active';
   onPressLesson: (i: number) => void;
 }) {
-  const rowStatusFor = (i: number) => (status === 'done' || i < done ? 'done' : i === done ? 'active' : 'upcoming');
+  const doneSet = new Set(doneIndices);
+  // "Next up" = the first not-yet-completed lesson, wherever it is in the list.
+  const nextIdx = lessons.findIndex((_, i) => !doneSet.has(i));
+  const rowStatusFor = (i: number) =>
+    status === 'done' || doneSet.has(i) ? 'done' : i === nextIdx ? 'active' : 'upcoming';
   const sections = resolveLessonSections(moduleId, lessons.length);
 
   if (sections) {
@@ -45,8 +51,8 @@ export function ModuleLessonList({
             label={sec.label}
             lessons={lessons.slice(sec.start, sec.end)}
             startIndex={sec.start}
-            done={Math.max(0, Math.min(done - sec.start, sec.end - sec.start))}
-            defaultOpen={done >= sec.start && done < sec.end}
+            done={doneIndices.filter((i) => i >= sec.start && i < sec.end).length}
+            defaultOpen={nextIdx >= sec.start && nextIdx < sec.end}
             rowStatusFor={rowStatusFor}
             onPressLesson={onPressLesson}
           />

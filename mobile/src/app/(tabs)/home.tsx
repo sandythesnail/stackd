@@ -30,7 +30,7 @@ function ClerkName() {
 export default function Home() {
   const router = useRouter();
   const {
-    state, level, tierName, moduleDone, moduleTotal, moduleStatus, achievements,
+    state, level, tierName, moduleDone, moduleTotal, moduleStatus, nextLessonIndex, achievements,
     equippedMascotItems, dailyLoginBanner, dismissDailyLoginBanner,
     loginBonusPending, claimDailyLoginBonus,
   } = useStore();
@@ -56,6 +56,9 @@ export default function Home() {
   const nextDone = nextModule ? moduleDone(nextModule.id) : 0;
   const nextTotal = nextModule ? moduleTotal(nextModule.id) : 0;
   const nextPct = nextTotal ? nextDone / nextTotal : 0;
+  // First lesson not yet completed — progress is per-lesson now, so this can differ from
+  // the done COUNT whenever lessons were finished out of order.
+  const nextLesson = nextModule ? Math.max(0, nextLessonIndex(nextModule.id)) : 0;
 
   // One mood per calendar day (todaysHammyMood), unless a lesson's already been finished
   // today — then Hammy's just happy (satisfied) about that instead. The copy here is
@@ -106,7 +109,7 @@ export default function Home() {
             <View style={{ marginTop: 14 }}>
               <View style={styles.questMeta}>
                 <Txt style={{ fontFamily: font.displayMed, fontSize: 14, color: colors.ink }}>{nextModule.name}</Txt>
-                <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.pinkDark }}>Lesson {nextDone + 1} / {nextTotal}</Txt>
+                <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.pinkDark }}>Lesson {nextLesson + 1} / {nextTotal}</Txt>
               </View>
               <ProgressBar value={nextPct} tone="pink" />
             </View>
@@ -114,7 +117,7 @@ export default function Home() {
               label={ctaLabel}
               variant="pink"
               size="sm"
-              onPress={() => router.push({ pathname: '/learn/quest', params: { moduleId: nextModule.id, lessonIndex: String(nextDone) } })}
+              onPress={() => router.push({ pathname: '/learn/quest', params: { moduleId: nextModule.id, lessonIndex: String(nextLesson) } })}
               style={{ marginTop: 13 }}
             />
             {activeToday ? (

@@ -21040,6 +21040,19 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
 
 // ── Event listeners ────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Warm the browser cache for every illustrated face overlay up front. The overlays are
+  // applied as CSS background-images the instant a reaction/mood class lands — and the
+  // same class also hides the CSS eyes/cheeks/snout. On a cold cache that meant the very
+  // first reaction hid Hammy's real face while its replacement PNG was still downloading:
+  // a completely blank face for however long the network took. URLs must match the CSS
+  // exactly (including the ?v= cache-busters) to hit the same cache entries.
+  [
+    'faces/hammy-streak.png?v=17', 'faces/hammy-gentle.png?v=18', 'faces/hammy-happy.png?v=17',
+    'faces/star-face.png', 'faces/sleepy-face.png', 'faces/curious-face.png',
+    'faces/angry-face.png', 'faces/love-face.png', 'faces/nervy-face.png',
+    'faces/sad-face.png', 'faces/surprise-face.png', 'faces/wink-face.png',
+  ].forEach(src => { new Image().src = src; });
+
   // On mobile, the sidebar is a hamburger-triggered dropdown rather than a
   // permanent bar, so it should close itself once the user has picked
   // somewhere to go. Guarded to mobile widths only — reusing the "collapsed"

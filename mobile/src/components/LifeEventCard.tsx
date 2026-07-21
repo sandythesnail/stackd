@@ -53,7 +53,7 @@ export function LifeEventCard({
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Hammy size={56} bob={false} face={REACTION_FACES.gentle} blinkThroughFace={false} />
+        <Hammy size={56} bob={false} face={REACTION_FACES.gentle} />
         <View style={styles.headerText}>
           <Txt style={styles.tag}>{(event.tag || 'Life happens...').toUpperCase()}</Txt>
           <Txt style={styles.title}>{event.title}</Txt>

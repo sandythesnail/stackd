@@ -15,7 +15,7 @@ import { SURVEY_TRACKS } from '@/survey';
  * lesson content, not static mock fields. */
 export default function Modules() {
   const router = useRouter();
-  const { state, level, tierName, moduleDone, moduleTotal, moduleStatus } = useStore();
+  const { state, level, tierName, moduleDone, moduleDoneIndices, moduleTotal, moduleStatus } = useStore();
   const doneCount = modules.filter((m) => moduleStatus(m.id) === 'done').length;
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
   const trackModuleIds = activeTrack?.moduleIds ?? [];
@@ -82,7 +82,7 @@ export default function Modules() {
                     <ModuleLessonList
                       moduleId={m.id}
                       lessons={lessons}
-                      done={done}
+                      doneIndices={moduleDoneIndices(m.id)}
                       status={status}
                       onPressLesson={(i) => router.push({ pathname: '/learn/quest', params: { moduleId: m.id, lessonIndex: String(i) } })}
                     />

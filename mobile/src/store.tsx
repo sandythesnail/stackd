@@ -79,9 +79,12 @@ export type AppState = {
   ownedRoomItems: string[];
   equippedItems: string[];
   equippedRoom: Record<RoomSlot, string | null>;
-  /** Lessons completed per module id — the real source of truth for module progress,
-   * replacing the old static mock done/quests fields. */
-  moduleProgress: Record<string, number>;
+  /** Completed lesson INDICES per module id — the real source of truth for module
+   * progress. A set of indices (not a count): completing lesson 3 first marks exactly one
+   * lesson done, not lessons 1-3 — the old "highest index + 1" count claimed every earlier
+   * lesson too, which is how finishing one lesson could read "3 completed / 38%". Mirrors
+   * the website's per-quest questProgress map (see lib/webState.ts). */
+  moduleProgress: Record<string, number[]>;
   /** Per-module XP earned and cumulative graded-question accuracy, accumulated once per
    * lesson the first time it's completed (mirrors the `advanced`-gated coin payout below, so
    * replaying an already-completed lesson doesn't re-count or skew the accuracy) — powers the
@@ -129,11 +132,12 @@ const DEFAULT_STATE: AppState = {
   ownedRoomItems: [],
   equippedItems: ['crown', 'sunglasses'],
   equippedRoom: { wallpaper: null, wall: null, rug: null, plant: null, bed: null, desk: null, lamp: null, window: null },
-  // Seeded to match Maya's original mock story (some modules done, some in progress).
-  moduleProgress: {
-    earning: 6, spending: 5, saving: 2, investing: 0, credit: 1, risk: 0,
-    loans: 0, taxes: 6, psychology: 0, career: 7, scams: 0,
-  },
+  // Empty on purpose: progress only ever reflects lessons the player actually finished.
+  // This used to be seeded with Maya's mock-story counts (earning: 6, saving: 2, ...),
+  // which made a brand-new player's very first lesson finish read as "3 completed / 38%"
+  // — phantom progress they never earned. See LEGACY_DEMO_SEEDS below, which strips those
+  // same phantom counts back out of previously-saved states.
+  moduleProgress: {},
   moduleStats: {},
   unlockedAchievementIds: [],
   shownLifeEventIds: [],
@@ -207,13 +211,47 @@ function accumulateModuleStats(
   };
 }
 
-function isModuleMastered(moduleProgress: Record<string, number>, moduleId: string) {
+/** How many of this module's real lessons are done — distinct valid indices only. */
+function moduleDoneCount(moduleProgress: Record<string, number[]>, moduleId: string) {
   const total = moduleTotal(moduleId);
-  return total > 0 && (moduleProgress[moduleId] ?? 0) >= total;
+  return new Set((moduleProgress[moduleId] ?? []).filter((i) => i >= 0 && i < total)).size;
 }
 
-function masteredCount(moduleProgress: Record<string, number>) {
+function isModuleMastered(moduleProgress: Record<string, number[]>, moduleId: string) {
+  const total = moduleTotal(moduleId);
+  return total > 0 && moduleDoneCount(moduleProgress, moduleId) >= total;
+}
+
+function masteredCount(moduleProgress: Record<string, number[]>) {
   return ALL_MODULE_IDS.filter((id) => isModuleMastered(moduleProgress, id)).length;
+}
+
+/** The old DEFAULT_STATE shipped Maya's mock-story progress counts baked into every fresh
+ * install. When migrating a saved state from the legacy count format to per-lesson index
+ * arrays, subtract these phantom counts back out: a legacy count of 3 in `saving` (seed 2)
+ * means the player really finished ONE lesson — index 2, the "next up" lesson the UI
+ * pointed them at — so it becomes [2], not [0,1,2]. */
+const LEGACY_DEMO_SEEDS: Record<string, number> = {
+  earning: 6, spending: 5, saving: 2, investing: 0, credit: 1, risk: 0,
+  loans: 0, taxes: 6, psychology: 0, career: 7, scams: 0,
+};
+
+/** Accepts either format from persisted/remote state: per-lesson index arrays (current)
+ * pass through cleaned; legacy numeric counts are converted via LEGACY_DEMO_SEEDS. */
+function normalizeModuleProgress(raw: unknown): Record<string, number[]> {
+  if (!raw || typeof raw !== 'object') return {};
+  const out: Record<string, number[]> = {};
+  for (const [id, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (Array.isArray(v)) {
+      const idxs = [...new Set(v.filter((n): n is number => Number.isInteger(n) && n >= 0))].sort((a, b) => a - b);
+      if (idxs.length) out[id] = idxs;
+    } else if (typeof v === 'number' && Number.isFinite(v)) {
+      const idxs: number[] = [];
+      for (let i = LEGACY_DEMO_SEEDS[id] ?? 0; i < v; i++) idxs.push(i);
+      if (idxs.length) out[id] = idxs;
+    }
+  }
+  return out;
 }
 
 /** Which achievements are met right now, given the subset of app.js's ACHIEVEMENTS checks
@@ -253,6 +291,10 @@ type Ctx = {
   equippedRoomItems: () => ShopItemReal[];
   equippedMascotItems: () => ShopItemReal[];
   moduleDone: (moduleId: string) => number;
+  /** The exact lesson indices completed in this module — for per-lesson done/next markers. */
+  moduleDoneIndices: (moduleId: string) => number[];
+  /** First not-yet-completed lesson index (the one to open for "continue"), or -1 if all done. */
+  nextLessonIndex: (moduleId: string) => number;
   moduleTotal: (moduleId: string) => number;
   moduleMastered: (moduleId: string) => boolean;
   /** 'done' once every lesson is complete, else 'active'. Nothing is level-gated —
@@ -388,7 +430,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       let loadedState = DEFAULT_STATE;
       if (raw) {
         try {
-          loadedState = { ...DEFAULT_STATE, ...JSON.parse(raw) };
+          const parsed = JSON.parse(raw);
+          loadedState = {
+            ...DEFAULT_STATE,
+            ...parsed,
+            // Migrates legacy numeric counts (and strips the old fake demo seeds) into
+            // per-lesson index arrays — see normalizeModuleProgress/LEGACY_DEMO_SEEDS.
+            moduleProgress: normalizeModuleProgress(parsed.moduleProgress),
+          };
         } catch {
           // corrupt/incompatible saved state — fall back to defaults already set
         }
@@ -426,7 +475,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           .filter((i): i is ShopItemReal => !!i),
       equippedMascotItems: () =>
         state.equippedItems.map((id) => shopItemsReal.find((i) => i.id === id)).filter((i): i is ShopItemReal => !!i),
-      moduleDone: (moduleId) => Math.min(state.moduleProgress[moduleId] ?? 0, moduleTotal(moduleId)),
+      moduleDone: (moduleId) => moduleDoneCount(state.moduleProgress, moduleId),
+      moduleDoneIndices: (moduleId) => (state.moduleProgress[moduleId] ?? []).filter((i) => i >= 0 && i < moduleTotal(moduleId)),
+      nextLessonIndex: (moduleId) => {
+        const done = new Set(state.moduleProgress[moduleId] ?? []);
+        for (let i = 0; i < moduleTotal(moduleId); i++) if (!done.has(i)) return i;
+        return -1;
+      },
       moduleTotal,
       moduleMastered: (moduleId) => isModuleMastered(state.moduleProgress, moduleId),
       moduleStatus: (moduleId) => (isModuleMastered(state.moduleProgress, moduleId) ? 'done' : 'active'),
@@ -530,11 +585,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         setState((s) => {
           const wasMastered = isModuleMastered(s.moduleProgress, moduleId);
-          const current = s.moduleProgress[moduleId] ?? 0;
+          const completed = s.moduleProgress[moduleId] ?? [];
           const total = moduleTotal(moduleId);
-          const advanced = lessonIndex + 1 > current;
+          // "New progress" = THIS specific lesson hasn't been finished before — one lesson
+          // finished marks exactly one lesson done, never any earlier siblings.
+          const advanced = lessonIndex >= 0 && lessonIndex < total && !completed.includes(lessonIndex);
           const nextProgress = advanced
-            ? { ...s.moduleProgress, [moduleId]: Math.min(lessonIndex + 1, total) }
+            ? { ...s.moduleProgress, [moduleId]: [...completed, lessonIndex].sort((a, b) => a - b) }
             : s.moduleProgress;
           let next: AppState = {
             ...s,
@@ -661,6 +718,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const merged: AppState = {
           ...state,
           ...partial,
+          // Defensive: a remote snapshot written by an older client may still carry the
+          // legacy numeric-count format — normalize either way.
+          moduleProgress: partial.moduleProgress
+            ? normalizeModuleProgress(partial.moduleProgress)
+            : state.moduleProgress,
           coins: Math.max(state.coins, partial.coins ?? state.coins),
           diamonds: Math.max(state.diamonds, partial.diamonds ?? state.diamonds),
           xp: Math.max(state.xp, partial.xp ?? state.xp),

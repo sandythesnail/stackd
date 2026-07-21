@@ -1118,8 +1118,12 @@ select.budget-input { cursor: pointer; }
 .hammy-side-avatar.streak .pig-body { box-shadow: none; }
 /* The illustration draws its own nose — the CSS snout is a distinctly different pink oval
    sitting on top of the head gradient, so it reads as a hard outline behind the art. Hide it
-   entirely rather than just dropping its shadow. */
-.pig-snout { transition: opacity 0.15s ease; }
+   entirely rather than just dropping its shadow. Eyes and cheeks get the same 0.15s opacity
+   fade as the snout and the overlay itself: without it they vanished INSTANTLY the moment a
+   reaction class landed, while the illustrated face was still 0.15s from fully faded in —
+   a blank-faced flash on every single reaction. Crossfading all the swapped features on the
+   same clock means some face is always at full combined opacity. */
+.pig-snout, .pig-eye, .pig-cheek { transition: opacity 0.15s ease; }
 .hammy-side-avatar.happy .pig-snout,
 .hammy-side-avatar.gentle .pig-snout,
 .hammy-side-avatar.streak .pig-snout { opacity: 0; }

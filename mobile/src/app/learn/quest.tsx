@@ -397,7 +397,6 @@ export default function QuestPlayer() {
                 face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
                 reaction={reactionMood}
                 reactionKey={reactionKey}
-                blinkThroughFace={false}
               />
             </View>
           </View>
@@ -1646,10 +1645,12 @@ const styles = StyleSheet.create({
   // can't pull him off-center the way a shared row did). paddingHorizontal is the hard
   // safety margin the bubble's width is sized against (see bubbleSlot) so it can never run
   // off the left edge of the screen. paddingTop clears space below the floating action
-  // button — at 16 it wasn't enough: at size 130, Hammy's ear sits only ~16px into his own
-  // render, which put it inside the button's own vertical span (top:4, ~48 tall) even at
-  // rest, before any reaction bounce (see Hammy.tsx's reactY, up to -30) made it worse.
-  companionWrap: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 54, paddingBottom: 4 },
+  // button (top: 4, height 48 → bottom edge 52): the old 54 left only a 2px gap, which
+  // read as Hammy crowding the green button, and reaction bounces (see Hammy.tsx's reactY,
+  // up to -30) lifted his ears straight into it. 72 keeps a real gap at rest and through
+  // the common happy bounce (-22); when the glossary tray shows, it's a normal-flow
+  // sibling above this block, so it pushes Hammy down along with the lowered button.
+  companionWrap: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 72, paddingBottom: 4 },
   // Holds ONLY Hammy in normal flow — its size IS Hammy's size, nothing else. The reaction
   // bubble is positioned absolutely against it (see bubbleSlot), so it can sit right next to
   // him without being a layout sibling that would fight his centering.
@@ -1658,8 +1659,11 @@ const styles = StyleSheet.create({
   // cutting the text off. The bubble is anchored to (and moves with) this same box, so
   // shifting Hammy reclaims room for it. Sized together with bubbleSlot's width below so
   // even a full-width bubble clears the left edge on a ~375px-wide phone (iPhone SE), the
-  // narrowest common target.
-  hammyStage: { position: 'relative', transform: [{ translateX: 40 }] },
+  // narrowest common target. 32 (down from 40) keeps that bubble room while easing Hammy's
+  // right ear back from under the floating green action button in the top-right corner:
+  // at 375pt, stage left = 187.5 + 32 - 65 = 154.5, so the 125-wide bubble + 10 gap still
+  // clears the left edge with ~19px to spare.
+  hammyStage: { position: 'relative', transform: [{ translateX: 32 }] },
   // right: '100%' parks the bubble's right edge at hammyStage's own left edge (i.e. Hammy's
   // left edge) regardless of Hammy's exact pixel width; marginRight adds the gap. top/bottom
   // 0 stretches it to Hammy's full height so justifyContent: 'center' vertically centers the
