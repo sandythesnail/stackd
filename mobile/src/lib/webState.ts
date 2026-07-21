@@ -5,20 +5,51 @@
  *
  * Design:
  *  - webToMobile: read the web blob into mobile's AppState (derive moduleProgress counts
- *    from the web's completedLessons map, map field-name differences).
+ *    from the web's questProgress map, map field-name differences).
  *  - mobileToWeb: write mobile's AppState back, MERGING onto the last-seen remote blob so
- *    web-only fields (budgetPlan, onboardingSurvey, financialState, questProgress, …) are
- *    preserved, never clobbered. Mobile-only fields are stashed under `_mobile`.
+ *    web-only fields (budgetPlan, onboardingSurvey, financialState, …) are preserved,
+ *    never clobbered. Mobile-only fields are stashed under `_mobile`.
  *
- * Fidelity notes: the web tracks per-lesson score/total; mobile tracks a per-module
- * completed-count. Going mobile→web we synthesize {score:1,total:1} records for lessons
- * mobile completed that the web didn't already have — so "flawless/hadPerfect"-style
- * detail can be slightly optimistic, but completion + mastery + all currencies are exact.
+ * Real per-lesson completion on the web lives in `questProgress` (keyed
+ * "moduleId::questId", see app.js's questKey/startQuest/finishQuest) — every module was
+ * rebuilt as a full quest chain, and finishQuest never writes `completedLessons`/
+ * `completedModules` per lesson anymore (those two fields are legacy, left over from the
+ * pre-quest flat-quiz lessons, and are effectively frozen at whatever a module's very
+ * first finished quest wrote there). Deriving moduleProgress from them instead of
+ * questProgress silently undercounts — usually all the way to zero — every module a user
+ * actually completed lessons in on the website, which is why synced percentages on mobile
+ * used to read low/wrong. mainQuests/subQuestFor split (a module's 8 real lessons vs its
+ * one real-life step-by-step-guide subquest) is ported verbatim into content.quests'
+ * `parentQuestId` field, so mobile can group web's flat questProgress map back by module
+ * without needing web's own MODULES array.
+ *
+ * Fidelity notes: going mobile→web we synthesize completed questProgress entries (done:
+ * true, zeroed score/analytics) for lessons mobile completed that the web didn't already
+ * have — so per-lesson "flawless/hadPerfect"-style detail can be slightly optimistic, but
+ * completion + mastery + all currencies are exact.
  */
-import { moduleContentById } from '@/content';
+import { moduleContent, moduleContentById } from '@/content';
 import type { AppState } from '@/store';
+import type { StatDelta } from '@/content';
 
 export type LessonRecord = { score: number; total: number; xpEarned: number };
+
+/** Only the fields this file reads/writes on a web questProgress record — web owns the
+ * full shape (see app.js's startQuest), the rest passes through untouched via the merge
+ * in mobileToWeb (this file never replaces `remote.questProgress` wholesale, only adds
+ * missing entries onto a copy of it). */
+export type QuestProgressRecord = {
+  done?: boolean;
+  chapterIdx?: number;
+  chapterScore?: number;
+  chapterTotal?: number;
+  streak?: number;
+  dashboard?: StatDelta;
+  learnedTerms?: unknown[];
+  hintsUsed?: number;
+  xpEarned?: number;
+  analytics?: unknown;
+};
 
 /** The web `state` blob. Known fields are typed; unknown web-only fields pass through via
  * the index signature so mobile can preserve them on write. */
@@ -30,6 +61,7 @@ export type WebState = {
   lastSeenTier?: string | null;
   completedModules?: Record<string, LessonRecord>;
   completedLessons?: Record<string, LessonRecord>;
+  questProgress?: Record<string, QuestProgressRecord>;
   unlockedAchievements?: string[];
   coins?: number;
   diamonds?: number;
@@ -69,19 +101,30 @@ function extractMobileOnly(m: AppState): Partial<AppState> {
 
 /** Read the web blob into a partial mobile AppState (callers spread it over DEFAULT_STATE). */
 export function webToMobile(web: WebState): Partial<AppState> {
-  // Count completed lessons per module from keys shaped `${moduleId}_${lessonIdx}`.
+  const questProgress = web.questProgress ?? {};
+  // Real per-module lesson counts, derived from questProgress (see file header) — a
+  // module's 8 real lessons are its quests without a parentQuestId; the 9th, the
+  // real-life step-by-step-guide subquest, is tracked separately (completedLifeTaskIds),
+  // same split store.tsx's moduleTotal/completeLifeTask make locally.
   const moduleProgress: Record<string, number> = {};
-  for (const key of Object.keys(web.completedLessons ?? {})) {
-    const modId = key.slice(0, key.lastIndexOf('_'));
-    if (modId) moduleProgress[modId] = (moduleProgress[modId] ?? 0) + 1;
-  }
-  // A fully-completed module is authoritative — clamp its count to the real lesson total.
-  for (const modId of Object.keys(web.completedModules ?? {})) {
-    const total = moduleContentById(modId)?.lessons.length ?? 0;
-    if (total) moduleProgress[modId] = total;
+  const webLifeTaskIds: string[] = [];
+  for (const m of moduleContent) {
+    const mainQuestIds = m.quests.filter((q) => !q.parentQuestId).map((q) => q.id);
+    const doneCount = mainQuestIds.filter((qid) => questProgress[`${m.id}::${qid}`]?.done).length;
+    if (doneCount) moduleProgress[m.id] = doneCount;
+
+    const subQuest = m.quests.find((q) => q.parentQuestId);
+    if (subQuest && questProgress[`${m.id}::${subQuest.id}`]?.done) webLifeTaskIds.push(m.id);
   }
 
+  // Restore any mobile-only fields we previously stashed (safe no-op if absent) — but
+  // completedLifeTaskIds gets unioned with what we just read off the web, not overwritten
+  // by it, since the subquest may have been finished on either device.
   const mobileExtras = (web._mobile ?? {}) as Partial<AppState>;
+  const completedLifeTaskIds = Array.from(
+    new Set([...(mobileExtras.completedLifeTaskIds ?? []), ...webLifeTaskIds])
+  );
+
   return {
     coins: num(web.coins),
     diamonds: num(web.diamonds),
@@ -95,9 +138,9 @@ export function webToMobile(web: WebState): Partial<AppState> {
     unlockedAchievementIds: arr(web.unlockedAchievements),
     questBossesWon: arr(web.questBossesWon),
     dailyLoginLog: (web.dailyLoginLog as Record<string, number>) ?? {},
-    moduleProgress,
-    // Restore any mobile-only fields we previously stashed (safe no-op if absent).
     ...mobileExtras,
+    moduleProgress,
+    completedLifeTaskIds,
   };
 }
 
@@ -112,20 +155,57 @@ function normalizeRoom(room: Record<string, string | null> | undefined): AppStat
  * Merge mobile AppState onto the last-seen remote blob, preserving every web-only field.
  * Pass the remote we last read (or null for a first upload).
  */
+const EMPTY_ANALYTICS = { knowledgeCheck: [], mythCards: [], polls: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null };
+
+/** A completed questProgress record for a quest mobile finished but the web hasn't
+ * recorded yet — shaped like app.js's startQuest default, just pre-marked done so the
+ * website's own renderModuleList/mastery checks (which read questProgress, not
+ * completedLessons) recognize it immediately. */
+function finishedQuestRecord(chapters: number, initialState: StatDelta): QuestProgressRecord {
+  return {
+    chapterIdx: chapters,
+    dashboard: { ...initialState },
+    chapterScore: 0,
+    chapterTotal: 0,
+    streak: 0,
+    done: true,
+    learnedTerms: [],
+    hintsUsed: 0,
+    xpEarned: 0,
+    analytics: EMPTY_ANALYTICS,
+  };
+}
+
 export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState {
   const base: WebState = remote ? { ...remote } : {};
 
   const completedLessons: Record<string, LessonRecord> = { ...(base.completedLessons ?? {}) };
   const completedModules: Record<string, LessonRecord> = { ...(base.completedModules ?? {}) };
+  const questProgress: Record<string, QuestProgressRecord> = { ...(base.questProgress ?? {}) };
+
   for (const [modId, count] of Object.entries(mobile.moduleProgress)) {
-    const total = moduleContentById(modId)?.lessons.length ?? 0;
-    for (let i = 0; i < count; i++) {
-      const key = `${modId}_${i}`;
-      if (!completedLessons[key]) completedLessons[key] = { score: 1, total: 1, xpEarned: 0 };
+    const content = moduleContentById(modId);
+    const mainQuests = content?.quests.filter((q) => !q.parentQuestId) ?? [];
+    const total = mainQuests.length;
+    for (let i = 0; i < count && i < mainQuests.length; i++) {
+      const quest = mainQuests[i];
+      const key = `${modId}::${quest.id}`;
+      if (!questProgress[key]?.done) questProgress[key] = finishedQuestRecord(quest.chapters.length, quest.initialState);
+      // Legacy fields — no real reader left for real modules, kept only so an old client
+      // still reading them (or a not-yet-migrated module) doesn't regress.
+      const legacyKey = `${modId}_${i}`;
+      if (!completedLessons[legacyKey]) completedLessons[legacyKey] = { score: 1, total: 1, xpEarned: 0 };
     }
     if (total && count >= total && !completedModules[modId]) {
       completedModules[modId] = { score: total, total, xpEarned: 0 };
     }
+  }
+
+  for (const modId of mobile.completedLifeTaskIds) {
+    const subQuest = moduleContentById(modId)?.quests.find((q) => q.parentQuestId);
+    if (!subQuest) continue;
+    const key = `${modId}::${subQuest.id}`;
+    if (!questProgress[key]?.done) questProgress[key] = finishedQuestRecord(subQuest.chapters.length, subQuest.initialState);
   }
 
   return {
@@ -145,6 +225,7 @@ export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState
     dailyLoginLog: mobile.dailyLoginLog,
     completedLessons,
     completedModules,
+    questProgress,
     _mobile: extractMobileOnly(mobile),
   };
 }
