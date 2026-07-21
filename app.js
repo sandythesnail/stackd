@@ -18040,13 +18040,7 @@ function renderHome() {
   document.getElementById('h-tier').textContent = tier.name;
   document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
 
-  const satisfiedToday = hasModuleActivityToday();
-  const mood = todaysHammyMood();
-  const moodClass = satisfiedToday ? 'mood-satisfied' : `mood-${mood.id}`;
-  document.getElementById('home-mascot-card').innerHTML = `
-    <div class="mascot-pig-wrap has-face-overlay ${moodClass}">${withFaceOverlay(getPigWithItemMarkup(0.34, getEquippedItems()))}</div>
-    <div class="mascot-mood-label">Hammy is feeling <strong>${satisfiedToday ? 'happy' : mood.label}</strong> today</div>
-    <div class="mascot-mood-msg">${satisfiedToday ? "Thanks for working on a module today — Hammy's mood is lifted!" : mood.msg}</div>`;
+  renderHomeMascotCard();
 
   const loginBonusPending = dailyLoginBonusPending() || pendingStreakDiamonds > 0;
   document.getElementById('home-stats-row').innerHTML = `
@@ -18081,6 +18075,81 @@ function renderHome() {
 
   renderModuleList('home-modules-grid');
   renderAchievementBadges('home-achievements-row', 'home-achieve-sub', { onlyUnlocked: true });
+}
+
+// Ported directly from the mobile app's Home "Continue quest" card (see mobile's
+// home.tsx) — same mood-based speech line, same "Keep Hammy happy — do another module"
+// CTA copy, same pink progress card. Falls back to the plain mood-only card once every
+// module is done (mobile just hides its card there; keeping Hammy's mood visible even
+// after "graduating" is existing web behavior this port doesn't otherwise touch).
+function renderHomeMascotCard() {
+  const satisfiedToday = hasModuleActivityToday();
+  const mood = todaysHammyMood();
+  const moodClass = satisfiedToday ? 'mood-satisfied' : `mood-${mood.id}`;
+  const pigMarkup = (scale) => `<div class="mascot-pig-wrap has-face-overlay ${moodClass}">${withFaceOverlay(getPigWithItemMarkup(scale, getEquippedItems()))}</div>`;
+
+  const nextModule = MODULES.find(m => !isModuleFullyDone(m));
+  const card = document.getElementById('home-mascot-card');
+  card.classList.toggle('quest-card', !!nextModule);
+
+  if (!nextModule) {
+    card.innerHTML = `
+      ${pigMarkup(0.34)}
+      <div class="mascot-mood-label">Hammy is feeling <strong>${satisfiedToday ? 'happy' : mood.label}</strong> today</div>
+      <div class="mascot-mood-msg">${satisfiedToday ? "Thanks for working on a module today — Hammy's mood is lifted!" : mood.msg}</div>`;
+    return;
+  }
+
+  const quest = hasQuest(nextModule);
+  const totalUnits = quest ? mainQuests(nextModule).length : nextModule.lessons.length;
+  const doneUnits = quest
+    ? mainQuests(nextModule).filter(q => state.questProgress[questKey(nextModule.id, q.id)]?.done).length
+    : nextModule.lessons.filter((_, i) => !!state.completedLessons[`${nextModule.id}_${i}`]).length;
+  // The NEXT lesson to do, by index — not the done COUNT above, which can differ once
+  // lessons are finished out of order (mirrors mobile's nextLessonIndex vs moduleDone split).
+  const nextIdx = quest
+    ? mainQuests(nextModule).findIndex(q => !state.questProgress[questKey(nextModule.id, q.id)]?.done)
+    : nextModule.lessons.findIndex((_, i) => !state.completedLessons[`${nextModule.id}_${i}`]);
+  const nextLessonNum = Math.max(0, nextIdx) + 1;
+  const nextPct = totalUnits ? Math.round((doneUnits / totalUnits) * 100) : 0;
+
+  const speechMsg = satisfiedToday ? "Hammy's had a great day already, thanks to you! Keep it going?" : mood.msg;
+  const ctaLabel = satisfiedToday ? 'Keep Hammy happy — do another module' : 'Continue quest';
+
+  card.innerHTML = `
+    <div class="quest-top">
+      ${pigMarkup(0.24)}
+      <div class="speech-bubble quest-speech">${speechMsg}</div>
+    </div>
+    <div>
+      <div class="quest-meta-row">
+        <span class="quest-module-name">${nextModule.title}</span>
+        <span class="quest-lesson-count">Lesson ${nextLessonNum} / ${totalUnits}</span>
+      </div>
+      <div class="quest-bar-track"><div class="quest-bar-fill" style="width:${nextPct}%"></div></div>
+    </div>
+    <button type="button" class="quest-cta-btn" id="quest-cta-btn">${ctaLabel}</button>
+    ${satisfiedToday ? `<div class="quest-nudge">🔥 ${state.streak}-day streak — Hammy will be even happier tomorrow</div>` : ''}`;
+
+  document.getElementById('quest-cta-btn').addEventListener('click', () => startNextLessonFor(nextModule));
+}
+
+// Resumes (or, if every lesson/quest is already done, replays the last one — defensive
+// only, since a module reached via renderHomeMascotCard's nextModule search always has at
+// least one undone lesson/quest by construction) whichever lesson/quest in `mod` comes
+// next, exactly matching what clicking that same tile in the module list itself would do.
+function startNextLessonFor(mod) {
+  if (hasQuest(mod)) {
+    const quests = mainQuests(mod);
+    const target = quests.find(q => !state.questProgress[questKey(mod.id, q.id)]?.done) || quests[quests.length - 1];
+    startQuest(mod.id, target.id);
+  } else {
+    const idx = mod.lessons.findIndex((_, i) => !state.completedLessons[`${mod.id}_${i}`]);
+    const lessonIdx = idx === -1 ? mod.lessons.length - 1 : idx;
+    const lesson = mod.lessons[lessonIdx];
+    if (lesson.type) startBonusActivity(mod.id, lessonIdx);
+    else startHook(mod.id, lessonIdx);
+  }
 }
 
 // ── MODULES PAGE ───────────────────────────────

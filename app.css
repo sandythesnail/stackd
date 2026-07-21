@@ -220,6 +220,32 @@ body { background: var(--bg); min-height: 100vh; }
 .mascot-mood-label strong { color: var(--pink-dark); text-transform: capitalize; }
 .mascot-mood-msg { font-size: 0.92rem; color: var(--text-mid); max-width: 440px; line-height: 1.5; }
 
+/* Ported directly from the mobile app's Home "Continue quest" card (see mobile's
+   home.tsx) — replaces the plain mood-only card above whenever there's an unfinished
+   module to resume. Falls back to the plain .mascot-mood-* markup once every module is
+   done (mobile just hides its card entirely there; keeping Hammy's mood visible even
+   after "graduating" is existing web behavior this port doesn't otherwise touch). */
+.mascot-card.quest-card { background: var(--pink-pale); border-color: var(--pink-light); align-items: stretch; text-align: left; gap: 1rem; }
+.quest-top { display: flex; align-items: center; gap: 0.9rem; }
+.quest-speech { margin-bottom: 0; flex: 1; }
+.quest-meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; margin-bottom: 0.5rem; }
+.quest-module-name { font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; color: var(--text); }
+.quest-lesson-count { font-size: 0.8rem; font-weight: 700; color: var(--pink-dark); white-space: nowrap; }
+.quest-bar-track { height: 8px; background: #fff; border-radius: 999px; overflow: hidden; }
+.quest-bar-fill { height: 100%; background: var(--pink); border-radius: 999px; transition: width 0.5s ease; }
+.quest-cta-btn {
+  width: 100%; background: var(--pink); color: #fff; font-family: inherit; font-weight: 700;
+  font-size: 0.95rem; padding: 0.85rem; border: none; border-radius: var(--radius-sm);
+  cursor: pointer; transition: background 0.18s;
+}
+.quest-cta-btn:hover { background: var(--pink-dark); }
+.quest-nudge { font-size: 0.8rem; text-align: center; color: var(--pink-dark); }
+
+@media (max-width: 600px) {
+  .quest-top { flex-direction: column; align-items: flex-start; }
+  .quest-speech::before, .quest-speech::after { display: none; }
+}
+
 /* Daily mood face swapped onto the big Home mascot (see todaysHammyMood()/renderHome() in
    app.js) — reuses the same .hammy-face-overlay layer as the quest-companion Hammy, just with
    its own set of illustrated moods from faces/ so idle Home Hammy is never blank-faced. Unlike
