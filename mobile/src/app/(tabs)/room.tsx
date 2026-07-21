@@ -13,28 +13,33 @@ type SlotLayout = { label: string; floorStanding?: boolean } & ViewStyle;
 type FurnitureSlot = Exclude<RoomSlot, 'wallpaper'>;
 type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
 
-/** Ported from the website's room-slot-* CSS rules (app.css), then sized up further —
- * matching the website's exact percentages left every item rendering tiny inside the much
- * smaller mobile scene. `floorStanding` marks furniture that should sit ON something (the
- * floor, a desk) rather than hang on the wall — see RoomSlotBox's `align="bottom"` below,
- * which anchors the item's own art to the bottom of its box instead of dead-center, so a
- * lamp's actual base lands at the bottom of its slot instead of floating in the middle of
- * empty letterboxed space above the visual floor line. Wallpaper isn't here — it's rendered
- * as the wall zone itself, not a positioned slot. */
+/** Loosely ported from the website's room-slot-* CSS rules (app.css), then sized up a LOT
+ * further — the website's own percentages, and even a first larger pass on top of them,
+ * still rendered tiny at mobile's much smaller scene size. `floorStanding` marks furniture
+ * that should sit ON something (the floor, a desk) rather than hang on the wall — see
+ * RoomSlotBox's `align="bottom"` below, which anchors the item's own art to the bottom of
+ * its box instead of dead-center, so e.g. a lamp's actual base lands at the bottom of its
+ * slot instead of floating in the middle of empty letterboxed space above the floor line.
+ * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
 const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
-  window: { label: 'Window', top: '14%', left: '33%', width: '34%', height: '28%' },
-  wall: { label: 'Wall art', top: '5%', left: '5%', width: '18%', height: '44%' },
-  lamp: { label: 'Lamp', top: '4%', right: '5%', width: '11%', height: '42%', floorStanding: true },
-  plant: { label: 'Plant', bottom: '5%', left: '30%', width: '8%', height: '18%', floorStanding: true },
-  bed: { label: 'Bed', bottom: '5%', right: '3%', width: '28%', height: '30%', floorStanding: true },
-  rug: { label: 'Rug', bottom: '2%', left: '32%', width: '36%', height: '19%', floorStanding: true },
-  desk: { label: 'Desk', bottom: '4%', left: '5%', width: '21%', height: '28%', floorStanding: true },
+  window: { label: 'Window', top: '10%', left: '28%', width: '42%', height: '34%' },
+  wall: { label: 'Wall art', top: '4%', left: '3%', width: '24%', height: '46%' },
+  lamp: { label: 'Lamp', top: '3%', right: '3%', width: '16%', height: '48%', floorStanding: true },
+  plant: { label: 'Plant', bottom: '5%', left: '32%', width: '13%', height: '24%', floorStanding: true },
+  bed: { label: 'Bed', bottom: '4%', right: '1%', width: '36%', height: '36%', floorStanding: true },
+  // Centered under Hammy (see the `hammy` style's alignSelf: 'center') and tall enough to
+  // reach up well past where Hammy's feet actually land (bottom: '12%') — the point being
+  // asked for here is the rug visibly extending up BEHIND Hammy, not just sitting further
+  // down the floor on its own, so the two read as "standing on it" rather than two separate
+  // unrelated floor items.
+  rug: { label: 'Rug', bottom: '0%', left: '18%', width: '64%', height: '34%', floorStanding: true },
+  desk: { label: 'Desk', bottom: '3%', left: '2%', width: '28%', height: '34%', floorStanding: true },
 };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
-// no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND the
-// furniture that legitimately overlaps it (a plant or bed sitting partway onto a rug is
-// normal; a rug drawn on top of them covering their base would look wrong).
+// no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND
+// everything else that legitimately overlaps it: the furniture that can sit partway onto a
+// rug (normal), and Hammy standing on it (the whole point of the rug reaching up that far).
 const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'rug', 'lamp', 'plant', 'bed', 'desk'];
 
 /** Ported from the website's wardrobeTabLabels (app.js) — the wardrobe only manages
@@ -55,7 +60,6 @@ export default function Room() {
   const [wardrobeCat, setWardrobeCat] = useState<WardrobeCategory>('hat');
 
   const equipped = equippedMascotItems();
-  const wearingLabel = equipped.length ? equipped.map((i) => i.name).join(' + ') : 'Nothing yet';
   const roomItems = equippedRoomItems();
   const wallpaperItem = roomItems.find((i) => i.slot === 'wallpaper');
   const bySlot = (slot: RoomSlot) => roomItems.find((i) => i.slot === slot);
@@ -107,9 +111,9 @@ export default function Room() {
 
           <Hammy size={218} equipped={equipped} style={styles.hammy} />
 
-          <View style={styles.wearing}>
-            <Txt style={styles.wearingTxt}>Wearing: {wearingLabel} 🐷</Txt>
-          </View>
+          <Pressable style={styles.furnitureCta} onPress={goToRoomShop}>
+            <Txt style={styles.furnitureCtaTxt}>Buy some furniture from the Furniture Farm! 🛒</Txt>
+          </Pressable>
         </View>
       ) : (
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.wardrobeContent}>
@@ -154,25 +158,17 @@ export default function Room() {
   );
 }
 
-function RoomSlotBox({
-  layout, item, onPress,
-}: {
-  layout: SlotLayout;
-  item?: ShopItemReal;
-  onPress: () => void;
-}) {
+// Renders nothing at all for an empty slot — no placeholder box, dashed or otherwise. The
+// furnitureCta banner is the one, single way into the shop from this screen now, so an
+// unfurnished room just reads as an empty room instead of a scene full of "+" outlines.
+function RoomSlotBox({ layout, item, onPress }: { layout: SlotLayout; item?: ShopItemReal; onPress: () => void }) {
+  if (!item) return null;
   const { label: _label, floorStanding, ...position } = layout;
   return (
     <View style={[styles.slot, position]}>
-      {item ? (
-        <Pressable style={styles.slotFilled} onPress={onPress}>
-          <ItemArt item={item} fill align={floorStanding ? 'bottom' : 'mid'} />
-        </Pressable>
-      ) : (
-        // No "+ Label" chip — just a soft dashed outline, still tappable, without a text
-        // callout cluttering an otherwise-empty scene.
-        <Pressable style={styles.slotEmpty} onPress={onPress} />
-      )}
+      <Pressable style={styles.slotFilled} onPress={onPress}>
+        <ItemArt item={item} fill align={floorStanding ? 'bottom' : 'mid'} />
+      </Pressable>
     </View>
   );
 }
@@ -197,29 +193,23 @@ const styles = StyleSheet.create({
   floorZone: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '52%' },
   slot: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   slotFilled: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  // A quiet dashed outline instead of a "+ Label" chip — still tappable, without a text
-  // callout cluttering an otherwise-empty scene.
-  slotEmpty: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(44,62,45,0.22)',
-  },
   hammy: { position: 'absolute', bottom: '12%', alignSelf: 'center' },
-  wearing: {
+  furnitureCta: {
     position: 'absolute',
     top: 14,
     alignSelf: 'center',
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: '#EFE4D6',
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    maxWidth: '84%',
+    backgroundColor: colors.pink,
+    borderRadius: 18,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    shadowColor: '#2C3E2D',
+    shadowOpacity: 0.16,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
-  wearingTxt: { fontFamily: font.extra, fontSize: 12, color: colors.pinkDark },
+  furnitureCtaTxt: { fontFamily: font.extra, fontSize: 12.5, color: colors.white, textAlign: 'center' },
   wardrobeContent: { paddingHorizontal: 16, paddingBottom: 8 },
   wardrobeStage: {
     alignItems: 'center',
