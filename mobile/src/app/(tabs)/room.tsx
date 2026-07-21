@@ -1,7 +1,6 @@
-import { type ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Defs, Pattern, Rect } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { Screen, Header, Txt, Hammy, ItemArt, Wallpaper, ListRow } from '@/components';
 import { colors, font } from '@/theme';
@@ -108,9 +107,9 @@ export default function Room() {
           </View>
         ) : (
           <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
-            <WardrobeBackdrop>
+            <View style={styles.wardrobeStage}>
               <Hammy size={190} equipped={equipped} />
-            </WardrobeBackdrop>
+            </View>
 
             <View style={styles.filters}>
               {WARDROBE_CATEGORIES.map((c) => {
@@ -147,27 +146,6 @@ export default function Room() {
         )}
       </View>
     </Screen>
-  );
-}
-
-// The wardrobe's stage used to be a brown wood-plank texture (ported from the website's
-// `.wardrobe-backdrop`) — swapped for plain vertical white stripes instead, same up-and-down
-// banding as the old planks, just white/off-white instead of brown, and with no circle
-// staging Hammy — Hammy sits directly on the striped backdrop.
-function WardrobeBackdrop({ children }: { children: ReactNode }) {
-  return (
-    <View style={styles.wardrobeStage}>
-      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-        <Defs>
-          <Pattern id="wardrobe-stripe" patternUnits="userSpaceOnUse" width={24} height={24}>
-            <Rect x={0} y={0} width={12} height={24} fill="#FFFFFF" />
-            <Rect x={12} y={0} width={12} height={24} fill="#F2EEE2" />
-          </Pattern>
-        </Defs>
-        <Rect x={0} y={0} width="100%" height="100%" fill="url(#wardrobe-stripe)" />
-      </Svg>
-      {children}
-    </View>
   );
 }
 
@@ -265,17 +243,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   wearingTxt: { fontFamily: font.extra, fontSize: 12, color: colors.pinkDark },
-  // overflow:'hidden' clips the striped SVG backdrop to the card's own rounded corners —
-  // see the WardrobeBackdrop component above.
   wardrobeStage: {
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.pinkBg,
+    borderWidth: 1.5,
+    borderColor: colors.pinkBorder,
     borderRadius: 24,
     paddingTop: 22,
     paddingBottom: 22,
     minHeight: 240,
-    overflow: 'hidden',
-    position: 'relative',
   },
   filters: { flexDirection: 'row', gap: 7, marginTop: 14 },
   fchip: {
