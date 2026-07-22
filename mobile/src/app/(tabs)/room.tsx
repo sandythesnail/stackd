@@ -27,9 +27,11 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // This is the layout for every lamp EXCEPT Fairy Lights — see FairyLightsGarland below,
   // which replaces this slot's normal rendering entirely when that item is equipped.
   lamp: { label: 'Lamp', top: '2%', right: '2%', width: '20%', height: '54%', floorStanding: true },
-  // Down at the floor, tucked beside the lamp's own base (bottom of the lamp's tall strip
-  // is around 44% from the bottom, so there's no overlap sitting here at 2-22%).
-  plant: { label: 'Plant', bottom: '2%', right: '2%', width: '16%', height: '20%', floorStanding: true },
+  // Pushed back and up (bottom sits right at the wall/floor seam, 48% up from the bottom —
+  // see floorZone's own 52% height) instead of down at the literal bottom edge, so it reads
+  // as tucked into the back corner rather than out front — but still bottom-anchored right
+  // on that seam line (not just placed high up with nothing under it), so it doesn't float.
+  plant: { label: 'Plant', bottom: '46%', right: '2%', width: '15%', height: '20%', floorStanding: true },
   // Right under the window (window now starts at top 4%, height 40% -> ends at 44%).
   bed: { label: 'Bed', top: '44%', left: '20%', width: '56%', height: '46%', floorStanding: true },
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
@@ -37,12 +39,12 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // body rather than only trailing out below his feet, so the two read as "standing on it"
   // rather than two separate unrelated floor items.
   rug: { label: 'Rug', bottom: '8%', left: '16%', width: '66%', height: '50%', floorStanding: true },
-  // Much bigger again (was 26%/42%) and moved further left; a color fix (see
-  // content/shopItems.json's desk_study/desk_vanity) darkened its actual wood tone instead
-  // of layering a translucent scrim over it — that scrim covered the item's full bounding
-  // box, including the transparent letterboxed margins around the art itself, which is
-  // exactly what showed up as a stray greyish rectangle next to the desk.
-  desk: { label: 'Desk', top: '42%', left: '0%', width: '34%', height: '50%', floorStanding: true },
+  // Directly under the window (left matches the window's own left edge, 24%) instead of the
+  // far-left corner — a color fix (see content/shopItems.json's desk_study/desk_vanity)
+  // darkened its actual wood tone instead of layering a translucent scrim over it, which
+  // covered the item's full bounding box (including the transparent letterboxed margins
+  // around the art) and was showing up as a stray greyish rectangle.
+  desk: { label: 'Desk', top: '42%', left: '24%', width: '34%', height: '50%', floorStanding: true },
 };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
@@ -205,23 +207,32 @@ function RoomSlotBox({
 
 // Fairy Lights only, replacing the normal single "lamp" slot entirely — a row of GARLAND_COUNT
 // repeated copies spanning the full width of the scene, right under the furnitureCta pill
-// near the top, each individually rotated 90° so the strand (drawn tall, viewBox 70x120)
+// near the top, each individually rotated 90° so the strand (drawn tall, viewBox 45x120)
 // reads as a horizontal string of lights instead of a squashed vertical one. Uses a single
 // screen-width-derived cell size instead of per-cell onLayout measurement — every cell is
-// identical, so one calculation covers the whole row.
-const GARLAND_COUNT = 5;
+// identical, so one calculation covers the whole row. Fewer, wider cells than an earlier pass
+// (was 5, no overlap) — that read as separated repeats instead of one continuous garland;
+// cutting the count and pulling cells together with a negative margin fixes both.
+const GARLAND_COUNT = 3;
+const GARLAND_OVERLAP = 0.12;
 function FairyLightsGarland({ item, onPress }: { item: ShopItemReal; onPress: () => void }) {
   const { width: winW } = useWindowDimensions();
-  const cellW = winW / GARLAND_COUNT;
-  // The item's own art is 70x120 (tall); rotated 90° its natural footprint is 120x70 (wide),
-  // i.e. height ~= width * 70/120. Letterboxes to fit if a cell ends up a bit off that ratio
+  // Oversized so GARLAND_COUNT cells, pulled together by the overlap margin below, still
+  // span the full screen width instead of leaving a gap short of the right edge.
+  const cellW = (winW / GARLAND_COUNT) * (1 + GARLAND_OVERLAP);
+  // The item's own art is 45x120 (tall); rotated 90° its natural footprint is 120x45 (wide),
+  // i.e. height ~= width * 45/120. Letterboxes to fit if a cell ends up a bit off that ratio
   // (ItemArt's own preserveAspectRatio), so this doesn't need to be exact.
-  const cellH = cellW * (70 / 120);
+  const cellH = cellW * (45 / 120);
   return (
     <View style={[styles.slot, styles.garlandBand]}>
       <View style={{ flexDirection: 'row' }}>
         {Array.from({ length: GARLAND_COUNT }, (_, i) => (
-          <Pressable key={i} onPress={onPress} style={{ width: cellW, height: cellH, alignItems: 'center', justifyContent: 'center' }}>
+          <Pressable
+            key={i}
+            onPress={onPress}
+            style={{ width: cellW, height: cellH, marginLeft: i === 0 ? 0 : -cellW * GARLAND_OVERLAP, alignItems: 'center', justifyContent: 'center' }}
+          >
             <View style={{ width: cellH, height: cellW, transform: [{ rotate: '90deg' }] }}>
               <ItemArt item={item} fill align="mid" />
             </View>

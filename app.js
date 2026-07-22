@@ -15755,23 +15755,22 @@ const SHOP_ITEMS = [
   },
   {
     id: 'lamp_fairy', name: 'Fairy Lights', category: 'room', slot: 'lamp', price: 65,
-    viewBox: '0 0 70 120',
+    // Tightened from '0 0 70 120' (which fit the old two-strand version) to actually bound
+    // the single remaining strand (content spans roughly x=10-35) — the old, wider viewBox
+    // left a lot of dead transparent space that showed up as a gap once mobile's room
+    // repeats this item side by side (see room.tsx's FairyLightsGarland).
+    viewBox: '0 0 45 120',
     desc: 'Twinkly and financially responsible.',
-    // The 4 extra dots sit at the midpoint of each swooping arc (computed from the actual
-    // quadratic-bezier curve, not eyeballed) — lights at the bottom of each peak/loop, not
-    // just at the 3 anchor points every strand already had.
+    // Single strand only — used to be two parallel wavy lines, which read as two separated
+    // rows once mobile's room repeats this item side by side as a garland (see room.tsx's
+    // FairyLightsGarland). The 2 midpoint dots sit at the bottom of each swooping arc
+    // (computed from the actual quadratic-bezier curve, not eyeballed).
     svg: `<path d="M10,10 Q35,40 10,60 Q35,90 10,110" stroke="#B8935E" stroke-width="2" fill="none"/>
-          <path d="M60,10 Q35,40 60,60 Q35,90 60,110" stroke="#B8935E" stroke-width="2" fill="none"/>
           <circle cx="10" cy="10" r="5" fill="#FFE45A"/>
           <circle cx="10" cy="60" r="5" fill="#FF96B8"/>
           <circle cx="10" cy="110" r="5" fill="#8FDD78"/>
-          <circle cx="60" cy="10" r="5" fill="#8FDD78"/>
-          <circle cx="60" cy="60" r="5" fill="#FFE45A"/>
-          <circle cx="60" cy="110" r="5" fill="#FF96B8"/>
           <circle cx="22.5" cy="37.5" r="3.5" fill="#FF96B8"/>
-          <circle cx="22.5" cy="87.5" r="3.5" fill="#FFE45A"/>
-          <circle cx="47.5" cy="37.5" r="3.5" fill="#8FDD78"/>
-          <circle cx="47.5" cy="87.5" r="3.5" fill="#FF96B8"/>`
+          <circle cx="22.5" cy="87.5" r="3.5" fill="#FFE45A"/>`
   },
   {
     id: 'lamp_desk', name: 'Desk Lamp', category: 'room', slot: 'lamp', price: 55,

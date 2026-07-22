@@ -529,9 +529,9 @@
     "category": "room",
     "slot": "lamp",
     "price": 65,
-    "viewBox": "0 0 70 120",
+    "viewBox": "0 0 45 120",
     "desc": "Twinkly and financially responsible.",
-    "svg": "<path d=\"M10,10 Q35,40 10,60 Q35,90 10,110\" stroke=\"#B8935E\" stroke-width=\"2\" fill=\"none\"/>\n          <path d=\"M60,10 Q35,40 60,60 Q35,90 60,110\" stroke=\"#B8935E\" stroke-width=\"2\" fill=\"none\"/>\n          <circle cx=\"10\" cy=\"10\" r=\"5\" fill=\"#FFE45A\"/>\n          <circle cx=\"10\" cy=\"60\" r=\"5\" fill=\"#FF96B8\"/>\n          <circle cx=\"10\" cy=\"110\" r=\"5\" fill=\"#8FDD78\"/>\n          <circle cx=\"60\" cy=\"10\" r=\"5\" fill=\"#8FDD78\"/>\n          <circle cx=\"60\" cy=\"60\" r=\"5\" fill=\"#FFE45A\"/>\n          <circle cx=\"60\" cy=\"110\" r=\"5\" fill=\"#FF96B8\"/>\n          <circle cx=\"22.5\" cy=\"37.5\" r=\"3.5\" fill=\"#FF96B8\"/>\n          <circle cx=\"22.5\" cy=\"87.5\" r=\"3.5\" fill=\"#FFE45A\"/>\n          <circle cx=\"47.5\" cy=\"37.5\" r=\"3.5\" fill=\"#8FDD78\"/>\n          <circle cx=\"47.5\" cy=\"87.5\" r=\"3.5\" fill=\"#FF96B8\"/>"
+    "svg": "<path d=\"M10,10 Q35,40 10,60 Q35,90 10,110\" stroke=\"#B8935E\" stroke-width=\"2\" fill=\"none\"/>\n          <circle cx=\"10\" cy=\"10\" r=\"5\" fill=\"#FFE45A\"/>\n          <circle cx=\"10\" cy=\"60\" r=\"5\" fill=\"#FF96B8\"/>\n          <circle cx=\"10\" cy=\"110\" r=\"5\" fill=\"#8FDD78\"/>\n          <circle cx=\"22.5\" cy=\"37.5\" r=\"3.5\" fill=\"#FF96B8\"/>\n          <circle cx=\"22.5\" cy=\"87.5\" r=\"3.5\" fill=\"#FFE45A\"/>"
   },
   {
     "id": "lamp_desk",
