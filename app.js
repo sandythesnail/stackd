@@ -15686,40 +15686,6 @@ const SHOP_ITEMS = [
           <rect x="130" y="88" width="10" height="10" fill="#8A6438"/>`
   },
   {
-    id: 'bed_bunk', name: 'Bunk Bed', category: 'room', slot: 'bed', price: 160,
-    viewBox: '0 0 160 130',
-    desc: 'For a piggy with big dreams.',
-    svg: `<rect x="14" y="14" width="132" height="28" rx="6" fill="var(--green-light)"/>
-          <rect x="14" y="14" width="132" height="10" rx="5" fill="var(--white)" opacity="0.6"/>
-          <rect x="14" y="70" width="132" height="34" rx="6" fill="var(--green)"/>
-          <rect x="14" y="70" width="132" height="12" rx="6" fill="var(--white)" opacity="0.4"/>
-          <rect x="8" y="14" width="8" height="96" fill="#8A6438"/>
-          <rect x="144" y="14" width="8" height="96" fill="#8A6438"/>`
-  },
-  {
-    id: 'bed_daybed', name: 'Daybed', category: 'room', slot: 'bed', price: 130,
-    viewBox: '0 0 160 100',
-    desc: 'Perfect for a mid-budgeting nap.',
-    svg: `<rect x="10" y="56" width="140" height="30" rx="8" fill="var(--green)"/>
-          <rect x="10" y="56" width="140" height="12" rx="6" fill="var(--green-light)"/>
-          <rect x="16" y="40" width="18" height="24" rx="6" fill="var(--white)" stroke="var(--border)" stroke-width="2"/>
-          <rect x="126" y="40" width="18" height="24" rx="6" fill="var(--white)" stroke="var(--border)" stroke-width="2"/>
-          <rect x="20" y="86" width="10" height="10" fill="#8A6438"/>
-          <rect x="130" y="86" width="10" height="10" fill="#8A6438"/>`
-  },
-  {
-    id: 'bed_canopy', name: 'Canopy Bed', category: 'room', slot: 'bed', price: 175,
-    viewBox: '0 0 160 100',
-    desc: 'A dreamy upgrade for a top saver.',
-    svg: `<rect x="6" y="10" width="6" height="90" fill="#8A6438"/>
-          <rect x="148" y="10" width="6" height="90" fill="#8A6438"/>
-          <path d="M12,10 Q80,-4 148,10" stroke="#8A6438" stroke-width="4" fill="none"/>
-          <path d="M14,12 Q80,50 14,90" fill="var(--pink-pale)" opacity="0.55"/>
-          <path d="M146,12 Q80,50 146,90" fill="var(--pink-pale)" opacity="0.55"/>
-          <rect x="10" y="60" width="140" height="34" rx="8" fill="var(--pink)"/>
-          <rect x="10" y="60" width="140" height="12" rx="6" fill="var(--pink-light)"/>`
-  },
-  {
     id: 'desk_study', name: 'Study Desk', category: 'room', slot: 'desk', price: 115,
     viewBox: '0 0 160 100',
     desc: 'A tidy desk for getting things done.',
@@ -15732,45 +15698,23 @@ const SHOP_ITEMS = [
           <rect x="65" y="40" width="30" height="18" rx="2" fill="var(--green-pale)" stroke="var(--border)" stroke-width="2"/>`
   },
   {
-    id: 'desk_vanity', name: 'Vanity Desk', category: 'room', slot: 'desk', price: 135,
-    viewBox: '0 0 160 100',
-    desc: 'A desk with a little mirror to match.',
-    // Darkened from #E8B896 — same floor-blending issue as desk_study.
-    svg: `<rect x="15" y="56" width="130" height="8" rx="2" fill="#B8875A"/>
-          <rect x="21" y="64" width="6" height="28" fill="#8A6438"/>
-          <rect x="133" y="64" width="6" height="28" fill="#8A6438"/>
-          <rect x="76" y="50" width="8" height="8" fill="var(--border)"/>
-          <ellipse cx="80" cy="32" rx="16" ry="20" fill="var(--pink-pale)" stroke="var(--border)" stroke-width="2"/>`
-  },
-  {
-    id: 'lamp_moon', name: 'Moon Lamp', category: 'room', slot: 'lamp', price: 50,
-    viewBox: '0 0 70 110',
-    desc: 'Soft light for late-night budgeting.',
-    svg: `<rect x="30" y="90" width="10" height="16" fill="#8A6438"/>
-          <ellipse cx="35" cy="106" rx="20" ry="4" fill="var(--border)"/>
-          <line x1="35" y1="20" x2="35" y2="90" stroke="#B8935E" stroke-width="3"/>
-          <circle cx="35" cy="18" r="18" fill="#FFF6D8"/>
-          <circle cx="41" cy="12" r="4" fill="#F5E5A8"/>
-          <circle cx="30" cy="24" r="2.5" fill="#F5E5A8"/>`
-  },
-  {
     id: 'lamp_fairy', name: 'Fairy Lights', category: 'room', slot: 'lamp', price: 65,
-    // Tightened from '0 0 70 120' (which fit the old two-strand version) to actually bound
-    // the single remaining strand (content spans roughly x=10-35) — the old, wider viewBox
-    // left a lot of dead transparent space that showed up as a gap once mobile's room
-    // repeats this item side by side (see room.tsx's FairyLightsGarland).
-    viewBox: '0 0 45 120',
+    // Natively horizontal now (was a tall vertical strand, viewBox 0 0 45 120) — the icon
+    // itself used to only look right after mobile's room applied a 90° rotation just for
+    // that one screen (see room.tsx's FairyLightsGarland); everywhere else (shop listing,
+    // wardrobe) it rendered sideways. Redrawn as a strand strung between 3 anchor points
+    // with a natural gravity droop between them, instead of just rotating the old vertical
+    // art — the sag reads more like an actual hung string of lights.
+    viewBox: '0 0 120 45',
     desc: 'Twinkly and financially responsible.',
-    // Single strand only — used to be two parallel wavy lines, which read as two separated
-    // rows once mobile's room repeats this item side by side as a garland (see room.tsx's
-    // FairyLightsGarland). The 2 midpoint dots sit at the bottom of each swooping arc
-    // (computed from the actual quadratic-bezier curve, not eyeballed).
-    svg: `<path d="M10,10 Q35,40 10,60 Q35,90 10,110" stroke="#B8935E" stroke-width="2" fill="none"/>
+    // The 2 smaller dots sit at the bottom of each droop (computed from the actual
+    // quadratic-bezier curve, not eyeballed).
+    svg: `<path d="M10,10 Q35,40 60,10 Q85,40 110,10" stroke="#B8935E" stroke-width="2" fill="none"/>
           <circle cx="10" cy="10" r="5" fill="#FFE45A"/>
-          <circle cx="10" cy="60" r="5" fill="#FF96B8"/>
-          <circle cx="10" cy="110" r="5" fill="#8FDD78"/>
-          <circle cx="22.5" cy="37.5" r="3.5" fill="#FF96B8"/>
-          <circle cx="22.5" cy="87.5" r="3.5" fill="#FFE45A"/>`
+          <circle cx="60" cy="10" r="5" fill="#FF96B8"/>
+          <circle cx="110" cy="10" r="5" fill="#8FDD78"/>
+          <circle cx="35" cy="25" r="3.5" fill="#FF96B8"/>
+          <circle cx="85" cy="25" r="3.5" fill="#FFE45A"/>`
   },
   {
     id: 'lamp_desk', name: 'Desk Lamp', category: 'room', slot: 'lamp', price: 55,
@@ -15780,15 +15724,6 @@ const SHOP_ITEMS = [
           <line x1="35" y1="98" x2="35" y2="70" stroke="#B8935E" stroke-width="4"/>
           <line x1="35" y1="70" x2="55" y2="46" stroke="#B8935E" stroke-width="4"/>
           <path d="M40,30 L64,42 L52,58 L32,48 Z" fill="#FFF6D8"/>`
-  },
-  {
-    id: 'lamp_lava', name: 'Lava Lamp', category: 'room', slot: 'lamp', price: 70,
-    viewBox: '0 0 70 110',
-    desc: 'Groovy glow for the room.',
-    svg: `<rect x="26" y="94" width="18" height="12" rx="3" fill="#4A4A52"/>
-          <path d="M18,92 L52,92 L46,30 Q35,20 24,30 Z" fill="none" stroke="#C0C0C8" stroke-width="3"/>
-          <ellipse cx="35" cy="70" rx="9" ry="12" fill="#FF6F91"/>
-          <ellipse cx="33" cy="46" rx="6" ry="8" fill="#FF6F91"/>`
   },
   {
     id: 'window_sunny', name: 'Sunny Window', category: 'room', slot: 'window', price: 90,

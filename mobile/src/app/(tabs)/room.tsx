@@ -42,10 +42,10 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // Pushed higher still (top 2%, right at the window's own top edge/the ceiling) so it
   // reads as tucked against the wall under the window, not floating out in the middle of
   // the floor — centered in the window's own span (left 24%-72%, so left 31% centers this
-  // 34%-wide desk). A color fix (see content/shopItems.json's desk_study/desk_vanity)
-  // darkened its actual wood tone instead of layering a translucent scrim over it, which
-  // covered the item's full bounding box (including the transparent letterboxed margins
-  // around the art) and was showing up as a stray greyish rectangle.
+  // 34%-wide desk). A color fix (see content/shopItems.json's desk_study) darkened its
+  // actual wood tone instead of layering a translucent scrim over it, which covered the
+  // item's full bounding box (including the transparent letterboxed margins around the
+  // art) and was showing up as a stray greyish rectangle.
   desk: { label: 'Desk', top: '2%', left: '31%', width: '34%', height: '50%', floorStanding: true },
 };
 
@@ -209,12 +209,13 @@ function RoomSlotBox({
 
 // Fairy Lights only, replacing the normal single "lamp" slot entirely — a row of GARLAND_COUNT
 // repeated copies spanning the full width of the scene, right under the furnitureCta pill
-// near the top, each individually rotated 90° so the strand (drawn tall, viewBox 45x120)
-// reads as a horizontal string of lights instead of a squashed vertical one. Uses a single
-// screen-width-derived cell size instead of per-cell onLayout measurement — every cell is
-// identical, so one calculation covers the whole row. Fewer, wider cells than an earlier pass
-// (was 5, no overlap) — that read as separated repeats instead of one continuous garland;
-// cutting the count and pulling cells together with a negative margin fixes both.
+// near the top. The item's own art is natively horizontal now (viewBox 120x45 — it used to
+// be drawn tall and get rotated 90° just for this one screen, which left it sideways
+// everywhere else it rendered, like the shop listing), so no rotation is needed here anymore.
+// Uses a single screen-width-derived cell size instead of per-cell onLayout measurement —
+// every cell is identical, so one calculation covers the whole row. Cells overlap slightly
+// (a negative margin) so the repeats read as one continuous garland instead of visibly
+// separated segments.
 const GARLAND_COUNT = 3;
 const GARLAND_OVERLAP = 0.12;
 function FairyLightsGarland({ item, onPress }: { item: ShopItemReal; onPress: () => void }) {
@@ -222,9 +223,9 @@ function FairyLightsGarland({ item, onPress }: { item: ShopItemReal; onPress: ()
   // Oversized so GARLAND_COUNT cells, pulled together by the overlap margin below, still
   // span the full screen width instead of leaving a gap short of the right edge.
   const cellW = (winW / GARLAND_COUNT) * (1 + GARLAND_OVERLAP);
-  // The item's own art is 45x120 (tall); rotated 90° its natural footprint is 120x45 (wide),
-  // i.e. height ~= width * 45/120. Letterboxes to fit if a cell ends up a bit off that ratio
-  // (ItemArt's own preserveAspectRatio), so this doesn't need to be exact.
+  // The item's own art is 120x45 (wide) — height ~= width * 45/120. Letterboxes to fit if a
+  // cell ends up a bit off that ratio (ItemArt's own preserveAspectRatio), so this doesn't
+  // need to be exact.
   const cellH = cellW * (45 / 120);
   return (
     <View style={[styles.slot, styles.garlandBand]}>
@@ -233,11 +234,9 @@ function FairyLightsGarland({ item, onPress }: { item: ShopItemReal; onPress: ()
           <Pressable
             key={i}
             onPress={onPress}
-            style={{ width: cellW, height: cellH, marginLeft: i === 0 ? 0 : -cellW * GARLAND_OVERLAP, alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: cellW, height: cellH, marginLeft: i === 0 ? 0 : -cellW * GARLAND_OVERLAP }}
           >
-            <View style={{ width: cellH, height: cellW, transform: [{ rotate: '90deg' }] }}>
-              <ItemArt item={item} fill align="mid" />
-            </View>
+            <ItemArt item={item} fill align="mid" />
           </Pressable>
         ))}
       </View>
