@@ -17716,7 +17716,7 @@ function refreshShopModal(itemId) {
     if (!remaining) {
       btn = `<button class="shop-btn shop-btn-broke" disabled>✓ All items collected!</button>`;
     } else {
-      btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>${ICON_GIFT} Open Box · ${shopPriceLabel(item)}</button>`;
+      btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>Open Box · ${shopPriceLabel(item)}</button>`;
     }
   } else if (equipped) {
     btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'} · Remove</button>`;
@@ -17847,7 +17847,7 @@ function renderShopPage() {
       const boxRemaining = isBox ? mysteryPoolUnowned(item.mysteryPool).length : 0;
       const canAfford = isReward ? false : isLocked ? false : (isBox && !boxRemaining) ? false : shopBalanceFor(item) >= item.price;
       const statusLabel = isBox
-        ? (boxRemaining ? `${ICON_GIFT} ${shopPriceLabel(item)}` : '✓ All collected!')
+        ? (boxRemaining ? shopPriceLabel(item) : '✓ All collected!')
         : equipped
         ? (item.slot === 'wallpaper' ? '✓ Applied' : isRoom ? '✓ Placed' : '✓ Equipped')
         : owned ? 'Owned'
@@ -17861,10 +17861,7 @@ function renderShopPage() {
           ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
           : getPigWithItemMarkup(0.29, item);
       return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${(isReward || isLocked) && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
-        ${isDiamond && !isBox ? '<span class="shop-exclusive-ribbon">Mystery</span>' : ''}
-        ${isBox ? '<span class="shop-exclusive-ribbon">Mystery</span>' : ''}
-        ${isLocked && !isDiamond ? '<span class="shop-reward-ribbon">Mystery</span>' : ''}
-        ${isReward && !owned ? '<span class="shop-reward-ribbon">Reward</span>' : ''}
+        ${isBox || (isDiamond && !isBox) || (isLocked && !isDiamond) ? `<span class="${isDiamond ? 'shop-exclusive-ribbon' : 'shop-gold-ribbon'}">Mystery</span>` : (isReward && !owned) ? '<span class="shop-milestone-ribbon">Reward</span>' : ''}
         <div class="shop-preview">
           ${preview}
         </div>
@@ -17897,7 +17894,6 @@ function renderShopPage() {
           <div class="shop-storefront-text">
             <div class="shop-storefront-sign">The Furniture Farm</div>
             <div class="shop-storefront-sub">${filledRoomSlots ? `${filledRoomSlots} piece${filledRoomSlots === 1 ? '' : 's'} furnished so far` : 'Furnish Hammy\'s room — every cozy upgrade compounds!'}</div>
-            <div class="shop-earn-tip">Earn ${ICON_COIN} coins by completing lessons · ${ICON_DIAMOND} diamonds every 3-day streak</div>
           </div>
         </div>
       </div>`
@@ -17910,7 +17906,6 @@ function renderShopPage() {
           <div class="shop-storefront-text">
             <div class="shop-storefront-sign">Porky's Boutique</div>
             <div class="shop-storefront-sub">${wornItems.length ? `Currently wearing: <strong>${wornItems.map(i => i.name).join(', ')}</strong>` : 'Pick something cute for your pig!'}</div>
-            <div class="shop-earn-tip">Earn ${ICON_COIN} coins by completing lessons · ${ICON_DIAMOND} diamonds every 3-day streak</div>
           </div>
         </div>
       </div>`;
@@ -18308,8 +18303,8 @@ function renderProgressPage() {
   const pct = xpProgressPct();
   const nextXP = xpForLevel(state.level);
 
-  // Donut chart math (SVG circle r=32, circumference ≈ 201)
-  const r = 32;
+  // Donut chart math — ported from mobile's Ring (size=140, stroke=16), so r=(140-16)/2=62.
+  const r = 62;
   const circ = +(2 * Math.PI * r).toFixed(2);
   const offset = +(circ * (1 - done / MODULES.length)).toFixed(2);
 
@@ -18357,15 +18352,16 @@ function renderProgressPage() {
 
     <!-- Donut + Module score bars -->
     <div class="pg-charts-row">
-      <div class="pg-chart-card">
+      <div class="pg-chart-card pg-ring-card">
         <div class="pg-chart-title">Modules Done</div>
         <div class="pg-donut-wrap">
-          <svg viewBox="0 0 80 80" class="pg-donut-svg">
-            <circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--border)" stroke-width="8"/>
-            <circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--green)" stroke-width="8"
+          <svg viewBox="0 0 140 140" class="pg-donut-svg">
+            <circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--border)" stroke-width="16"/>
+            <circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--green)" stroke-width="16"
               stroke-dasharray="${circ}" stroke-dashoffset="${offset}"
-              stroke-linecap="round" transform="rotate(-90 40 40)" class="pg-donut-fill"/>
+              stroke-linecap="round" transform="rotate(-90 70 70)" class="pg-donut-fill"/>
           </svg>
+          <div class="pg-donut-hole"></div>
           <div class="pg-donut-center">
             <span class="pg-donut-num">${done}</span>
             <span class="pg-donut-den">/${MODULES.length}</span>
@@ -18385,6 +18381,7 @@ function renderProgressPage() {
             const scorePct = comp ? (comp.score / (comp.total || 5)) * 100 : 0;
             const isPink = pinkMods.has(m.id);
             return `<div class="pg-bar-row">
+              <div class="mod-icon mod-icon-sm ${m.iconColor}">${m.icon}</div>
               <span class="pg-bar-label">${m.title}</span>
               <div class="pg-bar-track">
                 <div class="pg-bar-fill${isPink ? ' pg-bar-pink' : ''}" style="width:${scorePct}%"></div>
@@ -18423,7 +18420,7 @@ function renderProgressPage() {
     <div class="pg-chart-card">
       <div class="pg-chart-title">Level Progress</div>
       <div class="pg-level-row">
-        <div class="pg-level-big">Lv ${state.level}</div>
+        <div class="pg-level-badge"><span class="pg-level-badge-txt">Lv ${state.level}</span></div>
         <div class="pg-level-info">
           <div class="pg-xp-row-detail">
             <span>${state.xp.toLocaleString()} XP earned</span>
@@ -20296,7 +20293,8 @@ function showHammyReaction(mod, isCorrect, context = 'answer') {
   qp.streak = isCorrect ? (qp.streak || 0) + 1 : 0;
   saveState();
 
-  const gentleSet = context === 'match' ? HAMMY_TRYAGAIN_MSGS : context === 'outcome' ? HAMMY_OUTCOME_GENTLE_MSGS : HAMMY_GENTLE_MSGS;
+  const gentleSet = context === 'match' || context === 'noexplain' ? HAMMY_TRYAGAIN_MSGS
+    : context === 'outcome' ? HAMMY_OUTCOME_GENTLE_MSGS : HAMMY_GENTLE_MSGS;
   let msg = isCorrect
     ? HAMMY_CORRECT_MSGS[Math.floor(Math.random() * HAMMY_CORRECT_MSGS.length)]
     : gentleSet[Math.floor(Math.random() * gentleSet.length)];
@@ -20397,7 +20395,10 @@ function renderTeachChapter(chapter, mod, onDone) {
             if ((b.dataset.answer === 'true') === c.check.isTrue) b.classList.add('correct');
             else if (b === btn) b.classList.add('wrong');
           });
-          showHammyReaction(mod, isCorrect);
+          // 'noexplain': the word-check has no explanation text anywhere near it (just the
+          // correct/wrong highlight on the two buttons above), so "Here's why:"/"Here's
+          // what's true:" would dangle with nothing to point at.
+          showHammyReaction(mod, isCorrect, 'noexplain');
           readyToAdvance();
         });
       });
