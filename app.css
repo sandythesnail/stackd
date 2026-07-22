@@ -1980,17 +1980,19 @@ select.budget-input { cursor: pointer; }
     repeating-linear-gradient(90deg, #C6935B 0, #C6935B 58px, #B98650 58px, #B98650 62px),
     linear-gradient(180deg, #D7A968, #B9834C);
 }
-.room-pig { position: relative; z-index: 2; margin-bottom: 0.5%; cursor: pointer; }
+.room-pig { position: relative; z-index: 2; margin-bottom: 0.5%; margin-left: 6%; cursor: pointer; }
 .room-pig .pig-stage { transform-origin: bottom center; }
 .room-slot { position: absolute; }
 .room-slot svg { width: 100%; height: 100%; display: block; }
-.room-slot-window { top: 17%; left: 50%; transform: translateX(-50%); width: 30%; height: 24%; }
+.room-slot-window { top: 15%; left: 50%; transform: translateX(-50%); width: 36%; height: 30%; }
 .room-slot-wall  { top: 6%; left: 6%; width: 15%; height: 40%; }
-.room-slot-lamp  { top: 5%; right: 6%; width: 9%; height: 38%; }
-.room-slot-plant { bottom: 6%; left: 31%; width: 6%; height: 14%; z-index: 1; }
-.room-slot-bed   { bottom: 6%; right: 4%; width: 24%; height: 26%; z-index: 1; }
-.room-slot-rug   { bottom: 3%; left: 50%; transform: translateX(-50%); width: 34%; height: 16%; z-index: 1; }
-.room-slot-desk  { bottom: 5%; left: 6%; width: 18%; height: 24%; z-index: 1; }
+/* top+height reached only 43% before — short of the floor's 48% start, so the lamp visibly
+   floated above the floor line instead of standing on it. */
+.room-slot-lamp  { top: 3%; right: 5%; width: 13%; height: 48%; }
+.room-slot-plant { bottom: 5%; left: 27%; width: 12%; height: 24%; z-index: 1; }
+.room-slot-bed   { bottom: 5%; right: 3%; width: 29%; height: 31%; z-index: 1; }
+.room-slot-rug   { bottom: 2%; left: 50%; transform: translateX(-50%); width: 50%; height: 24%; z-index: 1; }
+.room-slot-desk  { bottom: 4%; left: 5%; width: 22%; height: 29%; z-index: 1; }
 
 /* A quiet dashed outline per empty slot instead of the small round "+" button + pill label
    this used to be — matches the mobile app's equivalent room-slot treatment. Still fully
@@ -2004,9 +2006,10 @@ select.budget-input { cursor: pointer; }
 .wallpaper-swatch { width: 100%; height: 100%; border-radius: var(--radius-sm); }
 
 /* ─── WARDROBE ─── */
+/* Same striped floor as the Room page's .room-floor, not its own pink — the wardrobe is
+   still Hammy's room, just browsing outfits instead of furniture. */
 .wardrobe-backdrop {
-  background: var(--pink-pale);
-  border: 1.5px solid var(--pink-light);
+  background: repeating-linear-gradient(90deg, #C6935B 0, #C6935B 58px, #B98650 58px, #B98650 62px);
   display: flex; align-items: stretch; gap: 1.5rem;
   padding: 1.75rem; overflow-y: auto;
 }
@@ -2368,7 +2371,23 @@ select.budget-input { cursor: pointer; }
    than a small nested link inside another quest's tile — .lt-subquest is retired. As the
    9th (odd, last) tile in the ungrouped 2-col grid it already gets the existing
    :last-child:nth-child(odd) treatment above (spans both columns, no stray empty cell). */
+/* Real-life sub-quest — its own outlined card, ported from mobile's RealLifeSubQuestRow
+   (pink border/bg by default, green once done) rather than blending into the plain grid
+   row look every other lesson tile uses. */
+.subquest-tile {
+  margin: 0.5rem 1rem 0.75rem;
+  border: 1.5px solid var(--pink-light) !important;
+  border-radius: var(--radius-sm);
+  background: var(--pink-pale);
+}
+.subquest-tile:hover { background: var(--pink-pale); }
 .subquest-tile .lt-title { color: var(--pink-dark); }
+.subquest-tile.done {
+  border-color: var(--green-light) !important;
+  background: var(--green-pale);
+}
+.subquest-tile.done:hover { background: var(--green-pale); }
+.subquest-tile.done .lt-title { color: var(--green-dark); }
 .lt-cta {
   flex-shrink: 0; font-size: 0.78rem; font-weight: 700;
   padding: 0.3rem 0.75rem; border-radius: var(--radius-sm);

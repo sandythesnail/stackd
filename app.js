@@ -16787,7 +16787,7 @@ function renderModuleList(containerId) {
     const badge = allDone
       ? `<span class="card-badge badge-done">✓ Complete</span>`
       : unitsDone > 0
-        ? `<span class="card-badge badge-progress">${unitsDone}/${totalUnits} lessons</span>`
+        ? `<span class="card-badge badge-progress">${donePct}% done</span>`
         : isRecommended
           ? `<span class="card-badge badge-recommend">★ Recommended</span>`
           // Was "Up to XXX XP" — percent complete instead, matching the percent-based
@@ -16823,7 +16823,7 @@ function renderModuleList(containerId) {
         subHtml = `<div class="lesson-tile quest-tile subquest-tile${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">
           <div class="lt-body">
             <div class="lt-num"><span class="lt-num-label">Lesson ${quests.length + 1}</span> <span class="card-badge badge-xp">Up to ${questMaxXP(sub, m)} XP</span></div>
-            <div class="lt-title">🎯 Real-life guide: ${sub.topic}</div>
+            <div class="lt-title">Real-life sub-quest: ${sub.topic}</div>
             <div class="lt-meta">${sub.character.tagline}</div>
           </div>
           <span class="lt-cta">${subCta}</span>

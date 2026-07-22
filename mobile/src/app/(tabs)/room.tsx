@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Screen, Txt, Hammy, ItemArt, Wallpaper, ListRow } from '@/components';
 import { colors, font } from '@/theme';
@@ -22,23 +21,23 @@ type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
  * slot instead of floating in the middle of empty letterboxed space above the floor line.
  * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
 const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
-  window: { label: 'Window', top: '10%', left: '28%', width: '42%', height: '34%' },
+  window: { label: 'Window', top: '9%', left: '24%', width: '48%', height: '40%' },
   wall: { label: 'Wall art', top: '4%', left: '3%', width: '24%', height: '46%' },
-  lamp: { label: 'Lamp', top: '3%', right: '3%', width: '16%', height: '48%', floorStanding: true },
+  // top+height used to land at 51%, just barely into the floor zone (48%) — bumped both so
+  // the lamp's own base clearly overlaps the floor instead of only just grazing it.
+  lamp: { label: 'Lamp', top: '2%', right: '2%', width: '20%', height: '54%', floorStanding: true },
   // Moved off dead-center (where it used to sit right on top of both the rug and Hammy) to
   // the right, tucked in beside the bed instead — clear of Hammy's own footprint, and a
   // plant next to a bed is a normal enough pairing that the modest overlap with the bed's
   // edge reads as intentional rather than a collision.
-  plant: { label: 'Plant', bottom: '4%', left: '62%', width: '18%', height: '36%', floorStanding: true },
-  bed: { label: 'Bed', bottom: '4%', right: '1%', width: '36%', height: '36%', floorStanding: true },
-  // Centered under Hammy (see the `hammy` style's alignSelf: 'center') and tall enough to
-  // reach up well past where Hammy's feet actually land (bottom: '12%') — the point being
-  // asked for here is the rug visibly extending up BEHIND Hammy, not just sitting further
-  // down the floor on its own, so the two read as "standing on it" rather than two separate
-  // unrelated floor items. height bumped further so it reaches up even more of the way
-  // behind Hammy than the previous pass did.
-  rug: { label: 'Rug', bottom: '0%', left: '18%', width: '64%', height: '46%', floorStanding: true },
-  desk: { label: 'Desk', bottom: '3%', left: '2%', width: '28%', height: '34%', floorStanding: true },
+  plant: { label: 'Plant', bottom: '4%', left: '58%', width: '24%', height: '42%', floorStanding: true },
+  bed: { label: 'Bed', bottom: '3%', right: '0%', width: '40%', height: '40%', floorStanding: true },
+  // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
+  // (bottom raised off the literal floor edge) so more of it reads as sitting BEHIND Hammy's
+  // body rather than only trailing out below his feet, so the two read as "standing on it"
+  // rather than two separate unrelated floor items.
+  rug: { label: 'Rug', bottom: '8%', left: '16%', width: '66%', height: '50%', floorStanding: true },
+  desk: { label: 'Desk', bottom: '3%', left: '2%', width: '32%', height: '38%', floorStanding: true },
 };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
@@ -49,6 +48,12 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
 // (see the plant entry above), and a plant tucked in front of the bed reads right; a bed
 // painted on top would instead hide almost the entire plant behind it.
 const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'rug', 'lamp', 'bed', 'plant', 'desk'];
+
+// Fixed-width vertical stripes, ported pixel-for-pixel from the website's .room-floor
+// (repeating-linear-gradient(90deg, #C6935B 0 58px, #B98650 58px 62px)) — a plain two-tone
+// gradient here used to have no stripes at all. More entries than any real screen is wide
+// enough to need; the floor's own overflow:hidden clips the rest.
+const FLOOR_STRIPES = Array.from({ length: 24 }, (_, i) => i);
 
 /** Ported from the website's wardrobeTabLabels (app.js) — the wardrobe only manages
  * equippable cosmetics, not room decor or auto-awarded "reward" items. */
@@ -102,7 +107,11 @@ export default function Room() {
           <View style={styles.wallZone}>
             <Wallpaper item={wallpaperItem} style={StyleSheet.absoluteFill} />
           </View>
-          <LinearGradient colors={['#D7A968', '#B9834C']} style={styles.floorZone} />
+          <View style={styles.floorZone}>
+            <View style={styles.floorStripes}>
+              {FLOOR_STRIPES.map((i) => <View key={i} style={styles.floorStripe} />)}
+            </View>
+          </View>
 
           {FURNITURE_SLOTS.map((slot) => {
             const item = bySlot(slot);
@@ -126,6 +135,9 @@ export default function Room() {
       ) : (
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.wardrobeContent}>
           <View style={styles.wardrobeStage}>
+            <View style={styles.wardrobeStageStripes} pointerEvents="none">
+              {FLOOR_STRIPES.map((i) => <View key={i} style={styles.floorStripe} />)}
+            </View>
             <Hammy size={190} equipped={equipped} />
           </View>
 
@@ -198,7 +210,12 @@ const styles = StyleSheet.create({
   // every bit of vertical space down to the tab bar instead of sitting in an inset card.
   scene: { flex: 1 },
   wallZone: { position: 'absolute', top: 0, left: 0, right: 0, height: '48%' },
-  floorZone: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '52%' },
+  floorZone: {
+    position: 'absolute', bottom: 0, left: 0, right: 0, height: '52%',
+    backgroundColor: '#B98650', overflow: 'hidden',
+  },
+  floorStripes: { flex: 1, flexDirection: 'row' },
+  floorStripe: { width: 58, height: '100%', backgroundColor: '#C6935B', marginRight: 4 },
   slot: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   slotFilled: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   hammy: { position: 'absolute', bottom: '12%', alignSelf: 'center' },
@@ -219,17 +236,19 @@ const styles = StyleSheet.create({
   },
   furnitureCtaTxt: { fontFamily: font.extra, fontSize: 12.5, color: colors.white, textAlign: 'center' },
   wardrobeContent: { paddingHorizontal: 16, paddingBottom: 8 },
+  // Same striped floor as the Room tab's floorZone, not its own pink — the wardrobe is
+  // still Hammy's room, just browsing outfits instead of furniture.
   wardrobeStage: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.pinkBg,
-    borderWidth: 1.5,
-    borderColor: colors.pinkBorder,
+    backgroundColor: '#B98650',
     borderRadius: 24,
+    overflow: 'hidden',
     paddingTop: 22,
     paddingBottom: 22,
     minHeight: 240,
   },
+  wardrobeStageStripes: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'row' },
   filters: { flexDirection: 'row', gap: 7, marginTop: 14 },
   fchip: {
     flex: 1,
