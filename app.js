@@ -20348,7 +20348,11 @@ function showHammyReaction(mod, isCorrect, context = 'answer') {
   if (isStreak) { avatar.classList.add('streak'); msgEl.classList.add('streak'); }
   // Face and message hide together (previously the face reverted to blank at 1300ms while
   // the bubble stayed up until 2400ms, leaving Hammy blank-faced under a still-visible message).
-  setTimeout(() => avatar.classList.remove('happy', 'gentle', 'streak'), 1400);
+  // The avatar's own timer is tracked/cleared the same way msgEl's is below — without that, a
+  // second reaction fired within 1400ms of the first left the FIRST call's stale timeout to
+  // strip the mood class out from under the second one, going blank-faced mid-message.
+  clearTimeout(avatar._faceHideTimer);
+  avatar._faceHideTimer = setTimeout(() => avatar.classList.remove('happy', 'gentle', 'streak'), 1400);
   msgEl._hideTimer = setTimeout(() => {
     msgEl.classList.remove('show');
     setTimeout(() => { if (!msgEl.classList.contains('show')) msgEl.textContent = ''; }, 320);
@@ -20371,7 +20375,10 @@ function showHammyMessage(text, isGood) {
   msgEl.classList.add('show', isGood ? 'happy' : 'gentle');
   // Face and message hide together (previously the face reverted to blank at 1300ms while
   // this longer narration text stayed up until 4500ms, leaving Hammy blank-faced for ~3s).
-  setTimeout(() => avatar.classList.remove('happy', 'gentle'), 2800);
+  // Same stale-timeout race as showHammyReaction above — track/clear the avatar's own timer
+  // too, or a rapid second call lets the first call's timeout blank the face out from under it.
+  clearTimeout(avatar._faceHideTimer);
+  avatar._faceHideTimer = setTimeout(() => avatar.classList.remove('happy', 'gentle'), 2800);
   msgEl._hideTimer = setTimeout(() => {
     msgEl.classList.remove('show');
     setTimeout(() => { if (!msgEl.classList.contains('show')) msgEl.textContent = ''; }, 320);

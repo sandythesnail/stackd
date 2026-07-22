@@ -1071,7 +1071,7 @@ function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollCha
           <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === chapter.isTrue ? colors.greenDark : colors.pinkDark }}>
             {answered === chapter.isTrue ? 'Correct!' : 'Not quite.'}
           </Txt>
-          <Txt variant="lead" style={{ fontSize: 13, marginTop: 4 }}>{chapter.explanation}</Txt>
+          <Txt variant="lead" style={{ fontSize: 13, marginTop: 4, color: answered === chapter.isTrue ? colors.greenDark : colors.pinkDark }}>{chapter.explanation}</Txt>
         </Card>
       ) : null}
     </View>
@@ -1192,7 +1192,7 @@ function MythcardsView({
               <Txt style={[styles.mythGuessLine, { color: resolved.guessedRight ? colors.greenDark : colors.pinkDark }]}>
                 You said {resolved.guessedTrue ? 'True' : 'False'}, {resolved.guessedRight ? 'and that is right.' : 'not quite.'}
               </Txt>
-              <Txt variant="lead" style={{ fontSize: 13 }}>{card.explanation}</Txt>
+              <Txt variant="lead" style={{ fontSize: 13, color: resolved.guessedRight ? colors.greenDark : colors.pinkDark }}>{card.explanation}</Txt>
             </>
           )}
         </Animated.View>
@@ -1258,7 +1258,7 @@ function KnowledgecheckView({
         })}
       </View>
       {answered ? (
-        <Card><Txt variant="lead" style={{ fontSize: 13 }}>{question.exp}</Txt></Card>
+        <Card><Txt variant="lead" style={{ fontSize: 13, color: right ? colors.greenDark : colors.pinkDark }}>{question.exp}</Txt></Card>
       ) : null}
     </View>
   );
@@ -1451,7 +1451,7 @@ function PriceisrightView({
           <Txt style={{ fontFamily: font.bold, fontSize: 13, color: close ? colors.greenDark : colors.pinkDark }}>
             {close ? 'Close enough!' : `Actual: $${chapter.actualValue}`}
           </Txt>
-          <Txt variant="lead" style={{ fontSize: 13, marginTop: 4 }}>{chapter.explanation}</Txt>
+          <Txt variant="lead" style={{ fontSize: 13, marginTop: 4, color: close ? colors.greenDark : colors.pinkDark }}>{chapter.explanation}</Txt>
         </Card>
       ) : null}
     </View>
@@ -1495,7 +1495,7 @@ function ExplainbackView({
       />
       {submitted ? (
         <Card style={{ gap: 6 }}>
-          <Txt style={{ fontFamily: font.bold, fontSize: 13, color: colors.greenDark }}>
+          <Txt style={{ fontFamily: font.bold, fontSize: 13, color: hitKeywords.length ? colors.greenDark : colors.pinkDark }}>
             {hitKeywords.length ? `Nice — you covered: ${hitKeywords.join(', ')}` : "Here's the full picture:"}
           </Txt>
           <Txt variant="lead" style={{ fontSize: 13 }}>{chapter.fullDefinition}</Txt>

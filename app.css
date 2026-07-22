@@ -1003,6 +1003,8 @@ select.budget-input { cursor: pointer; }
 .correct-state .feedback-label { color: var(--green-dark); }
 .wrong-state   .feedback-label { color: var(--pink-dark); }
 .feedback-exp { font-size: 0.8rem; color: var(--text-mid); line-height: 1.55; }
+.correct-state .feedback-exp { color: var(--green-dark); }
+.wrong-state   .feedback-exp { color: var(--pink-dark); }
 .btn-next {
   background: var(--text); color: #fff; font-weight: 600; font-size: 0.82rem;
   padding: 0.55rem 1.2rem; border-radius: var(--radius-sm); white-space: nowrap; flex-shrink: 0;
@@ -1399,7 +1401,10 @@ select.budget-input { cursor: pointer; }
 .feedback-panel.kc-panel.wrong-state { background: var(--pink-pale); border-color: var(--pink-light); }
 .feedback-panel.kc-panel .feedback-indicator { width: 12px; height: 12px; }
 .feedback-panel.kc-panel .feedback-label { font-size: 1.4rem; margin-bottom: 0.4rem; }
-.feedback-panel.kc-panel .feedback-exp { font-size: 1.12rem; line-height: 1.5; color: var(--green-dark); font-weight: 500; }
+/* No color here — was hardcoded to green-dark regardless of right/wrong, so a wrong
+   knowledge-check answer's own explanation still read as green. Color now comes from the
+   shared .correct-state/.wrong-state .feedback-exp rules above. */
+.feedback-panel.kc-panel .feedback-exp { font-size: 1.12rem; line-height: 1.5; font-weight: 500; }
 .feedback-panel.kc-panel .btn-next { font-size: 0.95rem; padding: 0.7rem 1.5rem; }
 .feedback-panel.kc-panel .btn-next { align-self: flex-end; }
 @media (max-width: 640px) { .kc-split { flex-direction: column; } }
