@@ -15690,12 +15690,14 @@ const SHOP_ITEMS = [
     viewBox: '0 0 160 100',
     desc: 'A tidy desk for getting things done.',
     // Darkened from #C6935B — that was the exact same tone as the room floor's own light
-    // stripe color, so the desk visually vanished into the floor behind it.
+    // stripe color, so the desk visually vanished into the floor behind it. The laptop/
+    // monitor screen (was a pale-green-on-border chip, easy to miss) is now a plain
+    // black-outlined white screen so it actually reads as a laptop.
     svg: `<rect x="15" y="56" width="130" height="8" rx="2" fill="#7A5230"/>
           <rect x="21" y="64" width="6" height="28" fill="#8A6438"/>
           <rect x="133" y="64" width="6" height="28" fill="#8A6438"/>
           <rect x="63" y="56" width="34" height="4" rx="1" fill="var(--border)"/>
-          <rect x="65" y="40" width="30" height="18" rx="2" fill="var(--green-pale)" stroke="var(--border)" stroke-width="2"/>`
+          <rect x="65" y="40" width="30" height="18" rx="2" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>`
   },
   {
     id: 'lamp_fairy', name: 'Fairy Lights', category: 'room', slot: 'lamp', price: 65,

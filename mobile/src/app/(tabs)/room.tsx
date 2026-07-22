@@ -41,12 +41,12 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   rug: { label: 'Rug', bottom: '8%', left: '16%', width: '66%', height: '50%', floorStanding: true },
   // Pushed higher still (top 2%, right at the window's own top edge/the ceiling) so it
   // reads as tucked against the wall under the window, not floating out in the middle of
-  // the floor — centered in the window's own span (left 24%-72%, so left 31% centers this
-  // 34%-wide desk). A color fix (see content/shopItems.json's desk_study) darkened its
-  // actual wood tone instead of layering a translucent scrim over it, which covered the
-  // item's full bounding box (including the transparent letterboxed margins around the
+  // the floor — centered in the window's own span (left 24%-72%, so left 26% centers this
+  // bigger, 44%-wide desk). A color fix (see content/shopItems.json's desk_study) darkened
+  // its actual wood tone instead of layering a translucent scrim over it, which covered
+  // the item's full bounding box (including the transparent letterboxed margins around the
   // art) and was showing up as a stray greyish rectangle.
-  desk: { label: 'Desk', top: '2%', left: '31%', width: '34%', height: '50%', floorStanding: true },
+  desk: { label: 'Desk', top: '2%', left: '26%', width: '44%', height: '62%', floorStanding: true },
 };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
