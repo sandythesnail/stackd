@@ -39,14 +39,14 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // body rather than only trailing out below his feet, so the two read as "standing on it"
   // rather than two separate unrelated floor items.
   rug: { label: 'Rug', bottom: '8%', left: '16%', width: '66%', height: '50%', floorStanding: true },
-  // Pushed way back (top 10%, right up near the window's own top edge) so it reads as
-  // tucked against the wall under the window, not floating out in the middle of the floor —
-  // centered in the window's own span (left 24%-72%, so left 31% centers this 34%-wide
-  // desk). A color fix (see content/shopItems.json's desk_study/desk_vanity) darkened its
-  // actual wood tone instead of layering a translucent scrim over it, which covered the
-  // item's full bounding box (including the transparent letterboxed margins around the art)
-  // and was showing up as a stray greyish rectangle.
-  desk: { label: 'Desk', top: '10%', left: '31%', width: '34%', height: '50%', floorStanding: true },
+  // Pushed higher still (top 2%, right at the window's own top edge/the ceiling) so it
+  // reads as tucked against the wall under the window, not floating out in the middle of
+  // the floor — centered in the window's own span (left 24%-72%, so left 31% centers this
+  // 34%-wide desk). A color fix (see content/shopItems.json's desk_study/desk_vanity)
+  // darkened its actual wood tone instead of layering a translucent scrim over it, which
+  // covered the item's full bounding box (including the transparent letterboxed margins
+  // around the art) and was showing up as a stray greyish rectangle.
+  desk: { label: 'Desk', top: '2%', left: '31%', width: '34%', height: '50%', floorStanding: true },
 };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
