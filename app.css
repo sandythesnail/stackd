@@ -834,8 +834,6 @@ select.budget-input { cursor: pointer; }
 .ci-area-debt { fill: var(--pink-light); opacity: 0.55; }
 .ci-line-debt { fill: none; stroke: var(--pink-dark); stroke-width: 2.5; stroke-dasharray: 1000; stroke-dashoffset: 1000; transition: stroke-dashoffset 1s ease; }
 .ci-line-debt.drawn { stroke-dashoffset: 0; }
-.ci-debt-summary { font-size: 0.82rem; color: var(--text-mid); line-height: 1.5; margin-top: 0.6rem; }
-.ci-debt-summary strong { color: var(--pink-dark); }
 
 /* Opportunity-cost decision-chain activity (Spending module bonus lesson) */
 .opcost-day-tag {

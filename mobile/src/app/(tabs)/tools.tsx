@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Screen, Header, Txt, Card, Tag, Segmented, StackedAreaChart } from '@/components';
 import { colors, font } from '@/theme';
 import { useStore, type BudgetLineItem } from '@/store';
-import { computeCompoundGrowth, computeMinPaymentDebt, computeLoanMinPayment, computeLoanPayoff, SeriesPoint } from '@/simulators';
+import { computeCompoundGrowth, computeLoanMinPayment, computeLoanPayoff, SeriesPoint } from '@/simulators';
 
 /** Adds a `zero` key alongside a debt/payoff series so StackedAreaChart can draw a single
  * area from zero up to `balance` — mirrors the website's `points.map(p => ({ ...p, zero: 0 }))`. */
@@ -158,10 +158,6 @@ function CompoundInterestPanel() {
   const points = computeCompoundGrowth({ startingAmount, monthlyContribution, annualRatePct, years });
   const final = points[points.length - 1];
 
-  const debtPoints = computeMinPaymentDebt({ startingBalance: 1000, annualRatePct: 24 });
-  const debtFinal = debtPoints[debtPoints.length - 1];
-  const debtYears = (debtPoints.length - 1) / 12;
-
   const doublingYears = annualRatePct > 0 ? 72 / annualRatePct : null;
   const milestoneTargets = [10000, 50000, 100000, 500000, 1000000];
   const milestone = milestoneTargets.filter((m) => m > startingAmount).find((m) => points.some((p) => p.balance >= m));
@@ -258,20 +254,6 @@ function CompoundInterestPanel() {
             🎯 Crosses {money(milestone)} around year {(milestonePoint.month / 12).toFixed(1)}
           </Txt>
         ) : null}
-      </Card>
-
-      <Card style={styles.warningCard}>
-        <Collapsible title="⚠ Credit Card Warning">
-          <Txt variant="lead" style={{ fontSize: 12 }}>
-            $1,000 at 24% APR, minimum payments only:
-          </Txt>
-          <StackedAreaChart points={withZero(debtPoints)} baseKey="zero" totalKey="balance" tone="debt" />
-          <Txt variant="lead" style={{ fontSize: 12.5 }}>
-            {debtFinal.balance <= 0.5
-              ? `${debtYears.toFixed(1)} yrs to pay off — ${money(debtFinal.totalInterest)} interest, more than the balance itself.`
-              : `Still not paid off after 10 yrs — ${money(debtFinal.totalInterest)} interest paid, ${money(debtFinal.balance)} still owed.`}
-          </Txt>
-        </Collapsible>
       </Card>
     </>
   );

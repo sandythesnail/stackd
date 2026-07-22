@@ -18800,23 +18800,6 @@ function computeCompoundGrowth({ startingAmount, monthlyContribution, annualRate
   return points;
 }
 
-// Minimum-payment credit card amortization — a common real formula (2% of balance or a $25
-// floor, whichever is greater) so this illustrates the actual, not exaggerated, trap.
-function computeMinPaymentDebt({ startingBalance, annualRatePct, months = 120 }) {
-  const monthlyRate = annualRatePct / 100 / 12;
-  let balance = startingBalance;
-  let totalInterest = 0;
-  const points = [{ month: 0, balance, totalInterest: 0 }];
-  for (let m = 1; m <= months && balance > 0.5; m++) {
-    const interest = balance * monthlyRate;
-    const payment = Math.max(balance * 0.02, Math.min(25, balance));
-    balance = Math.max(0, balance + interest - payment);
-    totalInterest += interest;
-    points.push({ month: m, balance, totalInterest });
-  }
-  return points;
-}
-
 // Standard fixed-payment loan amortization formula — the same math a federal/private student
 // loan servicer uses to set your required monthly payment over a given term.
 function computeLoanMinPayment({ principal, annualRatePct, termYears }) {
@@ -18904,12 +18887,6 @@ function renderCompoundInterestPanel() {
           </div>
           <button class="budget-add-btn" id="ci-compare-toggle" type="button">Compare: start at 18 vs. start at 28 →</button>
         </div>
-        <div class="budget-card ci-warning-card">
-          <div class="budget-card-title">⚠ Credit Card Warning</div>
-          <p class="budget-note" style="margin-top:-0.2rem;">A $1,000 balance at 24% APR, paying only the minimum (2% of balance or $25, whichever is more) every month:</p>
-          <div class="ci-chart-wrap" id="ci-debt-chart"></div>
-          <p class="ci-debt-summary" id="ci-debt-summary"></p>
-        </div>
       </div>
       <div class="budget-col">
         <div class="budget-card ci-result-card">
@@ -18949,23 +18926,6 @@ function renderCompoundInterestPanel() {
     document.getElementById('ci-milestones').innerHTML = `
       ${doublingYears ? `<div class="ci-milestone-item">📈 At ${sim.annualRatePct}%, your money roughly doubles every <strong>${doublingYears} years</strong> (Rule of 72).</div>` : ''}
       ${milestonePoint ? `<div class="ci-milestone-item">🎯 You'll cross <strong>$${milestone.toLocaleString()}</strong> around year <strong>${(milestonePoint.month / 12).toFixed(1)}</strong>.</div>` : ''}`;
-  }
-
-  function renderDebtChart() {
-    const points = computeMinPaymentDebt({ startingBalance: 1000, annualRatePct: 24 });
-    const final = points[points.length - 1];
-    const chart = buildStackedAreaChart(points.map(p => ({ ...p, zero: 0 })), 'zero', 'balance');
-    const chartEl = document.getElementById('ci-debt-chart');
-    chartEl.innerHTML = `
-      <svg viewBox="0 0 ${chart.width} ${chart.height}" class="ci-svg">
-        <path d="${chart.deltaArea}" class="ci-area-debt"></path>
-        <path d="${chart.totalLine}" class="ci-line-debt" pathLength="1000"></path>
-      </svg>`;
-    requestAnimationFrame(() => chartEl.querySelector('.ci-line-debt').classList.add('drawn'));
-    const years = (points.length - 1) / 12;
-    document.getElementById('ci-debt-summary').innerHTML = final.balance <= 0.5
-      ? `Paid off after about ${years.toFixed(1)} years — total interest paid: <strong>$${Math.round(final.totalInterest).toLocaleString()}</strong>, more than the original balance.`
-      : `Still not paid off after 10 years — total interest paid so far: <strong>$${Math.round(final.totalInterest).toLocaleString()}</strong>, and $${Math.round(final.balance).toLocaleString()} of the balance remains.`;
   }
 
   function renderComparison() {
@@ -19034,7 +18994,6 @@ function renderCompoundInterestPanel() {
   }
 
   renderMainChart();
-  renderDebtChart();
 }
 
 // Post-college loan payoff, grounded in an actual monthly budget (take-home pay minus rent,
