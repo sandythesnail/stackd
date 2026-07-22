@@ -51,6 +51,14 @@ const TOUR_STEPS: { targetId: string; title: string; body: string; requiresRealC
     title: 'Start a lesson',
     body: 'Tap a lesson to start it — finish them in order to complete the module.',
   },
+  {
+    // Tools lives in the always-mounted TabBar (present from the very first render, same as
+    // Shop/Modules), so this needs no beforeShow drawer-opening logic the way the website's
+    // equivalent step does for its collapsible mobile sidebar.
+    targetId: 'tour-tools-tab',
+    title: 'Do the math in Tools',
+    body: 'Budget, loan payoff, and compound interest calculators — real numbers, not just lessons. Handy any time, not just while you\'re learning.',
+  },
 ];
 
 type MeasuredRect = { x: number; y: number; width: number; height: number };

@@ -22,30 +22,44 @@ type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
  * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
 const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   window: { label: 'Window', top: '9%', left: '24%', width: '48%', height: '40%' },
-  wall: { label: 'Wall art', top: '4%', left: '3%', width: '24%', height: '46%' },
+  // Sized down just a touch from 24%/46% — it was reading a bit too big next to everything else.
+  wall: { label: 'Wall art', top: '4%', left: '3%', width: '21%', height: '41%' },
   // top+height used to land at 51%, just barely into the floor zone (48%) — bumped both so
-  // the lamp's own base clearly overlaps the floor instead of only just grazing it.
+  // the lamp's own base clearly overlaps the floor instead of only just grazing it. This is
+  // the layout for every lamp EXCEPT Fairy Lights — see FAIRY_LIGHTS_LAYOUT below, which
+  // replaces this one specifically when that item is equipped (rendered separately in Room()).
   lamp: { label: 'Lamp', top: '2%', right: '2%', width: '20%', height: '54%', floorStanding: true },
-  // Mirrors the lamp's own top/height exactly (same vertical band, all the way back) but on
-  // the opposite (left) side of the scene instead of dead-center where it used to sit right
-  // on top of both the rug and Hammy.
-  plant: { label: 'Plant', top: '2%', left: '2%', width: '20%', height: '54%', floorStanding: true },
-  bed: { label: 'Bed', bottom: '3%', right: '0%', width: '40%', height: '40%', floorStanding: true },
+  // Tucked into the back-right corner (a modest overlap with the top of the lamp's own tall
+  // strip is intentional — there's little other free space back there once the lamp, window,
+  // and the much bigger bed/desk all claim their own territory).
+  plant: { label: 'Plant', top: '2%', right: '2%', width: '14%', height: '16%', floorStanding: true },
+  // Right under the window (window: top 9%, height 40% -> ends at 49%) and much bigger than
+  // before (was 40%/40%) — the width is centered under the window's own 24%-72% span.
+  bed: { label: 'Bed', top: '49%', left: '20%', width: '56%', height: '46%', floorStanding: true },
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
   // (bottom raised off the literal floor edge) so more of it reads as sitting BEHIND Hammy's
   // body rather than only trailing out below his feet, so the two read as "standing on it"
   // rather than two separate unrelated floor items.
   rug: { label: 'Rug', bottom: '8%', left: '16%', width: '66%', height: '50%', floorStanding: true },
-  desk: { label: 'Desk', bottom: '3%', left: '2%', width: '32%', height: '38%', floorStanding: true },
+  // Much bigger than before (was 32%/38%) and moved to the bed's left side, tucked in with a
+  // modest intentional overlap rather than left with an awkward gap — see the `darken`
+  // overlay applied to this one specifically in Room() (its own color is close to the
+  // floor's, so a flat resize alone would still blend right into it).
+  desk: { label: 'Desk', top: '51%', left: '0%', width: '26%', height: '42%', floorStanding: true },
 };
+
+// Fairy Lights only — every other lamp keeps SLOT_LAYOUT.lamp above. A thin horizontal band
+// right above the window instead of the tall vertical strip the item's own art was drawn
+// for; RotatedFairyLights (below) rotates the art 90° to actually read as horizontal there.
+const FAIRY_LIGHTS_LAYOUT: SlotLayout = { label: 'Fairy Lights', top: '0%', left: '18%', width: '60%', height: '9%' };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
 // no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND
 // everything else that legitimately overlaps it: the furniture that can sit partway onto a
 // rug (normal), and Hammy standing on it (the whole point of the rug reaching up that far).
-// plant renders AFTER bed on purpose too — its box overlaps most of the bed's own footprint
-// (see the plant entry above), and a plant tucked in front of the bed reads right; a bed
-// painted on top would instead hide almost the entire plant behind it.
+// plant renders AFTER lamp on purpose too — its box overlaps the top of the lamp's own tall
+// strip (see the plant entry above), and a plant sitting in front of the lamp reads right; a
+// lamp painted on top would instead hide it.
 const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'rug', 'lamp', 'bed', 'plant', 'desk'];
 
 // Fixed-width vertical stripes, ported pixel-for-pixel from the website's .room-floor
@@ -114,6 +128,9 @@ export default function Room() {
 
           {FURNITURE_SLOTS.map((slot) => {
             const item = bySlot(slot);
+            if (slot === 'lamp' && item?.id === 'lamp_fairy') {
+              return <RotatedFairyLights key={slot} layout={FAIRY_LIGHTS_LAYOUT} item={item} onPress={goToRoomShop} />;
+            }
             const layout = SLOT_LAYOUT[slot];
             return (
               <RoomSlotBox
@@ -121,6 +138,7 @@ export default function Room() {
                 layout={layout}
                 item={item}
                 onPress={goToRoomShop}
+                darken={slot === 'desk'}
               />
             );
           })}
@@ -180,13 +198,53 @@ export default function Room() {
 // Renders nothing at all for an empty slot — no placeholder box, dashed or otherwise. The
 // furnitureCta banner is the one, single way into the shop from this screen now, so an
 // unfurnished room just reads as an empty room instead of a scene full of "+" outlines.
-function RoomSlotBox({ layout, item, onPress }: { layout: SlotLayout; item?: ShopItemReal; onPress: () => void }) {
+// `darken` layers a translucent black scrim over the art — used for the desk, whose own
+// wood tone is close enough to the floor's that a resize alone still blended right into it.
+function RoomSlotBox({
+  layout, item, onPress, darken,
+}: { layout: SlotLayout; item?: ShopItemReal; onPress: () => void; darken?: boolean }) {
   if (!item) return null;
   const { label: _label, floorStanding, ...position } = layout;
   return (
     <View style={[styles.slot, position]}>
       <Pressable style={styles.slotFilled} onPress={onPress}>
         <ItemArt item={item} fill align={floorStanding ? 'bottom' : 'mid'} />
+        {darken ? <View style={styles.darkenScrim} pointerEvents="none" /> : null}
+      </Pressable>
+    </View>
+  );
+}
+
+// Fairy Lights' own art is drawn tall (a vertical strand, viewBox 70x120) — this measures
+// its slot box (via onLayout, since SLOT_LAYOUT uses % strings whose pixel size isn't known
+// ahead of render) and rotates a correctly-swapped inner box 90° so the strand actually
+// reads as a horizontal string of lights above the window instead of a squashed vertical one.
+function RotatedFairyLights({ layout, item, onPress }: { layout: SlotLayout; item: ShopItemReal; onPress: () => void }) {
+  const { label: _label, floorStanding: _floorStanding, ...position } = layout;
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  return (
+    <View
+      style={[styles.slot, position]}
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        if (width !== size.w || height !== size.h) setSize({ w: width, h: height });
+      }}
+    >
+      <Pressable style={styles.slotFilled} onPress={onPress}>
+        {size.w > 0 && size.h > 0 ? (
+          <View
+            style={{
+              position: 'absolute',
+              width: size.h,
+              height: size.w,
+              top: (size.h - size.w) / 2,
+              left: (size.w - size.h) / 2,
+              transform: [{ rotate: '90deg' }],
+            }}
+          >
+            <ItemArt item={item} fill align="mid" />
+          </View>
+        ) : null}
       </Pressable>
     </View>
   );
@@ -217,6 +275,7 @@ const styles = StyleSheet.create({
   floorStripe: { width: 58, height: '100%', backgroundColor: '#C6935B', marginRight: 4 },
   slot: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   slotFilled: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  darkenScrim: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.32)' },
   hammy: { position: 'absolute', bottom: '12%', alignSelf: 'center' },
   furnitureCta: {
     position: 'absolute',

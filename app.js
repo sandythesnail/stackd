@@ -17156,6 +17156,20 @@ const ONBOARDING_TOUR_STEPS = [
       }
     },
   },
+  {
+    target: () => document.getElementById('nav-tools-btn'),
+    title: 'Do the math in Tools',
+    body: 'Budget, loan payoff, and compound interest calculators — real numbers, not just lessons. Handy any time, not just while you\'re learning.',
+    beforeShow: () => {
+      // Same collapsible mobile sidebar as the Shop step above — Tools isn't on screen to
+      // spotlight until the drawer is open.
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth <= 768 && !sidebar.classList.contains('collapsed')) {
+        sidebar.classList.add('collapsed');
+        tourOpenedMobileNav = true;
+      }
+    },
+  },
 ];
 let tourStepIdx = 0;
 let tourOpenedMobileNav = false;

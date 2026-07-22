@@ -53,14 +53,17 @@ export function TabBar({ state, navigation }: TabBarProps) {
             <Txt style={[styles.label, { color }]}>{meta.label}</Txt>
           </Pressable>
         );
-        // The Shop and Modules tabs are the ones spotlighted by the onboarding tour (see
-        // OnboardingTour.tsx) — wrapped only for those routes so every other tab stays a
+        // The Shop, Modules, and Tools tabs are the ones spotlighted by the onboarding tour
+        // (see OnboardingTour.tsx) — wrapped only for those routes so every other tab stays a
         // plain Pressable.
         if (route.name === 'shop') {
           return <TourTarget key={route.key} id="tour-shop-tab" style={styles.tab}>{tab}</TourTarget>;
         }
         if (route.name === 'modules') {
           return <TourTarget key={route.key} id="tour-modules-tab" style={styles.tab}>{tab}</TourTarget>;
+        }
+        if (route.name === 'tools') {
+          return <TourTarget key={route.key} id="tour-tools-tab" style={styles.tab}>{tab}</TourTarget>;
         }
         return tab;
       })}
