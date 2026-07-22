@@ -1982,18 +1982,20 @@ select.budget-input { cursor: pointer; }
     repeating-linear-gradient(90deg, #C6935B 0, #C6935B 58px, #B98650 58px, #B98650 62px),
     linear-gradient(180deg, #D7A968, #B9834C);
 }
-.room-pig { position: relative; z-index: 2; margin-bottom: 0.5%; cursor: pointer; }
+.room-pig { position: relative; z-index: 2; margin-bottom: 6%; cursor: pointer; }
 .room-pig .pig-stage { transform-origin: bottom center; }
 .room-slot { position: absolute; }
 .room-slot svg { width: 100%; height: 100%; display: block; }
 .room-slot-window { top: 15%; left: 50%; transform: translateX(-50%); width: 36%; height: 30%; }
 .room-slot-wall  { top: 6%; left: 6%; width: 15%; height: 40%; }
-/* top+height reached only 43% before — short of the floor's 48% start, so the lamp visibly
-   floated above the floor line instead of standing on it. */
-.room-slot-lamp  { top: 3%; right: 5%; width: 13%; height: 48%; }
-/* Sits toward the back of the room (high up in the floor zone, well clear of the bed/desk/
-   rug down front) instead of down in the foreground right next to Hammy. */
-.room-slot-plant { bottom: 32%; left: 38%; width: 13%; height: 24%; z-index: 1; }
+/* Pushed further down (top raised from 3% to 8%) on top of the app.js preserveAspectRatio
+   fix (see slotBlock/FLOOR_STANDING_SLOTS) — the box reaching the floor wasn't enough on its
+   own, since the SVG content itself was still centered within that box by default rather
+   than anchored to its bottom edge. */
+.room-slot-lamp  { top: 8%; right: 5%; width: 13%; height: 48%; }
+/* All the way back against the wall line (48% is where the floor zone starts) instead of
+   partway into the foreground. */
+.room-slot-plant { bottom: 46%; left: 38%; width: 13%; height: 18%; z-index: 1; }
 .room-slot-bed   { bottom: 5%; right: 3%; width: 29%; height: 31%; z-index: 1; }
 /* Unlike the other room-slots (positioned against the full .room-backdrop), this one is
    nested inside .room-floor (52% of the backdrop's own height — see renderRoomPage), so its

@@ -18014,6 +18014,10 @@ function updateRoomSubnavActiveState() {
   });
 }
 
+// Slots whose art should sit ON something (the floor, a desk) rather than hang on the
+// wall — mirrors mobile's SLOT_LAYOUT `floorStanding` flags exactly. See slotBlock below.
+const FLOOR_STANDING_SLOTS = new Set(['lamp', 'plant', 'bed', 'rug', 'desk']);
+
 function renderRoomPage() {
   updateRoomSubnavActiveState();
   if (roomActiveTab === 'wardrobe') { renderWardrobeScene(); return; }
@@ -18028,8 +18032,14 @@ function renderRoomPage() {
     const itemId = room[slotKey];
     const item = itemId ? SHOP_ITEMS.find(i => i.id === itemId) : null;
     if (item) {
+      // Floor-standing items (lamp, plant, bed, rug, desk) need their own art anchored to
+      // the BOTTOM of the slot box, not the SVG default center — with no preserveAspectRatio
+      // override, the browser centers the artwork vertically (xMidYMid), which is why a tall
+      // slot box (sized to reach the floor) still showed the lamp floating in its middle.
+      // Wall-mounted items (window, wall art) keep the default centered anchor.
+      const par = FLOOR_STANDING_SLOTS.has(slotKey) ? ' preserveAspectRatio="xMidYMax meet"' : '';
       return `<div class="room-slot room-slot-${slotKey}" data-slot="${slotKey}">
-        <svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>
+        <svg viewBox="${item.viewBox}"${par} xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>
       </div>`;
     }
     return `<div class="room-slot room-slot-${slotKey} empty" data-slot="${slotKey}" aria-label="${emptyLabel}"></div>`;

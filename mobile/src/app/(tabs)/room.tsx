@@ -26,11 +26,10 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // top+height used to land at 51%, just barely into the floor zone (48%) — bumped both so
   // the lamp's own base clearly overlaps the floor instead of only just grazing it.
   lamp: { label: 'Lamp', top: '2%', right: '2%', width: '20%', height: '54%', floorStanding: true },
-  // Moved off dead-center (where it used to sit right on top of both the rug and Hammy) to
-  // the right, tucked in beside the bed instead — clear of Hammy's own footprint, and a
-  // plant next to a bed is a normal enough pairing that the modest overlap with the bed's
-  // edge reads as intentional rather than a collision.
-  plant: { label: 'Plant', bottom: '4%', left: '54%', width: '30%', height: '52%', floorStanding: true },
+  // Mirrors the lamp's own top/height exactly (same vertical band, all the way back) but on
+  // the opposite (left) side of the scene instead of dead-center where it used to sit right
+  // on top of both the rug and Hammy.
+  plant: { label: 'Plant', top: '2%', left: '2%', width: '20%', height: '54%', floorStanding: true },
   bed: { label: 'Bed', bottom: '3%', right: '0%', width: '40%', height: '40%', floorStanding: true },
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
   // (bottom raised off the literal floor edge) so more of it reads as sitting BEHIND Hammy's
