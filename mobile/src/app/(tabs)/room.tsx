@@ -30,7 +30,7 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // the right, tucked in beside the bed instead — clear of Hammy's own footprint, and a
   // plant next to a bed is a normal enough pairing that the modest overlap with the bed's
   // edge reads as intentional rather than a collision.
-  plant: { label: 'Plant', bottom: '4%', left: '58%', width: '24%', height: '42%', floorStanding: true },
+  plant: { label: 'Plant', bottom: '4%', left: '54%', width: '30%', height: '52%', floorStanding: true },
   bed: { label: 'Bed', bottom: '3%', right: '0%', width: '40%', height: '40%', floorStanding: true },
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
   // (bottom raised off the literal floor edge) so more of it reads as sitting BEHIND Hammy's
