@@ -29,8 +29,18 @@
  * completion + mastery + all currencies are exact.
  */
 import { moduleContent, moduleContentById } from '@/content';
-import type { AppState } from '@/store';
+import type { AppState, BudgetPlan } from '@/store';
 import type { StatDelta } from '@/content';
+
+const DEFAULT_BUDGET_PLAN: BudgetPlan = {
+  incomeSources: [],
+  fixedExpenses: [],
+  variableExpenses: {
+    groceries: 0, diningOut: 0, foodDelivery: 0, coffee: 0, clothing: 0,
+    beauty: 0, transportation: 0, entertainment: 0, textbooks: 0, gym: 0,
+  },
+  savingsGoal: 0,
+};
 
 export type LessonRecord = { score: number; total: number; xpEarned: number };
 
@@ -71,6 +81,7 @@ export type WebState = {
   equippedRoom?: Record<string, string | null>;
   dailyLoginLog?: Record<string, number>;
   questBossesWon?: string[];
+  budgetPlan?: BudgetPlan;
   /** Mobile-only fields stashed here so a mobile→mobile round-trip preserves them (the
    * web ignores this key). */
   _mobile?: Partial<AppState>;
@@ -143,6 +154,7 @@ export function webToMobile(web: WebState): Partial<AppState> {
     unlockedAchievementIds: arr(web.unlockedAchievements),
     questBossesWon: arr(web.questBossesWon),
     dailyLoginLog: (web.dailyLoginLog as Record<string, number>) ?? {},
+    budgetPlan: web.budgetPlan ?? DEFAULT_BUDGET_PLAN,
     ...mobileExtras,
     moduleProgress,
     completedLifeTaskIds,
@@ -229,6 +241,7 @@ export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState
     unlockedAchievements: mobile.unlockedAchievementIds,
     questBossesWon: mobile.questBossesWon,
     dailyLoginLog: mobile.dailyLoginLog,
+    budgetPlan: mobile.budgetPlan,
     completedLessons,
     completedModules,
     questProgress,

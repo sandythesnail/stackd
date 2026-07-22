@@ -70,6 +70,18 @@ export function itemRarity(item: Pick<ShopItemReal, 'rarity'>) {
 
 const ROOM_SLOTS: RoomSlot[] = ['wallpaper', 'wall', 'rug', 'plant', 'bed', 'desk', 'lamp', 'window'];
 
+/** Ported verbatim from the website's Budget Calculator (renderBudgetCalculatorPanel/
+ * computeBudgetTotals in app.js) — free-form add/remove income sources and fixed expenses,
+ * plus the same 10 named variable-spending categories, rather than a simplified mobile-only
+ * shape. Shared with the web schema (see lib/webState.ts) so edits on either platform sync. */
+export type BudgetLineItem = { id: string; label: string; amount: number | '' };
+export type BudgetPlan = {
+  incomeSources: BudgetLineItem[];
+  fixedExpenses: BudgetLineItem[];
+  variableExpenses: Record<string, number | ''>;
+  savingsGoal: number | '';
+};
+
 export type AppState = {
   coins: number;
   diamonds: number;
@@ -124,6 +136,8 @@ export type AppState = {
   /** Whether the first-login spotlight tour (XP, then the Shop tab) has already played —
    * mirrors the website's state.hasSeenOnboardingTour, see components/OnboardingTour.tsx. */
   hasSeenOnboardingTour: boolean;
+  /** Mirrors the website's state.budgetPlan exactly — see BudgetPlan above. */
+  budgetPlan: BudgetPlan;
 };
 
 const DEFAULT_STATE: AppState = {
@@ -157,6 +171,19 @@ const DEFAULT_STATE: AppState = {
   lastModuleActivityDate: null,
   completedLifeTaskIds: [],
   hasSeenOnboardingTour: false,
+  // Matches app.js's own default state literal exactly — the income/fixed-expense starter
+  // rows ("Part-time job"/"Rent") are lazily seeded by the Tools screen itself whenever
+  // either list is empty, same as the website's renderBudgetCalculatorPanel, rather than
+  // baked in here.
+  budgetPlan: {
+    incomeSources: [],
+    fixedExpenses: [],
+    variableExpenses: {
+      groceries: 0, diningOut: 0, foodDelivery: 0, coffee: 0, clothing: 0,
+      beauty: 0, transportation: 0, entertainment: 0, textbooks: 0, gym: 0,
+    },
+    savingsGoal: 0,
+  },
 };
 
 export type MysteryResult = {
@@ -366,6 +393,9 @@ type Ctx = {
   /** Marks the first-login spotlight tour as seen, whether it finished or was skipped —
    * see components/OnboardingTour.tsx. */
   markOnboardingTourSeen: () => void;
+  /** Persists a Budget Calculator edit, same as the website calling saveState() after every
+   * input change (see Tools.tsx). Accepts either a full replacement plan or an updater. */
+  setBudgetPlan: (next: BudgetPlan | ((prev: BudgetPlan) => BudgetPlan)) => void;
   /** Achievements newly unlocked since the last dismissal — drives the global unlock toast. */
   newAchievements: () => AchievementView[];
   dismissNewAchievements: () => void;
@@ -739,6 +769,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       setOnboardingTrack: (trackId) => setState((s) => ({ ...s, onboardingTrackId: trackId })),
       markOnboardingTourSeen: () => setState((s) => (s.hasSeenOnboardingTour ? s : { ...s, hasSeenOnboardingTour: true })),
+      setBudgetPlan: (next) => setState((s) => ({
+        ...s, budgetPlan: typeof next === 'function' ? next(s.budgetPlan) : next,
+      })),
       newAchievements: () => ACHIEVEMENTS.filter((a) => newAchievementIds.includes(a.id)).map((a) => ({ ...a, earned: true })),
       dismissNewAchievements: () => setNewAchievementIds([]),
       resetProgress: () => {

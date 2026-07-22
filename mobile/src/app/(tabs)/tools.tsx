@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, ScrollView, Pressable, StyleSheet, TextInput } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Screen, Header, Txt, Card, Tag, Segmented, StackedAreaChart } from '@/components';
 import { colors, font } from '@/theme';
-import { useStore } from '@/store';
+import { useStore, type BudgetLineItem } from '@/store';
 import { computeCompoundGrowth, computeMinPaymentDebt, computeLoanMinPayment, computeLoanPayoff, SeriesPoint } from '@/simulators';
 
 /** Adds a `zero` key alongside a debt/payoff series so StackedAreaChart can draw a single
@@ -12,6 +12,11 @@ import { computeCompoundGrowth, computeMinPaymentDebt, computeLoanMinPayment, co
 const withZero = (points: SeriesPoint[]): SeriesPoint[] => points.map((p) => ({ ...p, zero: 0 }));
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
+
+/** Strips a parenthetical aside from a category label — mirrors the website's chart-label
+ * regex (`.replace(/\s*\(.*?\)/, '')`), used wherever the full descriptive label ("Food
+ * Delivery (DoorDash, Uber Eats, etc.)") would be too long for a chart bar or filter chip. */
+const shortLabel = (label: string) => label.replace(/\s*\(.*?\)/, '');
 
 /** Collapsed-by-default section so secondary content (warnings, category editors, "what
  * if" scenarios) doesn't add to the default scroll length. */
@@ -54,9 +59,74 @@ function SliderRow({
   );
 }
 
+/** A compact "$123" numeric field — mirrors the website's `<input type="number">` money
+ * fields exactly (free-form amount, no slider) rather than mobile's earlier slider-only
+ * take on these same values. */
+function AmountField({ value, onChangeText, width = 84 }: { value: number | ''; onChangeText: (v: number | '') => void; width?: number }) {
+  return (
+    <View style={[styles.amountWrap, { width }]}>
+      <Txt style={styles.amountPrefix}>$</Txt>
+      <TextInput
+        style={styles.amountInput}
+        value={value === '' ? '' : String(value)}
+        onChangeText={(t) => {
+          const cleaned = t.replace(/[^0-9]/g, '');
+          onChangeText(cleaned === '' ? '' : Number(cleaned));
+        }}
+        keyboardType="number-pad"
+        placeholder="0"
+        placeholderTextColor={colors.muted6}
+      />
+    </View>
+  );
+}
+
+/** One free-form income/fixed-expense row: an editable label, an editable amount, and a
+ * remove button — mirrors the website's rowHtml() exactly (Budget Calculator's income
+ * sources and fixed expenses are open-ended lists, not fixed sliders). */
+function LineItemRow({
+  item, onLabelChange, onAmountChange, onRemove,
+}: {
+  item: BudgetLineItem;
+  onLabelChange: (t: string) => void;
+  onAmountChange: (v: number | '') => void;
+  onRemove: () => void;
+}) {
+  return (
+    <View style={styles.lineRow}>
+      <TextInput
+        style={styles.lineLabelInput}
+        value={item.label}
+        onChangeText={onLabelChange}
+        placeholder="Label"
+        placeholderTextColor={colors.muted6}
+      />
+      <AmountField value={item.amount} onChangeText={onAmountChange} />
+      <Pressable onPress={onRemove} hitSlop={10} style={styles.removeBtn}>
+        <Txt style={styles.removeTxt}>×</Txt>
+      </Pressable>
+    </View>
+  );
+}
+
+/** One fixed-label variable-expense category row — mirrors the website's 10-category
+ * variable-expense grid, with the same food-delivery/beauty "adds up fast" highlight. */
+function CategoryRow({
+  label, value, onChangeText, callout,
+}: {
+  label: string; value: number | ''; onChangeText: (v: number | '') => void; callout?: boolean;
+}) {
+  return (
+    <View style={[styles.categoryRow, callout && styles.categoryRowCallout]}>
+      <Txt style={[styles.categoryLabel, callout && { color: colors.calloutText }]} numberOfLines={2}>{label}</Txt>
+      <AmountField value={value} onChangeText={onChangeText} />
+    </View>
+  );
+}
+
 /** Screen 10 — Tools. Three real calculators ported from the website's Tools page
- * (Compound Interest, Loan Payoff, Budget 50/30/20), all with live math instead of a
- * static mock display. */
+ * (Budget, Loan Payoff, Compound Interest), matched field-for-field with the website's own
+ * inputs/presets/copy rather than a simplified mobile-only take. */
 export default function Tools() {
   const { state, level, tierName } = useStore();
   const [tab, setTab] = useState(0);
@@ -213,7 +283,13 @@ const RATE_PRESETS = [
   { mode: 'private', label: 'Private', rate: 9 },
 ] as const;
 
-const TERM_PRESETS = [5, 10, 15, 20, 25];
+// Named terms, ported exactly from the website's 3 loan-term presets — not a plain 5/10/15/
+// 20/25yr picker like this screen used to have.
+const TERM_PRESETS = [
+  { years: 10, label: 'Standard' },
+  { years: 20, label: 'Extended' },
+  { years: 25, label: 'Income-Driven' },
+] as const;
 
 function LoanPayoffPanel() {
   const [loanBalance, setLoanBalance] = useState(27000);
@@ -221,11 +297,13 @@ function LoanPayoffPanel() {
   const [rateMode, setRateMode] = useState<'subsidized' | 'unsubsidized' | 'private' | 'custom'>('subsidized');
   const [termYears, setTermYears] = useState(10);
   const [monthlyIncome, setMonthlyIncome] = useState(3200);
-  const [livingExpenses, setLivingExpenses] = useState(1800);
+  const [rent, setRent] = useState(1100);
+  const [food, setFood] = useState(400);
+  const [otherExpenses, setOtherExpenses] = useState(300);
   const [extraPayment, setExtraPayment] = useState(0);
 
   const minPayment = computeLoanMinPayment({ principal: loanBalance, annualRatePct, termYears });
-  const essential = livingExpenses;
+  const essential = rent + food + otherExpenses;
   const availableForLoan = monthlyIncome - essential;
   const shortfall = minPayment - availableForLoan;
   const canAffordMinimum = shortfall <= 0;
@@ -272,9 +350,9 @@ function LoanPayoffPanel() {
         <View style={{ gap: 8 }}>
           <Txt style={styles.sliderLabel}>Term</Txt>
           <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
-            {TERM_PRESETS.map((yr) => (
-              <Pressable key={yr} onPress={() => setTermYears(yr)}>
-                <Tag tone={termYears === yr ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>{yr}yr</Tag>
+            {TERM_PRESETS.map((p) => (
+              <Pressable key={p.years} onPress={() => setTermYears(p.years)}>
+                <Tag tone={termYears === p.years ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>{p.label} {p.years}yr</Tag>
               </Pressable>
             ))}
           </View>
@@ -283,8 +361,13 @@ function LoanPayoffPanel() {
 
       <Card style={{ gap: 15 }}>
         <Txt style={styles.cardTitle}>Take-Home Pay & Living Costs</Txt>
+        <Txt variant="lead" style={{ fontSize: 12, marginTop: -6 }}>
+          Uses take-home (net) pay, not gross salary — see the Earning module for the difference.
+        </Txt>
         <SliderRow label="Monthly take-home pay" value={monthlyIncome} onChange={setMonthlyIncome} min={1500} max={7000} step={50} format={money} />
-        <SliderRow label="Living expenses (rent, food, everything else)" value={livingExpenses} onChange={setLivingExpenses} min={0} max={4000} step={25} format={money} />
+        <SliderRow label="Rent" value={rent} onChange={setRent} min={0} max={3000} step={25} format={money} />
+        <SliderRow label="Food" value={food} onChange={setFood} min={0} max={1000} step={10} format={money} />
+        <SliderRow label="Other (utilities, transport, etc.)" value={otherExpenses} onChange={setOtherExpenses} min={0} max={1500} step={10} format={money} />
       </Card>
 
       <Card style={styles.resultCard}>
@@ -349,24 +432,15 @@ function CompareRow({ label, years, interest }: { label: string; years: number; 
   );
 }
 
-// Grouped from the website's 10-category BUDGET_CATEGORY_LABELS (app.js) into 5 broader
-// buckets — mobile's audience is first-time budgeters, and 10 individual sliders was more
-// granularity than "basic and easy to understand" calls for. Not synced anywhere (this
-// panel's state is local-only, see BudgetPanel), so the grouping is mobile-only.
+// Ported verbatim from the website's BUDGET_CATEGORY_LABELS/ORDER (app.js) — all 10 named
+// categories, not a mobile-only grouped-down set, so the Budget Calculator matches the
+// website's exactly (state.budgetPlan is now a shared, synced field — see lib/webState.ts).
 const BUDGET_CATEGORY_LABELS: Record<string, string> = {
-  food: 'Food & Drink',
-  shopping: 'Shopping & Personal Care',
-  transportation: 'Transportation',
-  funFitness: 'Entertainment & Fitness',
-  textbooks: 'Textbooks',
+  groceries: 'Groceries', diningOut: 'Dining Out', foodDelivery: 'Food Delivery (DoorDash, Uber Eats, etc.)',
+  coffee: 'Coffee', clothing: 'Clothing / Thrift', beauty: 'Beauty / Personal Care',
+  transportation: 'Transportation', entertainment: 'Entertainment', textbooks: 'Textbooks', gym: 'Gym',
 };
-const BUDGET_CATEGORY_ORDER = ['food', 'shopping', 'transportation', 'funFitness', 'textbooks'];
-const BUDGET_CATEGORY_DEFAULTS: Record<string, number> = {
-  food: 395, shopping: 70, transportation: 70, funFitness: 60, textbooks: 20,
-};
-const BUDGET_CATEGORY_MAX: Record<string, number> = {
-  food: 900, shopping: 400, transportation: 400, funFitness: 400, textbooks: 300,
-};
+const BUDGET_CATEGORY_ORDER = ['groceries', 'diningOut', 'foodDelivery', 'coffee', 'clothing', 'beauty', 'transportation', 'entertainment', 'textbooks', 'gym'];
 
 function BarRow({ label, val, max, tone }: { label: string; val: number; max: number; tone: 'pink' | 'green' }) {
   const pct = max > 0 ? Math.min(100, (val / max) * 100) : 0;
@@ -388,53 +462,120 @@ function BarRow({ label, val, max, tone }: { label: string; val: number; max: nu
 }
 
 function BudgetPanel() {
-  const [monthlyIncome, setMonthlyIncome] = useState(1200);
-  const [fixedExpenses, setFixedExpenses] = useState(700);
-  const [variable, setVariable] = useState<Record<string, number>>(BUDGET_CATEGORY_DEFAULTS);
-  const [savingsGoal, setSavingsGoal] = useState(150);
-  const [whatIfCategory, setWhatIfCategory] = useState('food');
+  const { state, setBudgetPlan } = useStore();
+  const plan = state.budgetPlan;
+
+  // Mirrors the website's renderBudgetCalculatorPanel: an empty income/fixed-expense list
+  // (a first-time visit, or one the player cleared out entirely) gets a single starter row
+  // seeded back in, rather than showing a blank list with nothing to edit.
+  useEffect(() => {
+    if (plan.incomeSources.length === 0 || plan.fixedExpenses.length === 0) {
+      setBudgetPlan((p) => ({
+        ...p,
+        incomeSources: p.incomeSources.length ? p.incomeSources : [{ id: 'inc0', label: 'Part-time job', amount: '' }],
+        fixedExpenses: p.fixedExpenses.length ? p.fixedExpenses : [{ id: 'fix0', label: 'Rent', amount: '' }],
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [whatIfCategory, setWhatIfCategory] = useState('foodDelivery');
   const [whatIfCut, setWhatIfCut] = useState(0);
 
-  const setCategory = (key: string, v: number) => setVariable((prev) => ({ ...prev, [key]: v }));
+  const totalIncome = plan.incomeSources.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+  const totalFixed = plan.fixedExpenses.reduce((s, x) => s + (Number(x.amount) || 0), 0);
+  const totalVariable = BUDGET_CATEGORY_ORDER.reduce((s, k) => s + (Number(plan.variableExpenses[k]) || 0), 0);
+  const totalExpenses = totalFixed + totalVariable;
+  const remaining = totalIncome - totalExpenses;
+  const deliveryBeautyTotal = (Number(plan.variableExpenses.foodDelivery) || 0) + (Number(plan.variableExpenses.beauty) || 0);
+  const calloutOn = deliveryBeautyTotal > 100;
 
-  const totalVariable = BUDGET_CATEGORY_ORDER.reduce((s, k) => s + (variable[k] || 0), 0);
-  const totalExpenses = fixedExpenses + totalVariable;
-  const remaining = monthlyIncome - totalExpenses;
-
+  const savingsGoal = Number(plan.savingsGoal) || 0;
   const goalGap = savingsGoal > 0 ? remaining - savingsGoal : null;
 
-  const maxCut = Math.min(100, variable[whatIfCategory] || 0);
+  // Hard $100 ceiling on the "what if" cut regardless of the category's own total — ported
+  // as-is from the website's own maxCut math, not a mobile-side bug.
+  const maxCut = Math.min(100, Number(plan.variableExpenses[whatIfCategory]) || 0);
   const cut = Math.min(whatIfCut, maxCut);
   const newRemaining = remaining + cut;
-  const maxBar = Math.max(fixedExpenses, ...BUDGET_CATEGORY_ORDER.map((k) => variable[k] || 0), 1);
+
+  const maxBar = Math.max(totalFixed, ...BUDGET_CATEGORY_ORDER.map((k) => Number(plan.variableExpenses[k]) || 0), 1);
+
+  const updateIncome = (id: string, patch: Partial<BudgetLineItem>) =>
+    setBudgetPlan((p) => ({ ...p, incomeSources: p.incomeSources.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
+  const updateFixed = (id: string, patch: Partial<BudgetLineItem>) =>
+    setBudgetPlan((p) => ({ ...p, fixedExpenses: p.fixedExpenses.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
+  const removeIncome = (id: string) => setBudgetPlan((p) => ({ ...p, incomeSources: p.incomeSources.filter((x) => x.id !== id) }));
+  const removeFixed = (id: string) => setBudgetPlan((p) => ({ ...p, fixedExpenses: p.fixedExpenses.filter((x) => x.id !== id) }));
+  const addIncome = () => setBudgetPlan((p) => ({ ...p, incomeSources: [...p.incomeSources, { id: `inc${Date.now()}`, label: 'New source', amount: '' as const }] }));
+  const addFixed = () => setBudgetPlan((p) => ({ ...p, fixedExpenses: [...p.fixedExpenses, { id: `fix${Date.now()}`, label: 'New expense', amount: '' as const }] }));
+  const setVariable = (key: string, v: number | '') => setBudgetPlan((p) => ({ ...p, variableExpenses: { ...p.variableExpenses, [key]: v } }));
+  const setSavingsGoal = (v: number | '') => setBudgetPlan((p) => ({ ...p, savingsGoal: v }));
 
   return (
     <>
-      <Card style={{ gap: 13 }}>
-        <SliderRow label="Take-home pay" value={monthlyIncome} onChange={setMonthlyIncome} min={0} max={6000} step={25} format={money} />
-        <SliderRow label="Rent & fixed costs" value={fixedExpenses} onChange={setFixedExpenses} min={0} max={3000} step={25} format={money} />
-        <SliderRow label="Savings goal" value={savingsGoal} onChange={setSavingsGoal} min={0} max={1500} step={25} format={money} />
+      <Card style={{ gap: 10 }}>
+        <Txt style={styles.cardTitle}>Monthly Income</Txt>
+        {plan.incomeSources.map((item) => (
+          <LineItemRow
+            key={item.id}
+            item={item}
+            onLabelChange={(t) => updateIncome(item.id, { label: t })}
+            onAmountChange={(v) => updateIncome(item.id, { amount: v })}
+            onRemove={() => removeIncome(item.id)}
+          />
+        ))}
+        <Pressable onPress={addIncome}>
+          <Tag tone="lock">+ Add income source</Tag>
+        </Pressable>
       </Card>
 
-      <Card style={{ gap: 13 }}>
-        <Collapsible title={`Everyday Spending (${money(totalVariable)}/mo)`}>
-          {BUDGET_CATEGORY_ORDER.map((key) => (
-            <SliderRow
-              key={key}
-              label={BUDGET_CATEGORY_LABELS[key]}
-              value={variable[key] || 0}
-              onChange={(v) => setCategory(key, v)}
-              min={0} max={BUDGET_CATEGORY_MAX[key]} step={5} format={money}
-            />
-          ))}
-        </Collapsible>
+      <Card style={{ gap: 10 }}>
+        <Txt style={styles.cardTitle}>Fixed Expenses</Txt>
+        {plan.fixedExpenses.map((item) => (
+          <LineItemRow
+            key={item.id}
+            item={item}
+            onLabelChange={(t) => updateFixed(item.id, { label: t })}
+            onAmountChange={(v) => updateFixed(item.id, { amount: v })}
+            onRemove={() => removeFixed(item.id)}
+          />
+        ))}
+        <Pressable onPress={addFixed}>
+          <Tag tone="lock">+ Add fixed expense</Tag>
+        </Pressable>
+      </Card>
+
+      <Card style={{ gap: 10 }}>
+        <Txt style={styles.cardTitle}>Variable Expenses</Txt>
+        <Txt variant="lead" style={{ fontSize: 12 }}>
+          Food delivery and beauty services add up faster than most students expect — see your monthly total below.
+        </Txt>
+        {BUDGET_CATEGORY_ORDER.map((key) => (
+          <CategoryRow
+            key={key}
+            label={BUDGET_CATEGORY_LABELS[key]}
+            value={plan.variableExpenses[key] ?? ''}
+            onChangeText={(v) => setVariable(key, v)}
+            callout={calloutOn && (key === 'foodDelivery' || key === 'beauty')}
+          />
+        ))}
+      </Card>
+
+      <Card style={{ gap: 10 }}>
+        <Txt style={styles.cardTitle}>Savings Goal</Txt>
+        <View style={styles.savingsRow}>
+          <Txt style={styles.categoryLabel}>I want to save</Txt>
+          <AmountField value={plan.savingsGoal} onChangeText={setSavingsGoal} width={72} />
+          <Txt style={styles.categoryLabel}>per month</Txt>
+        </View>
       </Card>
 
       <Card style={styles.resultCard}>
         <Txt style={styles.resultCap}>SUMMARY</Txt>
         <View style={{ width: '100%', gap: 6 }}>
-          <View style={styles.summaryRow}><Txt style={styles.compareLabel}>Total income</Txt><Txt style={styles.compareVal}>{money(monthlyIncome)}</Txt></View>
-          <View style={styles.summaryRow}><Txt style={styles.compareLabel}>Fixed expenses</Txt><Txt style={styles.compareVal}>{money(fixedExpenses)}</Txt></View>
+          <View style={styles.summaryRow}><Txt style={styles.compareLabel}>Total income</Txt><Txt style={styles.compareVal}>{money(totalIncome)}</Txt></View>
+          <View style={styles.summaryRow}><Txt style={styles.compareLabel}>Fixed expenses</Txt><Txt style={styles.compareVal}>{money(totalFixed)}</Txt></View>
           <View style={styles.summaryRow}><Txt style={styles.compareLabel}>Variable expenses</Txt><Txt style={styles.compareVal}>{money(totalVariable)}</Txt></View>
           <View style={[styles.summaryRow, { marginTop: 4 }]}>
             <Txt style={{ fontFamily: font.displayMed, fontSize: 14, color: remaining < 0 ? colors.pinkDark : colors.ink }}>Remaining balance</Txt>
@@ -452,9 +593,9 @@ function BudgetPanel() {
 
       <Card style={{ gap: 12 }}>
         <Txt style={styles.cardTitle}>Spending by Category</Txt>
-        <BarRow label="Fixed Expenses" val={fixedExpenses} max={maxBar} tone="pink" />
+        <BarRow label="Fixed Expenses" val={totalFixed} max={maxBar} tone="pink" />
         {BUDGET_CATEGORY_ORDER.map((key) => (
-          <BarRow key={key} label={BUDGET_CATEGORY_LABELS[key]} val={variable[key] || 0} max={maxBar} tone="green" />
+          <BarRow key={key} label={shortLabel(BUDGET_CATEGORY_LABELS[key])} val={Number(plan.variableExpenses[key]) || 0} max={maxBar} tone="green" />
         ))}
       </Card>
 
@@ -464,14 +605,14 @@ function BudgetPanel() {
             {BUDGET_CATEGORY_ORDER.map((key) => (
               <Pressable key={key} onPress={() => { setWhatIfCategory(key); setWhatIfCut(0); }}>
                 <Tag tone={whatIfCategory === key ? 'green' : 'lock'} style={{ paddingVertical: 5, paddingHorizontal: 8 }}>
-                  {BUDGET_CATEGORY_LABELS[key]}
+                  {shortLabel(BUDGET_CATEGORY_LABELS[key])}
                 </Tag>
               </Pressable>
             ))}
           </View>
           {maxCut > 0 ? (
             <>
-              <SliderRow label={`Cut ${BUDGET_CATEGORY_LABELS[whatIfCategory]} by`} value={cut} onChange={setWhatIfCut} min={0} max={maxCut} step={1} format={money} />
+              <SliderRow label={`Cut ${shortLabel(BUDGET_CATEGORY_LABELS[whatIfCategory])} by`} value={cut} onChange={setWhatIfCut} min={0} max={maxCut} step={1} format={money} />
               <Txt variant="lead" style={{ fontSize: 12.5 }}>
                 Cut {money(cut)} → {money(newRemaining)} remaining
                 {savingsGoal > 0
@@ -514,4 +655,34 @@ const styles = StyleSheet.create({
   overThresholdTxt: { color: colors.pinkDark },
   collapseHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   collapseChevron: { fontFamily: font.bold, fontSize: 13, color: colors.muted4 },
+
+  // Free-form income/fixed-expense row.
+  lineRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  lineLabelInput: {
+    flex: 1, fontFamily: font.semi, fontSize: 14, color: colors.ink,
+    backgroundColor: colors.screen, borderRadius: 10, borderWidth: 1.5, borderColor: colors.borderOpt,
+    paddingVertical: 9, paddingHorizontal: 11,
+  },
+  amountWrap: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.screen, borderRadius: 10, borderWidth: 1.5, borderColor: colors.borderOpt,
+    paddingVertical: 9, paddingHorizontal: 10, gap: 2,
+  },
+  amountPrefix: { fontFamily: font.extra, fontSize: 14, color: colors.muted4 },
+  amountInput: { flex: 1, fontFamily: font.extra, fontSize: 14, color: colors.ink, padding: 0 },
+  removeBtn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
+  removeTxt: { fontFamily: font.bold, fontSize: 18, color: colors.muted5, lineHeight: 20 },
+
+  // Fixed-category variable-expense row.
+  categoryRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+    paddingVertical: 6,
+  },
+  categoryRowCallout: {
+    backgroundColor: colors.calloutBg, borderRadius: 10,
+    paddingHorizontal: 8, marginHorizontal: -8,
+  },
+  categoryLabel: { flex: 1, fontFamily: font.semi, fontSize: 13, color: colors.ink },
+
+  savingsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
 });
