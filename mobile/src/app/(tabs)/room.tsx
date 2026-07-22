@@ -39,12 +39,13 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // body rather than only trailing out below his feet, so the two read as "standing on it"
   // rather than two separate unrelated floor items.
   rug: { label: 'Rug', bottom: '8%', left: '16%', width: '66%', height: '50%', floorStanding: true },
-  // Directly under the window (left matches the window's own left edge, 24%) instead of the
-  // far-left corner — a color fix (see content/shopItems.json's desk_study/desk_vanity)
-  // darkened its actual wood tone instead of layering a translucent scrim over it, which
-  // covered the item's full bounding box (including the transparent letterboxed margins
-  // around the art) and was showing up as a stray greyish rectangle.
-  desk: { label: 'Desk', top: '42%', left: '24%', width: '34%', height: '50%', floorStanding: true },
+  // Under the window, mirrored to the plant's own vertical band (top 34%, same math as
+  // plant's bottom: 46%) but on the left side instead of the right — a color fix (see
+  // content/shopItems.json's desk_study/desk_vanity) darkened its actual wood tone instead
+  // of layering a translucent scrim over it, which covered the item's full bounding box
+  // (including the transparent letterboxed margins around the art) and was showing up as a
+  // stray greyish rectangle.
+  desk: { label: 'Desk', top: '34%', left: '2%', width: '34%', height: '50%', floorStanding: true },
 };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
@@ -269,8 +270,8 @@ const styles = StyleSheet.create({
   slot: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   slotFilled: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   // Right under the furnitureCta pill (top: 14, roughly 40-ish tall) and spanning the full
-  // width of the scene.
-  garlandBand: { top: 60, left: 0, right: 0 },
+  // width of the scene. Nudged up slightly from 60.
+  garlandBand: { top: 52, left: 0, right: 0 },
   hammy: { position: 'absolute', bottom: '12%', alignSelf: 'center' },
   furnitureCta: {
     position: 'absolute',
