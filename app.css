@@ -1993,19 +1993,16 @@ select.budget-input { cursor: pointer; }
 /* top+height reached only 43% before — short of the floor's 48% start, so the lamp visibly
    floated above the floor line instead of standing on it. */
 .room-slot-lamp  { top: 3%; right: 5%; width: 13%; height: 48%; }
-/* Tucked beside the bed instead of dead-center where it used to sit right next to Hammy —
-   ported from mobile's own plant placement (a modest overlap with the bed's edge is
-   intentional there too, see mobile's room.tsx SLOT_LAYOUT comment). */
-.room-slot-plant { bottom: 4%; left: 58%; width: 15%; height: 26%; z-index: 1; }
+/* Sits toward the back of the room (high up in the floor zone, well clear of the bed/desk/
+   rug down front) instead of down in the foreground right next to Hammy. */
+.room-slot-plant { bottom: 32%; left: 38%; width: 13%; height: 24%; z-index: 1; }
 .room-slot-bed   { bottom: 5%; right: 3%; width: 29%; height: 31%; z-index: 1; }
 /* Unlike the other room-slots (positioned against the full .room-backdrop), this one is
    nested inside .room-floor (52% of the backdrop's own height — see renderRoomPage), so its
-   bottom/height are percentages of THAT, not the full scene. Width matches mobile's rug
-   (66%) directly since both containers are full-width either way; bottom/height are rescaled
-   (÷0.52) so the rug ends up covering the same actual share of the room mobile's does — big
-   and tall enough to visibly extend up BEHIND the centered pig, reading as "standing on it"
-   instead of two separate, barely-overlapping floor items. */
-.room-slot-rug   { bottom: 12%; left: 50%; transform: translateX(-50%); width: 66%; height: 90%; z-index: 1; }
+   bottom/height are percentages of THAT, not the full scene. Sized down from an earlier
+   oversized pass (66%/90%, which read as too big) to a size that still visibly extends
+   behind the centered pig without dominating the whole floor. */
+.room-slot-rug   { bottom: 6%; left: 50%; transform: translateX(-50%); width: 42%; height: 45%; z-index: 1; }
 .room-slot-desk  { bottom: 4%; left: 5%; width: 22%; height: 29%; z-index: 1; }
 
 /* No visual box for an empty slot at all — matches the mobile app, which renders nothing.
