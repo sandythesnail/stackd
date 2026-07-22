@@ -493,13 +493,21 @@ body { background: var(--bg); min-height: 100vh; }
 .daily-login-modal-card .btn-primary { width: 100%; }
 
 /* ─── PROGRESS PIG MASCOT ─── */
-.pg-mascot-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin-bottom: 2rem; }
+/* No margin-bottom here — #page-progress .page-body's own gap (below) already spaces this
+   from the next section; the two used to stack (gap AND margin), leaving an oversized 72px
+   gap right at the top of the page. */
+.pg-mascot-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
 .pg-mascot-pig { }
 .pg-mascot-bubble {
   font-size: 1.35rem; font-weight: 600; color: var(--text-mid);
   background: var(--card-bg); border: 1px solid var(--border);
   padding: 0.65rem 1.5rem; border-radius: 999px;
 }
+
+/* Tighter section spacing than the site-wide .page-body default (2.5rem) — this page stacks
+   5 sections in sequence, and the full gap between every one of them read as sparse/floaty
+   next to mobile's much tighter equivalent screen. */
+#page-progress .page-body { gap: 1.6rem; }
 
 /* ─── PROGRESS PAGE CHARTS ─── */
 .pg-stats-row {
@@ -522,12 +530,15 @@ body { background: var(--bg); min-height: 100vh; }
 }
 .pg-stat-sub { font-size: 0.78rem; color: var(--text-soft); font-weight: 500; }
 
-.pg-charts-row {
-  display: grid; grid-template-columns: 240px 1fr; gap: 1.25rem; align-items: stretch;
+/* Modules Done + Level Progress — equal columns since both are naturally compact cards
+   (unlike the old pairing with the tall 11-row Module Scores card, which forced this row
+   to stretch to match and left a lot of dead space around the ring). */
+.pg-top-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: stretch;
 }
 .pg-chart-card {
   background: #fff; border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 1.75rem;
+  border-radius: var(--radius); padding: 1.5rem 1.65rem;
 }
 .pg-chart-title {
   font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
@@ -2162,7 +2173,7 @@ select.budget-input { cursor: pointer; }
   .quiz-body { padding: 1.5rem 1rem 140px; }
   .feedback-panel { max-width: 100%; }
   .pg-stats-row { grid-template-columns: 1fr 1fr; }
-  .pg-charts-row { grid-template-columns: 1fr; }
+  .pg-top-row { grid-template-columns: 1fr; }
   .pg-level-row { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .quest-body { padding-left: 0.6rem; padding-right: 0.6rem; }
   /* Narrower than before — the Hammy column was eating enough horizontal room that longer

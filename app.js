@@ -18383,8 +18383,11 @@ function renderProgressPage() {
       </div>
     </div>
 
-    <!-- Donut + Module score bars -->
-    <div class="pg-charts-row">
+    <!-- Modules Done + Level Progress — paired together since both are naturally compact
+         cards (avoids the old layout's problem: pairing this with the much-taller 11-row
+         Module Scores card forced it to stretch to match, leaving a lot of dead space
+         around the ring). -->
+    <div class="pg-top-row">
       <div class="pg-chart-card pg-ring-card">
         <div class="pg-chart-title">Modules Done</div>
         <div class="pg-donut-wrap">
@@ -18407,22 +18410,40 @@ function renderProgressPage() {
       </div>
 
       <div class="pg-chart-card">
-        <div class="pg-chart-title">Module Scores</div>
-        <div class="pg-bar-chart">
-          ${MODULES.map(m => {
-            const comp = state.completedModules[m.id];
-            const scorePct = comp ? (comp.score / (comp.total || 5)) * 100 : 0;
-            const isPink = pinkMods.has(m.id);
-            return `<div class="pg-bar-row">
-              <div class="mod-icon mod-icon-sm ${m.iconColor}">${m.icon}</div>
-              <span class="pg-bar-label">${m.title}</span>
-              <div class="pg-bar-track">
-                <div class="pg-bar-fill${isPink ? ' pg-bar-pink' : ''}" style="width:${scorePct}%"></div>
-              </div>
-              <span class="pg-bar-val">${comp ? `${comp.score}/${comp.total || 5}` : '—'}</span>
-            </div>`;
-          }).join('')}
+        <div class="pg-chart-title">Level Progress</div>
+        <div class="pg-level-row">
+          <div class="pg-level-badge"><span class="pg-level-badge-txt">Lv ${state.level}</span></div>
+          <div class="pg-level-info">
+            <div class="pg-xp-row-detail">
+              <span>${state.xp.toLocaleString()} XP earned</span>
+              <span>${nextXP.toLocaleString()} XP needed</span>
+            </div>
+            <div class="pg-level-bar-track">
+              <div class="pg-level-bar-fill" style="width:${pct}%"></div>
+            </div>
+            <div class="pg-xp-sub">${(nextXP - state.xp).toLocaleString()} XP to Level ${state.level + 1} · ${tier.name}</div>
+          </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Module Scores -->
+    <div class="pg-chart-card">
+      <div class="pg-chart-title">Module Scores</div>
+      <div class="pg-bar-chart">
+        ${MODULES.map(m => {
+          const comp = state.completedModules[m.id];
+          const scorePct = comp ? (comp.score / (comp.total || 5)) * 100 : 0;
+          const isPink = pinkMods.has(m.id);
+          return `<div class="pg-bar-row">
+            <div class="mod-icon mod-icon-sm ${m.iconColor}">${m.icon}</div>
+            <span class="pg-bar-label">${m.title}</span>
+            <div class="pg-bar-track">
+              <div class="pg-bar-fill${isPink ? ' pg-bar-pink' : ''}" style="width:${scorePct}%"></div>
+            </div>
+            <span class="pg-bar-val">${comp ? `${comp.score}/${comp.total || 5}` : '—'}</span>
+          </div>`;
+        }).join('')}
       </div>
     </div>
 
@@ -18445,24 +18466,6 @@ function renderProgressPage() {
         </div>
         <div class="pg-col-labels">
           ${MODULES.map(m => `<span>${m.title.split(' ')[0]}</span>`).join('')}
-        </div>
-      </div>
-    </div>
-
-    <!-- Level progress -->
-    <div class="pg-chart-card">
-      <div class="pg-chart-title">Level Progress</div>
-      <div class="pg-level-row">
-        <div class="pg-level-badge"><span class="pg-level-badge-txt">Lv ${state.level}</span></div>
-        <div class="pg-level-info">
-          <div class="pg-xp-row-detail">
-            <span>${state.xp.toLocaleString()} XP earned</span>
-            <span>${nextXP.toLocaleString()} XP needed</span>
-          </div>
-          <div class="pg-level-bar-track">
-            <div class="pg-level-bar-fill" style="width:${pct}%"></div>
-          </div>
-          <div class="pg-xp-sub">${(nextXP - state.xp).toLocaleString()} XP to Level ${state.level + 1} · ${tier.name}</div>
         </div>
       </div>
     </div>`;
