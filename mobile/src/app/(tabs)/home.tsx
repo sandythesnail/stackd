@@ -38,15 +38,23 @@ export default function Home() {
   const [selectedBadge, setSelectedBadge] = useState<AchievementView | null>(null);
   const { startTour } = useOnboardingTour();
 
-  // First-login spotlight tour (XP, then Shop) — fires once, gated on the persisted flag,
-  // right after a new user lands here from the onboarding survey. The delay gives the
-  // survey->home screen transition a beat to finish before measuring anything on screen.
+  // First-login spotlight tour (XP, then Shop) — gated on the persisted flag, right after a
+  // new user lands here from the onboarding survey. The delay gives the survey->home screen
+  // transition a beat to finish before measuring anything on screen.
+  //
+  // Depends on state.hasSeenOnboardingTour (not []): on mount, the store's AsyncStorage load
+  // is still in flight and `state` is momentarily DEFAULT_STATE, where hasSeenOnboardingTour
+  // is always false — with an empty dep array this effect fired once, saw that stale false,
+  // and scheduled the tour regardless of what the real persisted value turned out to be a
+  // moment later, so it replayed on every single reload no matter how many times it had
+  // already been seen. Keying off the real field lets the effect re-run (and its cleanup
+  // cancel the pending timeout) the instant the load resolves to true.
   useEffect(() => {
     if (state.hasSeenOnboardingTour) return;
     const t = setTimeout(startTour, 450);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [state.hasSeenOnboardingTour]);
 
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
   const trackModuleIds = activeTrack?.moduleIds ?? [];
