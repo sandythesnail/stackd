@@ -15723,7 +15723,9 @@ const SHOP_ITEMS = [
     id: 'desk_study', name: 'Study Desk', category: 'room', slot: 'desk', price: 115,
     viewBox: '0 0 160 100',
     desc: 'A tidy desk for getting things done.',
-    svg: `<rect x="15" y="56" width="130" height="8" rx="2" fill="#C6935B"/>
+    // Darkened from #C6935B — that was the exact same tone as the room floor's own light
+    // stripe color, so the desk visually vanished into the floor behind it.
+    svg: `<rect x="15" y="56" width="130" height="8" rx="2" fill="#7A5230"/>
           <rect x="21" y="64" width="6" height="28" fill="#8A6438"/>
           <rect x="133" y="64" width="6" height="28" fill="#8A6438"/>
           <rect x="63" y="56" width="34" height="4" rx="1" fill="var(--border)"/>
@@ -15733,7 +15735,8 @@ const SHOP_ITEMS = [
     id: 'desk_vanity', name: 'Vanity Desk', category: 'room', slot: 'desk', price: 135,
     viewBox: '0 0 160 100',
     desc: 'A desk with a little mirror to match.',
-    svg: `<rect x="15" y="56" width="130" height="8" rx="2" fill="#E8B896"/>
+    // Darkened from #E8B896 — same floor-blending issue as desk_study.
+    svg: `<rect x="15" y="56" width="130" height="8" rx="2" fill="#B8875A"/>
           <rect x="21" y="64" width="6" height="28" fill="#8A6438"/>
           <rect x="133" y="64" width="6" height="28" fill="#8A6438"/>
           <rect x="76" y="50" width="8" height="8" fill="var(--border)"/>
@@ -15754,6 +15757,9 @@ const SHOP_ITEMS = [
     id: 'lamp_fairy', name: 'Fairy Lights', category: 'room', slot: 'lamp', price: 65,
     viewBox: '0 0 70 120',
     desc: 'Twinkly and financially responsible.',
+    // The 4 extra dots sit at the midpoint of each swooping arc (computed from the actual
+    // quadratic-bezier curve, not eyeballed) — lights at the bottom of each peak/loop, not
+    // just at the 3 anchor points every strand already had.
     svg: `<path d="M10,10 Q35,40 10,60 Q35,90 10,110" stroke="#B8935E" stroke-width="2" fill="none"/>
           <path d="M60,10 Q35,40 60,60 Q35,90 60,110" stroke="#B8935E" stroke-width="2" fill="none"/>
           <circle cx="10" cy="10" r="5" fill="#FFE45A"/>
@@ -15761,7 +15767,11 @@ const SHOP_ITEMS = [
           <circle cx="10" cy="110" r="5" fill="#8FDD78"/>
           <circle cx="60" cy="10" r="5" fill="#8FDD78"/>
           <circle cx="60" cy="60" r="5" fill="#FFE45A"/>
-          <circle cx="60" cy="110" r="5" fill="#FF96B8"/>`
+          <circle cx="60" cy="110" r="5" fill="#FF96B8"/>
+          <circle cx="22.5" cy="37.5" r="3.5" fill="#FF96B8"/>
+          <circle cx="22.5" cy="87.5" r="3.5" fill="#FFE45A"/>
+          <circle cx="47.5" cy="37.5" r="3.5" fill="#8FDD78"/>
+          <circle cx="47.5" cy="87.5" r="3.5" fill="#FF96B8"/>`
   },
   {
     id: 'lamp_desk', name: 'Desk Lamp', category: 'room', slot: 'lamp', price: 55,

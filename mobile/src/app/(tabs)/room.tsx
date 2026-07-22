@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, ViewStyle } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, ViewStyle, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Txt, Hammy, ItemArt, Wallpaper, ListRow } from '@/components';
 import { colors, font } from '@/theme';
@@ -21,37 +21,29 @@ type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
  * slot instead of floating in the middle of empty letterboxed space above the floor line.
  * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
 const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
-  window: { label: 'Window', top: '9%', left: '24%', width: '48%', height: '40%' },
-  // Sized down just a touch from 24%/46% — it was reading a bit too big next to everything else.
+  // Shifted up to line up with the poster's own top (4%) instead of sitting lower than it.
+  window: { label: 'Window', top: '4%', left: '24%', width: '48%', height: '40%' },
   wall: { label: 'Wall art', top: '4%', left: '3%', width: '21%', height: '41%' },
-  // top+height used to land at 51%, just barely into the floor zone (48%) — bumped both so
-  // the lamp's own base clearly overlaps the floor instead of only just grazing it. This is
-  // the layout for every lamp EXCEPT Fairy Lights — see FAIRY_LIGHTS_LAYOUT below, which
-  // replaces this one specifically when that item is equipped (rendered separately in Room()).
+  // This is the layout for every lamp EXCEPT Fairy Lights — see FairyLightsGarland below,
+  // which replaces this slot's normal rendering entirely when that item is equipped.
   lamp: { label: 'Lamp', top: '2%', right: '2%', width: '20%', height: '54%', floorStanding: true },
-  // Tucked into the back-right corner (a modest overlap with the top of the lamp's own tall
-  // strip is intentional — there's little other free space back there once the lamp, window,
-  // and the much bigger bed/desk all claim their own territory).
-  plant: { label: 'Plant', top: '2%', right: '2%', width: '14%', height: '16%', floorStanding: true },
-  // Right under the window (window: top 9%, height 40% -> ends at 49%) and much bigger than
-  // before (was 40%/40%) — the width is centered under the window's own 24%-72% span.
-  bed: { label: 'Bed', top: '49%', left: '20%', width: '56%', height: '46%', floorStanding: true },
+  // Down at the floor, tucked beside the lamp's own base (bottom of the lamp's tall strip
+  // is around 44% from the bottom, so there's no overlap sitting here at 2-22%).
+  plant: { label: 'Plant', bottom: '2%', right: '2%', width: '16%', height: '20%', floorStanding: true },
+  // Right under the window (window now starts at top 4%, height 40% -> ends at 44%).
+  bed: { label: 'Bed', top: '44%', left: '20%', width: '56%', height: '46%', floorStanding: true },
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
   // (bottom raised off the literal floor edge) so more of it reads as sitting BEHIND Hammy's
   // body rather than only trailing out below his feet, so the two read as "standing on it"
   // rather than two separate unrelated floor items.
   rug: { label: 'Rug', bottom: '8%', left: '16%', width: '66%', height: '50%', floorStanding: true },
-  // Much bigger than before (was 32%/38%) and moved to the bed's left side, tucked in with a
-  // modest intentional overlap rather than left with an awkward gap — see the `darken`
-  // overlay applied to this one specifically in Room() (its own color is close to the
-  // floor's, so a flat resize alone would still blend right into it).
-  desk: { label: 'Desk', top: '51%', left: '0%', width: '26%', height: '42%', floorStanding: true },
+  // Much bigger again (was 26%/42%) and moved further left; a color fix (see
+  // content/shopItems.json's desk_study/desk_vanity) darkened its actual wood tone instead
+  // of layering a translucent scrim over it — that scrim covered the item's full bounding
+  // box, including the transparent letterboxed margins around the art itself, which is
+  // exactly what showed up as a stray greyish rectangle next to the desk.
+  desk: { label: 'Desk', top: '42%', left: '0%', width: '34%', height: '50%', floorStanding: true },
 };
-
-// Fairy Lights only — every other lamp keeps SLOT_LAYOUT.lamp above. A thin horizontal band
-// right above the window instead of the tall vertical strip the item's own art was drawn
-// for; RotatedFairyLights (below) rotates the art 90° to actually read as horizontal there.
-const FAIRY_LIGHTS_LAYOUT: SlotLayout = { label: 'Fairy Lights', top: '0%', left: '18%', width: '60%', height: '9%' };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
 // no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND
@@ -129,7 +121,7 @@ export default function Room() {
           {FURNITURE_SLOTS.map((slot) => {
             const item = bySlot(slot);
             if (slot === 'lamp' && item?.id === 'lamp_fairy') {
-              return <RotatedFairyLights key={slot} layout={FAIRY_LIGHTS_LAYOUT} item={item} onPress={goToRoomShop} />;
+              return <FairyLightsGarland key={slot} item={item} onPress={goToRoomShop} />;
             }
             const layout = SLOT_LAYOUT[slot];
             return (
@@ -138,7 +130,6 @@ export default function Room() {
                 layout={layout}
                 item={item}
                 onPress={goToRoomShop}
-                darken={slot === 'desk'}
               />
             );
           })}
@@ -198,54 +189,45 @@ export default function Room() {
 // Renders nothing at all for an empty slot — no placeholder box, dashed or otherwise. The
 // furnitureCta banner is the one, single way into the shop from this screen now, so an
 // unfurnished room just reads as an empty room instead of a scene full of "+" outlines.
-// `darken` layers a translucent black scrim over the art — used for the desk, whose own
-// wood tone is close enough to the floor's that a resize alone still blended right into it.
 function RoomSlotBox({
-  layout, item, onPress, darken,
-}: { layout: SlotLayout; item?: ShopItemReal; onPress: () => void; darken?: boolean }) {
+  layout, item, onPress,
+}: { layout: SlotLayout; item?: ShopItemReal; onPress: () => void }) {
   if (!item) return null;
   const { label: _label, floorStanding, ...position } = layout;
   return (
     <View style={[styles.slot, position]}>
       <Pressable style={styles.slotFilled} onPress={onPress}>
         <ItemArt item={item} fill align={floorStanding ? 'bottom' : 'mid'} />
-        {darken ? <View style={styles.darkenScrim} pointerEvents="none" /> : null}
       </Pressable>
     </View>
   );
 }
 
-// Fairy Lights' own art is drawn tall (a vertical strand, viewBox 70x120) — this measures
-// its slot box (via onLayout, since SLOT_LAYOUT uses % strings whose pixel size isn't known
-// ahead of render) and rotates a correctly-swapped inner box 90° so the strand actually
-// reads as a horizontal string of lights above the window instead of a squashed vertical one.
-function RotatedFairyLights({ layout, item, onPress }: { layout: SlotLayout; item: ShopItemReal; onPress: () => void }) {
-  const { label: _label, floorStanding: _floorStanding, ...position } = layout;
-  const [size, setSize] = useState({ w: 0, h: 0 });
+// Fairy Lights only, replacing the normal single "lamp" slot entirely — a row of GARLAND_COUNT
+// repeated copies spanning the full width of the scene, right under the furnitureCta pill
+// near the top, each individually rotated 90° so the strand (drawn tall, viewBox 70x120)
+// reads as a horizontal string of lights instead of a squashed vertical one. Uses a single
+// screen-width-derived cell size instead of per-cell onLayout measurement — every cell is
+// identical, so one calculation covers the whole row.
+const GARLAND_COUNT = 5;
+function FairyLightsGarland({ item, onPress }: { item: ShopItemReal; onPress: () => void }) {
+  const { width: winW } = useWindowDimensions();
+  const cellW = winW / GARLAND_COUNT;
+  // The item's own art is 70x120 (tall); rotated 90° its natural footprint is 120x70 (wide),
+  // i.e. height ~= width * 70/120. Letterboxes to fit if a cell ends up a bit off that ratio
+  // (ItemArt's own preserveAspectRatio), so this doesn't need to be exact.
+  const cellH = cellW * (70 / 120);
   return (
-    <View
-      style={[styles.slot, position]}
-      onLayout={(e) => {
-        const { width, height } = e.nativeEvent.layout;
-        if (width !== size.w || height !== size.h) setSize({ w: width, h: height });
-      }}
-    >
-      <Pressable style={styles.slotFilled} onPress={onPress}>
-        {size.w > 0 && size.h > 0 ? (
-          <View
-            style={{
-              position: 'absolute',
-              width: size.h,
-              height: size.w,
-              top: (size.h - size.w) / 2,
-              left: (size.w - size.h) / 2,
-              transform: [{ rotate: '90deg' }],
-            }}
-          >
-            <ItemArt item={item} fill align="mid" />
-          </View>
-        ) : null}
-      </Pressable>
+    <View style={[styles.slot, styles.garlandBand]}>
+      <View style={{ flexDirection: 'row' }}>
+        {Array.from({ length: GARLAND_COUNT }, (_, i) => (
+          <Pressable key={i} onPress={onPress} style={{ width: cellW, height: cellH, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: cellH, height: cellW, transform: [{ rotate: '90deg' }] }}>
+              <ItemArt item={item} fill align="mid" />
+            </View>
+          </Pressable>
+        ))}
+      </View>
     </View>
   );
 }
@@ -275,7 +257,9 @@ const styles = StyleSheet.create({
   floorStripe: { width: 58, height: '100%', backgroundColor: '#C6935B', marginRight: 4 },
   slot: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   slotFilled: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  darkenScrim: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.32)' },
+  // Right under the furnitureCta pill (top: 14, roughly 40-ish tall) and spanning the full
+  // width of the scene.
+  garlandBand: { top: 60, left: 0, right: 0 },
   hammy: { position: 'absolute', bottom: '12%', alignSelf: 'center' },
   furnitureCta: {
     position: 'absolute',
