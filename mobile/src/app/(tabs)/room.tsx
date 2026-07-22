@@ -39,13 +39,13 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // body rather than only trailing out below his feet, so the two read as "standing on it"
   // rather than two separate unrelated floor items.
   rug: { label: 'Rug', bottom: '8%', left: '16%', width: '66%', height: '50%', floorStanding: true },
-  // Under the window, mirrored to the plant's own vertical band (top 34%, same math as
-  // plant's bottom: 46%) but on the left side instead of the right — a color fix (see
+  // Centered directly under the window (window spans left 24%-72%, so left 31% centers this
+  // 34%-wide desk right in the middle of that span) — a color fix (see
   // content/shopItems.json's desk_study/desk_vanity) darkened its actual wood tone instead
   // of layering a translucent scrim over it, which covered the item's full bounding box
   // (including the transparent letterboxed margins around the art) and was showing up as a
   // stray greyish rectangle.
-  desk: { label: 'Desk', top: '34%', left: '2%', width: '34%', height: '50%', floorStanding: true },
+  desk: { label: 'Desk', top: '34%', left: '31%', width: '34%', height: '50%', floorStanding: true },
 };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
