@@ -15719,13 +15719,15 @@ const SHOP_ITEMS = [
           <circle cx="85" cy="25" r="3.5" fill="#FFE45A"/>`
   },
   {
-    id: 'lamp_desk', name: 'Desk Lamp', category: 'room', slot: 'lamp', price: 55,
+    id: 'lamp_moon', name: 'Moon Lamp', category: 'room', slot: 'lamp', price: 50,
     viewBox: '0 0 70 110',
-    desc: 'For late-night budget spreadsheets.',
-    svg: `<rect x="14" y="98" width="42" height="8" rx="3" fill="#8A6438"/>
-          <line x1="35" y1="98" x2="35" y2="70" stroke="#B8935E" stroke-width="4"/>
-          <line x1="35" y1="70" x2="55" y2="46" stroke="#B8935E" stroke-width="4"/>
-          <path d="M40,30 L64,42 L52,58 L32,48 Z" fill="#FFF6D8"/>`
+    desc: 'Soft light for late-night budgeting.',
+    svg: `<rect x="30" y="90" width="10" height="16" fill="#8A6438"/>
+          <ellipse cx="35" cy="106" rx="20" ry="4" fill="var(--border)"/>
+          <line x1="35" y1="20" x2="35" y2="90" stroke="#B8935E" stroke-width="3"/>
+          <circle cx="35" cy="18" r="18" fill="#FFF6D8"/>
+          <circle cx="41" cy="12" r="4" fill="#F5E5A8"/>
+          <circle cx="30" cy="24" r="2.5" fill="#F5E5A8"/>`
   },
   {
     id: 'window_sunny', name: 'Sunny Window', category: 'room', slot: 'window', price: 90,
