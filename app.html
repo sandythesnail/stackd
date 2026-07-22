@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="app.css?v=25">
+  <link rel="stylesheet" href="app.css?v=26">
   <script
     defer
     crossorigin="anonymous"
@@ -304,6 +304,21 @@
               <div class="settings-val" id="settings-account-name">—</div>
             </div>
             <button class="btn-secondary" id="settings-signout-btn">Sign out</button>
+          </div>
+        </div>
+        <div class="referral-card" id="feedback-card">
+          <div class="referral-card-head">
+            <h2>Feedback &amp; Bug Reports</h2>
+            <span class="section-sub">Run into something broken, or just have a thought? Tell us — it goes straight to the people building this.</span>
+          </div>
+          <div class="feedback-chips">
+            <button type="button" class="feedback-chip active" data-category="feedback">💬 Feedback</button>
+            <button type="button" class="feedback-chip" data-category="bug">🐛 Bug</button>
+          </div>
+          <textarea id="feedback-message" class="feedback-textarea" rows="4" placeholder="What's on your mind?"></textarea>
+          <div class="feedback-actions">
+            <button class="btn-secondary" id="feedback-send-btn">Send</button>
+            <span class="feedback-status" id="feedback-status"></span>
           </div>
         </div>
         <div class="referral-card">
@@ -624,6 +639,6 @@
   </div>
 
 </div>
-<script src="app.js?v=25"></script>
+<script src="app.js?v=26"></script>
 </body>
 </html>

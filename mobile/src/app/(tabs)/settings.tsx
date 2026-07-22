@@ -1,15 +1,16 @@
-import { ReactNode, useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, Alert, Linking } from 'react-native';
+import { ReactNode, useMemo, useRef, useState } from 'react';
+import { View, ScrollView, Pressable, StyleSheet, Alert, Linking, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import { useUser, useClerk } from '@clerk/clerk-expo';
-import { Screen, Header, Txt, Button, Coin, Diamond, useOnboardingTour } from '@/components';
+import { useUser, useClerk, useAuth } from '@clerk/clerk-expo';
+import { Screen, Header, Txt, Button, Card, Coin, Diamond, useOnboardingTour } from '@/components';
 import { colors, font } from '@/theme';
 import { user, modules } from '@/data';
 import { useStore } from '@/store';
 import { authEnabled } from '@/lib/env';
+import { makeSupabase } from '@/lib/supabase';
 import { MODULE_SOURCES } from '@/references';
 
 /** Screen 14 — Settings (invite, account, sources).
@@ -78,6 +79,8 @@ export default function Settings() {
           )}
         </View>
 
+        <FeedbackCard />
+
         <SourcesSection />
       </ScrollView>
     </Screen>
@@ -136,6 +139,106 @@ function ReferralCardBody({ link }: { link: string | null }) {
         <Txt variant="lead" style={{ fontSize: 12.5, marginTop: 11 }}>Sign in to get your link.</Txt>
       )}
     </LinearGradient>
+  );
+}
+
+/** Feedback / bug-report box — writes straight to the shared `feedback` table (see
+ * supabase/feedback.sql), same table the website's Settings page writes to. RLS only lets a
+ * signed-in user insert rows tagged with their own clerk_user_id, so this is a one-way
+ * "send us a note," not something that reads/lists anything back. */
+function FeedbackCard() {
+  return authEnabled ? <ClerkFeedbackCard /> : <FeedbackCardBody onSubmit={null} />;
+}
+
+/** Only rendered when auth is on — same client-creation pattern as SupabaseSync.tsx (a
+ * Supabase client whose every request carries the current Clerk token, so RLS can trust
+ * auth.jwt()->>'sub' as the real signed-in user). This is its own lightweight client just
+ * for this one write, not the shared sync client. */
+function ClerkFeedbackCard() {
+  const { getToken, userId } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+  const supabase = useMemo(() => makeSupabase(() => getTokenRef.current()), []);
+
+  const onSubmit = async (category: 'bug' | 'feedback', message: string) => {
+    if (!userId) return false;
+    const { error } = await supabase.from('feedback').insert({
+      clerk_user_id: userId, category, message, app: 'mobile', page: 'settings',
+    });
+    return !error;
+  };
+
+  return <FeedbackCardBody onSubmit={userId ? onSubmit : null} />;
+}
+
+function FeedbackCardBody({
+  onSubmit,
+}: {
+  onSubmit: ((category: 'bug' | 'feedback', message: string) => Promise<boolean>) | null;
+}) {
+  const [category, setCategory] = useState<'bug' | 'feedback'>('feedback');
+  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  const send = async () => {
+    if (!onSubmit || !message.trim() || status === 'sending') return;
+    setStatus('sending');
+    const ok = await onSubmit(category, message.trim());
+    if (ok) {
+      setStatus('sent');
+      setMessage('');
+      setTimeout(() => setStatus('idle'), 2500);
+    } else {
+      setStatus('error');
+    }
+  };
+
+  return (
+    <Card style={{ gap: 4, marginTop: 6 }}>
+      <Txt style={styles.feedbackH}>Feedback & bug reports</Txt>
+      <Txt variant="lead" style={{ fontSize: 12.5 }}>
+        Run into something broken, or just have a thought? Tell us — it goes straight to the people building this.
+      </Txt>
+      <View style={styles.feedbackChips}>
+        {(['feedback', 'bug'] as const).map((c) => {
+          const on = c === category;
+          return (
+            <Pressable key={c} onPress={() => setCategory(c)} style={[styles.fbChip, on && styles.fbChipOn]}>
+              <Txt style={[styles.fbChipTxt, on && { color: colors.white }]}>{c === 'bug' ? '🐛 Bug' : '💬 Feedback'}</Txt>
+            </Pressable>
+          );
+        })}
+      </View>
+      {onSubmit ? (
+        <>
+          <TextInput
+            style={styles.feedbackInput}
+            value={message}
+            onChangeText={setMessage}
+            placeholder={category === 'bug' ? "What happened, and what did you expect instead?" : "What's on your mind?"}
+            placeholderTextColor={colors.muted6}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
+          <Button
+            label={status === 'sending' ? 'Sending…' : status === 'sent' ? 'Sent — thank you!' : 'Send'}
+            variant={status === 'sent' ? 'ghost' : 'green'}
+            size="sm"
+            disabled={!message.trim() || status === 'sending'}
+            onPress={send}
+            style={{ marginTop: 4, alignSelf: 'flex-start', paddingHorizontal: 22 }}
+          />
+          {status === 'error' ? (
+            <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.danger, marginTop: 2 }}>
+              Couldn&apos;t send that — check your connection and try again.
+            </Txt>
+          ) : null}
+        </>
+      ) : (
+        <Txt variant="lead" style={{ fontSize: 12.5, marginTop: 4 }}>Sign in to send feedback.</Txt>
+      )}
+    </Card>
   );
 }
 
@@ -244,6 +347,19 @@ function Row({
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 22, paddingBottom: 28, gap: 12 },
+  feedbackH: { fontFamily: font.displayMed, fontSize: 16, color: colors.ink },
+  feedbackChips: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  fbChip: {
+    paddingVertical: 7, paddingHorizontal: 13, borderRadius: 16,
+    backgroundColor: colors.screen, borderWidth: 1.5, borderColor: colors.borderOpt,
+  },
+  fbChipOn: { backgroundColor: colors.green, borderColor: colors.green },
+  fbChipTxt: { fontFamily: font.extra, fontSize: 12.5, color: colors.muted3 },
+  feedbackInput: {
+    marginTop: 10, minHeight: 88, fontFamily: font.semi, fontSize: 14, color: colors.ink,
+    backgroundColor: colors.screen, borderRadius: 14, borderWidth: 1.5, borderColor: colors.borderOpt,
+    paddingVertical: 12, paddingHorizontal: 14,
+  },
   invite: { borderRadius: 24, borderWidth: 1.5, borderColor: colors.pinkBorder2, padding: 18 },
   inviteH: { fontFamily: font.displayMed, fontSize: 16, color: colors.pinkDark },
   inviteCopyRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 5, marginTop: 5 },

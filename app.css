@@ -683,6 +683,26 @@ body { background: var(--bg); min-height: 100vh; }
 @media (max-width: 480px) {
   .referral-link-row { flex-direction: column; }
 }
+
+.feedback-chips { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; }
+.feedback-chip {
+  font-family: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+  padding: 0.4rem 0.85rem; border-radius: 999px;
+  background: var(--bg); border: 1.5px solid var(--border); color: var(--text-mid);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.feedback-chip:hover { border-color: var(--green); }
+.feedback-chip.active { background: var(--green); border-color: var(--green); color: #fff; }
+.feedback-textarea {
+  width: 100%; resize: vertical; min-height: 100px;
+  font-family: inherit; font-size: 0.9rem; color: var(--text);
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 0.75rem 0.9rem;
+}
+.feedback-actions { display: flex; align-items: center; gap: 0.9rem; margin-top: 0.9rem; }
+.feedback-status { font-size: 0.82rem; font-weight: 600; color: var(--green-dark); }
+.feedback-status.error { color: var(--pink-dark); }
+
 .sources-module {
   border-top: 1px solid var(--border); padding: 0.85rem 0; font-size: 0.82rem; color: var(--text-mid);
 }

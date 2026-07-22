@@ -18519,6 +18519,51 @@ function renderSettingsPage() {
       }).catch(() => {});
     };
   }
+
+  // Feedback / bug reports — writes straight to the shared `feedback` table (see
+  // supabase/feedback.sql), same table the mobile app's Settings screen writes to. One-way
+  // "send us a note": RLS only lets a signed-in user insert rows tagged with their own
+  // clerk_user_id, there's no read/list surface here.
+  let feedbackCategory = 'feedback';
+  const feedbackChips = document.querySelectorAll('.feedback-chip');
+  feedbackChips.forEach(chip => {
+    chip.onclick = () => {
+      feedbackChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      feedbackCategory = chip.dataset.category;
+    };
+  });
+  const feedbackSendBtn = document.getElementById('feedback-send-btn');
+  const feedbackMessage = document.getElementById('feedback-message');
+  const feedbackStatus = document.getElementById('feedback-status');
+  if (feedbackSendBtn && feedbackMessage && feedbackStatus) {
+    feedbackSendBtn.onclick = async () => {
+      const message = feedbackMessage.value.trim();
+      if (!message) return;
+      if (!window.stackdSupabase || !window.Clerk?.user) {
+        feedbackStatus.textContent = 'Sign in to send feedback.';
+        feedbackStatus.classList.add('error');
+        return;
+      }
+      feedbackSendBtn.disabled = true;
+      feedbackSendBtn.textContent = 'Sending…';
+      const { error } = await window.stackdSupabase.from('feedback').insert({
+        clerk_user_id: Clerk.user.id, category: feedbackCategory, message, app: 'web', page: 'settings',
+      });
+      feedbackSendBtn.disabled = false;
+      feedbackSendBtn.textContent = 'Send';
+      if (error) {
+        console.error('Failed to send feedback:', error);
+        feedbackStatus.classList.add('error');
+        feedbackStatus.textContent = "Couldn't send that — check your connection and try again.";
+      } else {
+        feedbackMessage.value = '';
+        feedbackStatus.classList.remove('error');
+        feedbackStatus.textContent = 'Sent — thank you!';
+        setTimeout(() => { feedbackStatus.textContent = ''; }, 2500);
+      }
+    };
+  }
 }
 
 // ── TOOLS PAGE (Budget Calculator + Compound Interest Simulator) ──────────────
