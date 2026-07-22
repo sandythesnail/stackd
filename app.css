@@ -1984,10 +1984,7 @@ select.budget-input { cursor: pointer; }
     repeating-linear-gradient(90deg, #C6935B 0, #C6935B 58px, #B98650 58px, #B98650 62px),
     linear-gradient(180deg, #D7A968, #B9834C);
 }
-/* left (not margin-left): .room-floor centers this via justify-content, and a margin there
-   only shifts the centered position by half its own value — left offsets the full amount,
-   so the requested rightward shift is actually visible instead of barely there. */
-.room-pig { position: relative; left: 8%; z-index: 2; margin-bottom: 0.5%; cursor: pointer; }
+.room-pig { position: relative; z-index: 2; margin-bottom: 0.5%; cursor: pointer; }
 .room-pig .pig-stage { transform-origin: bottom center; }
 .room-slot { position: absolute; }
 .room-slot svg { width: 100%; height: 100%; display: block; }
@@ -1996,9 +1993,19 @@ select.budget-input { cursor: pointer; }
 /* top+height reached only 43% before — short of the floor's 48% start, so the lamp visibly
    floated above the floor line instead of standing on it. */
 .room-slot-lamp  { top: 3%; right: 5%; width: 13%; height: 48%; }
-.room-slot-plant { bottom: 4%; left: 24%; width: 18%; height: 32%; z-index: 1; }
+/* Tucked beside the bed instead of dead-center where it used to sit right next to Hammy —
+   ported from mobile's own plant placement (a modest overlap with the bed's edge is
+   intentional there too, see mobile's room.tsx SLOT_LAYOUT comment). */
+.room-slot-plant { bottom: 4%; left: 58%; width: 15%; height: 26%; z-index: 1; }
 .room-slot-bed   { bottom: 5%; right: 3%; width: 29%; height: 31%; z-index: 1; }
-.room-slot-rug   { bottom: 3%; left: 50%; transform: translateX(-50%); width: 34%; height: 16%; z-index: 1; }
+/* Unlike the other room-slots (positioned against the full .room-backdrop), this one is
+   nested inside .room-floor (52% of the backdrop's own height — see renderRoomPage), so its
+   bottom/height are percentages of THAT, not the full scene. Width matches mobile's rug
+   (66%) directly since both containers are full-width either way; bottom/height are rescaled
+   (÷0.52) so the rug ends up covering the same actual share of the room mobile's does — big
+   and tall enough to visibly extend up BEHIND the centered pig, reading as "standing on it"
+   instead of two separate, barely-overlapping floor items. */
+.room-slot-rug   { bottom: 12%; left: 50%; transform: translateX(-50%); width: 66%; height: 90%; z-index: 1; }
 .room-slot-desk  { bottom: 4%; left: 5%; width: 22%; height: 29%; z-index: 1; }
 
 /* No visual box for an empty slot at all — matches the mobile app, which renders nothing.
