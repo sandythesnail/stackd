@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css?v=28">
+  <link rel="stylesheet" href="hammy-intro.css?v=1">
   <script
     defer
     crossorigin="anonymous"
@@ -575,15 +576,8 @@
     </div>
   </div>
 
-  <!-- HAMMY BIRTH OVERLAY -->
-  <div class="birth-overlay" id="birth-overlay">
-    <div class="birth-card">
-      <div class="birth-pig-wrap" id="birth-pig-wrap"></div>
-      <h2>A new piggy was born!</h2>
-      <p>Meet Hammy. They're just a baby right now. Complete lessons to earn XP and coins, and watch them grow up alongside you as you master each module.</p>
-      <button class="btn-primary" id="birth-ok">Let's raise them!</button>
-    </div>
-  </div>
+  <!-- The animated "meet Hammy" intro (replaces the old birth popup) builds its
+       own overlay at runtime — see hammy-intro.js / runFirstLoadSequence. -->
 
   <!-- ONBOARDING SURVEY OVERLAY -->
   <div class="onboarding-overlay" id="onboarding-overlay">
@@ -640,5 +634,6 @@
 
 </div>
 <script src="app.js?v=33"></script>
+<script src="hammy-intro.js?v=1"></script>
 </body>
 </html>

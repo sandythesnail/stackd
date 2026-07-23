@@ -1,0 +1,299 @@
+/* ─── HAMMY ONBOARDING INTRO ───
+   The animated "meet Hammy" sequence that replaced the static "A new piggy
+   was born!" popup. Shown once, between the onboarding survey and the
+   spotlight tour (see runFirstLoadSequence in app.js + hammy-intro.js).
+   Reuses the .pig-* CSS pig (styles.css) and .hammy-face-overlay (app.css);
+   everything intro-specific is namespaced hi- / pb- to avoid collisions. */
+
+.hammy-intro-overlay {
+  position: fixed;
+  inset: 0;
+  background: #FAF6ED;
+  z-index: 250; /* same layer the birth overlay occupied */
+  overflow: hidden;
+}
+
+.hi-stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(96vw, 560px);
+  height: min(92vh, 700px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.hi-stage.exit { opacity: 0; transform: translate(-50%, -50%) scale(0.94); pointer-events: none; }
+.hi-stage.shake { animation: hiScreenShake 0.4s ease-out; }
+@keyframes hiScreenShake {
+  0%, 100% { transform: translate(-50%, -50%); }
+  20% { transform: translate(calc(-50% - 7px), calc(-50% + 4px)); }
+  40% { transform: translate(calc(-50% + 7px), calc(-50% - 4px)); }
+  60% { transform: translate(calc(-50% - 4px), calc(-50% + 3px)); }
+  80% { transform: translate(calc(-50% + 3px), calc(-50% - 2px)); }
+}
+
+.hi-anchor {
+  position: absolute;
+  left: 50%;
+  top: 60%;
+  width: 0;
+  height: 0;
+}
+
+/* ── Piggy bank (user-commissioned SVG art, classes pb-*) ── */
+.hi-bank {
+  --bank-w: min(98vw, 112vh);
+  position: absolute;
+  left: calc(var(--bank-w) / -2);
+  top: calc(-4vh - var(--bank-w) * 0.4);
+  width: var(--bank-w);
+  height: calc(var(--bank-w) * 0.80);
+  opacity: 0;
+  z-index: 3;
+}
+.hi-bank-half { position: absolute; inset: 0; }
+.hi-bank-half svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.hi-bank-half.l { clip-path: polygon(0 0, 53% 0, 46% 30%, 55% 55%, 45% 78%, 52% 100%, 0 100%); }
+.hi-bank-half.r { clip-path: polygon(53% 0, 100% 0, 100% 100%, 52% 100%, 45% 78%, 55% 55%, 46% 30%); }
+
+.pb-body { fill: #fcd5e3; stroke: #4e353b; stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; }
+.pb-inner { fill: #f99bbd; }
+.pb-outline { stroke: #4e353b; stroke-width: 6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.pb-dark { fill: #4e353b; }
+.pb-cheek { fill: #f57ba6; opacity: 0.85; }
+
+.hi-crack {
+  position: absolute;
+  left: 50%;
+  top: 29%;
+  height: 48%;
+  width: 4px;
+  transform: translateX(-50%);
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+}
+.hi-crack svg { display: block; width: 34px; height: 100%; margin-left: -15px; overflow: visible; }
+
+.hi-bank.drop-in { animation: hiBankDrop 0.65s cubic-bezier(0.22, 1.3, 0.36, 1) forwards; }
+@keyframes hiBankDrop {
+  0%   { opacity: 0; transform: translateY(-18vh) scale(0.7); }
+  60%  { opacity: 1; transform: translateY(14px) scale(1.04, 0.93); }
+  80%  { transform: translateY(-6px) scale(0.98, 1.03); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.hi-bank.wobble { opacity: 1; animation: hiBankWobble 0.55s ease-in-out; }
+@keyframes hiBankWobble {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  15% { transform: rotate(-4deg) scale(1.02, 0.98); }
+  35% { transform: rotate(4deg) scale(0.98, 1.03); }
+  55% { transform: rotate(-3.5deg) scale(1.03, 0.97); }
+  75% { transform: rotate(3deg) scale(0.99, 1.02); }
+}
+.hi-bank.wobble .hi-crack { animation: hiCrackFlash 0.55s ease-in forwards; }
+@keyframes hiCrackFlash {
+  0%, 40% { opacity: 0; }
+  55% { opacity: 1; }
+  70% { opacity: 0.4; }
+  85%, 100% { opacity: 1; }
+}
+.hi-bank.popped { opacity: 1; }
+.hi-bank.popped .hi-crack { opacity: 0; }
+.hi-bank.popped .hi-bank-half.l { animation: hiHalfLeft 0.6s cubic-bezier(0.3, 0.6, 0.6, 1) forwards; }
+.hi-bank.popped .hi-bank-half.r { animation: hiHalfRight 0.6s cubic-bezier(0.3, 0.6, 0.6, 1) forwards; }
+@keyframes hiHalfLeft {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(-360px, 110px) rotate(-46deg); opacity: 0; }
+}
+@keyframes hiHalfRight {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(360px, 110px) rotate(46deg); opacity: 0; }
+}
+
+/* ── Pop effects ── */
+.hi-ring {
+  position: absolute;
+  left: -12px;
+  top: calc(-4vh - 12px);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 7px solid #FF96B8;
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.hi-ring.go { animation: hiPopRing 0.6s cubic-bezier(0.1, 0.7, 0.3, 1) forwards; }
+@keyframes hiPopRing {
+  0%   { opacity: 0.95; transform: scale(0.4); border-width: 14px; }
+  100% { opacity: 0; transform: scale(20); border-width: 1px; }
+}
+.hi-ring2 { border-color: #FFC400; }
+.hi-ring2.go { animation-duration: 0.75s; animation-delay: 0.06s; }
+
+.hi-flash {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 55%, rgba(255,255,255,0.95), rgba(255,255,255,0) 65%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 252;
+}
+.hi-flash.go { animation: hiFlashOut 0.45s ease-out forwards; }
+@keyframes hiFlashOut { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+.hi-particle {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.hi-particle svg { display: block; width: 100%; height: 100%; }
+.hi-sparkle { clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%); }
+
+/* ── Hammy (the production CSS pig + face overlay) ── */
+.hi-hammy {
+  position: absolute;
+  left: 0;
+  bottom: -40px;
+  transform: translateX(-50%);
+  z-index: 5;
+  opacity: 0;
+}
+.hi-hammy-rig { transform-origin: 50% 96%; }
+.hi-hammy.emerge { opacity: 1; }
+.hi-hammy.emerge .hi-hammy-rig { animation: hiHammyEmerge 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+@keyframes hiHammyEmerge {
+  0%   { opacity: 0; transform: translateY(90px) scale(0.2, 0.1); }
+  45%  { opacity: 1; transform: translateY(-22px) scale(0.82, 1.26); }
+  65%  { transform: translateY(8px) scale(1.13, 0.87); }
+  82%  { transform: translateY(-4px) scale(0.96, 1.05); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.hi-hammy.wave { opacity: 1; }
+.hi-hammy.wave .hi-hammy-rig { animation: hiHammyWave 0.9s ease-in-out forwards; }
+@keyframes hiHammyWave {
+  0%, 100% { transform: rotate(0deg); }
+  18% { transform: rotate(-6deg) translateY(-4px); }
+  40% { transform: rotate(5deg) translateY(-2px); }
+  62% { transform: rotate(-4deg) translateY(-3px); }
+  82% { transform: rotate(2.5deg) translateY(0); }
+}
+.hi-hammy.settled { opacity: 1; }
+/* Exit: three even hops in a straight line off the right of the screen. */
+.hi-hammy.hop-off .hi-hammy-rig { animation: hiHopOff 1.1s cubic-bezier(0.42, 0, 0.58, 1) forwards; }
+@keyframes hiHopOff {
+  0%   { transform: translate(0, 0) scale(1); }
+  8%   { transform: translate(0, 8px) scale(1.08, 0.9); }
+  22%  { transform: translate(calc(8vw + 50px), -80px) scale(0.96, 1.06); }
+  34%  { transform: translate(calc(16vw + 100px), 0) scale(1.1, 0.88); }
+  50%  { transform: translate(calc(25vw + 155px), -80px) scale(0.96, 1.06); }
+  62%  { transform: translate(calc(34vw + 210px), 0) scale(1.1, 0.88); }
+  80%  { transform: translate(calc(44vw + 265px), -80px) scale(0.96, 1.06); }
+  100% { transform: translate(calc(54vw + 320px), 0) scale(1); }
+}
+
+/* ── Speech bubble ── */
+.hi-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 265px;
+  transform: translateX(-50%) scale(0);
+  background: #fff;
+  color: #4A6844;
+  font-family: var(--font-display, inherit);
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.3;
+  padding: 13px 24px;
+  border-radius: 22px;
+  border: 3px solid #6B8F65;
+  white-space: normal;
+  text-align: center;
+  width: max-content;
+  max-width: min(80vw, 380px);
+  z-index: 7;
+  box-shadow: 0 6px 18px rgba(74, 104, 68, 0.18);
+  transform-origin: 50% 100%;
+}
+.hi-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -13px;
+  transform: translateX(-50%);
+  border: 11px solid transparent;
+  border-top-color: #6B8F65;
+  border-bottom: none;
+}
+.hi-bubble.pop-in { animation: hiBubblePop 0.45s cubic-bezier(0.34, 1.8, 0.64, 1) forwards; }
+@keyframes hiBubblePop {
+  0%   { transform: translateX(-50%) scale(0) rotate(-8deg); }
+  70%  { transform: translateX(-50%) scale(1.1) rotate(2deg); }
+  100% { transform: translateX(-50%) scale(1) rotate(0deg); }
+}
+
+/* ── Tappable dialogue reply ── */
+.hi-choice {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 8;
+  display: none;
+}
+.hi-choice.show {
+  display: block;
+  animation: hiChoicePop 0.4s cubic-bezier(0.34, 1.8, 0.64, 1) both,
+             hiChoiceNudge 1.6s ease-in-out 0.9s infinite;
+}
+@keyframes hiChoicePop {
+  0%   { transform: translateX(-50%) translateY(18px) scale(0.6); opacity: 0; }
+  100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+}
+@keyframes hiChoiceNudge {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-4px); }
+}
+.hi-choice button {
+  background: #fff;
+  color: #4A6844;
+  border: 3px solid #6B8F65;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  padding: 12px 24px;
+  border-radius: 999px;
+  cursor: pointer;
+  max-width: min(84vw, 400px);
+  box-shadow: 0 5px 14px rgba(74, 104, 68, 0.18), 0 3px 0 #6B8F65;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.hi-choice button:hover { transform: translateY(-2px); }
+.hi-choice button:active { transform: translateY(2px); box-shadow: 0 2px 6px rgba(74, 104, 68, 0.18), 0 1px 0 #6B8F65; }
+
+/* ── Skip ── */
+.hi-skip {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 253;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #4A6844;
+  opacity: 0.55;
+  cursor: pointer;
+  padding: 8px 10px;
+  transition: opacity 0.15s ease;
+}
+.hi-skip:hover, .hi-skip:focus-visible { opacity: 1; }
+
+/* ── Narrow screens: sit Hammy + dialogue lower ── */
+@media (max-width: 600px) {
+  .hi-anchor { top: 68%; }
+  .hi-bubble { bottom: 255px; font-size: 19px; }
+}
