@@ -44,11 +44,11 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // (bottom + height, same 20% height) instead of top-anchoring, so its position is set by
   // where its base sits rather than by squeezing between a fixed top and the render size.
   // Window ends at top 4% + height 40% = 44% from the top, i.e. 56% up from the bottom, so
-  // bottom: 56% - height(20%) = 36% put the box's top edge flush under the window. Nudged a
-  // touch higher still (36% -> 39%), tucking it slightly up under the window instead of
-  // sitting exactly flush. Left/width (centered under the window, span 24%-72%, center 48%)
-  // kept from the last size pass: left = 48 - 52/2 = 22%.
-  desk: { label: 'Desk', bottom: '39%', left: '22%', width: '52%', height: '20%', floorStanding: true },
+  // bottom: 56% - height(20%) = 36% put the box's top edge flush under the window. Nudged
+  // higher twice since (36% -> 39% -> 41%), tucking it a bit further up under the window
+  // instead of sitting exactly flush. Left/width (centered under the window, span 24%-72%,
+  // center 48%) kept from the last size pass: left = 48 - 52/2 = 22%.
+  desk: { label: 'Desk', bottom: '41%', left: '22%', width: '52%', height: '20%', floorStanding: true },
 };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
