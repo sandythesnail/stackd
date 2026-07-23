@@ -16022,11 +16022,11 @@ const LIFE_EVENTS = [
     id: 'car_repair',
     tag: 'Uh oh!',
     title: 'The Car Won’t Start',
-    scenario: 'It’s 7:45am and you have an 8am final. Your car won’t start. The mechanic says it’s the alternator — $380, and they can have it done by tomorrow if you say yes right now.',
+    scenario: 'It’s 7:45am and you have an 8am final. Your car won’t start. The mechanic says it’s the alternator: $380, and they can have it done by tomorrow if you say yes right now.',
     choices: [
       { id: 'a', label: 'Pay it from savings', effect: { savings: -380 }, result: 'You cover it in full. Your savings takes a hit, but you walk away with zero debt and a working car.' },
       { id: 'b', label: 'Put it on a credit card you’re still paying off', effect: { creditScore: -8 }, result: 'The card absorbs it today. If you only pay the minimum, this $380 repair could quietly cost you $500+ by the time it’s paid off.' },
-      { id: 'c', label: 'Ask a parent to cover it, pay them back over time', effect: { checking: -130 }, result: 'No interest, no credit hit — but you now owe someone who trusts you. Worth protecting that.' }
+      { id: 'c', label: 'Ask a parent to cover it, pay them back over time', effect: { checking: -130 }, result: 'No interest, no credit hit, but you now owe someone who trusts you. Worth protecting that.' }
     ]
   },
   {
@@ -16035,8 +16035,8 @@ const LIFE_EVENTS = [
     title: 'Your Roommate Stopped Paying Rent',
     scenario: 'Your name is on the lease with a roommate. This month, they said they’d "get you back" and never paid their $450 half. Rent is due in 2 days.',
     choices: [
-      { id: 'a', label: 'Cover their half from your emergency savings', effect: { savings: -450 }, result: 'You avoid a late fee and a landlord conversation — but now you’re the one owed money, and collecting from a friend is its own project.' },
-      { id: 'b', label: 'Pay only your half and let the landlord chase them', effect: { creditScore: -15 }, result: 'Depending on your lease, a missed partial payment can still show up as a late payment on the whole unit — including your name.' },
+      { id: 'a', label: 'Cover their half from your emergency savings', effect: { savings: -450 }, result: 'You avoid a late fee and a landlord conversation, but now you’re the one owed money, and collecting from a friend is its own project.' },
+      { id: 'b', label: 'Pay only your half and let the landlord chase them', effect: { creditScore: -15 }, result: 'Depending on your lease, a missed partial payment can still show up as a late payment on the whole unit, including your name.' },
       { id: 'c', label: 'Pay your half, ask for a written payment plan on theirs', effect: { checking: -225 }, result: 'You keep the lease current and start a paper trail. Get any repayment agreement in writing, even a text.' }
     ]
   },
@@ -16044,10 +16044,10 @@ const LIFE_EVENTS = [
     id: 'medical_bill',
     tag: 'Something unexpected happened!',
     title: 'A Bill You Didn’t See Coming',
-    scenario: 'You went to urgent care for what turned out to be nothing serious. Three weeks later, a bill for $210 shows up — your insurance covered less than you expected.',
+    scenario: 'You went to urgent care for what turned out to be nothing serious. Three weeks later, a bill for $210 shows up. Your insurance covered less than you expected.',
     choices: [
       { id: 'a', label: 'Pay it in full right away', effect: { checking: -210 }, result: 'Handled. One less thing hanging over you, and no risk of it going to collections.' },
-      { id: 'b', label: 'Ignore it — you’ll deal with it later', effect: { creditScore: -25 }, result: 'Unpaid medical bills can go to collections faster than people expect, and a collections account can knock a credit score down hard for years.' },
+      { id: 'b', label: 'Ignore it and deal with it later', effect: { creditScore: -25 }, result: 'Unpaid medical bills can go to collections faster than people expect, and a collections account can knock a credit score down hard for years.' },
       { id: 'c', label: 'Call the billing office and ask for a payment plan', effect: { checking: -35 }, result: 'Most providers have an interest-free payment plan, but almost nobody asks. A 5-minute call turns $210 into $35/month.' }
     ]
   }
@@ -16063,9 +16063,9 @@ const LIFE_EVENT_UNLOCKS = {
     title: 'A Text From "Financial Aid"',
     scenario: 'You get a text: "Your financial aid disbursement is on hold. Verify your bank account within 24 hours: studentaid-verify.net/login" You just finished the Scams module. This one’s on you.',
     choices: [
-      { id: 'a', label: 'Click the link and check it out', effect: { creditScore: -40, checking: -150 }, result: 'That wasn’t studentaid.gov — it was a lookalike domain. Entering your bank login handed it straight to a scammer. This is exactly the pattern you just learned to spot.' },
-      { id: 'b', label: 'Ignore it and check your real aid portal directly', effect: {}, coinDelta: 15, result: 'Exactly right. You went straight to the source instead of trusting the link. Real disbursement holds show up in your official portal — never a text with a countdown.' },
-      { id: 'c', label: 'Report it as phishing and delete', effect: {}, coinDelta: 20, result: 'Even better — reporting it helps your school’s IT/security team warn other students before they fall for the same message.' }
+      { id: 'a', label: 'Click the link and check it out', effect: { creditScore: -40, checking: -150 }, result: 'That wasn’t studentaid.gov. It was a lookalike domain. Entering your bank login handed it straight to a scammer. This is exactly the pattern you just learned to spot.' },
+      { id: 'b', label: 'Ignore it and check your real aid portal directly', effect: {}, coinDelta: 15, result: 'Exactly right. You went straight to the source instead of trusting the link. Real disbursement holds show up in your official portal, never a text with a countdown.' },
+      { id: 'c', label: 'Report it as phishing and delete', effect: {}, coinDelta: 20, result: 'Even better. Reporting it helps your school’s IT/security team warn other students before they fall for the same message.' }
     ]
   }
 };
@@ -16421,7 +16421,7 @@ function showDailyLoginModal(coins, diamonds = 0) {
     ? `<strong>+${coins} coins</strong> and <strong>+${diamonds} diamonds</strong>`
     : `<strong>+${coins} coins</strong>`;
   const desc = displayStreak === 1
-    ? `Congrats, you started a streak! You earned ${rewardText} — come back tomorrow to keep it going.`
+    ? `Congrats, you started a streak! You earned ${rewardText}. Come back tomorrow to keep it going.`
     : `You earned ${rewardText} for logging in today.`;
   modal.innerHTML = `
     <div class="daily-login-modal-card">
@@ -16748,7 +16748,7 @@ function renderModuleList(containerId) {
       const tiles = quests.map((q, idx) => {
         const qp = state.questProgress[questKey(m.id, q.id)];
         const done = !!(qp && qp.done);
-        const cta = done ? '↻ Replay Quest' : (qp && qp.chapterIdx > 0 ? `Resume — ${questLabel(m, q)} →` : 'Begin Quest →');
+        const cta = done ? '↻ Replay Quest' : (qp && qp.chapterIdx > 0 ? `Resume ${questLabel(m, q)} →` : 'Begin Quest →');
         const html = `<div class="lesson-tile quest-tile${done ? ' done' : ''}" data-module="${m.id}" data-quest="${q.id}">
           <div class="lt-body">
             <div class="lt-num"><span class="lt-num-label">Lesson ${idx + 1}</span> <span class="card-badge badge-xp">Up to ${questMaxXP(q, m)} XP</span></div>
@@ -16767,7 +16767,7 @@ function renderModuleList(containerId) {
       if (sub) {
         const subQp = state.questProgress[questKey(m.id, sub.id)];
         const subDone = !!(subQp && subQp.done);
-        const subCta = subDone ? '↻ Replay Guide' : (subQp && subQp.chapterIdx > 0 ? `Resume — ${questLabel(m, sub)} →` : 'Begin Guide →');
+        const subCta = subDone ? '↻ Replay Guide' : (subQp && subQp.chapterIdx > 0 ? `Resume ${questLabel(m, sub)} →` : 'Begin Guide →');
         subHtml = `<div class="lesson-tile quest-tile subquest-tile${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">
           <div class="lt-body">
             <div class="lt-num"><span class="lt-num-label">Lesson ${quests.length + 1}</span> <span class="card-badge badge-xp">Up to ${questMaxXP(sub, m)} XP</span></div>
@@ -17090,7 +17090,7 @@ const ONBOARDING_TOUR_STEPS = [
     // real to measure/spotlight) until expanded.
     target: () => document.querySelector('#modules-grid .module-row .lesson-tile'),
     title: 'Start a lesson',
-    body: 'Tap a lesson to start it — finish them in order to complete the module.',
+    body: 'Tap a lesson to start it. Finish them in order to complete the module.',
     beforeShow: () => {
       const row = document.querySelector('#modules-grid .module-row');
       if (row && !row.classList.contains('expanded')) {
@@ -17107,7 +17107,7 @@ const ONBOARDING_TOUR_STEPS = [
   {
     target: () => document.getElementById('nav-tools-btn'),
     title: 'Do the math in Tools',
-    body: 'Budget, loan payoff, and compound interest calculators — real numbers, not just lessons. Handy any time, not just while you\'re learning.',
+    body: 'Budget, loan payoff, and compound interest calculators: real numbers, not just lessons. Handy any time, not just while you\'re learning.',
     beforeShow: () => {
       // Same collapsible mobile sidebar as the Shop step above — Tools isn't on screen to
       // spotlight until the drawer is open.
@@ -17379,7 +17379,7 @@ function renderAchievementBadges(containerId, subId, { onlyUnlocked = false, det
   if (filterStatus === 'earned') list = list.filter(a => state.unlockedAchievements.includes(a.id));
   else if (filterStatus === 'unearned') list = list.filter(a => !state.unlockedAchievements.includes(a.id));
   if (list.length === 0) {
-    container.innerHTML = `<p class="ach-empty">${onlyUnlocked ? 'No badges yet — complete a lesson to start earning them.' : 'No badges match these filters.'}</p>`;
+    container.innerHTML = `<p class="ach-empty">${onlyUnlocked ? 'No badges yet. Complete a lesson to start earning them.' : 'No badges match these filters.'}</p>`;
     return;
   }
   list.forEach(a => {
@@ -17542,15 +17542,15 @@ function withFaceOverlay(pigMarkup) {
 // login streak in updateStreak()) so it holds steady across renders/refreshes and only
 // changes once players come back on a new day — not a random reroll on every page visit.
 const HAMMY_MOODS = [
-  { id: 'star', label: 'starstruck', msg: "Hammy's feeling starstruck today. Give them something to be proud of — finish a module!" },
+  { id: 'star', label: 'starstruck', msg: "Hammy's feeling starstruck today. Give them something to be proud of: finish a module!" },
   { id: 'sleepy', label: 'sleepy', msg: "Hammy's a little sleepy today. Wake them up with a quick module!" },
-  { id: 'curious', label: 'curious', msg: "Hammy's feeling curious today. Satisfy their curiosity — start a module!" },
+  { id: 'curious', label: 'curious', msg: "Hammy's feeling curious today. Satisfy their curiosity: start a module!" },
   { id: 'angry', label: 'grumpy', msg: "Hammy woke up grumpy today. Turn their mood around with a module!" },
-  { id: 'love', label: 'smitten', msg: "Hammy's feeling the love today! Show them some back — finish a module." },
-  { id: 'nervy', label: 'nervous', msg: "Hammy's a bit nervous today. Ease their nerves — complete a module." },
-  { id: 'sad', label: 'a little blue', msg: "Hammy's feeling a little blue today. Cheer them up — finish a module!" },
-  { id: 'surprise', label: 'surprised', msg: "Hammy's totally surprised today. See what's in store — start a module!" },
-  { id: 'wink', label: 'playful', msg: "Hammy's feeling playful today. Play along — finish a module!" },
+  { id: 'love', label: 'smitten', msg: "Hammy's feeling the love today! Show them some back: finish a module." },
+  { id: 'nervy', label: 'nervous', msg: "Hammy's a bit nervous today. Ease their nerves: complete a module." },
+  { id: 'sad', label: 'a little blue', msg: "Hammy's feeling a little blue today. Cheer them up: finish a module!" },
+  { id: 'surprise', label: 'surprised', msg: "Hammy's totally surprised today. See what's in store: start a module!" },
+  { id: 'wink', label: 'playful', msg: "Hammy's feeling playful today. Play along: finish a module!" },
 ];
 
 function todaysHammyMood() {
@@ -17855,7 +17855,7 @@ function renderShopPage() {
           <div class="shop-storefront-room-icon">🛋️</div>
           <div class="shop-storefront-text">
             <div class="shop-storefront-sign">The Furniture Farm</div>
-            <div class="shop-storefront-sub">${filledRoomSlots ? `${filledRoomSlots} piece${filledRoomSlots === 1 ? '' : 's'} furnished so far` : 'Furnish Hammy\'s room — every cozy upgrade compounds!'}</div>
+            <div class="shop-storefront-sub">${filledRoomSlots ? `${filledRoomSlots} piece${filledRoomSlots === 1 ? '' : 's'} furnished so far` : 'Furnish Hammy\'s room: every cozy upgrade compounds!'}</div>
           </div>
         </div>
       </div>`
@@ -18106,7 +18106,7 @@ function renderHome() {
   const done = modulesCompletedCount();
   const tier = getTier(done);
   document.getElementById('h-tier').textContent = tier.name;
-  document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
+  document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete, replay to master!' : `${done}/${MODULES.length} complete`;
 
   renderHomeMascotCard(done);
 
@@ -18179,7 +18179,7 @@ function renderHomeMascotCard(done) {
         ${pigMarkup(0.3)}
         <div>
           <div class="mascot-mood-label">Hammy is feeling <strong>${satisfiedToday ? 'happy' : mood.label}</strong> today</div>
-          <div class="mascot-mood-msg">${satisfiedToday ? "Thanks for working on a module today — Hammy's mood is lifted!" : mood.msg}</div>
+          <div class="mascot-mood-msg">${satisfiedToday ? "Thanks for working on a module today, Hammy's mood is lifted!" : mood.msg}</div>
         </div>
       </div>
       ${questStatsRowHtml(done)}`;
@@ -18202,7 +18202,7 @@ function renderHomeMascotCard(done) {
   const nextPct = totalUnits ? Math.round((doneUnits / totalUnits) * 100) : 0;
 
   const speechMsg = satisfiedToday ? "Hammy's had a great day already, thanks to you! Keep it going?" : mood.msg;
-  const ctaLabel = satisfiedToday ? 'Keep Hammy happy — do another module' : 'Continue quest';
+  const ctaLabel = satisfiedToday ? 'Keep Hammy happy: do another module' : 'Continue quest';
 
   card.innerHTML = `
     <div class="quest-top">
@@ -18218,7 +18218,7 @@ function renderHomeMascotCard(done) {
       <div class="quest-bar-track"><div class="quest-bar-fill" style="width:${nextPct}%"></div></div>
     </div>
     <button type="button" class="quest-cta-btn" id="quest-cta-btn">${ctaLabel}</button>
-    ${satisfiedToday ? `<div class="quest-nudge">🔥 ${state.streak}-day streak — Hammy will be even happier tomorrow</div>` : ''}`;
+    ${satisfiedToday ? `<div class="quest-nudge">🔥 ${state.streak}-day streak, Hammy will be even happier tomorrow</div>` : ''}`;
 
   document.getElementById('quest-cta-btn').addEventListener('click', () => startNextLessonFor(nextModule));
   wireHomeStreakCard();
@@ -18247,7 +18247,7 @@ function startNextLessonFor(mod) {
 function renderModulesPage() {
   updateSidebarStats();
   const done = modulesCompletedCount();
-  document.getElementById('modules-sub').textContent = done === MODULES.length ? 'All complete — replay to master!' : `${done}/${MODULES.length} complete`;
+  document.getElementById('modules-sub').textContent = done === MODULES.length ? 'All complete, replay to master!' : `${done}/${MODULES.length} complete`;
   renderModuleList('modules-grid');
 }
 
@@ -18506,11 +18506,11 @@ function renderSettingsPage() {
       if (error) {
         console.error('Failed to send feedback:', error);
         feedbackStatus.classList.add('error');
-        feedbackStatus.textContent = "Couldn't send that — check your connection and try again.";
+        feedbackStatus.textContent = "Couldn't send that. Check your connection and try again.";
       } else {
         feedbackMessage.value = '';
         feedbackStatus.classList.remove('error');
-        feedbackStatus.textContent = 'Sent — thank you!';
+        feedbackStatus.textContent = 'Sent, thank you!';
         setTimeout(() => { feedbackStatus.textContent = ''; }, 2500);
       }
     };
@@ -18612,7 +18612,7 @@ function renderBudgetCalculatorPanel() {
         </div>
         <div class="budget-card">
           <div class="budget-card-title">Variable Expenses</div>
-          <div class="budget-note">Food delivery and beauty services add up faster than most students expect — see your monthly total below.</div>
+          <div class="budget-note">Food delivery and beauty services add up faster than most students expect. See your monthly total below.</div>
           <div class="budget-row-list" id="variable-rows"></div>
         </div>
         <div class="budget-card">
@@ -18707,7 +18707,7 @@ function renderBudgetCalculatorPanel() {
     let goalMsg = '';
     if (plan.savingsGoal > 0) {
       goalMsg = goalGap >= 0
-        ? `<p class="budget-goal-msg ok">On track — this leaves $${goalGap.toFixed(0)}/month beyond your $${plan.savingsGoal} goal.</p>`
+        ? `<p class="budget-goal-msg ok">On track: this leaves $${goalGap.toFixed(0)}/month beyond your $${plan.savingsGoal} goal.</p>`
         : `<p class="budget-goal-msg bad">You'd need to cut about $${Math.abs(goalGap).toFixed(0)}/month to hit your $${plan.savingsGoal} savings goal.</p>`;
     }
     summary.innerHTML = `
@@ -18762,7 +18762,7 @@ function renderBudgetCalculatorPanel() {
     whatif.innerHTML = `
       ${categoryPicker}
       <input type="range" class="microsim-range" id="whatif-slider" min="0" max="${maxCut}" step="1" value="${cut}">
-      <p class="budget-whatif-result" id="whatif-result">Cut this by <strong>$${cut.toFixed(0)}</strong> → remaining balance becomes <strong>$${newRemaining.toFixed(0)}</strong>${plan.savingsGoal > 0 ? (newRemaining >= plan.savingsGoal ? ' — enough to hit your savings goal.' : `, still $${Math.max(0, plan.savingsGoal - newRemaining).toFixed(0)} short of your goal.`) : '.'}</p>`;
+      <p class="budget-whatif-result" id="whatif-result">Cut this by <strong>$${cut.toFixed(0)}</strong> → remaining balance becomes <strong>$${newRemaining.toFixed(0)}</strong>${plan.savingsGoal > 0 ? (newRemaining >= plan.savingsGoal ? ', enough to hit your savings goal.' : `, still $${Math.max(0, plan.savingsGoal - newRemaining).toFixed(0)} short of your goal.`) : '.'}</p>`;
 
     document.getElementById('whatif-category').addEventListener('change', (e) => {
       whatif.dataset.category = e.target.value;
@@ -18777,7 +18777,7 @@ function renderBudgetCalculatorPanel() {
       whatif.dataset.category = savedCategory;
       whatif.dataset.cut = liveCut;
       const liveRemaining = totals.remaining + liveCut;
-      document.getElementById('whatif-result').innerHTML = `Cut this by <strong>$${liveCut.toFixed(0)}</strong> → remaining balance becomes <strong>$${liveRemaining.toFixed(0)}</strong>${plan.savingsGoal > 0 ? (liveRemaining >= plan.savingsGoal ? ' — enough to hit your savings goal.' : `, still $${Math.max(0, plan.savingsGoal - liveRemaining).toFixed(0)} short of your goal.`) : '.'}`;
+      document.getElementById('whatif-result').innerHTML = `Cut this by <strong>$${liveCut.toFixed(0)}</strong> → remaining balance becomes <strong>$${liveRemaining.toFixed(0)}</strong>${plan.savingsGoal > 0 ? (liveRemaining >= plan.savingsGoal ? ', enough to hit your savings goal.' : `, still $${Math.max(0, plan.savingsGoal - liveRemaining).toFixed(0)} short of your goal.`) : '.'}`;
     });
   }
 
@@ -18928,7 +18928,7 @@ function renderCompoundInterestPanel() {
     const final = points[points.length - 1];
     document.getElementById('ci-headline').innerHTML =
       `<span class="ci-headline-num">$${Math.round(final.balance).toLocaleString()}</span>
-       <span class="ci-headline-sub">after ${sim.years} year${sim.years === 1 ? '' : 's'} — you'll have put in $${Math.round(final.contributed).toLocaleString()}, interest earned the rest: $${Math.round(final.balance - final.contributed).toLocaleString()}</span>`;
+       <span class="ci-headline-sub">after ${sim.years} year${sim.years === 1 ? '' : 's'}, you'll have put in $${Math.round(final.contributed).toLocaleString()}, interest earned the rest: $${Math.round(final.balance - final.contributed).toLocaleString()}</span>`;
     const chart = buildStackedAreaChart(points, 'contributed', 'balance');
     const chartEl = document.getElementById('ci-chart');
     chartEl.innerHTML = `
@@ -18960,7 +18960,7 @@ function renderCompoundInterestPanel() {
       <p class="budget-note" style="margin-top:-0.2rem;">Same $${sim.monthlyContribution}/month, same ${sim.annualRatePct}% rate, both stop contributing at 65. A 10-year head start:</p>
       <div class="ci-compare-row"><span>Start at 18</span><strong>$${Math.round(earlyFinal).toLocaleString()}</strong></div>
       <div class="ci-compare-row"><span>Start at 28</span><strong>$${Math.round(lateFinal).toLocaleString()}</strong></div>
-      <div class="ci-compare-gap">The 10-year head start is worth <strong>$${Math.round(earlyFinal - lateFinal).toLocaleString()}</strong> more by 65 — from the same monthly amount.</div>`;
+      <div class="ci-compare-gap">The 10-year head start is worth <strong>$${Math.round(earlyFinal - lateFinal).toLocaleString()}</strong> more by 65, from the same monthly amount.</div>`;
   }
 
   document.querySelectorAll('.ci-preset-btn').forEach(btn => {
@@ -19052,7 +19052,7 @@ function renderLoanPayoffPanel() {
         </div>
         <div class="budget-card">
           <div class="budget-card-title">Monthly Take-Home Pay & Living Costs</div>
-          <div class="budget-note">Uses take-home (net) pay, not gross salary — see the Earning module for the difference.</div>
+          <div class="budget-note">Uses take-home (net) pay, not gross salary. See the Earning module for the difference.</div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Monthly take-home pay</span><span class="microsim-slider-val" id="lp-income-val">$${sim.monthlyIncome.toLocaleString()}</span></div>
             <input type="range" class="microsim-range" id="lp-income" min="1500" max="7000" step="50" value="${sim.monthlyIncome}">
@@ -19096,7 +19096,7 @@ function renderLoanPayoffPanel() {
     if (shortfall > 0) {
       card.innerHTML = `
         <div class="budget-card-title">⚠ Budget Reality Check</div>
-        <p class="budget-goal-msg bad">After rent, food, and other expenses, you have <strong>$${Math.max(0, availableForLoan).toFixed(0)}</strong>/month left, but the minimum payment on this loan is <strong>$${minPayment.toFixed(0)}</strong>/month — you're <strong>$${shortfall.toFixed(0)}</strong> short. This isn't sustainable without cutting expenses, increasing income, or choosing a longer loan term.</p>`;
+        <p class="budget-goal-msg bad">After rent, food, and other expenses, you have <strong>$${Math.max(0, availableForLoan).toFixed(0)}</strong>/month left, but the minimum payment on this loan is <strong>$${minPayment.toFixed(0)}</strong>/month. You're <strong>$${shortfall.toFixed(0)}</strong> short. This isn't sustainable without cutting expenses, increasing income, or choosing a longer loan term.</p>`;
     } else {
       card.innerHTML = `
         <div class="budget-card-title">Budget Reality Check</div>
@@ -19113,7 +19113,7 @@ function renderLoanPayoffPanel() {
       return;
     }
     if (maxExtra <= 0) {
-      card.innerHTML = `<div class="budget-card-title">Extra Payments</div><p class="budget-note">No spare room in this budget beyond the minimum payment — every dollar of take-home pay is already spoken for.</p>`;
+      card.innerHTML = `<div class="budget-card-title">Extra Payments</div><p class="budget-note">No spare room in this budget beyond the minimum payment. Every dollar of take-home pay is already spoken for.</p>`;
       return;
     }
     sim.extraPayment = Math.min(sim.extraPayment, maxExtra);
@@ -19157,7 +19157,7 @@ function renderLoanPayoffPanel() {
     const chartEl = document.getElementById('lp-chart');
     const milestones = document.getElementById('lp-milestones');
     if (!points) {
-      headline.innerHTML = `<span class="ci-headline-sub">A $${totalPayment.toFixed(0)}/month payment doesn't even cover this loan's interest — the balance would only grow. Raise the payment to see a payoff timeline.</span>`;
+      headline.innerHTML = `<span class="ci-headline-sub">A $${totalPayment.toFixed(0)}/month payment doesn't even cover this loan's interest. The balance would only grow. Raise the payment to see a payoff timeline.</span>`;
       chartEl.innerHTML = '';
       milestones.innerHTML = '';
       return;
@@ -19166,7 +19166,7 @@ function renderLoanPayoffPanel() {
     const years = (points.length - 1) / 12;
     headline.innerHTML = `
       <span class="ci-headline-num">${years.toFixed(1)} yrs</span>
-      <span class="ci-headline-sub">paid off — total interest paid: $${Math.round(final.totalInterest).toLocaleString()}, total paid: $${Math.round(sim.loanBalance + final.totalInterest).toLocaleString()}</span>`;
+      <span class="ci-headline-sub">paid off. Total interest paid: $${Math.round(final.totalInterest).toLocaleString()}, total paid: $${Math.round(sim.loanBalance + final.totalInterest).toLocaleString()}</span>`;
     const chart = buildStackedAreaChart(points.map(p => ({ ...p, zero: 0 })), 'zero', 'balance');
     chartEl.innerHTML = `
       <svg viewBox="0 0 ${chart.width} ${chart.height}" class="ci-svg">
@@ -19373,7 +19373,7 @@ function renderDecisionChainActivity(mod, lesson) {
       btn.addEventListener('click', () => {
         choicesEl.querySelectorAll('button').forEach(b => b.disabled = true);
         results.push({ day: d.day, choiceLabel: choice.label, cost: choice.cost, gaveUp: choice.gaveUp, good: choice.good });
-        showHammyMessage(choice.good ? "Nice — that adds up over time!" : "Worth noticing what that traded off.", choice.good);
+        showHammyMessage(choice.good ? "Nice, that adds up over time!" : "Worth noticing what that traded off.", choice.good);
         const outcome = document.createElement('div');
         outcome.className = 'decision-outcome';
         outcome.innerHTML = `<p class="quest-outcome-text">${choice.cost > 0 ? `That's $${choice.cost} spent. What you gave up instead: ${choice.gaveUp}.` : (choice.gaveUp ? choice.gaveUp : `You kept the $${d.choices.find(c => c.cost > 0) ? d.choices.find(c => c.cost > 0).cost : ''} in your pocket.`)}</p>`;
@@ -19419,10 +19419,10 @@ function renderDecisionChainActivity(mod, lesson) {
           <div class="pg-col-name">${r.day}</div>
         </div>`).join('');
       main.innerHTML = `
-        <p class="quest-prompt">${activity.summaryIntro || "Here's your week — the path you took, and what each choice actually cost beyond the price tag."}</p>
+        <p class="quest-prompt">${activity.summaryIntro || "Here's your week: the path you took, and what each choice actually cost beyond the price tag."}</p>
         <div class="pg-column-chart">${barsHtml}</div>
         <div class="opcost-summary" id="opcost-summary">
-          ${results.map(r => `<div class="opcost-summary-item"><strong>${r.day}:</strong> ${r.choiceLabel}${r.cost > 0 ? ` — <span class="opcost-gave-up">gave up: ${r.gaveUp}</span>` : ''}</div>`).join('')}
+          ${results.map(r => `<div class="opcost-summary-item"><strong>${r.day}:</strong> ${r.choiceLabel}${r.cost > 0 ? ` (<span class="opcost-gave-up">gave up: ${r.gaveUp}</span>)` : ''}</div>`).join('')}
           <p class="opcost-total">Total spent this week: <strong>$${totalSpent}</strong></p>
         </div>
         ${takeawayHtml}`;
@@ -19497,7 +19497,7 @@ function renderBossChallengeActivity(mod, lesson) {
         value += choice.delta;
         animateDashboard(from, value);
         if (!choice.isOptimal) allOptimal = false;
-        showHammyMessage(choice.isOptimal ? "Nice — that's the smarter play." : "Worth noticing what that cost you.", choice.isOptimal);
+        showHammyMessage(choice.isOptimal ? "Nice, that's the smarter play." : "Worth noticing what that cost you.", choice.isOptimal);
         const outcome = document.createElement('div');
         outcome.className = 'decision-outcome';
         outcome.innerHTML = `<p class="quest-outcome-text">${choice.result}</p>`;
@@ -19526,7 +19526,7 @@ function renderBossChallengeActivity(mod, lesson) {
       ? `<div class="opcost-takeaway"><span class="myth-card-tag">KEY TAKEAWAY</span><p>${activity.takeaway}</p></div>` : '';
     const bonusXp = allOptimal ? (activity.bonusXpForOptimalPath || 0) : 0;
     const bonusHtml = bonusXp > 0
-      ? `<div class="bossc-bonus"><span class="myth-card-tag">OPTIMAL PATH</span><p>Every choice this run was the strongest option on the table — +${bonusXp} bonus XP.</p></div>` : '';
+      ? `<div class="bossc-bonus"><span class="myth-card-tag">OPTIMAL PATH</span><p>Every choice this run was the strongest option on the table, +${bonusXp} bonus XP.</p></div>` : '';
 
     main.innerHTML = `
       <p class="quest-prompt">${activity.summaryIntro || "Here's how the challenge played out."}</p>
@@ -19614,7 +19614,7 @@ function renderSorterActivity(mod, lesson) {
       }
     });
     const correctCount = activity.items.filter(it => it.category === 'depends' || placements[it.id] === it.category).length;
-    showHammyMessage(correctCount === activity.items.length ? "You caught every one!" : "A few gray areas — that's normal, that's the point.", correctCount === activity.items.length);
+    showHammyMessage(correctCount === activity.items.length ? "You caught every one!" : "A few gray areas, that's normal, that's the point.", correctCount === activity.items.length);
     const note = document.createElement('p');
     note.className = 'sorter-final-note';
     note.textContent = activity.subscriptionCreepNote || '';
@@ -20058,7 +20058,7 @@ function renderSubQuestResults(mod, qp, newAchs) {
     <div class="subquest-celebrate-hammy hammy-side-avatar streak">${withFaceOverlay(getPigWithItemMarkup(0.55, getEquippedItems()))}</div>
     <div class="results-grade">Sub-Quest Complete</div>
     <h2 class="results-title">${quest.topic}</h2>
-    <p class="results-score">Hammy just walked through this one step by step, for real — here's what stuck.</p>
+    <p class="results-score">Hammy just walked through this one step by step, for real. Here's what stuck.</p>
     <div class="results-rewards-row">
       <div class="results-xp-card">
         <div class="results-xp-num">+${xpEarned} XP</div>
