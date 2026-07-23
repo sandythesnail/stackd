@@ -12,16 +12,19 @@
  */
 import { useEffect, useMemo, useRef } from 'react';
 import { AppState as RNAppState } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@clerk/clerk-expo';
 import { useStore, type AppState } from '@/store';
 import { makeSupabase } from './supabase';
 import { mobileToWeb, webToMobile, type WebState } from './webState';
 
 const DEBOUNCE_MS = 1500;
+/** Which account wrote the device-global AsyncStorage snapshot — see the owner check. */
+const OWNER_KEY = 'stackd_state_owner_v1';
 
 export function SupabaseSync() {
   const { isSignedIn, userId, getToken } = useAuth();
-  const { state, hydrateFromRemote } = useStore();
+  const { state, hydrated, hydrateFromRemote, resetForAccountSwitch } = useStore();
 
   // Keep latest getToken/state/hydrate in refs so the Supabase client and callbacks are
   // stable (created once) yet always act on current values.
@@ -31,6 +34,8 @@ export function SupabaseSync() {
   stateRef.current = state;
   const hydrateRef = useRef(hydrateFromRemote);
   hydrateRef.current = hydrateFromRemote;
+  const resetRef = useRef(resetForAccountSwitch);
+  resetRef.current = resetForAccountSwitch;
 
   const supabase = useMemo(() => makeSupabase(() => getTokenRef.current()), []);
 
@@ -60,13 +65,29 @@ export function SupabaseSync() {
     [userId, push],
   );
 
-  // Load remote on sign-in.
+  // Load remote on sign-in — gated on the store's own AsyncStorage hydration, so the
+  // account-owner check below can never race the local snapshot load.
   useEffect(() => {
     ready.current = false;
     lastRemote.current = null;
-    if (!isSignedIn || !userId) return;
+    if (!hydrated || !isSignedIn || !userId) return;
     let cancelled = false;
     (async () => {
+      // Cross-account guard: the AsyncStorage snapshot is device-global, not per-account.
+      // Without this, a second account signing up on the same device inherited the
+      // previous account's progress — hydrateFromRemote's max() floors let the old
+      // coins/xp win even against a real remote row, and for a brand-new account the
+      // "seed a fresh cloud row" path below uploaded the old account's entire snapshot
+      // into the new account's user_progress row. If the cached snapshot was written by
+      // a different account (or an unknown pre-guard session), reset to a clean slate
+      // BEFORE any cloud read or write.
+      const owner = await AsyncStorage.getItem(OWNER_KEY);
+      let localState = stateRef.current;
+      if (owner !== userId) {
+        localState = resetRef.current();
+        await AsyncStorage.setItem(OWNER_KEY, userId);
+      }
+      if (cancelled) return;
       const { data, error } = await supabase
         .from('user_progress')
         .select('state')
@@ -83,11 +104,11 @@ export function SupabaseSync() {
         ready.current = true;
       } else {
         ready.current = true;
-        await push(userId, stateRef.current); // seed a fresh cloud row from local state
+        await push(userId, localState); // seed a fresh cloud row from local state
       }
     })();
     return () => { cancelled = true; };
-  }, [isSignedIn, userId, supabase, push]);
+  }, [hydrated, isSignedIn, userId, supabase, push]);
 
   // Debounced upload whenever local state changes (after the initial load).
   useEffect(() => {

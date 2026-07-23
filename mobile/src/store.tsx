@@ -325,6 +325,9 @@ function findLifeEvent(id: string | null) {
 
 type Ctx = {
   state: AppState;
+  /** True once the on-device AsyncStorage snapshot has been loaded into `state` — gates
+   * anything (like SupabaseSync's account-owner check) that must not race that load. */
+  hydrated: boolean;
   level: number;
   tierName: string;
   isOwned: (id: string) => boolean;
@@ -401,6 +404,11 @@ type Ctx = {
   dismissNewAchievements: () => void;
   /** Ported from the website's Settings reset button: wipes local state back to defaults. */
   resetProgress: () => void;
+  /** A different account signed in on this device than the one whose snapshot is cached
+   * (see SupabaseSync's owner check): restart from a clean slate instead of inheriting
+   * the previous account's progress. Returns the fresh state synchronously so the caller
+   * can seed the new account's cloud row without racing React's setState. */
+  resetForAccountSwitch: () => AppState;
   /** Merge a remote (cloud-synced) snapshot into local state — used by SupabaseSync after
    * translating the web's user_progress blob into mobile's AppState. */
   hydrateFromRemote: (partial: Partial<AppState>) => void;
@@ -474,6 +482,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * so it naturally clears itself on next launch same as the website). */
   const [pendingStreakDiamonds, setPendingStreakDiamonds] = useState(0);
   const loaded = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
@@ -496,6 +505,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setState(next);
       if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
       loaded.current = true;
+      setHydrated(true);
     });
   }, []);
 
@@ -514,6 +524,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     return {
       state,
+      hydrated,
       level,
       tierName,
       loginBonusPending,
@@ -780,6 +791,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setDailyLoginBanner(null);
         setNewAchievementIds([]);
       },
+      resetForAccountSwitch: () => {
+        // Same daily bookkeeping the initial load runs, but against pristine defaults —
+        // the discarded snapshot belonged to a different account.
+        const { next, streakDiamondsEarned } = runDailyCheck(DEFAULT_STATE);
+        setState(next);
+        setDailyLoginBanner(null);
+        setNewAchievementIds([]);
+        setPendingStreakDiamonds(streakDiamondsEarned);
+        return next;
+      },
       // Merge the remote snapshot, then re-run the once-per-day check against the merged
       // result — otherwise a stale cloud streak/lastPlayedDate (from before today's local
       // increment) clobbers the increment we just computed on local load.
@@ -819,7 +840,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
       },
     };
-  }, [state, dailyLoginBanner, newAchievementIds, pendingStreakDiamonds]);
+  }, [state, hydrated, dailyLoginBanner, newAchievementIds, pendingStreakDiamonds]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

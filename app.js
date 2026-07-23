@@ -16229,6 +16229,8 @@ function saveState() {
   const { level, xp, streak, lastPlayedDate, lastSeenTier, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
   const snapshot = { level, xp, streak, lastPlayedDate, lastSeenTier, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
   localStorage.setItem('stackd_v2', JSON.stringify(snapshot));
+  // Stamp which account this cached snapshot belongs to (see ensureLocalStateOwner).
+  if (window.Clerk?.user) localStorage.setItem('stackd_v2_owner', Clerk.user.id);
   scheduleSupabaseSync(snapshot);
 }
 
@@ -16298,6 +16300,30 @@ function applyRemoteState(remote) {
   // this back to false on the very next load and show the tour again. Once seen locally, it
   // stays seen regardless of what a stale remote snapshot says.
   if (localHasSeenTour) state.hasSeenOnboardingTour = true;
+  saveState();
+  renderHome();
+}
+
+// The local snapshot lives under a single localStorage key shared by every account that
+// ever signs in from this browser. Without this guard, a second account signing in on
+// the same machine inherited the previous account's entire snapshot on load — and,
+// because a brand-new account has no user_progress row for applyRemoteState to
+// overwrite it with, the debounced sync then uploaded that inherited snapshot into the
+// NEW account's row: permanent cross-account contamination. app-auth.js calls this as
+// soon as the Clerk user id is known, BEFORE any remote read or write: if the cached
+// snapshot was written by a different account (or by an unknown pre-guard legacy
+// session), discard it and restart this session from a clean slate — the account's
+// real progress, if it has any, is hydrated right after from its own Supabase row.
+function ensureLocalStateOwner(userId) {
+  const owner = localStorage.getItem('stackd_v2_owner');
+  if (owner === userId) return;
+  localStorage.removeItem('stackd_v2');
+  localStorage.setItem('stackd_v2_owner', userId);
+  Object.assign(state, JSON.parse(DEFAULT_STATE_JSON));
+  // Redo the boot-time session/streak bookkeeping (see the DOMContentLoaded init) that
+  // already ran against the discarded snapshot before auth resolved.
+  state.lifeEvents.sessionCount++;
+  pendingStreakDiamonds = updateStreak();
   saveState();
   renderHome();
 }

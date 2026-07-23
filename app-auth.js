@@ -14,6 +14,13 @@ window.addEventListener('load', async function () {
     { accessToken: () => Clerk.session.getToken() }
   );
 
+  // If the locally-cached snapshot belongs to a different account than the one now
+  // signed in, discard it BEFORE reading/writing this account's row — otherwise the
+  // previous account's progress bleeds into (and gets uploaded as) this account's.
+  if (typeof window.ensureLocalStateOwner === 'function') {
+    window.ensureLocalStateOwner(Clerk.user.id);
+  }
+
   const { data: remoteRow, error: remoteError } = await window.stackdSupabase
     .from('user_progress')
     .select('state')
