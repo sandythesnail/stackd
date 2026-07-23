@@ -103,11 +103,11 @@ const MODULES = [
       }
     ],
     lessons: [
-      { title: 'Your First Paycheck', hook: 'You just started your on-campus job and received your first paycheck. The stub says $300 gross but only $241 hit your bank. Where did $59 go — and what does "withholding" actually mean?', qIndices: [0, 1] },
-      { title: 'Tax Forms & Withholding', hook: 'Your employer hands you a W-4 on day one. Fill it out wrong and you could owe a surprise tax bill in April — or hand the government an interest-free loan all year. What should you actually put down?', qIndices: [2, 3] },
-      { title: 'Work-Study & Campus Jobs', hook: 'Your financial aid offer includes $3,000 in Federal Work-Study — a term you\'ve never seen before. Is it a loan? A regular job? And does it matter how many hours you work?', qIndices: [4, 5] },
-      { title: 'Gig Work & Side Income', hook: 'You start picking up dog-walking and tutoring gigs for extra cash, paid straight to Venmo. No W-4, no withholding — just money landing in your account. Is that too good to be true?', qIndices: [6, 7] },
-      { title: 'Reading Your Pay Stub', hook: 'Your paycheck seems short this week. Before assuming payroll made a mistake — or missing one that actually happened — do you even know how to read everything on your pay stub?', qIndices: [8, 9] },
+      { title: 'Your First Paycheck', hook: 'You just started your on-campus job and received your first paycheck. The stub says $300 gross but only $241 hit your bank. Where did $59 go, and what does "withholding" actually mean?', qIndices: [0, 1] },
+      { title: 'Tax Forms & Withholding', hook: 'Your employer hands you a W-4 on day one. Fill it out wrong and you could owe a surprise tax bill in April, or hand the government an interest-free loan all year. What should you actually put down?', qIndices: [2, 3] },
+      { title: 'Work-Study & Campus Jobs', hook: 'Your financial aid offer includes $3,000 in Federal Work-Study, a term you\'ve never seen before. Is it a loan? A regular job? And does it matter how many hours you work?', qIndices: [4, 5] },
+      { title: 'Gig Work & Side Income', hook: 'You start picking up dog-walking and tutoring gigs for extra cash, paid straight to Venmo. No W-4, no withholding, just money landing in your account. Is that too good to be true?', qIndices: [6, 7] },
+      { title: 'Reading Your Pay Stub', hook: 'Your paycheck seems short this week. Before assuming payroll made a mistake, or missing one that actually happened, do you even know how to read everything on your pay stub?', qIndices: [8, 9] },
       { title: 'Raises & Growing Your Income', hook: 'Your manager offers you a raise from $16/hour to $17.50/hour, and mentions the university\'s 403(b) retirement match up to 3%. Between the raise and the match, what should you actually do with the extra money?', qIndices: [10, 11] }
     ],
     quests: [
@@ -594,14 +594,14 @@ const MODULES = [
           {
             id: 'ps_spot1', type: 'spotcheck', title: 'Spot What Deserves a Second Look',
             intro: "Here's a plain-text readout of Hammy's pay stub. Tap any line that's worth double-checking before assuming it's correct, then hit Continue to see what you caught.",
-            postingTitle: "Pay Stub — Pay Period 6/2–6/15",
+            postingTitle: "Pay Stub: Pay Period 6/2–6/15",
             segments: [
               { id: 's1', text: "Gross Pay: $450.00 (30.0 regular hrs @ $15.00/hr). ", isRedFlag: false, explanation: "This math checks out (30 × $15 = $450), a normal line, but still worth a quick multiply every time." },
-              { id: 's2', text: "Overtime: 0.0 hrs, $0.00 — ", isRedFlag: true, explanation: "Hammy actually worked 6 hours of overtime this period. A $0.00 overtime line when hours were logged is exactly the kind of error that's easy to miss if you only glance at net pay." },
-              { id: 's3', text: "FICA-SS: -$27.90, FICA-Med: -$6.53 — ", isRedFlag: false, explanation: "6.2% and 1.45% of $450 gross, matches the expected FICA rate, nothing unusual here." },
-              { id: 's4', text: "Federal Income Tax: -$22.00 — ", isRedFlag: false, explanation: "A normal withholding line based on Hammy's W-4, no red flag on its own." },
-              { id: 's5', text: "Health Insurance (pre-tax): -$15.00 — ", isRedFlag: false, explanation: "A standard pre-tax deduction if Hammy is enrolled in a plan, expected and fine." },
-              { id: 's6', text: "YTD Net Pay: $1,120.15, despite this being the 4th pay period of the year — ", isRedFlag: true, explanation: "Four periods at roughly this net pay should total closer to $1,500+. A YTD figure that looks too low compared to the math is worth flagging and asking payroll about." },
+              { id: 's2', text: "Overtime: 0.0 hrs, $0.00.", isRedFlag: true, explanation: "Hammy actually worked 6 hours of overtime this period. A $0.00 overtime line when hours were logged is exactly the kind of error that's easy to miss if you only glance at net pay." },
+              { id: 's3', text: "FICA-SS: -$27.90, FICA-Med: -$6.53.", isRedFlag: false, explanation: "6.2% and 1.45% of $450 gross, matches the expected FICA rate, nothing unusual here." },
+              { id: 's4', text: "Federal Income Tax: -$22.00.", isRedFlag: false, explanation: "A normal withholding line based on Hammy's W-4, no red flag on its own." },
+              { id: 's5', text: "Health Insurance (pre-tax): -$15.00.", isRedFlag: false, explanation: "A standard pre-tax deduction if Hammy is enrolled in a plan, expected and fine." },
+              { id: 's6', text: "YTD Net Pay: $1,120.15, despite this being the 4th pay period of the year.", isRedFlag: true, explanation: "Four periods at roughly this net pay should total closer to $1,500+. A YTD figure that looks too low compared to the math is worth flagging and asking payroll about." },
               { id: 's7', text: "Net Pay: $378.57.", isRedFlag: false, explanation: "Once the missing overtime is added back in, this line will need correcting too, but the line itself is just doing the subtraction it was given." }
             ],
             xpOnComplete: 5
@@ -1436,22 +1436,22 @@ const MODULES = [
           {
             id: 'dd0', type: 'story', title: 'The New Job Paperwork',
             beats: [
-              { speaker: 'intro', text: "Hammy just got hired for a campus job, and the onboarding paperwork asks for direct deposit information. Knowing what a pay stub says is one thing — actually setting up how the money gets there is another." }
+              { speaker: 'intro', text: "Hammy just got hired for a campus job, and the onboarding paperwork asks for direct deposit information. Knowing what a pay stub says is one thing; actually setting up how the money gets there is another." }
             ]
           },
           {
             id: 'dd1', type: 'teach', title: 'Step 1 & 2: Find the Numbers, Fill the Form',
             concepts: [
-              { term: 'Step 1: Find the Routing & Account Numbers', plain: "Both numbers are printed at the bottom of a paper check, or found in the banking app under account details. The routing number identifies the bank; the account number identifies the specific account.", analogy: "The routing number is like a zip code — it gets the deposit to the right bank. The account number is the exact address once it's there.", check: { statement: 'The routing number identifies your specific account, and the account number identifies your bank.', isTrue: false } },
-              { term: 'Step 2: Fill Out the Employer Form', plain: "Most employers use a simple form or online portal asking for the bank name, routing number, account number, and whether it's checking or savings. Double-check every digit — one wrong number can send a paycheck to the wrong place.", analogy: "It's a one-time setup, like adding a new payment method, just in the other direction.", check: { statement: 'A single wrong digit on a direct deposit form has no real consequence.', isTrue: false } }
+              { term: 'Step 1: Find the Routing & Account Numbers', plain: "Both numbers are printed at the bottom of a paper check, or found in the banking app under account details. The routing number identifies the bank; the account number identifies the specific account.", analogy: "The routing number is like a zip code: it gets the deposit to the right bank. The account number is the exact address once it's there.", check: { statement: 'The routing number identifies your specific account, and the account number identifies your bank.', isTrue: false } },
+              { term: 'Step 2: Fill Out the Employer Form', plain: "Most employers use a simple form or online portal asking for the bank name, routing number, account number, and whether it's checking or savings. Double-check every digit: one wrong number can send a paycheck to the wrong place.", analogy: "It's a one-time setup, like adding a new payment method, just in the other direction.", check: { statement: 'A single wrong digit on a direct deposit form has no real consequence.', isTrue: false } }
             ],
             xpOnComplete: 3
           },
           {
             id: 'dd2', type: 'teach', title: 'Step 3 & 4: Confirm & Troubleshoot',
             concepts: [
-              { term: 'Step 3: Confirm With the First Paycheck', plain: "The first deposit is the real test — check that the amount matches what's expected (gross pay minus deductions) and that it landed in the right account.", analogy: "Like double-checking a package tracking number the first time shipping somewhere new.", check: { statement: 'The first paycheck is a reasonable time to double-check that direct deposit is actually working correctly.', isTrue: true } },
-              { term: "Step 4: If Pay Doesn't Show Up", plain: "Some employers take one pay cycle to fully activate direct deposit, and a paper check may be issued in the meantime. If a payment is genuinely missing on payday, contact HR or payroll directly — don't just wait and assume it'll appear.", analogy: "Think of it like a package marked delivered that never arrived — worth a call, not just a shrug.", check: {} }
+              { term: 'Step 3: Confirm With the First Paycheck', plain: "The first deposit is the real test: check that the amount matches what's expected (gross pay minus deductions) and that it landed in the right account.", analogy: "Like double-checking a package tracking number the first time shipping somewhere new.", check: { statement: 'The first paycheck is a reasonable time to double-check that direct deposit is actually working correctly.', isTrue: true } },
+              { term: "Step 4: If Pay Doesn't Show Up", plain: "Some employers take one pay cycle to fully activate direct deposit, and a paper check may be issued in the meantime. If a payment is genuinely missing on payday, contact HR or payroll directly. Don't just wait and assume it'll appear.", analogy: "Think of it like a package marked delivered that never arrived: worth a call, not just a shrug.", check: {} }
             ],
             xpOnComplete: 3
           },
@@ -1460,7 +1460,7 @@ const MODULES = [
             prompt: "Hammy is filling out the direct deposit form and isn't sure whether the 9-digit number on the check is the routing number or the account number.",
             hintText: "Which number identifies the BANK, and which identifies the specific account?",
             choices: [
-              { id: 'a', label: 'Guess and fill it in quickly to finish the paperwork', outcome: { text: "Guessing risks sending the paycheck to the wrong place entirely — worth 30 extra seconds to check.", delta: {}, compare: [{ label: 'Risk of error', value: 1 }, { label: 'Time saved', value: 0 }] } },
+              { id: 'a', label: 'Guess and fill it in quickly to finish the paperwork', outcome: { text: "Guessing risks sending the paycheck to the wrong place entirely, worth 30 extra seconds to check.", delta: {}, compare: [{ label: 'Risk of error', value: 1 }, { label: 'Time saved', value: 0 }] } },
               { id: 'b', label: "Check the bank's app or a sample check to confirm which number is which", outcome: { text: "A quick check confirms the routing number (bank) and account number (specific account) before submitting.", delta: {}, compare: [{ label: 'Risk of error', value: 0 }, { label: 'Time spent', value: 1 }] } }
             ],
             xpOnComplete: 4
@@ -1479,7 +1479,7 @@ const MODULES = [
   {
     id: 'spending', title: 'Spending', icon: '02', iconColor: 'pink', xpReward: 35,
     hook: 'It\'s week 6 of the semester. You had $800 for the month. You check your account and there\'s $23 left. You didn\'t buy anything big. How did this happen - and how do you stop it?',
-    desc: 'Budgeting on a student income, meal plans, and paying for college — FAFSA, scholarships, grants, and payment plans.',
+    desc: 'Budgeting on a student income, meal plans, and paying for college: FAFSA, scholarships, grants, and payment plans.',
     questions: [
       {
         q: 'The 50/30/20 rule splits your after-tax income. What does the "50" represent?',
@@ -1513,60 +1513,60 @@ const MODULES = [
       },
       {
         q: 'When can students first submit the FAFSA (Free Application for Federal Student Aid) for the upcoming academic year, and why does the timing matter?',
-        opts: ['Anytime over the summer — timing doesn\'t matter', 'FAFSA opens October 1st each year, and applying early matters because many grants and state aid programs are awarded first-come, first-served until funds run out', 'Only after you\'ve already enrolled and started classes', 'FAFSA is a one-time application you only submit once, in your first year'],
+        opts: ['Anytime over the summer, timing doesn\'t matter', 'FAFSA opens October 1st each year, and applying early matters because many grants and state aid programs are awarded first-come, first-served until funds run out', 'Only after you\'ve already enrolled and started classes', 'FAFSA is a one-time application you only submit once, in your first year'],
         correct: 1,
-        exp: 'The FAFSA opens every October 1st for the following academic year — put it on your calendar. It determines your eligibility for federal grants, work-study, and loans, plus most school and state aid. The application trips a lot of students up — income verification, tax data transfer, dependency questions — but gathering your tax documents ahead of time makes it far less stressful. You must resubmit it every single year you\'re in school to keep your aid.'
+        exp: 'The FAFSA opens every October 1st for the following academic year: put it on your calendar. It determines your eligibility for federal grants, work-study, and loans, plus most school and state aid. The application trips a lot of students up (income verification, tax data transfer, dependency questions), but gathering your tax documents ahead of time makes it far less stressful. You must resubmit it every single year you\'re in school to keep your aid.'
       },
       {
         q: 'After you submit the FAFSA, your school sends you a financial aid offer (sometimes called an award letter). What should you do with it?',
-        opts: ['Ignore it — aid is automatically applied to your bill', 'Review each item individually — grants, scholarships, work-study, loans — and actively accept or decline each one; you\'re never required to accept loans just because they\'re offered', 'Accept the entire package as one bundled decision with no choices', 'Only respond if you plan on taking loans'],
+        opts: ['Ignore it, aid is automatically applied to your bill', 'Review each item individually (grants, scholarships, work-study, loans) and actively accept or decline each one; you\'re never required to accept loans just because they\'re offered', 'Accept the entire package as one bundled decision with no choices', 'Only respond if you plan on taking loans'],
         correct: 1,
-        exp: 'A financial aid offer isn\'t one lump decision. Gift aid — grants and scholarships — is money you should almost always accept since it\'s never repaid. Loans are a separate choice: you can accept the full amount, accept less, or decline entirely. Read the offer line by line, confirm whether it covers a full year or just one semester, and know exactly what\'s free versus what you\'ll owe with interest.'
+        exp: 'A financial aid offer isn\'t one lump decision. Gift aid (grants and scholarships) is money you should almost always accept since it\'s never repaid. Loans are a separate choice: you can accept the full amount, accept less, or decline entirely. Read the offer line by line, confirm whether it covers a full year or just one semester, and know exactly what\'s free versus what you\'ll owe with interest.'
       },
       {
         q: 'You\'re still short on funds after grants and scholarships are applied to your bill. Besides borrowing more, what\'s another option worth exploring?',
-        opts: ['There is no other option besides loans', 'A tuition payment plan through your school\'s bursar office, which splits your balance into smaller monthly installments — often interest-free', 'Skip the payment and hope the school doesn\'t notice', 'Put the balance on a credit card'],
+        opts: ['There is no other option besides loans', 'A tuition payment plan through your school\'s bursar office, which splits your balance into smaller monthly installments, often interest-free', 'Skip the payment and hope the school doesn\'t notice', 'Put the balance on a credit card'],
         correct: 1,
-        exp: 'Most schools offer a tuition payment plan that breaks your bill into monthly installments, often for just a small flat enrollment fee instead of interest. It won\'t lower what you owe, but it eases cash-flow pressure without taking on debt. Pair that with actively searching for outside scholarships — local organizations, employers, and community foundations all offer free money that doesn\'t show up on your school\'s offer automatically.'
+        exp: 'Most schools offer a tuition payment plan that breaks your bill into monthly installments, often for just a small flat enrollment fee instead of interest. It won\'t lower what you owe, but it eases cash-flow pressure without taking on debt. Pair that with actively searching for outside scholarships: local organizations, employers, and community foundations all offer free money that doesn\'t show up on your school\'s offer automatically.'
       },
       {
         q: 'You have $1,200 in dining dollars for a 16-week semester. What\'s the smartest way to make sure it lasts?',
-        opts: ['Spend it however you want since it resets each semester', 'Divide it into a weekly budget (about $75/week) and track your balance so you\'re not caught out before finals', 'Spend it all in the first month since it doesn\'t roll over anyway', 'Ignore your balance — the school will notify you when it\'s empty'],
+        opts: ['Spend it however you want since it resets each semester', 'Divide it into a weekly budget (about $75/week) and track your balance so you\'re not caught out before finals', 'Spend it all in the first month since it doesn\'t roll over anyway', 'Ignore your balance, the school will notify you when it\'s empty'],
         correct: 1,
-        exp: 'Dining dollars work like any other budget — divide the total by the weeks remaining to get a spending target, and check your balance regularly. Students who don\'t track it often run out with weeks of the semester still left.'
+        exp: 'Dining dollars work like any other budget: divide the total by the weeks remaining to get a spending target, and check your balance regularly. Students who don\'t track it often run out with weeks of the semester still left.'
       },
       {
         q: 'Which of these should you have on hand before starting your FAFSA?',
-        opts: ['Nothing — the form asks for everything as you go', 'Your (and your parents\', if you\'re a dependent) prior-prior year tax information, Social Security numbers, and a list of schools you\'re applying to', 'Your college acceptance letter, and only that', 'Your final high school transcript'],
+        opts: ['Nothing, the form asks for everything as you go', 'Your (and your parents\', if you\'re a dependent) prior-prior year tax information, Social Security numbers, and a list of schools you\'re applying to', 'Your college acceptance letter, and only that', 'Your final high school transcript'],
         correct: 1,
         exp: 'The FAFSA uses prior-prior year tax data pulled directly from the IRS in many cases. Gathering SSNs, tax info, and your school list ahead of time turns a stressful form into a 30-minute task.'
       },
       {
-        q: 'Grants and scholarships versus work-study and loans — what\'s the key difference between these two categories of financial aid?',
-        opts: ['There\'s no real difference — they\'re all just "aid"', 'Grants and scholarships are gift aid you never repay; work-study requires you to work for the money and loans must be repaid with interest', 'Loans are always a better deal because you get the money faster', 'Scholarships must be repaid once you graduate and start earning'],
+        q: 'Grants and scholarships versus work-study and loans: what\'s the key difference between these two categories of financial aid?',
+        opts: ['There\'s no real difference, they\'re all just "aid"', 'Grants and scholarships are gift aid you never repay; work-study requires you to work for the money and loans must be repaid with interest', 'Loans are always a better deal because you get the money faster', 'Scholarships must be repaid once you graduate and start earning'],
         correct: 1,
-        exp: 'Gift aid — grants and scholarships — is money you never pay back, so it should almost always be accepted first. Self-help aid — work-study (which you earn by working) and loans (which you repay with interest) — comes with a cost attached. Know which category each line on your aid offer falls into before deciding what to accept.'
+        exp: 'Gift aid (grants and scholarships) is money you never pay back, so it should almost always be accepted first. Self-help aid, work-study (which you earn by working) and loans (which you repay with interest), comes with a cost attached. Know which category each line on your aid offer falls into before deciding what to accept.'
       },
       {
         q: 'You\'re still short on funds after your school\'s aid offer. Besides taking on more loans, what\'s worth exploring?',
         opts: ['There\'s nothing else to try besides borrowing more', 'Outside/private scholarships from local organizations and community foundations, and employer tuition assistance if you work part-time', 'Asking your school to simply waive the remaining balance', 'Putting the remaining balance on a high-interest credit card'],
         correct: 1,
-        exp: 'Outside scholarships — from local businesses, community foundations, cultural organizations, and even your parents\' employers — don\'t show up on your school\'s aid offer automatically, so you have to search separately. Some part-time employers also offer tuition assistance for enrolled students — always worth asking.'
+        exp: 'Outside scholarships (from local businesses, community foundations, cultural organizations, and even your parents\' employers) don\'t show up on your school\'s aid offer automatically, so you have to search separately. Some part-time employers also offer tuition assistance for enrolled students, always worth asking.'
       }
     ],
     lessons: [
-      { title: 'The 50/30/20 Rule', hook: 'It\'s week 6 of the semester. You had $800 for the month. You check your account and there\'s $23 left. You didn\'t buy anything big. How did this happen — and how do you stop it?', qIndices: [0, 1] },
-      { title: 'Needs vs. Wants & Staying in the Black', hook: 'You\'ve labeled your rent as a "need" and brunch as a "want" — but by the end of the month you\'ve spent more than you earned anyway. What happened, and how do you catch it before you\'re in the red?', qIndices: [2, 3] },
-      { title: 'Day-to-Day Money on Campus', hook: 'You\'ve got $1,200 in dining dollars and $47 in your emergency fund, both meant to last the semester. One is about pacing spending, the other about surviving a surprise cost — how do you handle both?', qIndices: [4, 8] },
+      { title: 'The 50/30/20 Rule', hook: 'It\'s week 6 of the semester. You had $800 for the month. You check your account and there\'s $23 left. You didn\'t buy anything big. How did this happen, and how do you stop it?', qIndices: [0, 1] },
+      { title: 'Needs vs. Wants & Staying in the Black', hook: 'You\'ve labeled your rent as a "need" and brunch as a "want," but by the end of the month you\'ve spent more than you earned anyway. What happened, and how do you catch it before you\'re in the red?', qIndices: [2, 3] },
+      { title: 'Day-to-Day Money on Campus', hook: 'You\'ve got $1,200 in dining dollars and $47 in your emergency fund, both meant to last the semester. One is about pacing spending, the other about surviving a surprise cost. How do you handle both?', qIndices: [4, 8] },
       { title: 'FAFSA & the Financial Aid Timeline', hook: 'It\'s October 1st and your inbox reminds you: FAFSA is open. Last year you put it off, missed a scholarship deadline, and scrambled to gather documents in August. This year, what\'s the plan?', qIndices: [5, 9] },
-      { title: 'Grants, Scholarships & Your Aid Offer', hook: 'Your financial aid offer lists grants, a scholarship, work-study, and loans all on one page, and it feels like a single number to accept or reject. Is it — or does each line deserve its own decision?', qIndices: [6, 10] },
+      { title: 'Grants, Scholarships & Your Aid Offer', hook: 'Your financial aid offer lists grants, a scholarship, work-study, and loans all on one page, and it feels like a single number to accept or reject. Is it, or does each line deserve its own decision?', qIndices: [6, 10] },
       { title: 'Payment Plans & Closing the Gap', hook: 'After grants and scholarships, you\'re still $1,800 short for the semester. Loans aren\'t your only option, and neither is panicking. What else can actually close that gap?', qIndices: [7, 11] },
       {
         title: 'Opportunity Cost: The Real Price of Every Decision',
         type: 'decision-chain',
-        hook: 'You just spent $80 on a concert ticket without a second thought. But that $80 didn\'t just disappear — it was a choice. What did you actually give up to make it?',
+        hook: 'You just spent $80 on a concert ticket without a second thought. But that $80 didn\'t just disappear. It was a choice. What did you actually give up to make it?',
         activity: {
-          intro: "Every dollar you spend is a dollar that could have gone somewhere else. That's opportunity cost — the value of the next-best thing you gave up. Over one week, you'll make three spending decisions. At the end, you'll see exactly what each one cost you beyond the price tag.",
+          intro: "Every dollar you spend is a dollar that could have gone somewhere else. That's opportunity cost: the value of the next-best thing you gave up. Over one week, you'll make three spending decisions. At the end, you'll see exactly what each one cost you beyond the price tag.",
           decisions: [
             {
               day: 'Monday',
@@ -1586,10 +1586,10 @@ const MODULES = [
             },
             {
               day: 'Saturday',
-              prompt: "A promo email offers 40% off a $60 hoodie — $36 for the next 2 hours. You weren't planning to buy anything.",
+              prompt: "A promo email offers 40% off a $60 hoodie: $36 for the next 2 hours. You weren't planning to buy anything.",
               choices: [
                 { id: 'a', label: 'Buy it, the deal is too good to pass up', cost: 36, gaveUp: 'almost a whole week of your food delivery budget', good: false },
-                { id: 'b', label: 'Close the email and think it over for 24 hours', cost: 0, gaveUp: 'the urgency-driven "deal" — if you still want it tomorrow, it\'ll likely still be there', good: true }
+                { id: 'b', label: 'Close the email and think it over for 24 hours', cost: 0, gaveUp: 'the urgency-driven "deal," if you still want it tomorrow, it\'ll likely still be there', good: true }
               ]
             }
           ],
@@ -1599,9 +1599,9 @@ const MODULES = [
       {
         title: 'Wants vs. Needs (And the Gray Zone)',
         type: 'sorter',
-        hook: 'Marketing is designed to make wants feel like needs. Before your next purchase, can you actually tell the difference — and does it matter?',
+        hook: 'Marketing is designed to make wants feel like needs. Before your next purchase, can you actually tell the difference, and does it matter?',
         activity: {
-          intro: "Sort each expense into Need, Want, or It Depends. There's no judgment here — the goal is just noticing the difference before you spend, not guilt after. Tap an item, then tap the bucket it belongs in.",
+          intro: "Sort each expense into Need, Want, or It Depends. There's no judgment here: the goal is just noticing the difference before you spend, not guilt after. Tap an item, then tap the bucket it belongs in.",
           items: [
             { id: 'i1', label: 'Rent', category: 'need' },
             { id: 'i2', label: 'Groceries', category: 'need' },
@@ -1614,8 +1614,8 @@ const MODULES = [
             { id: 'i9', label: 'Concert tickets', category: 'want' },
             { id: 'i10', label: 'A $6 coffee, every day', category: 'want' },
             { id: 'i11', label: 'The newest phone when yours still works fine', category: 'want' },
-            { id: 'i12', label: 'All your streaming subscriptions, combined', category: 'depends', note: 'One is often a want you actually use — five you forgot you had is subscription creep.' },
-            { id: 'i13', label: 'A gym membership you use 3x/week', category: 'depends', note: 'A want that supports your health — reasonable if it fits your budget and you actually use it.' },
+            { id: 'i12', label: 'All your streaming subscriptions, combined', category: 'depends', note: 'One is often a want you actually use; five you forgot you had is subscription creep.' },
+            { id: 'i13', label: 'A gym membership you use 3x/week', category: 'depends', note: 'A want that supports your health, reasonable if it fits your budget and you actually use it.' },
             { id: 'i14', label: 'A new outfit for a one-time event', category: 'depends', note: 'Could be a want, or a need if you truly have nothing appropriate to wear.' },
             { id: 'i15', label: 'A haircut', category: 'depends', note: 'A basic trim is upkeep; a $150 salon visit before a big event leans want.' }
           ],
@@ -1628,7 +1628,7 @@ const MODULES = [
         type: 'boss-challenge',
         hook: 'You\'ve got $150 in checking and a full week of decisions before your financial aid refund posts. Every choice either protects that cushion or eats into it.',
         activity: {
-          intro: "You're heading into the last week before your refund hits, with $150 in checking. Four decisions are coming at you this week. Each one either protects your balance or chips away at it — there's no pausing the week to think it over.",
+          intro: "You're heading into the last week before your refund hits, with $150 in checking. Four decisions are coming at you this week. Each one either protects your balance or chips away at it. There's no pausing the week to think it over.",
           startLabel: 'Start the Week →',
           dashboardLabel: 'Checking',
           startingValue: 150,
@@ -2112,7 +2112,7 @@ const MODULES = [
             hintText: "Is the meal plan already covering this for free?",
             choices: [
               { id: 'a', label: 'Keep DoorDashing, it\'s already how the week started', outcome: { text: 'Another $54 gone on delivery fees for food already free at the dining hall.', delta: { checking: -54 }, compare: [{ label: 'Spent', value: 54 }, { label: 'Kept', value: 0 }] } },
-              { id: 'b', label: 'Actually use the meal swipes for the rest of the week', outcome: { text: 'Zero extra spent — the meal plan was already covering this.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 54 }] } }
+              { id: 'b', label: 'Actually use the meal swipes for the rest of the week', outcome: { text: 'Zero extra spent, the meal plan was already covering this.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 54 }] } }
             ],
             xpOnComplete: 4
           },
@@ -2124,7 +2124,7 @@ const MODULES = [
           {
             id: 'cm2', type: 'decision', title: 'Wednesday: The Surprise Show',
             prompt: "A favorite band just announced a surprise $45 show this weekend. Tickets are going fast.",
-            hintText: "Rent is due in 2 days — how much cushion is left after that?",
+            hintText: "Rent is due in 2 days: how much cushion is left after that?",
             choices: [
               { id: 'a', label: 'Buy the ticket now, before it sells out', outcome: { text: 'Rent\'s still due in 2 days, and now there\'s less cushion heading into it.', delta: { checking: -45 }, compare: [{ label: 'Spent', value: 45 }, { label: 'Kept', value: 0 }] } },
               { id: 'b', label: 'Skip this one, catch the next show after the refund posts', outcome: { text: 'A real skip, but nothing this week\'s budget couldn\'t afford to lose.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 45 }] } }
@@ -2134,7 +2134,7 @@ const MODULES = [
           {
             id: 'cm_ms1', type: 'microsim', title: "Pacing the Last $150",
             prompt: "Hammy has $150 in checking and 5 days until the refund posts. Rent auto-pays $110 out of this on Friday. Decide how much of what's left goes to food/extras versus staying as cushion.",
-            hintText: "Rent already takes $110 off the top — that leaves $40 to split between the two sliders before going negative.",
+            hintText: "Rent already takes $110 off the top, that leaves $40 to split between the two sliders before going negative.",
             income: 150,
             fixedCosts: [
               { label: 'Rent (auto-pay Friday)', amount: 110 }
@@ -2144,7 +2144,7 @@ const MODULES = [
               { id: 'cushion', label: 'Kept as cushion', min: 0, max: 40, step: 5, default: 40 }
             ],
             feedbackTiers: [
-              { maxLeftover: -1, text: "That's more than the $40 left after rent — the week's plan doesn't actually fit. Try smaller amounts.", ok: false },
+              { maxLeftover: -1, text: "That's more than the $40 left after rent. The week's plan doesn't actually fit. Try smaller amounts.", ok: false },
               { maxLeftover: 4, text: "It fits, but almost nothing is left over if anything unexpected comes up before the refund lands.", ok: true },
               { maxLeftover: Infinity, text: "Solid. Hammy's protecting real cushion instead of spending right up to the edge.", ok: true }
             ],
@@ -2168,7 +2168,7 @@ const MODULES = [
             hintText: "Is there a free version of the same time together?",
             choices: [
               { id: 'a', label: 'Go to brunch', outcome: { text: 'A nice morning, but that\'s $22 that could\'ve been the cushion between Hammy and $0.', delta: { checking: -22 }, compare: [{ label: 'Spent', value: 22 }, { label: 'Kept', value: 0 }] } },
-              { id: 'b', label: 'Suggest a free hangout instead — coffee and a study session at home', outcome: { text: 'Same friends, same time together, $22 still in checking.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 22 }] } }
+              { id: 'b', label: 'Suggest a free hangout instead: coffee and a study session at home', outcome: { text: 'Same friends, same time together, $22 still in checking.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 22 }] } }
             ],
             xpOnComplete: 4
           },
@@ -2223,8 +2223,8 @@ const MODULES = [
             scenario: "Rent auto-pays tomorrow: $110, already accounted for in Hammy's checking balance. But a friend suggests putting $50 of it on a credit card instead, \"to save cash.\"",
             hintText: "Does moving money to a card actually save anything, or just add interest on top?",
             choices: [
-              { id: 'a', label: 'Let rent auto-pay as planned', consequence: { text: 'Handled — exactly what that $110 was already budgeted for.', delta: { checking: -110 }, xpMultiplier: 1.25 } },
-              { id: 'b', label: 'Panic and put $50 of it on a credit card "to save cash"', consequence: { text: 'Now there\'s a card balance accruing interest on top of everything else — the "cash saved" cost more than it kept.', delta: { checking: -60 }, xpMultiplier: 0.6 } }
+              { id: 'a', label: 'Let rent auto-pay as planned', consequence: { text: 'Handled, exactly what that $110 was already budgeted for.', delta: { checking: -110 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: 'Panic and put $50 of it on a credit card "to save cash"', consequence: { text: 'Now there\'s a card balance accruing interest on top of everything else, the "cash saved" cost more than it kept.', delta: { checking: -60 }, xpMultiplier: 0.6 } }
             ]
           }
         ]
@@ -2410,8 +2410,8 @@ const MODULES = [
           {
             id: 'ao_m1', type: 'matching', title: 'Match It! Round 1',
             pairs: [
-              { term: 'Gift Aid', definition: 'Grants and scholarships — money that never needs to be repaid.' },
-              { term: 'Self-Help Aid', definition: 'Work-study and loans — aid that requires work or repayment.' },
+              { term: 'Gift Aid', definition: 'Grants and scholarships: money that never needs to be repaid.' },
+              { term: 'Self-Help Aid', definition: 'Work-study and loans: aid that requires work or repayment.' },
               { term: 'Aid Offer', definition: 'The letter listing every type of aid a school is offering, bundled together.' }
             ],
             xpOnComplete: 4
@@ -2436,13 +2436,13 @@ const MODULES = [
           {
             id: 'ao_spot1', type: 'spotcheck', title: 'Spot What Needs an Active Decision',
             intro: "Here's Hammy's aid offer letter. Tap any line that requires Hammy to actually make a choice, rather than something that's automatic, then hit Continue to see what you caught.",
-            postingTitle: "Financial Aid Offer — Academic Year",
+            postingTitle: "Financial Aid Offer: Academic Year",
             segments: [
-              { id: 's1', text: "Federal Pell Grant: $3,500 — automatically applied to your account, no action needed. ", isRedFlag: false, explanation: "Gift aid like this is typically applied automatically, no decision required." },
-              { id: 's2', text: "University Merit Scholarship: $2,000 — automatically renewed as long as a 3.0 GPA is maintained. ", isRedFlag: false, explanation: "Also automatic, though worth noting the GPA requirement to keep it renewing." },
-              { id: 's3', text: "Federal Work-Study: $2,800 — must be actively applied for and earned through an approved campus job. ", isRedFlag: true, explanation: "This requires action: finding and working an approved job to actually earn any of this amount." },
-              { id: 's4', text: "Direct Subsidized Loan: $3,500 — accept, reduce, or decline any amount using the portal before the deadline. ", isRedFlag: true, explanation: "Loans are never automatic and never required, this needs an active accept/reduce/decline decision." },
-              { id: 's5', text: "Direct Unsubsidized Loan: $2,000 — accept, reduce, or decline any amount using the portal before the deadline. ", isRedFlag: true, explanation: "Same as the subsidized loan line, an active decision, not an automatic acceptance." },
+              { id: 's1', text: "Federal Pell Grant: $3,500, automatically applied to your account, no action needed. ", isRedFlag: false, explanation: "Gift aid like this is typically applied automatically, no decision required." },
+              { id: 's2', text: "University Merit Scholarship: $2,000, automatically renewed as long as a 3.0 GPA is maintained. ", isRedFlag: false, explanation: "Also automatic, though worth noting the GPA requirement to keep it renewing." },
+              { id: 's3', text: "Federal Work-Study: $2,800, must be actively applied for and earned through an approved campus job. ", isRedFlag: true, explanation: "This requires action: finding and working an approved job to actually earn any of this amount." },
+              { id: 's4', text: "Direct Subsidized Loan: $3,500, accept, reduce, or decline any amount using the portal before the deadline. ", isRedFlag: true, explanation: "Loans are never automatic and never required, this needs an active accept/reduce/decline decision." },
+              { id: 's5', text: "Direct Unsubsidized Loan: $2,000, accept, reduce, or decline any amount using the portal before the deadline. ", isRedFlag: true, explanation: "Same as the subsidized loan line, an active decision, not an automatic acceptance." },
               { id: 's6', text: "Estimated Cost of Attendance: $22,000 for the year, listed for reference only. ", isRedFlag: false, explanation: "Informational only, not something requiring a decision on its own." }
             ],
             xpOnComplete: 5
@@ -2574,7 +2574,7 @@ const MODULES = [
             pairs: [
               { term: 'Payment Plan', definition: 'Splits a balance into monthly installments, often for a small flat fee.' },
               { term: 'Bursar\'s Office', definition: "The school office that typically manages tuition billing and payment plans." },
-              { term: 'Cash-Flow Problem', definition: 'Having the total ability to pay, just not all at once — what a payment plan solves.' }
+              { term: 'Cash-Flow Problem', definition: 'Having the total ability to pay, just not all at once: what a payment plan solves.' }
             ],
             xpOnComplete: 4
           },
@@ -2683,7 +2683,7 @@ const MODULES = [
           {
             id: 'oc0', type: 'story', title: 'Every Dollar Has a Job',
             beats: [
-              { speaker: 'intro', text: "Hammy just spent $80 on a concert ticket without a second thought. But that $80 didn't just disappear — it was a choice. Today, you'll help Hammy see exactly what three spending decisions this week actually cost beyond the price tag." },
+              { speaker: 'intro', text: "Hammy just spent $80 on a concert ticket without a second thought. But that $80 didn't just disappear. It was a choice. Today, you'll help Hammy see exactly what three spending decisions this week actually cost beyond the price tag." },
               { speaker: 'Hammy', text: '"It\'s just $80, though. It\'s not like I can\'t afford it."' },
               { speaker: 'narrator', text: "Affording it and it being free are two different things. Every dollar spent is a dollar that stops being available for anything else." }
             ]
@@ -2691,7 +2691,7 @@ const MODULES = [
           {
             id: 'oc1', type: 'teach', title: 'Opportunity Cost',
             concepts: [
-              { term: 'Opportunity Cost', plain: "Every dollar you spend is a dollar that could have gone somewhere else. Opportunity cost is the value of the next-best thing you gave up to make that purchase.", analogy: "It's not just what you bought — it's everything else that money could have been instead.", check: { statement: 'Opportunity cost only applies to big purchases, not everyday spending.', isTrue: false } }
+              { term: 'Opportunity Cost', plain: "Every dollar you spend is a dollar that could have gone somewhere else. Opportunity cost is the value of the next-best thing you gave up to make that purchase.", analogy: "It's not just what you bought, it's everything else that money could have been instead.", check: { statement: 'Opportunity cost only applies to big purchases, not everyday spending.', isTrue: false } }
             ],
             xpOnComplete: 2
           },
@@ -2710,7 +2710,7 @@ const MODULES = [
             hintText: "Think about what that $80 could otherwise cover.",
             choices: [
               { id: 'a', label: 'Buy the ticket', outcome: { text: 'That\'s about 3 weeks of groceries, or $80 closer to the laptop fund, gone for one night out.', delta: { checking: -80 }, compare: [{ label: 'Spent', value: 80 }, { label: 'Kept', value: 0 }] } },
-              { id: 'b', label: 'Skip it, keep the $80', outcome: { text: 'A night out with friends, given up — but the $80 stays put.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 80 }] } }
+              { id: 'b', label: 'Skip it, keep the $80', outcome: { text: 'A night out with friends, given up, but the $80 stays put.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 80 }] } }
             ],
             xpOnComplete: 4
           },
@@ -2751,11 +2751,11 @@ const MODULES = [
           },
           {
             id: 'oc4', type: 'decision', title: 'Saturday: The Hoodie',
-            prompt: "A promo email offers 40% off a $60 hoodie — $36 for the next 2 hours. Hammy wasn't planning to buy anything.",
+            prompt: "A promo email offers 40% off a $60 hoodie: $36 for the next 2 hours. Hammy wasn't planning to buy anything.",
             hintText: "Was this already on the list, or is the countdown doing the deciding?",
             choices: [
               { id: 'a', label: 'Buy it, the deal is too good to pass up', outcome: { text: 'Almost a whole week of food delivery budget, spent on something not planned.', delta: { checking: -36 }, compare: [{ label: 'Spent', value: 36 }, { label: 'Kept', value: 0 }] } },
-              { id: 'b', label: 'Close the email and think it over for 24 hours', outcome: { text: 'If it\'s still wanted tomorrow, it\'ll likely still be there — the urgency wasn\'t real.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 36 }] } }
+              { id: 'b', label: 'Close the email and think it over for 24 hours', outcome: { text: 'If it\'s still wanted tomorrow, it\'ll likely still be there, the urgency wasn\'t real.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 36 }] } }
             ],
             xpOnComplete: 4
           },
@@ -2810,8 +2810,8 @@ const MODULES = [
             scenario: "Looking back at the week, Hammy realizes every \"yes\" had a real cost attached, even the small ones. One more offer shows up: a friend wants to split a $40 Uber to a party across town instead of taking a $6 bus.",
             hintText: "What's the actual gap between these two options, and what could that gap buy instead?",
             choices: [
-              { id: 'a', label: 'Split the Uber, it\'s more fun and faster', consequence: { text: 'That\'s $14 more than the bus for the same trip — a real cost for convenience.', delta: { checking: -20 }, xpMultiplier: 0.75 } },
-              { id: 'b', label: 'Take the bus and pocket the difference', consequence: { text: 'Same destination, more of that $40 still in checking — opportunity cost, applied.', delta: { checking: -6 }, xpMultiplier: 1.25 } }
+              { id: 'a', label: 'Split the Uber, it\'s more fun and faster', consequence: { text: 'That\'s $14 more than the bus for the same trip, a real cost for convenience.', delta: { checking: -20 }, xpMultiplier: 0.75 } },
+              { id: 'b', label: 'Take the bus and pocket the difference', consequence: { text: 'Same destination, more of that $40 still in checking: opportunity cost, applied.', delta: { checking: -6 }, xpMultiplier: 1.25 } }
             ]
           }
         ]
@@ -2826,7 +2826,7 @@ const MODULES = [
           {
             id: 'gz0', type: 'story', title: 'Sorting It Out',
             beats: [
-              { speaker: 'intro', text: "Marketing is designed to make wants feel like needs. Before Hammy's next purchase, can they actually tell the difference — and does it matter?" },
+              { speaker: 'intro', text: "Marketing is designed to make wants feel like needs. Before Hammy's next purchase, can they actually tell the difference, and does it matter?" },
               { speaker: 'Hammy', text: '"Everything I buy feels necessary in the moment. That can\'t all be true, right?"' },
               { speaker: 'narrator', text: "It's not, and the gap between \"feels necessary\" and \"actually is\" is exactly what's worth sorting out." }
             ]
@@ -2834,8 +2834,8 @@ const MODULES = [
           {
             id: 'gz1', type: 'teach', title: 'Needs, Wants & the Gray Zone',
             concepts: [
-              { term: 'Need', plain: "Something you can't reasonably go without — rent, groceries, a required textbook, insurance.", analogy: "If skipping it creates a real problem, it's a need.", check: { statement: 'A daily $6 coffee is generally considered a need.', isTrue: false } },
-              { term: '"It Depends"', plain: "Some expenses genuinely depend on context — a gym membership used three times a week supports your health; one forgotten about is just a recurring charge.", analogy: "Same expense, different situation, different answer.", check: { statement: 'Every expense fits neatly into either "need" or "want" with no in-between.', isTrue: false } }
+              { term: 'Need', plain: "Something you can't reasonably go without: rent, groceries, a required textbook, insurance.", analogy: "If skipping it creates a real problem, it's a need.", check: { statement: 'A daily $6 coffee is generally considered a need.', isTrue: false } },
+              { term: '"It Depends"', plain: "Some expenses genuinely depend on context. A gym membership used three times a week supports your health; one forgotten about is just a recurring charge.", analogy: "Same expense, different situation, different answer.", check: { statement: 'Every expense fits neatly into either "need" or "want" with no in-between.', isTrue: false } }
             ],
             xpOnComplete: 2
           },
@@ -2847,9 +2847,9 @@ const MODULES = [
           {
             id: 'gz2', type: 'matching', title: 'Match It! Need, Want, or Depends',
             pairs: [
-              { term: 'Rent', definition: 'Need — a real problem if skipped' },
-              { term: 'Concert tickets', definition: 'Want — nice to have, not essential' },
-              { term: 'A gym membership used 3x/week', definition: 'Depends — a want that supports health, if actually used' }
+              { term: 'Rent', definition: 'Need: a real problem if skipped' },
+              { term: 'Concert tickets', definition: 'Want: nice to have, not essential' },
+              { term: 'A gym membership used 3x/week', definition: 'Depends: a want that supports health, if actually used' }
             ],
             xpOnComplete: 4
           },
@@ -2884,7 +2884,7 @@ const MODULES = [
             prompt: "Hammy has five streaming subscriptions but can only remember actively watching two of them this month.",
             hintText: "Which category fits a subscription nobody remembers using?",
             choices: [
-              { id: 'a', label: 'Keep all five, cancelling feels like a hassle', outcome: { text: 'The three forgotten subscriptions are pure subscription creep — a want quietly billing every month.', delta: {}, compare: [{ label: 'Monthly cost kept', value: 45 }, { label: 'Could be saved', value: 27 }] } },
+              { id: 'a', label: 'Keep all five, cancelling feels like a hassle', outcome: { text: 'The three forgotten subscriptions are pure subscription creep: a want quietly billing every month.', delta: {}, compare: [{ label: 'Monthly cost kept', value: 45 }, { label: 'Could be saved', value: 27 }] } },
               { id: 'b', label: 'Cancel the three unused ones', outcome: { text: 'A monthly reminder to check for creep pays off immediately.', delta: {}, compare: [{ label: 'Monthly cost kept', value: 18 }, { label: 'Saved', value: 27 }] } }
             ],
             xpOnComplete: 5
@@ -2972,7 +2972,7 @@ const MODULES = [
           {
             id: 'bs1', type: 'teach', title: 'Step 1 & 2: Track & Sort',
             concepts: [
-              { term: 'Step 1: Track a Real Week of Spending', plain: "Before building a budget, look at what actually gets spent — pull up a week or two of bank and card transactions. Most people are surprised by at least one category.", analogy: "You can't fix a leak without first finding where the water is going.", check: { statement: 'The most useful first step in budgeting is guessing spending amounts instead of checking real transactions.', isTrue: false } },
+              { term: 'Step 1: Track a Real Week of Spending', plain: "Before building a budget, look at what actually gets spent: pull up a week or two of bank and card transactions. Most people are surprised by at least one category.", analogy: "You can't fix a leak without first finding where the water is going.", check: { statement: 'The most useful first step in budgeting is guessing spending amounts instead of checking real transactions.', isTrue: false } },
               { term: 'Step 2: Sort Into Needs, Wants, Savings', plain: "Label each expense from the tracked week as a need (rent, groceries), a want (dining out, subscriptions), or savings/debt payoff. This turns a vague sense of overspending into actual numbers per category.", analogy: "It's the same sorting exercise as needs vs. wants, just applied to real transactions instead of hypothetical examples.", check: {} }
             ],
             xpOnComplete: 3
@@ -2980,8 +2980,8 @@ const MODULES = [
           {
             id: 'bs2', type: 'teach', title: 'Step 3 & 4: Pick a Tool & Review',
             concepts: [
-              { term: 'Step 3: Pick a Tool to Track It', plain: "A budgeting app (many banks include one free), a simple spreadsheet, or even a notes app all work — the best tool is whichever one actually gets checked regularly. Set the 50/30/20 percentages as targets to compare against.", analogy: "The fanciest budgeting app in the world does nothing if it's never opened.", check: { statement: 'The most important feature of a budgeting tool is that it actually gets used consistently.', isTrue: true } },
-              { term: 'Step 4: Review & Adjust Monthly', plain: "At the end of each month, compare actual spending against the 50/30/20 targets. Going over in one category isn't a failure — it's information for adjusting next month.", analogy: "A budget isn't a grade to pass or fail, it's a dashboard to check and steer by.", check: {} }
+              { term: 'Step 3: Pick a Tool to Track It', plain: "A budgeting app (many banks include one free), a simple spreadsheet, or even a notes app all work. The best tool is whichever one actually gets checked regularly. Set the 50/30/20 percentages as targets to compare against.", analogy: "The fanciest budgeting app in the world does nothing if it's never opened.", check: { statement: 'The most important feature of a budgeting tool is that it actually gets used consistently.', isTrue: true } },
+              { term: 'Step 4: Review & Adjust Monthly', plain: "At the end of each month, compare actual spending against the 50/30/20 targets. Going over in one category isn't a failure, it's information for adjusting next month.", analogy: "A budget isn't a grade to pass or fail, it's a dashboard to check and steer by.", check: {} }
             ],
             xpOnComplete: 3
           },
@@ -3015,7 +3015,7 @@ const MODULES = [
         q: 'What is a high-yield savings account (HYSA)?',
         opts: ['An investment account that tracks the stock market', 'A savings account that earns significantly more interest than a standard bank account', 'A checking account with no monthly fees', 'A CD that locks your money for 5 years'],
         correct: 1,
-        exp: 'HYSAs pay 10–20x more interest than traditional savings. Look for APYs of 4–5%. A game changer on a student budget.'
+        exp: 'HYSAs pay 10–20x more interest than traditional savings. Look for APYs of 4–5%. A real difference on a student budget.'
       },
       {
         q: 'You have $50 extra at the end of the month. What\'s the smartest first move?',
@@ -3043,30 +3043,30 @@ const MODULES = [
       },
       {
         q: 'A traditional big-bank savings account pays 0.01% APY. An online high-yield savings account pays 4.5% APY. On a $1,000 balance, what\'s the real difference after a year?',
-        opts: ['Basically nothing, about $0.10 either way', 'About $0.10 in the traditional account versus about $45 in the HYSA — a huge gap for holding the exact same money', 'HYSAs are riskier, so the extra interest isn\'t worth it', 'Big banks always automatically match online rates'],
+        opts: ['Basically nothing, about $0.10 either way', 'About $0.10 in the traditional account versus about $45 in the HYSA, a huge gap for holding the exact same money', 'HYSAs are riskier, so the extra interest isn\'t worth it', 'Big banks always automatically match online rates'],
         correct: 1,
-        exp: '$1,000 × 0.01% ≈ $0.10. $1,000 × 4.5% ≈ $45. Same FDIC-insured safety, wildly different return — moving idle savings into a HYSA is one of the easiest wins available to a student.'
+        exp: '$1,000 × 0.01% ≈ $0.10. $1,000 × 4.5% ≈ $45. Same FDIC-insured safety, wildly different return: moving idle savings into a HYSA is one of the easiest wins available to a student.'
       },
       {
         q: 'You keep your entire checking balance right at $0 and don\'t link a savings account as backup. What\'s the risk?',
-        opts: ['There is no risk if you\'re careful', 'A single unexpected charge — a subscription renewal, a bounced Venmo request — can trigger an overdraft fee, often $30+ per incident', 'Banks won\'t charge fees to student accounts', 'Linking a backup account always costs extra'],
+        opts: ['There is no risk if you\'re careful', 'A single unexpected charge, like a subscription renewal or a bounced Venmo request, can trigger an overdraft fee, often $30+ per incident', 'Banks won\'t charge fees to student accounts', 'Linking a backup account always costs extra'],
         correct: 1,
-        exp: 'Overdraft fees stack quickly if your checking account runs at exactly $0. Many banks let you link a savings account as free automatic backup for small shortfalls — worth setting up even if you rarely need it.'
+        exp: 'Overdraft fees stack quickly if your checking account runs at exactly $0. Many banks let you link a savings account as free automatic backup for small shortfalls, worth setting up even if you rarely need it.'
       },
       {
         q: 'Every December you scramble to afford a flight home, and every January you\'re caught off guard by $400 in textbooks. What kind of saving strategy prevents this?',
-        opts: ['There\'s nothing you can do about predictable costs', 'A sinking fund — setting aside a little each month specifically for a known, recurring expense so the full amount is ready when it\'s due', 'Just put it on a credit card each time and pay it off eventually', 'Wait for a scholarship to cover it'],
+        opts: ['There\'s nothing you can do about predictable costs', 'A sinking fund: setting aside a little each month specifically for a known, recurring expense so the full amount is ready when it\'s due', 'Just put it on a credit card each time and pay it off eventually', 'Wait for a scholarship to cover it'],
         correct: 1,
-        exp: 'A sinking fund is different from an emergency fund — it\'s for expenses you know are coming (textbooks, holiday flights, spring break), not surprises. Saving $50/month specifically earmarked for "textbooks" means the January bill is no longer an emergency.'
+        exp: 'A sinking fund is different from an emergency fund: it\'s for expenses you know are coming (textbooks, holiday flights, spring break), not surprises. Saving $50/month specifically earmarked for "textbooks" means the January bill is no longer an emergency.'
       },
       {
         q: 'You want to save more but keep forgetting to move money over manually. What\'s an easy way to build the habit passively?',
         opts: ['Rely on remembering to transfer money every week', 'Use a round-up feature or automatic savings app that rounds purchases to the next dollar and saves the difference', 'Only save large lump sums once a year', 'Avoid checking your balance so you\'re not tempted to spend it'],
         correct: 1,
-        exp: 'Round-up tools save small, near-invisible amounts — rounding a $4.60 coffee to $5.00 — with zero ongoing effort. It won\'t replace a real savings plan, but it builds momentum quietly in the background.'
+        exp: 'Round-up tools save small, near-invisible amounts, rounding a $4.60 coffee to $5.00, with zero ongoing effort. It won\'t replace a real savings plan, but it builds momentum quietly in the background.'
       },
       {
-        q: 'You\'re saving for three things at once — an emergency fund, a laptop, and a spring break trip. What\'s the smartest way to organize this?',
+        q: 'You\'re saving for three things at once: an emergency fund, a laptop, and a spring break trip. What\'s the smartest way to organize this?',
         opts: ['Keep it all in one account and try to remember which portion is for what', 'Use named sub-accounts or savings "buckets" for each goal so you always know how close you are to each one', 'Only save for one goal at a time and ignore the others completely', 'Avoid setting specific goals since it makes saving stressful'],
         correct: 1,
         exp: 'Most online banks let you create multiple named savings buckets under one account. Separating goals keeps you from accidentally raiding one goal\'s progress for another, and makes progress toward each feel more real.'
@@ -3075,21 +3075,21 @@ const MODULES = [
         q: 'You only have $60 left this month to put toward savings, and you\'re torn between your emergency fund and a concert ticket fund. What\'s the smarter priority?',
         opts: ['Always split it evenly between every goal no matter what', 'Prioritize the emergency fund until it has at least a starter cushion (like $500–$1,000), since it protects you from going into debt', 'Always prioritize whichever goal is more fun', 'Skip saving entirely this month since it\'s not enough to matter'],
         correct: 1,
-        exp: 'Not all savings goals carry the same risk if left unfunded. An emergency fund protects you from debt when something breaks or goes wrong — that safety net comes before discretionary goals, even if it feels less exciting to fund.'
+        exp: 'Not all savings goals carry the same risk if left unfunded. An emergency fund protects you from debt when something breaks or goes wrong. That safety net comes before discretionary goals, even if it feels less exciting to fund.'
       },
       {
         q: 'You commit to saving $50/month through an automatic transfer. After 12 months, how much have you saved, not counting interest?',
         opts: ['$50', '$300', '$600', '$1,200'],
         correct: 2,
-        exp: '$50 × 12 = $600 saved with zero extra effort once the transfer is automated. Add even a modest HYSA interest rate on top and the number climbs a bit higher — proof that consistency, not the size of each deposit, is what builds the balance.'
+        exp: '$50 × 12 = $600 saved with zero extra effort once the transfer is automated. Add even a modest HYSA interest rate on top and the number climbs a bit higher, proof that consistency, not the size of each deposit, is what builds the balance.'
       }
     ],
     lessons: [
-      { title: 'High-Yield Savings', hook: 'You check your big bank\'s savings account: 0.01% APY. A friend mentions their online account pays 4.5%. Same FDIC insurance, same $1,000 balance — what\'s actually different?', qIndices: [0, 5] },
+      { title: 'High-Yield Savings', hook: 'You check your big bank\'s savings account: 0.01% APY. A friend mentions their online account pays 4.5%. Same FDIC insurance, same $1,000 balance, what\'s actually different?', qIndices: [0, 5] },
       { title: 'Checking vs. Savings & Avoiding Fees', hook: 'You keep your checking account hovering right around $0 between paychecks. One surprise subscription renewal later, you\'re hit with a $34 overdraft fee. What should you have set up?', qIndices: [2, 6] },
       { title: 'How Interest & Consistency Add Up', hook: 'You set up an automatic $50/month transfer to savings and mostly forget about it. A year later, you check the balance and don\'t recognize the number. How did doing basically nothing add up to this much?', qIndices: [3, 11] },
-      { title: 'Sinking Funds for Predictable Costs', hook: 'Your laptop just died during finals week. A replacement costs $400. You have $47 in your checking account. This is what a missing emergency fund looks like — and it\'s completely avoidable.', qIndices: [7, 1] },
-      { title: 'Automating Your Savings', hook: 'You\'ve decided to start saving, but at the end of every month there\'s nothing left. You keep saying "I\'ll save whatever\'s left" — but there\'s never anything left. What changes?', qIndices: [4, 8] },
+      { title: 'Sinking Funds for Predictable Costs', hook: 'Your laptop just died during finals week. A replacement costs $400. You have $47 in your checking account. This is what a missing emergency fund looks like, and it\'s completely avoidable.', qIndices: [7, 1] },
+      { title: 'Automating Your Savings', hook: 'You\'ve decided to start saving, but at the end of every month there\'s nothing left. You keep saying "I\'ll save whatever\'s left," but there\'s never anything left. What changes?', qIndices: [4, 8] },
       { title: 'Setting & Prioritizing Savings Goals', hook: 'You\'re saving for an emergency fund, a new laptop, and a spring break trip all at once, with only $60 free this month. Do you split it evenly, or does one of these actually matter more right now?', qIndices: [9, 10] }
     ],
     quests: [
@@ -3532,7 +3532,7 @@ const MODULES = [
           {
             id: 'cvs_m1', type: 'matching', title: 'Match It! Round 1',
             pairs: [
-              { term: 'Checking', definition: 'Built for constant movement — everyday spending and bill payments.' },
+              { term: 'Checking', definition: 'Built for constant movement: everyday spending and bill payments.' },
               { term: 'Savings', definition: 'Built for holding money toward a goal, usually earning interest.' },
               { term: 'Living at $0', definition: 'Keeping a checking balance right at zero with no buffer.' }
             ],
@@ -4327,7 +4327,7 @@ const MODULES = [
           {
             id: 'os0', type: 'story', title: 'Time to Actually Open One',
             beats: [
-              { speaker: 'intro', text: "Hammy knows a high-yield savings account beats a big bank's 0.01% APY — but the account itself doesn't exist yet. Knowing the theory and actually doing the paperwork are two different things. Let's walk through it, step by step." }
+              { speaker: 'intro', text: "Hammy knows a high-yield savings account beats a big bank's 0.01% APY, but the account itself doesn't exist yet. Knowing the theory and actually doing the paperwork are two different things. Let's walk through it, step by step." }
             ]
           },
           {
@@ -4335,13 +4335,13 @@ const MODULES = [
             concepts: [
               {
                 term: 'Step 1: Compare a Few Options',
-                plain: "Look for the highest APY with no monthly fees and no minimum balance requirement — several online banks typically compete for the top rates with none of those catches, though the exact leaders and numbers shift with the market, so it's worth checking current rates rather than trusting any one number for long. FDIC insurance up to $250,000 is standard on real banks and non-negotiable — never open an account without it.",
-                analogy: "Shopping for a savings account is like comparing phone plans — same basic service, but the fine print on fees and rates varies a lot.",
+                plain: "Look for the highest APY with no monthly fees and no minimum balance requirement. Several online banks typically compete for the top rates with none of those catches, though the exact leaders and numbers shift with the market, so it's worth checking current rates rather than trusting any one number for long. FDIC insurance up to $250,000 is standard on real banks and non-negotiable: never open an account without it.",
+                analogy: "Shopping for a savings account is like comparing phone plans, same basic service, but the fine print on fees and rates varies a lot.",
                 check: { statement: 'FDIC insurance is an optional extra that most savings accounts don\'t include.', isTrue: false }
               },
               {
                 term: 'Step 2: Apply Online',
-                plain: "Most online banks let you apply in about 10 minutes: legal name, address, Social Security number, and a way to fund the initial deposit — often by linking an existing checking account.",
+                plain: "Most online banks let you apply in about 10 minutes: legal name, address, Social Security number, and a way to fund the initial deposit, often by linking an existing checking account.",
                 analogy: "It's the same basic information as any account signup, just with a routing and account number at the end to link it.",
                 check: { statement: 'Opening an online HYSA typically requires visiting a branch in person.', isTrue: false }
               }
@@ -4353,14 +4353,14 @@ const MODULES = [
             concepts: [
               {
                 term: 'Step 3: Make the First Deposit',
-                plain: "Transfer money from an existing checking account — this usually takes 1–3 business days to clear the first time. Many online banks have no minimum opening deposit at all.",
-                analogy: "Think of it as the first move-in payment — after that, deposits and transfers move faster.",
+                plain: "Transfer money from an existing checking account. This usually takes 1–3 business days to clear the first time. Many online banks have no minimum opening deposit at all.",
+                analogy: "Think of it as the first move-in payment, after that, deposits and transfers move faster.",
                 check: { statement: 'Most online HYSAs require a large minimum deposit just to open the account.', isTrue: false }
               },
               {
                 term: 'Step 4: Automate a Recurring Transfer',
-                plain: "Set up an automatic transfer for payday — even $25 per paycheck — so saving happens without having to remember. This is the single easiest way to actually build the habit.",
-                analogy: "\"Pay yourself first\" — the transfer happens before there's a chance to spend it.",
+                plain: "Set up an automatic transfer for payday, even $25 per paycheck, so saving happens without having to remember. This is the single easiest way to actually build the habit.",
+                analogy: "\"Pay yourself first\": the transfer happens before there's a chance to spend it.",
                 check: { statement: 'Automating a recurring transfer is one of the most effective ways to actually save consistently.', isTrue: true }
               }
             ],
