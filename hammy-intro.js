@@ -1,7 +1,7 @@
 // ─── HAMMY ONBOARDING INTRO ───
 // The animated "meet Hammy" sequence that replaced the static "A new piggy was
 // born!" popup. runFirstLoadSequence (app.js) calls startHammyIntro() once,
-// between the onboarding survey and the spotlight tour; onDone fires exactly
+// as the first step of onboarding (before the survey); onDone fires exactly
 // once whether the user watches the whole thing or taps Skip, and by then the
 // overlay, timers, and audio are fully torn down.
 //

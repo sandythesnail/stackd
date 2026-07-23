@@ -17035,14 +17035,10 @@ function finishOnboardingSurvey(skipped) {
 }
 
 // Runs on every load and after each step of the first-time flow completes, so the sequence
-// is always: onboarding survey, then meeting Hammy, then the spotlight tour, in that fixed
-// order, never more than one stacked on screen at once. A returning user who's already done
-// all three just falls through immediately.
+// is always: meeting Hammy (the animated intro), then the onboarding survey, then the
+// spotlight tour, in that fixed order, never more than one stacked on screen at once. A
+// returning user who's already done all three just falls through immediately.
 function runFirstLoadSequence() {
-  if (!state.onboardingSurvey.completed) {
-    showOnboardingSurvey();
-    return;
-  }
   if (!state.metHammy) {
     // Animated "meet Hammy" intro (hammy-intro.js) — replaced the static
     // "A new piggy was born!" popup. Completing OR skipping it counts as met.
@@ -17051,6 +17047,10 @@ function runFirstLoadSequence() {
       saveState();
       runFirstLoadSequence();
     });
+    return;
+  }
+  if (!state.onboardingSurvey.completed) {
+    showOnboardingSurvey();
     return;
   }
   if (!state.hasSeenOnboardingTour) {

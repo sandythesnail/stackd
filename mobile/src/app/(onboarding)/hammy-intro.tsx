@@ -2,17 +2,17 @@ import { useEffect, useRef, useState, useId } from 'react';
 import { View, Animated, Easing, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path, Rect, Ellipse, Circle, Polygon, Defs, ClipPath, G } from 'react-native-svg';
+import Svg, { Path, Rect, Ellipse, Circle, Polygon, Defs, ClipPath, G, RadialGradient, Stop } from 'react-native-svg';
 import { Txt, Hammy, Coin, Diamond } from '@/components';
 import { colors, font } from '@/theme';
 import { REACTION_FACES, MOOD_FACES, type FaceOverlay } from '@/hammyFaces';
 
 /** Screen — animated "meet Hammy" intro. Replaces the old static piggy-born
- * screen and now runs AFTER the survey, BEFORE the home-screen spotlight tour:
- * the piggy bank drops in, cracks open in a coin/diamond/sparkle burst, Hammy
- * emerges and walks the user through three tappable dialogue beats, then hops
- * off-screen and lands them on Home (where the tour auto-starts for first-time
- * users — see home.tsx). Ported from the website's hammy-intro.js.
+ * screen and leads off onboarding, BEFORE the survey: the piggy bank drops in,
+ * cracks open in a coin/diamond/sparkle burst, Hammy emerges and walks the
+ * user through three tappable dialogue beats, then hops off-screen into the
+ * survey (which lands on Home, where the spotlight tour auto-starts for
+ * first-time users — see home.tsx). Ported from the website's hammy-intro.js.
  *
  * No jingle SFX here yet: the repo has no audio library (expo-av/expo-audio)
  * and adding a native module is a build-affecting decision — the web version
@@ -187,15 +187,14 @@ export default function HammyIntro() {
   const at = (ms: number, fn: () => void) => { timers.current.push(setTimeout(fn, ms)); };
 
   /* Single exit path for the natural ending and Skip — clears every pending
-     timer so nothing fires after navigation. push, not replace: crossing into
-     the (tabs) branch via replace() has a known blank-screen failure (see
-     survey.tsx / results.tsx). */
+     timer so nothing fires after navigation. Continues into the survey, the
+     next onboarding step. */
   const finish = () => {
     if (finished.current) return;
     finished.current = true;
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    router.push('/(tabs)/home');
+    router.push('/(onboarding)/survey');
   };
 
   const playWave = () => {
@@ -309,7 +308,9 @@ export default function HammyIntro() {
     ],
   };
 
-  const hammyBottom = H * 0.16;
+  // Hammy vertically centered on the screen (200-tall body), bubble above him,
+  // clear of the reply chip at the bottom.
+  const hammyBottom = H / 2 - 100;
 
   return (
     <View style={styles.wrap}>
@@ -354,8 +355,19 @@ export default function HammyIntro() {
         </>
       ) : null}
 
-      {/* white flash on the pop */}
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.flash, { opacity: flashOp }]} />
+      {/* flash on the pop — a soft radial burst of light (matching the web's
+          radial-gradient .hi-flash), NOT a flat full-screen white rectangle */}
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: flashOp }]}>
+        <Svg width="100%" height="100%">
+          <Defs>
+            <RadialGradient id={`flash-${uid}`} cx="50%" cy="52%" r="60%">
+              <Stop offset="0" stopColor="#ffffff" stopOpacity={0.95} />
+              <Stop offset="0.65" stopColor="#ffffff" stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill={`url(#flash-${uid})`} />
+        </Svg>
+      </Animated.View>
 
       <SafeAreaView style={styles.chrome} pointerEvents="box-none">
         {!finished.current ? (
@@ -389,7 +401,6 @@ const styles = StyleSheet.create({
     borderColor: '#FF96B8',
   },
   particle: { position: 'absolute', left: -20, top: -20 },
-  flash: { backgroundColor: 'rgba(255,255,255,0.92)' },
   hammyWrap: { position: 'absolute', alignSelf: 'center' },
   bubble: {
     position: 'absolute',
