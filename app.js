@@ -17018,8 +17018,13 @@ function runFirstLoadSequence() {
     return;
   }
   if (!state.metHammy) {
-    document.getElementById('birth-pig-wrap').innerHTML = getPigMarkup(0.22);
-    document.getElementById('birth-overlay').classList.add('visible');
+    // Animated "meet Hammy" intro (hammy-intro.js) — replaced the static
+    // "A new piggy was born!" popup. Completing OR skipping it counts as met.
+    startHammyIntro(() => {
+      state.metHammy = true;
+      saveState();
+      runFirstLoadSequence();
+    });
     return;
   }
   if (!state.hasSeenOnboardingTour) {
@@ -21558,12 +21563,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.maybeShowFirstTimeExperience = runFirstLoadSequence;
   window.maybeClaimReferrerRewards = maybeClaimReferrerRewards;
 
-  document.getElementById('birth-ok').addEventListener('click', () => {
-    document.getElementById('birth-overlay').classList.remove('visible');
-    state.metHammy = true;
-    saveState();
-    runFirstLoadSequence();
-  });
   document.getElementById('onboarding-skip').addEventListener('click', () => finishOnboardingSurvey(true));
   document.getElementById('tour-next').addEventListener('click', advanceOnboardingTour);
   document.getElementById('tour-skip').addEventListener('click', endOnboardingTour);
