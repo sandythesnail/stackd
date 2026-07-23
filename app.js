@@ -4424,51 +4424,51 @@ const MODULES = [
       },
       {
         q: 'You have $500 and a friend suggests putting it all into one company\'s stock because "it\'s going to blow up." What\'s the risk with this approach?',
-        opts: ['There\'s no risk if you pick the right company', 'Putting all your money in one stock means your entire investment depends on that single company\'s performance — diversification spreads that risk across many companies', 'Diversification only matters for investors with over $100,000', 'Single stocks always outperform diversified funds'],
+        opts: ['There\'s no risk if you pick the right company', 'Putting all your money in one stock means your entire investment depends on that single company\'s performance: diversification spreads that risk across many companies', 'Diversification only matters for investors with over $100,000', 'Single stocks always outperform diversified funds'],
         correct: 1,
-        exp: 'Even great companies can crash unexpectedly. Diversification — spreading money across many companies through something like an index fund — means one company\'s bad quarter doesn\'t wipe out your investment.'
+        exp: 'Even great companies can crash unexpectedly. Diversification, spreading money across many companies through something like an index fund, means one company\'s bad quarter doesn\'t wipe out your investment.'
       },
       {
         q: 'You\'re 19 and only have $2,000 in babysitting cash with no formal paperwork. Can you contribute to a Roth IRA?',
-        opts: ['No, Roth IRAs are only for people over 25', 'No, you need a college degree first', 'Yes — as long as it\'s earned income, even informal work counts, and you can contribute up to that amount or the annual limit, whichever is lower', 'Yes, but only if a parent opens the account for you'],
+        opts: ['No, Roth IRAs are only for people over 25', 'No, you need a college degree first', 'Yes, as long as it\'s earned income, even informal work counts, and you can contribute up to that amount or the annual limit, whichever is lower', 'Yes, but only if a parent opens the account for you'],
         correct: 2,
-        exp: 'Roth IRA eligibility is based on having earned income, not age or job type — babysitting, tutoring, and part-time jobs all count. You can contribute up to the amount you earned or the annual IRS limit, whichever is smaller.'
+        exp: 'Roth IRA eligibility is based on having earned income, not age or job type. Babysitting, tutoring, and part-time jobs all count. You can contribute up to the amount you earned or the annual IRS limit, whichever is smaller.'
       },
       {
         q: 'You\'re 19 and investing for retirement decades away. A friend who\'s 60 and retiring soon has a very different portfolio. What should be different about yours?',
-        opts: ['Nothing, everyone should invest identically regardless of age', 'With decades until retirement, you can typically afford to hold more stocks — higher short-term volatility, higher long-term growth — while someone near retirement shifts toward more stable investments like bonds', 'You should invest more conservatively than someone who is retiring soon', 'You should avoid the stock market entirely until you\'re older'],
+        opts: ['Nothing, everyone should invest identically regardless of age', 'With decades until retirement, you can typically afford to hold more stocks (higher short-term volatility, higher long-term growth), while someone near retirement shifts toward more stable investments like bonds', 'You should invest more conservatively than someone who is retiring soon', 'You should avoid the stock market entirely until you\'re older'],
         correct: 1,
         exp: 'Time horizon drives risk tolerance. Decades of runway mean you can ride out short-term stock market dips in exchange for higher long-term growth. Someone nearing retirement has less time to recover from a downturn, so they typically shift toward more stable investments.'
       },
       {
         q: 'You only have $25/month to invest and think it\'s not worth starting until you have more money saved up. What\'s the flaw in that thinking?',
-        opts: ['It\'s correct — investing small amounts isn\'t worth it', 'Investing consistently, even in small amounts (dollar-cost averaging), gets your money into the market sooner and builds the habit — waiting for a "big enough" amount often means never starting', 'You need at least $1,000 to open any investment account', 'Small investments are illegal'],
+        opts: ['It\'s correct, investing small amounts isn\'t worth it', 'Investing consistently, even in small amounts (dollar-cost averaging), gets your money into the market sooner and builds the habit. Waiting for a "big enough" amount often means never starting', 'You need at least $1,000 to open any investment account', 'Small investments are illegal'],
         correct: 1,
-        exp: 'Dollar-cost averaging — investing a fixed amount on a regular schedule — means you buy at different prices over time and don\'t have to correctly "time" the market. Waiting to invest until you have more money almost always costs you more in lost time than it saves.'
+        exp: 'Dollar-cost averaging, investing a fixed amount on a regular schedule, means you buy at different prices over time and don\'t have to correctly "time" the market. Waiting to invest until you have more money almost always costs you more in lost time than it saves.'
       },
       {
         q: 'Your job offers a 403(b) with a 3% match, and you\'re also eligible to open a Roth IRA. If you can\'t max out both, what\'s the typical smart order?',
-        opts: ['Always max the Roth IRA first and ignore any employer match', 'Contribute enough to the 403(b) to get the full employer match first (free money), then direct extra savings to a Roth IRA', 'Only ever use one account — pick whichever has a better name', 'Employer plans and Roth IRAs cannot both be used by the same person'],
+        opts: ['Always max the Roth IRA first and ignore any employer match', 'Contribute enough to the 403(b) to get the full employer match first (free money), then direct extra savings to a Roth IRA', 'Only ever use one account: pick whichever has a better name', 'Employer plans and Roth IRAs cannot both be used by the same person'],
         correct: 1,
         exp: 'The order that maximizes free money: capture the full employer match first since it\'s an immediate guaranteed return, then build up a Roth IRA for its tax-free growth and broader investment choices. Both can be used together.'
       },
       {
         q: 'An index fund had a great year last year, so a friend suggests putting all your investing money into "whatever performed best last year." What\'s wrong with this strategy?',
-        opts: ['Nothing, past winners always keep winning', 'Past performance doesn\'t guarantee future results — chasing last year\'s top performer is a common beginner mistake instead of sticking to a diversified, long-term strategy', 'You should always buy whatever underperformed last year instead', 'Fund performance never changes year to year'],
+        opts: ['Nothing, past winners always keep winning', 'Past performance doesn\'t guarantee future results. Chasing last year\'s top performer is a common beginner mistake instead of sticking to a diversified, long-term strategy', 'You should always buy whatever underperformed last year instead', 'Fund performance never changes year to year'],
         correct: 1,
         exp: 'Markets are cyclical, and last year\'s top performer is not a reliable predictor of next year\'s results. A consistent, diversified, long-term strategy tends to beat chasing performance.'
       },
       {
         q: 'The stock market drops 15% right after you start investing. What\'s typically the smartest response for a young investor with a long time horizon?',
-        opts: ['Sell everything immediately to avoid further losses', 'Stay invested (or keep contributing) since market dips are normal and selling locks in the loss — time in the market matters more than timing it', 'Stop investing completely for several years', 'Panic and move all your money to cash permanently'],
+        opts: ['Sell everything immediately to avoid further losses', 'Stay invested (or keep contributing) since market dips are normal and selling locks in the loss: time in the market matters more than timing it', 'Stop investing completely for several years', 'Panic and move all your money to cash permanently'],
         correct: 1,
-        exp: 'Market downturns are a normal, expected part of investing — not a signal to sell. Selling during a dip turns a temporary paper loss into a permanent one. With decades until retirement, staying invested lets you buy in at lower prices and recover as markets historically have.'
+        exp: 'Market downturns are a normal, expected part of investing, not a signal to sell. Selling during a dip turns a temporary paper loss into a permanent one. With decades until retirement, staying invested lets you buy in at lower prices and recover as markets historically have.'
       }
     ],
     lessons: [
       { title: 'Compound Interest & Time', hook: 'Two students each invest $1,000 into the same fund. Alex starts at 18, Sam starts at 28. At 65, Alex has $21,000. Sam has $10,700. Same amount invested. What made the difference?', qIndices: [1, 2] },
-      { title: 'Roth IRA Basics', hook: 'You have $50/month to invest and someone says "open a Roth IRA." You\'ve heard the words but don\'t know if you even qualify — do you need a big salary, a certain age, or a special account first?', qIndices: [0, 6] },
-      { title: 'Contribution Limits & Where to Save First', hook: 'Your job offers a 403(b) with a match, and you\'re also eligible for a Roth IRA with a $7,500 annual limit. You can\'t max out both right now — which comes first?', qIndices: [4, 9] },
+      { title: 'Roth IRA Basics', hook: 'You have $50/month to invest and someone says "open a Roth IRA." You\'ve heard the words but don\'t know if you even qualify. Do you need a big salary, a certain age, or a special account first?', qIndices: [0, 6] },
+      { title: 'Contribution Limits & Where to Save First', hook: 'Your job offers a 403(b) with a match, and you\'re also eligible for a Roth IRA with a $7,500 annual limit. You can\'t max out both right now. Which comes first?', qIndices: [4, 9] },
       { title: 'Index Funds & Diversification', hook: 'A friend tells you to put your $500 savings into one stock they\'re sure will "blow up." Another friend says index funds are the smarter move. What\'s actually different about spreading your money across hundreds of companies?', qIndices: [3, 5] },
       { title: 'Risk, Time Horizon & Staying the Course', hook: 'The market drops 15% the same month you started investing, right as your 60-year-old parent\'s retirement account also takes a hit. Should you both be reacting the same way?', qIndices: [7, 11] },
       { title: 'Getting Started Small', hook: 'You only have $25/month to invest and figure it\'s not worth starting until you\'ve saved up more. Meanwhile a friend jumps into whatever fund had the best return last year. Is either of you making the smart move?', qIndices: [8, 10] }
@@ -5677,7 +5677,7 @@ const MODULES = [
           {
             id: 'ob0', type: 'story', title: 'Ready to Actually Start',
             beats: [
-              { speaker: 'intro', text: "Hammy understands compound interest and index funds now — but the account itself has never actually been opened. Knowing the theory and doing the paperwork are two different things. Let's walk through it." }
+              { speaker: 'intro', text: "Hammy understands compound interest and index funds now, but the account itself has never actually been opened. Knowing the theory and doing the paperwork are two different things. Let's walk through it." }
             ]
           },
           {
@@ -5685,8 +5685,8 @@ const MODULES = [
             concepts: [
               {
                 term: 'Step 1: Pick a Brokerage',
-                plain: "Fidelity, Schwab, and Vanguard are common no-fee options for beginners — look for $0 account minimums, $0 commission on stock and ETF trades, and no monthly maintenance fees. Any of the major ones work fine for a first account.",
-                analogy: "Picking a brokerage is like picking a bank — the big reputable ones are all safe bets, the differences are mostly app experience and fund selection.",
+                plain: "Fidelity, Schwab, and Vanguard are common no-fee options for beginners: look for $0 account minimums, $0 commission on stock and ETF trades, and no monthly maintenance fees. Any of the major ones work fine for a first account.",
+                analogy: "Picking a brokerage is like picking a bank: the big reputable ones are all safe bets, the differences are mostly app experience and fund selection.",
                 check: { statement: 'You need thousands of dollars saved up before you can open a brokerage account.', isTrue: false }
               },
               {
@@ -5703,13 +5703,13 @@ const MODULES = [
             concepts: [
               {
                 term: 'Step 3: Link a Bank & Fund It',
-                plain: "Connect a checking account the same way as any other online account — routing and account number, or a secure bank login. Most brokerages let you start with any amount, even $5 or $10, there's no minimum most of the time.",
+                plain: "Connect a checking account the same way as any other online account: routing and account number, or a secure bank login. Most brokerages let you start with any amount, even $5 or $10, there's no minimum most of the time.",
                 analogy: "Funding the account is just a transfer, like Venmo-ing money into a separate account that happens to invest it.",
                 check: { statement: 'Most modern brokerages require a large minimum deposit before you can fund the account.', isTrue: false }
               },
               {
                 term: 'Step 4: Buy an Index Fund',
-                plain: "Once funded, search for a broad index fund (like one tracking the S&P 500), enter a dollar amount or number of shares, and place the order. A \"market order\" buys at the current price immediately — the simplest choice for a first trade.",
+                plain: "Once funded, search for a broad index fund (like one tracking the S&P 500), enter a dollar amount or number of shares, and place the order. A \"market order\" buys at the current price immediately, the simplest choice for a first trade.",
                 analogy: "It's like checkout on a shopping site: pick the item, confirm the amount, submit.",
                 check: { statement: 'A market order buys at whatever the current price happens to be right now.', isTrue: true }
               }
@@ -5719,9 +5719,9 @@ const MODULES = [
           {
             id: 'ob3', type: 'decision', title: 'The First $50',
             prompt: "Hammy has $50 to invest for the first time. The brokerage account is open and funded. What's the smartest first move?",
-            hintText: "Think back to diversification — one company, or many at once?",
+            hintText: "Think back to diversification: one company, or many at once?",
             choices: [
-              { id: 'a', label: 'Buy $50 of a single trending stock', outcome: { text: "One company's bad quarter can wipe out the investment — concentrated risk for a first trade.", delta: {}, compare: [{ label: 'Companies owned', value: 1 }, { label: 'Diversified option', value: 500 }] } },
+              { id: 'a', label: 'Buy $50 of a single trending stock', outcome: { text: "One company's bad quarter can wipe out the investment: concentrated risk for a first trade.", delta: {}, compare: [{ label: 'Companies owned', value: 1 }, { label: 'Diversified option', value: 500 }] } },
               { id: 'b', label: 'Buy $50 of a broad index fund', outcome: { text: "Instant exposure to hundreds of companies at once, with the exact same $50.", delta: {}, compare: [{ label: 'Companies owned', value: 500 }, { label: 'Single-stock option', value: 1 }] } }
             ],
             xpOnComplete: 4
@@ -5776,7 +5776,7 @@ const MODULES = [
         q: 'You have no credit history at all. What\'s a common way for a student to start building credit safely?',
         opts: ['You can\'t build credit until you have a full-time job', 'Become an authorized user on a parent\'s card, get a secured or student credit card, and make small purchases you pay off in full each month', 'Take out the largest loan you can qualify for', 'Avoid all forms of credit until age 25'],
         correct: 1,
-        exp: 'Options built for beginners — student credit cards, secured cards backed by a refundable deposit, or becoming an authorized user on a parent\'s well-managed card — let you start building payment history safely, often with a low limit while you learn the ropes.'
+        exp: 'Options built for beginners (student credit cards, secured cards backed by a refundable deposit, or becoming an authorized user on a parent\'s well-managed card) let you start building payment history safely, often with a low limit while you learn the ropes.'
       },
       {
         q: 'Which of these is a common credit mistake students make?',
@@ -5788,31 +5788,31 @@ const MODULES = [
         q: 'A store offers you 20% off today if you open their retail credit card. What\'s the hidden risk?',
         opts: ['There is no risk, store cards are identical to regular cards', 'Store cards often carry very high APRs (sometimes 25–30%+), so carrying a balance can cost far more than the discount was worth', 'Store cards never affect your credit score', 'You can only use store cards at that one retailer forever'],
         correct: 1,
-        exp: 'Retail/store cards frequently carry some of the highest APRs available. A one-time 20% discount can be wiped out fast if you carry a balance at 28% APR for even a couple months. If you open one, treat it like any card — pay it off in full.'
+        exp: 'Retail/store cards frequently carry some of the highest APRs available. A one-time 20% discount can be wiped out fast if you carry a balance at 28% APR for even a couple months. If you open one, treat it like any card: pay it off in full.'
       },
       {
         q: 'Beyond your three-digit credit score, what else lives on your credit report?',
-        opts: ['Nothing else, the score is the entire report', 'A full history of your credit accounts, balances, payment history, and hard inquiries — all checkable for free once a year at annualcreditreport.com', 'Your bank account balance and daily spending habits', 'Your college GPA and academic record'],
+        opts: ['Nothing else, the score is the entire report', 'A full history of your credit accounts, balances, payment history, and hard inquiries, all checkable for free once a year at annualcreditreport.com', 'Your bank account balance and daily spending habits', 'Your college GPA and academic record'],
         correct: 1,
-        exp: 'Your credit report is the detailed record; your score is a single number summarizing it. Checking your full report yearly — free, from all three bureaus, via annualcreditreport.com — helps you catch errors or fraud that the score alone won\'t show.'
+        exp: 'Your credit report is the detailed record; your score is a single number summarizing it. Checking your full report yearly (free, from all three bureaus, via annualcreditreport.com) helps you catch errors or fraud that the score alone won\'t show.'
       },
       {
         q: 'You check your free credit report and spot a credit card account you never opened. What should you do?',
         opts: ['Ignore it, it will probably fall off eventually', 'File a dispute directly with the credit bureau reporting it, and consider a fraud alert if it looks like identity theft', 'Close all of your other accounts immediately', 'Wait until your score drops further before taking action'],
         correct: 1,
-        exp: 'Errors and fraudulent accounts don\'t fix themselves. Dispute the item directly with the credit bureau (Equifax, Experian, or TransUnion) as soon as you spot it — the longer it sits, the more it can drag down your score.'
+        exp: 'Errors and fraudulent accounts don\'t fix themselves. Dispute the item directly with the credit bureau (Equifax, Experian, or TransUnion) as soon as you spot it. The longer it sits, the more it can drag down your score.'
       },
       {
         q: 'Two students have the same on-time payment record, but one has had a credit card for 4 years and the other for 4 months. How does this affect their scores?',
         opts: ['Length of credit history has no impact on your score', 'A longer credit history generally helps your score, which is why closing your oldest card can quietly hurt you even if you stop using it', 'Only the newest account matters for scoring', 'Length of history only matters after you turn 30'],
         correct: 1,
-        exp: 'Length of credit history is one of the standard FICO scoring factors. It\'s also why financial advice often says to keep your oldest card open — even with a small occasional charge — rather than closing it once you stop using it regularly.'
+        exp: 'Length of credit history is one of the standard FICO scoring factors. It\'s also why financial advice often says to keep your oldest card open (even with a small occasional charge) rather than closing it once you stop using it regularly.'
       },
       {
         q: 'You\'re rate-shopping for a car loan and a lender checks your credit as part of a pre-qualification quote. Is this the same as applying for a new credit card?',
-        opts: ['Yes, both always hurt your score the same amount', 'Not necessarily — a "soft" inquiry like pre-qualification typically doesn\'t affect your score, while a "hard" inquiry like a full application can cause a small, temporary dip', 'Soft inquiries are illegal for lenders to run', 'Hard inquiries permanently and severely damage your score forever'],
+        opts: ['Yes, both always hurt your score the same amount', 'Not necessarily: a "soft" inquiry like pre-qualification typically doesn\'t affect your score, while a "hard" inquiry like a full application can cause a small, temporary dip', 'Soft inquiries are illegal for lenders to run', 'Hard inquiries permanently and severely damage your score forever'],
         correct: 1,
-        exp: 'Soft inquiries — pre-qualification checks, checking your own score — don\'t affect your score. Hard inquiries — a full application for a card or loan — cause a small, temporary dip and stay on your report for about two years.'
+        exp: 'Soft inquiries (pre-qualification checks, checking your own score) don\'t affect your score. Hard inquiries (a full application for a card or loan) cause a small, temporary dip and stay on your report for about two years.'
       }
     ],
     lessons: [
@@ -5820,8 +5820,8 @@ const MODULES = [
       { title: 'Utilization & Store Cards', hook: 'Your roommate got 20% off by opening a store credit card at checkout. Meanwhile you\'re both told to keep your credit utilization under 30%. Are these two things related?', qIndices: [1, 7] },
       { title: 'Building Credit From Scratch', hook: 'You\'ve never had a credit card, loan, or any credit history at all. Meanwhile you keep hearing that checking your own score doesn\'t hurt it, but applying for five cards at once might. What\'s actually true?', qIndices: [5, 11] },
       { title: 'Common Mistakes That Hurt Your Score', hook: 'Your friend co-signed a car loan for their sibling and closed their oldest credit card the same month "to simplify things." Their score dropped 60 points. What happened?', qIndices: [3, 6] },
-      { title: 'The FICO Scale', hook: 'Your roommate got an apartment at a better rate because their credit score was 720. Yours was 610 — despite having a card for the same amount of time. What actually goes into that number?', qIndices: [4, 10] },
-      { title: 'Credit Reports & Disputing Errors', hook: 'You get an alert that an account you don\'t recognize just showed up on your credit report. Before panicking, do you even know what\'s normally on there — or how to get it fixed?', qIndices: [8, 9] }
+      { title: 'The FICO Scale', hook: 'Your roommate got an apartment at a better rate because their credit score was 720. Yours was 610, despite having a card for the same amount of time. What actually goes into that number?', qIndices: [4, 10] },
+      { title: 'Credit Reports & Disputing Errors', hook: 'You get an alert that an account you don\'t recognize just showed up on your credit report. Before panicking, do you even know what\'s normally on there, or how to get it fixed?', qIndices: [8, 9] }
     ],
     quests: [
       {
@@ -6028,14 +6028,14 @@ const MODULES = [
             {
               term: 'The Five Factors of Your Score',
               plain: "Your credit score is built from five weighted factors: payment history (35%), amounts owed (30%), length of credit history (15%), new credit (10%), and credit mix (10%). Payment history alone is the single largest factor, worth more than any other one factor by itself.",
-              analogy: "Think of it like a report card where one class — showing up on time, every time — counts for over a third of your grade.",
+              analogy: "Think of it like a report card where one class (showing up on time, every time) counts for over a third of your grade.",
               check: { statement: 'New credit inquiries and credit mix matter more to your score than payment history.', isTrue: false }
             },
             {
               term: 'Starting With Nothing',
               plain: "No credit history isn't a bad score, it's no score at all, and everyone starts there. The two most common ways to build from zero: a secured credit card, where a refundable deposit becomes your limit, then you use it like a debit card and pay it off monthly. Or become an authorized user on a family member's well-managed card.",
-              analogy: "A secured card is training wheels — same bike, same rules, just a deposit backing you up until you've built trust.",
-              check: { statement: 'You need to carry a balance from month to month to build credit — paying in full every month won\'t help as much.', isTrue: false }
+              analogy: "A secured card is training wheels: same bike, same rules, just a deposit backing you up until you've built trust.",
+              check: { statement: 'You need to carry a balance from month to month to build credit. Paying in full every month won\'t help as much.', isTrue: false }
             }
           ],
           xpOnComplete: 3
@@ -6710,10 +6710,10 @@ const MODULES = [
             intro: "Here's an excerpt from Hammy's credit report. Tap anything that looks worth disputing or double-checking, then hit Continue to see what you caught.",
             postingTitle: "Credit Report Excerpt",
             segments: [
-              { id: 's1', text: "Student Credit Card — opened 14 months ago, current balance $210, all payments on time. ", isRedFlag: false, explanation: "This matches Hammy's actual account, nothing to dispute here." },
-              { id: 's2', text: "Retail Credit Card — opened 3 weeks ago, current balance $890, never applied for by Hammy. ", isRedFlag: true, explanation: "An account Hammy never opened is exactly the kind of entry worth disputing immediately, and possibly a sign of identity theft." },
-              { id: 's3', text: "Hard inquiry from a car dealership — 2 months ago, related to a loan Hammy did apply for. ", isRedFlag: false, explanation: "A hard inquiry tied to an application Hammy actually made, expected and not an error." },
-              { id: 's4', text: "Personal loan — reported as 45 days late last month, though Hammy has bank records showing the payment was made on time. ", isRedFlag: true, explanation: "A payment reported late that Hammy has proof was made on time is a factual inaccuracy worth disputing." },
+              { id: 's1', text: "Student Credit Card, opened 14 months ago, current balance $210, all payments on time. ", isRedFlag: false, explanation: "This matches Hammy's actual account, nothing to dispute here." },
+              { id: 's2', text: "Retail Credit Card, opened 3 weeks ago, current balance $890, never applied for by Hammy. ", isRedFlag: true, explanation: "An account Hammy never opened is exactly the kind of entry worth disputing immediately, and possibly a sign of identity theft." },
+              { id: 's3', text: "Hard inquiry from a car dealership, 2 months ago, related to a loan Hammy did apply for. ", isRedFlag: false, explanation: "A hard inquiry tied to an application Hammy actually made, expected and not an error." },
+              { id: 's4', text: "Personal loan, reported as 45 days late last month, though Hammy has bank records showing the payment was made on time. ", isRedFlag: true, explanation: "A payment reported late that Hammy has proof was made on time is a factual inaccuracy worth disputing." },
               { id: 's5', text: "Address on file lists a apartment Hammy moved out of two years ago. ", isRedFlag: false, explanation: "Outdated but harmless address info generally isn't worth a formal dispute, it doesn't affect the score." }
             ],
             xpOnComplete: 5
@@ -7067,7 +7067,7 @@ const MODULES = [
           {
             id: 'cs0', type: 'story', title: 'The Card Arrives',
             beats: [
-              { speaker: 'intro', text: "Hammy's new credit card just showed up in the mail. Knowing what a credit card IS is one thing — actually setting it up correctly is another. Let's walk through it together, step by step." }
+              { speaker: 'intro', text: "Hammy's new credit card just showed up in the mail. Knowing what a credit card IS is one thing; actually setting it up correctly is another. Let's walk through it together, step by step." }
             ]
           },
           {
@@ -7075,14 +7075,14 @@ const MODULES = [
             concepts: [
               {
                 term: 'Step 1: Activate & Log In',
-                plain: "Every major card issuer — Chase, Discover, Capital One, Bank of America — has an app or web portal. After the card arrives, activate it (usually a quick phone call or a tap in the app), then create a login. This is command central for everything that follows.",
-                analogy: "Like setting up any new account — one login, and everything else lives inside it.",
+                plain: "Every major card issuer (Chase, Discover, Capital One, Bank of America) has an app or web portal. After the card arrives, activate it (usually a quick phone call or a tap in the app), then create a login. This is command central for everything that follows.",
+                analogy: "Like setting up any new account: one login, and everything else lives inside it.",
                 check: { statement: 'A credit card can be used normally right out of the envelope, with no activation step.', isTrue: false }
               },
               {
                 term: 'Step 2: Connect a Bank Account',
                 plain: "To pay the bill, link a checking account using two numbers: the routing number (identifies the BANK) and the account number (identifies the specific account). Both are printed at the bottom of a paper check, or found in the bank's app.",
-                analogy: "The routing number is like a zip code — it gets the payment to the right bank. The account number is the exact address once it's there.",
+                analogy: "The routing number is like a zip code: it gets the payment to the right bank. The account number is the exact address once it's there.",
                 check: { statement: 'The routing number identifies your bank, and the account number identifies your specific account.', isTrue: true }
               }
             ],
@@ -7093,14 +7093,14 @@ const MODULES = [
             concepts: [
               {
                 term: 'Step 3: Set Up Autopay',
-                plain: "Most apps let you set autopay to minimum due, a set amount, or full statement balance. Full balance is almost always the right choice — it guarantees no interest and no missed payments.",
+                plain: "Most apps let you set autopay to minimum due, a set amount, or full statement balance. Full balance is almost always the right choice: it guarantees no interest and no missed payments.",
                 analogy: "Full-balance autopay is like paying off a group tab in full. Minimum autopay is chipping in $5 and letting the rest sit there, growing.",
                 check: { statement: 'Setting autopay to the minimum due guarantees you\'ll never pay any interest.', isTrue: false }
               },
               {
                 term: 'Step 4: If a Payment Is Missed',
-                plain: "Autopay fails or the linked account is empty, and there's a late fee — 30+ days late, and it's reported to the credit bureaus, a real hit that can take months to recover from.",
-                analogy: "A late payment is a single bruise. A carried balance is a slow leak — less dramatic in the moment, but it adds up.",
+                plain: "Autopay fails or the linked account is empty, and there's a late fee. Go 30+ days late, and it's reported to the credit bureaus, a real hit that can take months to recover from.",
+                analogy: "A late payment is a single bruise. A carried balance is a slow leak: less dramatic in the moment, but it adds up.",
                 linkOut: { label: 'See exactly how a carried balance grows', action: 'compound-interest' }
               }
             ],
@@ -7111,7 +7111,7 @@ const MODULES = [
             prompt: "Hammy's app asks which autopay option to choose: minimum due, a fixed $50, or full statement balance.",
             hintText: "Which option guarantees zero interest, no matter what?",
             choices: [
-              { id: 'a', label: 'Full statement balance', outcome: { text: "Every bill gets paid in full automatically — no interest, no missed payments, no thinking about it again.", delta: { checking: 0 }, compare: [{ label: 'Interest risk', value: 0 }, { label: 'Effort required', value: 0 }] } },
+              { id: 'a', label: 'Full statement balance', outcome: { text: "Every bill gets paid in full automatically: no interest, no missed payments, no thinking about it again.", delta: { checking: 0 }, compare: [{ label: 'Interest risk', value: 0 }, { label: 'Effort required', value: 0 }] } },
               { id: 'b', label: 'Minimum due, to keep more cash available', outcome: { text: "Late fees get avoided, but the rest of the balance sits there accruing interest every single day.", delta: { checking: 0 }, compare: [{ label: 'Interest risk', value: 1 }, { label: 'Effort required', value: 0 }] } }
             ],
             xpOnComplete: 4
@@ -7120,7 +7120,7 @@ const MODULES = [
             id: 'cs4', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 3],
             hintTexts: [
               "Think about what happens to a balance when only the minimum gets paid.",
-              "Think about which habit — paying in full, on time — carries the most weight for your score."
+              "Think about which habit, paying in full, on time, carries the most weight for your score."
             ]
           }
         ]
@@ -7172,17 +7172,17 @@ const MODULES = [
         q: 'Your school automatically bills you for its student health insurance plan, but you\'re already covered under a parent\'s plan until 26. What should you do?',
         opts: ['Pay for both plans just to be safe', 'Submit a waiver by the school\'s deadline showing proof of existing coverage, so the school removes the charge from your bill', 'Ignore the charge, it will go away on its own', 'Cancel your parent\'s plan instead'],
         correct: 1,
-        exp: 'Many schools auto-enroll and bill students for a health plan unless you actively waive it with proof of comparable coverage — and waivers have a hard deadline, often within the first few weeks of the semester.'
+        exp: 'Many schools auto-enroll and bill students for a health plan unless you actively waive it with proof of comparable coverage, and waivers have a hard deadline, often within the first few weeks of the semester.'
       },
       {
         q: 'You\'re bringing a car to campus for the first time. What should you check on your auto insurance before move-in?',
         opts: ['Nothing changes just because you\'re a student', 'Whether your policy still qualifies for a good-student or resident-student discount, and whether your coverage limits are adequate for a new location', 'Auto insurance is optional if you only drive occasionally', 'Your parents\' policy automatically covers you no matter what'],
         correct: 1,
-        exp: 'Adding a car — or a student driver — to a policy changes the math. Insurers often offer good-student discounts, and coverage needs can shift based on where the car is garaged. A quick call before move-in can save money and avoid gaps.'
+        exp: 'Adding a car, or a student driver, to a policy changes the math. Insurers often offer good-student discounts, and coverage needs can shift based on where the car is garaged. A quick call before move-in can save money and avoid gaps.'
       },
       {
         q: 'You get an email that looks like it\'s from your school\'s financial aid office asking you to "verify your account" by clicking a link and entering your login. What should you do?',
-        opts: ['Click the link immediately since it mentions financial aid', 'Check the sender\'s actual email address and go directly to the official site instead of clicking — schools and banks don\'t ask for login credentials by email', 'Forward it to your friends so they can verify it too', 'Reply with your student ID number to confirm you got it'],
+        opts: ['Click the link immediately since it mentions financial aid', 'Check the sender\'s actual email address and go directly to the official site instead of clicking: schools and banks don\'t ask for login credentials by email', 'Forward it to your friends so they can verify it too', 'Reply with your student ID number to confirm you got it'],
         correct: 1,
         exp: 'Phishing emails impersonating financial aid offices, banks, and even professors are extremely common on college campuses. Legitimate institutions don\'t ask you to confirm login credentials through an emailed link.'
       },
@@ -7190,25 +7190,25 @@ const MODULES = [
         q: 'A renter\'s insurance policy costs about $15/month and has a $500 deductible. Your $1,500 laptop is stolen. How does the payout typically work?',
         opts: ['You get nothing back since you have a deductible', 'After the $500 deductible, your policy would typically cover the remaining value up to your policy limit', 'You get the full $1,500 with no deductible applied', 'You must cancel the policy to file a claim'],
         correct: 1,
-        exp: 'A deductible is the amount you pay first before insurance covers the rest, not money you lose entirely. On a $1,500 stolen laptop with a $500 deductible, you\'d typically be reimbursed for roughly $1,000 — often making the $15/month cost well worth it.'
+        exp: 'A deductible is the amount you pay first before insurance covers the rest, not money you lose entirely. On a $1,500 stolen laptop with a $500 deductible, you\'d typically be reimbursed for roughly $1,000, often making the $15/month cost well worth it.'
       },
       {
         q: 'You need to check your bank balance while at a coffee shop using the shop\'s public WiFi. What\'s the safer way to do it?',
         opts: ['Log in directly over the public WiFi, it\'s fine for quick checks', 'Use your phone\'s cellular data or a trusted personal hotspot instead of public WiFi for anything involving financial accounts', 'Public WiFi is always encrypted and totally safe for banking', 'Only check your balance using the shop\'s shared computer'],
         correct: 1,
-        exp: 'Public WiFi networks can expose your data to anyone else connected to the same network. Using cellular data or a personal hotspot for banking logins avoids that risk — combine it with two-factor authentication for extra protection.'
+        exp: 'Public WiFi networks can expose your data to anyone else connected to the same network. Using cellular data or a personal hotspot for banking logins avoids that risk; combine it with two-factor authentication for extra protection.'
       },
       {
         q: 'Your wallet is stolen, including your debit card and student ID. What should be your first move?',
         opts: ['Wait a day to see if it turns up before doing anything', 'Immediately call your bank to freeze or cancel the card, then update any autopay subscriptions linked to it and report the loss to campus security', 'Cancel your bank account entirely and never open a new one', 'Post about it on social media and wait for someone to return it'],
         correct: 1,
-        exp: 'Acting fast limits the damage — freezing or canceling the card stops unauthorized use immediately. Update any subscriptions or autopay linked to that card once you get a new one, and report the loss to campus security if your student ID was also taken.'
+        exp: 'Acting fast limits the damage: freezing or canceling the card stops unauthorized use immediately. Update any subscriptions or autopay linked to that card once you get a new one, and report the loss to campus security if your student ID was also taken.'
       }
     ],
     lessons: [
-      { title: 'Health Insurance Basics', hook: 'You just turned 20 and get a letter asking if you want to enroll in your school\'s health plan for $2,000/year. You\'re already covered under a parent\'s plan. Do you need this — and what do all these insurance terms even mean?', qIndices: [0, 5] },
+      { title: 'Health Insurance Basics', hook: 'You just turned 20 and get a letter asking if you want to enroll in your school\'s health plan for $2,000/year. You\'re already covered under a parent\'s plan. Do you need this, and what do all these insurance terms even mean?', qIndices: [0, 5] },
       { title: 'Health Waivers & Car Insurance', hook: 'It\'s move-in day. You\'ve got a car in the parking lot for the first time and a health insurance waiver deadline you almost forgot about. Both are the kind of things that quietly cost you money if you ignore them.', qIndices: [6, 7] },
-      { title: 'Renter\'s & Landlord Insurance', hook: 'You\'re moving off-campus next fall. A pipe bursts in your apartment and ruins your laptop, TV, and clothes. Your landlord\'s insurance covers the building — not your stuff. You owe $2,000 in replacements. What should you have had?', qIndices: [1, 2] },
+      { title: 'Renter\'s & Landlord Insurance', hook: 'You\'re moving off-campus next fall. A pipe bursts in your apartment and ruins your laptop, TV, and clothes. Your landlord\'s insurance covers the building, not your stuff. You owe $2,000 in replacements. What should you have had?', qIndices: [1, 2] },
       { title: 'What Insurance Actually Pays Out', hook: 'In the same week, you notice a $47 charge you don\'t recognize on your debit card, and you\'re filing your first-ever renter\'s insurance claim after a burst pipe. Do you know what to expect from either process?', qIndices: [9, 4] },
       { title: 'Identity Theft & Staying Safe Online', hook: 'You get a text claiming to be your bank, asking you to confirm your login while you\'re on public coffee-shop WiFi. Something about it feels off, but you\'re not totally sure why.', qIndices: [3, 10] },
       { title: 'If Something Is Stolen or Compromised', hook: 'Your wallet gets stolen the same week you get a suspicious "verify your financial aid account" email. Reacting fast to both keeps a bad day from turning into months of cleanup.', qIndices: [11, 8] }
@@ -8343,7 +8343,7 @@ const MODULES = [
           {
             id: 'rp_spot1', type: 'spotcheck', title: 'Spot What\'s Worth Asking About',
             intro: "Here's a section of Hammy's renter's policy. Tap anything worth asking a question about before signing, then hit Continue to see what you caught.",
-            postingTitle: "Renter's Policy — Coverage Details",
+            postingTitle: "Renter's Policy: Coverage Details",
             segments: [
               { id: 's1', text: "Personal property coverage: up to $30,000 for covered losses. ", isRedFlag: false, explanation: "A clear, standard coverage figure, no red flag on its own." },
               { id: 's2', text: "Jewelry and watches: sub-limit of $1,500 total, regardless of the overall policy limit. ", isRedFlag: true, explanation: "A sub-limit like this is exactly the kind of detail that matters if Hammy owns anything valuable in this category, worth checking against actual item values." },
@@ -8427,27 +8427,27 @@ const MODULES = [
         id: 'health_enroll',
         parentQuestId: 'health_basics',
         topic: 'Enrolling in a Health Insurance Plan: A Step-by-Step Guide',
-        character: { name: 'Hammy', tagline: 'Actually enrolling in — or waiving — a health plan' },
+        character: { name: 'Hammy', tagline: 'Actually enrolling in, or waiving, a health plan' },
         initialState: {},
         chapters: [
           {
             id: 'he0', type: 'story', title: 'The Enrollment Deadline',
             beats: [
-              { speaker: 'intro', text: "Hammy's school just sent an email: enroll in the student health plan, or submit a waiver, by the deadline in two weeks. Understanding premiums and deductibles is one thing — actually doing the paperwork is another." }
+              { speaker: 'intro', text: "Hammy's school just sent an email: enroll in the student health plan, or submit a waiver, by the deadline in two weeks. Understanding premiums and deductibles is one thing; actually doing the paperwork is another." }
             ]
           },
           {
             id: 'he1', type: 'teach', title: 'Step 1 & 2: Compare & Gather',
             concepts: [
-              { term: 'Step 1: Compare the Real Options', plain: "If already covered under a parent's plan (allowed until age 26), compare that coverage against the school's plan — network of doctors, cost, and whether it covers care near campus.", analogy: "It's a side-by-side comparison, like comparing two phone plans before switching.", check: { statement: "Students can generally stay on a parent's health plan until age 26.", isTrue: true } },
-              { term: "Step 2: Gather What's Needed", plain: "To waive the school's plan, proof of comparable existing coverage is required — usually the insurance card or a benefits summary showing the plan meets the school's minimum requirements.", analogy: "It's like providing proof of address — a specific document, not just a verbal claim.", check: {} }
+              { term: 'Step 1: Compare the Real Options', plain: "If already covered under a parent's plan (allowed until age 26), compare that coverage against the school's plan: network of doctors, cost, and whether it covers care near campus.", analogy: "It's a side-by-side comparison, like comparing two phone plans before switching.", check: { statement: "Students can generally stay on a parent's health plan until age 26.", isTrue: true } },
+              { term: "Step 2: Gather What's Needed", plain: "To waive the school's plan, proof of comparable existing coverage is required, usually the insurance card or a benefits summary showing the plan meets the school's minimum requirements.", analogy: "It's like providing proof of address: a specific document, not just a verbal claim.", check: {} }
             ],
             xpOnComplete: 3
           },
           {
             id: 'he2', type: 'teach', title: 'Step 3 & 4: Submit & Save',
             concepts: [
-              { term: 'Step 3: Submit Before the Deadline', plain: "Waivers and enrollments both have hard deadlines, often within the first few weeks of the semester. Miss it, and the school's plan (and its cost) gets automatically billed with no way to reverse it until next term.", analogy: "It's like an opt-out window — miss it, and the default choice sticks for the whole term.", check: { statement: 'Missing a health plan waiver deadline usually has no real consequence.', isTrue: false } },
+              { term: 'Step 3: Submit Before the Deadline', plain: "Waivers and enrollments both have hard deadlines, often within the first few weeks of the semester. Miss it, and the school's plan (and its cost) gets automatically billed with no way to reverse it until next term.", analogy: "It's like an opt-out window: miss it, and the default choice sticks for the whole term.", check: { statement: 'Missing a health plan waiver deadline usually has no real consequence.', isTrue: false } },
               { term: 'Step 4: Save the Confirmation', plain: "Whether waiving or enrolling, save the confirmation email or screenshot. If a bill shows up later that shouldn't be there, this proof makes it easy to get it corrected.", analogy: "A receipt for a decision that saves an argument later.", check: {} }
             ],
             xpOnComplete: 3
@@ -8458,7 +8458,7 @@ const MODULES = [
             hintText: "Is a missed deadline always truly final, or worth a call first?",
             choices: [
               { id: 'a', label: 'Just pay the charge since the deadline already passed', outcome: { text: "Paying without checking first means possibly losing $2,000 that a quick call to the health services office might have resolved.", delta: {}, compare: [{ label: 'Cost paid', value: 2000 }, { label: 'Cost if resolved', value: 0 }] } },
-              { id: 'b', label: 'Call the health services or bursar office to ask about a late waiver exception', outcome: { text: "Many schools allow a short grace period or exception process — worth asking before assuming the charge is final.", delta: {}, compare: [{ label: 'Cost if waived', value: 0 }, { label: 'Cost if not', value: 2000 }] } }
+              { id: 'b', label: 'Call the health services or bursar office to ask about a late waiver exception', outcome: { text: "Many schools allow a short grace period or exception process, worth asking before assuming the charge is final.", delta: {}, compare: [{ label: 'Cost if waived', value: 0 }, { label: 'Cost if not', value: 2000 }] } }
             ],
             xpOnComplete: 4
           },
