@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>DEV PREVIEW — Hammy Intro Animation</title>
+<style>
+  /* ============================================================
+     DEV-ONLY PREVIEW — Hammy onboarding intro animation
+     Not linked from the app. Not part of any production flow.
+     Piggy-bank graphic is a placeholder shape (real art TBD).
+     ============================================================ */
+  :root {
+    --green: #6B8F65;
+    --green-dark: #4A6844;
+    --cream: #FAF6ED;
+    --cream-asset: #F8F4EB; /* matches the baked bg of faces/excited.png */
+    --pink: #FF96B8;
+    --gold: #F5C244;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--cream-asset);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .dev-badge {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    background: var(--green-dark);
+    color: var(--cream);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 5px 10px;
+    border-radius: 6px;
+    opacity: 0.75;
+    z-index: 50;
+  }
+
+  /* ---------- Stage ---------- */
+  .stage {
+    position: relative;
+    width: min(90vw, 420px);
+    height: min(80vh, 560px);
+  }
+  .stage.shake { animation: screenShake 0.35s ease-out; }
+  @keyframes screenShake {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-5px, 3px); }
+    40% { transform: translate(5px, -3px); }
+    60% { transform: translate(-3px, 2px); }
+    80% { transform: translate(2px, -1px); }
+  }
+
+  .center-anchor {
+    position: absolute;
+    left: 50%;
+    top: 58%;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+  }
+
+  /* ---------- Piggy bank (placeholder shape) ---------- */
+  .bank {
+    position: absolute;
+    left: -80px;
+    top: -70px;
+    width: 160px;
+    height: 140px;
+    opacity: 0;
+    z-index: 3;
+  }
+  .bank-half { position: absolute; inset: 0; }
+  .bank-half svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+  /* left/right halves are clipped copies of the same drawing so it
+     can split apart on the pop */
+  .bank-half.left  { clip-path: polygon(0 0, 54% 0, 46% 35%, 55% 65%, 47% 100%, 0 100%); }
+  .bank-half.right { clip-path: polygon(54% 0, 100% 0, 100% 100%, 47% 100%, 55% 65%, 46% 35%); }
+
+  /* crack line that flashes just before the pop */
+  .crack {
+    position: absolute;
+    left: 50%;
+    top: 8%;
+    height: 84%;
+    width: 4px;
+    transform: translateX(-50%);
+    z-index: 4;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .crack svg { display: block; width: 26px; height: 100%; margin-left: -11px; overflow: visible; }
+
+  /* -- phases driven by classes on .bank -- */
+  .bank.drop-in { animation: bankDrop 0.55s cubic-bezier(0.22, 1.4, 0.36, 1) forwards; }
+  @keyframes bankDrop {
+    0%   { opacity: 0; transform: translateY(-120px) scale(0.6); }
+    60%  { opacity: 1; transform: translateY(10px) scale(1.05, 0.92); }
+    80%  { transform: translateY(-4px) scale(0.97, 1.04); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .bank.wobble { opacity: 1; animation: bankWobble 0.5s ease-in-out; }
+  @keyframes bankWobble {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    15% { transform: rotate(-6deg) scale(1.02, 0.98); }
+    35% { transform: rotate(6deg) scale(0.98, 1.03); }
+    55% { transform: rotate(-5deg) scale(1.03, 0.97); }
+    75% { transform: rotate(4deg) scale(0.99, 1.02); }
+  }
+  .bank.wobble .crack { animation: crackFlash 0.5s ease-in forwards; }
+  @keyframes crackFlash {
+    0%, 40% { opacity: 0; }
+    55% { opacity: 1; }
+    70% { opacity: 0.4; }
+    85%, 100% { opacity: 1; }
+  }
+
+  .bank.popped { opacity: 1; }
+  .bank.popped .crack { opacity: 0; }
+  .bank.popped .bank-half.left  { animation: halfLeft 0.55s cubic-bezier(0.3, 0.6, 0.6, 1) forwards; }
+  .bank.popped .bank-half.right { animation: halfRight 0.55s cubic-bezier(0.3, 0.6, 0.6, 1) forwards; }
+  @keyframes halfLeft {
+    0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-110px, 60px) rotate(-38deg); opacity: 0; }
+  }
+  @keyframes halfRight {
+    0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(110px, 60px) rotate(38deg); opacity: 0; }
+  }
+
+  /* ---------- Pop flash ring ---------- */
+  .pop-ring {
+    position: absolute;
+    left: -10px;
+    top: -10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 6px solid var(--pink);
+    opacity: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .pop-ring.go { animation: popRing 0.5s cubic-bezier(0.1, 0.7, 0.3, 1) forwards; }
+  @keyframes popRing {
+    0%   { opacity: 0.9; transform: scale(0.4); border-width: 10px; }
+    100% { opacity: 0; transform: scale(9); border-width: 1px; }
+  }
+
+  /* ---------- Coins & sparkles (spawned by JS) ---------- */
+  .particle {
+    position: absolute;
+    z-index: 6;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+  .coin {
+    border-radius: 50%;
+    border: 2.5px solid rgba(0, 0, 0, 0.14);
+    box-shadow: inset -2px -3px 0 rgba(0, 0, 0, 0.12), inset 2px 3px 0 rgba(255, 255, 255, 0.45);
+  }
+  .sparkle {
+    background: var(--pink);
+    clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  }
+
+  /* ---------- Hammy ---------- */
+  .hammy {
+    position: absolute;
+    left: -110px;
+    bottom: -80px;
+    width: 220px;
+    z-index: 5;
+    opacity: 0;
+    transform-origin: 50% 95%;
+  }
+  .hammy img {
+    display: block;
+    width: 100%;
+    /* feather the baked-in cream bg of the source PNGs into the page */
+    -webkit-mask-image: radial-gradient(ellipse 52% 52% at 50% 50%, #000 62%, transparent 92%);
+    mask-image: radial-gradient(ellipse 52% 52% at 50% 50%, #000 62%, transparent 92%);
+  }
+  .hammy .face-wink { position: absolute; inset: 0; opacity: 0; transition: opacity 0.25s ease; }
+  .hammy.winking .face-wink { opacity: 1; }
+
+  .hammy.emerge { animation: hammyEmerge 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  @keyframes hammyEmerge {
+    0%   { opacity: 0; transform: translateY(70px) scale(0.2, 0.1); }
+    45%  { opacity: 1; transform: translateY(-18px) scale(0.82, 1.28); } /* the big stretch */
+    65%  { transform: translateY(6px) scale(1.14, 0.86); }               /* squash landing */
+    82%  { transform: translateY(-3px) scale(0.96, 1.06); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .hammy.wave { opacity: 1; animation: hammyWave 0.9s ease-in-out forwards; }
+  @keyframes hammyWave {
+    0%, 100% { transform: rotate(0deg); }
+    18% { transform: rotate(-7deg) translateY(-4px); }
+    40% { transform: rotate(6deg) translateY(-2px); }
+    62% { transform: rotate(-5deg) translateY(-3px); }
+    82% { transform: rotate(3deg) translateY(0); }
+  }
+  .hammy.settled { opacity: 1; animation: hammyIdle 2.4s ease-in-out infinite; }
+  @keyframes hammyIdle {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-5px) scale(1.01, 0.99); }
+  }
+
+  /* ---------- Speech bubble ---------- */
+  .bubble {
+    position: absolute;
+    left: 50%;
+    bottom: 165px;
+    transform: translateX(-50%) scale(0);
+    background: #fff;
+    color: var(--green-dark);
+    font-size: 22px;
+    font-weight: 700;
+    padding: 12px 22px;
+    border-radius: 22px;
+    border: 3px solid var(--green);
+    white-space: nowrap;
+    z-index: 7;
+    box-shadow: 0 6px 18px rgba(74, 104, 68, 0.18);
+    transform-origin: 50% 100%;
+  }
+  .bubble::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -13px;
+    transform: translateX(-50%);
+    border: 11px solid transparent;
+    border-top-color: var(--green);
+    border-bottom: none;
+  }
+  .bubble.pop-in { animation: bubblePop 0.5s cubic-bezier(0.34, 1.8, 0.64, 1) forwards; }
+  @keyframes bubblePop {
+    0%   { transform: translateX(-50%) scale(0) rotate(-8deg); }
+    70%  { transform: translateX(-50%) scale(1.12) rotate(2deg); }
+    100% { transform: translateX(-50%) scale(1) rotate(0deg); }
+  }
+
+  /* ---------- Review controls ---------- */
+  .controls {
+    margin-top: 18px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    z-index: 20;
+  }
+  .controls button {
+    background: var(--green);
+    color: var(--cream);
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    padding: 10px 22px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 var(--green-dark);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  .controls button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--green-dark); }
+  .controls label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--green-dark);
+    cursor: pointer;
+    user-select: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="dev-badge">DEV PREVIEW · NOT IN APP</div>
+
+<div class="stage" id="stage">
+  <div class="center-anchor" id="anchor">
+
+    <!-- Placeholder piggy bank: simple SVG shape, real art to come later -->
+    <div class="bank" id="bank">
+      <div class="bank-half left">
+        <svg viewBox="0 0 160 140">
+          <ellipse cx="80" cy="78" rx="66" ry="52" fill="#6B8F65"/>
+          <ellipse cx="62" cy="60" rx="30" ry="20" fill="rgba(255,255,255,0.18)"/>
+          <rect x="62" y="20" width="36" height="10" rx="5" fill="#4A6844"/>
+          <ellipse cx="24" cy="52" rx="12" ry="14" fill="#4A6844"/>
+          <rect x="34" y="122" width="18" height="14" rx="6" fill="#4A6844"/>
+          <rect x="108" y="122" width="18" height="14" rx="6" fill="#4A6844"/>
+          <circle cx="52" cy="72" r="5" fill="#3A5236"/>
+        </svg>
+      </div>
+      <div class="bank-half right">
+        <svg viewBox="0 0 160 140">
+          <ellipse cx="80" cy="78" rx="66" ry="52" fill="#6B8F65"/>
+          <ellipse cx="62" cy="60" rx="30" ry="20" fill="rgba(255,255,255,0.18)"/>
+          <rect x="62" y="20" width="36" height="10" rx="5" fill="#4A6844"/>
+          <ellipse cx="24" cy="52" rx="12" ry="14" fill="#4A6844"/>
+          <rect x="34" y="122" width="18" height="14" rx="6" fill="#4A6844"/>
+          <rect x="108" y="122" width="18" height="14" rx="6" fill="#4A6844"/>
+          <circle cx="52" cy="72" r="5" fill="#3A5236"/>
+          <path d="M138 66 q14 4 10 16 q-4 10 -14 6" fill="none" stroke="#4A6844" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="crack">
+        <svg viewBox="0 0 26 120" preserveAspectRatio="none">
+          <path d="M13 0 L8 22 L17 40 L7 62 L16 82 L9 102 L13 120"
+                fill="none" stroke="#3A5236" stroke-width="3.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="pop-ring" id="popRing"></div>
+
+    <!-- Hammy: reuses existing full-body art from /faces -->
+    <div class="hammy" id="hammy">
+      <img src="faces/excited.png" alt="Hammy the pig mascot" class="face-excited">
+      <img src="faces/wink.png" alt="" class="face-wink" aria-hidden="true">
+    </div>
+
+    <div class="bubble" id="bubble">Hi, I&rsquo;m Hammy!</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button id="replayBtn">&#8635; Replay</button>
+  <label><input type="checkbox" id="slowmo"> Slow motion (3&times;)</label>
+</div>
+
+<script>
+(function () {
+  var stage   = document.getElementById("stage");
+  var bank    = document.getElementById("bank");
+  var popRing = document.getElementById("popRing");
+  var hammy   = document.getElementById("hammy");
+  var bubble  = document.getElementById("bubble");
+  var slowmo  = document.getElementById("slowmo");
+  var anchor  = document.getElementById("anchor");
+
+  var timers = [];
+  function at(ms, fn) {
+    var factor = slowmo.checked ? 3 : 1;
+    timers.push(setTimeout(fn, ms * factor));
+  }
+
+  function spawnParticles() {
+    // note: durations here stay at 1x — slow-mo is applied via playbackRate
+    var colors = ["#FF96B8", "#F5C244", "#FF96B8", "#F5C244", "#FFB7CE"];
+    for (var i = 0; i < 14; i++) {
+      var isCoin = i < 9;
+      var el = document.createElement("div");
+      el.className = "particle " + (isCoin ? "coin" : "sparkle");
+      var size = isCoin ? 14 + Math.random() * 12 : 10 + Math.random() * 8;
+      el.style.width = size + "px";
+      el.style.height = size + "px";
+      if (isCoin) el.style.background = colors[i % colors.length];
+      el.style.left = (-size / 2) + "px";
+      el.style.top = (-size / 2 - 20) + "px";
+      anchor.appendChild(el);
+
+      var angle = (-Math.PI / 2) + (Math.random() - 0.5) * 2.4; // mostly upward
+      var speed = 220 + Math.random() * 260;
+      var vx = Math.cos(angle) * speed;
+      var vy = Math.sin(angle) * speed;
+      var spin = (Math.random() - 0.5) * 900;
+      var dur = 0.9 + Math.random() * 0.4;
+
+      el.animate([
+        { transform: "translate(0px, 0px) rotate(0deg) scale(1)", opacity: 1 },
+        { transform: "translate(" + vx * 0.5 + "px, " + (vy * 0.5 + 150) + "px) rotate(" + spin + "deg) scale(0.9)",
+          opacity: 0.9, offset: 0.65 },
+        { transform: "translate(" + vx * 0.75 + "px, " + (vy * 0.75 + 420) + "px) rotate(" + spin * 1.4 + "deg) scale(0.7)",
+          opacity: 0 }
+      ], { duration: dur * 1000, easing: "cubic-bezier(0.15, 0.6, 0.5, 1)", fill: "forwards" });
+
+      var cleanupMs = dur * 1000 * (slowmo.checked ? 3 : 1) + 100;
+      (function (node, ms) { timers.push(setTimeout(function () { node.remove(); }, ms)); })(el, cleanupMs);
+    }
+  }
+
+  function reset() {
+    timers.forEach(clearTimeout);
+    timers = [];
+    bank.className = "bank";
+    popRing.className = "pop-ring";
+    hammy.className = "hammy";
+    bubble.className = "bubble";
+    stage.classList.remove("shake");
+    document.querySelectorAll(".particle").forEach(function (p) { p.remove(); });
+    // force reflow so re-adding animation classes restarts them
+    void bank.offsetWidth;
+  }
+
+  function play() {
+    reset();
+    var f = slowmo.checked ? 3 : 1;
+    document.documentElement.style.setProperty("--speed", f);
+    // Timeline (at 1x): total ~2.7s
+    bank.classList.add("drop-in");                                   // 0.00  bank bounces in
+    at(600, function () {
+      bank.classList.remove("drop-in");
+      bank.classList.add("wobble");                                  // 0.60  wobble + crack flash
+    });
+    at(1100, function () {                                           // 1.10  POP
+      bank.classList.remove("wobble");
+      bank.classList.add("popped");
+      popRing.classList.add("go");
+      stage.classList.add("shake");
+      spawnParticles();
+    });
+    at(1200, function () { hammy.classList.add("emerge"); });        // 1.20  Hammy stretches up
+    at(2050, function () {
+      hammy.classList.remove("emerge");
+      hammy.classList.add("wave");                                   // 2.05  wave wiggle
+      bubble.classList.add("pop-in");                                //       "Hi, I'm Hammy!"
+    });
+    at(2600, function () { hammy.classList.add("winking"); });       // 2.60  crossfade to wink
+    at(2950, function () {
+      hammy.classList.remove("wave");
+      hammy.classList.add("settled");                                //       gentle idle bob
+    });
+  }
+
+  // Slow-mo: the JS timeline is scaled in at(), and any CSS/WAAPI animation
+  // that starts while the box is checked gets its playbackRate slowed here.
+  var slowLoop = null;
+  function applySlowmo() {
+    if (slowLoop) { clearInterval(slowLoop); slowLoop = null; }
+    if (slowmo.checked) {
+      slowLoop = setInterval(function () {
+        document.getAnimations().forEach(function (a) {
+          if (a.playbackRate !== 1 / 3) a.playbackRate = 1 / 3;
+        });
+      }, 50);
+    } else {
+      document.getAnimations().forEach(function (a) { a.playbackRate = 1; });
+    }
+  }
+
+  function run() {
+    play();
+    applySlowmo();
+  }
+
+  slowmo.addEventListener("change", run);
+  document.getElementById("replayBtn").addEventListener("click", run);
+  run();
+})();
+</script>
+</body>
+</html>
