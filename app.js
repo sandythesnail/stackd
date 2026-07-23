@@ -8480,84 +8480,84 @@ const MODULES = [
     questions: [
       {
         q: 'What is the key difference between a Direct Subsidized and a Direct Unsubsidized federal loan?',
-        opts: ['Subsidized loans are only for graduate students', 'The government pays the interest on Subsidized loans while you\'re in school; Unsubsidized loans accrue interest the entire time, including while you\'re enrolled', 'Unsubsidized loans have no fixed interest rate while Subsidized loans do', 'There is no real difference — both are treated identically'],
+        opts: ['Subsidized loans are only for graduate students', 'The government pays the interest on Subsidized loans while you\'re in school; Unsubsidized loans accrue interest the entire time, including while you\'re enrolled', 'Unsubsidized loans have no fixed interest rate while Subsidized loans do', 'There is no real difference; both are treated identically'],
         correct: 1,
-        exp: 'Direct Subsidized Loans are need-based, and the government covers the interest while you\'re enrolled at least half-time. Direct Unsubsidized Loans aren\'t based on need, and interest starts accruing from day one — even before you graduate — so it\'s worth paying that interest if you can while still in school.'
+        exp: 'Direct Subsidized Loans are need-based, and the government covers the interest while you\'re enrolled at least half-time. Direct Unsubsidized Loans aren\'t based on need, and interest starts accruing from day one, even before you graduate, so it\'s worth paying that interest if you can while still in school.'
       },
       {
         q: 'Who is a Direct PLUS Loan designed for?',
         opts: ['Undergraduate students who have exhausted their Subsidized and Unsubsidized loan limits', 'Graduate/professional students, or parents of dependent undergrads, who need to cover costs beyond other financial aid', 'First-year students only', 'Students with excellent credit who want a lower interest rate than other federal loans'],
         correct: 1,
-        exp: 'PLUS Loans fill the gap after other aid is applied, and require a credit check, typically carrying a higher interest rate than Direct Subsidized/Unsubsidized loans. Parent PLUS is still available to parents of dependent undergrads. Grad PLUS, however, was discontinued for new graduate/professional borrowers starting July 1, 2026 — those students now borrow through higher Direct Unsubsidized Loan limits instead.'
+        exp: 'PLUS Loans fill the gap after other aid is applied, and require a credit check, typically carrying a higher interest rate than Direct Subsidized/Unsubsidized loans. Parent PLUS is still available to parents of dependent undergrads. Grad PLUS, however, was discontinued for new graduate/professional borrowers starting July 1, 2026. Those students now borrow through higher Direct Unsubsidized Loan limits instead.'
       },
       {
         q: 'How does the number of credits you\'re enrolled in affect your federal loan eligibility?',
-        opts: ['It has no effect — loan amounts are fixed no matter what', 'You generally need to be enrolled at least half-time to qualify for federal student loans, and your eligible amount can be reduced if you drop credits', 'Only full-time students can borrow any federal loans at all', 'Enrollment status only affects scholarships, never loans'],
+        opts: ['It has no effect; loan amounts are fixed no matter what', 'You generally need to be enrolled at least half-time to qualify for federal student loans, and your eligible amount can be reduced if you drop credits', 'Only full-time students can borrow any federal loans at all', 'Enrollment status only affects scholarships, never loans'],
         correct: 1,
-        exp: 'Federal loan eligibility is tied to enrollment status — usually at least half-time, commonly around 6 credits per semester for undergrads, though each school sets its own exact credit threshold. Drop below that threshold mid-semester and your aid, including loans already disbursed, can be adjusted or even reversed. Always check with your financial aid office before dropping a class.'
+        exp: 'Federal loan eligibility is tied to enrollment status: usually at least half-time, commonly around 6 credits per semester for undergrads, though each school sets its own exact credit threshold. Drop below that threshold mid-semester and your aid, including loans already disbursed, can be adjusted or even reversed. Always check with your financial aid office before dropping a class.'
       },
       {
         q: 'Before a first-time borrower can receive any federal Direct Loan funds, what must they complete?',
-        opts: ['Nothing — funds are automatically disbursed once FAFSA is approved', 'A Master Promissory Note (MPN) and Loan Entrance Counseling, both completed at studentaid.gov', 'A credit check and a co-signer application', 'An in-person meeting with a loan officer at a bank'],
+        opts: ['Nothing; funds are automatically disbursed once FAFSA is approved', 'A Master Promissory Note (MPN) and Loan Entrance Counseling, both completed at studentaid.gov', 'A credit check and a co-signer application', 'An in-person meeting with a loan officer at a bank'],
         correct: 1,
-        exp: 'Every first-time federal borrower must complete both a Master Promissory Note — your legal promise to repay — and Loan Entrance Counseling, which walks through your rights and responsibilities, before a single dollar is disbursed. Both are done directly at studentaid.gov, and skipping either one delays your funds.'
+        exp: 'Every first-time federal borrower must complete both a Master Promissory Note (your legal promise to repay) and Loan Entrance Counseling, which walks through your rights and responsibilities, before a single dollar is disbursed. Both are done directly at studentaid.gov, and skipping either one delays your funds.'
       },
       {
         q: 'Your school offers you $5,500 in federal loans, but after grants and savings you only need $3,200 to cover your costs. What\'s the smartest move?',
-        opts: ['Accept the full $5,500 — extra cash is always useful', 'Accept only the $3,200 you actually need, and decline or reduce the rest through your school\'s financial aid portal', 'Decline all loans, even the amount you need, to avoid any debt at all', 'Accept the full amount and invest the difference'],
+        opts: ['Accept the full $5,500; extra cash is always useful', 'Accept only the $3,200 you actually need, and decline or reduce the rest through your school\'s financial aid portal', 'Decline all loans, even the amount you need, to avoid any debt at all', 'Accept the full amount and invest the difference'],
         correct: 1,
-        exp: 'You are never required to accept a loan offer in full. Every dollar borrowed accrues interest and has to be repaid after graduation — borrowing only what covers your actual gap keeps your future monthly payments manageable. "It\'s offered" doesn\'t mean "you need it."'
+        exp: 'You are never required to accept a loan offer in full. Every dollar borrowed accrues interest and has to be repaid after graduation. Borrowing only what covers your actual gap keeps your future monthly payments manageable. "It\'s offered" doesn\'t mean "you need it."'
       },
       {
         q: 'You completed your MPN and Entrance Counseling last year and borrowed federal loans. Do you need to do anything to keep borrowing this year?',
-        opts: ['No — once you\'re approved for federal loans, you\'re approved permanently', 'Yes — you must submit the FAFSA again every academic year to maintain your eligibility for federal loans and other aid', 'Only if your GPA drops', 'Only if you change your major'],
+        opts: ['No, once you\'re approved for federal loans, you\'re approved permanently', 'Yes, you must submit the FAFSA again every academic year to maintain your eligibility for federal loans and other aid', 'Only if your GPA drops', 'Only if you change your major'],
         correct: 1,
-        exp: 'FAFSA isn\'t a one-time form — it must be resubmitted every academic year to keep your federal loan eligibility (and any grants or work-study) active. Missing the renewal is one of the most common ways students accidentally lose aid they were counting on.'
+        exp: 'FAFSA isn\'t a one-time form. It must be resubmitted every academic year to keep your federal loan eligibility (and any grants or work-study) active. Missing the renewal is one of the most common ways students accidentally lose aid they were counting on.'
       },
       {
         q: 'What\'s a key difference between federal and private student loans?',
         opts: ['They are identical in every way', 'Federal loans offer protections like income-driven repayment and deferment regardless of credit; private loans come from banks or credit unions, often require a credit check or cosigner, and offer fewer built-in protections', 'Private loans are always cheaper than federal loans', 'Federal loans require a credit check but private loans do not'],
         correct: 1,
-        exp: 'Federal loans come with borrower protections baked in by law — income-driven repayment, deferment, forgiveness programs — regardless of your credit. Private loans are issued by banks or credit unions, often require good credit or a cosigner, and rarely offer the same flexibility if you hit financial trouble. Exhaust federal loan options before considering private ones.'
+        exp: 'Federal loans come with borrower protections baked in by law (income-driven repayment, deferment, forgiveness programs) regardless of your credit. Private loans are issued by banks or credit unions, often require good credit or a cosigner, and rarely offer the same flexibility if you hit financial trouble. Exhaust federal loan options before considering private ones.'
       },
       {
         q: 'You graduate in May. When do your federal student loan payments typically begin?',
         opts: ['Immediately upon graduation', 'Usually after a 6-month grace period, giving you time to find a job before your first payment is due', 'Payments are never required until you turn 30', 'Only once you\'ve paid off all interest that accrued'],
         correct: 1,
-        exp: 'Most federal loans include a 6-month grace period after you graduate, leave school, or drop below half-time enrollment. Use that window to pick a repayment plan — but if you have unsubsidized loans, interest is still accruing during this period even though no payment is due yet.'
+        exp: 'Most federal loans include a 6-month grace period after you graduate, leave school, or drop below half-time enrollment. Use that window to pick a repayment plan, but if you have unsubsidized loans, interest is still accruing during this period even though no payment is due yet.'
       },
       {
         q: 'You graduate with $28,000 in federal loans and a modest starting salary. Are you stuck with one fixed monthly payment?',
-        opts: ['Yes, there is only one repayment option for everyone', 'No — beyond the Standard 10-year plan, income-driven repayment plans set your monthly payment as a percentage of your income, which can lower payments if you\'re earning less', 'You must pay off the entire balance within 2 years of graduating', 'Repayment plans can only be changed once, ever'],
+        opts: ['Yes, there is only one repayment option for everyone', 'No: beyond the Standard 10-year plan, income-driven repayment plans set your monthly payment as a percentage of your income, which can lower payments if you\'re earning less', 'You must pay off the entire balance within 2 years of graduating', 'Repayment plans can only be changed once, ever'],
         correct: 1,
-        exp: 'Federal loans offer multiple repayment plans. The Standard Plan pays off the loan in 10 years with a fixed payment. Income-driven repayment (IDR) plans instead calculate your payment based on your income and family size — useful if your starting salary is tight, though you\'ll generally pay more interest over a longer term.'
+        exp: 'Federal loans offer multiple repayment plans. The Standard Plan pays off the loan in 10 years with a fixed payment. Income-driven repayment (IDR) plans instead calculate your payment based on your income and family size, useful if your starting salary is tight, though you\'ll generally pay more interest over a longer term.'
       },
       {
         q: 'You put your unsubsidized loan into deferment for a year while unpaid interest builds up. When you leave deferment, what happens to that unpaid interest?',
-        opts: ['It disappears automatically', 'It typically capitalizes — gets added to your principal balance — meaning you now pay interest on a larger amount going forward', 'It\'s automatically forgiven after any deferment period', 'It has no effect on your future payments'],
+        opts: ['It disappears automatically', 'It typically capitalizes (gets added to your principal balance), meaning you now pay interest on a larger amount going forward', 'It\'s automatically forgiven after any deferment period', 'It has no effect on your future payments'],
         correct: 1,
-        exp: 'Interest capitalization means unpaid interest gets rolled into your principal balance, so you start paying interest on interest. This commonly happens at the end of a deferment or forbearance period. Paying at least the interest while it accrues — even a small amount — can prevent your balance from growing larger than what you actually borrowed.'
+        exp: 'Interest capitalization means unpaid interest gets rolled into your principal balance, so you start paying interest on interest. This commonly happens at the end of a deferment or forbearance period. Paying at least the interest while it accrues, even a small amount, can prevent your balance from growing larger than what you actually borrowed.'
       },
       {
         q: 'A parent takes out a Parent PLUS loan to help cover your tuition. Who is legally responsible for repaying it?',
-        opts: ['The student, once they graduate and start working', 'The parent who took out the loan — it cannot simply be transferred to the student\'s name after the fact', 'Whoever has the higher income', 'It splits automatically 50/50 between parent and student'],
+        opts: ['The student, once they graduate and start working', 'The parent who took out the loan; it cannot simply be transferred to the student\'s name after the fact', 'Whoever has the higher income', 'It splits automatically 50/50 between parent and student'],
         correct: 1,
-        exp: 'A Parent PLUS loan is the parent\'s legal debt, not the student\'s — even though it paid for the student\'s education. Some families refinance it into the student\'s name later through a private lender, but the federal loan itself stays the parent\'s responsibility unless that happens.'
+        exp: 'A Parent PLUS loan is the parent\'s legal debt, not the student\'s, even though it paid for the student\'s education. Some families refinance it into the student\'s name later through a private lender, but the federal loan itself stays the parent\'s responsibility unless that happens.'
       },
       {
         q: 'Before accepting your final year of loans, what\'s a smart way to think about how borrowing today affects you after graduation?',
-        opts: ['Borrowing decisions don\'t matter until the first payment is due', 'Estimate your total debt at graduation and compare the expected monthly payment against a realistic starting salary for your field — a rough rule of thumb is keeping total debt near or below your expected first-year salary', 'Always borrow the maximum offered since you can figure out repayment later', 'Only students in expensive majors need to think about this'],
+        opts: ['Borrowing decisions don\'t matter until the first payment is due', 'Estimate your total debt at graduation and compare the expected monthly payment against a realistic starting salary for your field: a rough rule of thumb is keeping total debt near or below your expected first-year salary', 'Always borrow the maximum offered since you can figure out repayment later', 'Only students in expensive majors need to think about this'],
         correct: 1,
-        exp: 'A common guideline: try to keep total student loan debt at or below your expected first-year salary in your field. Running the numbers before you graduate — total balance, estimated interest, and a realistic starting salary — turns an abstract future payment into something you can actually plan around now.'
+        exp: 'A common guideline: try to keep total student loan debt at or below your expected first-year salary in your field. Running the numbers before you graduate (total balance, estimated interest, and a realistic starting salary) turns an abstract future payment into something you can actually plan around now.'
       }
     ],
     lessons: [
-      { title: 'Federal Loan Types', hook: 'Your financial aid offer lists Direct Subsidized and Direct Unsubsidized loans, plus a mention of private loan options from your bank. You\'ve never had to compare loan types before — does it actually matter which one you take?', qIndices: [0, 6] },
-      { title: 'PLUS Loans & Who\'s Responsible', hook: 'Your parent takes out a Parent PLUS loan to cover the gap in your bill. You figure you\'ll just pay it off yourself after graduation — but is that actually how it works?', qIndices: [1, 10] },
-      { title: 'Eligibility & Paperwork', hook: 'Before a single dollar of your loan shows up, studentaid.gov wants you to complete a Master Promissory Note and Entrance Counseling — and you\'re not sure if dropping one class this semester puts your aid at risk.', qIndices: [2, 3] },
+      { title: 'Federal Loan Types', hook: 'Your financial aid offer lists Direct Subsidized and Direct Unsubsidized loans, plus a mention of private loan options from your bank. You\'ve never had to compare loan types before. Does it actually matter which one you take?', qIndices: [0, 6] },
+      { title: 'PLUS Loans & Who\'s Responsible', hook: 'Your parent takes out a Parent PLUS loan to cover the gap in your bill. You figure you\'ll just pay it off yourself after graduation, but is that actually how it works?', qIndices: [1, 10] },
+      { title: 'Eligibility & Paperwork', hook: 'Before a single dollar of your loan shows up, studentaid.gov wants you to complete a Master Promissory Note and Entrance Counseling, and you\'re not sure if dropping one class this semester puts your aid at risk.', qIndices: [2, 3] },
       { title: 'Borrowing Only What You Need', hook: 'Your financial aid offer shows $5,500 in federal loans available for the year. You only need $3,200 to cover the gap after grants. It\'s tempting to take it all as extra cash. Should you?', qIndices: [4, 5] },
       { title: 'Repayment Plans & Interest Capitalization', hook: 'You defer your loan for a semester while between jobs, and later hear terms like "income-driven repayment" and "capitalized interest" for the first time. Do you actually know what either means for your balance?', qIndices: [8, 9] },
-      { title: 'Grace Periods & Planning Ahead', hook: 'You graduate in May with $28,000 in federal loans and a job offer that starts in July. When does your first payment actually hit — and how do you know if you can afford it?', qIndices: [7, 11] }
+      { title: 'Grace Periods & Planning Ahead', hook: 'You graduate in May with $28,000 in federal loans and a job offer that starts in July. When does your first payment actually hit, and how do you know if you can afford it?', qIndices: [7, 11] }
     ],
     quests: [
       {
@@ -8919,7 +8919,7 @@ const MODULES = [
           {
             id: 'pl_sim1', type: 'simulator', simulatorId: 'credit-climb', title: 'Family Loan Clarity Climb',
             meterKey: 'moneyScore', meterMin: 0, meterMax: 100,
-            intro: "Watch Hammy's family navigate the Parent PLUS loan more clearly. Tap each decision to see the impact.",
+            intro: "Watch how Hammy's family sorts out the Parent PLUS loan. Tap each decision to see the impact.",
             hintText: "Clear agreements and early conversations are what drive most of the gains here.",
             decisions: [
               { id: 'd1', label: "Put the repayment plan in writing before the first payment is due", scoreDelta: 13, note: "Clarity upfront avoids confusion or resentment down the road." },
@@ -9769,20 +9769,20 @@ const MODULES = [
         id: 'accept_loan',
         parentQuestId: 'federal_loans',
         topic: 'Accepting Your Loan Offer on StudentAid.gov: A Step-by-Step Guide',
-        character: { name: 'Hammy', tagline: 'Actually accepting — or reducing — a federal loan offer' },
+        character: { name: 'Hammy', tagline: 'Actually accepting, or reducing, a federal loan offer' },
         initialState: {},
         chapters: [
           {
             id: 'al0', type: 'story', title: 'The Aid Offer Is In',
             beats: [
-              { speaker: 'intro', text: "Hammy's financial aid offer just arrived with $5,500 in federal loans listed. Knowing subsidized from unsubsidized is one thing — actually accepting, reducing, or declining the offer is another." }
+              { speaker: 'intro', text: "Hammy's financial aid offer just arrived with $5,500 in federal loans listed. Knowing subsidized from unsubsidized is one thing; actually accepting, reducing, or declining the offer is another." }
             ]
           },
           {
             id: 'al1', type: 'teach', title: 'Step 1 & 2: Log In & Complete Counseling',
             concepts: [
               { term: 'Step 1: Log Into StudentAid.gov', plain: "First-time federal borrowers need an FSA ID to log in. This account is the hub for everything: loan counseling, the Master Promissory Note, and later, servicing the loan after graduation.", analogy: "It's the single login that follows a federal loan through its entire life.", check: {} },
-              { term: 'Step 2: Complete Entrance Counseling', plain: "Before any funds are disbursed, first-time borrowers must complete Loan Entrance Counseling — a short online module covering how interest works, repayment options, and borrower rights.", analogy: "It's like a short orientation before getting the keys — quick, but required.", check: { statement: 'Entrance Counseling is optional for first-time federal borrowers.', isTrue: false } }
+              { term: 'Step 2: Complete Entrance Counseling', plain: "Before any funds are disbursed, first-time borrowers must complete Loan Entrance Counseling, a short online module covering how interest works, repayment options, and borrower rights.", analogy: "It's like a short orientation before getting the keys: quick, but required.", check: { statement: 'Entrance Counseling is optional for first-time federal borrowers.', isTrue: false } }
             ],
             xpOnComplete: 3
           },
@@ -9790,7 +9790,7 @@ const MODULES = [
             id: 'al2', type: 'teach', title: 'Step 3 & 4: Sign & Decide',
             concepts: [
               { term: 'Step 3: Sign the Master Promissory Note', plain: "The MPN is the legal promise to repay the loan under its terms. It's typically only signed once and can cover multiple years of loans from the same school.", analogy: "It's the signature on the loan itself, not a form for questions.", check: {} },
-              { term: 'Step 4: Accept, Reduce, or Decline Each Loan', plain: "The school's portal lists each loan offered. Nothing requires accepting the full amount — accept only what covers the actual gap after other aid, and reduce or decline the rest.", analogy: "It's a menu, not an all-or-nothing bundle.", check: { statement: 'A student must always accept the full loan amount offered in their aid package.', isTrue: false } }
+              { term: 'Step 4: Accept, Reduce, or Decline Each Loan', plain: "The school's portal lists each loan offered. Nothing requires accepting the full amount. Accept only what covers the actual gap after other aid, and reduce or decline the rest.", analogy: "It's a menu, not an all-or-nothing bundle.", check: { statement: 'A student must always accept the full loan amount offered in their aid package.', isTrue: false } }
             ],
             xpOnComplete: 3
           },
@@ -9800,7 +9800,7 @@ const MODULES = [
             hintText: "Does extra loan money offered mean it has to be borrowed?",
             choices: [
               { id: 'a', label: 'Accept the full $5,500 for extra spending money', outcome: { text: "The extra $2,300 accrues interest like the rest and has to be repaid with interest after graduation.", delta: {}, compare: [{ label: 'Borrowed', value: 5500 }, { label: 'Actually needed', value: 3200 }] } },
-              { id: 'b', label: 'Accept only the $3,200 needed and decline the rest', outcome: { text: "Only the amount actually needed gets borrowed — smaller balance, smaller future payments.", delta: {}, compare: [{ label: 'Borrowed', value: 3200 }, { label: 'Declined', value: 2300 }] } }
+              { id: 'b', label: 'Accept only the $3,200 needed and decline the rest', outcome: { text: "Only the amount actually needed gets borrowed: smaller balance, smaller future payments.", delta: {}, compare: [{ label: 'Borrowed', value: 3200 }, { label: 'Declined', value: 2300 }] } }
             ],
             xpOnComplete: 4
           },
@@ -9822,33 +9822,33 @@ const MODULES = [
     questions: [
       {
         q: 'As a student filing your very first tax return, what\'s the most important first step?',
-        opts: ['Guess your income and file whatever feels right', 'Gather your income documents (W-2s, 1099s), confirm whether a parent claims you as a dependent, and file by the deadline — typically April 15th', 'Wait until you owe money before filing anything', 'Only file if you made over $50,000'],
+        opts: ['Guess your income and file whatever feels right', 'Gather your income documents (W-2s, 1099s), confirm whether a parent claims you as a dependent, and file by the deadline, typically April 15th', 'Wait until you owe money before filing anything', 'Only file if you made over $50,000'],
         correct: 1,
-        exp: 'Even students with part-time or internship income often need to file. Collect every income document you received, confirm your dependency status (it changes your standard deduction), and file — free options like IRS Free File cover most students. The federal deadline is typically April 15th.'
+        exp: 'Even students with part-time or internship income often need to file. Collect every income document you received, confirm your dependency status (it changes your standard deduction), and file. Free options like IRS Free File cover most students. The federal deadline is typically April 15th.'
       },
       {
         q: 'You open your W-2 and "Box 1: Wages" is lower than your actual gross pay for the year. Why?',
-        opts: ['The employer made an error', 'Box 1 shows taxable wages after pre-tax deductions — like retirement contributions or certain benefits — are subtracted', 'Box 1 always equals your final paycheck of the year', 'W-2s only report your most recent paycheck'],
+        opts: ['The employer made an error', 'Box 1 shows taxable wages after pre-tax deductions (like retirement contributions or certain benefits) are subtracted', 'Box 1 always equals your final paycheck of the year', 'W-2s only report your most recent paycheck'],
         correct: 1,
-        exp: 'Box 1 reflects taxable wages, not gross pay — pre-tax deductions such as 401(k)/403(b) contributions are already removed. Other boxes show federal income tax, Social Security, and Medicare withheld. You\'ll need this form on hand to file your return.'
+        exp: 'Box 1 reflects taxable wages, not gross pay: pre-tax deductions such as 401(k)/403(b) contributions are already removed. Other boxes show federal income tax, Social Security, and Medicare withheld. You\'ll need this form on hand to file your return.'
       },
       {
         q: 'You did freelance design work and earned $900 through a platform that sent you a 1099-NEC instead of a W-2. What\'s different about this income?',
-        opts: ['Nothing — it\'s taxed exactly like W-2 wages with taxes already withheld', 'No taxes were withheld, so you\'re responsible for reporting it yourself and may owe self-employment tax on top of income tax', '1099 income is tax-free under $1,000', 'You don\'t need to report it since it wasn\'t a full-time job'],
+        opts: ['Nothing; it\'s taxed exactly like W-2 wages with taxes already withheld', 'No taxes were withheld, so you\'re responsible for reporting it yourself and may owe self-employment tax on top of income tax', '1099 income is tax-free under $1,000', 'You don\'t need to report it since it wasn\'t a full-time job'],
         correct: 1,
-        exp: '1099 income — freelance work, gig apps, a side business — has no taxes withheld upfront; that responsibility falls on you. Beyond income tax, you may owe self-employment tax (roughly 15.3% for Social Security and Medicare) once net earnings pass $400. Setting aside 20–30% of 1099 income as you earn it avoids a painful surprise bill.'
+        exp: '1099 income (freelance work, gig apps, a side business) has no taxes withheld upfront; that responsibility falls on you. Beyond income tax, you may owe self-employment tax (roughly 15.3% for Social Security and Medicare) once net earnings pass $400. Setting aside 20–30% of 1099 income as you earn it avoids a painful surprise bill.'
       },
       {
         q: 'You worked a paid summer internship and received a W-2 with taxes already withheld. Do you still need to file a return?',
-        opts: ['No — since taxes were already withheld, there\'s nothing left to do', 'Possibly yes — filing may get you a refund of over-withheld taxes, and you\'re required to file once your income passes the filing threshold', 'Only if the internship was unpaid', 'Internship income is exempt from taxes for students'],
+        opts: ['No, since taxes were already withheld, there\'s nothing left to do', 'Possibly yes: filing may get you a refund of over-withheld taxes, and you\'re required to file once your income passes the filing threshold', 'Only if the internship was unpaid', 'Internship income is exempt from taxes for students'],
         correct: 1,
-        exp: 'Internship pay is taxed like any other W-2 job. Many students have more withheld than they actually owe relative to their total annual income — filing is how you get that money back as a refund. Skipping the return can mean leaving money on the table.'
+        exp: 'Internship pay is taxed like any other W-2 job. Many students have more withheld than they actually owe relative to their total annual income. Filing is how you get that money back as a refund. Skipping the return can mean leaving money on the table.'
       },
       {
         q: 'What\'s the difference between the American Opportunity Tax Credit (AOTC) and the Lifetime Learning Credit (LLC)?',
         opts: ['They\'re the same credit under two different names', 'The AOTC applies to the first four years of undergraduate study and offers a larger credit; the LLC has no year limit and covers more types of coursework, but offers a smaller credit', 'The LLC is only for graduate students and the AOTC only for high schoolers', 'Neither can be claimed if the student is someone else\'s dependent'],
         correct: 1,
-        exp: 'The AOTC is worth up to $2,500/year for the first four years of a degree, and up to 40% of it is refundable even if you owe no tax. The LLC is worth up to $2,000/year with no limit on how many years you can claim it, and covers a broader range of courses. If you\'re a dependent, it\'s usually your parent who claims these — confirm who\'s eligible before anyone files.'
+        exp: 'The AOTC is worth up to $2,500/year for the first four years of a degree, and up to 40% of it is refundable even if you owe no tax. The LLC is worth up to $2,000/year with no limit on how many years you can claim it, and covers a broader range of courses. If you\'re a dependent, it\'s usually your parent who claims these. Confirm who\'s eligible before anyone files.'
       },
       {
         q: 'Which of these is a common mistake first-time student filers make?',
@@ -9860,45 +9860,45 @@ const MODULES = [
         q: 'Your parents claim you as a dependent on their tax return. How does this affect your own return?',
         opts: ['It means you\'re not allowed to file your own tax return at all', 'Your standard deduction may be lower than an independent filer\'s, and you generally can\'t claim certain credits your parents may claim instead', 'Being claimed as a dependent means you owe zero taxes automatically', 'It has no effect on either return'],
         correct: 1,
-        exp: 'Being claimed as a dependent affects your standard deduction and which credits you can claim yourself versus which your parents claim, like education credits. You can still file your own return to report your income — dependency status just changes some of the numbers and who gets which benefit.'
+        exp: 'Being claimed as a dependent affects your standard deduction and which credits you can claim yourself versus which your parents claim, like education credits. You can still file your own return to report your income; dependency status just changes some of the numbers and who gets which benefit.'
       },
       {
         q: 'You get a Form 1098-T from your school in January. What is it for?',
         opts: ['It reports your part-time job wages', 'It reports tuition payments and scholarships/grants received during the year, used to calculate education tax credits', 'It\'s your official transcript for job applications', 'It only matters if you\'re in your final year of school'],
         correct: 1,
-        exp: 'The 1098-T shows how much qualified tuition you paid and how much scholarship/grant aid you received. Whoever claims you — or you, if independent — uses these numbers to calculate education credits like the AOTC or LLC. Keep it with your other tax documents.'
+        exp: 'The 1098-T shows how much qualified tuition you paid and how much scholarship/grant aid you received. Whoever claims you (or you, if independent) uses these numbers to calculate education credits like the AOTC or LLC. Keep it with your other tax documents.'
       },
       {
         q: 'You earn $8,000 in freelance income this year with no taxes withheld. What might you need to do differently than a typical W-2 employee?',
         opts: ['Nothing, you can pay it all at once in April with no issues', 'If you expect to owe $1,000+ in tax, you may need to make estimated quarterly tax payments throughout the year to avoid an underpayment penalty', 'Freelance income under $10,000 is automatically tax-exempt', 'You must hire an accountant by law'],
         correct: 1,
-        exp: 'The IRS expects tax to be paid as you earn, not just once a year. If you expect to owe $1,000 or more and have no withholding, quarterly estimated payments help you avoid an underpayment penalty — setting aside 20–30% of each payment as you go makes this easier.'
+        exp: 'The IRS expects tax to be paid as you earn, not just once a year. If you expect to owe $1,000 or more and have no withholding, quarterly estimated payments help you avoid an underpayment penalty. Setting aside 20–30% of each payment as you go makes this easier.'
       },
       {
         q: 'You go to school in a different state than your permanent home, and you worked a part-time job there this year. Do you need to think about state taxes differently?',
-        opts: ['No, state taxes only depend on where your parents live', 'Possibly — you may need to file a state return in the state where you worked or earned income, in addition to or instead of your home state, depending on each state\'s rules', 'State taxes are always waived for students', 'You only owe state taxes after graduating'],
+        opts: ['No, state taxes only depend on where your parents live', 'Possibly: you may need to file a state return in the state where you worked or earned income, in addition to or instead of your home state, depending on each state\'s rules', 'State taxes are always waived for students', 'You only owe state taxes after graduating'],
         correct: 1,
-        exp: 'Earning income in the state where you attend school can create a filing obligation there, separate from your home state\'s residency rules. Every state\'s rules differ, and some have no income tax at all — check both states involved if you worked while at school.'
+        exp: 'Earning income in the state where you attend school can create a filing obligation there, separate from your home state\'s residency rules. Every state\'s rules differ, and some have no income tax at all. Check both states involved if you worked while at school.'
       },
       {
         q: 'You got a much bigger tax bill than expected last year because too little was withheld from your paychecks. What can you do about it going forward?',
         opts: ['Nothing, withholding is fixed once you start a job', 'Submit an updated W-4 to your employer to adjust how much federal tax is withheld from each paycheck', 'Ask your employer to stop reporting your income', 'Simply skip filing next year'],
         correct: 1,
-        exp: 'A W-4 isn\'t a one-time form — you can update it anytime, especially after a surprise tax bill or a big income change like adding a second job. Adjusting your withholding spreads the tax cost across the year instead of hitting you with one large bill in April.'
+        exp: 'A W-4 isn\'t a one-time form. You can update it anytime, especially after a surprise tax bill or a big income change like adding a second job. Adjusting your withholding spreads the tax cost across the year instead of hitting you with one large bill in April.'
       },
       {
         q: 'As a student with a simple return, what\'s a smart way to file without paying a tax prep company?',
         opts: ['You must always pay a company to file correctly', 'IRS Free File (for eligible incomes) and free VITA (Volunteer Income Tax Assistance) clinics on many campuses can prepare and file simple returns at no cost', 'Free filing options are only available to people over 65', 'Filing for free means you can\'t claim any credits'],
         correct: 1,
-        exp: 'Most students qualify for IRS Free File based on income, and many campuses host free VITA clinics staffed by IRS-certified volunteers during tax season. Both can handle W-2s, 1099s, and education credits — there\'s rarely a reason to pay for a simple first return.'
+        exp: 'Most students qualify for IRS Free File based on income, and many campuses host free VITA clinics staffed by IRS-certified volunteers during tax season. Both can handle W-2s, 1099s, and education credits. There\'s rarely a reason to pay for a simple first return.'
       }
     ],
     lessons: [
-      { title: 'Your First Return', hook: 'It\'s April, and you\'ve never filed a tax return in your life. You have a W-2 from your on-campus job. Where do you even start — and what does everything on that form actually mean?', qIndices: [0, 1] },
+      { title: 'Your First Return', hook: 'It\'s April, and you\'ve never filed a tax return in your life. You have a W-2 from your on-campus job. Where do you even start, and what does everything on that form actually mean?', qIndices: [0, 1] },
       { title: '1099s & Internship Income', hook: 'Your friend says they got a 1099-NEC after doing freelance design work over the summer, while you had a paid internship with a normal W-2. Are you taxed the same way?', qIndices: [2, 3] },
       { title: 'Education Credits & Your 1098-T', hook: 'Your school sends you a Form 1098-T in January and your parents mention "education credits" at dinner. You have no idea what either of those means for anyone\'s tax bill.', qIndices: [4, 7] },
       { title: 'Dependency Status & Common Mistakes', hook: 'Your parents still claim you as a dependent, and your friend who got $600 back after filing says you should definitely file too, even though you were "just an intern." What are you both getting wrong or right?', qIndices: [6, 5] },
-      { title: 'Freelance Income: Estimated Taxes & State Filing', hook: 'You earned $8,000 freelancing this year with nothing withheld, and half of it came from clients in the state where you go to school — not your home state. Is April the only deadline you need to worry about?', qIndices: [8, 9] },
+      { title: 'Freelance Income: Estimated Taxes & State Filing', hook: 'You earned $8,000 freelancing this year with nothing withheld, and half of it came from clients in the state where you go to school, not your home state. Is April the only deadline you need to worry about?', qIndices: [8, 9] },
       { title: 'Getting Your Withholding Right & Filing for Free', hook: 'Last year\'s tax bill caught you off guard, and this year a friend says campus has a free clinic that\'ll actually file your return for you. Do either of those things sound too good to be true?', qIndices: [10, 11] }
     ],
     quests: [
@@ -10108,7 +10108,7 @@ const MODULES = [
             beats: [
               { speaker: 'intro', text: "Hammy's friend did freelance design work over the summer and got a 1099-NEC. Hammy had a paid internship and got a normal W-2. They assume it's basically the same thing." },
               { speaker: 'Hammy', text: '"We both just got paid for work, right? Why would the form even matter?"' },
-              { speaker: 'narrator', text: "It matters more than either of them realizes, especially when it comes to what's already been handled versus what hasn't." },
+              { speaker: 'narrator', text: "It matters more than either of them realizes, especially for what's already been handled versus what hasn't." },
               { speaker: 'Hammy', text: '"Okay, what\'s actually different here?"' }
             ]
           },
@@ -10248,7 +10248,7 @@ const MODULES = [
           {
             id: 'wv_kc1', type: 'knowledgecheck', title: 'Quick Check', qIndices: [2, 3],
             hintTexts: [
-              "Think about what's different about 1099 income compared to W-2 income when it comes to taxes withheld.",
+              "Think about what's different about 1099 income compared to W-2 income and taxes withheld.",
               "Think about whether having taxes already withheld from a W-2 job means filing is optional."
             ]
           },
@@ -10302,7 +10302,7 @@ const MODULES = [
             beats: [
               { speaker: 'intro', text: "A Form 1098-T shows up from Hammy's school in January. At dinner, a parent mentions \"education credits\" like it's obvious what that means." },
               { speaker: 'Hammy', text: '"I have no idea what either of those things actually means for anyone\'s tax bill."' },
-              { speaker: 'narrator', text: "The 1098-T is the key that unlocks a real tax credit, worth understanding before it gets tossed in a drawer unread." },
+              { speaker: 'narrator', text: "The 1098-T is what makes a real tax credit possible, worth understanding before it gets tossed in a drawer unread." },
               { speaker: 'Hammy', text: '"A real credit? Like, actual money off what\'s owed?"' }
             ]
           },
@@ -10754,9 +10754,9 @@ const MODULES = [
             intro: "Here's a rundown of filing options Hammy is considering. Tap anything that's worth a second look before assuming it's actually free, then hit Continue to see what you caught.",
             postingTitle: "Comparing Filing Options",
             segments: [
-              { id: 's1', text: "IRS Free File — free federal filing for eligible incomes, directly through IRS-partnered software. ", isRedFlag: false, explanation: "A genuinely free, legitimate option with no hidden upsell for a simple return." },
-              { id: 's2', text: "Campus VITA clinic — free, in-person help from IRS-certified student volunteers. ", isRedFlag: false, explanation: "Another genuinely free option, well-suited to a simple student return." },
-              { id: 's3', text: "\"Free\" tax software ad — free to start, but charges extra once a 1099 or education credit form is added. ", isRedFlag: true, explanation: "This is the bait-and-switch pattern worth watching for, \"free\" only applies to the simplest possible return." },
+              { id: 's1', text: "IRS Free File: free federal filing for eligible incomes, directly through IRS-partnered software. ", isRedFlag: false, explanation: "A genuinely free, legitimate option with no hidden upsell for a simple return." },
+              { id: 's2', text: "Campus VITA clinic: free, in-person help from IRS-certified student volunteers. ", isRedFlag: false, explanation: "Another genuinely free option, well-suited to a simple student return." },
+              { id: 's3', text: "\"Free\" tax software ad: free to start, but charges extra once a 1099 or education credit form is added. ", isRedFlag: true, explanation: "This is the bait-and-switch pattern worth watching for, \"free\" only applies to the simplest possible return." },
               { id: 's4', text: "A local tax prep storefront charging a flat $150 fee. ", isRedFlag: true, explanation: "Not necessarily a scam, but worth comparing against the free options first for a return this simple." },
               { id: 's5', text: "A friend offering to \"just do it the same way\" they did theirs, without asking about Hammy's specific income sources. ", isRedFlag: true, explanation: "Every return is different, copying a friend's approach without checking Hammy's specific situation (like the 1099 income) risks errors." }
             ],
@@ -11106,13 +11106,13 @@ const MODULES = [
           {
             id: 'ff0', type: 'story', title: 'April Is Coming',
             beats: [
-              { speaker: 'intro', text: "Hammy has a W-2 from a campus job and has never filed a tax return. Knowing what a W-2 means is one thing — actually filing the return is another." }
+              { speaker: 'intro', text: "Hammy has a W-2 from a campus job and has never filed a tax return. Knowing what a W-2 means is one thing; actually filing the return is another." }
             ]
           },
           {
             id: 'ff1', type: 'teach', title: 'Step 1 & 2: Gather & Choose a Tool',
             concepts: [
-              { term: 'Step 1: Gather the Documents', plain: "Collect every income form received — W-2s from jobs, 1099s from gig work or freelancing — plus a 1098-T if enrolled, and last year's return if one exists.", analogy: "It's like packing for a trip — everything is much easier with the full list gathered first.", check: {} },
+              { term: 'Step 1: Gather the Documents', plain: "Collect every income form received (W-2s from jobs, 1099s from gig work or freelancing) plus a 1098-T if enrolled, and last year's return if one exists.", analogy: "It's like packing for a trip: everything is much easier with the full list gathered first.", check: {} },
               { term: 'Step 2: Pick a Free Filing Tool', plain: "IRS Free File is free for most students' income levels, and many schools host free VITA (Volunteer Income Tax Assistance) clinics. Paying a tax prep company usually isn't necessary for a simple return.", analogy: "Same result as a paid preparer, for most simple student returns, at no cost.", check: { statement: 'Most students with simple returns are required to pay a tax preparation company to file.', isTrue: false } }
             ],
             xpOnComplete: 3
@@ -11120,7 +11120,7 @@ const MODULES = [
           {
             id: 'ff2', type: 'teach', title: 'Step 3 & 4: Enter & Submit',
             concepts: [
-              { term: 'Step 3: Enter Info & Review', plain: "Most free tools walk through entering each form step by step, then flag likely credits — like education credits from a 1098-T — automatically. Review the summary before submitting; a small typo in a number can delay everything.", analogy: "It's a guided interview, not a blank form.", check: {} },
+              { term: 'Step 3: Enter Info & Review', plain: "Most free tools walk through entering each form step by step, then flag likely credits (like education credits from a 1098-T) automatically. Review the summary before submitting; a small typo in a number can delay everything.", analogy: "It's a guided interview, not a blank form.", check: {} },
               { term: 'Step 4: Submit & Track the Refund', plain: "E-filing is faster than mailing a paper return, and combined with direct deposit, the IRS issues most refunds in less than 21 days. The IRS's own tracking tool shows exactly where a return stands.", analogy: "Like tracking a package instead of wondering when it'll show up.", check: { statement: 'E-filing a tax return is typically faster than mailing a paper return.', isTrue: true } }
             ],
             xpOnComplete: 3
@@ -11152,114 +11152,114 @@ const MODULES = [
     desc: 'Impulse spending, social pressure, lifestyle inflation, subscriptions, BNPL, and the behavioral side of money.',
     questions: [
       {
-        q: 'You know you should save, and you even have a budget — but by month\'s end there\'s nothing left. What\'s usually the real reason?',
-        opts: ['Budgets simply don\'t work for anyone', 'Financial decisions are driven as much by emotion, habit, and environment as by logic — knowledge alone doesn\'t change behavior without systems that make good choices automatic', 'You simply don\'t earn enough money, full stop', 'Saving only matters once you have a high income'],
+        q: 'You know you should save, and you even have a budget, but by month\'s end there\'s nothing left. What\'s usually the real reason?',
+        opts: ['Budgets simply don\'t work for anyone', 'Financial decisions are driven as much by emotion, habit, and environment as by logic: knowledge alone doesn\'t change behavior without systems that make good choices automatic', 'You simply don\'t earn enough money, full stop', 'Saving only matters once you have a high income'],
         correct: 1,
-        exp: 'This is sometimes called the "knowledge-action gap" — knowing the right move and consistently doing it are different skills. Willpower fades, especially under stress or around friends. The fix isn\'t more willpower; it\'s designing your environment — automatic transfers, separate accounts, fewer triggers — so the right choice takes less effort than the wrong one.'
+        exp: 'This is sometimes called the "knowledge-action gap": knowing the right move and consistently doing it are different skills. Willpower fades, especially under stress or around friends. The fix isn\'t more willpower; it\'s designing your environment (automatic transfers, separate accounts, fewer triggers) so the right choice takes less effort than the wrong one.'
       },
       {
         q: 'What\'s the most effective way to reduce impulse spending?',
-        opts: ['Rely purely on willpower to resist urges in the moment', 'Identify your personal triggers — boredom, stress, social media ads, being with certain friends — and add friction, like a 24-hour rule before non-essential purchases', 'Avoid checking your bank balance so you don\'t feel guilty', 'Impulse spending can\'t be reduced, only accepted'],
+        opts: ['Rely purely on willpower to resist urges in the moment', 'Identify your personal triggers (boredom, stress, social media ads, being with certain friends) and add friction, like a 24-hour rule before non-essential purchases', 'Avoid checking your bank balance so you don\'t feel guilty', 'Impulse spending can\'t be reduced, only accepted'],
         correct: 1,
-        exp: 'Impulse purchases are triggered by emotion and environment — late-night scrolling, a stressful week, seeing a friend post a new purchase. A 24-hour waiting rule for non-essential buys over a set amount (say, $30) lets the emotional urge fade and gives your rational brain a chance to weigh in.'
+        exp: 'Impulse purchases are triggered by emotion and environment: late-night scrolling, a stressful week, seeing a friend post a new purchase. A 24-hour waiting rule for non-essential buys over a set amount (say, $30) lets the emotional urge fade and gives your rational brain a chance to weigh in.'
       },
       {
-        q: 'Your friend group keeps upgrading — concert tickets, new clothes, trips — and your spending has crept up to match, even though your income hasn\'t changed. What is this called?',
-        opts: ['Compound interest', 'Lifestyle inflation — spending rises to match perceived social norms or income increases, often without a matching increase in savings', 'Diversification', 'A one-time budget deficit, unrelated to social factors'],
+        q: 'Your friend group keeps upgrading (concert tickets, new clothes, trips) and your spending has crept up to match, even though your income hasn\'t changed. What is this called?',
+        opts: ['Compound interest', 'Lifestyle inflation: spending rises to match perceived social norms or income increases, often without a matching increase in savings', 'Diversification', 'A one-time budget deficit, unrelated to social factors'],
         correct: 1,
-        exp: 'Lifestyle inflation happens gradually — each "yes" feels small on its own, but they add up fast. Social pressure accelerates it, since spending often tracks the people around you rather than your actual budget. Naming the pattern helps: set a spending cap for social activities and be upfront with friends about it. Real friends adjust.'
+        exp: 'Lifestyle inflation happens gradually: each "yes" feels small on its own, but they add up fast. Social pressure accelerates it, since spending often tracks the people around you rather than your actual budget. Naming the pattern helps: set a spending cap for social activities and be upfront with friends about it. Real friends adjust.'
       },
       {
-        q: 'You review your bank statement and find six recurring subscriptions — some you forgot you even had. What\'s the best way to prevent this "subscription creep"?',
+        q: 'You review your bank statement and find six recurring subscriptions, some you forgot you even had. What\'s the best way to prevent this "subscription creep"?',
         opts: ['Subscriptions are small, so they\'re not worth tracking', 'Do a recurring-charge audit every month or two, cancel what you don\'t use, and set one overall "subscriptions" budget cap instead of stacking them one by one', 'Sign up for as many free trials as possible', 'Only cancel subscriptions once you\'re already in debt'],
         correct: 1,
-        exp: 'Subscriptions are designed to be easy to start and easy to forget — $8 here, $12 there adds up to real money over a year. Scan your statement monthly for recurring charges, cancel what you don\'t use, and set a total budget line for subscriptions instead of letting each one sneak in separately.'
+        exp: 'Subscriptions are designed to be easy to start and easy to forget: $8 here, $12 there adds up to real money over a year. Scan your statement monthly for recurring charges, cancel what you don\'t use, and set a total budget line for subscriptions instead of letting each one sneak in separately.'
       },
       {
-        q: 'A checkout page offers "Buy Now, Pay Later" — split a $200 purchase into 4 payments of $50 with no interest. What\'s the hidden risk?',
-        opts: ['There is no risk — it\'s always interest-free and completely safe', 'BNPL can encourage overspending beyond what you\'d normally buy, stacking multiple plans gets hard to track, and missed payments can trigger late fees or hit your credit', 'BNPL only works for people with excellent credit', 'BNPL automatically improves your credit score'],
+        q: 'A checkout page offers "Buy Now, Pay Later": split a $200 purchase into 4 payments of $50 with no interest. What\'s the hidden risk?',
+        opts: ['There is no risk; it\'s always interest-free and completely safe', 'BNPL can encourage overspending beyond what you\'d normally buy, stacking multiple plans gets hard to track, and missed payments can trigger late fees or hit your credit', 'BNPL only works for people with excellent credit', 'BNPL automatically improves your credit score'],
         correct: 1,
-        exp: 'BNPL feels painless because it splits the cost into smaller pieces — which is exactly why it can lead to overspending. Juggling several BNPL plans across different apps makes it easy to lose track of what\'s due and when, and missed payments can mean late fees or credit damage depending on the provider. Ask yourself: would I still buy this if I had to pay the full amount today?'
+        exp: 'BNPL feels painless because it splits the cost into smaller pieces, which is exactly why it can lead to overspending. Juggling several BNPL plans across different apps makes it easy to lose track of what\'s due and when, and missed payments can mean late fees or credit damage depending on the provider. Ask yourself: would I still buy this if I had to pay the full amount today?'
       },
       {
         q: 'What\'s the most reliable way to build a financial habit that actually sticks?',
-        opts: ['Rely on motivation and remember to do it manually every time', 'Automate the behavior — like an automatic savings transfer on payday — so the good choice happens by default without requiring willpower each time', 'Set an unrealistic goal so you\'re forced to try harder', 'Only check your spending once a year'],
+        opts: ['Rely on motivation and remember to do it manually every time', 'Automate the behavior (like an automatic savings transfer on payday) so the good choice happens by default without requiring willpower each time', 'Set an unrealistic goal so you\'re forced to try harder', 'Only check your spending once a year'],
         correct: 1,
-        exp: 'Habits that depend on remembering and willpower fade fast. Habits that run automatically — an auto-transfer to savings, a bill on autopay, a set weekly check-in — stick because they don\'t require a fresh decision every time. Start small and automatic; consistency beats intensity.'
+        exp: 'Habits that depend on remembering and willpower fade fast. Habits that run automatically (an auto-transfer to savings, a bill on autopay, a set weekly check-in) stick because they don\'t require a fresh decision every time. Start small and automatic; consistency beats intensity.'
       },
       {
         q: 'Your friend group is planning a spring break trip you can\'t really afford, but everyone\'s going and it\'s all anyone talks about. What\'s the healthiest way to handle it?',
-        opts: ['Go anyway and figure out the money later, even if it means a credit card balance you can\'t pay off', 'Decide your budget first, then either find a cheaper way to join or opt out and communicate it honestly — real friends adjust', 'Never hang out with this friend group again', 'Take out a personal loan to cover the trip without telling anyone'],
+        opts: ['Go anyway and figure out the money later, even if it means a credit card balance you can\'t pay off', 'Decide your budget first, then either find a cheaper way to join or opt out and communicate it honestly. Real friends adjust', 'Never hang out with this friend group again', 'Take out a personal loan to cover the trip without telling anyone'],
         correct: 1,
-        exp: 'Social pressure is one of the strongest drivers of overspending precisely because saying no feels awkward in the moment. Deciding your number in advance — and being upfront about it — takes the emotional pressure out of the decision.'
+        exp: 'Social pressure is one of the strongest drivers of overspending precisely because saying no feels awkward in the moment. Deciding your number in advance, and being upfront about it, takes the emotional pressure out of the decision.'
       },
       {
         q: 'You get a $400 tax refund and immediately spend it on something you\'d never buy with a regular paycheck. What\'s happening here?',
-        opts: ['Nothing unusual, all money is treated the same by everyone', 'This is "mental accounting" — treating money differently based on where it came from, even though a dollar from a refund spends exactly the same as a dollar from a paycheck', 'Tax refunds are not real money', 'Refunds should always be spent immediately by law'],
+        opts: ['Nothing unusual, all money is treated the same by everyone', 'This is "mental accounting": treating money differently based on where it came from, even though a dollar from a refund spends exactly the same as a dollar from a paycheck', 'Tax refunds are not real money', 'Refunds should always be spent immediately by law'],
         correct: 1,
-        exp: 'Mental accounting is a well-documented behavioral bias — people mentally label money as "bonus" or "free" and spend it more loosely than earned income, even though it\'s equally real money. Treating a refund like any other dollar helps you avoid this trap.'
+        exp: 'Mental accounting is a well-documented behavioral bias: people mentally label money as "bonus" or "free" and spend it more loosely than earned income, even though it\'s equally real money. Treating a refund like any other dollar helps you avoid this trap.'
       },
       {
         q: 'You open Instagram and within a minute see three targeted ads related to something you searched yesterday. You buy one on impulse. What\'s a practical defense against this?',
         opts: ['There\'s no defense, targeted ads always win', 'Add a personal rule like a 24-hour wait or a "sleep on it" cart before buying anything from a social media ad', 'Delete all social media accounts permanently', 'Only shop using incognito mode'],
         correct: 1,
-        exp: 'Targeted ads are designed to catch you at your most impulsive moment. A simple waiting-period rule for anything discovered through an ad — even 24 hours — breaks the impulse loop and gives you a chance to decide with a clear head.'
+        exp: 'Targeted ads are designed to catch you at your most impulsive moment. A simple waiting-period rule for anything discovered through an ad, even 24 hours, breaks the impulse loop and gives you a chance to decide with a clear head.'
       },
       {
         q: 'You\'ve been paying for a gym membership for 8 months but only went twice. You keep paying because "I already spent so much on it." What\'s this thinking called, and what should you actually do?',
-        opts: ['It\'s smart to keep paying since you might use it eventually', 'This is the sunk cost fallacy — money already spent is gone either way, so the only real decision is whether it\'s worth paying for going forward', 'You should double your membership to get your money\'s worth', 'Gym memberships cannot be canceled once started'],
+        opts: ['It\'s smart to keep paying since you might use it eventually', 'This is the sunk cost fallacy: money already spent is gone either way, so the only real decision is whether it\'s worth paying for going forward', 'You should double your membership to get your money\'s worth', 'Gym memberships cannot be canceled once started'],
         correct: 1,
-        exp: 'The sunk cost fallacy is continuing to invest in something because of what you\'ve already spent, not because it still makes sense. Money already spent is gone either way — the only real decision is whether the subscription is worth paying for going forward.'
+        exp: 'The sunk cost fallacy is continuing to invest in something because of what you\'ve already spent, not because it still makes sense. Money already spent is gone either way. The only real decision is whether the subscription is worth paying for going forward.'
       },
       {
         q: 'You keep seeing influencers post "get ready with me" hauls and feel like your wardrobe is suddenly inadequate, even though nothing in your life actually changed. What\'s driving this?',
-        opts: ['Your wardrobe genuinely became outdated overnight', 'Social comparison — constantly seeing curated, filtered spending from influencers and peers resets your sense of what\'s "normal," even when it doesn\'t reflect your actual needs or budget', 'Influencers are legally required to be honest about affordability', 'This feeling means you should upgrade your whole wardrobe immediately'],
+        opts: ['Your wardrobe genuinely became outdated overnight', 'Social comparison: constantly seeing curated, filtered spending from influencers and peers resets your sense of what\'s "normal," even when it doesn\'t reflect your actual needs or budget', 'Influencers are legally required to be honest about affordability', 'This feeling means you should upgrade your whole wardrobe immediately'],
         correct: 1,
-        exp: 'Social media constantly resets your baseline for what feels "normal" to own or spend, since you\'re comparing your everyday life to someone else\'s curated highlight reel. Recognizing the feeling as social comparison — not an actual need — is often enough to pause before buying.'
+        exp: 'Social media constantly resets your baseline for what feels "normal" to own or spend, since you\'re comparing your everyday life to someone else\'s curated highlight reel. Recognizing the feeling as social comparison, not an actual need, is often enough to pause before buying.'
       },
       {
         q: 'You had a stressful exam week and found yourself online shopping late at night for things you don\'t really need. What\'s a more effective coping strategy than shopping?',
-        opts: ['Nothing else works as well as a stress purchase', 'Identify the actual trigger — stress, boredom, loneliness — and build a non-spending response reserved specifically for those moments, like a walk or calling a friend', 'Just accept that stress spending is unavoidable', 'Cancel your bank card permanently'],
+        opts: ['Nothing else works as well as a stress purchase', 'Identify the actual trigger (stress, boredom, loneliness) and build a non-spending response reserved specifically for those moments, like a walk or calling a friend', 'Just accept that stress spending is unavoidable', 'Cancel your bank card permanently'],
         correct: 1,
         exp: 'Stress spending works because shopping provides a quick dopamine hit, not because you actually need the item. Building an alternative response to the same trigger breaks the automatic link between feeling stressed and buying something.'
       }
     ],
     lessons: [
-      { title: 'Why Knowing Isn\'t Enough', hook: 'You know you should be saving — you even said it out loud last week. Then a friend tags you in a group order twenty minutes later. Why does knowing what to do never seem to be enough?', qIndices: [0, 1] },
-      { title: 'Lifestyle Inflation & Social Pressure', hook: 'Your friend group keeps upgrading — concert tickets, new clothes, a spring break trip everyone\'s going on — and you feel like you have to keep up even though your income hasn\'t changed. Where\'s the line between fitting in and financial trouble?', qIndices: [2, 6] },
-      { title: 'Subscriptions & BNPL', hook: 'You check out online and see "Buy Now, Pay Later — 4 payments of $50, no interest." It feels harmless. Combined with the six subscriptions already on your card, is it?', qIndices: [3, 4] },
+      { title: 'Why Knowing Isn\'t Enough', hook: 'You know you should be saving. You even said it out loud last week. Then a friend tags you in a group order twenty minutes later. Why does knowing what to do never seem to be enough?', qIndices: [0, 1] },
+      { title: 'Lifestyle Inflation & Social Pressure', hook: 'Your friend group keeps upgrading (concert tickets, new clothes, a spring break trip everyone\'s going on) and you feel like you have to keep up even though your income hasn\'t changed. Where\'s the line between fitting in and financial trouble?', qIndices: [2, 6] },
+      { title: 'Subscriptions & BNPL', hook: 'You check out online and see "Buy Now, Pay Later: 4 payments of $50, no interest." It feels harmless. Combined with the six subscriptions already on your card, is it?', qIndices: [3, 4] },
       { title: 'Mental Accounting & Targeted Ads', hook: 'You get a $400 tax refund and immediately blow it on something you\'d never normally buy, then open Instagram and buy a targeted ad\'s product on impulse ten minutes later. Is your brain treating this money differently than a regular paycheck?', qIndices: [7, 8] },
       { title: 'Sunk Cost & Comparison Spending', hook: 'You\'re still paying for a gym membership you\'ve used twice in 8 months, and you just spent an hour comparing your closet to an influencer\'s "haul" video. Neither decision is really about the gym or the clothes.', qIndices: [9, 10] },
-      { title: 'Automating Habits & Coping With Triggers', hook: 'You automated your savings transfer months ago and it\'s worked well — but during a stressful exam week you still found yourself online shopping at 1am for things you don\'t need. What\'s the next habit to build?', qIndices: [5, 11] },
+      { title: 'Automating Habits & Coping With Triggers', hook: 'You automated your savings transfer months ago and it\'s worked well, but during a stressful exam week you still found yourself online shopping at 1am for things you don\'t need. What\'s the next habit to build?', qIndices: [5, 11] },
       {
         title: 'Evaluating Tradeoffs Under Pressure',
         type: 'decision-chain',
         hook: "It's 9pm, your friends just texted about a $60 concert this weekend, and you're tight on cash. Everyone's waiting on your answer. Does the pressure to decide fast change the decision itself?",
         activity: {
-          intro: "Being tight on time or money changes how you decide — that's the scarcity mindset: when resources feel scarce, your brain narrows in on the immediate problem and gets worse at weighing tradeoffs. Before any purchase over $50, run it through three questions: What's the actual cost? What's the consequence if I say yes? Can I undo this if I'm wrong — is it reversible? And when the pressure is social, not financial: an honest \"not this week, but let's do something free after\" almost always lands better with real friends than a vague excuse or an overspend you'll regret.",
+          intro: "Being tight on time or money changes how you decide. That's the scarcity mindset: when resources feel scarce, your brain narrows in on the immediate problem and gets worse at weighing tradeoffs. Before any purchase over $50, run it through three questions: What's the actual cost? What's the consequence if I say yes? Can I undo this if I'm wrong? Is it reversible? And when the pressure is social, not financial: an honest \"not this week, but let's do something free after\" almost always lands better with real friends than a vague excuse or an overspend you'll regret.",
           startLabel: 'See What Happens →',
           decisions: [
             {
-              prompt: "Your friends are going to a $60 concert this weekend, but you're tight on money this week — rent is due Monday. The group chat is waiting on your answer. What do you do?",
+              prompt: "Your friends are going to a $60 concert this weekend, but you're tight on money this week; rent is due Monday. The group chat is waiting on your answer. What do you do?",
               choices: [
-                { id: 'a', label: "Say yes and put it on a credit card — you don't want to miss out", cost: 60, gaveUp: "you're now $60 closer to not covering rent, and it's on a card that charges interest if you can't pay it off in full", good: false },
-                { id: 'b', label: "Make a vague excuse and skip it without explaining why", cost: 0, gaveUp: "Your money stays fine, but your friends are left guessing — and unexplained no's, repeated enough times, quietly create distance.", good: false },
-                { id: 'c', label: "Be honest: \"I'm tight this week, but I'm in for something free after\"", cost: 0, gaveUp: "Nothing — rent stays covered, and most real friends respect honesty a lot more than a vague no or a $60 flex they never see repaid.", good: true }
+                { id: 'a', label: "Say yes and put it on a credit card: you don't want to miss out", cost: 60, gaveUp: "you're now $60 closer to not covering rent, and it's on a card that charges interest if you can't pay it off in full", good: false },
+                { id: 'b', label: "Make a vague excuse and skip it without explaining why", cost: 0, gaveUp: "Your money stays fine, but your friends are left guessing, and unexplained no's, repeated enough times, quietly create distance.", good: false },
+                { id: 'c', label: "Be honest: \"I'm tight this week, but I'm in for something free after\"", cost: 0, gaveUp: "Nothing: rent stays covered, and most real friends respect honesty a lot more than a vague no or a $60 flex they never see repaid.", good: true }
               ]
             }
           ],
           finalChoiceLabel: 'See the Takeaway →',
           summaryIntro: "Here's what that choice set in motion.",
-          takeaway: "Option C cost nothing and cascaded nothing forward — no debt, no awkwardness, no guessing games. The scarcity mindset makes \"yes\" feel like the only way to protect a friendship. It usually isn't — the cost/consequence/reversibility check and a little honesty almost always find a cheaper path.",
+          takeaway: "Option C cost nothing and cascaded nothing forward: no debt, no awkwardness, no guessing games. The scarcity mindset makes \"yes\" feel like the only way to protect a friendship. It usually isn't. The cost/consequence/reversibility check and a little honesty almost always find a cheaper path.",
           xpOnComplete: 8
         }
       },
       {
         title: 'Boss Challenge: Resist the Pressure',
         type: 'boss-challenge',
-        hook: 'A full day of classic spending triggers is coming at you back to back — a countdown timer, a group chat, a bad mood, a discount code. Every one is designed to make "yes" feel automatic.',
+        hook: 'A full day of classic spending triggers is coming at you back to back: a countdown timer, a group chat, a bad mood, a discount code. Every one is designed to make "yes" feel automatic.',
         activity: {
-          intro: "Today's a gauntlet of the exact psychological triggers marketers and social pressure use to short-circuit good decisions: manufactured urgency, FOMO, mood spending, and fake exclusivity. Each time you resist one, that's real money that stays yours — this run tracks how much.",
+          intro: "Today's a gauntlet of the exact psychological triggers marketers and social pressure use to short-circuit good decisions: manufactured urgency, FOMO, mood spending, and fake exclusivity. Each time you resist one, that's real money that stays yours; this run tracks how much.",
           startLabel: 'Start the Day →',
           dashboardLabel: 'Resisted So Far',
           startingValue: 0,
@@ -11268,7 +11268,7 @@ const MODULES = [
               tag: 'Morning',
               prompt: 'A checkout page shows "⏰ 2 left, offer ends in 9:58" for a $70 jacket you weren\'t planning to buy.',
               choices: [
-                { id: 'a', label: 'Buy now, before the timer runs out', delta: 0, isOptimal: false, result: 'That timer resets for the next visitor too — the urgency was never really about the jacket running out.' },
+                { id: 'a', label: 'Buy now, before the timer runs out', delta: 0, isOptimal: false, result: 'That timer resets for the next visitor too. The urgency was never really about the jacket running out.' },
                 { id: 'b', label: 'Close the tab and give it 24 hours', delta: 70, isOptimal: true, result: 'Real scarcity is rare online. If it\'s still there tomorrow (it usually is), it was never actually about to disappear.' }
               ]
             },
@@ -11276,7 +11276,7 @@ const MODULES = [
               tag: 'Afternoon',
               prompt: 'Your group chat is planning a spontaneous $85 day trip this weekend that you can\'t really afford right now.',
               choices: [
-                { id: 'a', label: 'Say yes anyway — you don\'t want to be "the broke one"', delta: 0, isOptimal: false, result: 'Totally normal to want in, but saying yes here means catching up on a bill later this month.' },
+                { id: 'a', label: 'Say yes anyway: you don\'t want to be "the broke one"', delta: 0, isOptimal: false, result: 'Totally normal to want in, but saying yes here means catching up on a bill later this month.' },
                 { id: 'b', label: 'Be honest with the group about your budget this month', delta: 85, isOptimal: true, result: 'The friends worth keeping don\'t need a fake excuse, and next time you can say yes without the guilt.' }
               ]
             },
@@ -11293,14 +11293,14 @@ const MODULES = [
               prompt: 'An influencer posts a "24-hours-only" 30%-off code for a $120 haircare bundle you don\'t currently need.',
               choices: [
                 { id: 'a', label: 'Use the code, it\'s basically free money saved', delta: 0, isOptimal: false, result: 'A 30% discount on something you didn\'t need still costs the other 70% of $120 you didn\'t have to spend.' },
-                { id: 'b', label: 'Skip it — a sale isn\'t a reason to buy something you weren\'t already buying', delta: 120, isOptimal: true, result: 'That\'s the actual rule: a discount only saves money on something you were already going to buy.' }
+                { id: 'b', label: 'Skip it: a sale isn\'t a reason to buy something you weren\'t already buying', delta: 120, isOptimal: true, result: 'That\'s the actual rule: a discount only saves money on something you were already going to buy.' }
               ]
             }
           ],
           passThreshold: 0,
           endNoteAtOrAbove: 'Every dollar here is money that stayed in your account instead of funding someone else\'s urgency tactic.',
-          endNoteBelow: 'Even $0 resisted today is data, not a verdict — notice which trigger got you, that\'s the one to watch for next time.',
-          takeaway: 'None of today\'s triggers were really about the product. A countdown timer, a group chat, a bad mood, and a discount code are all designed to make you decide fast instead of well — the fix is always the same: slow down, and the "deal" almost always survives a day of thinking about it.',
+          endNoteBelow: 'Even $0 resisted today is data, not a verdict: notice which trigger got you, that\'s the one to watch for next time.',
+          takeaway: 'None of today\'s triggers were really about the product. A countdown timer, a group chat, a bad mood, and a discount code are all designed to make you decide fast instead of well. The fix is always the same: slow down, and the "deal" almost always survives a day of thinking about it.',
           xpOnComplete: 12,
           bonusXpForOptimalPath: 8
         }
@@ -12369,13 +12369,13 @@ const MODULES = [
           {
             id: 'ah0', type: 'story', title: 'Nine PM, Tight on Cash',
             beats: [
-              { speaker: 'intro', text: "It's 9pm and Hammy's friends just texted about a $60 concert this weekend. Hammy's tight on cash — rent is due Monday. Everyone's waiting on an answer. Does the pressure to decide fast change the decision itself?" }
+              { speaker: 'intro', text: "It's 9pm and Hammy's friends just texted about a $60 concert this weekend. Hammy's tight on cash; rent is due Monday. Everyone's waiting on an answer. Does the pressure to decide fast change the decision itself?" }
             ]
           },
           {
             id: 'ah1', type: 'teach', title: 'The Scarcity Mindset',
             concepts: [
-              { term: 'Scarcity Mindset', plain: "Being tight on time or money changes how you decide — when resources feel scarce, your brain narrows in on the immediate problem and gets worse at weighing tradeoffs. Before any purchase over $50, run it through three questions: what's the actual cost, what's the consequence if you say yes, and can you undo it if you're wrong?", analogy: "Pressure shrinks your field of view right when you need it widest.", check: { statement: 'Feeling rushed to decide has no real effect on decision quality.', isTrue: false } }
+              { term: 'Scarcity Mindset', plain: "Being tight on time or money changes how you decide: when resources feel scarce, your brain narrows in on the immediate problem and gets worse at weighing tradeoffs. Before any purchase over $50, run it through three questions: what's the actual cost, what's the consequence if you say yes, and can you undo it if you're wrong?", analogy: "Pressure shrinks your field of view right when you need it widest.", check: { statement: 'Feeling rushed to decide has no real effect on decision quality.', isTrue: false } }
             ],
             xpOnComplete: 2
           },
@@ -12384,9 +12384,9 @@ const MODULES = [
             prompt: "Hammy's friends are going to a $60 concert this weekend, but rent is due Monday. The group chat is waiting. What does Hammy do?",
             hintText: "Is there an honest option that costs nothing and explains nothing away?",
             choices: [
-              { id: 'a', label: "Say yes and put it on a credit card — don't want to miss out", outcome: { text: "Now $60 closer to not covering rent, on a card that charges interest if not paid in full.", delta: { checking: -60 }, compare: [{ label: 'Cost', value: 60 }, { label: 'Alternative', value: 0 }] } },
-              { id: 'b', label: 'Make a vague excuse and skip it without explaining why', outcome: { text: 'Money stays fine, but friends are left guessing — repeated unexplained no\'s quietly create distance.', delta: { checking: 0 }, compare: [{ label: 'Cost', value: 0 }, { label: 'Social cost', value: 1 }] } },
-              { id: 'c', label: '"I\'m tight this week, but I\'m in for something free after"', outcome: { text: 'Nothing lost — rent stays covered, and real friends respect honesty more than a vague no or an unrepaid flex.', delta: { checking: 0 }, compare: [{ label: 'Cost', value: 0 }, { label: 'Social cost', value: 0 }] } }
+              { id: 'a', label: "Say yes and put it on a credit card: don't want to miss out", outcome: { text: "Now $60 closer to not covering rent, on a card that charges interest if not paid in full.", delta: { checking: -60 }, compare: [{ label: 'Cost', value: 60 }, { label: 'Alternative', value: 0 }] } },
+              { id: 'b', label: 'Make a vague excuse and skip it without explaining why', outcome: { text: 'Money stays fine, but friends are left guessing; repeated unexplained no\'s quietly create distance.', delta: { checking: 0 }, compare: [{ label: 'Cost', value: 0 }, { label: 'Social cost', value: 1 }] } },
+              { id: 'c', label: '"I\'m tight this week, but I\'m in for something free after"', outcome: { text: 'Nothing lost: rent stays covered, and real friends respect honesty more than a vague no or an unrepaid flex.', delta: { checking: 0 }, compare: [{ label: 'Cost', value: 0 }, { label: 'Social cost', value: 0 }] } }
             ],
             xpOnComplete: 5
           },
@@ -12395,8 +12395,8 @@ const MODULES = [
             prompt: 'A checkout page shows "⏰ 2 left, offer ends in 9:58" for a $70 jacket Hammy wasn\'t planning to buy.',
             hintText: "Does the timer reset for the next visitor too?",
             choices: [
-              { id: 'a', label: 'Buy now, before the timer runs out', outcome: { text: 'That timer resets for the next visitor too — the urgency was never really about the jacket running out.', delta: { checking: -70 }, compare: [{ label: 'Spent', value: 70 }, { label: 'Kept', value: 0 }] } },
-              { id: 'b', label: 'Close the tab and give it 24 hours', outcome: { text: 'Real scarcity is rare online — if it\'s still there tomorrow, it was never actually about to disappear.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 70 }] } }
+              { id: 'a', label: 'Buy now, before the timer runs out', outcome: { text: 'That timer resets for the next visitor too. The urgency was never really about the jacket running out.', delta: { checking: -70 }, compare: [{ label: 'Spent', value: 70 }, { label: 'Kept', value: 0 }] } },
+              { id: 'b', label: 'Close the tab and give it 24 hours', outcome: { text: 'Real scarcity is rare online: if it\'s still there tomorrow, it was never actually about to disappear.', delta: { checking: 0 }, compare: [{ label: 'Spent', value: 0 }, { label: 'Kept', value: 70 }] } }
             ],
             xpOnComplete: 4
           },
@@ -12416,7 +12416,7 @@ const MODULES = [
             hintText: "A discount only saves money on something you were already buying.",
             choices: [
               { id: 'a', label: 'Use the code, it\'s basically free money saved', consequence: { text: 'A 30% discount on something not needed still costs the other 70% that didn\'t have to be spent.', delta: { checking: -84 }, xpMultiplier: 0.6 } },
-              { id: 'b', label: "Skip it — a sale isn't a reason to buy something not already on the list", consequence: { text: 'That\'s the actual rule: a discount only saves money on something already being bought.', delta: { checking: 0 }, xpMultiplier: 1.25 } }
+              { id: 'b', label: "Skip it: a sale isn't a reason to buy something not already on the list", consequence: { text: 'That\'s the actual rule: a discount only saves money on something already being bought.', delta: { checking: 0 }, xpMultiplier: 1.25 } }
             ]
           }
         ]
@@ -12437,16 +12437,16 @@ const MODULES = [
           {
             id: 'as1', type: 'teach', title: 'Step 1 & 2: Pick a Tool & Automate',
             concepts: [
-              { term: 'Step 1: Pick an App With Real Alerts', plain: "Most banking apps support custom alerts — a text or push notification when a balance drops below a set amount, or when a purchase exceeds a chosen threshold.", analogy: "It's a tripwire that notices before the balance gets to zero, not after.", check: {} },
-              { term: 'Step 2: Set an Automatic Transfer Rule', plain: "Set a recurring transfer to savings for payday, even a small amount — $20-$25 per paycheck is enough to start. The habit matters more than the amount at first.", analogy: '"Pay yourself first" happens automatically instead of relying on remembering.', check: { statement: 'An automatic transfer rule needs to move a large amount to be worthwhile.', isTrue: false } }
+              { term: 'Step 1: Pick an App With Real Alerts', plain: "Most banking apps support custom alerts: a text or push notification when a balance drops below a set amount, or when a purchase exceeds a chosen threshold.", analogy: "It's a tripwire that notices before the balance gets to zero, not after.", check: {} },
+              { term: 'Step 2: Set an Automatic Transfer Rule', plain: "Set a recurring transfer to savings for payday, even a small amount: $20-$25 per paycheck is enough to start. The habit matters more than the amount at first.", analogy: '"Pay yourself first" happens automatically instead of relying on remembering.', check: { statement: 'An automatic transfer rule needs to move a large amount to be worthwhile.', isTrue: false } }
             ],
             xpOnComplete: 3
           },
           {
             id: 'as2', type: 'teach', title: 'Step 3 & 4: Set Limits & Review',
             concepts: [
-              { term: 'Step 3: Set Spending Alerts & Category Limits', plain: "Many apps allow setting a monthly limit per category — like dining or shopping — and send an alert when getting close. This catches subscription creep and mood-spending patterns before the statement arrives.", analogy: "A speedometer for spending, instead of finding out the total at the end of the month.", check: {} },
-              { term: 'Step 4: Review Once a Month', plain: "Automation isn't set-and-forget forever — a quick monthly check confirms the alerts and transfer amount still make sense as income or expenses change.", analogy: "Like checking tire pressure occasionally, even on a car that mostly runs fine.", check: { statement: 'Automated savings and alerts never need to be revisited once set up.', isTrue: false } }
+              { term: 'Step 3: Set Spending Alerts & Category Limits', plain: "Many apps allow setting a monthly limit per category (like dining or shopping) and send an alert when getting close. This catches subscription creep and mood-spending patterns before the statement arrives.", analogy: "A speedometer for spending, instead of finding out the total at the end of the month.", check: {} },
+              { term: 'Step 4: Review Once a Month', plain: "Automation isn't set-and-forget forever. A quick monthly check confirms the alerts and transfer amount still make sense as income or expenses change.", analogy: "Like checking tire pressure occasionally, even on a car that mostly runs fine.", check: { statement: 'Automated savings and alerts never need to be revisited once set up.', isTrue: false } }
             ],
             xpOnComplete: 3
           },
@@ -12455,8 +12455,8 @@ const MODULES = [
             prompt: "It's 1am, Hammy is about to make an impulse purchase, and a spending alert pops up showing this category is already near its monthly limit.",
             hintText: "What was the whole point of setting this alert up in the first place?",
             choices: [
-              { id: 'a', label: 'Dismiss the alert and buy it anyway', outcome: { text: "The alert did its job — noticing it and buying anyway defeats the purpose it was set up for.", delta: { checking: -40 }, compare: [{ label: 'Category limit respected', value: 0 }, { label: 'Ignored', value: 1 }] } },
-              { id: 'b', label: 'Close the app and revisit tomorrow if still wanted', outcome: { text: "The exact scenario this system was built for — a pause instead of an in-the-moment decision.", delta: { checking: 0 }, compare: [{ label: 'Category limit respected', value: 1 }, { label: 'Ignored', value: 0 }] } }
+              { id: 'a', label: 'Dismiss the alert and buy it anyway', outcome: { text: "The alert did its job. Noticing it and buying anyway defeats the purpose it was set up for.", delta: { checking: -40 }, compare: [{ label: 'Category limit respected', value: 0 }, { label: 'Ignored', value: 1 }] } },
+              { id: 'b', label: 'Close the app and revisit tomorrow if still wanted', outcome: { text: "The exact scenario this system was built for: a pause instead of an in-the-moment decision.", delta: { checking: 0 }, compare: [{ label: 'Category limit respected', value: 1 }, { label: 'Ignored', value: 0 }] } }
             ],
             xpOnComplete: 4
           },
