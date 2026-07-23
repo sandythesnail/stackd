@@ -21,9 +21,9 @@ type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
  * slot instead of floating in the middle of empty letterboxed space above the floor line.
  * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
 const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
-  // Shifted up to line up with the poster's own top (4%) instead of sitting lower than it.
-  window: { label: 'Window', top: '4%', left: '24%', width: '48%', height: '40%' },
-  wall: { label: 'Wall art', top: '4%', left: '3%', width: '21%', height: '41%' },
+  // Both nudged down from top 4% to 10%, moving the window and poster lower on the wall.
+  window: { label: 'Window', top: '10%', left: '24%', width: '48%', height: '40%' },
+  wall: { label: 'Wall art', top: '10%', left: '3%', width: '21%', height: '41%' },
   // This is the layout for every lamp EXCEPT Fairy Lights — see FairyLightsGarland below,
   // which replaces this slot's normal rendering entirely when that item is equipped.
   lamp: { label: 'Lamp', top: '2%', right: '2%', width: '20%', height: '54%', floorStanding: true },
@@ -32,7 +32,9 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // as tucked into the back corner rather than out front — but still bottom-anchored right
   // on that seam line (not just placed high up with nothing under it), so it doesn't float.
   plant: { label: 'Plant', bottom: '46%', right: '2%', width: '15%', height: '20%', floorStanding: true },
-  // Right under the window (window now starts at top 4%, height 40% -> ends at 44%).
+  // Was positioned right under the window when the window started at top 4% (ending at
+  // 44%). The window has since moved down to top 10% (now ending at 50%), so this no longer
+  // sits flush under it, left as-is since only the window/poster were asked to move.
   bed: { label: 'Bed', top: '44%', left: '20%', width: '56%', height: '46%', floorStanding: true },
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
   // (bottom raised off the literal floor edge) so more of it reads as sitting BEHIND Hammy's
@@ -43,12 +45,10 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // instead of under it, which read wrong. Switched to bottom-anchoring like the plant above
   // (bottom + height, same 20% height) instead of top-anchoring, so its position is set by
   // where its base sits rather than by squeezing between a fixed top and the render size.
-  // Window ends at top 4% + height 40% = 44% from the top, i.e. 56% up from the bottom, so
-  // bottom: 56% - height(20%) = 36% put the box's top edge flush under the window. Nudged
-  // higher twice since (36% -> 39% -> 41%), tucking it a bit further up under the window
-  // instead of sitting exactly flush. Left/width (centered under the window, span 24%-72%,
-  // center 48%) kept from the last size pass: left = 48 - 52/2 = 22%.
-  desk: { label: 'Desk', bottom: '41%', left: '22%', width: '52%', height: '20%', floorStanding: true },
+  // Started flush under the window, then nudged higher three times since (36% -> 39% ->
+  // 41% -> 46%) as it kept reading as not high enough. Left/width (centered under the
+  // window, span 24%-72%, center 48%) kept from the last size pass: left = 48 - 52/2 = 22%.
+  desk: { label: 'Desk', bottom: '46%', left: '22%', width: '52%', height: '20%', floorStanding: true },
 };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
