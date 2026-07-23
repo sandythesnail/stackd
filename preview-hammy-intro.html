@@ -230,17 +230,20 @@
     82% { transform: rotate(2.5deg) translateY(0); }
   }
   .hammy-wrap.settled { opacity: 1; }
-  /* Exit: two quick bounces (same squash/stretch language as the dialogue
-     wiggle), then a big leap off the right edge. */
-  .hammy-wrap.hop-off .hammy-rig { animation: hammyHopOff 0.9s cubic-bezier(0.42, 0, 0.58, 1) forwards; }
+  /* Exit: three even hops in a straight line off the right of the SCREEN
+     (not just the stage) — the calc(vw + px) end point guarantees he fully
+     clears the viewport edge at any screen width. Squash on every landing,
+     no rotation, constant ground line. */
+  .hammy-wrap.hop-off .hammy-rig { animation: hammyHopOff 1.1s cubic-bezier(0.42, 0, 0.58, 1) forwards; }
   @keyframes hammyHopOff {
     0%   { transform: translate(0, 0) scale(1); }
-    12%  { transform: translate(0, 10px) scale(1.1, 0.88); }
-    30%  { transform: translate(70px, -110px) scale(0.94, 1.1) rotate(8deg); }
-    46%  { transform: translate(150px, -10px) scale(1.08, 0.92) rotate(4deg); }
-    56%  { transform: translate(150px, 4px) scale(1.12, 0.86) rotate(4deg); }
-    72%  { transform: translate(270px, -150px) scale(0.94, 1.08) rotate(12deg); }
-    100% { transform: translate(580px, 60px) scale(0.9, 1.05) rotate(18deg); }
+    8%   { transform: translate(0, 8px) scale(1.08, 0.9); }                      /* crouch */
+    22%  { transform: translate(calc(8vw + 50px), -80px) scale(0.96, 1.06); }    /* hop 1 peak */
+    34%  { transform: translate(calc(16vw + 100px), 0) scale(1.1, 0.88); }       /* land */
+    50%  { transform: translate(calc(25vw + 155px), -80px) scale(0.96, 1.06); }  /* hop 2 peak */
+    62%  { transform: translate(calc(34vw + 210px), 0) scale(1.1, 0.88); }       /* land */
+    80%  { transform: translate(calc(44vw + 265px), -80px) scale(0.96, 1.06); }  /* hop 3 peak */
+    100% { transform: translate(calc(54vw + 320px), 0) scale(1); }               /* off-screen */
   }
 
   /* ── .pig-* rules copied from styles.css (the production mascot) ── */
@@ -785,7 +788,7 @@
         void hammyWrap.offsetWidth;
         hammyWrap.classList.add("hop-off");
       });
-      at(2500, goHome); // fade starts as he clears the edge
+      at(2600, goHome); // fade starts as he clears the edge (hop runs 1600→2700)
     }
   }
 
