@@ -9,8 +9,8 @@
   /* ============================================================
      DEV-ONLY PREVIEW — Hammy onboarding intro animation (v2)
      Not linked from the app. Not part of any production flow.
-     - Piggy bank: placeholder SVG (classic pink bank silhouette),
-       real art to be commissioned later.
+     - Piggy bank: user-supplied SVG artwork (classes renamed pig-* →
+       pb-* to avoid colliding with the CSS pig below).
      - Hammy: the site's own CSS pig (.pig-* rules copied from
        styles.css) + the production face-overlay system
        (.hammy-face-overlay from app.css / mobile hammyFaces.ts).
@@ -89,6 +89,14 @@
   }
   .bank-half { position: absolute; inset: 0; }
   .bank-half svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  /* User-supplied piggy-bank art styles. Classes are pb-* (renamed from the
+     source SVG's pig-*) so they can't collide with Hammy's .pig-* CSS pig —
+     inline-SVG <style> would otherwise leak into the whole document. */
+  .pb-body { fill: #fcd5e3; stroke: #4e353b; stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; }
+  .pb-inner { fill: #f99bbd; }
+  .pb-outline { stroke: #4e353b; stroke-width: 6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .pb-dark { fill: #4e353b; }
+  .pb-cheek { fill: #f57ba6; opacity: 0.85; }
   /* left/right halves are clipped copies of the same drawing so it can split on the pop */
   .bank-half.left  { clip-path: polygon(0 0, 53% 0, 46% 30%, 55% 55%, 45% 78%, 52% 100%, 0 100%); }
   .bank-half.right { clip-path: polygon(53% 0, 100% 0, 100% 100%, 52% 100%, 45% 78%, 55% 55%, 46% 30%); }
@@ -96,8 +104,8 @@
   .crack {
     position: absolute;
     left: 50%;
-    top: 15%;
-    height: 72%;
+    top: 29%;
+    height: 48%;
     width: 4px;
     transform: translateX(-50%);
     z-index: 4;
@@ -415,15 +423,15 @@
 <div class="stage" id="stage">
   <div class="center-anchor" id="anchor">
 
-    <!-- Placeholder piggy bank: classic side-profile silhouette (round body, four
-         short legs, coin slot on top, curly tail, snout). Real art to come later. -->
+    <!-- Piggy bank: user-supplied artwork (see BANK_ART in the script below),
+         rendered twice and clipped into halves so it can crack apart. -->
     <div class="bank" id="bank">
       <div class="bank-half left"><svg viewBox="0 0 400 320" id="bankSvgL"></svg></div>
       <div class="bank-half right"><svg viewBox="0 0 400 320" id="bankSvgR"></svg></div>
       <div class="crack">
         <svg viewBox="0 0 34 120" preserveAspectRatio="none">
           <path d="M17 0 L10 20 L23 38 L9 60 L21 80 L11 100 L17 120"
-                fill="none" stroke="#8f3d61" stroke-width="3.5" stroke-linejoin="round"/>
+                fill="none" stroke="#4e353b" stroke-width="4.5" stroke-linejoin="round"/>
         </svg>
       </div>
     </div>
@@ -522,42 +530,46 @@
   var slowmo    = document.getElementById("slowmo");
   var anchor    = document.getElementById("anchor");
 
-  /* ── Placeholder piggy bank drawing (both halves share it; def ids are
-     namespaced per copy, same pattern app.js uses for equipped-item SVGs). ── */
-  function bankMarkup(uid) {
-    return '' +
-      '<defs>' +
-        '<linearGradient id="bankBody-' + uid + '" x1="0" y1="0" x2="0.6" y2="1">' +
-          '<stop offset="0" stop-color="#ffc9dd"/><stop offset="0.55" stop-color="#ff9ec4"/><stop offset="1" stop-color="#f27fab"/>' +
-        '</linearGradient>' +
-      '</defs>' +
-      /* curly tail (left side) */
-      '<path d="M44 150 q-26 -6 -22 -28 q4 -20 24 -16 q14 3 11 16 q-3 11 -14 9" fill="none" stroke="#e0709c" stroke-width="9" stroke-linecap="round"/>' +
-      /* four short legs (drawn first; body overlaps their tops, leaving visible stubs) */
-      '<rect x="92"  y="240" width="46" height="58" rx="18" fill="#ef86ae"/>' +
-      '<rect x="152" y="246" width="46" height="58" rx="18" fill="#f793b8"/>' +
-      '<rect x="212" y="246" width="46" height="58" rx="18" fill="#f793b8"/>' +
-      '<rect x="266" y="240" width="46" height="58" rx="18" fill="#ef86ae"/>' +
-      /* round body */
-      '<ellipse cx="200" cy="158" rx="162" ry="114" fill="url(#bankBody-' + uid + ')"/>' +
-      '<ellipse cx="148" cy="108" rx="66" ry="42" fill="rgba(255,255,255,0.4)"/>' +
-      /* ear */
-      '<path d="M276 52 q30 -18 44 2 q10 16 -12 34 q-22 -22 -32 -36z" fill="#f27fab"/>' +
-      /* snout sticking out the right side */
-      '<ellipse cx="362" cy="150" rx="34" ry="30" fill="#f27fab"/>' +
-      '<ellipse cx="362" cy="150" rx="30" ry="26" fill="#ff9ec4"/>' +
-      '<ellipse cx="354" cy="144" rx="7" ry="10" fill="#d9608c"/>' +
-      '<ellipse cx="372" cy="146" rx="7" ry="10" fill="#d9608c"/>' +
-      /* eye */
-      '<circle cx="300" cy="106" r="13" fill="#3a2230"/>' +
-      '<circle cx="296" cy="102" r="4.5" fill="#fff"/>' +
-      /* coin slot on top */
-      '<rect x="164" y="40" width="86" height="16" rx="8" fill="#8f3d61" transform="rotate(-4 207 48)"/>' +
-      /* cheek */
-      '<ellipse cx="308" cy="140" rx="16" ry="10" fill="rgba(255,150,184,0.55)"/>';
-  }
-  document.getElementById("bankSvgL").innerHTML = bankMarkup("l");
-  document.getElementById("bankSvgR").innerHTML = bankMarkup("r");
+  /* ── Piggy-bank artwork supplied by the user (geometry verbatim; classes
+     renamed pig-* → pb-*, styles hoisted to the page stylesheet — see CSS).
+     Both halves render the same drawing; the .bank-half clip-paths split it. ── */
+  var BANK_ART = '' +
+    /* Back Ear Outer */
+    '<path class="pb-body" d="M 125,113 C 118,67 148,53 162,91 Z" />' +
+    /* Back Ear Inner */
+    '<path class="pb-inner" d="M 132,107 C 127,77 146,67 155,89 Z" />' +
+    '<path class="pb-outline" d="M 132,107 C 127,77 146,67 155,89" />' +
+    /* Back Legs */
+    '<rect class="pb-body" x="135" y="215" width="32" height="35" rx="12" />' +
+    '<rect class="pb-body" x="225" y="215" width="32" height="35" rx="12" />' +
+    /* Curly Tail */
+    '<path class="pb-outline" d="M 312,165 C 335,165 342,135 322,135 C 305,135 308,158 322,154" />' +
+    /* Main Body */
+    '<ellipse class="pb-body" cx="210" cy="165" rx="105" ry="78" />' +
+    /* Front Legs */
+    '<rect class="pb-body" x="155" y="218" width="32" height="35" rx="12" />' +
+    '<rect class="pb-body" x="245" y="218" width="32" height="35" rx="12" />' +
+    /* Front Ear Outer */
+    '<path class="pb-body" d="M 150,118 C 142,70 178,56 192,96 Z" />' +
+    /* Front Ear Inner */
+    '<path class="pb-inner" d="M 158,112 C 152,78 175,68 184,96 Z" />' +
+    '<path class="pb-outline" d="M 158,112 C 152,78 175,68 184,96" />' +
+    /* Straight Coin Slot */
+    '<rect class="pb-dark" x="192" y="100" width="48" height="8" rx="4" />' +
+    /* Snout */
+    '<ellipse class="pb-body" cx="102" cy="180" rx="18" ry="24" />' +
+    '<ellipse class="pb-inner" cx="102" cy="180" rx="12" ry="17" />' +
+    '<ellipse class="pb-dark" cx="97" cy="180" rx="2.5" ry="6" />' +
+    '<ellipse class="pb-dark" cx="107" cy="180" rx="2.5" ry="6" />' +
+    /* Cheek Blush */
+    '<circle class="pb-cheek" cx="150" cy="184" r="14" />' +
+    /* Eye + White Glimmer Reflection */
+    '<circle class="pb-dark" cx="136" cy="144" r="8.5" />' +
+    '<circle fill="#ffffff" cx="133.5" cy="141.5" r="3" />' +
+    /* Back Highlight Curve */
+    '<path fill="#ffffff" opacity="0.5" d="M 285,130 C 270,110 240,108 220,110 C 245,108 275,117 288,138 Z" />';
+  document.getElementById("bankSvgL").innerHTML = BANK_ART;
+  document.getElementById("bankSvgR").innerHTML = BANK_ART;
 
   function setFace(name) {
     var f = FACES[name];
