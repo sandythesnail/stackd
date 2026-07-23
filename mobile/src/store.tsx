@@ -811,6 +811,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // as "logs in and collects the streak reward, but coins/diamonds don't update": the
       // claim's setState really did land, then this hydrate clobbered it a moment later.
       hydrateFromRemote: (partial) => {
+        // Same race as coins/diamonds/xp below, but for streak/lastPlayedDate/unlocked
+        // achievements: a stale remote row (Supabase upsert hasn't landed yet) must not
+        // un-advance today's already-computed streak, or applyAchievementUnlocks below
+        // would see a just-unlocked, just-rewarded achievement as "newly met" again and
+        // pay its coin/diamond reward a second time. Mirrors web's applyRemoteState guard
+        // (app.js) exactly — keep whichever side has the more recent lastPlayedDate.
+        const localIsNewer = !!state.lastPlayedDate &&
+          new Date(state.lastPlayedDate) >= new Date(partial.lastPlayedDate || 0);
+        const lastPlayedDate = localIsNewer ? state.lastPlayedDate : (partial.lastPlayedDate ?? state.lastPlayedDate);
+        const streak = localIsNewer
+          ? Math.max(state.streak, partial.streak ?? 0)
+          : (partial.streak ?? state.streak);
         const merged: AppState = {
           ...state,
           ...partial,
@@ -822,6 +834,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           coins: Math.max(state.coins, partial.coins ?? state.coins),
           diamonds: Math.max(state.diamonds, partial.diamonds ?? state.diamonds),
           xp: Math.max(state.xp, partial.xp ?? state.xp),
+          lastPlayedDate,
+          streak,
+          // Union, not overwrite: an achievement unlocked (and rewarded) locally this
+          // session must never be "forgotten" by a stale remote read — that would make
+          // applyAchievementUnlocks pay its reward out a second time below.
+          unlockedAchievementIds: Array.from(new Set([
+            ...state.unlockedAchievementIds,
+            ...(partial.unlockedAchievementIds ?? []),
+          ])),
           // Same race the comment above describes: a stale remote snapshot resolving after
           // this device already finished/skipped the tour this session would otherwise flip
           // it back to false and show the tour again next launch. Once seen locally, it
