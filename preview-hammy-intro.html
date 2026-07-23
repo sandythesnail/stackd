@@ -78,7 +78,9 @@
   /* ---------- Piggy bank (placeholder SVG, classic silhouette) ---------- */
   /* Dramatically larger than v1 — it IS the opening frame's centerpiece. */
   .bank {
-    --bank-w: min(78vw, 460px);
+    /* The full-screen centerpiece: near-viewport width, capped by height so
+       it can't poke off the top of short screens. */
+    --bank-w: min(92vw, 84vh, 600px);
     position: absolute;
     left: calc(var(--bank-w) / -2);
     top: calc(var(--bank-w) * 0.80 / -1 + var(--bank-w) * 0.14);
@@ -142,18 +144,18 @@
   .bank.popped .bank-half.right { animation: halfRight 0.6s cubic-bezier(0.3, 0.6, 0.6, 1) forwards; }
   @keyframes halfLeft {
     0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-    100% { transform: translate(-260px, 90px) rotate(-42deg); opacity: 0; }
+    100% { transform: translate(-360px, 110px) rotate(-46deg); opacity: 0; }
   }
   @keyframes halfRight {
     0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-    100% { transform: translate(260px, 90px) rotate(42deg); opacity: 0; }
+    100% { transform: translate(360px, 110px) rotate(46deg); opacity: 0; }
   }
 
   /* ---------- Pop flash ring ---------- */
   .pop-ring {
     position: absolute;
     left: -12px;
-    top: -60px;
+    top: -130px; /* centered on the (larger) bank's body */
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -228,6 +230,18 @@
     82% { transform: rotate(2.5deg) translateY(0); }
   }
   .hammy-wrap.settled { opacity: 1; }
+  /* Exit: two quick bounces (same squash/stretch language as the dialogue
+     wiggle), then a big leap off the right edge. */
+  .hammy-wrap.hop-off .hammy-rig { animation: hammyHopOff 0.9s cubic-bezier(0.42, 0, 0.58, 1) forwards; }
+  @keyframes hammyHopOff {
+    0%   { transform: translate(0, 0) scale(1); }
+    12%  { transform: translate(0, 10px) scale(1.1, 0.88); }
+    30%  { transform: translate(70px, -110px) scale(0.94, 1.1) rotate(8deg); }
+    46%  { transform: translate(150px, -10px) scale(1.08, 0.92) rotate(4deg); }
+    56%  { transform: translate(150px, 4px) scale(1.12, 0.86) rotate(4deg); }
+    72%  { transform: translate(270px, -150px) scale(0.94, 1.08) rotate(12deg); }
+    100% { transform: translate(580px, 60px) scale(0.9, 1.05) rotate(18deg); }
+  }
 
   /* ── .pig-* rules copied from styles.css (the production mascot) ── */
   .pig-stage{--pig-scale:1;position:relative;width:calc(440px*var(--pig-scale));height:calc(460px*var(--pig-scale));font-family:system-ui,sans-serif}
@@ -383,6 +397,26 @@
   .home-sim-card p { color: #6b6b60; font-size: 14.5px; line-height: 1.5; margin-bottom: 20px; }
   .home-sim-card .note { font-size: 12.5px; color: #9a9a8d; margin-bottom: 0; margin-top: 14px; }
 
+  /* ---------- Skip button ---------- */
+  .skip {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    z-index: 40;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--green-dark);
+    opacity: 0.55;
+    cursor: pointer;
+    padding: 8px 10px;
+    transition: opacity 0.15s ease;
+  }
+  .skip:hover, .skip:focus-visible { opacity: 1; }
+  .skip.hidden { display: none; }
+
   /* ---------- Review controls ---------- */
   .controls {
     margin-top: 14px;
@@ -419,6 +453,7 @@
 <body>
 
 <div class="dev-badge">DEV PREVIEW · NOT IN APP</div>
+<button class="skip" id="skipBtn" type="button">Skip &rarr;</button>
 
 <div class="stage" id="stage">
   <div class="center-anchor" id="anchor">
@@ -527,6 +562,7 @@
   var choice    = document.getElementById("choice");
   var choiceBtn = document.getElementById("choiceBtn");
   var homeSim   = document.getElementById("homeSim");
+  var skipBtn   = document.getElementById("skipBtn");
   var slowmo    = document.getElementById("slowmo");
   var anchor    = document.getElementById("anchor");
 
@@ -571,6 +607,57 @@
   document.getElementById("bankSvgL").innerHTML = BANK_ART;
   document.getElementById("bankSvgR").innerHTML = BANK_ART;
 
+  /* ── Coin jingle: PLACEHOLDER sound, synthesized with WebAudio (the repo has
+     no audio assets — swap in a real licensed SFX file later). A pointer-down
+     anywhere unlocks the AudioContext per browser autoplay policy; playJingle
+     only fires if audio is already permitted, otherwise it skips silently —
+     no error, no forced tap-to-enable prompt. ── */
+  var audioCtx = null;
+  var jingleNodes = [];
+  document.addEventListener("pointerdown", function () {
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtx) audioCtx = new Ctx();
+      if (audioCtx.state === "suspended") audioCtx.resume().catch(function () {});
+    } catch (e) { /* no audio available — fine */ }
+  });
+
+  function playJingle() {
+    if (!audioCtx || audioCtx.state !== "running") return; // not permitted yet — skip silently
+    try {
+      var t0 = audioCtx.currentTime;
+      var master = audioCtx.createGain();
+      master.gain.value = 0.5;
+      master.connect(audioCtx.destination);
+      jingleNodes.push(master);
+      // staggered high "tings" with fast exponential decay ≈ a handful of coins
+      var freqs = [2093, 2637, 3136, 2349, 2794, 3520, 2093];
+      for (var i = 0; i < freqs.length; i++) {
+        var t = t0 + i * 0.06 + Math.random() * 0.025;
+        var osc = audioCtx.createOscillator();
+        var g = audioCtx.createGain();
+        osc.type = "triangle";
+        osc.frequency.value = freqs[i] * (0.98 + Math.random() * 0.04);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.22, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+        osc.connect(g);
+        g.connect(master);
+        osc.start(t);
+        osc.stop(t + 0.35);
+        jingleNodes.push(osc);
+      }
+    } catch (e) { /* never let audio break the animation */ }
+  }
+
+  function stopJingle() {
+    jingleNodes.forEach(function (n) {
+      try { if (n.stop) n.stop(0); n.disconnect(); } catch (e) {}
+    });
+    jingleNodes = [];
+  }
+
   function setFace(name) {
     var f = FACES[name];
     overlay.style.backgroundImage = 'url("' + f.image + '")';
@@ -600,7 +687,7 @@
       el.style.width = size + "px";
       el.style.height = size + "px";
       el.style.left = (-size / 2) + "px";
-      el.style.top = (-size / 2 - 80) + "px";
+      el.style.top = (-size / 2 - 130) + "px";
       el.innerHTML = (isCoin ? ICON_COIN : ICON_DIAMOND)
         .replace('width="1.15em"', 'width="100%"')
         .replace('height="1.15em"', 'height="100%"');
@@ -635,7 +722,7 @@
       el.style.width = size + "px";
       el.style.height = size + "px";
       el.style.left = (-size / 2) + "px";
-      el.style.top = (-size / 2 - 80) + "px";
+      el.style.top = (-size / 2 - 130) + "px";
       el.style.background = colors[i % colors.length];
       anchor.appendChild(el);
 
@@ -691,14 +778,42 @@
         choice.classList.add("show");
       });
     } else {
-      at(2000, function () { stage.classList.add("exit"); });
-      at(2450, function () { homeSim.classList.add("show"); });
+      // hold "Let's go!" long enough to read, then Hammy hops off-screen
+      at(1600, function () {
+        bubble.classList.remove("pop-in");
+        hammyWrap.classList.remove("wave");
+        void hammyWrap.offsetWidth;
+        hammyWrap.classList.add("hop-off");
+      });
+      at(2500, goHome); // fade starts as he clears the edge
     }
+  }
+
+  /* Shared ending — used by both the natural finish and the Skip button. */
+  function goHome() {
+    choice.classList.remove("show");
+    skipBtn.classList.add("hidden");
+    stage.classList.add("exit");
+    at(450, function () { homeSim.classList.add("show"); });
+  }
+
+  /* Skip: kill every pending timer, sound, and particle, then jump home —
+     nothing may keep running in the background. */
+  function skipIntro() {
+    timers.forEach(clearTimeout);
+    timers = [];
+    stopJingle();
+    document.querySelectorAll(".particle").forEach(function (p) { p.remove(); });
+    bubble.classList.remove("pop-in");
+    choiceBtn.onclick = null;
+    goHome();
   }
 
   function reset() {
     timers.forEach(clearTimeout);
     timers = [];
+    stopJingle();
+    skipBtn.classList.remove("hidden");
     bank.className = "bank";
     popRing.className = "pop-ring";
     popRing2.className = "pop-ring ring2";
@@ -736,6 +851,7 @@
       popRing2.classList.add("go");
       flash.classList.add("go");
       stage.classList.add("shake");
+      playJingle();
       spawnCurrency();
       spawnSparkles();
     });
@@ -767,6 +883,7 @@
   slowmo.addEventListener("change", run);
   document.getElementById("replayBtn").addEventListener("click", run);
   document.getElementById("replayBtn2").addEventListener("click", run);
+  skipBtn.addEventListener("click", skipIntro);
   run();
 })();
 </script>
