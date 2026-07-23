@@ -141,13 +141,13 @@ export type AppState = {
 };
 
 const DEFAULT_STATE: AppState = {
-  coins: 340,
-  diamonds: 8,
-  xp: 1240,
-  streak: 12,
-  ownedItems: ['crown', 'sunglasses'],
+  coins: 0,
+  diamonds: 0,
+  xp: 0,
+  streak: 0,
+  ownedItems: [],
   ownedRoomItems: [],
-  equippedItems: ['crown', 'sunglasses'],
+  equippedItems: [],
   equippedRoom: { wallpaper: null, wall: null, rug: null, plant: null, bed: null, desk: null, lamp: null, window: null },
   // Empty on purpose: progress only ever reflects lessons the player actually finished.
   // This used to be seeded with Maya's mock-story counts (earning: 6, saving: 2, ...),
@@ -160,9 +160,8 @@ const DEFAULT_STATE: AppState = {
   shownLifeEventIds: [],
   pendingLifeEventId: null,
   lifeEventCooldown: 0,
-  // Seeded to "today" so a fresh install shows Maya's established streak as-is; real
-  // day-to-day tracking (increment/reset/daily coin drip) begins from the next real day.
-  lastPlayedDate: new Date().toDateString(),
+  // No streak/login history yet — runDailyCheck seeds this correctly on first real day.
+  lastPlayedDate: null,
   dailyLoginLog: {},
   onboardingTrackId: null,
   questBossesWon: [],
