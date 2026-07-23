@@ -12480,61 +12480,61 @@ const MODULES = [
         q: 'You receive a job offer of $58,000. What\'s the biggest mistake new grads make in this moment?',
         opts: ['Taking 24–48 hours to review the full offer before responding', 'Accepting immediately without ever asking if there\'s room to negotiate, assuming the first number is final', 'Asking a clarifying question about the start date', 'Reading the benefits summary before responding'],
         correct: 1,
-        exp: 'Most starting offers have some flexibility built in — employers often expect a counter. Simply asking "Is there room to negotiate?" costs nothing and can mean thousands more per year, which compounds through every future raise calculated as a percentage of your base. Silence is the most expensive mistake.'
+        exp: 'Most starting offers have some flexibility built in, and employers often expect a counter. Simply asking "Is there room to negotiate?" costs nothing and can mean thousands more per year, which compounds through every future raise calculated as a percentage of your base. Silence is the most expensive mistake.'
       },
       {
         q: 'What\'s the most effective way to approach negotiating your first salary?',
-        opts: ['Demand a specific number without justification and threaten to walk away', 'Research market rate for the role and location, then ask for a specific number backed by that research and your value — professionally and in writing when possible', 'Avoid mentioning a number at all and hope they offer more', 'Only negotiate if you already have a competing offer in hand'],
+        opts: ['Demand a specific number without justification and threaten to walk away', 'Research market rate for the role and location, then ask for a specific number backed by that research and your value, professionally and in writing when possible', 'Avoid mentioning a number at all and hope they offer more', 'Only negotiate if you already have a competing offer in hand'],
         correct: 1,
-        exp: 'Come with data: sites like Glassdoor, Levels.fyi, or your school\'s career center can show market rate for your role and location. Anchor your ask to that research, stay professional, and follow up in writing. You don\'t need a competing offer to negotiate — you just need a reasonable, researched ask.'
+        exp: 'Come with data: sites like Glassdoor, Levels.fyi, or your school\'s career center can show market rate for your role and location. Anchor your ask to that research, stay professional, and follow up in writing. You don\'t need a competing offer to negotiate; you just need a reasonable, researched ask.'
       },
       {
         q: 'Two job offers both pay $60,000. Job A has a $2,000/year health insurance premium and no HSA. Job B has a $500/year premium and an HSA with employer contributions. What does this tell you?',
-        opts: ['Nothing — if the salary is the same, the offers are equal', 'The "real" value of a compensation package includes benefits like health insurance premiums, dental, vision, and FSA/HSA options — not just the salary number', 'HSAs are only useful for people who are already sick', 'Health insurance premiums are always identical across employers'],
+        opts: ['Nothing, if the salary is the same, the offers are equal', 'The "real" value of a compensation package includes benefits like health insurance premiums, dental, vision, and FSA/HSA options, not just the salary number', 'HSAs are only useful for people who are already sick', 'Health insurance premiums are always identical across employers'],
         correct: 1,
-        exp: 'Salary is only part of total compensation. A lower premium and an employer-funded HSA — money that\'s yours, tax-advantaged, and often rolls over year to year — can be worth thousands annually, sometimes more than a modest salary bump. Always ask for the full benefits summary, not just the offer letter number.'
+        exp: 'Salary is only part of total compensation. A lower premium and an employer-funded HSA (money that\'s yours, tax-advantaged, and often rolls over year to year) can be worth thousands annually, sometimes more than a modest salary bump. Always ask for the full benefits summary, not just the offer letter number.'
       },
       {
         q: 'Your new employer offers a 401(k) with a 4% match, but you\'re not contributing anything yet. What are you missing out on?',
-        opts: ['Nothing significant — 401(k)s don\'t matter until you\'re older', 'Free money — an employer match is effectively part of your compensation, and not contributing enough to capture the full match means leaving a guaranteed, immediate return on the table', 'The match only applies after 10 years at the company', 'You can only access a match if you\'re a full-time salaried employee'],
+        opts: ['Nothing significant, 401(k)s don\'t matter until you\'re older', 'Free money: an employer match is effectively part of your compensation, and not contributing enough to capture the full match means leaving a guaranteed, immediate return on the table', 'The match only applies after 10 years at the company', 'You can only access a match if you\'re a full-time salaried employee'],
         correct: 1,
-        exp: 'An employer match is money your employer will only pay if you contribute your own money first. Not capturing the full 4% match on a $50,000 salary means leaving $2,000/year — guaranteed, before any investment growth — sitting unclaimed. It\'s the closest thing to a risk-free 100% return you\'ll ever be offered.'
+        exp: 'An employer match is money your employer will only pay if you contribute your own money first. Not capturing the full 4% match on a $50,000 salary means leaving $2,000/year, guaranteed, before any investment growth, sitting unclaimed. It\'s the closest thing to a risk-free 100% return you\'ll ever be offered.'
       },
       {
         q: 'You\'re comparing two job offers: Job A pays $65,000 in a high-cost city; Job B pays $58,000 in a lower-cost city with better benefits and a clear promotion timeline. How should you evaluate them?',
-        opts: ['Always take the higher salary number, regardless of other factors', 'Compare total compensation (salary plus benefits value), adjust for cost of living, and weigh growth potential — not just the headline number', 'Always take the lower-cost-of-living option automatically', 'Salary is the only factor that matters in any job decision'],
+        opts: ['Always take the higher salary number, regardless of other factors', 'Compare total compensation (salary plus benefits value), adjust for cost of living, and weigh growth potential, not just the headline number', 'Always take the lower-cost-of-living option automatically', 'Salary is the only factor that matters in any job decision'],
         correct: 1,
-        exp: 'The headline salary can be misleading. A $65,000 offer in an expensive city may have less real purchasing power than $58,000 somewhere cheaper. Factor in benefits value (retirement match, health coverage, PTO) and growth potential — will this role lead to a promotion or raise within a year or two? — before comparing offers side by side.'
+        exp: 'The headline salary can be misleading. A $65,000 offer in an expensive city may have less real purchasing power than $58,000 somewhere cheaper. Factor in benefits value (retirement match, health coverage, PTO) and growth potential (will this role lead to a promotion or raise within a year or two?) before comparing offers side by side.'
       },
       {
         q: 'Two grads take jobs with a $5,000 starting salary difference. Assuming similar raise structures over their careers, why does that early gap matter more than it seems?',
-        opts: ['It doesn\'t — a $5,000 difference is minor and evens out over time', 'Future raises, bonuses, and even new job offers are often calculated as a percentage of your current salary, so an early gap compounds and widens over a career, similar to compound interest', 'Only the first year\'s salary difference matters; every year after resets to equal footing', 'Salary differences only matter for retirement savings, not day-to-day life'],
+        opts: ['It doesn\'t, a $5,000 difference is minor and evens out over time', 'Future raises, bonuses, and even new job offers are often calculated as a percentage of your current salary, so an early gap compounds and widens over a career, similar to compound interest', 'Only the first year\'s salary difference matters; every year after resets to equal footing', 'Salary differences only matter for retirement savings, not day-to-day life'],
         correct: 1,
-        exp: 'Raises are usually a percentage of your current salary, so a higher starting point keeps multiplying that gap year after year — and future employers often ask about salary history, anchoring your next offer too. A $5,000 gap in your first job can turn into tens of thousands of dollars in lifetime earnings. Early-career decisions carry outsized weight precisely because they compound.'
+        exp: 'Raises are usually a percentage of your current salary, so a higher starting point keeps multiplying that gap year after year, and future employers often ask about salary history, anchoring your next offer too. A $5,000 gap in your first job can turn into tens of thousands of dollars in lifetime earnings. Early-career decisions carry outsized weight precisely because they compound.'
       },
       {
         q: 'Your offer letter includes a $5,000 signing bonus with a clause saying you must repay it if you leave within 12 months. What should you understand before accepting?',
-        opts: ['Signing bonuses are always free money with no strings attached', 'Read the clawback clause carefully — many signing bonuses must be repaid on a prorated basis if you leave before a set period', 'Signing bonuses replace your salary entirely', 'You can never negotiate the size of a signing bonus'],
+        opts: ['Signing bonuses are always free money with no strings attached', 'Read the clawback clause carefully: many signing bonuses must be repaid on a prorated basis if you leave before a set period', 'Signing bonuses replace your salary entirely', 'You can never negotiate the size of a signing bonus'],
         correct: 1,
-        exp: 'Signing bonus "clawback" clauses are common — leave before the vesting period (often 1-2 years) and you may owe some or all of it back. Read your offer letter closely for this detail before counting the bonus as guaranteed money.'
+        exp: 'Signing bonus "clawback" clauses are common. Leave before the vesting period (often 1-2 years) and you may owe some or all of it back. Read your offer letter closely for this detail before counting the bonus as guaranteed money.'
       },
       {
         q: 'Two offers pay the same salary, but Job A offers 10 days of PTO and Job B offers 20 days plus paid holidays. Does this matter?',
-        opts: ['No, PTO has no real financial value', 'Yes — unused time off is essentially unpaid time if you need it, so more PTO is a meaningful part of total compensation even though it doesn\'t show up in the salary number', 'PTO only matters for employees over 40', 'You should always choose the job with fewer vacation days to show more commitment'],
+        opts: ['No, PTO has no real financial value', 'Yes, unused time off is essentially unpaid time if you need it, so more PTO is a meaningful part of total compensation even though it doesn\'t show up in the salary number', 'PTO only matters for employees over 40', 'You should always choose the job with fewer vacation days to show more commitment'],
         correct: 1,
-        exp: 'Time off has real value — sick days, family emergencies, and rest all cost you unpaid time (or worse) without adequate PTO. When comparing offers with similar pay, benefits like vacation days and paid holidays are part of total compensation, not an afterthought.'
+        exp: 'Time off has real value. Sick days, family emergencies, and rest all cost you unpaid time (or worse) without adequate PTO. When comparing offers with similar pay, benefits like vacation days and paid holidays are part of total compensation, not an afterthought.'
       },
       {
         q: 'A startup offers you a lower salary but includes stock options as part of the package. What should you know before valuing that offer?',
-        opts: ['Stock options are always worth exactly what the company tells you', 'Stock options are a bet on the company\'s future value — they can be worth a lot or nothing at all, so weigh them as a bonus, not guaranteed income', 'Stock options can be cashed in immediately like a paycheck', 'Only executives receive stock options'],
+        opts: ['Stock options are always worth exactly what the company tells you', 'Stock options are a bet on the company\'s future value: they can be worth a lot or nothing at all, so weigh them as a bonus, not guaranteed income', 'Stock options can be cashed in immediately like a paycheck', 'Only executives receive stock options'],
         correct: 1,
-        exp: 'Startup equity is inherently speculative — it could be worth significant money someday, or nothing if the company doesn\'t succeed or you leave before it vests. Don\'t accept a salary you can\'t actually live on today based on the hope that equity will make up the difference.'
+        exp: 'Startup equity is inherently speculative. It could be worth significant money someday, or nothing if the company doesn\'t succeed or you leave before it vests. Don\'t accept a salary you can\'t actually live on today based on the hope that equity will make up the difference.'
       },
       {
         q: 'You\'re a sophomore with no full-time job yet. What\'s a low-cost way to start building professional relationships that pay off later in your job search?',
         opts: ['Wait until senior year to think about this at all', 'Reach out for informational interviews, attend campus career fairs, and keep an updated LinkedIn profile connecting with alumni in your field', 'Only network with people who already have a job offer to give you', 'Networking doesn\'t actually help with job searching'],
         correct: 1,
-        exp: 'Many jobs are found through referrals and connections, not cold applications alone. Informational interviews, career fairs, and staying active on LinkedIn — even before you\'re job hunting — build a network that can turn into real opportunities when you actually need them.'
+        exp: 'Many jobs are found through referrals and connections, not cold applications alone. Informational interviews, career fairs, and staying active on LinkedIn, even before you\'re job hunting, build a network that can turn into real opportunities when you actually need them.'
       },
       {
         q: 'Your typical annual raise at your current job is 3%, but a competing offer from another company would pay you 15% more for a similar role. What does this suggest about growing your income early in your career?',
@@ -12546,22 +12546,22 @@ const MODULES = [
         q: 'An offer letter lists $70,000 "total target compensation," made up of a $60,000 base salary and a $10,000 target bonus. What\'s important to understand about this number?',
         opts: ['The full $70,000 is guaranteed no matter what', 'Only the base salary ($60,000) is guaranteed; the bonus portion is often tied to performance or company results and may not be fully paid out every year', 'Bonuses are always paid before the base salary', 'The total number is meaningless and should be ignored'],
         correct: 1,
-        exp: 'Base salary is the guaranteed, predictable part of your pay. Bonuses — performance-based, sign-on, or discretionary — can vary or even be $0 in a bad year. When comparing offers, weigh the guaranteed base most heavily and treat bonus targets as a possible upside, not a promise.'
+        exp: 'Base salary is the guaranteed, predictable part of your pay. Bonuses (performance-based, sign-on, or discretionary) can vary or even be $0 in a bad year. When comparing offers, weigh the guaranteed base most heavily and treat bonus targets as a possible upside, not a promise.'
       }
     ],
     lessons: [
       { title: 'Negotiating Your First Offer', hook: 'You get a job offer: $58,000. You\'re thrilled and about to accept on the spot. Your friend negotiated theirs from $55,000 to $60,000 with one email. Did you just leave money on the table?', qIndices: [0, 1] },
       { title: 'Reading Your Offer Letter', hook: 'Your offer letter lists "$70,000 total target compensation" plus a $5,000 signing bonus with a repayment clause you almost skipped past. Do you actually know what you\'re agreeing to?', qIndices: [11, 6] },
-      { title: 'Benefits & Total Compensation', hook: 'Two offers pay the exact same salary — one gives you 10 PTO days, the other gives you 20 plus paid holidays. Does that difference actually matter, or is pay all that counts?', qIndices: [2, 7] },
+      { title: 'Benefits & Total Compensation', hook: 'Two offers pay the exact same salary. One gives you 10 PTO days, the other gives you 20 plus paid holidays. Does that difference actually matter, or is pay all that counts?', qIndices: [2, 7] },
       { title: 'Retirement Match & Equity', hook: 'Your new job offers a 401(k) match, while a startup offer instead dangles stock options rather than a higher salary. Which of these is actually real money, and which is a bet on the future?', qIndices: [3, 8] },
-      { title: 'Comparing Offers & Job-Hopping', hook: 'You have two offers on the table — one with a slightly higher salary, the other with a stronger 401(k) match and a clearer promotion path — and a friend just left their job for a 15% raise elsewhere. How should all of this factor into your decision?', qIndices: [4, 10] },
+      { title: 'Comparing Offers & Job-Hopping', hook: 'You have two offers on the table: one with a slightly higher salary, the other with a stronger 401(k) match and a clearer promotion path. A friend just left their job for a 15% raise elsewhere. How should all of this factor into your decision?', qIndices: [4, 10] },
       { title: 'Building Your Network & Long-Term Impact', hook: 'You\'re only a sophomore with no job offers yet, but the $5,000 gap between two hypothetical starting salaries keeps nagging at you. Does anything you do now actually affect that gap years from now?', qIndices: [9, 5] },
       {
         title: 'Why Negotiating Compounds',
         type: 'callout',
-        hook: 'Negotiating $5,000 more per year sounds like it\'s worth exactly $5,000 more per year. It isn\'t — and the real number is a lot bigger.',
+        hook: 'Negotiating $5,000 more per year sounds like it\'s worth exactly $5,000 more per year. It isn\'t, and the real number is a lot bigger.',
         activity: {
-          body: "Every negotiation skill in this module doesn't just affect this year's paycheck — it changes how much you can invest every single month, and money invested young has the most time to grow. Say negotiating adds $5,000/year starting at 22, and you invest all of it monthly at a 7% average return until 65. Here's what that one negotiation is actually worth by retirement:",
+          body: "Every negotiation skill in this module doesn't just affect this year's paycheck. It changes how much you can invest every single month, and money invested young has the most time to grow. Say negotiating adds $5,000/year starting at 22, and you invest all of it monthly at a 7% average return until 65. Here's what that one negotiation is actually worth by retirement:",
           example: { startingAmount: 0, monthlyContribution: 5000 / 12, annualRatePct: 7, years: 43, label: 'from one negotiated $5,000/year raise, starting at 22, invested at 7% until 65' },
           linkOut: { label: 'Run your own numbers in the Compound Interest Simulator', action: 'compound-interest' },
           xpOnComplete: 5
@@ -13676,10 +13676,10 @@ const MODULES = [
             intro: "Here's Hammy's onboarding checklist. Tap anything that has a real, time-sensitive deadline worth prioritizing in the first few weeks, then hit Continue to see what you caught.",
             postingTitle: "First-Day Onboarding Checklist",
             segments: [
-              { id: 's1', text: "Health insurance enrollment — due within 30 days of the start date. ", isRedFlag: true, explanation: "A real, hard deadline, missing it can mean waiting months for the next open enrollment." },
-              { id: 's2', text: "401(k) enrollment — no strict deadline, but every delayed paycheck misses the employer match. ", isRedFlag: true, explanation: "Not a hard cutoff, but a real, ongoing cost to delaying, worth prioritizing early." },
+              { id: 's1', text: "Health insurance enrollment, due within 30 days of the start date. ", isRedFlag: true, explanation: "A real, hard deadline, missing it can mean waiting months for the next open enrollment." },
+              { id: 's2', text: "401(k) enrollment, no strict deadline, but every delayed paycheck misses the employer match. ", isRedFlag: true, explanation: "Not a hard cutoff, but a real, ongoing cost to delaying, worth prioritizing early." },
               { id: 's3', text: "Updating an emergency contact in the HR system. ", isRedFlag: false, explanation: "Worth doing, but no real time pressure attached to this one." },
-              { id: 's4', text: "Direct deposit setup — needed before the first paycheck, but no complex enrollment window involved. ", isRedFlag: false, explanation: "Important to complete, but straightforward and low-risk if handled within the first week or so, not a complex deadline like the others." },
+              { id: 's4', text: "Direct deposit setup, needed before the first paycheck, but no complex enrollment window involved. ", isRedFlag: false, explanation: "Important to complete, but straightforward and low-risk if handled within the first week or so, not a complex deadline like the others." },
               { id: 's5', text: "Choosing a company email signature template. ", isRedFlag: false, explanation: "Purely cosmetic, no financial or coverage consequence at all." }
             ],
             xpOnComplete: 5
@@ -13771,7 +13771,7 @@ const MODULES = [
             id: 'ne1', type: 'teach', title: 'Step 1 & 2: Research & Draft',
             concepts: [
               { term: 'Step 1: Research the Market Rate', plain: "Sites like Glassdoor, Levels.fyi, and LinkedIn Salary show typical pay for the role, location, and experience level. A specific number backed by data is far more persuasive than a vague request for more.", analogy: "Showing up with comparable listings, like researching a car's fair price before negotiating.", check: {} },
-              { term: 'Step 2: Draft the Counter-Offer', plain: "A good counter-offer email thanks them for the offer, expresses enthusiasm for the role, states a specific target number backed by research, and asks if there's flexibility. Keep it short, professional, and non-confrontational.", analogy: "It reads like a business email, not a demand — friendly but specific.", check: { statement: 'A vague request for "more money" is generally more effective than a specific number backed by research.', isTrue: false } }
+              { term: 'Step 2: Draft the Counter-Offer', plain: "A good counter-offer email thanks them for the offer, expresses enthusiasm for the role, states a specific target number backed by research, and asks if there's flexibility. Keep it short, professional, and non-confrontational.", analogy: "It reads like a business email, not a demand: friendly but specific.", check: { statement: 'A vague request for "more money" is generally more effective than a specific number backed by research.', isTrue: false } }
             ],
             xpOnComplete: 3
           },
@@ -13807,17 +13807,17 @@ const MODULES = [
   {
     id: 'scams', title: 'Scams & Fraud Prevention', icon: '11', iconColor: 'rust', xpReward: 30,
     hook: 'You get a text: "Your financial aid is on hold. Click here to verify your bank info within 24 hours or funds will be released to another account." Your stomach drops for a second. Is this real?',
-    desc: 'The scams that specifically target college students — fake jobs, housing fraud, financial aid phishing, identity theft, P2P payment traps, and online shopping scams — and exactly how to spot them before they cost you anything.',
+    desc: 'The scams that specifically target college students: fake jobs, housing fraud, financial aid phishing, identity theft, P2P payment traps, and online shopping scams, and exactly how to spot them before they cost you anything.',
     questions: [
       {
         q: 'You\'re offered a remote job paying $35/hour with almost no interview. The recruiter only messages you on WhatsApp and asks for your bank routing number to "set up payroll" before you\'ve signed anything. What\'s the biggest red flag?',
-        opts: ['The pay is too high for a remote job', 'Legitimate employers collect banking details through official onboarding after you\'ve accepted a signed offer, never before, and never over an unofficial channel like a personal chat app', 'WhatsApp is against most employers\' policy', 'Nothing — this is normal for remote jobs'],
+        opts: ['The pay is too high for a remote job', 'Legitimate employers collect banking details through official onboarding after you\'ve accepted a signed offer, never before, and never over an unofficial channel like a personal chat app', 'WhatsApp is against most employers\' policy', 'Nothing, this is normal for remote jobs'],
         correct: 1,
         exp: 'Real employers set up direct deposit through HR onboarding after you\'re hired, not through a personal messaging app before you\'ve even had a real interview. Pay-first, verify-later is backwards for a reason.'
       },
       {
         q: 'A "company" sends you a check for $2,400 to cover home office equipment, and asks you to deposit it, keep $400, and wire the rest back to a vendor. What is this?',
-        opts: ['A generous employer-provided equipment stipend', 'A classic overpayment check scam — the check will bounce days later, and you\'re on the hook for every dollar you already wired out', 'A normal part of remote onboarding', 'A sign the company is very well funded'],
+        opts: ['A generous employer-provided equipment stipend', 'A classic overpayment check scam: the check will bounce days later, and you\'re on the hook for every dollar you already wired out', 'A normal part of remote onboarding', 'A sign the company is very well funded'],
         correct: 1,
         exp: 'Banks must let you access "available" funds within a few days, but a fraudulent check can take weeks to actually bounce. By the time it does, your wired money is gone and you owe the bank the full amount.'
       },
@@ -13829,49 +13829,49 @@ const MODULES = [
       },
       {
         q: 'You found the listing on Zillow, a platform you trust. Does that guarantee it\'s a real listing from the actual owner?',
-        opts: ['Yes — Zillow verifies every listing before it goes live', 'No — scammers regularly copy real listings and repost them on legitimate platforms, so the platform\'s reputation doesn\'t vouch for any one listing', 'Yes, but only for listings marked "verified"', 'No major platform has ever had a fake listing'],
+        opts: ['Yes, Zillow verifies every listing before it goes live', 'No, scammers regularly copy real listings and repost them on legitimate platforms, so the platform\'s reputation doesn\'t vouch for any one listing', 'Yes, but only for listings marked "verified"', 'No major platform has ever had a fake listing'],
         correct: 1,
-        exp: 'Being on a reputable platform like Zillow or Apartments.com doesn\'t mean a listing was screened for fraud — it just means someone posted it. Scammers exploit that borrowed trust deliberately.'
+        exp: 'Being on a reputable platform like Zillow or Apartments.com doesn\'t mean a listing was screened for fraud. It just means someone posted it. Scammers exploit that borrowed trust deliberately.'
       },
       {
         q: 'You get an email claiming to be from FAFSA asking you to "verify your account" by clicking a link and entering your Social Security number. The real site is studentaid.gov. What should you check first?',
-        opts: ['Whether the email has an official-looking logo', 'The actual URL the link points to — phishing links often use lookalike domains that are NOT the real .gov domain, no matter how official the email looks', 'Whether the email is well-written', 'Whether it was sent during business hours'],
+        opts: ['Whether the email has an official-looking logo', 'The actual URL the link points to: phishing links often use lookalike domains that are NOT the real .gov domain, no matter how official the email looks', 'Whether the email is well-written', 'Whether it was sent during business hours'],
         correct: 1,
         exp: 'Real federal financial aid sites end in .gov. A lookalike domain is not the same domain, no matter how convincing the email around it is. Always check the actual URL before entering anything.'
       },
       {
         q: 'A scholarship offer requires a $75 "processing fee" before they\'ll release your award. What\'s the rule of thumb here?',
-        opts: ['This is standard for competitive scholarships', 'Legitimate scholarships never require you to pay money to receive money — any fee required upfront is almost certainly a scam', '$75 is a small enough amount that it\'s worth the risk', 'Only fake scholarships are ever advertised by email'],
+        opts: ['This is standard for competitive scholarships', 'Legitimate scholarships never require you to pay money to receive money: any fee required upfront is almost certainly a scam', '$75 is a small enough amount that it\'s worth the risk', 'Only fake scholarships are ever advertised by email'],
         correct: 1,
         exp: 'This is one of the most reliable rules in financial aid: real scholarships pay you, they never ask you to pay them first. A processing fee required before payout is a scam, full stop.'
       },
       {
         q: 'You get a text saying your bank account has been "locked for suspicious activity" with a link to "verify" your login, plus a countdown timer. What\'s the safest move?',
-        opts: ['Click the link quickly since there\'s a time limit', 'Don\'t click the link — open your bank\'s app or site directly, typed in yourself, or call the number on the back of your card', 'Reply to the text asking if it\'s real', 'Forward it to a friend to ask what they think'],
+        opts: ['Click the link quickly since there\'s a time limit', 'Don\'t click the link. Open your bank\'s app or site directly, typed in yourself, or call the number on the back of your card', 'Reply to the text asking if it\'s real', 'Forward it to a friend to ask what they think'],
         correct: 1,
         exp: 'Urgency and countdown timers are a manipulation tactic, not a real security feature. Legitimate banks don\'t threaten to lock your account in a text with a clickable link. Always navigate to your bank directly instead.'
       },
       {
         q: 'If someone\'s email and password get exposed in a data breach, and they only change their password on that one breached site, are they now safe?',
-        opts: ['Yes, changing that one password fixes the problem', 'No — if they reused that password anywhere else, attackers run "credential stuffing" attacks trying the same combo across many other sites automatically', 'Yes, as long as they wait 30 days', 'Only if the breach was a bank'],
+        opts: ['Yes, changing that one password fixes the problem', 'No, if they reused that password anywhere else, attackers run "credential stuffing" attacks trying the same combo across many other sites automatically', 'Yes, as long as they wait 30 days', 'Only if the breach was a bank'],
         correct: 1,
         exp: 'Credential stuffing is exactly why reusing passwords is risky: one breach can compromise every account that shares that password. The fix is changing it everywhere it was reused, plus a password manager and 2FA.'
       },
       {
         q: 'You sell a jacket online. The buyer "accidentally" sends you $50 more than agreed and asks you to refund the difference via Venmo right away. What\'s happening?',
-        opts: ['They just made an honest mistake, refund them immediately', 'This is a common scam — the original payment is often reversed or fraudulent after you send the "refund," leaving you out the money you sent back', 'This is illegal on the buyer\'s part but harmless to you', 'It\'s fine as long as you get a screenshot first'],
+        opts: ['They just made an honest mistake, refund them immediately', 'This is a common scam: the original payment is often reversed or fraudulent after you send the "refund," leaving you out the money you sent back', 'This is illegal on the buyer\'s part but harmless to you', 'It\'s fine as long as you get a screenshot first'],
         correct: 1,
         exp: 'The overpayment-then-refund-request pattern is well known: the first payment gets reversed after you\'ve already sent real money back. If a payment is "wrong," cancel the original transaction instead of sending new money.'
       },
       {
         q: 'Why is it riskier to pay a stranger through Venmo, Cash App, or Zelle than with a credit card?',
-        opts: ['There\'s no real difference between them', 'P2P apps are built for paying people you already trust — once money is sent, there is generally no fraud protection or dispute process, unlike a credit card', 'P2P apps always charge higher fees', 'Credit cards are slower, which is the only real difference'],
+        opts: ['There\'s no real difference between them', 'P2P apps are built for paying people you already trust: once money is sent, there is generally no fraud protection or dispute process, unlike a credit card', 'P2P apps always charge higher fees', 'Credit cards are slower, which is the only real difference'],
         correct: 1,
-        exp: 'Credit cards come with built-in fraud protection and a formal dispute process. Venmo, Cash App, and Zelle are designed for people you already know — once that money moves, it\'s very hard to get back, which is exactly why scammers prefer them.'
+        exp: 'Credit cards come with built-in fraud protection and a formal dispute process. Venmo, Cash App, and Zelle are designed for people you already know. Once that money moves, it\'s very hard to get back, which is exactly why scammers prefer them.'
       },
       {
         q: 'A clearance site is selling everything at 80% off, was registered three weeks ago, and offers an extra 10% off if you pay with a gift card instead of a credit card. What\'s the biggest red flag?',
-        opts: ['The discount is too generous to pass up', 'Pushing you toward a gift card — a payment method with no dispute or refund protection — instead of a credit card', 'The site has too many product categories', 'It offers free shipping over $25'],
+        opts: ['The discount is too generous to pass up', 'Pushing you toward a gift card (a payment method with no dispute or refund protection) instead of a credit card', 'The site has too many product categories', 'It offers free shipping over $25'],
         correct: 1,
         exp: 'Gift cards and wire transfers can\'t be reversed if an order never shows up. A site that specifically rewards you for using the least-protected payment method is showing its hand.'
       },
@@ -13879,12 +13879,12 @@ const MODULES = [
         q: 'You\'re about to buy from an online store you\'ve never heard of. Which detail should worry you the most?',
         opts: ['It has a simple, modern-looking website', 'It was registered a few weeks ago, has no customer service number, and every review is five stars and posted this week', 'It sells more than one type of product', 'It has a countdown timer for a holiday sale'],
         correct: 1,
-        exp: 'A brand-new site with no way to reach a real person and a wall of suspiciously uniform, recent reviews are the two most reliable warning signs of a fake storefront — much more telling than a countdown timer alone.'
+        exp: 'A brand-new site with no way to reach a real person and a wall of suspiciously uniform, recent reviews are the two most reliable warning signs of a fake storefront, much more telling than a countdown timer alone.'
       }
     ],
     lessons: [
       { title: 'Fake Job Offers', hook: 'A remote job posting offers $35/hour, almost no interview, and asks to talk over WhatsApp instead of email. It sounds like a huge win. What is it actually testing you on?', qIndices: [0, 1] },
-      { title: 'Housing Scams', hook: 'A $650/month apartment shows up near campus — half the going rate — and the "landlord" just needs a deposit before showing it in person. Great deal, or something else?', qIndices: [2, 3] },
+      { title: 'Housing Scams', hook: 'A $650/month apartment shows up near campus, half the going rate, and the "landlord" just needs a deposit before showing it in person. Great deal, or something else?', qIndices: [2, 3] },
       { title: 'Financial Aid & Scholarship Fraud', hook: 'An email says your FAFSA needs "verification" and links to a login page that looks exactly like studentaid.gov. Does it matter that it looks right?', qIndices: [4, 5] },
       { title: 'Phishing & Identity Theft', hook: 'A text claims your bank account is locked, with a countdown clock and a link to fix it right now. Is the urgency the point, or a warning sign?', qIndices: [6, 7] },
       { title: 'Peer-to-Peer Payment Scams', hook: 'A buyer on a marketplace app "accidentally" overpays you and asks for the difference back over Venmo, right now. What actually happens to that first payment?', qIndices: [8, 9] },
@@ -13912,13 +13912,13 @@ const MODULES = [
             concepts: [
               {
                 term: 'Pay-Upfront / Overpayment Scam',
-                plain: "This is when a \"job\" asks you to pay for training, equipment, or a background check before you start — or sends you a check that's bigger than it should be and asks you to wire part of it back. Either way, money is supposed to flow FROM the employer TO you, never the other way around before you're paid.",
+                plain: "This is when a \"job\" asks you to pay for training, equipment, or a background check before you start, or sends you a check that's bigger than it should be and asks you to wire part of it back. Either way, money is supposed to flow FROM the employer TO you, never the other way around before you're paid.",
                 analogy: 'Think of it like a stranger handing you a $100 bill and asking for $80 back in cash right now, "just to make change." The first bill almost always turns out to be fake.',
                 check: { statement: 'A legitimate employer might occasionally ask you to pay a small fee before your first paycheck.', isTrue: false }
               },
               {
                 term: 'Vague, Too-Good, Personal-Channel Job Posts',
-                plain: "Real job posts are specific about what you'll actually do day to day. Scam posts are often vague on duties but very specific on an unusually high hourly rate, and they push you off the platform fast — into WhatsApp or a personal email — where there's no paper trail and no one moderating.",
+                plain: "Real job posts are specific about what you'll actually do day to day. Scam posts are often vague on duties but very specific on an unusually high hourly rate, and they push you off the platform fast, into WhatsApp or a personal email, where there's no paper trail and no one moderating.",
                 analogy: "It's the same instinct as a stranger at a party who's suspiciously eager to move the conversation somewhere private before you've even exchanged last names.",
                 check: { statement: 'Communicating only through a personal messaging app like WhatsApp is a normal part of most hiring processes.', isTrue: false }
               }
@@ -13942,12 +13942,12 @@ const MODULES = [
           {
             id: 'jb2', type: 'spotcheck', title: 'Spot the Red Flags',
             intro: "Below is a real-looking job posting. Tap every phrase you think is a red flag, then hit Continue to see what you caught.",
-            postingTitle: 'Remote Data Entry Assistant — $38/hr, Start This Week!',
+            postingTitle: 'Remote Data Entry Assistant: $38/hr, Start This Week!',
             segments: [
-              { id: 's1', text: 'Fully remote, flexible hours, no experience required.', isRedFlag: false, explanation: "Plenty of real remote jobs advertise this honestly — on its own this isn't suspicious." },
+              { id: 's1', text: 'Fully remote, flexible hours, no experience required.', isRedFlag: false, explanation: "Plenty of real remote jobs advertise this honestly, on its own this isn't suspicious." },
               { id: 's2', text: '$38/hour for basic data entry, immediate start.', isRedFlag: true, explanation: "Pay far above market rate for the skill level described, combined with urgency to start immediately, is a classic lure." },
               { id: 's3', text: 'To begin, message our HR coordinator directly on WhatsApp.', isRedFlag: true, explanation: 'Legitimate companies onboard through official email and HR systems, not personal messaging apps.' },
-              { id: 's4', text: 'We will mail you a check for $2,300 to purchase your home office equipment.', isRedFlag: true, explanation: "This is the classic overpayment check setup — you'll be asked to deposit it and wire part back before it bounces." },
+              { id: 's4', text: 'We will mail you a check for $2,300 to purchase your home office equipment.', isRedFlag: true, explanation: "This is the classic overpayment check setup: you'll be asked to deposit it and wire part back before it bounces." },
               { id: 's5', text: 'Please reply with your full name and preferred start date.', isRedFlag: false, explanation: 'A normal, low-risk request on its own.' },
               { id: 's6', text: 'Before your first check can be issued, send your bank routing and account number to payroll@quik-hire-solutions.net.', isRedFlag: true, explanation: "Real employers collect direct deposit info through secure official onboarding after you're hired, not via a personal email address before any contract exists." }
             ],
@@ -14037,7 +14037,7 @@ const MODULES = [
           {
             id: 'jb3', type: 'knowledgecheck', title: 'Quick Check', qIndices: [0, 1],
             hintTexts: [
-              "Think about WHEN a real employer needs your banking details — before or after you've signed something official?",
+              "Think about WHEN a real employer needs your banking details: before or after you've signed something official?",
               "Think about the direction money is supposed to flow when you're the one being hired."
             ]
           },
@@ -14068,7 +14068,7 @@ const MODULES = [
           },
           {
             id: 'jb4', type: 'bossbattle', title: 'GlobalHire Solutions',
-            scenario: "Hammy applied to 12 jobs last week. An email arrives from \"GlobalHire Solutions\" offering $35/hour for a remote position — no interview required. The email says to start immediately and asks for direct deposit info to \"set up payroll\" before anything else is signed.",
+            scenario: "Hammy applied to 12 jobs last week. An email arrives from \"GlobalHire Solutions\" offering $35/hour for a remote position, no interview required. The email says to start immediately and asks for direct deposit info to \"set up payroll\" before anything else is signed.",
             hintText: "Think back to the very first lesson: what's supposed to happen BEFORE an employer ever needs your banking details?",
             choices: [
               {
@@ -14077,7 +14077,7 @@ const MODULES = [
               },
               {
                 id: 'b', label: "Ignore the email and delete it without responding",
-                consequence: { text: "Hammy deletes the email. Safe — but the listing stays up and keeps targeting other students searching the same job boards.", delta: { savings: 0 }, xpMultiplier: 1 }
+                consequence: { text: "Hammy deletes the email. Safe, but the listing stays up and keeps targeting other students searching the same job boards.", delta: { savings: 0 }, xpMultiplier: 1 }
               },
               {
                 id: 'c', label: "Report the email to the job board and the school's career center, and don't send anything",
@@ -14097,7 +14097,7 @@ const MODULES = [
           {
             id: 'hs0', type: 'story', title: 'The Listing',
             beats: [
-              { speaker: 'intro', text: "Hammy and two roommates are hunting for a place near campus for next year, and rent nearby is brutal — most places are well over $1,000 a month." },
+              { speaker: 'intro', text: "Hammy and two roommates are hunting for a place near campus for next year, and rent nearby is brutal: most places are well over $1,000 a month." },
               { speaker: 'Hammy', text: '"Wait, this one\'s $650 a month and it looks amazing? That has to be a typo."' },
               { speaker: 'narrator', text: "Maybe. Or maybe it's designed to look too good to pass up. Let's check it out properly before anyone sends a dollar." },
               { speaker: 'Hammy', text: '"Okay, tell me exactly what to check before we get excited about this."' }
@@ -14108,13 +14108,13 @@ const MODULES = [
             concepts: [
               {
                 term: 'Deposit-Before-Viewing',
-                plain: "A real landlord or leasing office lets you see the actual unit — in person or on a live video call — before asking for any money. If someone wants a deposit before you've verified the place is real and they're the actual owner or an authorized agent, that's the scam working exactly as designed.",
+                plain: "A real landlord or leasing office lets you see the actual unit, in person or on a live video call, before asking for any money. If someone wants a deposit before you've verified the place is real and they're the actual owner or an authorized agent, that's the scam working exactly as designed.",
                 analogy: "It's like being asked to pay for a car before test-driving it, sight unseen, from a seller who won't meet you.",
                 check: { statement: "It's reasonable to send a deposit to hold an apartment before touring it, as long as the price seems fair.", isTrue: false }
               },
               {
                 term: '"Overseas Landlord" + Urgency',
-                plain: 'Scammers love a landlord who is conveniently "traveling," "out of the country," or has some other story that explains why they can\'t meet in person or show the unit. Pair that with pressure — "two other people are asking!" — and you\'ve got the two most common ingredients in a rental scam.',
+                plain: 'Scammers love a landlord who is conveniently "traveling," "out of the country," or has some other story that explains why they can\'t meet in person or show the unit. Pair that with pressure ("two other people are asking!") and you\'ve got the two most common ingredients in a rental scam.',
                 analogy: "It's the classic sales trick of manufactured scarcity, dressed up as a sympathetic personal story so you feel rude for questioning it.",
                 check: { statement: "A landlord who says they are traveling and can't meet in person is, by itself, always a scam.", isTrue: false }
               }
@@ -14135,7 +14135,7 @@ const MODULES = [
             intro: "Before Hammy deals with this listing, take a guess. Tap True or False, then see the answer.",
             statement: 'If an apartment listing is posted on Zillow or Apartments.com, it must be legitimate.',
             isTrue: false,
-            explanation: "False. Scammers regularly post on trusted, legitimate platforms — the platform hosting a listing doesn't mean anyone verified who posted it or that the deal is real.",
+            explanation: "False. Scammers regularly post on trusted, legitimate platforms; the platform hosting a listing doesn't mean anyone verified who posted it or that the deal is real.",
             xpOnComplete: 2
           },
           {
@@ -14165,7 +14165,7 @@ const MODULES = [
               },
               {
                 id: 'c', label: "Report the listing and start looking somewhere else",
-                outcome: { text: "Hammy flags the listing to the platform and moves on. A few weeks later, a friend mentions the exact same photos showed up under a different \"landlord\" name — Hammy wasn't the only target.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Deposit avoided', value: 500 }] }
+                outcome: { text: "Hammy flags the listing to the platform and moves on. A few weeks later, a friend mentions the exact same photos showed up under a different \"landlord\" name. Hammy wasn't the only target.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Deposit avoided', value: 500 }] }
               }
             ],
             xpOnComplete: 5
@@ -14206,7 +14206,7 @@ const MODULES = [
             ]
           },
           { id: 'hs5', type: 'hint', tag: "🎉 Hammy's Tip",
-            text: "You don't need to treat every listing or DM like a threat — most apartments are exactly what they say they are. The goal isn't paranoia, it's knowing the handful of patterns that actually matter, so you can move fast and confident on the real ones.",
+            text: "You don't need to treat every listing or DM like a threat. Most apartments are exactly what they say they are. The goal isn't paranoia, it's knowing the handful of patterns that actually matter, so you can move fast and confident on the real ones.",
             xpOnComplete: 1
           },
           {
@@ -14245,12 +14245,12 @@ const MODULES = [
           },
           {
             id: 'hs6', type: 'bossbattle', title: 'The Wire Transfer "Upgrade"',
-            scenario: "A different listing looks just as good, but this \"landlord\" says Venmo has been giving them trouble lately, and asks Hammy to wire the deposit directly to a bank account instead — for \"security.\" Move-in is supposedly next week.",
+            scenario: "A different listing looks just as good, but this \"landlord\" says Venmo has been giving them trouble lately, and asks Hammy to wire the deposit directly to a bank account instead, for \"security.\" Move-in is supposedly next week.",
             hintText: "A payment method switch that removes buyer protection is still a payment-before-viewing problem underneath.",
             choices: [
-              { id: 'a', label: 'Wire the deposit since a bank transfer sounds more official than Venmo', consequence: { text: "The account goes silent within hours. A wire transfer has even less recourse than Venmo — this money is gone for good.", delta: { savings: -500 }, xpMultiplier: 0.6 } },
+              { id: 'a', label: 'Wire the deposit since a bank transfer sounds more official than Venmo', consequence: { text: "The account goes silent within hours. A wire transfer has even less recourse than Venmo. This money is gone for good.", delta: { savings: -500 }, xpMultiplier: 0.6 } },
               { id: 'b', label: 'Ask to see the unit in person first, regardless of payment method', consequence: { text: "The \"landlord\" stalls and eventually stops replying. No deposit was ever sent for a place that never existed.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
-              { id: 'c', label: 'Report the listing and keep looking', consequence: { text: "Hammy flags it and moves on — and the roommates find a legitimate place within the week by touring in person first.", delta: { savings: 0 }, xpMultiplier: 1 } }
+              { id: 'c', label: 'Report the listing and keep looking', consequence: { text: "Hammy flags it and moves on, and the roommates find a legitimate place within the week by touring in person first.", delta: { savings: 0 }, xpMultiplier: 1 } }
             ]
           }
         ]
@@ -14264,7 +14264,7 @@ const MODULES = [
           {
             id: 'af0', type: 'story', title: 'The Verification Email',
             beats: [
-              { speaker: 'intro', text: "FAFSA renewal is due soon, and Hammy's inbox is full of financial aid emails — real reminders from the school, newsletter blasts, and now one that says the account needs \"urgent verification.\"" },
+              { speaker: 'intro', text: "FAFSA renewal is due soon, and Hammy's inbox is full of financial aid emails: real reminders from the school, newsletter blasts, and now one that says the account needs \"urgent verification.\"" },
               { speaker: 'Hammy', text: '"It says click here to verify my info or my aid gets delayed. The logo looks right..."' },
               { speaker: 'narrator', text: "Looking right and being right aren't the same thing. Let's actually check where that link goes." }
             ]
@@ -14274,8 +14274,8 @@ const MODULES = [
             concepts: [
               {
                 term: 'Anatomy of a URL',
-                plain: "A web address breaks into parts: the protocol (https://), then the actual domain — the part that matters most for trust — then anything after a slash (/), which is just a page on that site. Scammers exploit the fact that most people glance at a URL instead of reading it carefully.",
-                analogy: 'Think of the domain like a street address. Scammers can put "123 Main Street" in big letters on a building that\'s actually located somewhere completely different — the big letters are for show.',
+                plain: "A web address breaks into parts: the protocol (https://), then the actual domain, the part that matters most for trust, then anything after a slash (/), which is just a page on that site. Scammers exploit the fact that most people glance at a URL instead of reading it carefully.",
+                analogy: 'Think of the domain like a street address. Scammers can put "123 Main Street" in big letters on a building that\'s actually located somewhere completely different. The big letters are for show.',
                 check: { statement: "If a URL contains the words \"student aid\" or \"gov\" anywhere in the address, it's safe to trust.", isTrue: false }
               }
             ],
@@ -14300,12 +14300,12 @@ const MODULES = [
             intro: "Here's a link claiming to be from the FAFSA / Federal Student Aid office. Tap the part of the URL you think is suspicious, then hit Continue to see the full breakdown.",
             url: 'https://studentaid-gov.verify-account.net/login',
             parts: [
-              { id: 'p1', segment: 'https://', isSuspicious: false, note: "HTTPS just means the connection is encrypted — scam sites can have this too. It doesn't prove legitimacy on its own." },
-              { id: 'p2', segment: 'studentaid-gov.', isSuspicious: true, note: 'This LOOKS like "studentaid.gov" but it isn\'t — it\'s a made-up subdomain designed to trick a quick glance. It has nothing to do with the real government site.' },
-              { id: 'p3', segment: 'verify-account.net', isSuspicious: true, note: 'This is the actual domain the link goes to — not a government site at all. Everything before it ("studentaid-gov") is just a decoy label the scammer chose.' },
-              { id: 'p4', segment: '/login', isSuspicious: false, note: "A login path is completely normal on real sites too — the problem here isn't the path, it's the domain the whole URL actually points to." }
+              { id: 'p1', segment: 'https://', isSuspicious: false, note: "HTTPS just means the connection is encrypted, scam sites can have this too. It doesn't prove legitimacy on its own." },
+              { id: 'p2', segment: 'studentaid-gov.', isSuspicious: true, note: 'This LOOKS like "studentaid.gov" but it isn\'t: it\'s a made-up subdomain designed to trick a quick glance. It has nothing to do with the real government site.' },
+              { id: 'p3', segment: 'verify-account.net', isSuspicious: true, note: 'This is the actual domain the link goes to, not a government site at all. Everything before it ("studentaid-gov") is just a decoy label the scammer chose.' },
+              { id: 'p4', segment: '/login', isSuspicious: false, note: "A login path is completely normal on real sites too. The problem here isn't the path, it's the domain the whole URL actually points to." }
             ],
-            correctAnswerNote: 'The real Federal Student Aid site is exactly studentaid.gov — no extra words before or after the domain. Anything else, no matter how official-looking, is not the government.',
+            correctAnswerNote: 'The real Federal Student Aid site is exactly studentaid.gov, no extra words before or after the domain. Anything else, no matter how official-looking, is not the government.',
             xpOnComplete: 4
           },
           {
@@ -14352,9 +14352,9 @@ const MODULES = [
           {
             id: 'af3', type: 'mythcards', title: 'Financial Aid: True or False',
             cards: [
-              { myth: 'A scholarship that requires a small "processing fee" is fine as long as the payout is much bigger.', isTrue: false, explanation: 'Real scholarships never require you to pay to receive money. Any upfront fee — no matter how small compared to the promised award — is a hallmark of a scam.' },
-              { myth: 'The real FAFSA / Federal Student Aid site is studentaid.gov, and legitimate government sites use the .gov domain.', isTrue: true, explanation: 'Correct — .gov is a restricted domain that scammers cannot simply purchase the way they can a lookalike .net or .com.' },
-              { myth: 'If a financial aid email addresses you by name and mentions your actual school, it must be legitimate.', isTrue: false, explanation: 'Scammers can find your name and school easily — social media, public directories, even a previous data breach — and use them to make phishing feel personalized.' }
+              { myth: 'A scholarship that requires a small "processing fee" is fine as long as the payout is much bigger.', isTrue: false, explanation: 'Real scholarships never require you to pay to receive money. Any upfront fee, no matter how small compared to the promised award, is a hallmark of a scam.' },
+              { myth: 'The real FAFSA / Federal Student Aid site is studentaid.gov, and legitimate government sites use the .gov domain.', isTrue: true, explanation: 'Correct: .gov is a restricted domain that scammers cannot simply purchase the way they can a lookalike .net or .com.' },
+              { myth: 'If a financial aid email addresses you by name and mentions your actual school, it must be legitimate.', isTrue: false, explanation: 'Scammers can find your name and school easily: social media, public directories, even a previous data breach, and use them to make phishing feel personalized.' }
             ],
             xpPerCorrect: 2
           },
@@ -14382,7 +14382,7 @@ const MODULES = [
             hintText: "Which direction is money supposed to move when someone owes YOU an award?",
             choices: [
               { id: 'a', label: 'Pay the $75 fee to unlock the $2,500 award', consequence: { text: "The $75 goes through instantly. The promised $2,500 never arrives, and the site stops responding to emails.", delta: { savings: -75 }, xpMultiplier: 0.6 } },
-              { id: 'b', label: "Skip it — real scholarships don't charge you to pay you", consequence: { text: "Hammy deletes the email. No award existed to begin with — this was the scam's entire business model.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'b', label: "Skip it: real scholarships don't charge you to pay you", consequence: { text: "Hammy deletes the email. No award existed to begin with, this was the scam's entire business model.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
               { id: 'c', label: "Report it to the school's financial aid office and ask if it's legitimate", consequence: { text: "The financial aid office confirms it's a known scam circulating that semester and helps get it reported.", delta: { savings: 0 }, xpMultiplier: 1.1 } }
             ]
           }
@@ -14407,13 +14407,13 @@ const MODULES = [
             concepts: [
               {
                 term: 'Spoofed Senders & Urgency Language',
-                plain: "Scammers can make an email or text LOOK like it's from your bank, your school, or the government — the display name and even the sender address can be faked or made to look extremely close to the real one. Pair that with words like \"immediately\" or a countdown timer, and it's designed to make you act before you think.",
+                plain: "Scammers can make an email or text LOOK like it's from your bank, your school, or the government. The display name and even the sender address can be faked or made to look extremely close to the real one. Pair that with words like \"immediately\" or a countdown timer, and it's designed to make you act before you think.",
                 analogy: "It's a fire alarm pulled by someone who wants you running toward the exit they chose, not thinking clearly about whether there's actually a fire.",
                 check: { statement: "If a message looks like it's from your bank and creates a sense of urgency, that combination alone is a reason to slow down, not speed up.", isTrue: true }
               },
               {
                 term: 'Fake Login Pages',
-                plain: "A phishing link often leads to a page that looks nearly identical to a real login screen — same logo, same colors, sometimes the same layout. The only reliable way to tell is the URL in your browser's address bar, not how the page looks.",
+                plain: "A phishing link often leads to a page that looks nearly identical to a real login screen: same logo, same colors, sometimes the same layout. The only reliable way to tell is the URL in your browser's address bar, not how the page looks.",
                 analogy: "It's a stage set built to look exactly like a real store from the front, but there's nothing behind the wall.",
                 check: { statement: "If a login page looks exactly like your bank's real site, that's enough proof it's safe to enter your password.", isTrue: false }
               }
@@ -14425,10 +14425,10 @@ const MODULES = [
             intro: "Here's the actual text Hammy received. Tap every phrase you think is a red flag, then hit Continue to see what you caught.",
             postingTitle: 'Text Message',
             segments: [
-              { id: 'phs1', text: 'Your account has been locked for suspicious activity.', isRedFlag: false, explanation: "Scary-sounding on its own, but real banks do send fraud alerts — this phrase alone isn't proof of a scam." },
+              { id: 'phs1', text: 'Your account has been locked for suspicious activity.', isRedFlag: false, explanation: "Scary-sounding on its own, but real banks do send fraud alerts. This phrase alone isn't proof of a scam." },
               { id: 'phs2', text: 'Verify now or funds may be restricted.', isRedFlag: true, explanation: "Vague urgency plus a threat of consequences is a classic pressure tactic designed to stop you from thinking it through." },
               { id: 'phs3', text: 'Countdown: 10:00 remaining.', isRedFlag: true, explanation: "A ticking clock exists to make you act before you check whether the message is even real." },
-              { id: 'phs4', text: 'Tap this link to confirm your identity.', isRedFlag: true, explanation: "The link is the actual payload — it leads to a fake login page built to steal whatever you type into it." },
+              { id: 'phs4', text: 'Tap this link to confirm your identity.', isRedFlag: true, explanation: "The link is the actual payload: it leads to a fake login page built to steal whatever you type into it." },
               { id: 'phs5', text: 'Sent from a random 10-digit number, not a bank short code.', isRedFlag: true, explanation: "Real banks typically text from a consistent short code, not a number that changes every time." }
             ],
             xpOnComplete: 4
@@ -14452,7 +14452,7 @@ const MODULES = [
             intro: "Take a guess before we move on. Tap True or False, then see the answer.",
             statement: 'If someone\'s email and password are exposed in a data breach, changing the password on that one site is enough to stay safe.',
             isTrue: false,
-            explanation: "False. Credential stuffing means attackers try that same email/password combo across many other sites automatically — reused passwords are the real risk, not just the one breached site.",
+            explanation: "False. Credential stuffing means attackers try that same email/password combo across many other sites automatically. Reused passwords are the real risk, not just the one breached site.",
             xpOnComplete: 2
           },
           {
@@ -14471,14 +14471,14 @@ const MODULES = [
             concepts: [
               {
                 term: 'Reporting & Freezing',
-                plain: "If you think your identity has been stolen — someone opened an account, filed taxes, or applied for aid in your name — report it at IdentityTheft.gov (run by the FTC) for a personalized recovery plan, and place a free credit freeze with all three credit bureaus (Equifax, Experian, TransUnion) so no new accounts can be opened in your name.",
-                analogy: "A credit freeze is like changing the locks — it doesn't undo what already happened, but it stops anyone from walking back in through that same door.",
+                plain: "If you think your identity has been stolen (someone opened an account, filed taxes, or applied for aid in your name), report it at IdentityTheft.gov (run by the FTC) for a personalized recovery plan, and place a free credit freeze with all three credit bureaus (Equifax, Experian, TransUnion) so no new accounts can be opened in your name.",
+                analogy: "A credit freeze is like changing the locks. It doesn't undo what already happened, but it stops anyone from walking back in through that same door.",
                 check: { statement: 'A credit freeze costs money and can only be placed a limited number of times per year.', isTrue: false }
               },
               {
                 term: 'Tell Your School',
-                plain: "If the theft touches your financial aid — a fake FAFSA submission, a compromised student portal login — notify your school's financial aid office directly. They can flag your account and make sure a fraudulent submission doesn't mess with your real aid.",
-                analogy: "Your financial aid office is the one place that can actually undo damage done inside the financial aid system itself — the credit bureaus can't touch that part.",
+                plain: "If the theft touches your financial aid, a fake FAFSA submission, a compromised student portal login, notify your school's financial aid office directly. They can flag your account and make sure a fraudulent submission doesn't mess with your real aid.",
+                analogy: "Your financial aid office is the one place that can actually undo damage done inside the financial aid system itself. The credit bureaus can't touch that part.",
                 check: { statement: "Once you've frozen your credit, there's no need to also tell your school's financial aid office about aid-related identity theft.", isTrue: false }
               }
             ],
@@ -14498,7 +14498,7 @@ const MODULES = [
             intro: "One more before the quick check. Tap True or False, then see the answer.",
             statement: 'Financial aid offices will sometimes email students asking them to confirm their bank account details.',
             isTrue: false,
-            explanation: "False — and an important one to know. Real financial aid offices will never ask you to confirm bank account details over email. Any message that does is impersonating them.",
+            explanation: "False, and an important one to know. Real financial aid offices will never ask you to confirm bank account details over email. Any message that does is impersonating them.",
             xpOnComplete: 2
           },
           { id: 'ph5', type: 'knowledgecheck', title: 'Quick Check', qIndices: [6, 7],
@@ -14524,8 +14524,8 @@ const MODULES = [
             scenario: "The countdown from that text hits zero. A second, more urgent message arrives with a link and the words \"FINAL NOTICE.\"",
             hintText: "What did the URL-anatomy lesson say to check before trusting any link, no matter how urgent it looks?",
             choices: [
-              { id: 'a', label: 'Tap the link now, before the account actually gets locked', consequence: { text: "The page looks exactly like the real bank login — because it's built to. Hammy's real credentials just went straight to a scammer.", delta: { savings: -200 }, xpMultiplier: 0.6 } },
-              { id: 'b', label: "Ignore the text and open the bank's app directly to check", consequence: { text: "The real app shows nothing wrong — no lock, no alert. The text was fake from the start.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'a', label: 'Tap the link now, before the account actually gets locked', consequence: { text: "The page looks exactly like the real bank login, because it's built to. Hammy's real credentials just went straight to a scammer.", delta: { savings: -200 }, xpMultiplier: 0.6 } },
+              { id: 'b', label: "Ignore the text and open the bank's app directly to check", consequence: { text: "The real app shows nothing wrong, no lock, no alert. The text was fake from the start.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
               { id: 'c', label: 'Call the number on the back of the debit card to ask', consequence: { text: "The real bank confirms there's no issue and flags the number the text came from as a known scam line.", delta: { savings: 0 }, xpMultiplier: 1.1 } }
             ]
           }
@@ -14550,13 +14550,13 @@ const MODULES = [
             concepts: [
               {
                 term: 'No Fraud Protection, No Undo Button',
-                plain: "Venmo, Cash App, and Zelle are built to move money between people who already trust each other — splitting rent, paying a friend back. Once you hit send, that money is very hard or impossible to get back, and unlike a credit card, there's generally no formal dispute process on the other end.",
-                analogy: "It's the difference between handing someone cash and swiping a credit card — cash doesn't come with a receipt you can dispute later.",
+                plain: "Venmo, Cash App, and Zelle are built to move money between people who already trust each other: splitting rent, paying a friend back. Once you hit send, that money is very hard or impossible to get back, and unlike a credit card, there's generally no formal dispute process on the other end.",
+                analogy: "It's the difference between handing someone cash and swiping a credit card. Cash doesn't come with a receipt you can dispute later.",
                 check: { statement: "Remember from Managing Credit: credit cards can dispute fraudulent charges, while P2P apps like Venmo generally cannot reverse a payment once it's sent.", isTrue: true }
               },
               {
                 term: 'The Overpayment-Then-Refund Trap',
-                plain: "A buyer \"accidentally\" sends too much and asks for the difference back. The catch: their original payment often gets reversed or turns out fraudulent AFTER the refund is sent — leaving the seller out both the refund and whatever was never actually paid.",
+                plain: "A buyer \"accidentally\" sends too much and asks for the difference back. The catch: their original payment often gets reversed or turns out fraudulent AFTER the refund is sent, leaving the seller out both the refund and whatever was never actually paid.",
                 analogy: "It's a shell game where the first payment is the shell that disappears right after you look away.",
                 check: { statement: 'If someone overpays and asks for a refund of the difference, the safest move is to cancel the original payment rather than send a new one.', isTrue: true }
               }
@@ -14582,7 +14582,7 @@ const MODULES = [
             intro: "Take a guess before we go further. Tap True or False, then see the answer.",
             statement: 'If a buyer overpays and asks for the difference back, sending the refund quickly is the safest way to resolve it.',
             isTrue: false,
-            explanation: "False. The safest move is to cancel or reverse the ORIGINAL payment through the app first — sending a fresh refund on top of a payment that might not be real just doubles the loss.",
+            explanation: "False. The safest move is to cancel or reverse the ORIGINAL payment through the app first. Sending a fresh refund on top of a payment that might not be real just doubles the loss.",
             xpOnComplete: 2
           },
           {
@@ -14656,7 +14656,7 @@ const MODULES = [
             choices: [
               { id: 'a', label: 'Accept and ship immediately since the payment already went through', consequence: { text: "The Zelle payment reverses days later as unauthorized. The textbooks are gone and the money is gone with them.", delta: { savings: -120 }, xpMultiplier: 0.6 } },
               { id: 'b', label: 'Wait a few days to confirm the payment fully clears before shipping anything', consequence: { text: "The payment reverses within 48 hours, exactly as expected. Nothing shipped, nothing lost.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
-              { id: 'c', label: 'Ask the buyer to meet in person for a local, in-hand exchange instead', consequence: { text: "The buyer stops responding the moment cash-in-hand is suggested — a strong sign it was never a real sale.", delta: { savings: 0 }, xpMultiplier: 1.1 } }
+              { id: 'c', label: 'Ask the buyer to meet in person for a local, in-hand exchange instead', consequence: { text: "The buyer stops responding the moment cash-in-hand is suggested, a strong sign it was never a real sale.", delta: { savings: 0 }, xpMultiplier: 1.1 } }
             ]
           }
         ]
@@ -14686,7 +14686,7 @@ const MODULES = [
               },
               {
                 term: 'Checkout Red Flags',
-                plain: "Legitimate stores let you pay with a credit card. Scam storefronts often push you toward payment methods with no buyer protection — wire transfer, gift cards, or cryptocurrency — sometimes offering an extra discount specifically for using them.",
+                plain: "Legitimate stores let you pay with a credit card. Scam storefronts often push you toward payment methods with no buyer protection (wire transfer, gift cards, or cryptocurrency), sometimes offering an extra discount specifically for using them.",
                 analogy: "A cashier who only takes cash under the table isn't operating like a normal cashier.",
                 check: { statement: "A discount for paying with gift cards or crypto instead of a credit card is a bonus with no downside.", isTrue: false }
               }
@@ -14718,11 +14718,11 @@ const MODULES = [
           {
             id: 'sh2', type: 'spotcheck', title: 'Spot the Red Flags',
             intro: "Below is a real-looking product page. Tap every phrase you think is a red flag, then hit Continue to see what you caught.",
-            postingTitle: 'MEGA CLEARANCE — Everything 80% Off, Today Only!',
+            postingTitle: 'MEGA CLEARANCE: Everything 80% Off, Today Only!',
             segments: [
               { id: 's1', text: 'Free shipping on orders over $25.', isRedFlag: false, explanation: "A totally normal, common offer on its own." },
               { id: 's2', text: 'Founded 3 weeks ago, no customer service number listed.', isRedFlag: true, explanation: "A brand-new store with no way to reach a real person is a serious warning sign, especially paired with steep discounts." },
-              { id: 's3', text: 'Pay by gift card for an extra 10% off.', isRedFlag: true, explanation: "Gift cards can't be reversed or disputed — legitimate stores don't need to push you toward the one payment method with zero protection." },
+              { id: 's3', text: 'Pay by gift card for an extra 10% off.', isRedFlag: true, explanation: "Gift cards can't be reversed or disputed. Legitimate stores don't need to push you toward the one payment method with zero protection." },
               { id: 's4', text: 'Countdown timer: "Sale ends in 09:58!"', isRedFlag: true, explanation: "Manufactured urgency is a pressure tactic to stop you from thinking it through or comparing prices elsewhere." },
               { id: 's5', text: '30-day return policy.', isRedFlag: false, explanation: "A normal policy to state, though it only matters if the company is actually reachable when you need it." },
               { id: 's6', text: 'All reviews are 5 stars and posted this week.', isRedFlag: true, explanation: "A wall of suspiciously uniform, brand-new reviews is a common way scam sites fake social proof." }
@@ -14743,7 +14743,7 @@ const MODULES = [
             hintText: "Which payment method actually lets you dispute a charge if the order never shows up?",
             choices: [
               { id: 'a', label: 'Take the extra discount and pay with a gift card', outcome: { text: "The order never arrives. Since gift card payments can't be disputed or reversed, the money is simply gone.", delta: { savings: -80 }, compare: [{ label: 'Lost', value: 80 }, { label: 'Protected', value: 0 }] } },
-              { id: 'b', label: 'Skip the discount and pay with a credit card instead', outcome: { text: "The order never arrives either way — but Hammy disputes the charge with the credit card company and gets a full refund.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Refunded via dispute', value: 80 }] } }
+              { id: 'b', label: 'Skip the discount and pay with a credit card instead', outcome: { text: "The order never arrives either way, but Hammy disputes the charge with the credit card company and gets a full refund.", delta: { savings: 0 }, compare: [{ label: 'Lost', value: 0 }, { label: 'Refunded via dispute', value: 80 }] } }
             ],
             xpOnComplete: 5
           },
@@ -14791,8 +14791,8 @@ const MODULES = [
             scenario: "A social media ad shows a popular gadget at 75% off, ships from overseas, only accepts payment via wire transfer or crypto, and the site was registered two weeks ago.",
             hintText: "Count how many red-flag patterns from this quest are stacked in one place.",
             choices: [
-              { id: 'a', label: 'Order it — the ad looked professional and the price is amazing', consequence: { text: "Weeks pass with no package. The site goes offline entirely, and the wire transfer has no way to be reversed.", delta: { savings: -60 }, xpMultiplier: 0.6 } },
-              { id: 'b', label: "Look up the exact product on a retailer with a real return policy and pay by credit card instead", consequence: { text: "Hammy finds the same item for a bit more, but from a real store — and it actually arrives, with dispute protection if it hadn't.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
+              { id: 'a', label: 'Order it, the ad looked professional and the price is amazing', consequence: { text: "Weeks pass with no package. The site goes offline entirely, and the wire transfer has no way to be reversed.", delta: { savings: -60 }, xpMultiplier: 0.6 } },
+              { id: 'b', label: "Look up the exact product on a retailer with a real return policy and pay by credit card instead", consequence: { text: "Hammy finds the same item for a bit more, but from a real store, and it actually arrives, with dispute protection if it hadn't.", delta: { savings: 0 }, xpMultiplier: 1.25 } },
               { id: 'c', label: 'Search the store\'s name plus "scam" before ordering anything', consequence: { text: "The search turns up several recent reports of the same site taking payment and never shipping. Order skipped entirely.", delta: { savings: 0 }, xpMultiplier: 1.1 } }
             ]
           }
@@ -14837,7 +14837,7 @@ const MODULES = [
             segments: [
               { id: 'rs1', text: '"I feel like I\'ve known you my whole life already."', isRedFlag: true, explanation: "Intense emotional language this early is a classic love-bombing tactic to build fast attachment." },
               { id: 'rs2', text: '"My camera\'s been broken for weeks, sorry, we\'ll figure out a call soon."', isRedFlag: true, explanation: "A recurring excuse to avoid video verification is one of the most consistent romance scam patterns." },
-              { id: 'rs3', text: '"What did you do this weekend?"', isRedFlag: false, explanation: "A completely normal question — most of a real conversation looks just like this." },
+              { id: 'rs3', text: '"What did you do this weekend?"', isRedFlag: false, explanation: "A completely normal question, most of a real conversation looks just like this." },
               { id: 'rs4', text: '"I\'m stuck on a work contract overseas, it\'s a whole story."', isRedFlag: true, explanation: "A vague overseas or work-related reason for being unavailable is a common setup that later justifies both no video calls and future money requests." },
               { id: 'rs5', text: '"Can I ask you something? This is embarrassing, but I need help with an emergency."', isRedFlag: true, explanation: "This is the pivot point almost every romance scam eventually reaches, an emotional appeal that leads directly to a money request." }
             ],
@@ -14944,7 +14944,7 @@ const MODULES = [
           {
             id: 't0', type: 'story', title: 'The Screaming Pop-Up',
             beats: [
-              { speaker: 'intro', text: "Hammy's laptop suddenly locks up: a full-screen red warning blares an alarm sound and says \"YOUR COMPUTER IS INFECTED — CALL MICROSOFT SUPPORT IMMEDIATELY\" with a phone number and a countdown before \"all files will be deleted.\"" },
+              { speaker: 'intro', text: "Hammy's laptop suddenly locks up: a full-screen red warning blares an alarm sound and says \"YOUR COMPUTER IS INFECTED. CALL MICROSOFT SUPPORT IMMEDIATELY\" with a phone number and a countdown before \"all files will be deleted.\"" },
               { speaker: 'Hammy', text: '"It looks exactly like a Windows warning, and it\'s really loud. Should I call the number before it deletes everything?"' },
               { speaker: 'narrator', text: "Real security warnings don't work like this. Let's break down what's actually happening on that screen." }
             ]
@@ -15081,22 +15081,22 @@ const MODULES = [
           {
             id: 'fc0', type: 'story', title: 'After the Close Call',
             beats: [
-              { speaker: 'intro', text: "Hammy almost fell for a phishing text last week. Knowing identity theft is a risk is one thing — actually freezing credit and setting up fraud alerts is another." }
+              { speaker: 'intro', text: "Hammy almost fell for a phishing text last week. Knowing identity theft is a risk is one thing; actually freezing credit and setting up fraud alerts is another." }
             ]
           },
           {
             id: 'fc1', type: 'teach', title: 'Step 1 & 2: Contact & Freeze',
             concepts: [
-              { term: 'Step 1: Contact All Three Bureaus', plain: "A credit freeze only works if placed at all three bureaus — Equifax, Experian, and TransUnion — since lenders can pull from any one of them. Each has its own free online portal.", analogy: "Locking one door out of three still leaves two open.", check: { statement: 'Freezing your credit at just one bureau is enough to fully protect you.', isTrue: false } },
-              { term: 'Step 2: Place the Freeze', plain: "Placing a freeze is free by law and takes about 10 minutes per bureau online. It blocks new accounts from being opened in your name without explicit approval.", analogy: "Like changing the locks — it doesn't undo the past, but stops new break-ins.", check: {} }
+              { term: 'Step 1: Contact All Three Bureaus', plain: "A credit freeze only works if placed at all three bureaus (Equifax, Experian, and TransUnion) since lenders can pull from any one of them. Each has its own free online portal.", analogy: "Locking one door out of three still leaves two open.", check: { statement: 'Freezing your credit at just one bureau is enough to fully protect you.', isTrue: false } },
+              { term: 'Step 2: Place the Freeze', plain: "Placing a freeze is free by law and takes about 10 minutes per bureau online. It blocks new accounts from being opened in your name without explicit approval.", analogy: "Like changing the locks: it doesn't undo the past, but stops new break-ins.", check: {} }
             ],
             xpOnComplete: 3
           },
           {
             id: 'fc2', type: 'teach', title: 'Step 3 & 4: Secure & Know the Lift',
             concepts: [
-              { term: 'Step 3: Set a PIN', plain: "Each bureau provides a PIN or password when the freeze is placed — save it somewhere secure. That PIN is required to lift the freeze later, so losing it means an extra identity-verification step.", analogy: "It's the key to the lock just placed — worth keeping somewhere safe.", check: {} },
-              { term: 'Step 4: Know How to Lift It Later', plain: "A freeze can be lifted temporarily (for a specific lender) or permanently, usually instantly online with the PIN. This matters when applying for a new credit card, apartment, or loan down the line.", analogy: "The lock can be opened again anytime — it's not a permanent barrier, just a default off switch.", check: { statement: 'Once placed, a credit freeze can never be lifted again.', isTrue: false } }
+              { term: 'Step 3: Set a PIN', plain: "Each bureau provides a PIN or password when the freeze is placed, save it somewhere secure. That PIN is required to lift the freeze later, so losing it means an extra identity-verification step.", analogy: "It's the key to the lock just placed, worth keeping somewhere safe.", check: {} },
+              { term: 'Step 4: Know How to Lift It Later', plain: "A freeze can be lifted temporarily (for a specific lender) or permanently, usually instantly online with the PIN. This matters when applying for a new credit card, apartment, or loan down the line.", analogy: "The lock can be opened again anytime, it's not a permanent barrier, just a default off switch.", check: { statement: 'Once placed, a credit freeze can never be lifted again.', isTrue: false } }
             ],
             xpOnComplete: 3
           },
@@ -15105,7 +15105,7 @@ const MODULES = [
             prompt: "Six months after freezing credit at all three bureaus, Hammy wants to apply for a new credit card. The application gets rejected due to the freeze.",
             hintText: "Is a credit freeze permanent, or does it need one extra step first?",
             choices: [
-              { id: 'a', label: 'Assume credit is permanently broken and give up on the application', outcome: { text: "The freeze is still active and just needs to be lifted first — nothing is actually broken.", delta: {}, compare: [{ label: 'Extra steps needed', value: 1 }, { label: 'Steps if unfrozen first', value: 0 }] } },
+              { id: 'a', label: 'Assume credit is permanently broken and give up on the application', outcome: { text: "The freeze is still active and just needs to be lifted first, nothing is actually broken.", delta: {}, compare: [{ label: 'Extra steps needed', value: 1 }, { label: 'Steps if unfrozen first', value: 0 }] } },
               { id: 'b', label: 'Log into the bureau site with the saved PIN and lift the freeze before reapplying', outcome: { text: "A quick PIN-based lift clears the way for the application to go through normally.", delta: {}, compare: [{ label: 'Extra steps needed', value: 0 }, { label: 'Steps if left frozen', value: 1 }] } }
             ],
             xpOnComplete: 4
