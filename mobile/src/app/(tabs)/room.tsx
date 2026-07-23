@@ -46,7 +46,14 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // its actual wood tone instead of layering a translucent scrim over it, which covered
   // the item's full bounding box (including the transparent letterboxed margins around the
   // art) and was showing up as a stray greyish rectangle.
-  desk: { label: 'Desk', top: '2%', left: '26%', width: '44%', height: '62%', floorStanding: true },
+  // top is already 0% — flush with the very ceiling of the scene, no room to push it any
+  // higher than that. So "higher" now comes from size instead: widened from 44% to 52% and
+  // given real headroom again (height 13% -> 22%, back above the ~16% floor noted above
+  // where it was starting to go height-bound and shrink) so the bigger art actually renders
+  // at its bigger width-driven size instead of getting squeezed back down by a too-short box.
+  // Left recalculated to stay centered under the window (span 24%-72%, center 48%) at the
+  // new 52% width: 48 - 52/2 = 22%.
+  desk: { label: 'Desk', top: '0%', left: '22%', width: '52%', height: '22%', floorStanding: true },
 };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
