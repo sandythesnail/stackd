@@ -39,21 +39,15 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // body rather than only trailing out below his feet, so the two read as "standing on it"
   // rather than two separate unrelated floor items.
   rug: { label: 'Rug', bottom: '8%', left: '16%', width: '66%', height: '50%', floorStanding: true },
-  // Pushed higher still (top 2%, right at the window's own top edge/the ceiling) so it
-  // reads as tucked against the wall under the window, not floating out in the middle of
-  // the floor — centered in the window's own span (left 24%-72%, so left 26% centers this
-  // bigger, 44%-wide desk). A color fix (see content/shopItems.json's desk_study) darkened
-  // its actual wood tone instead of layering a translucent scrim over it, which covered
-  // the item's full bounding box (including the transparent letterboxed margins around the
-  // art) and was showing up as a stray greyish rectangle.
-  // top is already 0% — flush with the very ceiling of the scene, no room to push it any
-  // higher than that. So "higher" now comes from size instead: widened from 44% to 52% and
-  // given real headroom again (height 13% -> 22%, back above the ~16% floor noted above
-  // where it was starting to go height-bound and shrink) so the bigger art actually renders
-  // at its bigger width-driven size instead of getting squeezed back down by a too-short box.
-  // Left recalculated to stay centered under the window (span 24%-72%, center 48%) at the
-  // new 52% width: 48 - 52/2 = 22%.
-  desk: { label: 'Desk', top: '0%', left: '22%', width: '52%', height: '22%', floorStanding: true },
+  // Chasing "higher" all the way up to the literal ceiling (top 0%) put it above the window
+  // instead of under it, which read wrong. Switched to bottom-anchoring like the plant above
+  // (bottom + height, same 20% height) instead of top-anchoring, so its position is set by
+  // where its base sits rather than by squeezing between a fixed top and the render size.
+  // Window ends at top 4% + height 40% = 44% from the top, i.e. 56% up from the bottom —
+  // bottom: 56% - height(20%) = 36% puts the box's top edge right there, flush under the
+  // window. Left/width (centered under the window, span 24%-72%, center 48%) kept from the
+  // last size pass: left = 48 - 52/2 = 22%.
+  desk: { label: 'Desk', bottom: '36%', left: '22%', width: '52%', height: '20%', floorStanding: true },
 };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
