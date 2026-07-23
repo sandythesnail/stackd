@@ -154,10 +154,28 @@
     z-index: 2;
     pointer-events: none;
   }
-  .pop-ring.go { animation: popRing 0.55s cubic-bezier(0.1, 0.7, 0.3, 1) forwards; }
+  .pop-ring.go { animation: popRing 0.6s cubic-bezier(0.1, 0.7, 0.3, 1) forwards; }
   @keyframes popRing {
-    0%   { opacity: 0.9; transform: scale(0.4); border-width: 12px; }
-    100% { opacity: 0; transform: scale(13); border-width: 1px; }
+    0%   { opacity: 0.95; transform: scale(0.4); border-width: 14px; }
+    100% { opacity: 0; transform: scale(20); border-width: 1px; }
+  }
+  /* second, gold ring slightly behind the pink one for a layered blast */
+  .pop-ring.ring2 { border-color: #FFC400; }
+  .pop-ring.ring2.go { animation-duration: 0.75s; animation-delay: 0.06s; }
+
+  /* full-stage flash at the moment of the pop */
+  .flash {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 50% 55%, rgba(255,255,255,0.95), rgba(255,255,255,0) 65%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 25;
+  }
+  .flash.go { animation: flashOut 0.45s ease-out forwards; }
+  @keyframes flashOut {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
   }
 
   /* ---------- Currency spill (ICON_COIN / ICON_DIAMOND from app.js) ---------- */
@@ -168,6 +186,10 @@
     will-change: transform, opacity;
   }
   .particle svg { display: block; width: 100%; height: 100%; filter: none; }
+  /* sparkle glints mixed into the burst: 4-point star shapes */
+  .sparkle {
+    clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
+  }
 
   /* ---------- Hammy: the site's CSS pig, copied from styles.css ---------- */
   .hammy-wrap {
@@ -283,6 +305,46 @@
     100% { transform: translateX(-50%) scale(1) rotate(0deg); }
   }
 
+  /* ---------- Tappable dialogue choice ---------- */
+  .choice {
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    transform: translateX(-50%);
+    z-index: 8;
+    display: none;
+  }
+  .choice.show {
+    display: block;
+    animation: choicePop 0.4s cubic-bezier(0.34, 1.8, 0.64, 1) both,
+               choiceNudge 1.6s ease-in-out 0.9s infinite;
+  }
+  @keyframes choicePop {
+    0%   { transform: translateX(-50%) translateY(18px) scale(0.6); opacity: 0; }
+    100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+  }
+  @keyframes choiceNudge {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-4px); }
+  }
+  .choice button {
+    background: #fff;
+    color: var(--green-dark);
+    border: 3px solid var(--green);
+    font-size: 17px;
+    font-weight: 700;
+    font-family: inherit;
+    line-height: 1.3;
+    padding: 12px 24px;
+    border-radius: 999px;
+    cursor: pointer;
+    max-width: min(84vw, 400px);
+    box-shadow: 0 5px 14px rgba(74, 104, 68, 0.18), 0 3px 0 var(--green);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .choice button:hover { transform: translateY(-2px); }
+  .choice button:active { transform: translateY(2px); box-shadow: 0 2px 6px rgba(74, 104, 68, 0.18), 0 1px 0 var(--green); }
+
   /* ---------- Simulated home screen (preview stand-in only) ---------- */
   .home-sim {
     position: fixed;
@@ -367,6 +429,7 @@
     </div>
 
     <div class="pop-ring" id="popRing"></div>
+    <div class="pop-ring ring2" id="popRing2"></div>
 
     <!-- Hammy: the production CSS pig + face-overlay system (no image halo possible —
          the body is CSS-drawn; faces are the transparent overlay PNGs the app already uses) -->
@@ -396,7 +459,11 @@
 
     <div class="bubble" id="bubble"></div>
   </div>
+
+  <div class="choice" id="choice"><button id="choiceBtn" type="button"></button></div>
 </div>
+
+<div class="flash" id="flash"></div>
 
 <!-- Stand-in for the home screen. In a real integration this is where the app
      would navigate home; the preview deliberately goes nowhere. -->
@@ -433,19 +500,24 @@
     star:   { image: "mobile/assets/images/hammy-faces/star-face.png",   top: 143, left: 117, width: 206, height: 160 }
   };
 
-  /* ── Dialogue: exact lines + faces + readable hold times ── */
-  var DIALOGUE = [
-    { text: "Hi, I’m Hammy!", face: "streak", hold: 2100 },
-    { text: "I’ll be guiding you along your journey with financial literacy!", face: "wink", hold: 2700 },
-    { text: "Let’s go!", face: "star", hold: 2000 }
+  /* ── Dialogue: Hammy line → tappable player reply → next Hammy line.
+     `reply` is the choice the user must tap to advance; null = end of script. ── */
+  var SCRIPT = [
+    { hammy: "Hi, I’m Hammy!", face: "streak", reply: "Hi Hammy! Who are you?" },
+    { hammy: "I’ll be guiding you along your journey with financial literacy!", face: "wink", reply: "Sounds good, I’m excited!" },
+    { hammy: "Let’s go!", face: "star", reply: null }
   ];
 
   var stage     = document.getElementById("stage");
   var bank      = document.getElementById("bank");
   var popRing   = document.getElementById("popRing");
+  var popRing2  = document.getElementById("popRing2");
+  var flash     = document.getElementById("flash");
   var hammyWrap = document.getElementById("hammyWrap");
   var overlay   = document.getElementById("faceOverlay");
   var bubble    = document.getElementById("bubble");
+  var choice    = document.getElementById("choice");
+  var choiceBtn = document.getElementById("choiceBtn");
   var homeSim   = document.getElementById("homeSim");
   var slowmo    = document.getElementById("slowmo");
   var anchor    = document.getElementById("anchor");
@@ -502,12 +574,17 @@
     timers.push(setTimeout(fn, ms * factor));
   }
 
+  function scheduleParticleCleanup(node, durMs) {
+    var ms = durMs * (slowmo.checked ? 3 : 1) + 100;
+    timers.push(setTimeout(function () { node.remove(); }, ms));
+  }
+
   function spawnCurrency() {
-    for (var i = 0; i < 18; i++) {
+    for (var i = 0; i < 36; i++) {
       var isCoin = i % 5 !== 3; // roughly 4:1 coins to diamonds — coins are the common currency
       var el = document.createElement("div");
       el.className = "particle";
-      var size = 26 + Math.random() * 16;
+      var size = 34 + Math.random() * 26;
       el.style.width = size + "px";
       el.style.height = size + "px";
       el.style.left = (-size / 2) + "px";
@@ -517,23 +594,53 @@
         .replace('height="1.15em"', 'height="100%"');
       anchor.appendChild(el);
 
-      var angle = (-Math.PI / 2) + (Math.random() - 0.5) * 2.5; // mostly upward
-      var speed = 260 + Math.random() * 300;
+      var angle = (-Math.PI / 2) + (Math.random() - 0.5) * 3.0; // near-full upward fan
+      var speed = 340 + Math.random() * 440;
       var vx = Math.cos(angle) * speed;
       var vy = Math.sin(angle) * speed;
-      var spin = (Math.random() - 0.5) * 800;
-      var dur = 1.0 + Math.random() * 0.45;
+      var spin = (Math.random() - 0.5) * 1100;
+      var dur = 1.0 + Math.random() * 0.5;
 
       el.animate([
         { transform: "translate(0px, 0px) rotate(0deg) scale(1)", opacity: 1 },
-        { transform: "translate(" + vx * 0.5 + "px, " + (vy * 0.5 + 180) + "px) rotate(" + spin + "deg) scale(0.95)",
+        { transform: "translate(" + vx * 0.5 + "px, " + (vy * 0.5 + 220) + "px) rotate(" + spin + "deg) scale(0.95)",
           opacity: 1, offset: 0.65 },
-        { transform: "translate(" + vx * 0.75 + "px, " + (vy * 0.75 + 500) + "px) rotate(" + spin * 1.4 + "deg) scale(0.8)",
+        { transform: "translate(" + vx * 0.75 + "px, " + (vy * 0.75 + 620) + "px) rotate(" + spin * 1.4 + "deg) scale(0.8)",
           opacity: 0 }
       ], { duration: dur * 1000, easing: "cubic-bezier(0.15, 0.6, 0.5, 1)", fill: "forwards" });
 
-      var cleanupMs = dur * 1000 * (slowmo.checked ? 3 : 1) + 100;
-      (function (node, ms) { timers.push(setTimeout(function () { node.remove(); }, ms)); })(el, cleanupMs);
+      scheduleParticleCleanup(el, dur * 1000);
+    }
+  }
+
+  /* Small star glints mixed into the burst — quick, twinkly, gone fast. */
+  function spawnSparkles() {
+    var colors = ["#FF96B8", "#FFC400", "#FFFFFF", "#FFD9E7"];
+    for (var i = 0; i < 26; i++) {
+      var el = document.createElement("div");
+      el.className = "particle sparkle";
+      var size = 10 + Math.random() * 14;
+      el.style.width = size + "px";
+      el.style.height = size + "px";
+      el.style.left = (-size / 2) + "px";
+      el.style.top = (-size / 2 - 80) + "px";
+      el.style.background = colors[i % colors.length];
+      anchor.appendChild(el);
+
+      var angle = Math.random() * Math.PI * 2; // sparkles fly in every direction
+      var dist = 90 + Math.random() * 320;
+      var dx = Math.cos(angle) * dist;
+      var dy = Math.sin(angle) * dist * 0.8 - 60;
+      var dur = 0.5 + Math.random() * 0.45;
+
+      el.animate([
+        { transform: "translate(0px, 0px) scale(0.2) rotate(0deg)", opacity: 1 },
+        { transform: "translate(" + dx * 0.6 + "px, " + dy * 0.6 + "px) scale(1.25) rotate(90deg)", opacity: 1, offset: 0.35 },
+        { transform: "translate(" + dx * 0.8 + "px, " + dy * 0.8 + "px) scale(0.7) rotate(140deg)", opacity: 0.9, offset: 0.6 },
+        { transform: "translate(" + dx + "px, " + dy + "px) scale(1.1) rotate(180deg)", opacity: 0 }
+      ], { duration: dur * 1000, easing: "cubic-bezier(0.2, 0.7, 0.4, 1)", fill: "forwards" });
+
+      scheduleParticleCleanup(el, dur * 1000);
     }
   }
 
@@ -544,14 +651,51 @@
     bubble.classList.add("pop-in");
   }
 
+  /* Every Hammy line gets the same wave wiggle — remove + reflow + re-add so
+     the animation replays even when the class is already present. */
+  function replayWave() {
+    hammyWrap.classList.remove("wave");
+    void hammyWrap.offsetWidth;
+    hammyWrap.classList.add("settled", "wave");
+  }
+
+  /* Show script line idx: Hammy's face + bubble + wave, then either offer the
+     tappable reply (advancing only on tap) or wrap up to the home screen. */
+  function hammyLine(idx) {
+    var line = SCRIPT[idx];
+    setFace(line.face);
+    showLine(line.hammy);
+    replayWave();
+
+    if (line.reply !== null) {
+      // let the user read Hammy's line before the reply chip appears
+      at(1300, function () {
+        choiceBtn.textContent = line.reply;
+        choiceBtn.onclick = function () {
+          choice.classList.remove("show");
+          choiceBtn.onclick = null;
+          at(280, function () { hammyLine(idx + 1); });
+        };
+        choice.classList.add("show");
+      });
+    } else {
+      at(2000, function () { stage.classList.add("exit"); });
+      at(2450, function () { homeSim.classList.add("show"); });
+    }
+  }
+
   function reset() {
     timers.forEach(clearTimeout);
     timers = [];
     bank.className = "bank";
     popRing.className = "pop-ring";
+    popRing2.className = "pop-ring ring2";
+    flash.className = "flash";
     hammyWrap.className = "hammy-wrap";
     bubble.className = "bubble";
     bubble.textContent = "";
+    choice.classList.remove("show");
+    choiceBtn.onclick = null;
     stage.classList.remove("shake", "exit");
     homeSim.classList.remove("show");
     document.querySelectorAll(".particle").forEach(function (p) { p.remove(); });
@@ -560,17 +704,14 @@
 
   function play() {
     reset();
-    setFace(DIALOGUE[0].face);
+    setFace(SCRIPT[0].face);
 
-    /* Timeline at 1x (~9.7s total):
+    /* Timeline at 1x:
        0.00  giant piggy bank drops in
        0.80  wobble + crack flash
-       1.35  POP — halves fly apart, ring, shake, coin/diamond spill
+       1.35  POP — flash, double ring, shake, coin/diamond/sparkle burst
        1.45  Hammy springs up (stretch + squash)
-       2.30  line 1 (streak face)   — holds ~2.1s
-       4.40  line 2 (wink face)     — holds ~2.7s
-       7.10  line 3 (star face)     — holds ~2.0s
-       9.10  transition to (simulated) home screen */
+       2.30  line 1, then each next line waits for the user's tapped reply */
     bank.classList.add("drop-in");
     at(800, function () {
       bank.classList.remove("drop-in");
@@ -580,26 +721,14 @@
       bank.classList.remove("wobble");
       bank.classList.add("popped");
       popRing.classList.add("go");
+      popRing2.classList.add("go");
+      flash.classList.add("go");
       stage.classList.add("shake");
       spawnCurrency();
+      spawnSparkles();
     });
     at(1450, function () { hammyWrap.classList.add("emerge"); });
-
-    var t = 2300;
-    DIALOGUE.forEach(function (line, idx) {
-      at(t, function () {
-        setFace(line.face);
-        showLine(line.text);
-        hammyWrap.className = "hammy-wrap " + (idx === 0 ? "wave" : "settled");
-      });
-      t += line.hold;
-    });
-    at(t, function () {
-      stage.classList.add("exit");
-    });
-    at(t + 450, function () {
-      homeSim.classList.add("show");
-    });
+    at(2300, function () { hammyLine(0); });
   }
 
   /* Slow-mo: the JS timeline is scaled in at(); CSS/WAAPI animations started
