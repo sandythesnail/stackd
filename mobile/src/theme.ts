@@ -113,38 +113,39 @@ export const colors = {
   cream: '#FAF6ED',
 } as const;
 
-/** Module accent colors keyed by module id — vivid/saturated versions of the ORIGINAL pastel
- * hue for each module (sage green, pink, mint, lavender, sky blue, peach, amber, slate,
- * rose, periwinkle, terracotta), per direct request to revert off two brighter but
- * hue-reassigned passes (a purple cluster, then a straight ROYGBIV spread) back to the
- * original palette's own identity, just more saturated instead of pastel. */
+/** Module accent colors keyed by module id — ported from the website's `.mod-icon.<color>`
+ * pastel pairs (app.css) so module icon badges match exactly: a pale background with a
+ * darker, same-hue foreground for the icon glyph/text (see `moduleColorText` below).
+ * `scams` has no source value — the website's own `iconColor: 'rust'` has no matching
+ * `.mod-icon.rust` CSS rule anywhere in app.css, a real bug on the site itself, so this is
+ * a filled-in rust/terracotta pastel consistent with the rest of the palette. */
 export const moduleColor: Record<string, string> = {
-  earning: '#4CAF50', // was pastel sage green
-  spending: '#EC6B94', // was pastel pink
-  saving: '#2DD4BF', // was pastel mint
-  investing: '#9B5DE0', // was pastel lavender
-  credit: '#3FA9F5', // was pastel sky blue
-  risk: '#FF9F5A', // was pastel peach
-  loans: '#FFD23F', // was pastel amber
-  taxes: '#7686B8', // was pastel slate
-  psychology: '#E362A8', // was pastel rose
-  career: '#7C86E3', // was pastel periwinkle
-  scams: '#E8875A', // was pastel terracotta
+  earning: '#B2C9AE',
+  spending: '#F2CDD7',
+  saving: '#C8F5F0',
+  investing: '#E8D6FF',
+  credit: '#D6EEFF',
+  risk: '#FFE5D0',
+  loans: '#FFEDB0',
+  taxes: '#E3E7F0',
+  psychology: '#F5D9E8',
+  career: '#DCE0FA',
+  scams: '#F5D9C8',
 };
 
 /** Darker foreground paired with each `moduleColor` background — the module icon's text
  * color on the website (never plain white on the pale chip). */
 export const moduleColorText: Record<string, string> = {
-  earning: '#2D6B2F',
-  spending: '#99275A',
-  saving: '#0F7A6C',
-  investing: '#5B21B6',
-  credit: '#1D5FA8',
-  risk: '#A34E1E',
+  earning: '#4A6844',
+  spending: '#B5607A',
+  saving: '#1A6B64',
+  investing: '#6B35B8',
+  credit: '#1A5E8A',
+  risk: '#8A3E1A',
   loans: '#8A6800',
-  taxes: '#3C4A73',
-  psychology: '#8F2D6B',
-  career: '#3138A0',
+  taxes: '#3C4A63',
+  psychology: '#8F2D5E',
+  career: '#38408A',
   scams: '#8A4A1A',
 };
 

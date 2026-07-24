@@ -311,22 +311,20 @@ body { background: var(--bg); min-height: 100vh; }
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
 }
-/* Vivid/saturated versions of each class's ORIGINAL pastel hue (matches mobile/src/theme.ts's
-   moduleColor exactly) — reverted off a straight ROYGBIV reassignment per direct request,
-   back to each module's own original hue identity, just more saturated instead of pastel.
-   .mod-icon.rust is new: iconColor: 'rust' (scams) had no matching rule at all before this,
-   a real pre-existing bug — it silently rendered with no background/text color. */
-.mod-icon.green { background: #4CAF50; color: #2D6B2F; }
-.mod-icon.pink  { background: #EC6B94; color: #99275A; }
-.mod-icon.mint  { background: #2DD4BF; color: #0F7A6C; }
-.mod-icon.lav   { background: #9B5DE0; color: #5B21B6; }
-.mod-icon.sky   { background: #3FA9F5; color: #1D5FA8; }
-.mod-icon.peach { background: #FF9F5A; color: #A34E1E; }
-.mod-icon.amber { background: #FFD23F; color: #8A6800; }
-.mod-icon.slate { background: #7686B8; color: #3C4A73; }
-.mod-icon.berry { background: #E362A8; color: #8F2D6B; }
-.mod-icon.indigo { background: #7C86E3; color: #3138A0; }
-.mod-icon.rust { background: #E8875A; color: #8A4A1A; }
+.mod-icon.green { background: var(--green-light); color: var(--green-dark); }
+.mod-icon.pink  { background: var(--pink-light);  color: var(--pink-dark); }
+.mod-icon.mint  { background: #C8F5F0; color: #1A6B64; }
+.mod-icon.lav   { background: #E8D6FF; color: #6B35B8; }
+.mod-icon.sky   { background: #D6EEFF; color: #1A5E8A; }
+.mod-icon.peach { background: #FFE5D0; color: #8A3E1A; }
+.mod-icon.amber { background: #FFEDB0; color: #8A6800; }
+.mod-icon.slate { background: #E3E7F0; color: #3C4A63; }
+.mod-icon.berry { background: #F5D9E8; color: #8F2D5E; }
+.mod-icon.indigo { background: #DCE0FA; color: #38408A; }
+/* Pastel terracotta, matching mobile's scams fallback — iconColor: 'rust' (scams) had no
+   matching rule at all before this pass, a real pre-existing bug (it silently rendered with
+   no background/text color); this class is new, filling that gap rather than reintroducing it. */
+.mod-icon.rust { background: #F5D9C8; color: #8A4A1A; }
 
 .card-badge { font-size: 0.68rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: var(--radius-sm); white-space: nowrap; }
 .badge-done { background: var(--green-light); color: var(--green-dark); }
