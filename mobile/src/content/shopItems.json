@@ -459,9 +459,9 @@
     "category": "room",
     "slot": "bed",
     "price": 140,
-    "viewBox": "0 0 160 100",
+    "viewBox": "0 0 100 130",
     "desc": "Every good saver needs good rest.",
-    "svg": "<rect x=\"10\" y=\"50\" width=\"140\" height=\"40\" rx=\"10\" fill=\"#D4899E\"/>\n          <rect x=\"10\" y=\"50\" width=\"140\" height=\"14\" rx=\"7\" fill=\"#F2CDD7\"/>\n          <rect x=\"16\" y=\"34\" width=\"34\" height=\"26\" rx=\"8\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"2\"/>\n          <rect x=\"20\" y=\"88\" width=\"10\" height=\"10\" fill=\"#8A6438\"/>\n          <rect x=\"130\" y=\"88\" width=\"10\" height=\"10\" fill=\"#8A6438\"/>"
+    "svg": "<rect x=\"6\" y=\"30\" width=\"88\" height=\"88\" rx=\"14\" fill=\"#D4899E\"/>\n          <rect x=\"6\" y=\"30\" width=\"88\" height=\"20\" rx=\"10\" fill=\"#F2CDD7\"/>\n          <rect x=\"24\" y=\"8\" width=\"52\" height=\"30\" rx=\"12\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"2\"/>\n          <rect x=\"14\" y=\"110\" width=\"10\" height=\"14\" fill=\"#8A6438\"/>\n          <rect x=\"76\" y=\"110\" width=\"10\" height=\"14\" fill=\"#8A6438\"/>"
   },
   {
     "id": "desk_study",

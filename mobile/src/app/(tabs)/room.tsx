@@ -30,10 +30,12 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // Moved down to the floor and over to Hammy's left flank (was tucked in the back-right
   // corner behind the lamp) so it reads as sitting right beside Hammy in the foreground.
   plant: { label: 'Plant', bottom: '6%', left: '14%', width: '17%', height: '24%', floorStanding: true },
-  // Was positioned right under the window when the window started at top 4% (ending at
-  // 44%). The window has since moved down to top 10% (now ending at 50%), so this no longer
-  // sits flush under it, left as-is since only the window/poster were asked to move.
-  bed: { label: 'Bed', top: '44%', left: '20%', width: '56%', height: '46%', floorStanding: true },
+  // Redrawn to face the viewer (was a wide side-profile silhouette) and re-slotted into the
+  // gap under the wall poster (which ends at top 51%, so this starts right there) and left
+  // of the desk (which starts at left 22%, so this ends just short of it at 21%) — the old
+  // box (left 20%-76%) nearly matched the desk's own footprint (left 22%-74%) and the two
+  // furniture pieces painted on top of each other instead of sitting side by side.
+  bed: { label: 'Bed', bottom: '6%', left: '2%', width: '19%', height: '43%', floorStanding: true },
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
   // (bottom raised off the literal floor edge) so more of it reads as sitting BEHIND Hammy's
   // body rather than only trailing out below his feet, so the two read as "standing on it"
