@@ -294,6 +294,20 @@ function normalizeModuleProgress(raw: unknown): Record<string, number[]> {
   return out;
 }
 
+/** Union two per-module completed-lesson-index maps (never drops an index either side has)
+ * — see the "stale remote must never regress local progress" note on hydrateFromRemote below.
+ * A stale remote snapshot that hasn't caught up to a lesson finished locally must not erase
+ * that lesson's completion by replacing the whole array; it can only ever add to it. */
+function unionModuleProgress(
+  a: Record<string, number[]>, b: Record<string, number[]>,
+): Record<string, number[]> {
+  const out: Record<string, number[]> = {};
+  for (const id of new Set([...Object.keys(a), ...Object.keys(b)])) {
+    out[id] = [...new Set([...(a[id] ?? []), ...(b[id] ?? [])])].sort((x, y) => x - y);
+  }
+  return out;
+}
+
 /** Which achievements are met right now, given the subset of app.js's ACHIEVEMENTS checks
  * that the mobile app can actually evaluate today (see Achievement.available). */
 function computeMetAchievementIds(s: AppState): string[] {
@@ -827,9 +841,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ...state,
           ...partial,
           // Defensive: a remote snapshot written by an older client may still carry the
-          // legacy numeric-count format — normalize either way.
+          // legacy numeric-count format — normalize either way. Unioned (not replaced) with
+          // local for the same reason as ownedItems/ownedRoomItems below: a stale remote
+          // read (the debounced upload can still be in flight when the page reloads) must
+          // never erase a lesson finished locally moments before the reload.
           moduleProgress: partial.moduleProgress
-            ? normalizeModuleProgress(partial.moduleProgress)
+            ? unionModuleProgress(state.moduleProgress, normalizeModuleProgress(partial.moduleProgress))
             : state.moduleProgress,
           coins: Math.max(state.coins, partial.coins ?? state.coins),
           diamonds: Math.max(state.diamonds, partial.diamonds ?? state.diamonds),
@@ -848,6 +865,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           // it back to false and show the tour again next launch. Once seen locally, it
           // stays seen no matter what a stale remote read says.
           hasSeenOnboardingTour: state.hasSeenOnboardingTour || !!partial.hasSeenOnboardingTour,
+          // Below: the same "stale remote must never regress local" reasoning as coins/
+          // diamonds/xp above, extended to fields that previously had no protection at all
+          // (plain `...partial` above overwrote them wholesale) — this was reported as
+          // buying/placing room decor, or finishing a lesson, then losing it on next reload:
+          // the debounced Supabase upload (1.5s) hadn't landed before the page reloaded, so
+          // the remote row this sign-in read back was one step behind, and blindly taking
+          // its ownedItems/ownedRoomItems/questBossesWon erased the not-yet-synced local gain.
+          ownedItems: Array.from(new Set([...state.ownedItems, ...(partial.ownedItems ?? [])])),
+          ownedRoomItems: Array.from(new Set([...state.ownedRoomItems, ...(partial.ownedRoomItems ?? [])])),
+          questBossesWon: Array.from(new Set([...state.questBossesWon, ...(partial.questBossesWon ?? [])])),
+          // Not a "growing" collection like the ones above (equipping is a swap, not an
+          // accumulation), so union doesn't apply — but the same race still applies: prefer
+          // whichever side is non-empty, and prefer LOCAL when both are, since local is the
+          // side that was actually just interacted with on this device. Only take remote's
+          // equip state on a genuinely fresh local install (nothing equipped locally yet).
+          equippedItems: state.equippedItems.length ? state.equippedItems : (partial.equippedItems ?? state.equippedItems),
+          equippedRoom: Object.values(state.equippedRoom).some(Boolean) ? state.equippedRoom : (partial.equippedRoom ?? state.equippedRoom),
+          // Coin drip is once-per-calendar-day keyed by date, so merging (not overwriting)
+          // can only add a day either side is missing, never erase one either side already has.
+          dailyLoginLog: { ...(partial.dailyLoginLog ?? {}), ...state.dailyLoginLog },
         };
         const { next, streakDiamondsEarned } = runDailyCheck(merged);
         setState(next);
