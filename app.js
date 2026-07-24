@@ -17272,12 +17272,16 @@ function positionTourStep() {
 
   // The "Start a lesson" highlight hugs the tile much tighter than every other step's
   // spotlight — the tile is a wide, full-row element, so the usual 8px padding on all sides
-  // made the glowing box read as noticeably taller/wider than the tile itself.
+  // made the glowing box read as noticeably taller/wider than the tile itself. The bottom
+  // edge specifically sits a bit tighter still (padBottom < pad) — pulled up a few px past
+  // even, into the tile's own inner padding, which reads better against a wide short row
+  // than the symmetric padding every other side uses.
   const pad = step.requiresRealClick ? 1 : 8;
+  const padBottom = step.requiresRealClick ? -2 : pad;
   spotlight.style.top = (r.top - pad) + 'px';
   spotlight.style.left = (r.left - pad) + 'px';
   spotlight.style.width = (r.width + pad * 2) + 'px';
-  spotlight.style.height = (r.height + pad * 2) + 'px';
+  spotlight.style.height = (r.height + pad + padBottom) + 'px';
 
   // Any spotlighted element needs to stay genuinely clickable, not just visually
   // not-covered — .tour-overlay still captures clicks everywhere else, but here a literal
@@ -17290,7 +17294,7 @@ function positionTourStep() {
   // doesn't work here either way: .sidebar (z-index 50) is its own stacking context below
   // .tour-overlay's 290, so no z-index a descendant of it sets can ever paint above the
   // overlay — clipping the hole sidesteps that entirely.
-  const hx = r.left - pad, hy = r.top - pad, hw = r.width + pad * 2, hh = r.height + pad * 2;
+  const hx = r.left - pad, hy = r.top - pad, hw = r.width + pad * 2, hh = r.height + pad + padBottom;
   const outer = `M0,0 H${window.innerWidth} V${window.innerHeight} H0 Z`;
   // Rounded to match .tour-spotlight's own border-radius (14px) — a sharp-cornered hole
   // clipped under a rounded visual ring left a small sharp-vs-round mismatch right at the
