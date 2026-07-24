@@ -428,6 +428,13 @@ type Ctx = {
   /** Dev-only: backdates lastPlayedDate by one day and re-runs the daily check, so the
    * streak/daily-login flow can be verified without waiting for a real day boundary. */
   debugSimulateNewDay: () => void;
+  /** Dev-only: grants ownership (not equip — room slots/MAX_EQUIPPED_ITEMS still cap what's
+   * actually worn/placed at once) of every real, buyable Furniture Farm and Porky's Boutique
+   * item, so the full catalog can be browsed/equipped without grinding coins. Skips mystery
+   * BOX items themselves (buying one is a currency sink, not something to "own") and the
+   * 'reward' category (achievement-earned, not part of either shop tab, and not wired to
+   * ownedItems by any real code path today). */
+  devOwnEverything: () => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
@@ -895,6 +902,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const { next, streakDiamondsEarned } = runDailyCheck({ ...state, lastPlayedDate: yesterday });
         setState(next);
         if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
+      },
+      devOwnEverything: () => {
+        const wearableIds = shopItemsReal
+          .filter((i) => (i.category === 'hat' || i.category === 'accessory' || i.category === 'exclusive') && !i.isMysteryBox)
+          .map((i) => i.id);
+        const roomIds = shopItemsReal.filter((i) => i.category === 'room' && i.slot).map((i) => i.id);
+        setState((s) => ({
+          ...s,
+          ownedItems: Array.from(new Set([...s.ownedItems, ...wearableIds])),
+          ownedRoomItems: Array.from(new Set([...s.ownedRoomItems, ...roomIds])),
+        }));
       },
     };
   }, [state, hydrated, dailyLoginBanner, newAchievementIds, pendingStreakDiamonds]);

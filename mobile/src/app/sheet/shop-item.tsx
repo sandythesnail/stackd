@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { View, Pressable, StyleSheet, Animated, Easing } from 'react-native';
+import Svg, { Path, Rect } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +19,27 @@ const RARITY_COLOR: Record<string, string> = { common: '#2F9E44', rare: '#2E6FE0
 
 function mysteryBoxNameFor(poolKey: string) {
   return shopItemsReal.find((i) => i.isMysteryBox && i.mysteryPool === poolKey)?.name ?? 'a Mystery Box';
+}
+
+/** Ported from the website's ICON_GIFT (app.js) — a real drawn gift box (lid, ribbon, bow,
+ * shine highlight), not the plain 🎁 unicode emoji mobile used before. `tone` recolors just
+ * the box/lid (the gold ribbon stays gold regardless) — the accessory pool gets purple to
+ * match its own card art (see accessory_mystery_box's gradient in shopItems.json), every
+ * other pool keeps the site's original pink. */
+function GiftIcon({ size, tone = 'pink' }: { size: number; tone?: 'pink' | 'purple' }) {
+  const c = tone === 'purple'
+    ? { body: '#C9A0FF', lid: '#8A3FE0', stroke: '#4A1A8A' }
+    : { body: '#FF6FA0', lid: '#FF4F8A', stroke: '#8A2646' };
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Rect x={4} y={11} width={16} height={8.5} rx={1} fill={c.body} stroke={c.stroke} strokeWidth={1.4} />
+      <Rect x={3} y={8} width={18} height={3.4} rx={0.9} fill={c.lid} stroke={c.stroke} strokeWidth={1.4} />
+      <Rect x={10.7} y={8} width={2.6} height={11.5} fill="#FFD23F" stroke="#8A5A00" strokeWidth={0.8} />
+      <Path d="M12 8c-1.6-3.2-5.4-3.2-5.4-0.2 0 1.7 2.5 1 5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" strokeWidth={0.8} strokeLinejoin="round" />
+      <Path d="M12 8c1.6-3.2 5.4-3.2 5.4-0.2 0 1.7-2.5 1-5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" strokeWidth={0.8} strokeLinejoin="round" />
+      <Rect x={4} y={11} width={16} height={1.6} fill="#ffffff" opacity={0.25} />
+    </Svg>
+  );
 }
 
 /** Screen 22 — Shop item detail modal. Real item pulled from the ported shop catalog,
@@ -116,9 +138,11 @@ export default function ShopItemModal() {
             <IconButton name="x" size={34} iconSize={16} onPress={() => router.back()} />
           </View>
 
-          <LinearGradient colors={['#FFF3F7', '#FBE0EA']} style={styles.preview}>
+          <LinearGradient colors={['#FFF3F7', '#FBE0EA']} style={[styles.preview, opening && styles.previewCentered]}>
             {opening ? (
-              <Animated.Text style={[styles.spinIcon, { transform: [{ rotate }, { scale }] }]}>🎁</Animated.Text>
+              <Animated.View style={{ transform: [{ rotate }, { scale }] }}>
+                <GiftIcon size={72} tone={item.mysteryPool === 'accessory' ? 'purple' : 'pink'} />
+              </Animated.View>
             ) : reveal ? (
               // Wallpaper items have no `svg` field at all (they're a bg/pattern lookup,
               // not raw item art — see Wallpaper.tsx) — ItemArt.tsx calls item.svg.replace(...)
@@ -222,7 +246,11 @@ const styles = StyleSheet.create({
   // Bottom-anchored, not centered — see shop.tsx's preview style for why (matches the
   // website's .shop-preview: centering left tall hats no headroom and they clipped at the top).
   preview: { height: 210, borderRadius: 22, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },
-  spinIcon: { fontSize: 72 },
+  // The spinning gift icon has no "base" the way item art does — flex-end left it sitting
+  // near the bottom edge instead of in the middle of the preview, unlike the website's
+  // .shop-modal-pig (a plain centered flexbox). Overrides justifyContent back to center only
+  // while opening.
+  previewCentered: { justifyContent: 'center' },
   head: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 10 },
   balance: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingVertical: 14, paddingHorizontal: 16 },
   oddsLine: { fontFamily: font.extra, fontSize: 15, marginTop: 6 },

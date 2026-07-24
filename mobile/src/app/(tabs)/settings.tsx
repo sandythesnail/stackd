@@ -24,7 +24,7 @@ import { MODULE_SOURCES } from '@/references';
  * copy-to-clipboard. */
 export default function Settings() {
   const router = useRouter();
-  const { state, level, tierName, resetProgress, debugSimulateNewDay } = useStore();
+  const { state, level, tierName, resetProgress, debugSimulateNewDay, devOwnEverything } = useStore();
   const { startTour } = useOnboardingTour();
 
   const replayTour = () => {
@@ -63,6 +63,14 @@ export default function Settings() {
               title="Simulate next day (dev)"
               sub={`Streak: ${state.streak}`}
               onPress={debugSimulateNewDay}
+            />
+          ) : null}
+          {__DEV__ ? (
+            <Row
+              icon="shopping-bag"
+              title="Own everything (dev)"
+              sub="Grants every Furniture Farm & Porky's Boutique item — doesn't auto-equip any of it"
+              onPress={devOwnEverything}
             />
           ) : null}
           {authEnabled ? (
