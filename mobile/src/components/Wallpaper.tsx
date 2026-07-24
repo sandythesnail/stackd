@@ -8,8 +8,10 @@ import type { ShopItemReal } from '@/content';
 const WALLPAPER: Record<string, { bg: string; dot?: string } | { bg: string; stripe: [string, string] }> = {
   wallpaper_sage: { bg: '#E0EAE0', dot: 'rgba(107,143,101,0.3)' },
   wallpaper_blush: { bg: '#FBF0F3', dot: 'rgba(212,137,158,0.3)' },
-  wallpaper_cream: { bg: '#FAF6ED' },
+  wallpaper_sky: { bg: '#DCE8F2', dot: 'rgba(59,107,148,0.3)' },
+  wallpaper_rust: { bg: '#F5E1DB', dot: 'rgba(154,74,58,0.3)' },
   wallpaper_stripes: { bg: '#E0EAE0', stripe: ['#B2C9AE', '#E0EAE0'] },
+  wallpaper_denim: { bg: '#DCE8F2', stripe: ['#8FB8D9', '#DCE8F2'] },
 };
 
 /** The website's default, unequipped wall-zone look. */

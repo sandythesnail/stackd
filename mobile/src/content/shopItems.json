@@ -325,13 +325,31 @@
     "wallCss": "background: repeating-linear-gradient(45deg, var(--green-light), var(--green-light) 10px, var(--green-pale) 10px, var(--green-pale) 20px);"
   },
   {
-    "id": "wallpaper_cream",
-    "name": "Classic Cream Wallpaper",
+    "id": "wallpaper_sky",
+    "name": "Sky Dot Wallpaper",
     "category": "room",
     "slot": "wallpaper",
     "price": 30,
-    "desc": "Simple, clean, and cozy.",
-    "wallCss": "background: var(--bg);"
+    "desc": "Soft blue polka dots.",
+    "wallCss": "background-color: #DCE8F2; background-image: radial-gradient(circle, rgba(59,107,148,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;"
+  },
+  {
+    "id": "wallpaper_rust",
+    "name": "Rust Dot Wallpaper",
+    "category": "room",
+    "slot": "wallpaper",
+    "price": 45,
+    "desc": "Warm terracotta polka dots.",
+    "wallCss": "background-color: #F5E1DB; background-image: radial-gradient(circle, rgba(154,74,58,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;"
+  },
+  {
+    "id": "wallpaper_denim",
+    "name": "Denim Stripe Wallpaper",
+    "category": "room",
+    "slot": "wallpaper",
+    "price": 55,
+    "desc": "Diagonal blue stripes.",
+    "wallCss": "background: repeating-linear-gradient(45deg, #8FB8D9, #8FB8D9 10px, #DCE8F2 10px, #DCE8F2 20px);"
   },
   {
     "id": "wall_money_poster",
@@ -351,7 +369,7 @@
     "price": 70,
     "viewBox": "0 0 100 130",
     "desc": "A little pep talk on the wall.",
-    "svg": "<rect x=\"4\" y=\"4\" width=\"92\" height=\"122\" rx=\"4\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"4\"/>\n          <rect x=\"14\" y=\"14\" width=\"72\" height=\"102\" fill=\"#FBF0F3\"/>\n          <circle cx=\"50\" cy=\"50\" r=\"22\" fill=\"#F2CDD7\"/>\n          <path d=\"M40,50 L47,58 L62,42\" stroke=\"#B5607A\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n          <text x=\"50\" y=\"95\" font-size=\"10\" text-anchor=\"middle\" fill=\"#B5607A\" font-weight=\"700\">YOU GOT THIS</text>"
+    "svg": "<rect x=\"4\" y=\"4\" width=\"92\" height=\"122\" rx=\"4\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"4\"/>\n          <rect x=\"14\" y=\"14\" width=\"72\" height=\"102\" fill=\"#E7EFF6\"/>\n          <circle cx=\"50\" cy=\"50\" r=\"22\" fill=\"#8FB8D9\"/>\n          <path d=\"M40,50 L47,58 L62,42\" stroke=\"#3B6B94\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n          <text x=\"50\" y=\"95\" font-size=\"10\" text-anchor=\"middle\" fill=\"#3B6B94\" font-weight=\"700\">YOU GOT THIS</text>"
   },
   {
     "id": "wall_plant_frame",
@@ -371,7 +389,7 @@
     "price": 75,
     "viewBox": "0 0 100 130",
     "desc": "Up and to the right, baby.",
-    "svg": "<rect x=\"4\" y=\"4\" width=\"92\" height=\"122\" rx=\"4\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"4\"/>\n          <rect x=\"14\" y=\"14\" width=\"72\" height=\"102\" fill=\"#E0EAE0\"/>\n          <rect x=\"26\" y=\"86\" width=\"10\" height=\"20\" fill=\"#B2C9AE\"/>\n          <rect x=\"42\" y=\"70\" width=\"10\" height=\"36\" fill=\"#6B8F65\"/>\n          <rect x=\"58\" y=\"50\" width=\"10\" height=\"56\" fill=\"#4A6844\"/>\n          <path d=\"M24,64 L44,44 L58,54 L76,28\" stroke=\"#FFD700\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n          <path d=\"M68,28 L76,28 L76,36\" stroke=\"#FFD700\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+    "svg": "<rect x=\"4\" y=\"4\" width=\"92\" height=\"122\" rx=\"4\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"4\"/>\n          <rect x=\"14\" y=\"14\" width=\"72\" height=\"102\" fill=\"#F2EEE6\"/>\n          <rect x=\"26\" y=\"86\" width=\"10\" height=\"20\" fill=\"#E3A392\"/>\n          <rect x=\"42\" y=\"70\" width=\"10\" height=\"36\" fill=\"#8FB8D9\"/>\n          <rect x=\"58\" y=\"50\" width=\"10\" height=\"56\" fill=\"#6B8F65\"/>\n          <path d=\"M24,64 L44,44 L58,54 L76,28\" stroke=\"#FFD700\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n          <path d=\"M68,28 L76,28 L76,36\" stroke=\"#FFD700\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
   },
   {
     "id": "rug_green",
@@ -404,6 +422,26 @@
     "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#F5D67A\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"80\" ry=\"20\" fill=\"none\" stroke=\"#B8935E\" stroke-width=\"3\" opacity=\"0.35\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"55\" ry=\"13\" fill=\"none\" stroke=\"#B8935E\" stroke-width=\"2.5\" opacity=\"0.3\"/>"
   },
   {
+    "id": "rug_blue",
+    "name": "Denim Rug",
+    "category": "room",
+    "slot": "rug",
+    "price": 60,
+    "viewBox": "0 0 220 70",
+    "desc": "Cool footing for a warm room.",
+    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#8FB8D9\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"80\" ry=\"20\" fill=\"none\" stroke=\"#3B6B94\" stroke-width=\"3\" opacity=\"0.35\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"55\" ry=\"13\" fill=\"none\" stroke=\"#3B6B94\" stroke-width=\"2.5\" opacity=\"0.3\"/>"
+  },
+  {
+    "id": "rug_terracotta",
+    "name": "Terracotta Rug",
+    "category": "room",
+    "slot": "rug",
+    "price": 60,
+    "viewBox": "0 0 220 70",
+    "desc": "Earthy warmth for movie nights.",
+    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#E3A392\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"80\" ry=\"20\" fill=\"none\" stroke=\"#A85A42\" stroke-width=\"3\" opacity=\"0.35\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"55\" ry=\"13\" fill=\"none\" stroke=\"#A85A42\" stroke-width=\"2.5\" opacity=\"0.3\"/>"
+  },
+  {
     "id": "rug_braided",
     "name": "Braided Rug",
     "category": "room",
@@ -411,7 +449,7 @@
     "price": 70,
     "viewBox": "0 0 220 70",
     "desc": "Ringed in every color of the collection.",
-    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#F2CDD7\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"88\" ry=\"23\" fill=\"#FFFFFF\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"70\" ry=\"18\" fill=\"#B2C9AE\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"45\" ry=\"11\" fill=\"#FFFFFF\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"22\" ry=\"5.5\" fill=\"#F2CDD7\"/>"
+    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#F2CDD7\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"90\" ry=\"24\" fill=\"#FFFFFF\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"72\" ry=\"19\" fill=\"#B2C9AE\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"56\" ry=\"14.5\" fill=\"#FFFFFF\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"38\" ry=\"10\" fill=\"#8FB8D9\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"20\" ry=\"5.5\" fill=\"#E3A392\"/>"
   },
   {
     "id": "plant_pothos",
@@ -461,7 +499,7 @@
     "price": 140,
     "viewBox": "0 0 100 130",
     "desc": "Every good saver needs good rest.",
-    "svg": "<rect x=\"6\" y=\"30\" width=\"88\" height=\"88\" rx=\"14\" fill=\"#D4899E\"/>\n          <rect x=\"6\" y=\"30\" width=\"88\" height=\"20\" rx=\"10\" fill=\"#F2CDD7\"/>\n          <rect x=\"24\" y=\"8\" width=\"52\" height=\"30\" rx=\"12\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"2\"/>\n          <rect x=\"14\" y=\"110\" width=\"10\" height=\"14\" fill=\"#8A6438\"/>\n          <rect x=\"76\" y=\"110\" width=\"10\" height=\"14\" fill=\"#8A6438\"/>"
+    "svg": "<rect x=\"6\" y=\"30\" width=\"88\" height=\"88\" rx=\"14\" fill=\"#6E93B8\"/>\n          <rect x=\"6\" y=\"30\" width=\"88\" height=\"20\" rx=\"10\" fill=\"#C7DCEC\"/>\n          <rect x=\"24\" y=\"8\" width=\"52\" height=\"30\" rx=\"12\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"2\"/>\n          <rect x=\"14\" y=\"110\" width=\"10\" height=\"14\" fill=\"#8A6438\"/>\n          <rect x=\"76\" y=\"110\" width=\"10\" height=\"14\" fill=\"#8A6438\"/>"
   },
   {
     "id": "desk_study",
