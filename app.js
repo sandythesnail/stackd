@@ -17131,8 +17131,10 @@ const ONBOARDING_TOUR_STEPS = [
     // beforeShow below, since a collapsed module row's tiles are all max-height:0 (nothing
     // real to measure/spotlight) until expanded. Advanced by the real click itself, not the
     // Next button (see requiresRealClick handling in renderTourStep/positionTourStep) — the
-    // user practices the actual navigation instead of reading about it, and gets a yellow
-    // highlight ring around the exact tile to click (see .tour-lesson-highlight in app.css).
+    // user practices the actual navigation instead of reading about it, and gets a glowing
+    // yellow ring around the exact tile to click (see .tour-spotlight-yellow in app.css —
+    // drawn on the tour's own spotlight element so it's always aligned with it, not a
+    // separate ring on the tile itself).
     target: () => document.querySelector('#modules-grid .module-row .lesson-tile'),
     title: 'Start a lesson',
     body: 'Tap this first lesson to start it. Finish them in order to complete the module.',
@@ -17159,8 +17161,12 @@ const ONBOARDING_TOUR_STEPS = [
       // the user's actual click, leaving the tour stuck open with only Skip able to close
       // it. Driving dismissal from the real "start the lesson" action itself instead means
       // it can never go stale, on any render pass.
+      // Purely a JS marker for "this is the tile the tour is currently waiting on" — no
+      // visual styling of its own. The actual glowing ring is .tour-spotlight-yellow
+      // (toggled in positionTourStep), which tracks the tour's own measured spotlight rect
+      // rather than this element, so it's always exactly aligned with it.
       const tile = document.querySelector('#modules-grid .module-row .lesson-tile');
-      if (tile) tile.classList.add('tour-lesson-highlight');
+      if (tile) tile.classList.add('tour-lesson-target');
     },
   },
 ];
@@ -17177,8 +17183,8 @@ function dismissTourForLessonStart(tile) {
   const overlay = document.getElementById('tour-overlay');
   if (!overlay || !overlay.classList.contains('visible')) return;
   if (!ONBOARDING_TOUR_STEPS[tourStepIdx].requiresRealClick) return;
-  if (!tile.classList.contains('tour-lesson-highlight')) return;
-  tile.classList.remove('tour-lesson-highlight');
+  if (!tile.classList.contains('tour-lesson-target')) return;
+  tile.classList.remove('tour-lesson-target');
   advanceOnboardingTour();
 }
 
@@ -17242,6 +17248,10 @@ function positionTourStep() {
   const targetEl = step.target();
   const spotlight = document.getElementById('tour-spotlight');
   const tooltip = document.getElementById('tour-tooltip');
+  // Glowing yellow ring only for the "Start a lesson" step — drawn on this same element (see
+  // .tour-spotlight-yellow in app.css) so it's always exactly aligned with the highlighted
+  // rect, never a separately-offset ring on the tile itself.
+  spotlight.classList.toggle('tour-spotlight-yellow', !!step.requiresRealClick);
   const r = targetEl ? targetEl.getBoundingClientRect() : null;
   // offsetParent is null for anything not actually rendered (display:none, or an ancestor
   // that is) — a target in that state still returns a technically-valid all-zero rect from
@@ -17316,10 +17326,11 @@ function endOnboardingTour() {
     tourOpenedMobileNav = false;
   }
   // Defensive: only actually needed if the tour ends (e.g. Skip) while the "click the first
-  // lesson" step is still active and waiting — a real click already clears its own highlight
+  // lesson" step is still active and waiting — a real click already clears its own marker
   // via dismissTourForLessonStart. querySelectorAll rather than a captured single-node
   // reference so this can't miss a re-rendered tile.
-  document.querySelectorAll('.tour-lesson-highlight').forEach(el => el.classList.remove('tour-lesson-highlight'));
+  document.querySelectorAll('.tour-lesson-target').forEach(el => el.classList.remove('tour-lesson-target'));
+  document.getElementById('tour-spotlight')?.classList.remove('tour-spotlight-yellow');
   state.hasSeenOnboardingTour = true;
   saveState();
 }
@@ -18177,8 +18188,6 @@ function renderHome() {
   showPage('home');
   updateSidebarStats();
   const done = modulesCompletedCount();
-  const tier = getTier(done);
-  document.getElementById('h-tier').textContent = tier.name;
   document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete, replay to master!' : `${done}/${MODULES.length} complete`;
   document.getElementById('home-hdr-coins').textContent = (state.coins || 0).toLocaleString();
   document.getElementById('home-hdr-diamonds').textContent = (state.diamonds || 0).toLocaleString();
@@ -21641,10 +21650,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('onboarding-skip').addEventListener('click', () => finishOnboardingSurvey(true));
   document.getElementById('tour-next').addEventListener('click', advanceOnboardingTour);
   document.getElementById('tour-skip').addEventListener('click', endOnboardingTour);
-  document.getElementById('sidebar-help-btn').addEventListener('click', startOnboardingTour);
   // Home page header icons (mirrors mobile's Header onReplayTour/onGear) — wired once here
   // rather than in renderHome(), which reruns on every home render and would otherwise pile
-  // up duplicate listeners.
+  // up duplicate listeners. The only "?" left — a second copy used to float over every page
+  // via the sidebar, which was redundant.
   document.getElementById('home-help-btn').addEventListener('click', startOnboardingTour);
   document.getElementById('home-settings-btn').addEventListener('click', () => { showPage('settings'); renderSettingsPage(); });
 

@@ -41,9 +41,10 @@ body { background: var(--bg); min-height: 100vh; }
   transition: background 0.18s, color 0.18s;
 }
 .sidebar-toggle:hover { background: var(--bg); color: var(--text); }
-/* Shared circular icon-button chrome — the sidebar's "?" (replay tour) and the home page
-   header's help/settings icons all use this, matching the mobile app's IconButton (white
-   bg, 1.5px border, centered icon) instead of each having its own one-off style. */
+/* Shared circular icon-button chrome — the home page header's help/settings icons (the
+   only place "?"/gear buttons live now; a second copy used to float over every page via the
+   sidebar, which read as redundant next to this one). Matches the mobile app's IconButton
+   (white bg, 1.5px border, centered icon). */
 .header-icon-btn {
   width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
@@ -51,20 +52,6 @@ body { background: var(--bg); min-height: 100vh; }
   cursor: pointer; transition: background 0.18s, color 0.18s;
 }
 .header-icon-btn:hover { background: var(--bg); color: var(--text); }
-/* Literal "?" glyph (was a hand-drawn SVG circle) — bigger and bolder so it actually reads
-   as a question mark at a glance instead of a faint generic icon. */
-.sidebar-help-mark {
-  font-family: var(--font-display); font-weight: 800;
-  font-size: 1.3rem; line-height: 1;
-}
-/* Pinned to the far right of the whole viewport, not just the sidebar's own row —
-   position:fixed pulls it entirely out of .sidebar-brand-row's flex flow, which is also
-   what restores that row to its original clean 2-item (brand / collapse-toggle) layout
-   instead of the toggle competing for space with a 3rd item. right:64px rather than 20px
-   leaves clear room to its left of the mobile top bar's own hamburger toggle, which sits in
-   that same corner on narrow layouts (see the @media (max-width:768px) sidebar rules) —
-   20px would overlap it there. */
-#sidebar-help-btn { position: fixed; top: 14px; right: 64px; z-index: 2; }
 .sidebar-nav {
   display: flex; flex-direction: column; gap: 0.2rem; flex: 1;
 }
@@ -173,12 +160,6 @@ body { background: var(--bg); min-height: 100vh; }
 .header-stats-col { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; }
 .home-header-icons { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; flex-shrink: 0; }
 
-.tier-chip {
-  display: inline-block;
-  font-size: 0.7rem; font-weight: 600; padding: 0.22rem 0.65rem;
-  border-radius: var(--radius-sm); background: var(--green-pale); color: var(--green-dark);
-  border: 1px solid var(--green-light);
-}
 .stat-pill {
   font-size: 0.78rem; font-weight: 500; padding: 0.3rem 0.8rem;
   border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border); color: var(--text-mid);
@@ -1969,7 +1950,21 @@ select.budget-input { cursor: pointer; }
 .tour-spotlight {
   position: fixed; border-radius: 14px;
   box-shadow: 0 0 0 9999px rgba(20,26,20,0.62);
-  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease, box-shadow 0.15s ease;
+}
+/* "Start a lesson" step only (see positionTourStep toggling this class in app.js): the same
+   box-shadow property that punches the dark backdrop's hole also draws a glowing yellow ring
+   right at that hole's own edge — an extra layer on the SAME box-shadow, on the SAME element
+   the tour already uses for its hole/click-through math, so the ring can never end up offset
+   from the actual highlighted area the way a separate ring drawn on the tile itself used to
+   (that was the earlier "outline doesn't align with the box" bug). Color/weight matches
+   .module-row.recommended's solid #F0C22E ring, plus a soft blurred glow layered on top for
+   visibility on this one "tap me" step. */
+.tour-spotlight.tour-spotlight-yellow {
+  box-shadow:
+    0 0 0 9999px rgba(20,26,20,0.62),
+    0 0 20px 4px rgba(240, 194, 46, 0.6),
+    0 0 0 3px #F0C22E;
 }
 .tour-tooltip {
   position: fixed; width: 300px; max-width: calc(100vw - 28px);
@@ -1994,19 +1989,6 @@ select.budget-input { cursor: pointer; }
 }
 .tour-skip:hover { color: var(--text-mid); }
 .tour-next { padding: 0.6rem 1.15rem; font-size: 0.85rem; }
-/* Yellow "tap me" ring on the onboarding tour's "Start a lesson" step — separate from the
-   tour's own neutral white spotlight ring, toggled directly on the lesson tile itself (see
-   ONBOARDING_TOUR_STEPS' last step in app.js). Reuses the exact same technique as
-   .module-row.recommended above (real `border`, not `outline` + a manual offset) instead of
-   its own one-off ring: a real border is drawn exactly on the element's own edge, so it's
-   never at risk of the border-vs-highlight misalignment an `outline`/`outline-offset` hack
-   can end up with. border-radius rounds the tile into a distinct card, same as recommended
-   does for a whole module row. */
-.tour-lesson-highlight {
-  border-radius: var(--radius-sm);
-  border: 2px solid #F0C22E !important;
-  box-shadow: 0 0 0 3px rgba(240, 194, 46, 0.18) !important;
-}
 
 /* ─── ROOM PAGE ─── */
 #page-room.active { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
