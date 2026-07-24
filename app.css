@@ -311,16 +311,22 @@ body { background: var(--bg); min-height: 100vh; }
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
 }
-.mod-icon.green { background: var(--green-light); color: var(--green-dark); }
-.mod-icon.pink  { background: var(--pink-light);  color: var(--pink-dark); }
-.mod-icon.mint  { background: #C8F5F0; color: #1A6B64; }
-.mod-icon.lav   { background: #E8D6FF; color: #6B35B8; }
-.mod-icon.sky   { background: #D6EEFF; color: #1A5E8A; }
-.mod-icon.peach { background: #FFE5D0; color: #8A3E1A; }
-.mod-icon.amber { background: #FFEDB0; color: #8A6800; }
-.mod-icon.slate { background: #E3E7F0; color: #3C4A63; }
-.mod-icon.berry { background: #F5D9E8; color: #8F2D5E; }
-.mod-icon.indigo { background: #DCE0FA; color: #38408A; }
+/* Vivid/saturated versions of each class's ORIGINAL pastel hue (matches mobile/src/theme.ts's
+   moduleColor exactly) — reverted off a straight ROYGBIV reassignment per direct request,
+   back to each module's own original hue identity, just more saturated instead of pastel.
+   .mod-icon.rust is new: iconColor: 'rust' (scams) had no matching rule at all before this,
+   a real pre-existing bug — it silently rendered with no background/text color. */
+.mod-icon.green { background: #4CAF50; color: #2D6B2F; }
+.mod-icon.pink  { background: #EC6B94; color: #99275A; }
+.mod-icon.mint  { background: #2DD4BF; color: #0F7A6C; }
+.mod-icon.lav   { background: #9B5DE0; color: #5B21B6; }
+.mod-icon.sky   { background: #3FA9F5; color: #1D5FA8; }
+.mod-icon.peach { background: #FF9F5A; color: #A34E1E; }
+.mod-icon.amber { background: #FFD23F; color: #8A6800; }
+.mod-icon.slate { background: #7686B8; color: #3C4A73; }
+.mod-icon.berry { background: #E362A8; color: #8F2D6B; }
+.mod-icon.indigo { background: #7C86E3; color: #3138A0; }
+.mod-icon.rust { background: #E8875A; color: #8A4A1A; }
 
 .card-badge { font-size: 0.68rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: var(--radius-sm); white-space: nowrap; }
 .badge-done { background: var(--green-light); color: var(--green-dark); }
@@ -1927,18 +1933,14 @@ select.budget-input { cursor: pointer; }
    element of its own — .tour-spotlight's own oversized box-shadow doubles as the dark
    backdrop everywhere OUTSIDE the highlighted rect, which is what actually punches the
    VISUAL "hole" over the real element rather than a separate cutout layer. .tour-overlay
-   itself still captures every click (the spotlighted element only looks clickable by
-   default, isn't) so a stray tap elsewhere can't navigate the page out from under the tour
-   mid-walkthrough — Next/Skip are the only way through, except a requiresRealClick step
-   (see positionTourStep in app.js), which clips an actual click-through hole out of
-   .tour-overlay over the real element via clip-path, since clicking it for real (not Next)
-   is how that step advances. */
+   also clips an actual click-through hole out of itself over the spotlighted element via
+   clip-path (see positionTourStep in app.js) so that element is always really clickable,
+   not just visually not-covered — Next/Skip are still the only way through everywhere else. */
 .tour-overlay { position: fixed; inset: 0; z-index: 290; display: none; }
 .tour-overlay.visible { display: block; }
 .tour-spotlight {
   position: fixed; border-radius: 14px;
   box-shadow: 0 0 0 9999px rgba(20,26,20,0.62);
-  border: 2px solid #fff;
   transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
 }
 .tour-tooltip {
@@ -1964,6 +1966,13 @@ select.budget-input { cursor: pointer; }
 }
 .tour-skip:hover { color: var(--text-mid); }
 .tour-next { padding: 0.6rem 1.15rem; font-size: 0.85rem; }
+/* Yellow "tap me" ring on the onboarding tour's "Start a lesson" step — separate from the
+   tour's own neutral white spotlight ring, toggled directly on the lesson tile itself (see
+   ONBOARDING_TOUR_STEPS' last step in app.js). */
+.tour-lesson-highlight {
+  outline: 3px solid #F0C22E !important;
+  box-shadow: 0 0 8px rgba(240, 194, 46, 0.5) !important;
+}
 
 /* ─── ROOM PAGE ─── */
 #page-room.active { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }

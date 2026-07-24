@@ -1,5 +1,5 @@
 import { ReactNode, useMemo, useRef, useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, Alert, Linking, TextInput } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, Linking, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { user, modules } from '@/data';
 import { useStore } from '@/store';
 import { authEnabled } from '@/lib/env';
 import { makeSupabase } from '@/lib/supabase';
+import { confirmDestructive } from '@/lib/confirm';
 import { MODULE_SOURCES } from '@/references';
 
 /** Screen 14 — Settings (invite, account, sources).
@@ -35,21 +36,13 @@ export default function Settings() {
   };
 
   const confirmReset = () => {
-    Alert.alert('Reset all progress?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Reset',
-        style: 'destructive',
-        onPress: () => {
-          resetProgress();
-          // push, not replace — this screen lives in the (tabs) nested navigator, and
-          // replace() doesn't reliably cross into a different top-level branch like
-          // (onboarding) (see results.tsx's continuePress for the full story of the "route
-          // doesn't exist"/blank-screen crash this causes).
-          router.push('/(onboarding)/welcome');
-        },
-      },
-    ]);
+    confirmDestructive('Reset all progress?', 'This cannot be undone.', 'Reset', () => {
+      resetProgress();
+      // Straight back to Home, not onboarding — the user is still signed in, and
+      // resetProgress() already zeroed local state, so Home immediately reflects the
+      // reset instead of showing a signup form to an already-authenticated account.
+      router.push('/(tabs)/home');
+    });
   };
   return (
     <Screen edges={['top']}>
@@ -296,21 +289,14 @@ function ClerkSignOutRow() {
   const router = useRouter();
   const { signOut } = useClerk();
   const onSignOut = () => {
-    Alert.alert('Sign out?', 'Your progress is saved to your account.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign out',
-        style: 'destructive',
-        onPress: async () => {
-          await signOut();
-          // push, not replace — this screen lives in the (tabs) nested navigator, and
-          // replace() doesn't reliably cross into a different top-level branch like
-          // (onboarding) (see results.tsx's continuePress for the full story of the "route
-          // doesn't exist"/blank-screen crash this causes).
-          router.push('/(onboarding)/welcome');
-        },
-      },
-    ]);
+    confirmDestructive('Sign out?', 'Your progress is saved to your account.', 'Sign out', async () => {
+      await signOut();
+      // push, not replace — this screen lives in the (tabs) nested navigator, and
+      // replace() doesn't reliably cross into a different top-level branch like
+      // (onboarding) (see results.tsx's continuePress for the full story of the "route
+      // doesn't exist"/blank-screen crash this causes).
+      router.push('/(onboarding)/signin');
+    });
   };
   return <Row icon="log-out" title="Sign out" last onPress={onSignOut} />;
 }

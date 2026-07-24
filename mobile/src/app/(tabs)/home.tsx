@@ -100,7 +100,14 @@ export default function Home() {
 
   return (
     <Screen edges={['top']}>
-      <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} onGear={() => router.push('/(tabs)/settings')} />
+      <Header
+        level={level}
+        name={tierName}
+        coins={state.coins}
+        diamonds={state.diamonds}
+        onReplayTour={startTour}
+        onGear={() => router.push('/(tabs)/settings')}
+      />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Greeting />
 

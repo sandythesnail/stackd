@@ -111,7 +111,10 @@ export default function RootLayout() {
             >
               <Stack.Screen name="index" />
               <Stack.Screen name="(onboarding)" />
-              <Stack.Screen name="(tabs)" />
+              {/* Deliberately fade rather than the default slide — this is the transition
+                  out of the onboarding flow (Hammy intro → survey → tour) into the real
+                  app, which reads better as a soft reveal than a lateral slide. */}
+              <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
               <Stack.Screen name="learn" />
               {/* These live under /sheet, not /modal: the web build's baseUrl is "/m"
                   (app.json) and Expo Router's stripBaseUrl() removes it as a raw string

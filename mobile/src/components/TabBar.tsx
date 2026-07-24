@@ -2,9 +2,13 @@ import { ReactNode } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { colors, font } from '@/theme';
 import { Txt } from './Txt';
-import { TourTarget, useOnboardingTour } from './OnboardingTour';
+import { TourTarget } from './OnboardingTour';
+
+const TAB_PRESS_SPRING = { damping: 16, stiffness: 380 };
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 /** Minimal structural subset of the props expo-router's Tabs passes to `tabBar`. */
 type TabBarProps = {
@@ -27,9 +31,39 @@ const ICONS: Record<
   shop: { label: 'Shop', render: (c) => <Feather name="shopping-bag" size={25} color={c} /> },
 };
 
+function TabButton({
+  route,
+  focused,
+  color,
+  meta,
+  navigation,
+}: {
+  route: { key: string; name: string };
+  focused: boolean;
+  color: string;
+  meta: { label: string; render: (color: string) => ReactNode };
+  navigation: TabBarProps['navigation'];
+}) {
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return (
+    <AnimatedPressable
+      style={[styles.tab, animatedStyle]}
+      onPressIn={() => { scale.value = withSpring(0.9, TAB_PRESS_SPRING); }}
+      onPressOut={() => { scale.value = withSpring(1, TAB_PRESS_SPRING); }}
+      onPress={() => {
+        const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+        if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
+      }}
+    >
+      {meta.render(color)}
+      <Txt style={[styles.label, { color }]}>{meta.label}</Txt>
+    </AnimatedPressable>
+  );
+}
+
 export function TabBar({ state, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
-  const { advanceIfWaitingOn } = useOnboardingTour();
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
       {state.routes.map((route, i) => {
@@ -37,22 +71,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
         if (!meta) return null;
         const focused = state.index === i;
         const color = focused ? colors.green : colors.muted6;
-        const tab = (
-          <Pressable
-            key={route.key}
-            style={styles.tab}
-            onPress={() => {
-              const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-              if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
-              // A no-op unless the tour is actually on the "tap Modules" step waiting for
-              // exactly this tap (see OnboardingTour.tsx) — always safe to call.
-              if (route.name === 'modules') advanceIfWaitingOn('tour-modules-tab');
-            }}
-          >
-            {meta.render(color)}
-            <Txt style={[styles.label, { color }]}>{meta.label}</Txt>
-          </Pressable>
-        );
+        const tab = <TabButton key={route.key} route={route} focused={focused} color={color} meta={meta} navigation={navigation} />;
         // The Shop, Modules, and Tools tabs are the ones spotlighted by the onboarding tour
         // (see OnboardingTour.tsx) — wrapped only for those routes so every other tab stays a
         // plain Pressable.

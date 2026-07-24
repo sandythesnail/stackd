@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, useWindowDimensions, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { SlideInDown } from 'react-native-reanimated';
 import { Txt, Button, LifeEventCard } from '@/components';
 import { colors } from '@/theme';
 import { useStore } from '@/store';
+import { LIFE_EVENT_SHEET_HEIGHT_PCT } from '@/lifeEventLayout';
 
 /** Screen 21 — "Life happens…" life-event card. Real scenarios ported from the website's
  * LIFE_EVENTS/LIFE_EVENT_UNLOCKS, triggered by the store after a lesson completes. Presented
@@ -23,23 +25,27 @@ export default function LifeEvent() {
     router.push('/(tabs)/modules');
   };
 
+  const { height: winH } = useWindowDimensions();
+  const sheetHeight = winH * LIFE_EVENT_SHEET_HEIGHT_PCT;
+
   return (
     <View style={styles.root}>
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <View style={[StyleSheet.absoluteFill, styles.scrim]} />
       </View>
       <SafeAreaView edges={['bottom']} style={styles.anchor}>
-        <View style={styles.sheet}>
-          <View style={styles.handle} />
-          {event ? (
-            <LifeEventCard event={event} onResolve={resolveLifeEvent} onDone={done} />
-          ) : (
-            <View style={{ gap: 16 }}>
-              <Txt variant="h1">All quiet for now</Txt>
-              <Button label="Close" onPress={done} />
-            </View>
-          )}
-        </View>
+        <Animated.View entering={SlideInDown.duration(320)} style={[styles.sheet, { height: sheetHeight }]}>
+          <ScrollView contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
+            {event ? (
+              <LifeEventCard event={event} onResolve={resolveLifeEvent} onDone={done} />
+            ) : (
+              <View style={{ gap: 16 }}>
+                <Txt variant="h1">All quiet for now</Txt>
+                <Button label="Close" onPress={done} />
+              </View>
+            )}
+          </ScrollView>
+        </Animated.View>
       </SafeAreaView>
     </View>
   );
@@ -53,9 +59,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    paddingHorizontal: 22,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingTop: 20,
   },
-  handle: { width: 44, height: 5, borderRadius: 3, backgroundColor: '#D6DFCF', alignSelf: 'center', marginBottom: 18 },
+  sheetContent: { paddingHorizontal: 22, paddingBottom: 24 },
 });

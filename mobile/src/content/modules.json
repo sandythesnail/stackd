@@ -654,6 +654,7 @@
           {
             "id": "w4_t1",
             "type": "teach",
+            "fullScreen": true,
             "title": "The W-4 Form",
             "concepts": [
               {
@@ -671,6 +672,7 @@
           {
             "id": "w4_t2",
             "type": "teach",
+            "fullScreen": true,
             "title": "Under-Withholding vs. Over-Withholding",
             "concepts": [
               {
@@ -724,6 +726,7 @@
           {
             "id": "w4_t3",
             "type": "teach",
+            "fullScreen": true,
             "title": "Claiming Exempt",
             "concepts": [
               {
@@ -850,6 +853,7 @@
           {
             "id": "w4_t4",
             "type": "teach",
+            "fullScreen": true,
             "title": "Multiple Jobs & Side Income",
             "concepts": [
               {
@@ -972,6 +976,7 @@
           {
             "id": "w4_t5",
             "type": "teach",
+            "fullScreen": true,
             "title": "You Can Always Update It",
             "concepts": [
               {

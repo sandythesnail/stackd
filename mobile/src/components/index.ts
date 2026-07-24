@@ -19,5 +19,6 @@ export { Stat, SectionHead, Speech, Callout, Segmented, Dots, Divider } from './
 export { MIcon, ModuleTile, ListRow, BadgeMedal, BadgeIcon } from './ModuleBits';
 export { ModuleLessonList, RealLifeSubQuestRow } from './ModuleLessonList';
 export { LifeEventCard } from './LifeEventCard';
+export { FitToViewport } from './FitToViewport';
 export { AchievementDetailModal } from './AchievementDetailModal';
 export { StackedAreaChart } from './Chart';

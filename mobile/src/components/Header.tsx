@@ -43,6 +43,7 @@ export function Header({
   diamonds = 8,
   title,
   onGear,
+  onReplayTour,
 }: {
   level?: number;
   name?: string;
@@ -50,6 +51,7 @@ export function Header({
   diamonds?: number;
   title?: string;
   onGear?: () => void;
+  onReplayTour?: () => void;
 }) {
   return (
     <View style={styles.hdr}>
@@ -57,6 +59,9 @@ export function Header({
       <View style={styles.chips}>
         <CurrencyChip kind="coin" value={coins} />
         <CurrencyChip kind="diamond" value={diamonds} />
+        {onReplayTour ? (
+          <IconButton name="help-circle" size={36} iconSize={18} color={colors.muted3} onPress={onReplayTour} />
+        ) : null}
         {onGear ? <IconButton name="settings" size={36} iconSize={18} color={colors.muted3} onPress={onGear} /> : null}
       </View>
     </View>

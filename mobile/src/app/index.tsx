@@ -23,7 +23,7 @@ export default function Splash() {
 function TimedRedirect() {
   const router = useRouter();
   useEffect(() => {
-    const t = setTimeout(() => router.replace('/(onboarding)/welcome'), 1900);
+    const t = setTimeout(() => router.replace('/(onboarding)/signup'), 1900);
     return () => clearTimeout(t);
   }, [router]);
   return null;
@@ -36,7 +36,7 @@ function AuthRedirect() {
   useEffect(() => {
     if (!isLoaded) return;
     const t = setTimeout(
-      () => router.replace(isSignedIn ? '/(tabs)/home' : '/(onboarding)/welcome'),
+      () => router.replace(isSignedIn ? '/(tabs)/home' : '/(onboarding)/signup'),
       isSignedIn ? 300 : 1200,
     );
     return () => clearTimeout(t);

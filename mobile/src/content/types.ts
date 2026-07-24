@@ -34,6 +34,11 @@ export type StoryChapter = {
 
 export type TeachChapter = {
   id: string; type: 'teach'; title: string;
+  // Opt-in: hides the companion Hammy + glossary tray and gives this chapter's content the
+  // full screen instead of sharing space with them — for a chapter dense enough (a full
+  // form walkthrough like the W-4) that Hammy's header is worth trading away. Defaults to
+  // false/unset so every other teach chapter keeps the normal shared layout.
+  fullScreen?: boolean;
   // Every concept has either `check` (sometimes `{}` — informational only, no quiz) or,
   // rarely, `linkOut` (deep-link to a Tools simulator) instead.
   concepts: {

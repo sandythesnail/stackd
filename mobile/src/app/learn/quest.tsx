@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet } from 'react-native';
+import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions } from 'react-native';
+import Reanimated, { SlideInDown, FadeInDown, FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
-import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, LifeEventCard } from '@/components';
+import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, LifeEventCard, FitToViewport } from '@/components';
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
+import { LIFE_EVENT_SHEET_HEIGHT_PCT } from '@/lifeEventLayout';
 import type { LifeEvent } from '@/lifeEvents';
 import { REACTION_FACES } from '@/hammyFaces';
 import { EMPTY_ANALYTICS, setPendingQuestAnalytics, type QuestAnalytics } from '@/questReport';
@@ -72,8 +74,16 @@ type ActionProps = { onAction: (action: QuestAction) => void };
  * Set on mount, cleared on unmount/change via the effect's own cleanup, so a later chapter
  * that never calls this can't get stuck inheriting 'intro' from whatever the previous
  * chapter last reported. */
-type LayoutMode = 'normal' | 'intro';
+// 'full' hides the companion row + glossary tray same as 'intro', but leaves the content
+// area as a plain scrollable list instead of a big centered Hammy stage — for a chapter
+// dense enough (a full form walkthrough like the W-4) to be worth trading Hammy's header
+// away for, see TeachChapter.fullScreen.
+type LayoutMode = 'normal' | 'intro' | 'full';
 type LayoutModeProps = { onLayoutMode: (mode: LayoutMode) => void };
+
+/** Reported by a chapter whose content should shrink-to-fit the viewport instead of
+ * scrolling — see the `fitMode` state above and FitToViewport. */
+type FitModeProps = { onFitMode: (fit: boolean) => void };
 
 /** Feeds the end-of-lesson report (see @/questReport, results.tsx) — mirrors what the
  * website's per-chapter handlers write into `qp.analytics`. Only the chapter types the
@@ -195,6 +205,14 @@ export default function QuestPlayer() {
   // used elsewhere in this file — so nothing here can get stuck on the wrong layout.
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
   const onLayoutMode = (m: LayoutMode) => setLayoutMode(m);
+  // Chapter types whose content is real-but-bounded (a teach concept, a knowledge-check
+  // question, a matching grid) report true here so the content area shrinks-to-fit instead
+  // of scrolling — see FitToViewport. Left false (the default, real ScrollView) for chapter
+  // types not yet audited for this, and for mythcards specifically, whose swipe gesture
+  // tracks raw screen coordinates that a visual scale transform would throw out of sync
+  // with the card's actual drawn position.
+  const [fitMode, setFitMode] = useState(false);
+  const onFitMode = (f: boolean) => setFitMode(f);
   // An ambient life event (see rollAmbientLifeEvent) pauses a mid-quest chapter transition
   // the same way the website's maybeTriggerAmbientLifeEvent pauses its own "next" handlers
   // — the chapter doesn't actually advance until the event is dismissed. pendingAdvanceRef
@@ -263,20 +281,12 @@ export default function QuestPlayer() {
   // the body bounce/wobble replays each time, mirroring the website forcing its CSS
   // animation to restart.
   //
-  // Mood and message clear together on the SAME timer (this is the actual fix the website
-  // itself documents — see its showHammyReaction/showHammyMessage comments: they used to
-  // clear on different timers, "leaving Hammy blank-faced under a still-visible message",
-  // which is exactly what was reported here as "Hammy's face goes blank in the matching
-  // portion." The fix is a synced revert, not making the face permanently sticky — Hammy
-  // reacts, then reverts cleanly to the default face a beat later, every time.
-  const reactionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (reactionTimeout.current) clearTimeout(reactionTimeout.current); }, []);
+  // No auto-hide timer — the message/mood stay up (so the user has time to actually read
+  // the feedback) until clearReaction() fires, which every chapter view already calls right
+  // as it advances to the next question/concept (see e.g. TeachView/KnowledgecheckView's
+  // next()). Chapter changes reset it too, so nothing can carry a stale reaction across into
+  // a not-yet-answered concept in the next chapter.
   useEffect(() => {
-    // Also clears any still-pending timeout from the previous chapter's last reactTo call
-    // — without this, a stale timeout could still be sitting there ready to fire later
-    // (harmless on its own, since it only sets already-null values back to null, but it's
-    // dead weight this effect should have owned clearing in the first place).
-    if (reactionTimeout.current) { clearTimeout(reactionTimeout.current); reactionTimeout.current = null; }
     setReactionMood(null);
     setReactionMsg(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -295,15 +305,8 @@ export default function QuestPlayer() {
     }
     setReactionMsg(msg);
     setReactionKey((k) => k + 1);
-    if (reactionTimeout.current) clearTimeout(reactionTimeout.current);
-    reactionTimeout.current = setTimeout(() => {
-      setReactionMood(null);
-      setReactionMsg(null);
-      reactionTimeout.current = null;
-    }, customMsg ? 2800 : 1400);
   };
   const clearReaction = () => {
-    if (reactionTimeout.current) { clearTimeout(reactionTimeout.current); reactionTimeout.current = null; }
     setReactionMood(null);
     setReactionMsg(null);
   };
@@ -372,21 +375,24 @@ export default function QuestPlayer() {
       {/* Everything below shares one "header zone" so the chapter's own action button can
           float in its top-right corner (position: absolute) instead of claiming a whole
           row of its own — reclaims a full row of vertical space on every single chapter.
-          minHeight only kicks in for the 'intro' layout (story intro / Hammy's Tip), where
-          the companion row/glossary tray are hidden and there'd otherwise be nothing in
-          this zone to reserve room for the floating button against. */}
-      <View style={[styles.headerZone, layoutMode === 'intro' && styles.headerZoneIntro]}>
+          minHeight only kicks in for 'intro'/'full' layouts, where the companion row/
+          glossary tray are hidden and there'd otherwise be nothing in this zone to reserve
+          room for the floating button against. */}
+      <View style={[styles.headerZone, layoutMode !== 'normal' && styles.headerZoneIntro]}>
         {/* "Look back" glossary tray — ported from the website's #glossary-tray. Hidden
-            during a big-centered-Hammy 'intro' screen same as the companion row, and
-            naturally absent until the first teach/matching chapter has taught a term. */}
-        {terms.length > 0 && layoutMode !== 'intro' ? <GlossaryTray terms={terms} /> : null}
-        {/* Companion row — hidden during a story chapter's intro beat or a 'hint' chapter,
-            both of which show their own big centered Hammy in the content area instead
-            (see StoryView/HintView). hammyStage holds ONLY Hammy in normal flow, so
-            centering it centers Hammy himself; the reaction bubble is a positioned overlay
-            hugging his left side, not a flex sibling — it no longer has to fight for actual
-            centering the way a shared flex row did. */}
-        {layoutMode !== 'intro' ? (
+            during a big-centered-Hammy 'intro' screen (and a dense 'full' chapter) same as
+            the companion row, and naturally absent until the first teach/matching chapter
+            has taught a term. */}
+        {terms.length > 0 && layoutMode === 'normal' ? <GlossaryTray terms={terms} /> : null}
+        {/* Companion row — hidden during a story chapter's intro beat, a 'hint' chapter, or
+            a chapter opting into the full-screen layout (see TeachChapter.fullScreen), all
+            of which either show their own big centered Hammy in the content area instead
+            (StoryView/HintView) or give that space to the content entirely. hammyStage
+            holds ONLY Hammy in normal flow, so centering it centers Hammy himself; the
+            reaction bubble is a positioned overlay hugging his left side, not a flex
+            sibling — it no longer has to fight for actual centering the way a shared flex
+            row did. */}
+        {layoutMode === 'normal' ? (
           <View style={styles.companionWrap}>
             <View style={styles.hammyStage}>
               <ReactionBubble message={reactionMsg} mood={reactionMood} />
@@ -409,7 +415,7 @@ export default function QuestPlayer() {
             top edge) so the two can never overlap — automatic, not something that has to be
             re-tuned by hand per chapter. */}
         {action ? (
-          <View style={[styles.actionBarFloat, terms.length > 0 && layoutMode !== 'intro' && styles.actionBarFloatBelowTray]}>
+          <View style={[styles.actionBarFloat, terms.length > 0 && layoutMode === 'normal' && styles.actionBarFloatBelowTray]}>
             <Button
               label={action.label}
               onPress={action.onPress}
@@ -421,21 +427,43 @@ export default function QuestPlayer() {
           </View>
         ) : null}
       </View>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ChapterView
-          key={chapter.id}
-          chapter={chapter}
-          questions={content.questions}
-          moduleXpReward={content.xpReward}
-          charName={quest.character.name}
-          onComplete={onComplete}
-          reactTo={reactTo}
-          clearReaction={clearReaction}
-          onAction={onAction}
-          onLayoutMode={onLayoutMode}
-          {...reportProps}
-        />
-      </ScrollView>
+      {fitMode ? (
+        <FitToViewport style={{ flex: 1 }} contentStyle={styles.content}>
+          <Reanimated.View key={chapter.id} entering={FadeIn.duration(260)}>
+            <ChapterView
+              chapter={chapter}
+              questions={content.questions}
+              moduleXpReward={content.xpReward}
+              charName={quest.character.name}
+              onComplete={onComplete}
+              reactTo={reactTo}
+              clearReaction={clearReaction}
+              onAction={onAction}
+              onLayoutMode={onLayoutMode}
+              onFitMode={onFitMode}
+              {...reportProps}
+            />
+          </Reanimated.View>
+        </FitToViewport>
+      ) : (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <Reanimated.View key={chapter.id} entering={FadeIn.duration(260)}>
+            <ChapterView
+              chapter={chapter}
+              questions={content.questions}
+              moduleXpReward={content.xpReward}
+              charName={quest.character.name}
+              onComplete={onComplete}
+              reactTo={reactTo}
+              clearReaction={clearReaction}
+              onAction={onAction}
+              onLayoutMode={onLayoutMode}
+              onFitMode={onFitMode}
+              {...reportProps}
+            />
+          </Reanimated.View>
+        </ScrollView>
+      )}
       {ambientEventActive ? (
         <AmbientLifeEventModal
           pendingLifeEvent={pendingLifeEvent}
@@ -453,23 +481,23 @@ export default function QuestPlayer() {
 }
 
 function ChapterView({
-  chapter, questions, moduleXpReward, charName, onComplete, reactTo, clearReaction, onAction, onLayoutMode,
+  chapter, questions, moduleXpReward, charName, onComplete, reactTo, clearReaction, onAction, onLayoutMode, onFitMode,
   reportKnowledgeCheck, reportMythCard, reportMatchingMistake, reportDecision, reportExplainback,
 }: {
   chapter: Chapter; questions: Question[]; moduleXpReward: number; charName: string; onComplete: Complete;
-} & ReactProps & ReportProps & ActionProps & LayoutModeProps) {
+} & ReactProps & ReportProps & ActionProps & LayoutModeProps & FitModeProps) {
   const reactProps: ReactProps = { reactTo, clearReaction };
   switch (chapter.type) {
     case 'story': return <StoryView chapter={chapter} charName={charName} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
-    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
-    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} {...reactProps} reportMatchingMistake={reportMatchingMistake} />;
+    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} onFitMode={onFitMode} {...reactProps} />;
+    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} onAction={onAction} onFitMode={onFitMode} {...reactProps} reportMatchingMistake={reportMatchingMistake} />;
     case 'hint': return <HintView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
     case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
     case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'poll': return <PollView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMythCard={reportMythCard} />;
-    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} onAction={onAction} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} />;
-    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
+    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} onAction={onAction} onFitMode={onFitMode} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} />;
+    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} onAction={onAction} onFitMode={onFitMode} {...reactProps} />;
     case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
     case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
@@ -562,6 +590,7 @@ function AmbientLifeEventModal({
   onDone, pendingLifeEvent, resolveLifeEvent,
 }: { onDone: () => void; pendingLifeEvent: () => LifeEvent | null; resolveLifeEvent: (choiceId: string) => void }) {
   const [event] = useState(() => pendingLifeEvent());
+  const { height: winH } = useWindowDimensions();
 
   if (!event) return null;
 
@@ -569,10 +598,11 @@ function AmbientLifeEventModal({
     <Modal visible transparent animationType="fade" onRequestClose={() => {}}>
       <View style={styles.ambientLifeRoot}>
         <View style={[StyleSheet.absoluteFill, styles.ambientLifeScrim]} />
-        <View style={styles.ambientLifeSheet}>
-          <View style={styles.ambientLifeHandle} />
-          <LifeEventCard event={event} onResolve={resolveLifeEvent} onDone={onDone} />
-        </View>
+        <Reanimated.View entering={SlideInDown.duration(320)} style={[styles.ambientLifeSheet, { height: winH * LIFE_EVENT_SHEET_HEIGHT_PCT }]}>
+          <ScrollView contentContainerStyle={styles.ambientLifeSheetContent} showsVerticalScrollIndicator={false}>
+            <LifeEventCard event={event} onResolve={resolveLifeEvent} onDone={onDone} />
+          </ScrollView>
+        </Reanimated.View>
       </View>
     </Modal>
   );
@@ -666,7 +696,7 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
  * overflow:visible, matching `.story-avatar.has-character { overflow: visible }`), and —
  * the actual point — equipped hats/glasses/neckwear show up in the dialogue picture too,
  * exactly like the website's story avatar. */
-function HammyHeadAvatar({ size = 40 }: { size?: number }) {
+function HammyHeadAvatar({ size = 56 }: { size?: number }) {
   const { equippedMascotItems } = useStore();
   return <Hammy headOnly size={size} bob={false} equipped={equippedMascotItems()} style={{ flexShrink: 0 }} />;
 }
@@ -724,7 +754,7 @@ function StoryView({
           const isNarrator = beat.speaker === 'narrator';
           const isHammy = beat.speaker === charName || beat.speaker === 'intro';
           return (
-            <View key={idx} style={styles.storyBeat}>
+            <Reanimated.View key={idx} entering={FadeInDown.duration(280)} style={styles.storyBeat}>
               {!isNarrator ? (isHammy ? <HammyHeadAvatar /> : (
                 <View style={styles.storyAvatar}>
                   <Txt style={styles.storyAvatarTxt}>{beat.speaker.charAt(0)}</Txt>
@@ -733,7 +763,7 @@ function StoryView({
               <View style={[styles.storyBubble, isNarrator && styles.storyBubbleNarrator]}>
                 <Txt style={[styles.storyBubbleTxt, isNarrator && styles.storyBubbleNarratorTxt]}>{beat.text}</Txt>
               </View>
-            </View>
+            </Reanimated.View>
           );
         })
       )}
@@ -743,8 +773,8 @@ function StoryView({
 
 /* ───────────────────────── teach ───────────────────────── */
 function TeachView({
-  chapter, onComplete, onAction, reactTo, clearReaction,
-}: { chapter: TeachChapter; onComplete: Complete } & ReactProps & ActionProps) {
+  chapter, onComplete, onAction, onLayoutMode, onFitMode, reactTo, clearReaction,
+}: { chapter: TeachChapter; onComplete: Complete } & ReactProps & ActionProps & LayoutModeProps & FitModeProps) {
   const router = useRouter();
   const [i, setI] = useState(0);
   const [answered, setAnswered] = useState<boolean | null>(null);
@@ -752,6 +782,18 @@ function TeachView({
   const last = i + 1 >= chapter.concepts.length;
   // Some concepts have no statement at all (check: {} or absent) — informational only, no quiz.
   const hasCheck = !!concept.check?.statement;
+
+  useEffect(() => {
+    onLayoutMode(chapter.fullScreen ? 'full' : 'normal');
+    return () => onLayoutMode('normal');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapter.fullScreen]);
+
+  useEffect(() => {
+    onFitMode(true);
+    return () => onFitMode(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pick = (guess: boolean) => {
     setAnswered(guess);
@@ -772,7 +814,10 @@ function TeachView({
   }, [hasCheck, answered, last]);
 
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    // Keyed to the concept index so each concept swap gets its own fade in/out instead of an
+    // instant cut — this also smooths over FitToViewport's resize (a new concept usually has
+    // a different natural height), which without a fade read as a jarring snap-resize.
+    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Card style={{ gap: 8 }}>
         <Txt style={styles.term}>{concept.term}</Txt>
@@ -796,7 +841,7 @@ function TeachView({
           ) : null}
         </Card>
       ) : null}
-    </View>
+    </Reanimated.View>
   );
 }
 
@@ -806,13 +851,32 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function MatchingView({
-  chapter, onComplete, reactTo, reportMatchingMistake,
-}: { chapter: MatchingChapter; onComplete: Complete } & ReactProps & Pick<ReportProps, 'reportMatchingMistake'>) {
+  chapter, onComplete, onAction, onFitMode, reactTo, reportMatchingMistake,
+}: { chapter: MatchingChapter; onComplete: Complete } & ReactProps & Pick<ReportProps, 'reportMatchingMistake'> & ActionProps & FitModeProps) {
   const [terms] = useState(() => shuffle(chapter.pairs.map((p) => p.term)));
   const [defs] = useState(() => shuffle(chapter.pairs.map((p) => p.definition)));
   const [matched, setMatched] = useState<Set<string>>(new Set());
   const [selTerm, setSelTerm] = useState<string | null>(null);
   const [wrongPair, setWrongPair] = useState<string | null>(null);
+  // Set a beat after the last pair is matched (see the 950ms delay below) — separate from
+  // just checking matched.size so the Next button doesn't appear mid-reaction, before Hammy's
+  // "Nice! 🎉" bubble has actually had time to show.
+  const [readyToAdvance, setReadyToAdvance] = useState(false);
+
+  useEffect(() => {
+    onFitMode(true);
+    return () => onFitMode(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // Requires an actual tap on Next now, rather than auto-completing on a timer — this used
+    // to call onComplete directly here, which silently carried the user into the NEXT
+    // chapter (sometimes Hammy's Tip) with no button press at all, reported as "getting
+    // automatically transported."
+    onAction(readyToAdvance ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0) } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readyToAdvance]);
 
   const pickDef = (def: string) => {
     if (!selTerm) return;
@@ -824,10 +888,9 @@ function MatchingView({
       setMatched(next);
       setSelTerm(null);
       // Long enough for Hammy's "Nice! 🎉" reaction bubble to actually be seen (it fades in
-      // over 250ms) before the chapter transitions out from under it — at the old 400ms the
-      // final correct match could advance almost before the bubble finished appearing,
-      // reading as "Hammy didn't say anything."
-      if (next.size === chapter.pairs.length) setTimeout(() => onComplete(chapter.xpOnComplete ?? 0), 950);
+      // over 250ms) before the Next button appears — at the old 400ms the button could show
+      // up almost before the bubble finished appearing, reading as "Hammy didn't say anything."
+      if (next.size === chapter.pairs.length) setTimeout(() => setReadyToAdvance(true), 950);
     } else {
       setWrongPair(def);
       setTimeout(() => { setWrongPair(null); setSelTerm(null); }, 500);
@@ -835,10 +898,10 @@ function MatchingView({
   };
 
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 6 }}>
       <Txt variant="h2">{chapter.title}</Txt>
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <View style={{ flex: 1, gap: 8 }}>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={{ flex: 1, gap: 6 }}>
           {terms.map((t) => (
             <Pressable
               key={t}
@@ -850,7 +913,7 @@ function MatchingView({
             </Pressable>
           ))}
         </View>
-        <View style={{ flex: 1, gap: 8 }}>
+        <View style={{ flex: 1, gap: 6 }}>
           {defs.map((d) => {
             const isDone = chapter.pairs.some((p) => p.definition === d && matched.has(p.term));
             return (
@@ -900,25 +963,22 @@ function HintView({
   };
 
   return (
-    <View style={styles.storyIntroStage}>
-      <Pressable onPress={tap} disabled={revealed} hitSlop={14}>
-        <Hammy size={168} bob equipped={equippedMascotItems()} reaction={revealed ? 'happy' : null} reactionKey={tapTick} />
-      </Pressable>
-      {/* A literal speech bubble pointing up at Hammy — same border-triangle tail trick as
-          the in-quest reaction bubble, just rotated to point up instead of sideways since
-          Hammy sits directly above this instead of beside it. */}
-      <View style={styles.tipBubble}>
+    <View style={styles.hintStage}>
+      <Reanimated.View key={revealed ? 'revealed' : 'prompt'} entering={FadeInDown.duration(320).springify()} style={styles.tipBubble}>
         <View style={styles.tipBubbleTailBorder} />
         <View style={styles.tipBubbleTailFill} />
         <Tag tone="warm">{chapter.tag || "🐷 Hammy's Tip"}</Tag>
         {revealed ? (
-          <Txt style={[styles.storyIntroCaption, { marginTop: 8 }]}>{chapter.text}</Txt>
+          <Txt style={[styles.tipCaption, { marginTop: 8 }]}>{chapter.text}</Txt>
         ) : (
           <Txt style={[styles.storyIntroCaption, { marginTop: 8, color: colors.muted3, fontStyle: 'italic' }]}>
             Tap Hammy to hear what they have to say.
           </Txt>
         )}
-      </View>
+      </Reanimated.View>
+      <Pressable onPress={tap} disabled={revealed} hitSlop={14}>
+        <Hammy size={168} bob equipped={equippedMascotItems()} reaction={revealed ? 'happy' : null} reactionKey={tapTick} />
+      </Pressable>
     </View>
   );
 }
@@ -1205,14 +1265,20 @@ function MythcardsView({
 const OPT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 function KnowledgecheckView({
-  chapter, questions, onComplete, onAction, reactTo, clearReaction, reportKnowledgeCheck,
-}: { chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete } & ReactProps & ActionProps & Pick<ReportProps, 'reportKnowledgeCheck'>) {
+  chapter, questions, onComplete, onAction, onFitMode, reactTo, clearReaction, reportKnowledgeCheck,
+}: { chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete } & ReactProps & ActionProps & Pick<ReportProps, 'reportKnowledgeCheck'> & FitModeProps) {
   const [i, setI] = useState(0);
   const [sel, setSel] = useState<number | null>(null);
   const question = questions[chapter.qIndices[i]];
   const answered = sel !== null;
   const right = question ? sel === question.correct : false;
   const last = i + 1 >= chapter.qIndices.length;
+
+  useEffect(() => {
+    onFitMode(true);
+    return () => onFitMode(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pick = (idx: number) => {
     setSel(idx);
@@ -1239,7 +1305,10 @@ function KnowledgecheckView({
 
   if (!question) return null;
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    // Keyed to the question index so each question swap gets its own fade in/out instead of
+    // an instant cut — also smooths over FitToViewport's resize between questions of
+    // different lengths, which without a fade read as a jarring snap-resize.
+    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{question.q}</Txt>
       <View style={{ gap: 10 }}>
@@ -1258,9 +1327,13 @@ function KnowledgecheckView({
         })}
       </View>
       {answered ? (
-        <Card><Txt variant="lead" style={{ fontSize: 13, color: right ? colors.greenDark : colors.pinkDark }}>{question.exp}</Txt></Card>
+        // Shortened (not the raw question.exp) — a long explanation was the single biggest
+        // driver of FitToViewport having to shrink the screen noticeably, which read as "the
+        // screen minimizes" when the text ran long. 110 chars, not shortFeedback's default 60
+        // (tuned for the narrow companion bubble) — this is a full-width card with more room.
+        <Card><Txt variant="lead" style={{ fontSize: 13, color: right ? colors.greenDark : colors.pinkDark }}>{shortFeedback(question.exp, 110)}</Txt></Card>
       ) : null}
-    </View>
+    </Reanimated.View>
   );
 }
 
@@ -1287,13 +1360,19 @@ function MeterTrack({ pct, height = 14 }: { pct: number; height?: number }) {
   );
 }
 
-function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: SimulatorChapter; onComplete: Complete } & ActionProps & ReactProps) {
+function SimulatorView({ chapter, onComplete, onAction, onFitMode, reactTo }: { chapter: SimulatorChapter; onComplete: Complete } & ActionProps & ReactProps & FitModeProps) {
   // meterKey/meterMin/meterMax are missing on 2/22 real chapters — fall back to a plain 0-100 score.
   const meterKey = chapter.meterKey ?? 'score';
   const meterMin = chapter.meterMin ?? 0;
   const meterMax = chapter.meterMax ?? 100;
   const [meter, setMeter] = useState((meterMin + meterMax) / 2);
   const [used, setUsed] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    onFitMode(true);
+    return () => onFitMode(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const apply = (d: SimulatorChapter['decisions'][number]) => {
     setMeter((m) => Math.min(meterMax, Math.max(meterMin, m + d.scoreDelta)));
@@ -1645,52 +1724,52 @@ const styles = StyleSheet.create({
   // up to -30) lifted his ears straight into it. 72 keeps a real gap at rest and through
   // the common happy bounce (-22); when the glossary tray shows, it's a normal-flow
   // sibling above this block, so it pushes Hammy down along with the lowered button.
-  companionWrap: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 72, paddingBottom: 4 },
+  // flex-start (not center) pins Hammy to the left edge of the stage — the reaction bubble
+  // lives to his RIGHT (see bubbleSlot), not squeezed into the remaining space on his left
+  // the way a centered Hammy needed.
+  companionWrap: { alignItems: 'flex-start', paddingHorizontal: 16, paddingTop: 32, paddingBottom: 4 },
   // Holds ONLY Hammy in normal flow — its size IS Hammy's size, nothing else. The reaction
   // bubble is positioned absolutely against it (see bubbleSlot), so it can sit right next to
-  // him without being a layout sibling that would fight his centering.
-  // Shifted a smidge right of dead-center — centered exactly left the bubble with nowhere
-  // to go on its left before running into the screen edge (or companionWrap's padding) and
-  // cutting the text off. The bubble is anchored to (and moves with) this same box, so
-  // shifting Hammy reclaims room for it. Sized together with bubbleSlot's width below so
-  // even a full-width bubble clears the left edge on a ~375px-wide phone (iPhone SE), the
-  // narrowest common target. 32 (down from 40) keeps that bubble room while easing Hammy's
-  // right ear back from under the floating green action button in the top-right corner:
-  // at 375pt, stage left = 187.5 + 32 - 65 = 154.5, so the 125-wide bubble + 10 gap still
-  // clears the left edge with ~19px to spare.
-  hammyStage: { position: 'relative', transform: [{ translateX: 32 }] },
-  // right: '100%' parks the bubble's right edge at hammyStage's own left edge (i.e. Hammy's
-  // left edge) regardless of Hammy's exact pixel width; marginRight adds the gap. top/bottom
+  // him without being a layout sibling that would fight his left alignment.
+  hammyStage: { position: 'relative' },
+  // left: '100%' parks the bubble's left edge at hammyStage's own right edge (i.e. Hammy's
+  // right edge) regardless of Hammy's exact pixel width; marginLeft adds the gap. top/bottom
   // 0 stretches it to Hammy's full height so justifyContent: 'center' vertically centers the
   // actual bubble within that — no measuring or magic numbers needed either way. Being fully
   // out of flow also means the bubble growing for a longer message can never shift anything
-  // else on screen, which used to be a real problem when it was a flex sibling. Narrower
-  // than before (was 200) since the feedback text itself is now kept short — see
-  // shortFeedback — so it doesn't need nearly as much room, and leaves more margin against
-  // running off the left edge of the screen.
+  // else on screen. Kept narrow (125, matching the previously-short feedback copy — see
+  // shortFeedback) so it can never reach as far right as the floating action button in the
+  // header zone's top-right corner (see actionBarFloat) even on a ~375px-wide phone.
+  // top-anchored with no fixed/matched height (was top:0 + bottom:0, forcing the slot to
+  // exactly Hammy's own height and centering within it) — now that this message stays up
+  // until the user advances instead of auto-hiding after ~1.4s (see reactTo), a longer
+  // message needed more room than Hammy's height could reliably provide, and the fixed
+  // height risked clipping/overflow. Growing downward from the top instead guarantees every
+  // word is visible regardless of length.
   bubbleSlot: {
-    position: 'absolute', top: 0, bottom: 0, right: '100%', marginRight: 10,
-    width: 125, justifyContent: 'center', alignItems: 'flex-end',
+    position: 'absolute', top: 0, left: '100%', marginLeft: 10,
+    width: 140, alignItems: 'flex-start',
   },
-  bubbleInner: { alignItems: 'flex-end' },
+  bubbleInner: { alignItems: 'flex-start' },
   reactionBox: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
     borderRadius: 16, paddingVertical: 10, paddingHorizontal: 13,
   },
   reactionTxt: { fontFamily: font.bold, fontSize: 14.5, lineHeight: 19 },
-  // A literal speech-bubble tail on the box's right edge, pointing at Hammy — the classic
-  // border-triangle trick (colored left border, transparent top/bottom, zero width/height).
-  // Two stacked triangles (a larger border-colored one behind, a smaller white one in
-  // front) fake the box's own 1.5px stroke carrying around the point.
+  // A literal speech-bubble tail on the box's left edge, pointing at Hammy (who now sits to
+  // its left, not its right) — the classic border-triangle trick (colored right border,
+  // transparent top/bottom, zero width/height). Two stacked triangles (a larger
+  // border-colored one behind, a smaller white one in front) fake the box's own 1.5px stroke
+  // carrying around the point.
   reactionTailBorder: {
-    position: 'absolute', top: '50%', right: -9, marginTop: -7,
-    width: 0, height: 0, borderTopWidth: 7, borderBottomWidth: 7, borderLeftWidth: 9,
-    borderTopColor: 'transparent', borderBottomColor: 'transparent', borderLeftColor: colors.border,
+    position: 'absolute', top: '50%', left: -9, marginTop: -7,
+    width: 0, height: 0, borderTopWidth: 7, borderBottomWidth: 7, borderRightWidth: 9,
+    borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: colors.border,
   },
   reactionTailFill: {
-    position: 'absolute', top: '50%', right: -6.5, marginTop: -5.8,
-    width: 0, height: 0, borderTopWidth: 5.8, borderBottomWidth: 5.8, borderLeftWidth: 7.5,
-    borderTopColor: 'transparent', borderBottomColor: 'transparent', borderLeftColor: colors.white,
+    position: 'absolute', top: '50%', left: -6.5, marginTop: -5.8,
+    width: 0, height: 0, borderTopWidth: 5.8, borderBottomWidth: 5.8, borderRightWidth: 7.5,
+    borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: colors.white,
   },
   // Story chapter title — pink, and rendered in the exact same spot whether the intro
   // screen or the dialogue log is showing, so it visibly stays put across the transition.
@@ -1700,22 +1779,27 @@ const styles = StyleSheet.create({
     fontFamily: font.semi, fontSize: 17.5, lineHeight: 24, color: colors.ink,
     textAlign: 'center', maxWidth: 320,
   },
-  // Hammy's Tip (funfact) speech bubble — a white bordered card with an upward-pointing
-  // tail (Hammy sits directly above it, unlike the sideways reaction bubble).
+  // Hammy's Tip (funfact) — the bubble sits at the TOP of the stage with Hammy below it
+  // (see hintStage), so the tail now points DOWN toward Hammy instead of up.
+  hintStage: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: 18, paddingTop: 20, paddingVertical: 24 },
+  tipCaption: {
+    fontFamily: font.bold, fontSize: 17.5, lineHeight: 24, color: colors.ink,
+    textAlign: 'center', maxWidth: 320,
+  },
   tipBubble: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
-    borderRadius: 20, paddingVertical: 16, paddingHorizontal: 20, marginTop: 10,
+    borderRadius: 20, paddingVertical: 16, paddingHorizontal: 20, marginBottom: 10,
     alignItems: 'center', maxWidth: 340,
   },
   tipBubbleTailBorder: {
-    position: 'absolute', top: -11, left: '50%', marginLeft: -11,
-    width: 0, height: 0, borderLeftWidth: 11, borderRightWidth: 11, borderBottomWidth: 13,
-    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: colors.border,
+    position: 'absolute', bottom: -11, left: '50%', marginLeft: -11,
+    width: 0, height: 0, borderLeftWidth: 11, borderRightWidth: 11, borderTopWidth: 13,
+    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: colors.border,
   },
   tipBubbleTailFill: {
-    position: 'absolute', top: -8.5, left: '50%', marginLeft: -9,
-    width: 0, height: 0, borderLeftWidth: 9, borderRightWidth: 9, borderBottomWidth: 10.5,
-    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: colors.white,
+    position: 'absolute', bottom: -8.5, left: '50%', marginLeft: -9,
+    width: 0, height: 0, borderLeftWidth: 9, borderRightWidth: 9, borderTopWidth: 10.5,
+    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: colors.white,
   },
   // Ambient mid-quest life-event overlay — a bottom sheet, matching the post-lesson
   // route's own life-event screen so the two read as the same feature.
@@ -1723,10 +1807,10 @@ const styles = StyleSheet.create({
   ambientLifeScrim: { backgroundColor: 'rgba(22,32,23,0.55)' },
   ambientLifeSheet: {
     backgroundColor: colors.white, borderTopLeftRadius: 28, borderTopRightRadius: 28,
-    paddingHorizontal: 22, paddingTop: 12, paddingBottom: 34,
+    paddingTop: 20,
   },
-  ambientLifeHandle: { width: 44, height: 5, borderRadius: 3, backgroundColor: '#D6DFCF', alignSelf: 'center', marginBottom: 18 },
-  content: { paddingHorizontal: 22, paddingTop: 10, paddingBottom: 20, gap: 12, flexGrow: 1 },
+  ambientLifeSheetContent: { paddingHorizontal: 22, paddingBottom: 34 },
+  content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 20, gap: 12, flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
   // Story beats — speaker-styled: white bordered bubble + pig-head avatar for Hammy, a
@@ -1734,12 +1818,12 @@ const styles = StyleSheet.create({
   // .story-bubble.narrator / .story-avatar).
   storyBeat: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   storyAvatar: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: colors.screen,
+    width: 56, height: 56, borderRadius: 28, backgroundColor: colors.screen,
     alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden',
   },
-  storyAvatarTxt: { fontSize: 18 },
+  storyAvatarTxt: { fontSize: 22 },
   storyBubble: {
-    flex: 1, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.borderOpt,
+    flex: 1, flexShrink: 1, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.borderOpt,
     borderRadius: 16, padding: 14,
   },
   storyBubbleTxt: { fontFamily: font.semi, fontSize: 14.5, lineHeight: 20, color: colors.ink },
@@ -1747,7 +1831,7 @@ const styles = StyleSheet.create({
   storyBubbleNarratorTxt: { fontFamily: font.medium, fontStyle: 'italic', color: colors.muted2 },
   matchChip: {
     borderWidth: 1.5, borderColor: colors.borderOpt, borderRadius: 14,
-    paddingVertical: 12, paddingHorizontal: 12, backgroundColor: colors.white,
+    paddingVertical: 8, paddingHorizontal: 12, backgroundColor: colors.white,
   },
   matchChipOn: { borderColor: colors.green, backgroundColor: '#F1F6EF' },
   matchChipWrong: { borderColor: '#D98A9E', backgroundColor: colors.pinkBg2 },

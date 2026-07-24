@@ -2,7 +2,7 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Txt, IconButton, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow } from '@/components';
-import { font } from '@/theme';
+import { font, colors } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
@@ -52,15 +52,15 @@ export default function ModuleDetail() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={['#EAF4F6', '#DCEEF1']} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={styles.hero}>
-          <MIcon abbr={mod.icon} color="#4FA3B8" size={52} r={16} fontSize={20} />
+        <LinearGradient colors={[colors.white, mod.color]} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={[styles.hero, { borderColor: mod.color }]}>
+          <MIcon abbr={mod.icon} color={mod.textColor} size={52} r={16} fontSize={20} />
           <View style={{ flex: 1 }}>
             <Txt variant="h2">{content?.desc ?? mod.name}</Txt>
             <View style={styles.heroMeta}>
-              <Txt style={styles.heroTiny}>{done} of {total} lessons</Txt>
-              <Txt style={styles.heroTiny}>{content?.xpReward ?? 0} XP each</Txt>
+              <Txt style={[styles.heroTiny, { color: mod.textColor }]}>{done} of {total} lessons</Txt>
+              <Txt style={[styles.heroTiny, { color: mod.textColor }]}>{content?.xpReward ?? 0} XP each</Txt>
             </View>
-            <ProgressBar value={pct} height={9} fillColors={['#68B7C9', '#4FA3B8']} style={{ marginTop: 6 }} />
+            <ProgressBar value={pct} height={9} fillColors={[mod.color, mod.textColor]} style={{ marginTop: 6 }} />
           </View>
         </LinearGradient>
 
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#EFEFE7',
   },
   content: { paddingHorizontal: 22, paddingTop: 14, paddingBottom: 28, gap: 14 },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 24, borderWidth: 1.5, borderColor: '#CBE5E9', padding: 18 },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 24, borderWidth: 1.5, padding: 18 },
   heroMeta: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  heroTiny: { fontFamily: font.bold, fontSize: 12, color: '#3E8697' },
+  heroTiny: { fontFamily: font.bold, fontSize: 12 },
 });

@@ -4,6 +4,7 @@ import { colors, font } from '@/theme';
 import { Txt } from './Txt';
 import { ListRow } from './ModuleBits';
 import { Button } from './Button';
+import { TourTarget, useOnboardingTour } from './OnboardingTour';
 import type { LessonSummary } from '@/content';
 import { moduleContentById } from '@/content';
 import { resolveLessonSections } from '@/lessonSections';
@@ -26,6 +27,7 @@ export function ModuleLessonList({
   doneIndices,
   status,
   onPressLesson,
+  tourTargetFirstLesson,
 }: {
   moduleId: string;
   lessons: LessonSummary[];
@@ -34,6 +36,9 @@ export function ModuleLessonList({
   doneIndices: number[];
   status: 'done' | 'active';
   onPressLesson: (i: number) => void;
+  /** True only for the Modules tab's first module (see (tabs)/modules.tsx) — makes lesson
+   * index 0 the onboarding tour's "Start a lesson" stop (see OnboardingTour.tsx). */
+  tourTargetFirstLesson?: boolean;
 }) {
   const doneSet = new Set(doneIndices);
   // "Next up" = the first not-yet-completed lesson, wherever it is in the list.
@@ -55,6 +60,7 @@ export function ModuleLessonList({
             defaultOpen={nextIdx >= sec.start && nextIdx < sec.end}
             rowStatusFor={rowStatusFor}
             onPressLesson={onPressLesson}
+            tourTargetFirstLesson={tourTargetFirstLesson}
           />
         ))}
       </View>
@@ -63,7 +69,14 @@ export function ModuleLessonList({
   return (
     <View style={{ gap: 10 }}>
       {lessons.map((lesson, i) => (
-        <LessonRow key={lesson.title} lesson={lesson} index={i} status={rowStatusFor(i)} onPress={() => onPressLesson(i)} />
+        <LessonRow
+          key={lesson.title}
+          lesson={lesson}
+          index={i}
+          status={rowStatusFor(i)}
+          onPress={() => onPressLesson(i)}
+          isTourTarget={!!tourTargetFirstLesson && i === 0}
+        />
       ))}
     </View>
   );
@@ -101,6 +114,7 @@ function LessonSectionBlock({
   defaultOpen,
   rowStatusFor,
   onPressLesson,
+  tourTargetFirstLesson,
 }: {
   label: string;
   lessons: LessonSummary[];
@@ -109,6 +123,7 @@ function LessonSectionBlock({
   defaultOpen: boolean;
   rowStatusFor: (i: number) => string;
   onPressLesson: (i: number) => void;
+  tourTargetFirstLesson?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -125,7 +140,14 @@ function LessonSectionBlock({
           {lessons.map((lesson, i) => {
             const idx = startIndex + i;
             return (
-              <LessonRow key={lesson.title} lesson={lesson} index={idx} status={rowStatusFor(idx)} onPress={() => onPressLesson(idx)} />
+              <LessonRow
+                key={lesson.title}
+                lesson={lesson}
+                index={idx}
+                status={rowStatusFor(idx)}
+                onPress={() => onPressLesson(idx)}
+                isTourTarget={!!tourTargetFirstLesson && idx === 0}
+              />
             );
           })}
         </View>
@@ -139,16 +161,33 @@ function LessonRow({
   index,
   status,
   onPress,
+  isTourTarget,
 }: {
   lesson: LessonSummary;
   index: number;
   status: string;
   onPress: () => void;
+  /** True only for the Modules tab's first lesson while it's also acting as the onboarding
+   * tour's "Start a lesson" stop — draws a yellow highlight ring while that step is active,
+   * and requires the real tap to advance the tour (see OnboardingTour.tsx). */
+  isTourTarget?: boolean;
 }) {
   const node = QNODE[status];
   const isActive = status === 'active';
-  return (
-    <ListRow onPress={onPress} style={isActive ? [{ borderWidth: 2, borderColor: colors.green, backgroundColor: '#F1F6EF' }] : undefined}>
+  const { activeTargetId, advanceIfWaitingOn } = useOnboardingTour();
+  const tourHighlighted = !!isTourTarget && activeTargetId === 'tour-lesson-tile';
+
+  const row = (
+    <ListRow
+      onPress={() => {
+        if (isTourTarget) advanceIfWaitingOn('tour-lesson-tile');
+        onPress();
+      }}
+      style={[
+        isActive && { borderWidth: 2, borderColor: colors.green, backgroundColor: colors.tagGreenBg },
+        tourHighlighted && styles.tourHighlight,
+      ]}
+    >
       <View style={[styles.qnode, { backgroundColor: node.bg }]}>
         <Txt style={styles.qnodeTxt}>{status === 'done' ? '✓' : String(index + 1)}</Txt>
       </View>
@@ -161,6 +200,8 @@ function LessonRow({
       ) : null}
     </ListRow>
   );
+
+  return isTourTarget ? <TourTarget id="tour-lesson-tile">{row}</TourTarget> : row;
 }
 
 const styles = StyleSheet.create({
@@ -176,6 +217,10 @@ const styles = StyleSheet.create({
   sectionLabel: { fontFamily: font.extra, fontSize: 10.5, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.pinkDark },
   sectionMeta: { fontFamily: font.extra, fontSize: 10.5, letterSpacing: 0.5, color: colors.pinkDark },
   sectionChevron: { fontFamily: font.bold, fontSize: 13, color: colors.pinkDark },
+  tourHighlight: {
+    borderWidth: 3, borderColor: colors.reward,
+    shadowColor: colors.reward, shadowOpacity: 0.5, shadowRadius: 8, shadowOffset: { width: 0, height: 0 }, elevation: 6,
+  },
   qnode: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   qnodeTxt: { fontFamily: font.display, fontSize: 15, color: colors.white },
   qTitle: { fontFamily: font.extra, fontSize: 14, color: colors.ink },

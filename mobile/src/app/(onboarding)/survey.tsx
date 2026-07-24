@@ -37,11 +37,9 @@ export default function Survey() {
 
   const finish = () => {
     setOnboardingTrack(activeTrack.id);
-    // push, not replace — this screen lives in the (onboarding) nested navigator, and
-    // replace() doesn't reliably cross into a different top-level branch like (tabs) (see
-    // results.tsx's continuePress for the full story of the "route doesn't exist"/
-    // blank-screen crash this causes).
-    router.push('/(tabs)/home');
+    // The animated hammy-intro now plays right after the survey (on "Start learning"),
+    // before landing on Home — see hammy-intro.tsx's own finish handler for the Home push.
+    router.push('/(onboarding)/hammy-intro');
   };
 
   const back = () => {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow, MaybeTourTarget } from '@/components';
+import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow } from '@/components';
 import { colors, font, radius } from '@/theme';
 import { modules } from '@/data';
 import { moduleContentById } from '@/content';
@@ -42,7 +42,7 @@ export default function Modules() {
         </View>
 
         <View style={{ gap: 12 }}>
-          {modules.map((m, idx) => {
+          {modules.map((m) => {
             const content = moduleContentById(m.id);
             // The real-life step-by-step guide lesson is surfaced separately, right below
             // the main list, via RealLifeSubQuestRow — same split the website makes between
@@ -79,20 +79,24 @@ export default function Modules() {
                 {isOpen ? (
                   <View style={styles.rowBody}>
                     <ProgressBar value={pct} tone={status === 'done' ? 'green' : 'pink'} height={7} style={{ marginBottom: 12 }} />
-                    {/* The first module's lesson list is the onboarding tour's "Start a
-                        lesson" stop (see OnboardingTour.tsx) — a fresh user's active module
-                        starts expanded (see the `expanded` initializer above), so this is
-                        already measurable the moment the tour reaches it, no forced-open
-                        step needed. */}
-                    <MaybeTourTarget id={idx === 0 ? 'tour-lesson-tile' : undefined}>
-                      <ModuleLessonList
-                        moduleId={m.id}
-                        lessons={lessons}
-                        doneIndices={moduleDoneIndices(m.id)}
-                        status={status}
-                        onPressLesson={(i) => router.push({ pathname: '/learn/quest', params: { moduleId: m.id, lessonIndex: String(i) } })}
-                      />
-                    </MaybeTourTarget>
+                    {/* The ACTIVE module's first lesson row is the onboarding tour's "Start a
+                        lesson" stop (see OnboardingTour.tsx / ModuleLessonList.tsx's
+                        tourTargetFirstLesson) — keyed to `status === 'active'`, not array
+                        position (idx === 0 was always "earning" regardless of which module
+                        the user's survey track actually starts on; if that wasn't earning,
+                        earning's row was never expanded, so the target never mounted and the
+                        tour got stuck on this step with no real element to tap and no Next
+                        button to fall back on). The active module is the one guaranteed to
+                        auto-expand (see the `expanded` initializer above), so this is always
+                        measurable the moment the tour navigates here. */}
+                    <ModuleLessonList
+                      moduleId={m.id}
+                      lessons={lessons}
+                      doneIndices={moduleDoneIndices(m.id)}
+                      status={status}
+                      onPressLesson={(i) => router.push({ pathname: '/learn/quest', params: { moduleId: m.id, lessonIndex: String(i) } })}
+                      tourTargetFirstLesson={status === 'active'}
+                    />
                     {guideIndex >= 0 ? (
                       <RealLifeSubQuestRow
                         moduleId={m.id}
@@ -111,7 +115,7 @@ export default function Modules() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 22, paddingBottom: 28, gap: 14 },
+  content: { paddingHorizontal: 18, paddingBottom: 22, gap: 11 },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   row: {
     backgroundColor: colors.white,
@@ -127,7 +131,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    padding: 15,
+    padding: 12,
   },
   rowHeadRecommended: { backgroundColor: colors.rewardBg },
   rowHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
@@ -135,5 +139,5 @@ const styles = StyleSheet.create({
   rowDesc: { fontFamily: font.medium, fontSize: 11.5, color: colors.muted4, marginTop: 2 },
   tag: { paddingVertical: 4, paddingHorizontal: 9 },
   chevron: { fontFamily: font.bold, fontSize: 15, color: colors.muted4 },
-  rowBody: { paddingHorizontal: 15, paddingBottom: 16, paddingTop: 2 },
+  rowBody: { paddingHorizontal: 12, paddingBottom: 13, paddingTop: 2 },
 });

@@ -1,5 +1,6 @@
 import { useState, ReactNode } from 'react';
 import { Pressable, StyleSheet, ViewStyle, GestureResponderEvent } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { colors, font, radius } from '@/theme';
 import { Txt } from './Txt';
 
@@ -13,9 +14,15 @@ const VARIANTS: Record<Variant, { bg: string; text: string; border?: string }> =
   disabled: { bg: colors.disBg, text: colors.disText },
 };
 
+const PRESS_SPRING = { damping: 16, stiffness: 380 };
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 /** Flat, single-color pill — matches the website's .quest-continue-fab.ready (solid fill,
- * no bezel/offset-shadow "3D press" layer). Pressed state just dims slightly instead of
- * shifting/revealing an underlayer. */
+ * no bezel/offset-shadow "3D press" layer). Pressed state dims slightly AND scales down
+ * (spring back on release) — this is the one shared primitive nearly every CTA in the app
+ * routes through (Resume, chapter actions, etc.), so this single animation covers "every
+ * button" rather than needing a bespoke one per screen. */
 export function Button({
   label,
   onPress,
@@ -34,16 +41,18 @@ export function Button({
   disabled?: boolean;
 }) {
   const [pressed, setPressed] = useState(false);
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const v = VARIANTS[disabled ? 'disabled' : variant];
   const r = size === 'sm' ? radius.md : radius.xl;
   const h = size === 'sm' ? 48 : 56;
 
   return (
-    <Pressable
+    <AnimatedPressable
       disabled={disabled}
       onPress={onPress}
-      onPressIn={() => setPressed(true)}
-      onPressOut={() => setPressed(false)}
+      onPressIn={() => { setPressed(true); scale.value = withSpring(0.96, PRESS_SPRING); }}
+      onPressOut={() => { setPressed(false); scale.value = withSpring(1, PRESS_SPRING); }}
       style={[
         styles.inner,
         {
@@ -55,6 +64,7 @@ export function Button({
           borderColor: v.border,
         },
         style,
+        animatedStyle,
       ]}
     >
       {left}
@@ -67,7 +77,7 @@ export function Button({
       >
         {label}
       </Txt>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

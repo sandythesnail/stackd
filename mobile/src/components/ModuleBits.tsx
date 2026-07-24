@@ -1,9 +1,13 @@
 import { ReactNode } from 'react';
-import { View, Pressable, StyleSheet, ViewStyle } from 'react-native';
+import { View, Pressable, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { SvgXml } from 'react-native-svg';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { colors, font, radius } from '@/theme';
 import { mixHex, hexToRgba } from '@/colorMix';
 import { Txt } from './Txt';
+
+const ROW_PRESS_SPRING = { damping: 16, stiffness: 380 };
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 /** Rounded module icon badge — a pale background with its paired darker foreground number
  * ("01".."11"), matching the website's `.mod-icon` chip exactly (never white-on-color). */
@@ -64,12 +68,19 @@ export function ListRow({
   children: ReactNode;
   locked?: boolean;
   onPress?: () => void;
-  style?: ViewStyle | ViewStyle[];
+  style?: StyleProp<ViewStyle>;
 }) {
+  const scale = useSharedValue(1);
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return (
-    <Pressable onPress={onPress} style={[styles.lrow, locked && styles.lrowLock, style]}>
+    <AnimatedPressable
+      onPress={onPress}
+      onPressIn={() => { scale.value = withSpring(0.98, ROW_PRESS_SPRING); }}
+      onPressOut={() => { scale.value = withSpring(1, ROW_PRESS_SPRING); }}
+      style={[styles.lrow, locked && styles.lrowLock, style, animatedStyle]}
+    >
       {children}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

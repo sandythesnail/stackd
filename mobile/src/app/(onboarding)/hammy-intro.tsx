@@ -8,11 +8,12 @@ import { colors, font } from '@/theme';
 import { REACTION_FACES, MOOD_FACES, type FaceOverlay } from '@/hammyFaces';
 
 /** Screen — animated "meet Hammy" intro. Replaces the old static piggy-born
- * screen and leads off onboarding, BEFORE the survey: the piggy bank drops in,
- * cracks open in a coin/diamond/sparkle burst, Hammy emerges and walks the
- * user through three tappable dialogue beats, then hops off-screen into the
- * survey (which lands on Home, where the spotlight tour auto-starts for
- * first-time users — see home.tsx). Ported from the website's hammy-intro.js.
+ * screen and plays AFTER the survey, right when the user taps "Start learning"
+ * on the track-recommendation step: the piggy bank drops in, cracks open in a
+ * coin/diamond/sparkle burst, Hammy emerges and walks the user through three
+ * tappable dialogue beats, then hops off-screen into Home, where the spotlight
+ * tour auto-starts for first-time users (see home.tsx). Ported from the
+ * website's hammy-intro.js.
  *
  * No jingle SFX here yet: the repo has no audio library (expo-av/expo-audio)
  * and adding a native module is a build-affecting decision — the web version
@@ -187,14 +188,15 @@ export default function HammyIntro() {
   const at = (ms: number, fn: () => void) => { timers.current.push(setTimeout(fn, ms)); };
 
   /* Single exit path for the natural ending and Skip — clears every pending
-     timer so nothing fires after navigation. Continues into the survey, the
-     next onboarding step. */
+     timer so nothing fires after navigation. This plays after the survey (on
+     "Start learning"), so it lands straight on Home — the spotlight tour
+     auto-starts from there for first-time users. */
   const finish = () => {
     if (finished.current) return;
     finished.current = true;
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    router.push('/(onboarding)/survey');
+    router.push('/(tabs)/home');
   };
 
   const playWave = () => {

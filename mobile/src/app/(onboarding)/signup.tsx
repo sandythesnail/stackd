@@ -52,8 +52,9 @@ function ClerkSignUp() {
       const res = await signUp.attemptEmailAddressVerification({ code: code.trim() });
       if (res.status === 'complete') {
         await setActive({ session: res.createdSessionId });
-        // the animated hammy-intro leads off onboarding; the survey follows it
-        router.replace('/(onboarding)/hammy-intro');
+        // The survey leads off onboarding now; the animated hammy-intro plays after the
+        // user hits "Start learning" on the survey's final (track recommendation) step.
+        router.replace('/(onboarding)/survey');
       } else {
         setError('That code didn’t verify. Check your email and try again.');
       }
@@ -171,7 +172,7 @@ function StubSignUp() {
       </View>
 
       <Spacer />
-      <Button label="Continue" onPress={() => router.push('/(onboarding)/hammy-intro')} style={{ marginBottom: 10 }} />
+      <Button label="Continue" onPress={() => router.push('/(onboarding)/survey')} style={{ marginBottom: 10 }} />
       <View style={styles.footer}>
         <Txt style={styles.footTxt}>Already have an account? </Txt>
         <Txt style={styles.link} onPress={() => router.push('/(onboarding)/signin')}>Sign in</Txt>
