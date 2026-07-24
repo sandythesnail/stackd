@@ -17277,7 +17277,7 @@ function positionTourStep() {
   // even, into the tile's own inner padding, which reads better against a wide short row
   // than the symmetric padding every other side uses.
   const pad = step.requiresRealClick ? 1 : 8;
-  const padBottom = step.requiresRealClick ? -2 : pad;
+  const padBottom = step.requiresRealClick ? -6 : pad;
   spotlight.style.top = (r.top - pad) + 'px';
   spotlight.style.left = (r.left - pad) + 'px';
   spotlight.style.width = (r.width + pad * 2) + 'px';
