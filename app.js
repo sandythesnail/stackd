@@ -16866,13 +16866,17 @@ function renderModuleList(containerId) {
       // Covers both the 8 main-quest tiles and the real-life sub-quest tile (also a
       // .quest-tile — see the subquest-tile markup above).
       row.querySelectorAll('.quest-tile').forEach(tile => {
-        tile.addEventListener('click', () => startQuest(tile.dataset.module, tile.dataset.quest));
+        tile.addEventListener('click', () => {
+          dismissTourForLessonStart(tile);
+          startQuest(tile.dataset.module, tile.dataset.quest);
+        });
       });
     } else {
       row.querySelectorAll('.lesson-tile').forEach(tile => {
         const lessonIdx = parseInt(tile.dataset.lesson);
         const lesson = m.lessons[lessonIdx];
         tile.addEventListener('click', () => {
+          dismissTourForLessonStart(tile);
           if (lesson.type) startBonusActivity(tile.dataset.module, lessonIdx);
           else startHook(tile.dataset.module, lessonIdx);
         });
@@ -17148,23 +17152,35 @@ const ONBOARDING_TOUR_STEPS = [
         row.querySelector('.module-row-header')?.setAttribute('aria-expanded', 'true');
         if (lessons) requestAnimationFrame(() => { lessons.style.transition = ''; });
       }
+      // Dismissal itself is NOT wired up here — see dismissTourForLessonStart(), called from
+      // the tile's own real click handler in renderModuleList. A second bolted-on listener
+      // captured on this specific DOM node used to do it instead, which silently stopped
+      // working if the grid re-rendered (replacing tile nodes) between this beforeShow and
+      // the user's actual click, leaving the tour stuck open with only Skip able to close
+      // it. Driving dismissal from the real "start the lesson" action itself instead means
+      // it can never go stale, on any render pass.
       const tile = document.querySelector('#modules-grid .module-row .lesson-tile');
-      if (tile) {
-        tile.classList.add('tour-lesson-highlight');
-        tourLessonClickHandler = () => {
-          tile.classList.remove('tour-lesson-highlight');
-          tile.removeEventListener('click', tourLessonClickHandler);
-          tourLessonClickHandler = null;
-          advanceOnboardingTour();
-        };
-        tile.addEventListener('click', tourLessonClickHandler);
-      }
+      if (tile) tile.classList.add('tour-lesson-highlight');
     },
   },
 ];
 let tourStepIdx = 0;
 let tourOpenedMobileNav = false;
-let tourLessonClickHandler = null;
+
+// Called from the real "start this lesson" click handlers in renderModuleList (both the
+// quest-tile and plain-lesson-tile paths) — not a second bolted-on listener, so it can't go
+// stale if the grid re-renders. Always safe to call unconditionally alongside a tile's
+// normal click behavior: no-ops unless the tour is actually on the requiresRealClick step
+// AND this is the exact tile it's waiting on (mirrors the mobile app's
+// advanceIfWaitingOn/isTourTarget check in OnboardingTour.tsx + ModuleLessonList.tsx).
+function dismissTourForLessonStart(tile) {
+  const overlay = document.getElementById('tour-overlay');
+  if (!overlay || !overlay.classList.contains('visible')) return;
+  if (!ONBOARDING_TOUR_STEPS[tourStepIdx].requiresRealClick) return;
+  if (!tile.classList.contains('tour-lesson-highlight')) return;
+  tile.classList.remove('tour-lesson-highlight');
+  advanceOnboardingTour();
+}
 
 function startOnboardingTour() {
   tourStepIdx = 0;
@@ -17172,7 +17188,22 @@ function startOnboardingTour() {
   window.scrollTo(0, 0);
   document.getElementById('tour-overlay').classList.add('visible');
   window.addEventListener('resize', positionTourStep);
+  // Suppress the spotlight/tooltip's position transition for the tour's very first paint so
+  // it appears already in place instead of visibly sliding in from the top-left corner —
+  // matches the mobile app's tour, which lazily seeds its animated position values from the
+  // first real measurement rather than animating in from an arbitrary default (see
+  // OnboardingTour.tsx). Step-to-step movement after this still animates via the normal
+  // 0.25s CSS transition on .tour-spotlight/.tour-tooltip, which is what the mobile tour's
+  // own transition duration/easing was built to match.
+  const spotlight = document.getElementById('tour-spotlight');
+  const tooltip = document.getElementById('tour-tooltip');
+  spotlight.style.transition = 'none';
+  tooltip.style.transition = 'none';
   renderTourStep();
+  setTimeout(() => {
+    spotlight.style.transition = '';
+    tooltip.style.transition = '';
+  }, 130);
 }
 
 function renderTourStep() {
@@ -17284,17 +17315,11 @@ function endOnboardingTour() {
     document.getElementById('sidebar').classList.remove('collapsed');
     tourOpenedMobileNav = false;
   }
-  // Defensive: only actually pending if the tour ends (e.g. Skip) while the "click the first
-  // lesson" step is still active and waiting — a real click already removes both of these
-  // itself.
-  if (tourLessonClickHandler) {
-    const tile = document.querySelector('#modules-grid .module-row .lesson-tile');
-    if (tile) {
-      tile.classList.remove('tour-lesson-highlight');
-      tile.removeEventListener('click', tourLessonClickHandler);
-    }
-    tourLessonClickHandler = null;
-  }
+  // Defensive: only actually needed if the tour ends (e.g. Skip) while the "click the first
+  // lesson" step is still active and waiting — a real click already clears its own highlight
+  // via dismissTourForLessonStart. querySelectorAll rather than a captured single-node
+  // reference so this can't miss a re-rendered tile.
+  document.querySelectorAll('.tour-lesson-highlight').forEach(el => el.classList.remove('tour-lesson-highlight'));
   state.hasSeenOnboardingTour = true;
   saveState();
 }
@@ -20034,7 +20059,14 @@ function renderChapter(mod, idx) {
   hammyMsg.className = 'hammy-side-msg';
   hammyMsg.textContent = '';
 
-  document.getElementById('quest-main').innerHTML = '';
+  const questMain = document.getElementById('quest-main');
+  questMain.innerHTML = '';
+  // Restart the fade-in every chapter (see .quest-main.chapter-enter in app.css) — a class
+  // that's already present won't replay its animation, so it has to come off, force a
+  // reflow, then go back on.
+  questMain.classList.remove('chapter-enter');
+  void questMain.offsetWidth;
+  questMain.classList.add('chapter-enter');
 
   const onDone = () => advanceChapter(mod);
 

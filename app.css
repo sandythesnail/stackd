@@ -41,6 +41,13 @@ body { background: var(--bg); min-height: 100vh; }
   transition: background 0.18s, color 0.18s;
 }
 .sidebar-toggle:hover { background: var(--bg); color: var(--text); }
+/* Literal "?" glyph (was a hand-drawn SVG circle) — bigger and bolder so it actually reads
+   as a question mark at a glance instead of a faint generic icon. */
+.sidebar-help-btn { width: 34px; height: 34px; }
+.sidebar-help-mark {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 1.35rem; line-height: 1;
+}
 .sidebar-nav {
   display: flex; flex-direction: column; gap: 0.2rem; flex: 1;
 }
@@ -1227,6 +1234,11 @@ select.budget-input { cursor: pointer; }
    in JS from the real available space), so short content isn't squished against the top with
    Hammy floating awkwardly beside empty space below. */
 .quest-main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+/* Each chapter/question fades in on entry — matches the mobile app's per-chapter
+   `entering={FadeIn.duration(260)}` (quest.tsx), retriggered in renderChapter() by
+   removing/re-adding this class so it replays every time quest-main's content changes. */
+.quest-main.chapter-enter { animation: chapterFadeIn 0.26s ease; }
+@keyframes chapterFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* Shared chapter title — sits above the two-column layout, bled past quest-body's own padding
    so it hugs the true left edge of the screen, further left than everything else on the page. */
@@ -1966,9 +1978,22 @@ select.budget-input { cursor: pointer; }
 .tour-next { padding: 0.6rem 1.15rem; font-size: 0.85rem; }
 /* Yellow "tap me" ring on the onboarding tour's "Start a lesson" step — separate from the
    tour's own neutral white spotlight ring, toggled directly on the lesson tile itself (see
-   ONBOARDING_TOUR_STEPS' last step in app.js). */
+   ONBOARDING_TOUR_STEPS' last step in app.js). Matches the mobile app's tourHighlight style
+   (OnboardingTour.tsx / ModuleLessonList.tsx: borderWidth 3, colors.reward, shadowOpacity
+   0.5, shadowRadius 8) exactly on color/width/blur. border-radius + z-index are added on
+   top of that shared spec because .lesson-tile is a flush, square-cornered grid cell that
+   shares borders with its neighbors (mobile's ListRow is a standalone rounded card) — a
+   plain outline there reads as a thin line squeezed against the next tile's border instead
+   of the standalone glowing card mobile shows, so those two properties round the corners and
+   lift the highlighted tile above the shared grid lines it would otherwise be clipped by.
+   outline-offset pulls the ring inward so it isn't clipped by the section's overflow:hidden
+   collapse container at the grid's outer edge. */
 .tour-lesson-highlight {
+  position: relative;
+  z-index: 1;
+  border-radius: var(--radius-sm);
   outline: 3px solid #F0C22E !important;
+  outline-offset: -3px;
   box-shadow: 0 0 8px rgba(240, 194, 46, 0.5) !important;
 }
 
