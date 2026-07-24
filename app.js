@@ -18180,6 +18180,8 @@ function renderHome() {
   const tier = getTier(done);
   document.getElementById('h-tier').textContent = tier.name;
   document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete, replay to master!' : `${done}/${MODULES.length} complete`;
+  document.getElementById('home-hdr-coins').textContent = (state.coins || 0).toLocaleString();
+  document.getElementById('home-hdr-diamonds').textContent = (state.diamonds || 0).toLocaleString();
 
   renderHomeMascotCard(done);
 
@@ -21640,6 +21642,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('tour-next').addEventListener('click', advanceOnboardingTour);
   document.getElementById('tour-skip').addEventListener('click', endOnboardingTour);
   document.getElementById('sidebar-help-btn').addEventListener('click', startOnboardingTour);
+  // Home page header icons (mirrors mobile's Header onReplayTour/onGear) — wired once here
+  // rather than in renderHome(), which reruns on every home render and would otherwise pile
+  // up duplicate listeners.
+  document.getElementById('home-help-btn').addEventListener('click', startOnboardingTour);
+  document.getElementById('home-settings-btn').addEventListener('click', () => { showPage('settings'); renderSettingsPage(); });
 
   // Sidebar expand/collapse
   const sidebar = document.getElementById('sidebar');

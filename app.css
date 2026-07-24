@@ -41,13 +41,30 @@ body { background: var(--bg); min-height: 100vh; }
   transition: background 0.18s, color 0.18s;
 }
 .sidebar-toggle:hover { background: var(--bg); color: var(--text); }
+/* Shared circular icon-button chrome — the sidebar's "?" (replay tour) and the home page
+   header's help/settings icons all use this, matching the mobile app's IconButton (white
+   bg, 1.5px border, centered icon) instead of each having its own one-off style. */
+.header-icon-btn {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; border: 1.5px solid var(--border); color: var(--text-mid);
+  cursor: pointer; transition: background 0.18s, color 0.18s;
+}
+.header-icon-btn:hover { background: var(--bg); color: var(--text); }
 /* Literal "?" glyph (was a hand-drawn SVG circle) — bigger and bolder so it actually reads
    as a question mark at a glance instead of a faint generic icon. */
-.sidebar-help-btn { width: 34px; height: 34px; }
 .sidebar-help-mark {
   font-family: var(--font-display); font-weight: 800;
-  font-size: 1.35rem; line-height: 1;
+  font-size: 1.3rem; line-height: 1;
 }
+/* Pinned to the far right of the whole viewport, not just the sidebar's own row —
+   position:fixed pulls it entirely out of .sidebar-brand-row's flex flow, which is also
+   what restores that row to its original clean 2-item (brand / collapse-toggle) layout
+   instead of the toggle competing for space with a 3rd item. right:64px rather than 20px
+   leaves clear room to its left of the mobile top bar's own hamburger toggle, which sits in
+   that same corner on narrow layouts (see the @media (max-width:768px) sidebar rules) —
+   20px would overlap it there. */
+#sidebar-help-btn { position: fixed; top: 14px; right: 64px; z-index: 2; }
 .sidebar-nav {
   display: flex; flex-direction: column; gap: 0.2rem; flex: 1;
 }
@@ -154,6 +171,7 @@ body { background: var(--bg); min-height: 100vh; }
 }
 .page-subtitle { font-size: 0.95rem; color: var(--text-mid); margin: 0; line-height: 1.5; }
 .header-stats-col { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; }
+.home-header-icons { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; flex-shrink: 0; }
 
 .tier-chip {
   display: inline-block;
@@ -1978,23 +1996,16 @@ select.budget-input { cursor: pointer; }
 .tour-next { padding: 0.6rem 1.15rem; font-size: 0.85rem; }
 /* Yellow "tap me" ring on the onboarding tour's "Start a lesson" step — separate from the
    tour's own neutral white spotlight ring, toggled directly on the lesson tile itself (see
-   ONBOARDING_TOUR_STEPS' last step in app.js). Matches the mobile app's tourHighlight style
-   (OnboardingTour.tsx / ModuleLessonList.tsx: borderWidth 3, colors.reward, shadowOpacity
-   0.5, shadowRadius 8) exactly on color/width/blur. border-radius + z-index are added on
-   top of that shared spec because .lesson-tile is a flush, square-cornered grid cell that
-   shares borders with its neighbors (mobile's ListRow is a standalone rounded card) — a
-   plain outline there reads as a thin line squeezed against the next tile's border instead
-   of the standalone glowing card mobile shows, so those two properties round the corners and
-   lift the highlighted tile above the shared grid lines it would otherwise be clipped by.
-   outline-offset pulls the ring inward so it isn't clipped by the section's overflow:hidden
-   collapse container at the grid's outer edge. */
+   ONBOARDING_TOUR_STEPS' last step in app.js). Reuses the exact same technique as
+   .module-row.recommended above (real `border`, not `outline` + a manual offset) instead of
+   its own one-off ring: a real border is drawn exactly on the element's own edge, so it's
+   never at risk of the border-vs-highlight misalignment an `outline`/`outline-offset` hack
+   can end up with. border-radius rounds the tile into a distinct card, same as recommended
+   does for a whole module row. */
 .tour-lesson-highlight {
-  position: relative;
-  z-index: 1;
   border-radius: var(--radius-sm);
-  outline: 3px solid #F0C22E !important;
-  outline-offset: -3px;
-  box-shadow: 0 0 8px rgba(240, 194, 46, 0.5) !important;
+  border: 2px solid #F0C22E !important;
+  box-shadow: 0 0 0 3px rgba(240, 194, 46, 0.18) !important;
 }
 
 /* ─── ROOM PAGE ─── */
