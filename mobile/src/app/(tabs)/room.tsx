@@ -27,11 +27,9 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
   // This is the layout for every lamp EXCEPT Fairy Lights — see FairyLightsGarland below,
   // which replaces this slot's normal rendering entirely when that item is equipped.
   lamp: { label: 'Lamp', top: '2%', right: '2%', width: '20%', height: '54%', floorStanding: true },
-  // Pushed back and up (bottom sits right at the wall/floor seam, 48% up from the bottom —
-  // see floorZone's own 52% height) instead of down at the literal bottom edge, so it reads
-  // as tucked into the back corner rather than out front — but still bottom-anchored right
-  // on that seam line (not just placed high up with nothing under it), so it doesn't float.
-  plant: { label: 'Plant', bottom: '46%', right: '2%', width: '15%', height: '20%', floorStanding: true },
+  // Moved down to the floor and over to Hammy's left flank (was tucked in the back-right
+  // corner behind the lamp) so it reads as sitting right beside Hammy in the foreground.
+  plant: { label: 'Plant', bottom: '6%', left: '14%', width: '17%', height: '24%', floorStanding: true },
   // Was positioned right under the window when the window started at top 4% (ending at
   // 44%). The window has since moved down to top 10% (now ending at 50%), so this no longer
   // sits flush under it, left as-is since only the window/poster were asked to move.
@@ -55,9 +53,6 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
 // no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND
 // everything else that legitimately overlaps it: the furniture that can sit partway onto a
 // rug (normal), and Hammy standing on it (the whole point of the rug reaching up that far).
-// plant renders AFTER lamp on purpose too — its box overlaps the top of the lamp's own tall
-// strip (see the plant entry above), and a plant sitting in front of the lamp reads right; a
-// lamp painted on top would instead hide it.
 const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'rug', 'lamp', 'bed', 'plant', 'desk'];
 
 // Fixed-width vertical stripes, ported pixel-for-pixel from the website's .room-floor
