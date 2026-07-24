@@ -32,11 +32,11 @@ const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
   // Moved down to the floor and over to Hammy's left flank (was tucked in the back-right
   // corner behind the lamp) so it reads as sitting right beside Hammy in the foreground.
   plant: { label: 'Plant', bottom: '6%', left: '14%', width: '17%', height: '24%', floorStanding: true },
-  // Sized up a lot (19%->34% wide, 43%->65% tall) and pushed much further up (bottom 6%->22%)
-  // per direct request — now overlaps the bottom-left corner of the wall poster, which is an
-  // accepted trade-off of prioritizing the bed being bigger/higher over the earlier "tucked
-  // neatly under the poster" fit.
-  bed: { label: 'Bed', bottom: '22%', left: '2%', width: '34%', height: '65%', floorStanding: true },
+  // Sized up a lot (19%->34% wide, 43%->65% tall) and pushed much further up (bottom 6%->32%,
+  // then higher again) and a smidge further left (2%->0%) per direct request — overlaps the
+  // wall poster more than before, an accepted trade-off of prioritizing the bed being
+  // bigger/higher over the earlier "tucked neatly under the poster" fit.
+  bed: { label: 'Bed', bottom: '32%', left: '0%', width: '34%', height: '65%', floorStanding: true },
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
   // (bottom raised off the literal floor edge) so more of it reads as sitting BEHIND Hammy's
   // body rather than only trailing out below his feet, so the two read as "standing on it"
