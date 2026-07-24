@@ -154,7 +154,11 @@ export type ModuleContent = {
   quests: Quest[];
 };
 
-export type RoomSlot = 'wallpaper' | 'wall' | 'rug' | 'plant' | 'bed' | 'desk' | 'lamp' | 'window';
+// 'garland' is its own slot (not part of 'lamp') specifically so Fairy Lights — a ceiling
+// garland spanning the whole scene, see room.tsx's FairyLightsGarland — never competes with
+// a floor lamp/bookshelf for the same slot. They occupy visually distinct parts of the room,
+// so there's no reason equipping one should un-equip the other.
+export type RoomSlot = 'wallpaper' | 'wall' | 'rug' | 'plant' | 'bed' | 'desk' | 'lamp' | 'window' | 'garland';
 
 export type ShopItemReal = {
   id: string;

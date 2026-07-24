@@ -7,12 +7,14 @@ import type { ShopItemReal } from '@/content';
  * dotted sage/blush, diagonal stripe, or plain cream. Rendered as tiled SVG patterns rather
  * than CSS so the same textures show up pixel-for-pixel on native. */
 const WALLPAPER: Record<string, { bg: string; dot?: string } | { bg: string; stripe: [string, string] }> = {
-  wallpaper_sage: { bg: '#E0EAE0', dot: 'rgba(107,143,101,0.3)' },
-  wallpaper_blush: { bg: '#FBF0F3', dot: 'rgba(212,137,158,0.3)' },
-  wallpaper_sky: { bg: '#DCE8F2', dot: 'rgba(59,107,148,0.3)' },
-  wallpaper_red: { bg: '#F6E0DD', dot: 'rgba(196,50,50,0.32)' },
-  wallpaper_stripes: { bg: '#E0EAE0', stripe: ['#B2C9AE', '#E0EAE0'] },
-  wallpaper_denim: { bg: '#DCE8F2', stripe: ['#8FB8D9', '#DCE8F2'] },
+  wallpaper_sage_dot: { bg: '#E0EAE0', dot: 'rgba(107,143,101,0.3)' },
+  wallpaper_blush_dot: { bg: '#FBF0F3', dot: 'rgba(212,137,158,0.3)' },
+  wallpaper_denim_dot: { bg: '#DCE8F2', dot: 'rgba(59,107,148,0.3)' },
+  wallpaper_cherry_dot: { bg: '#F6E0DD', dot: 'rgba(196,50,50,0.32)' },
+  wallpaper_sage_stripe: { bg: '#E0EAE0', stripe: ['#B2C9AE', '#E0EAE0'] },
+  wallpaper_blush_stripe: { bg: '#FBF0F3', stripe: ['#F2CDD7', '#FBF0F3'] },
+  wallpaper_denim_stripe: { bg: '#DCE8F2', stripe: ['#8FB8D9', '#DCE8F2'] },
+  wallpaper_cherry_stripe: { bg: '#F6E0DD', stripe: ['#DD6D5E', '#F6E0DD'] },
 };
 
 /** The website's default, unequipped wall-zone look. */

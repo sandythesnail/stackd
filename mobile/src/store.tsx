@@ -68,7 +68,7 @@ export function itemRarity(item: Pick<ShopItemReal, 'rarity'>) {
   return item.rarity && RARITY_ORDER.includes(item.rarity) ? item.rarity : 'common';
 }
 
-const ROOM_SLOTS: RoomSlot[] = ['wallpaper', 'wall', 'rug', 'plant', 'bed', 'desk', 'lamp', 'window'];
+const ROOM_SLOTS: RoomSlot[] = ['wallpaper', 'wall', 'rug', 'plant', 'bed', 'desk', 'lamp', 'window', 'garland'];
 
 /** Ported verbatim from the website's Budget Calculator (renderBudgetCalculatorPanel/
  * computeBudgetTotals in app.js) — free-form add/remove income sources and fixed expenses,
@@ -148,7 +148,7 @@ const DEFAULT_STATE: AppState = {
   ownedItems: [],
   ownedRoomItems: [],
   equippedItems: [],
-  equippedRoom: { wallpaper: null, wall: null, rug: null, plant: null, bed: null, desk: null, lamp: null, window: null },
+  equippedRoom: { wallpaper: null, wall: null, rug: null, plant: null, bed: null, desk: null, lamp: null, window: null, garland: null },
   // Empty on purpose: progress only ever reflects lessons the player actually finished.
   // This used to be seeded with Maya's mock-story counts (earning: 6, saving: 2, ...),
   // which made a brand-new player's very first lesson finish read as "3 completed / 38%"

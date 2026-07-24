@@ -10,6 +10,10 @@ import type { RoomSlot, ShopItemReal } from '@/content';
 type SlotLayout = { label: string; floorStanding?: boolean } & ViewStyle;
 
 type FurnitureSlot = Exclude<RoomSlot, 'wallpaper'>;
+// 'garland' (Fairy Lights) never reaches SLOT_LAYOUT — it's rendered by the dedicated
+// FairyLightsGarland branch below instead of RoomSlotBox, so SLOT_LAYOUT itself doesn't need
+// (and shouldn't have to invent) an entry for it.
+type LayoutSlot = Exclude<FurnitureSlot, 'garland'>;
 type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
 
 /** Loosely ported from the website's room-slot-* CSS rules (app.css), then sized up a LOT
@@ -20,22 +24,19 @@ type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
  * its box instead of dead-center, so e.g. a lamp's actual base lands at the bottom of its
  * slot instead of floating in the middle of empty letterboxed space above the floor line.
  * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
-const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
+const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
   // Both nudged down from top 4% to 10%, moving the window and poster lower on the wall.
   window: { label: 'Window', top: '10%', left: '24%', width: '48%', height: '40%' },
   wall: { label: 'Wall art', top: '10%', left: '3%', width: '21%', height: '41%' },
-  // This is the layout for every lamp EXCEPT Fairy Lights — see FairyLightsGarland below,
-  // which replaces this slot's normal rendering entirely when that item is equipped.
   lamp: { label: 'Lamp', top: '2%', right: '2%', width: '20%', height: '54%', floorStanding: true },
   // Moved down to the floor and over to Hammy's left flank (was tucked in the back-right
   // corner behind the lamp) so it reads as sitting right beside Hammy in the foreground.
   plant: { label: 'Plant', bottom: '6%', left: '14%', width: '17%', height: '24%', floorStanding: true },
-  // Redrawn to face the viewer (was a wide side-profile silhouette) and re-slotted into the
-  // gap under the wall poster (which ends at top 51%, so this starts right there) and left
-  // of the desk (which starts at left 22%, so this ends just short of it at 21%) — the old
-  // box (left 20%-76%) nearly matched the desk's own footprint (left 22%-74%) and the two
-  // furniture pieces painted on top of each other instead of sitting side by side.
-  bed: { label: 'Bed', bottom: '6%', left: '2%', width: '19%', height: '43%', floorStanding: true },
+  // Sized up a lot (19%->34% wide, 43%->65% tall) and pushed much further up (bottom 6%->22%)
+  // per direct request — now overlaps the bottom-left corner of the wall poster, which is an
+  // accepted trade-off of prioritizing the bed being bigger/higher over the earlier "tucked
+  // neatly under the poster" fit.
+  bed: { label: 'Bed', bottom: '22%', left: '2%', width: '34%', height: '65%', floorStanding: true },
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
   // (bottom raised off the literal floor edge) so more of it reads as sitting BEHIND Hammy's
   // body rather than only trailing out below his feet, so the two read as "standing on it"
@@ -55,7 +56,7 @@ const SLOT_LAYOUT: Record<FurnitureSlot, SlotLayout> = {
 // no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND
 // everything else that legitimately overlaps it: the furniture that can sit partway onto a
 // rug (normal), and Hammy standing on it (the whole point of the rug reaching up that far).
-const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'rug', 'lamp', 'bed', 'plant', 'desk'];
+const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'rug', 'lamp', 'garland', 'bed', 'plant', 'desk'];
 
 // Fixed-width vertical stripes, ported pixel-for-pixel from the website's .room-floor
 // (repeating-linear-gradient(90deg, #C6935B 0 58px, #B98650 58px 62px)) — a plain two-tone
@@ -123,8 +124,8 @@ export default function Room() {
 
           {FURNITURE_SLOTS.map((slot) => {
             const item = bySlot(slot);
-            if (slot === 'lamp' && item?.id === 'lamp_fairy') {
-              return <FairyLightsGarland key={slot} item={item} onPress={goToRoomShop} />;
+            if (slot === 'garland') {
+              return item ? <FairyLightsGarland key={slot} item={item} onPress={goToRoomShop} /> : null;
             }
             const layout = SLOT_LAYOUT[slot];
             return (

@@ -161,7 +161,10 @@ export function webToMobile(web: WebState): Partial<AppState> {
   };
 }
 
-const ROOM_SLOTS = ['wallpaper', 'wall', 'rug', 'plant', 'bed', 'desk', 'lamp', 'window'] as const;
+// 'garland' (Fairy Lights) is mobile-only — the website has no equivalent slot, so this key
+// just rides along unread in the shared blob for a signed-in user on web, same as any other
+// _mobile-stashed field.
+const ROOM_SLOTS = ['wallpaper', 'wall', 'rug', 'plant', 'bed', 'desk', 'lamp', 'window', 'garland'] as const;
 function normalizeRoom(room: Record<string, string | null> | undefined): AppState['equippedRoom'] {
   const out = {} as AppState['equippedRoom'];
   for (const slot of ROOM_SLOTS) out[slot] = (room?.[slot] as string | null) ?? null;
