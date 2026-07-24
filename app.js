@@ -17270,10 +17270,10 @@ function positionTourStep() {
   spotlight.style.display = '';
   tooltip.style.transform = 'none';
 
-  // The "Start a lesson" highlight hugs the tile a bit tighter than every other step's
+  // The "Start a lesson" highlight hugs the tile much tighter than every other step's
   // spotlight — the tile is a wide, full-row element, so the usual 8px padding on all sides
   // made the glowing box read as noticeably taller/wider than the tile itself.
-  const pad = step.requiresRealClick ? 4 : 8;
+  const pad = step.requiresRealClick ? 1 : 8;
   spotlight.style.top = (r.top - pad) + 'px';
   spotlight.style.left = (r.left - pad) + 'px';
   spotlight.style.width = (r.width + pad * 2) + 'px';
