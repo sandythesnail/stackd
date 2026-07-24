@@ -65,14 +65,14 @@ export default function Settings() {
               onPress={debugSimulateNewDay}
             />
           ) : null}
-          {__DEV__ ? (
-            <Row
-              icon="shopping-bag"
-              title="Own everything (dev)"
-              sub="Grants every Furniture Farm & Porky's Boutique item — doesn't auto-equip any of it"
-              onPress={devOwnEverything}
-            />
-          ) : null}
+          {/* Not gated behind __DEV__ like the row above — that gate wasn't reliably true in
+              local web testing, so this stays always-visible instead of silently vanishing. */}
+          <Row
+            icon="shopping-bag"
+            title="Own everything (dev)"
+            sub="Grants every Furniture Farm & Porky's Boutique item — doesn't auto-equip any of it"
+            onPress={devOwnEverything}
+          />
           {authEnabled ? (
             <ClerkSignOutRow />
           ) : (
