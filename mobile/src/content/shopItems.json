@@ -334,13 +334,13 @@
     "wallCss": "background-color: #DCE8F2; background-image: radial-gradient(circle, rgba(59,107,148,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;"
   },
   {
-    "id": "wallpaper_rust",
-    "name": "Rust Dot Wallpaper",
+    "id": "wallpaper_red",
+    "name": "Red Dot Wallpaper",
     "category": "room",
     "slot": "wallpaper",
     "price": 45,
-    "desc": "Warm terracotta polka dots.",
-    "wallCss": "background-color: #F5E1DB; background-image: radial-gradient(circle, rgba(154,74,58,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;"
+    "desc": "Bold red polka dots.",
+    "wallCss": "background-color: #F6E0DD; background-image: radial-gradient(circle, rgba(196,50,50,.32) 1.5px, transparent 1.5px); background-size: 16px 16px;"
   },
   {
     "id": "wallpaper_denim",
@@ -392,6 +392,16 @@
     "svg": "<rect x=\"4\" y=\"4\" width=\"92\" height=\"122\" rx=\"4\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"4\"/>\n          <rect x=\"14\" y=\"14\" width=\"72\" height=\"102\" fill=\"#F2EEE6\"/>\n          <rect x=\"26\" y=\"86\" width=\"10\" height=\"20\" fill=\"#E3A392\"/>\n          <rect x=\"42\" y=\"70\" width=\"10\" height=\"36\" fill=\"#8FB8D9\"/>\n          <rect x=\"58\" y=\"50\" width=\"10\" height=\"56\" fill=\"#6B8F65\"/>\n          <path d=\"M24,64 L44,44 L58,54 L76,28\" stroke=\"#FFD700\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n          <path d=\"M68,28 L76,28 L76,36\" stroke=\"#FFD700\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
   },
   {
+    "id": "wall_diploma",
+    "name": "Diploma Frame",
+    "category": "room",
+    "slot": "wall",
+    "price": 80,
+    "viewBox": "0 0 100 130",
+    "desc": "Proof you know what APR means now.",
+    "svg": "<rect x=\"4\" y=\"4\" width=\"92\" height=\"122\" rx=\"4\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"4\"/>\n          <rect x=\"14\" y=\"14\" width=\"72\" height=\"102\" fill=\"#FAF6ED\"/>\n          <line x1=\"26\" y1=\"34\" x2=\"74\" y2=\"34\" stroke=\"#8A6438\" stroke-width=\"2\"/>\n          <text x=\"50\" y=\"50\" font-size=\"9\" text-anchor=\"middle\" fill=\"#4A6844\" font-weight=\"700\">DIPLOMA</text>\n          <line x1=\"26\" y1=\"62\" x2=\"74\" y2=\"62\" stroke=\"#D6DFD0\" stroke-width=\"2\"/>\n          <line x1=\"26\" y1=\"70\" x2=\"74\" y2=\"70\" stroke=\"#D6DFD0\" stroke-width=\"2\"/>\n          <line x1=\"26\" y1=\"78\" x2=\"60\" y2=\"78\" stroke=\"#D6DFD0\" stroke-width=\"2\"/>\n          <path d=\"M44,98 L40,112 L50,105 L60,112 L56,98 Z\" fill=\"#A62F26\"/>\n          <circle cx=\"50\" cy=\"92\" r=\"12\" fill=\"#C9A227\"/>\n          <circle cx=\"50\" cy=\"92\" r=\"8\" fill=\"none\" stroke=\"#8A6438\" stroke-width=\"1.5\"/>"
+  },
+  {
     "id": "rug_green",
     "name": "Sage Rug",
     "category": "room",
@@ -432,14 +442,14 @@
     "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#8FB8D9\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"80\" ry=\"20\" fill=\"none\" stroke=\"#3B6B94\" stroke-width=\"3\" opacity=\"0.35\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"55\" ry=\"13\" fill=\"none\" stroke=\"#3B6B94\" stroke-width=\"2.5\" opacity=\"0.3\"/>"
   },
   {
-    "id": "rug_terracotta",
-    "name": "Terracotta Rug",
+    "id": "rug_red",
+    "name": "Cherry Rug",
     "category": "room",
     "slot": "rug",
     "price": 60,
     "viewBox": "0 0 220 70",
-    "desc": "Earthy warmth for movie nights.",
-    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#E3A392\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"80\" ry=\"20\" fill=\"none\" stroke=\"#A85A42\" stroke-width=\"3\" opacity=\"0.35\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"55\" ry=\"13\" fill=\"none\" stroke=\"#A85A42\" stroke-width=\"2.5\" opacity=\"0.3\"/>"
+    "desc": "A bold pop of color underfoot.",
+    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#DD6D5E\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"80\" ry=\"20\" fill=\"none\" stroke=\"#A62F26\" stroke-width=\"3\" opacity=\"0.35\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"55\" ry=\"13\" fill=\"none\" stroke=\"#A62F26\" stroke-width=\"2.5\" opacity=\"0.3\"/>"
   },
   {
     "id": "rug_braided",
@@ -449,7 +459,7 @@
     "price": 70,
     "viewBox": "0 0 220 70",
     "desc": "Ringed in every color of the collection.",
-    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#F2CDD7\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"90\" ry=\"24\" fill=\"#FFFFFF\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"72\" ry=\"19\" fill=\"#B2C9AE\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"56\" ry=\"14.5\" fill=\"#FFFFFF\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"38\" ry=\"10\" fill=\"#8FB8D9\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"20\" ry=\"5.5\" fill=\"#E3A392\"/>"
+    "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#F2CDD7\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"90\" ry=\"24\" fill=\"#FFFFFF\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"72\" ry=\"19\" fill=\"#B2C9AE\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"56\" ry=\"14.5\" fill=\"#FFFFFF\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"38\" ry=\"10\" fill=\"#8FB8D9\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"20\" ry=\"5.5\" fill=\"#DD6D5E\"/>"
   },
   {
     "id": "plant_pothos",
@@ -492,6 +502,16 @@
     "svg": "<path d=\"M30,90 L26,116 L54,116 L50,90 Z\" fill=\"#C87848\"/>\n          <rect x=\"28\" y=\"86\" width=\"24\" height=\"8\" fill=\"#A56238\"/>\n          <path d=\"M40,88 C40,60 40,40 40,18\" stroke=\"#4A7840\" stroke-width=\"3\" fill=\"none\"/>\n          <path d=\"M40,80 L20,66 M40,80 L60,66 M40,64 L18,52 M40,64 L62,52 M40,48 L22,38 M40,48 L58,38 M40,32 L26,24 M40,32 L54,24\" stroke=\"#5E9950\" stroke-width=\"3\" stroke-linecap=\"round\"/>"
   },
   {
+    "id": "plant_money",
+    "name": "Money Plant",
+    "category": "room",
+    "slot": "plant",
+    "price": 60,
+    "viewBox": "0 0 80 120",
+    "desc": "A literal money tree. We couldn't resist.",
+    "svg": "<path d=\"M30,90 L26,116 L54,116 L50,90 Z\" fill=\"#C87848\"/>\n          <rect x=\"28\" y=\"86\" width=\"24\" height=\"8\" fill=\"#A56238\"/>\n          <path d=\"M40,88 C40,64 40,50 40,30\" stroke=\"#4A7840\" stroke-width=\"3\" fill=\"none\"/>\n          <circle cx=\"26\" cy=\"70\" r=\"9\" fill=\"#7EC96A\"/>\n          <circle cx=\"54\" cy=\"62\" r=\"9\" fill=\"#6FAE5C\"/>\n          <circle cx=\"40\" cy=\"50\" r=\"10\" fill=\"#8FDD78\"/>\n          <circle cx=\"30\" cy=\"40\" r=\"8\" fill=\"#7EC96A\"/>\n          <circle cx=\"50\" cy=\"34\" r=\"7\" fill=\"#6FAE5C\"/>\n          <circle cx=\"40\" cy=\"50\" r=\"4\" fill=\"#C9A227\" opacity=\"0.85\"/>\n          <circle cx=\"26\" cy=\"70\" r=\"3.5\" fill=\"#C9A227\" opacity=\"0.85\"/>"
+  },
+  {
     "id": "bed_cozy",
     "name": "Cozy Bed",
     "category": "room",
@@ -512,6 +532,16 @@
     "svg": "<rect x=\"15\" y=\"56\" width=\"130\" height=\"8\" rx=\"2\" fill=\"#7A5230\"/>\n          <rect x=\"21\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <rect x=\"133\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <rect x=\"58\" y=\"56\" width=\"44\" height=\"5\" rx=\"1\" fill=\"#D6DFD0\"/>\n          <rect x=\"61\" y=\"35\" width=\"38\" height=\"23\" rx=\"2\" fill=\"#FFFFFF\" stroke=\"#000000\" stroke-width=\"2\"/>"
   },
   {
+    "id": "desk_piggybank",
+    "name": "Piggy Bank Desk",
+    "category": "room",
+    "slot": "desk",
+    "price": 130,
+    "viewBox": "0 0 160 100",
+    "desc": "Where your savings actually sit.",
+    "svg": "<rect x=\"15\" y=\"56\" width=\"130\" height=\"8\" rx=\"2\" fill=\"#7A5230\"/>\n          <rect x=\"21\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <rect x=\"133\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <ellipse cx=\"72\" cy=\"46\" rx=\"20\" ry=\"14\" fill=\"#F2A8BE\"/>\n          <ellipse cx=\"56\" cy=\"48\" rx=\"6\" ry=\"5\" fill=\"#E8879F\"/>\n          <path d=\"M64,34 L60,26 L70,32 Z\" fill=\"#F2A8BE\"/>\n          <circle cx=\"62\" cy=\"42\" r=\"1.6\" fill=\"#3D2418\"/>\n          <rect x=\"60\" y=\"56\" width=\"4\" height=\"6\" fill=\"#E8879F\"/>\n          <rect x=\"82\" y=\"56\" width=\"4\" height=\"6\" fill=\"#E8879F\"/>\n          <rect x=\"70\" y=\"34\" width=\"8\" height=\"2.4\" rx=\"1\" fill=\"#B5607A\"/>\n          <ellipse cx=\"112\" cy=\"53\" rx=\"12\" ry=\"4\" fill=\"#C9A227\"/>\n          <ellipse cx=\"112\" cy=\"49\" rx=\"12\" ry=\"4\" fill=\"#E8C468\"/>\n          <ellipse cx=\"112\" cy=\"45\" rx=\"12\" ry=\"4\" fill=\"#C9A227\"/>\n          <ellipse cx=\"112\" cy=\"41\" rx=\"12\" ry=\"4\" fill=\"#E8C468\"/>\n          <text x=\"112\" y=\"44\" font-size=\"6\" text-anchor=\"middle\" fill=\"#8A6438\" font-weight=\"700\">$</text>"
+  },
+  {
     "id": "lamp_fairy",
     "name": "Fairy Lights",
     "category": "room",
@@ -530,6 +560,16 @@
     "viewBox": "0 0 70 110",
     "desc": "Soft light for late-night budgeting.",
     "svg": "<rect x=\"30\" y=\"90\" width=\"10\" height=\"16\" fill=\"#8A6438\"/>\n          <ellipse cx=\"35\" cy=\"106\" rx=\"20\" ry=\"4\" fill=\"#D6DFD0\"/>\n          <line x1=\"35\" y1=\"20\" x2=\"35\" y2=\"90\" stroke=\"#B8935E\" stroke-width=\"3\"/>\n          <circle cx=\"35\" cy=\"18\" r=\"18\" fill=\"#FFF6D8\"/>\n          <circle cx=\"41\" cy=\"12\" r=\"4\" fill=\"#F5E5A8\"/>\n          <circle cx=\"30\" cy=\"24\" r=\"2.5\" fill=\"#F5E5A8\"/>"
+  },
+  {
+    "id": "bookshelf_finance",
+    "name": "Finance Bookshelf",
+    "category": "room",
+    "slot": "lamp",
+    "price": 95,
+    "viewBox": "0 0 70 110",
+    "desc": "Everything you're learning, shelved and color-coded.",
+    "svg": "<rect x=\"6\" y=\"8\" width=\"58\" height=\"96\" rx=\"3\" fill=\"#8A6438\"/>\n          <rect x=\"10\" y=\"12\" width=\"50\" height=\"88\" fill=\"#F0EAE0\"/>\n          <rect x=\"10\" y=\"42\" width=\"50\" height=\"4\" fill=\"#8A6438\"/>\n          <rect x=\"10\" y=\"72\" width=\"50\" height=\"4\" fill=\"#8A6438\"/>\n          <rect x=\"13\" y=\"16\" width=\"6\" height=\"24\" fill=\"#3B6B94\"/>\n          <rect x=\"20\" y=\"18\" width=\"5\" height=\"22\" fill=\"#A62F26\"/>\n          <rect x=\"26\" y=\"14\" width=\"6\" height=\"26\" fill=\"#4A6844\"/>\n          <rect x=\"33\" y=\"20\" width=\"5\" height=\"20\" fill=\"#C9A227\"/>\n          <rect x=\"39\" y=\"16\" width=\"6\" height=\"24\" fill=\"#2AA8C4\"/>\n          <rect x=\"46\" y=\"22\" width=\"5\" height=\"18\" fill=\"#B5607A\"/>\n          <rect x=\"16\" y=\"52\" width=\"30\" height=\"7\" rx=\"1\" fill=\"#A62F26\"/>\n          <rect x=\"14\" y=\"60\" width=\"34\" height=\"8\" rx=\"1\" fill=\"#3B6B94\"/>\n          <rect x=\"13\" y=\"76\" width=\"6\" height=\"24\" fill=\"#2AA8C4\"/>\n          <rect x=\"20\" y=\"80\" width=\"5\" height=\"20\" fill=\"#C9A227\"/>\n          <rect x=\"27\" y=\"78\" width=\"6\" height=\"22\" fill=\"#4A6844\"/>\n          <rect x=\"34\" y=\"82\" width=\"5\" height=\"18\" fill=\"#A62F26\"/>\n          <rect x=\"41\" y=\"80\" width=\"6\" height=\"20\" fill=\"#3B6B94\"/>\n          <rect x=\"48\" y=\"84\" width=\"5\" height=\"16\" fill=\"#B5607A\"/>"
   },
   {
     "id": "window_sunny",

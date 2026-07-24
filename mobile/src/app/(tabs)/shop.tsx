@@ -307,16 +307,16 @@ const styles = StyleSheet.create({
   tchipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   tchipTxt: { fontFamily: font.extra, fontSize: 13.5, color: colors.muted3 },
 
-  storefront: { borderRadius: radius.card, overflow: 'hidden', backgroundColor: colors.pinkBg },
+  storefront: { borderRadius: radius.card, overflow: 'hidden', backgroundColor: colors.greenPale },
   awning: { flexDirection: 'row', height: 10 },
-  awningStripe: { flex: 1, backgroundColor: '#FF96B8' },
+  awningStripe: { flex: 1, backgroundColor: '#7EC96A' },
   storefrontInner: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14 },
   storefrontIconWrap: {
     width: 56, height: 56, borderRadius: 28, backgroundColor: colors.white,
     alignItems: 'center', justifyContent: 'center',
   },
   storefrontSign: { fontFamily: font.display, fontSize: 16, color: colors.ink },
-  storefrontSub: { fontFamily: font.semi, fontSize: 12, color: colors.pinkText, marginTop: 2 },
+  storefrontSub: { fontFamily: font.semi, fontSize: 12, color: colors.greenDark, marginTop: 2 },
 
   section: { gap: 14 },
   // A hairline rule above every section after the first — replaces the old bordered,
