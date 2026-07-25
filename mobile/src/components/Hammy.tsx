@@ -39,7 +39,19 @@ function EquippedItem({ item }: { item: ShopItemReal }) {
     .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${id}-${ns})`);
   return (
     <G transform={matrix}>
-      <SvgXml xml={`<svg xmlns="http://www.w3.org/2000/svg" width="${STAGE_W}" height="${STAGE_H}">${namespaced}</svg>`} width={STAGE_W} height={STAGE_H} />
+      {/* Each equipped item renders its own nested <svg width height> with no viewBox, so
+          any of the item's own raw coordinates that dip negative (the Cape/Golden Cape's
+          bottom-left point at x=-4, the Party Hat's topmost confetti at y=-3.5) get clipped
+          by THIS svg's own default viewport — a separate instance of the exact clipping bug
+          the outer stage Svg above was already fixed for (see its "tall hats/wide capes"
+          comment), since this inner svg has its own local (0,0)-(STAGE_W,STAGE_H) viewport
+          that clips before the outer G's matrix transform ever runs. */}
+      <SvgXml
+        xml={`<svg xmlns="http://www.w3.org/2000/svg" width="${STAGE_W}" height="${STAGE_H}">${namespaced}</svg>`}
+        width={STAGE_W}
+        height={STAGE_H}
+        style={{ overflow: 'visible' }}
+      />
     </G>
   );
 }
