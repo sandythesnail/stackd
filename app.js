@@ -18306,7 +18306,7 @@ function renderRoomPage() {
   // which tiles for the same reason: a single 120x45 strand stretched to 100% width and a
   // short height would either distort (stretch) or letterbox with dead space on both sides
   // (meet), neither of which reads as a garland actually running across the room.
-  const GARLAND_COUNT = 3;
+  const GARLAND_COUNT = 6;
   function garlandBlock() {
     const itemId = room.garland;
     const item = itemId ? SHOP_ITEMS.find(i => i.id === itemId) : null;

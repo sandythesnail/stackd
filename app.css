@@ -2047,6 +2047,10 @@ select.budget-input { cursor: pointer; }
    standard lamp box above) as the standard lamp box, so it reads as a genuinely bigger
    object rather than the same box just relabeled. */
 .room-slot-lamp[data-item="clock_grandfather"] { top: -21%; right: 5%; width: 20%; height: 85%; }
+/* Moon Lamp, same treatment as the clock override above — kept the standard box's bottom
+   edge (64%) so it still reads as sitting on the floor, just much bigger than the default
+   lamp box. */
+.room-slot-lamp[data-item="lamp_moon"] { top: -26%; right: 3%; width: 24%; height: 90%; }
 /* Fairy Lights live in their own 'garland' slot (see app.js SHOP_ITEMS + mobile's
    content/types.ts), not the 'lamp' slot, specifically so equipping them never unequips
    whatever's in the lamp slot (moon lamp / grandfather clock / bookshelf). Spans the full
@@ -2063,7 +2067,7 @@ select.budget-input { cursor: pointer; }
    (.room-slot-wall, top: 6%; left: 6%; height: 40% -> bottom edge at 46%) and enlarged —
    bottom: 13% + height: 42% puts this box's top edge at 45%, right up against the poster's
    own bottom edge. */
-.room-slot-bed   { bottom: 13%; left: 4%; width: 40%; height: 42%; z-index: 1; }
+.room-slot-bed   { bottom: 13%; left: 1%; width: 40%; height: 42%; z-index: 1; }
 /* Unlike the other room-slots (positioned against the full .room-backdrop), this one is
    nested inside .room-floor (42% of the backdrop's own height — see renderRoomPage), so its
    bottom/height are percentages of THAT, not the full scene. Sized down from an earlier
@@ -2075,7 +2079,7 @@ select.budget-input { cursor: pointer; }
    both boxes are centered now, so without this the rug (later in the DOM, same stacking
    context as room-backdrop's other children since .room-floor itself has no z-index) painted
    over the desk entirely and neither desk item ever appeared. */
-.room-slot-desk  { bottom: 4%; left: 50%; transform: translateX(-50%); width: 34%; height: 42%; z-index: 2; }
+.room-slot-desk  { bottom: 34%; left: 50%; transform: translateX(-50%); width: 34%; height: 42%; z-index: 2; }
 
 /* No visual box for an empty slot at all — matches the mobile app, which renders nothing.
    Still fully tappable (see the click handler in renderRoomPage), just invisible until
