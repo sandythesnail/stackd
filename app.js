@@ -15552,6 +15552,31 @@ const SHOP_ITEMS = [
     wallCss: 'background: var(--bg);'
   },
   {
+    id: 'wallpaper_blue_dot', name: 'Blue Dot Wallpaper', category: 'room', slot: 'wallpaper', price: 30,
+    desc: 'Soft blue polka dots.',
+    wallCss: 'background-color: #DCE8F2; background-image: radial-gradient(circle, rgba(59,107,148,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;'
+  },
+  {
+    id: 'wallpaper_cherry_dot', name: 'Cherry Dot Wallpaper', category: 'room', slot: 'wallpaper', price: 45,
+    desc: 'Bold red polka dots.',
+    wallCss: 'background-color: #F6E0DD; background-image: radial-gradient(circle, rgba(196,50,50,.32) 1.5px, transparent 1.5px); background-size: 16px 16px;'
+  },
+  {
+    id: 'wallpaper_blush_stripe', name: 'Blush Stripe Wallpaper', category: 'room', slot: 'wallpaper', price: 55,
+    desc: 'Diagonal pink stripes.',
+    wallCss: 'background: repeating-linear-gradient(45deg, #F2CDD7, #F2CDD7 10px, #FBF0F3 10px, #FBF0F3 20px);'
+  },
+  {
+    id: 'wallpaper_blue_stripe', name: 'Blue Stripe Wallpaper', category: 'room', slot: 'wallpaper', price: 55,
+    desc: 'Diagonal blue stripes.',
+    wallCss: 'background: repeating-linear-gradient(45deg, #8FB8D9, #8FB8D9 10px, #DCE8F2 10px, #DCE8F2 20px);'
+  },
+  {
+    id: 'wallpaper_cherry_stripe', name: 'Cherry Stripe Wallpaper', category: 'room', slot: 'wallpaper', price: 55,
+    desc: 'Diagonal red stripes.',
+    wallCss: 'background: repeating-linear-gradient(45deg, #DD6D5E, #DD6D5E 10px, #F6E0DD 10px, #F6E0DD 20px);'
+  },
+  {
     id: 'wall_money_poster', name: 'Money Tree Poster', category: 'room', slot: 'wall', price: 70,
     viewBox: '0 0 100 130',
     desc: 'Grows dollars, not leaves.',
@@ -15632,6 +15657,22 @@ const SHOP_ITEMS = [
           <ellipse cx="110" cy="40" rx="22" ry="5.5" fill="var(--pink-light)"/>`
   },
   {
+    id: 'rug_blue', name: 'Blue Rug', category: 'room', slot: 'rug', price: 60,
+    viewBox: '0 0 220 70',
+    desc: 'Cool footing for a warm room.',
+    svg: `<ellipse cx="110" cy="40" rx="105" ry="28" fill="#8FB8D9"/>
+          <ellipse cx="110" cy="40" rx="80" ry="20" fill="none" stroke="#3B6B94" stroke-width="3" opacity="0.35"/>
+          <ellipse cx="110" cy="40" rx="55" ry="13" fill="none" stroke="#3B6B94" stroke-width="2.5" opacity="0.3"/>`
+  },
+  {
+    id: 'rug_red', name: 'Cherry Rug', category: 'room', slot: 'rug', price: 60,
+    viewBox: '0 0 220 70',
+    desc: 'A bold pop of color underfoot.',
+    svg: `<ellipse cx="110" cy="40" rx="105" ry="28" fill="#DD6D5E"/>
+          <ellipse cx="110" cy="40" rx="80" ry="20" fill="none" stroke="#A62F26" stroke-width="3" opacity="0.35"/>
+          <ellipse cx="110" cy="40" rx="55" ry="13" fill="none" stroke="#A62F26" stroke-width="2.5" opacity="0.3"/>`
+  },
+  {
     id: 'plant_cactus', name: 'Tiny Cactus', category: 'room', slot: 'plant', price: 45,
     viewBox: '0 0 80 120',
     desc: 'Thrives on neglect. Relatable.',
@@ -15652,14 +15693,40 @@ const SHOP_ITEMS = [
           <path d="M40,80 L20,66 M40,80 L60,66 M40,64 L18,52 M40,64 L62,52 M40,48 L22,38 M40,48 L58,38 M40,32 L26,24 M40,32 L54,24" stroke="#5E9950" stroke-width="3" stroke-linecap="round"/>`
   },
   {
-    id: 'bed_cozy', name: 'Cozy Bed', category: 'room', slot: 'bed', price: 140,
-    viewBox: '0 0 160 100',
+    id: 'bed_cozy', name: 'Cozy Blue Bed', category: 'room', slot: 'bed', price: 140,
+    viewBox: '0 0 100 130',
     desc: 'Every good saver needs good rest.',
-    svg: `<rect x="10" y="50" width="140" height="40" rx="10" fill="var(--pink)"/>
-          <rect x="10" y="50" width="140" height="14" rx="7" fill="var(--pink-light)"/>
-          <rect x="16" y="34" width="34" height="26" rx="8" fill="var(--white)" stroke="var(--border)" stroke-width="2"/>
-          <rect x="20" y="88" width="10" height="10" fill="#8A6438"/>
-          <rect x="130" y="88" width="10" height="10" fill="#8A6438"/>`
+    svg: `<rect x="10" y="6" width="80" height="34" rx="12" fill="#4A6E8F"/>
+          <rect x="4" y="34" width="92" height="80" rx="10" fill="#6E93B8"/>
+          <rect x="4" y="50" width="92" height="14" fill="#C7DCEC"/>
+          <rect x="22" y="16" width="56" height="24" rx="10" fill="var(--white)" stroke="var(--border)" stroke-width="2"/>`
+  },
+  {
+    id: 'bed_sage', name: 'Sage Bed', category: 'room', slot: 'bed', price: 140,
+    viewBox: '0 0 100 130',
+    desc: 'Every good saver needs good rest.',
+    svg: `<rect x="10" y="6" width="80" height="34" rx="12" fill="#4A6844"/>
+          <rect x="4" y="34" width="92" height="80" rx="10" fill="#B2C9AE"/>
+          <rect x="4" y="50" width="92" height="14" fill="#E0EAE0"/>
+          <rect x="22" y="16" width="56" height="24" rx="10" fill="var(--white)" stroke="var(--border)" stroke-width="2"/>`
+  },
+  {
+    id: 'bed_blush', name: 'Blush Bed', category: 'room', slot: 'bed', price: 140,
+    viewBox: '0 0 100 130',
+    desc: 'Every good saver needs good rest.',
+    svg: `<rect x="10" y="6" width="80" height="34" rx="12" fill="#B5607A"/>
+          <rect x="4" y="34" width="92" height="80" rx="10" fill="#F2CDD7"/>
+          <rect x="4" y="50" width="92" height="14" fill="#FBF0F3"/>
+          <rect x="22" y="16" width="56" height="24" rx="10" fill="var(--white)" stroke="var(--border)" stroke-width="2"/>`
+  },
+  {
+    id: 'bed_cherry', name: 'Cherry Bed', category: 'room', slot: 'bed', price: 140,
+    viewBox: '0 0 100 130',
+    desc: 'Every good saver needs good rest.',
+    svg: `<rect x="10" y="6" width="80" height="34" rx="12" fill="#A62F26"/>
+          <rect x="4" y="34" width="92" height="80" rx="10" fill="#DD6D5E"/>
+          <rect x="4" y="50" width="92" height="14" fill="#F6E0DD"/>
+          <rect x="22" y="16" width="56" height="24" rx="10" fill="var(--white)" stroke="var(--border)" stroke-width="2"/>`
   },
   {
     id: 'desk_study', name: 'Study Desk', category: 'room', slot: 'desk', price: 115,
@@ -15703,7 +15770,7 @@ const SHOP_ITEMS = [
           <ellipse cx="100" cy="54" rx="4" ry="3" fill="#1C1C1C"/>`
   },
   {
-    id: 'lamp_fairy', name: 'Fairy Lights', category: 'room', slot: 'lamp', price: 65,
+    id: 'lamp_fairy', name: 'Colorful String Lights', category: 'room', slot: 'lamp', price: 65,
     // Natively horizontal now (was a tall vertical strand, viewBox 0 0 45 120) — the icon
     // itself used to only look right after mobile's room applied a 90° rotation just for
     // that one screen (see room.tsx's FairyLightsGarland); everywhere else (shop listing,
@@ -15761,6 +15828,75 @@ const SHOP_ITEMS = [
           <circle cx="35" cy="34" r="1.5" fill="#3A2A1E"/>`
   },
   {
+    id: 'bookshelf_finance', name: 'Bookshelf', category: 'room', slot: 'lamp', price: 95,
+    viewBox: '0 0 70 110',
+    desc: "Everything you're learning, shelved and color-coded.",
+    svg: `<rect x="6" y="8" width="58" height="96" rx="3" fill="#8A6438"/>
+          <rect x="10" y="12" width="50" height="88" fill="#F0EAE0"/>
+          <rect x="10" y="42" width="50" height="4" fill="#8A6438"/>
+          <rect x="10" y="72" width="50" height="4" fill="#8A6438"/>
+          <rect x="13" y="16" width="6" height="24" fill="#3B6B94"/>
+          <rect x="20" y="18" width="5" height="22" fill="#A62F26"/>
+          <rect x="26" y="14" width="6" height="26" fill="#4A6844"/>
+          <rect x="33" y="20" width="5" height="20" fill="#C9A227"/>
+          <rect x="39" y="16" width="6" height="24" fill="#2AA8C4"/>
+          <rect x="46" y="22" width="5" height="18" fill="#B5607A"/>
+          <rect x="16" y="56" width="30" height="7" rx="1" fill="#A62F26"/>
+          <rect x="14" y="64" width="34" height="8" rx="1" fill="#3B6B94"/>
+          <rect x="13" y="76" width="6" height="24" fill="#2AA8C4"/>
+          <rect x="20" y="80" width="5" height="20" fill="#C9A227"/>
+          <rect x="27" y="78" width="6" height="22" fill="#4A6844"/>
+          <rect x="34" y="82" width="5" height="18" fill="#A62F26"/>
+          <rect x="41" y="80" width="6" height="20" fill="#3B6B94"/>
+          <rect x="48" y="84" width="5" height="16" fill="#B5607A"/>`
+  },
+  {
+    id: 'shelf_trophy', name: 'Trophy Shelf', category: 'room', slot: 'lamp', price: 105,
+    viewBox: '0 0 70 110',
+    desc: 'Hardware for hitting your goals.',
+    svg: `<rect x="6" y="8" width="58" height="96" rx="3" fill="#8A6438"/>
+          <rect x="10" y="12" width="50" height="88" fill="#F0EAE0"/>
+          <rect x="10" y="42" width="50" height="4" fill="#8A6438"/>
+          <rect x="10" y="72" width="50" height="4" fill="#8A6438"/>
+          <path d="M28,16 L28,28 Q28,33 35,33 Q42,33 42,28 L42,16 Z" fill="#C9A227"/>
+          <path d="M28,18 Q20,18 20,24 Q20,29 27,28" stroke="#C9A227" stroke-width="2" fill="none"/>
+          <path d="M42,18 Q50,18 50,24 Q50,29 43,28" stroke="#C9A227" stroke-width="2" fill="none"/>
+          <rect x="32" y="33" width="6" height="4" fill="#C9A227"/>
+          <rect x="27" y="37" width="16" height="4" rx="1" fill="#B5607A"/>
+          <path d="M24,62 L20,70 L26,67 L30,72 L34,67 L40,70 L36,62 Z" fill="#3B6B94"/>
+          <circle cx="30" cy="56" r="10" fill="#8FE3F5"/>
+          <circle cx="30" cy="56" r="10" fill="none" stroke="#2AA8C4" stroke-width="1.5"/>
+          <circle cx="30" cy="56" r="6" fill="#2AA8C4"/>
+          <circle cx="30" cy="56" r="2" fill="#E8FBFF"/>
+          <path d="M18,82 L18,92 Q18,96 23,96 Q28,96 28,92 L28,82 Z" fill="#C88A4A"/>
+          <rect x="21" y="96" width="4" height="3" fill="#C88A4A"/>
+          <rect x="17" y="99" width="12" height="3" rx="1" fill="#B5607A"/>
+          <circle cx="46" cy="88" r="9" fill="#FFD700"/>
+          <circle cx="46" cy="88" r="9" fill="none" stroke="#B8860B" stroke-width="1.5"/>
+          <circle cx="46" cy="88" r="4.5" fill="#B8860B"/>`
+  },
+  {
+    id: 'shelf_record_player', name: 'Record Player Shelf', category: 'room', slot: 'lamp', price: 100,
+    viewBox: '0 0 70 110',
+    desc: 'Analog vibes for a digital budget.',
+    svg: `<rect x="6" y="8" width="58" height="96" rx="3" fill="#8A6438"/>
+          <rect x="10" y="12" width="50" height="88" fill="#F0EAE0"/>
+          <rect x="10" y="42" width="50" height="4" fill="#8A6438"/>
+          <rect x="10" y="72" width="50" height="4" fill="#8A6438"/>
+          <rect x="14" y="22" width="18" height="20" fill="#2B2E4A"/>
+          <rect x="33" y="20" width="18" height="22" fill="#A62F26"/>
+          <rect x="10" y="64" width="48" height="8" rx="2" fill="#3A2A1E"/>
+          <circle cx="26" cy="60" r="13" fill="#1C1C1C"/>
+          <circle cx="26" cy="60" r="9" fill="none" stroke="#3A3A3A" stroke-width="1"/>
+          <circle cx="26" cy="60" r="3" fill="#A62F26"/>
+          <circle cx="50" cy="50" r="3" fill="#8A6438"/>
+          <line x1="50" y1="50" x2="34" y2="57" stroke="#8A6438" stroke-width="2" stroke-linecap="round"/>
+          <rect x="14" y="98" width="36" height="4" rx="2" fill="#2B2E4A"/>
+          <rect x="14" y="93" width="36" height="4" rx="2" fill="#A62F26"/>
+          <rect x="14" y="88" width="36" height="4" rx="2" fill="#4A6844"/>
+          <rect x="14" y="83" width="36" height="4" rx="2" fill="#C9A227"/>`
+  },
+  {
     id: 'window_sunny', name: 'Sunny Window', category: 'room', slot: 'window', price: 90,
     viewBox: '0 0 160 160',
     desc: 'A bright view to budget by.',
@@ -15798,6 +15934,25 @@ const SHOP_ITEMS = [
           <circle cx="156" cy="8.5" r="3" fill="#8A6438"/>
           <path d="M0,2 L16,2 Q12,25 15,50 Q11,75 15,100 Q11,125 15,150 Q12,156 16,160 L0,160 Z" fill="#2F2B4A"/>
           <path d="M160,2 L144,2 Q148,25 145,50 Q149,75 145,100 Q149,125 145,150 Q148,156 144,160 L160,160 Z" fill="#2F2B4A"/>`
+  },
+  {
+    id: 'window_sunset', name: 'Sunset Window', category: 'room', slot: 'window', price: 160,
+    viewBox: '0 0 160 160',
+    desc: 'Golden hour, every hour.',
+    svg: `<defs><linearGradient id="sw-sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#6B4C8A"/><stop offset="45%" stop-color="#E8724A"/><stop offset="100%" stop-color="#FFC15E"/></linearGradient></defs>
+          <rect x="8" y="8" width="144" height="144" rx="8" fill="#8A6438"/>
+          <rect x="20" y="20" width="120" height="120" fill="url(#sw-sky)"/>
+          <circle cx="105" cy="100" r="18" fill="#FFC15E"/>
+          <circle cx="100" cy="95" r="6" fill="#FFE3B0" opacity="0.5"/>
+          <path d="M20,140 Q45,120 70,132 Q95,115 120,130 Q130,125 140,130 L140,140 L20,140 Z" fill="#4A2C3A"/>
+          <rect x="20" y="20" width="120" height="120" fill="none" stroke="#8A6438" stroke-width="5"/>
+          <line x1="80" y1="20" x2="80" y2="140" stroke="#8A6438" stroke-width="5"/>
+          <line x1="20" y1="80" x2="140" y2="80" stroke="#8A6438" stroke-width="5"/>
+          <rect x="0" y="7" width="160" height="3" fill="#5A3D22"/>
+          <circle cx="4" cy="8.5" r="3" fill="#8A6438"/>
+          <circle cx="156" cy="8.5" r="3" fill="#8A6438"/>
+          <path d="M0,2 L16,2 Q12,25 15,50 Q11,75 15,100 Q11,125 15,150 Q12,156 16,160 L0,160 Z" fill="#8B3A4A"/>
+          <path d="M160,2 L144,2 Q148,25 145,50 Q149,75 145,100 Q149,125 145,150 Q148,156 144,160 L160,160 Z" fill="#8B3A4A"/>`
   },
 
   // ── DIAMOND EXCLUSIVES (earned via 3-day streak bonuses, not coins) ──
