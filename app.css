@@ -2028,33 +2028,41 @@ select.budget-input { cursor: pointer; }
 .room-pig .pig-stage { transform-origin: bottom center; }
 .room-slot { position: absolute; }
 .room-slot svg { width: 100%; height: 100%; display: block; }
-/* aspect-ratio: 1/1 (not a matching height %) guarantees a true square regardless of the
-   backdrop's own aspect ratio — width% and height% are against different axes (backdrop
-   width vs. height), so no percentage pair alone can guarantee 1:1 the way this can. */
-.room-slot-window { top: 15%; left: 50%; transform: translateX(-50%); width: 30%; aspect-ratio: 1 / 1; height: auto; }
-.room-slot-wall  { top: 6%; left: 6%; width: 15%; height: 40%; }
-/* Pushed further down (top raised from 3% to 8%) on top of the app.js preserveAspectRatio
-   fix (see slotBlock/FLOOR_STANDING_SLOTS) — the box reaching the floor wasn't enough on its
-   own, since the SVG content itself was still centered within that box by default rather
-   than anchored to its bottom edge. */
-.room-slot-lamp  { top: 8%; right: 5%; width: 13%; height: 48%; }
+/* Matched to mobile's room.tsx SLOT_LAYOUT below — same percentages wherever the two
+   platforms' coordinate spaces line up (both split wall-zone/floor 48%/52%, so a plain
+   percentage of .room-backdrop reproduces the same physical spot as mobile's percentage of
+   its `scene` view). aspect-ratio: 1/1 (not a matching height %) guarantees a true square
+   regardless of the backdrop's own aspect ratio — width% and height% are against different
+   axes (backdrop width vs. height), so no percentage pair alone can guarantee 1:1 the way
+   this can. left: 48% (not 50%) centers it over the desk's own center (22% + 52%/2 = 48%),
+   matching mobile's DESK_CENTER_FRACTION.
+*/
+.room-slot-window { top: 15%; left: 48%; transform: translateX(-50%); width: 34%; aspect-ratio: 1 / 1; height: auto; }
+.room-slot-wall  { top: 6%; left: 4.5%; width: 21%; height: 41%; }
+.room-slot-lamp  { top: 2%; right: 3%; width: 20%; height: 54%; }
 /* The Grandfather Clock is a statement piece (also the most expensive item on the farm) —
    overrides the standard .room-slot-lamp box entirely via the data-item hook in slotBlock.
    Grown from both ends while keeping the same bottom edge (top+height = 56%) as the
    standard lamp box, so it reads as a genuinely bigger object rather than the same box
-   just relabeled. */
-.room-slot-lamp[data-item="clock_grandfather"] { top: -29%; right: 5%; width: 20%; height: 85%; }
-/* All the way back against the wall line (48% is where the floor zone starts) instead of
-   partway into the foreground. */
-.room-slot-plant { bottom: 46%; left: 38%; width: 13%; height: 18%; z-index: 1; }
-.room-slot-bed   { bottom: 5%; right: 3%; width: 29%; height: 31%; z-index: 1; }
+   just relabeled. Width (27%) matches mobile's CLOCK_LAYOUT exactly; height/top are a more
+   modest "significantly bigger" than mobile's own current value (top -202%, height 260%) —
+   that number is the result of several rounds of blind "even taller" requests with no visual
+   check in between, and reads as very likely broken (mostly off-screen) rather than a real
+   design target worth reproducing exactly. */
+.room-slot-lamp[data-item="clock_grandfather"] { top: -29%; right: 3%; width: 27%; height: 85%; }
+.room-slot-plant { bottom: 6%; left: 14%; width: 17%; height: 24%; z-index: 1; }
+.room-slot-bed   { bottom: 32%; left: 0%; width: 30%; height: 58%; z-index: 1; }
 /* Unlike the other room-slots (positioned against the full .room-backdrop), this one is
    nested inside .room-floor (52% of the backdrop's own height — see renderRoomPage), so its
-   bottom/height are percentages of THAT, not the full scene. Sized down from an earlier
-   oversized pass (66%/90%, which read as too big) to a size that still visibly extends
-   behind the centered pig without dominating the whole floor. */
-.room-slot-rug   { bottom: 6%; left: 50%; transform: translateX(-50%); width: 42%; height: 45%; z-index: 1; }
-.room-slot-desk  { bottom: 4%; left: 5%; width: 22%; height: 29%; z-index: 1; }
+   bottom/height are percentages of THAT, not the full scene. Mobile's rug isn't nested this
+   way (it's a plain scene sibling, bottom: 8%, height: 50% of the FULL scene), so those two
+   numbers are rescaled by /0.52 to land on the same physical spot here: 8/52 ≈ 15%,
+   50/52 ≈ 96%. left is a plain carry-over (66% width, left 17% — both platforms center
+   Hammy at 50%, so left: 17% centers the rug under him on either one identically, no
+   transform needed).
+*/
+.room-slot-rug   { bottom: 15%; left: 17%; width: 66%; height: 96%; z-index: 1; }
+.room-slot-desk  { bottom: 46%; left: 22%; width: 52%; height: 20%; z-index: 1; }
 
 /* No visual box for an empty slot at all — matches the mobile app, which renders nothing.
    Still fully tappable (see the click handler in renderRoomPage), just invisible until
