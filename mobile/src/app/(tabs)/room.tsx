@@ -12,8 +12,9 @@ type SlotLayout = { label: string; floorStanding?: boolean } & ViewStyle;
 type FurnitureSlot = Exclude<RoomSlot, 'wallpaper'>;
 // 'garland' (Fairy Lights) never reaches SLOT_LAYOUT — it's rendered by the dedicated
 // FairyLightsGarland branch below instead of RoomSlotBox, so SLOT_LAYOUT itself doesn't need
-// (and shouldn't have to invent) an entry for it.
-type LayoutSlot = Exclude<FurnitureSlot, 'garland'>;
+// (and shouldn't have to invent) an entry for it. 'window' is excluded for the same reason —
+// see SquareWindowSlot below.
+type LayoutSlot = Exclude<FurnitureSlot, 'garland' | 'window'>;
 type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
 
 /** Loosely ported from the website's room-slot-* CSS rules (app.css), then sized up a LOT
@@ -25,12 +26,6 @@ type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
  * slot instead of floating in the middle of empty letterboxed space above the floor line.
  * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
 const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
-  // Widened (not made taller) toward a square, as an experiment to see how it looks — width
-  // is a % of the scene's WIDTH and height a % of its HEIGHT, two different axes, so there's
-  // no exact percentage that guarantees a true square without measuring real pixels (like
-  // FairyLightsGarland does with useWindowDimensions below); 46% is a rough eyeball guess.
-  // Still centered over the desk (center 48%, so left = 48 - 46/2 = 25%).
-  window: { label: 'Window', top: '9%', left: '25%', width: '46%', height: '34%' },
   // Left recentered from 3% to 4.5% so the poster's horizontal center (4.5 + 21/2 = 15%)
   // lines up with the bed's center (bed spans left 0%-30%, center 15%) instead of sitting
   // slightly left of it.
@@ -71,9 +66,31 @@ const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
 // since floorStanding anchors the art to the box's BOTTOM edge — this is an unverified
 // guess at how far is safe before it visually collides with the Room/Wardrobe tab chips
 // above the scene (nothing here clips overflow), so it may need tuning after a look.
-// Nudged down very slightly after that pass (top -48% -> -46%, height unchanged) without
-// giving back the "further back"/"much taller" ground gained above.
-const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-46%', right: '2%', width: '27%', height: '96%', floorStanding: true };
+// Nudged down twice since (top -48% -> -46% -> -38%, height unchanged) without giving back
+// the "further back"/"much taller" ground gained above.
+const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-38%', right: '2%', width: '27%', height: '96%', floorStanding: true };
+
+// Two rounds of picking a width % and a height % (both against DIFFERENT axes — width against
+// the scene's width, height against its height) never actually produced a square, since there's
+// no percentage pair that guarantees a 1:1 ratio without knowing the real pixel dimensions of
+// both axes. Measuring the real screen width instead (same approach as FairyLightsGarland's
+// cellW below) and applying that single pixel value to BOTH width and height guarantees an
+// actual square regardless of device size.
+const WINDOW_TOP = '9%';
+const WINDOW_SIZE_FRACTION = 0.42; // of screen width
+const DESK_CENTER_FRACTION = 0.48; // matches the desk slot's center (left 22% + width 52% / 2)
+function SquareWindowSlot({ item, onPress }: { item: ShopItemReal; onPress: () => void }) {
+  const { width: winW } = useWindowDimensions();
+  const size = winW * WINDOW_SIZE_FRACTION;
+  const left = winW * DESK_CENTER_FRACTION - size / 2;
+  return (
+    <View style={[styles.slot, { top: WINDOW_TOP, left, width: size, height: size }]}>
+      <Pressable style={styles.slotFilled} onPress={onPress}>
+        <ItemArt item={item} fill align="mid" />
+      </Pressable>
+    </View>
+  );
+}
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
 // no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND
@@ -149,6 +166,9 @@ export default function Room() {
             const item = bySlot(slot);
             if (slot === 'garland') {
               return item ? <FairyLightsGarland key={slot} item={item} onPress={goToRoomShop} /> : null;
+            }
+            if (slot === 'window') {
+              return item ? <SquareWindowSlot key={slot} item={item} onPress={goToRoomShop} /> : null;
             }
             const layout = slot === 'lamp' && item?.id === 'clock_grandfather' ? CLOCK_LAYOUT : SLOT_LAYOUT[slot];
             return (
