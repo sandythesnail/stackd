@@ -567,7 +567,7 @@
     "price": 65,
     "viewBox": "0 0 120 45",
     "desc": "Warm and minimal.",
-    "svg": "<path d=\"M10,10 Q35,40 60,10 Q85,40 110,10\" stroke=\"#B8935E\" stroke-width=\"2\" fill=\"none\"/>\n          <circle cx=\"10\" cy=\"10\" r=\"5\" fill=\"#FFFDF5\"/>\n          <circle cx=\"60\" cy=\"10\" r=\"5\" fill=\"#FFF8E7\"/>\n          <circle cx=\"110\" cy=\"10\" r=\"5\" fill=\"#FFFDF5\"/>\n          <circle cx=\"35\" cy=\"25\" r=\"3.5\" fill=\"#FFF8E7\"/>\n          <circle cx=\"85\" cy=\"25\" r=\"3.5\" fill=\"#FFFDF5\"/>"
+    "svg": "<path d=\"M10,10 Q35,40 60,10 Q85,40 110,10\" stroke=\"#B8935E\" stroke-width=\"2\" fill=\"none\"/>\n          <circle cx=\"10\" cy=\"10\" r=\"5\" fill=\"#FFFDF5\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"60\" cy=\"10\" r=\"5\" fill=\"#FFF8E7\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"110\" cy=\"10\" r=\"5\" fill=\"#FFFDF5\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"35\" cy=\"25\" r=\"3.5\" fill=\"#FFF8E7\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"85\" cy=\"25\" r=\"3.5\" fill=\"#FFFDF5\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>"
   },
   {
     "id": "lamp_moon",
@@ -577,7 +577,7 @@
     "price": 220,
     "viewBox": "0 0 70 110",
     "desc": "Soft light for late-night budgeting.",
-    "svg": "<rect x=\"30\" y=\"90\" width=\"10\" height=\"16\" fill=\"#8A6438\"/>\n          <ellipse cx=\"35\" cy=\"106\" rx=\"20\" ry=\"4\" fill=\"#D6DFD0\"/>\n          <line x1=\"35\" y1=\"20\" x2=\"35\" y2=\"90\" stroke=\"#B8935E\" stroke-width=\"3\"/>\n          <circle cx=\"35\" cy=\"18\" r=\"18\" fill=\"#FFF6D8\"/>\n          <circle cx=\"41\" cy=\"12\" r=\"4\" fill=\"#F5E5A8\"/>\n          <circle cx=\"30\" cy=\"24\" r=\"2.5\" fill=\"#F5E5A8\"/>"
+    "svg": "<rect x=\"30\" y=\"90\" width=\"10\" height=\"16\" fill=\"#8A6438\"/>\n          <ellipse cx=\"35\" cy=\"106\" rx=\"20\" ry=\"4\" fill=\"#D6DFD0\"/>\n          <line x1=\"35\" y1=\"20\" x2=\"35\" y2=\"90\" stroke=\"#B8935E\" stroke-width=\"3\"/>\n          <circle cx=\"35\" cy=\"18\" r=\"18\" fill=\"#FFF6D8\" stroke=\"#D9D9D9\" stroke-width=\"1.5\"/>\n          <circle cx=\"41\" cy=\"12\" r=\"4\" fill=\"#F5E5A8\"/>\n          <circle cx=\"30\" cy=\"24\" r=\"2.5\" fill=\"#F5E5A8\"/>"
   },
   {
     "id": "bookshelf_finance",
@@ -610,14 +610,14 @@
     "svg": "<rect x=\"6\" y=\"8\" width=\"58\" height=\"96\" rx=\"3\" fill=\"#8A6438\"/>\n          <rect x=\"10\" y=\"12\" width=\"50\" height=\"88\" fill=\"#F0EAE0\"/>\n          <rect x=\"10\" y=\"42\" width=\"50\" height=\"4\" fill=\"#8A6438\"/>\n          <rect x=\"10\" y=\"72\" width=\"50\" height=\"4\" fill=\"#8A6438\"/>\n          <rect x=\"14\" y=\"22\" width=\"18\" height=\"20\" fill=\"#2B2E4A\"/>\n          <rect x=\"33\" y=\"20\" width=\"18\" height=\"22\" fill=\"#A62F26\"/>\n          <rect x=\"10\" y=\"64\" width=\"48\" height=\"8\" rx=\"2\" fill=\"#3A2A1E\"/>\n          <circle cx=\"26\" cy=\"60\" r=\"13\" fill=\"#1C1C1C\"/>\n          <circle cx=\"26\" cy=\"60\" r=\"9\" fill=\"none\" stroke=\"#3A3A3A\" stroke-width=\"1\"/>\n          <circle cx=\"26\" cy=\"60\" r=\"3\" fill=\"#A62F26\"/>\n          <circle cx=\"50\" cy=\"50\" r=\"3\" fill=\"#8A6438\"/>\n          <line x1=\"50\" y1=\"50\" x2=\"34\" y2=\"57\" stroke=\"#8A6438\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n          <rect x=\"14\" y=\"98\" width=\"36\" height=\"4\" rx=\"2\" fill=\"#2B2E4A\"/>\n          <rect x=\"14\" y=\"93\" width=\"36\" height=\"4\" rx=\"2\" fill=\"#A62F26\"/>\n          <rect x=\"14\" y=\"88\" width=\"36\" height=\"4\" rx=\"2\" fill=\"#4A6844\"/>\n          <rect x=\"14\" y=\"83\" width=\"36\" height=\"4\" rx=\"2\" fill=\"#C9A227\"/>"
   },
   {
-    "id": "lamp_neon",
-    "name": "Neon Dollar Sign",
+    "id": "lamp_star",
+    "name": "Star Lamp",
     "category": "room",
     "slot": "lamp",
     "price": 140,
     "viewBox": "0 0 70 110",
-    "desc": "Bright, bold, and a little extra.",
-    "svg": "<rect x=\"14\" y=\"10\" width=\"42\" height=\"76\" rx=\"6\" fill=\"#241C38\"/>\n          <rect x=\"30\" y=\"86\" width=\"10\" height=\"12\" fill=\"#8A6438\"/>\n          <ellipse cx=\"35\" cy=\"98\" rx=\"18\" ry=\"4\" fill=\"#D6DFD0\"/>\n          <path d=\"M42,24 C42,18 28,18 28,25 C28,32 42,34 42,41 C42,48 28,48 28,42\" stroke=\"#FF4FD8\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <line x1=\"35\" y1=\"16\" x2=\"35\" y2=\"70\" stroke=\"#FF4FD8\" stroke-width=\"4\" stroke-linecap=\"round\"/>\n          <path d=\"M42,24 C42,18 28,18 28,25 C28,32 42,34 42,41 C42,48 28,48 28,42\" stroke=\"#FFD6F5\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\" opacity=\"0.7\"/>\n          <line x1=\"35\" y1=\"16\" x2=\"35\" y2=\"70\" stroke=\"#FFD6F5\" stroke-width=\"1.5\" stroke-linecap=\"round\" opacity=\"0.7\"/>"
+    "desc": "The Moon Lamp's night-sky sibling.",
+    "svg": "<rect x=\"30\" y=\"90\" width=\"10\" height=\"16\" fill=\"#8A6438\"/>\n          <ellipse cx=\"35\" cy=\"106\" rx=\"20\" ry=\"4\" fill=\"#D6DFD0\"/>\n          <line x1=\"35\" y1=\"20\" x2=\"35\" y2=\"90\" stroke=\"#B8935E\" stroke-width=\"3\"/>\n          <path d=\"M35,0 L39.41,11.93 L52.12,12.44 L42.13,20.32 L45.58,32.56 L35,25.5 L24.42,32.56 L27.87,20.32 L17.88,12.44 L30.59,11.93 Z\" fill=\"#FFF6D8\" stroke=\"#D9D9D9\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/>\n          <circle cx=\"41\" cy=\"12\" r=\"2.5\" fill=\"#F5E5A8\"/>\n          <circle cx=\"30\" cy=\"24\" r=\"2\" fill=\"#F5E5A8\"/>"
   },
   {
     "id": "window_sunny",

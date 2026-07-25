@@ -25,9 +25,14 @@ type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
  * slot instead of floating in the middle of empty letterboxed space above the floor line.
  * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
 const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
-  // Both nudged down from top 4% to 10%, moving the window and poster lower on the wall.
-  window: { label: 'Window', top: '10%', left: '24%', width: '48%', height: '40%' },
-  wall: { label: 'Wall art', top: '10%', left: '3%', width: '21%', height: '41%' },
+  // Both nudged back up from top 10% to 6%, and the window shortened (40% -> 34% height) so
+  // it doesn't hang as low on the wall — together this frees up clearance so the poster can
+  // sit right above the bed instead of crowding the window/ceiling.
+  window: { label: 'Window', top: '6%', left: '24%', width: '48%', height: '34%' },
+  // Left recentered from 3% to 4.5% so the poster's horizontal center (4.5 + 21/2 = 15%)
+  // lines up with the bed's center (bed spans left 0%-30%, center 15%) instead of sitting
+  // slightly left of it.
+  wall: { label: 'Wall art', top: '6%', left: '4.5%', width: '21%', height: '41%' },
   lamp: { label: 'Lamp', top: '2%', right: '2%', width: '20%', height: '54%', floorStanding: true },
   // Moved down to the floor and over to Hammy's left flank (was tucked in the back-right
   // corner behind the lamp) so it reads as sitting right beside Hammy in the foreground.
