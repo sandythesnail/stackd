@@ -25,10 +25,11 @@ type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
  * slot instead of floating in the middle of empty letterboxed space above the floor line.
  * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
 const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
-  // Width/left now matched exactly to the desk slot below (left 22%, width 52%) so a window
-  // sits directly above the desk instead of just roughly overlapping it, and nudged down a
-  // touch further (6% -> 9%) so it lines up with the poster instead of sitting above it.
-  window: { label: 'Window', top: '9%', left: '22%', width: '52%', height: '34%' },
+  // Width previously matched the desk exactly (52%) but that read as too long — narrowed a
+  // lot further (52% -> 30%) while keeping it centered over the same spot (desk center =
+  // 22 + 52/2 = 48%, so left = 48 - 30/2 = 33%) so it still sits above the desk, just as a
+  // narrower window rather than one spanning the desk's full width.
+  window: { label: 'Window', top: '9%', left: '33%', width: '30%', height: '34%' },
   // Left recentered from 3% to 4.5% so the poster's horizontal center (4.5 + 21/2 = 15%)
   // lines up with the bed's center (bed spans left 0%-30%, center 15%) instead of sitting
   // slightly left of it.
@@ -61,11 +62,15 @@ const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
 // The Grandfather Clock (clock_grandfather) overrides the standard `lamp` box entirely —
 // it's meant to read as a genuinely bigger, statement piece of furniture (it's also the
 // most expensive item on the whole farm), not just another same-sized lamp-slot occupant.
-// Grown in both directions from the normal lamp box rather than just scaled up in place:
-// a bit further up (top 2% -> -6%) and quite a bit further down into the floor (bottom edge
-// 56% -> 66%), so the extra size reads as height AND a bigger footprint planted further
-// forward, not just the same object stretched toward the ceiling.
-const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-6%', right: '2%', width: '27%', height: '72%', floorStanding: true };
+// Previous pass grew it forward into the floor (bottom edge 56% -> 66%) to read as bigger,
+// but that's the opposite of "further back" — pulled the bottom edge back up to right at
+// the wall/floor seam (48%, floorZone's own top) instead, so it reads as standing back
+// against the wall rather than jutting into the foreground, and went much taller (72% ->
+// 96% height) on top of that. Both changes push `top` a lot further negative (-6% -> -48%)
+// since floorStanding anchors the art to the box's BOTTOM edge — this is an unverified
+// guess at how far is safe before it visually collides with the Room/Wardrobe tab chips
+// above the scene (nothing here clips overflow), so it may need tuning after a look.
+const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-48%', right: '2%', width: '27%', height: '96%', floorStanding: true };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
 // no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND
