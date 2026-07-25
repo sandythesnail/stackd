@@ -316,8 +316,8 @@
     "wallCss": "background-color: var(--pink-pale); background-image: radial-gradient(circle, rgba(212,137,158,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;"
   },
   {
-    "id": "wallpaper_denim_dot",
-    "name": "Denim Dot Wallpaper",
+    "id": "wallpaper_blue_dot",
+    "name": "Blue Dot Wallpaper",
     "category": "room",
     "slot": "wallpaper",
     "price": 30,
@@ -352,8 +352,8 @@
     "wallCss": "background: repeating-linear-gradient(45deg, #F2CDD7, #F2CDD7 10px, #FBF0F3 10px, #FBF0F3 20px);"
   },
   {
-    "id": "wallpaper_denim_stripe",
-    "name": "Denim Stripe Wallpaper",
+    "id": "wallpaper_blue_stripe",
+    "name": "Blue Stripe Wallpaper",
     "category": "room",
     "slot": "wallpaper",
     "price": 55,
@@ -441,7 +441,7 @@
   },
   {
     "id": "rug_blue",
-    "name": "Denim Rug",
+    "name": "Blue Rug",
     "category": "room",
     "slot": "rug",
     "price": 60,
@@ -477,7 +477,7 @@
     "price": 55,
     "viewBox": "0 0 80 120",
     "desc": "Low maintenance, unlike your budget last semester.",
-    "svg": "<path d=\"M30,90 L26,116 L54,116 L50,90 Z\" fill=\"#C87848\"/>\n          <rect x=\"28\" y=\"86\" width=\"24\" height=\"8\" fill=\"#A56238\"/>\n          <path d=\"M40,90 C34,70 20,64 12,50\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M40,90 C44,66 60,58 68,44\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M40,90 C40,64 40,50 40,30\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <ellipse cx=\"12\" cy=\"48\" rx=\"12\" ry=\"8\" fill=\"#7EC96A\" transform=\"rotate(-30 12 48)\"/>\n          <ellipse cx=\"68\" cy=\"42\" rx=\"12\" ry=\"8\" fill=\"#7EC96A\" transform=\"rotate(30 68 42)\"/>\n          <ellipse cx=\"40\" cy=\"26\" rx=\"10\" ry=\"14\" fill=\"#8FDD78\"/>"
+    "svg": "<path d=\"M30,90 L26,116 L54,116 L50,90 Z\" fill=\"#C87848\"/>\n          <rect x=\"28\" y=\"86\" width=\"24\" height=\"8\" fill=\"#A56238\"/>\n          <path d=\"M40,87 C34,67 20,61 12,47\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M40,87 C44,63 60,55 68,41\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M40,87 C40,61 40,47 40,27\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <ellipse cx=\"12\" cy=\"45\" rx=\"12\" ry=\"8\" fill=\"#7EC96A\" transform=\"rotate(-30 12 45)\"/>\n          <ellipse cx=\"68\" cy=\"39\" rx=\"12\" ry=\"8\" fill=\"#7EC96A\" transform=\"rotate(30 68 39)\"/>\n          <ellipse cx=\"40\" cy=\"23\" rx=\"10\" ry=\"14\" fill=\"#8FDD78\"/>"
   },
   {
     "id": "plant_succulent",
@@ -487,37 +487,47 @@
     "price": 50,
     "viewBox": "0 0 80 120",
     "desc": "A little cluster of low-key vibes.",
-    "svg": "<path d=\"M22,96 L18,116 L62,116 L58,96 Z\" fill=\"#D68A54\"/>\n          <rect x=\"20\" y=\"92\" width=\"40\" height=\"8\" fill=\"#B06A38\"/>\n          <ellipse cx=\"30\" cy=\"82\" rx=\"12\" ry=\"9\" fill=\"#7EC96A\"/>\n          <ellipse cx=\"50\" cy=\"80\" rx=\"13\" ry=\"10\" fill=\"#6FAE5C\"/>\n          <ellipse cx=\"40\" cy=\"70\" rx=\"10\" ry=\"12\" fill=\"#8FDD78\"/>"
-  },
-  {
-    "id": "plant_fern",
-    "name": "Leafy Fern",
-    "category": "room",
-    "slot": "plant",
-    "price": 55,
-    "viewBox": "0 0 80 120",
-    "desc": "Growing steadily, like your savings.",
-    "svg": "<path d=\"M30,90 L26,116 L54,116 L50,90 Z\" fill=\"#C87848\"/>\n          <rect x=\"28\" y=\"86\" width=\"24\" height=\"8\" fill=\"#A56238\"/>\n          <path d=\"M40,88 C40,60 40,40 40,18\" stroke=\"#4A7840\" stroke-width=\"3\" fill=\"none\"/>\n          <path d=\"M40,80 L20,66 M40,80 L60,66 M40,64 L18,52 M40,64 L62,52 M40,48 L22,38 M40,48 L58,38 M40,32 L26,24 M40,32 L54,24\" stroke=\"#5E9950\" stroke-width=\"3\" stroke-linecap=\"round\"/>"
-  },
-  {
-    "id": "plant_snake",
-    "name": "Snake Plant",
-    "category": "room",
-    "slot": "plant",
-    "price": 55,
-    "viewBox": "0 0 80 120",
-    "desc": "Nearly impossible to kill.",
-    "svg": "<path d=\"M30,90 L26,116 L54,116 L50,90 Z\" fill=\"#C87848\"/>\n          <rect x=\"28\" y=\"86\" width=\"24\" height=\"8\" fill=\"#A56238\"/>\n          <path d=\"M34,90 C33,64 32,38 30,16 L36,16 C36,38 36,64 38,90 Z\" fill=\"#4A7840\"/>\n          <path d=\"M40,90 C40,60 40,32 40,12 L46,12 C45,32 44,60 44,90 Z\" fill=\"#5E9950\"/>\n          <path d=\"M46,90 C47,64 48,42 50,22 L56,22 C54,42 52,64 52,90 Z\" fill=\"#4A7840\"/>"
+    "svg": "<path d=\"M22,96 L18,116 L62,116 L58,96 Z\" fill=\"#D68A54\"/>\n          <rect x=\"20\" y=\"92\" width=\"40\" height=\"8\" fill=\"#B06A38\"/>\n          <ellipse cx=\"30\" cy=\"88\" rx=\"12\" ry=\"9\" fill=\"#7EC96A\"/>\n          <ellipse cx=\"50\" cy=\"86\" rx=\"13\" ry=\"10\" fill=\"#6FAE5C\"/>\n          <ellipse cx=\"40\" cy=\"76\" rx=\"10\" ry=\"12\" fill=\"#8FDD78\"/>"
   },
   {
     "id": "bed_cozy",
-    "name": "Cozy Bed",
+    "name": "Cozy Blue Bed",
     "category": "room",
     "slot": "bed",
     "price": 140,
     "viewBox": "0 0 100 130",
     "desc": "Every good saver needs good rest.",
     "svg": "<rect x=\"10\" y=\"6\" width=\"80\" height=\"34\" rx=\"12\" fill=\"#4A6E8F\"/>\n          <rect x=\"4\" y=\"34\" width=\"92\" height=\"80\" rx=\"10\" fill=\"#6E93B8\"/>\n          <rect x=\"4\" y=\"50\" width=\"92\" height=\"14\" fill=\"#C7DCEC\"/>\n          <rect x=\"22\" y=\"16\" width=\"56\" height=\"24\" rx=\"10\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"2\"/>"
+  },
+  {
+    "id": "bed_sage",
+    "name": "Sage Bed",
+    "category": "room",
+    "slot": "bed",
+    "price": 140,
+    "viewBox": "0 0 100 130",
+    "desc": "Every good saver needs good rest.",
+    "svg": "<rect x=\"10\" y=\"6\" width=\"80\" height=\"34\" rx=\"12\" fill=\"#4A6844\"/>\n          <rect x=\"4\" y=\"34\" width=\"92\" height=\"80\" rx=\"10\" fill=\"#B2C9AE\"/>\n          <rect x=\"4\" y=\"50\" width=\"92\" height=\"14\" fill=\"#E0EAE0\"/>\n          <rect x=\"22\" y=\"16\" width=\"56\" height=\"24\" rx=\"10\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"2\"/>"
+  },
+  {
+    "id": "bed_blush",
+    "name": "Blush Bed",
+    "category": "room",
+    "slot": "bed",
+    "price": 140,
+    "viewBox": "0 0 100 130",
+    "desc": "Every good saver needs good rest.",
+    "svg": "<rect x=\"10\" y=\"6\" width=\"80\" height=\"34\" rx=\"12\" fill=\"#B5607A\"/>\n          <rect x=\"4\" y=\"34\" width=\"92\" height=\"80\" rx=\"10\" fill=\"#F2CDD7\"/>\n          <rect x=\"4\" y=\"50\" width=\"92\" height=\"14\" fill=\"#FBF0F3\"/>\n          <rect x=\"22\" y=\"16\" width=\"56\" height=\"24\" rx=\"10\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"2\"/>"
+  },
+  {
+    "id": "bed_cherry",
+    "name": "Cherry Bed",
+    "category": "room",
+    "slot": "bed",
+    "price": 140,
+    "viewBox": "0 0 100 130",
+    "desc": "Every good saver needs good rest.",
+    "svg": "<rect x=\"10\" y=\"6\" width=\"80\" height=\"34\" rx=\"12\" fill=\"#A62F26\"/>\n          <rect x=\"4\" y=\"34\" width=\"92\" height=\"80\" rx=\"10\" fill=\"#DD6D5E\"/>\n          <rect x=\"4\" y=\"50\" width=\"92\" height=\"14\" fill=\"#F6E0DD\"/>\n          <rect x=\"22\" y=\"16\" width=\"56\" height=\"24\" rx=\"10\" fill=\"#FFFFFF\" stroke=\"#D6DFD0\" stroke-width=\"2\"/>"
   },
   {
     "id": "desk_study",
@@ -541,13 +551,23 @@
   },
   {
     "id": "lamp_fairy",
-    "name": "Fairy Lights",
+    "name": "Colorful String Lights",
     "category": "room",
     "slot": "garland",
     "price": 65,
     "viewBox": "0 0 120 45",
     "desc": "Twinkly and financially responsible.",
     "svg": "<path d=\"M10,10 Q35,40 60,10 Q85,40 110,10\" stroke=\"#B8935E\" stroke-width=\"2\" fill=\"none\"/>\n          <circle cx=\"10\" cy=\"10\" r=\"5\" fill=\"#FFE45A\"/>\n          <circle cx=\"60\" cy=\"10\" r=\"5\" fill=\"#FF96B8\"/>\n          <circle cx=\"110\" cy=\"10\" r=\"5\" fill=\"#8FDD78\"/>\n          <circle cx=\"35\" cy=\"25\" r=\"3.5\" fill=\"#FF96B8\"/>\n          <circle cx=\"85\" cy=\"25\" r=\"3.5\" fill=\"#FFE45A\"/>"
+  },
+  {
+    "id": "string_lights_white",
+    "name": "White String Lights",
+    "category": "room",
+    "slot": "garland",
+    "price": 65,
+    "viewBox": "0 0 120 45",
+    "desc": "Warm and minimal.",
+    "svg": "<path d=\"M10,10 Q35,40 60,10 Q85,40 110,10\" stroke=\"#B8935E\" stroke-width=\"2\" fill=\"none\"/>\n          <circle cx=\"10\" cy=\"10\" r=\"5\" fill=\"#FFFDF5\"/>\n          <circle cx=\"60\" cy=\"10\" r=\"5\" fill=\"#FFF8E7\"/>\n          <circle cx=\"110\" cy=\"10\" r=\"5\" fill=\"#FFFDF5\"/>\n          <circle cx=\"35\" cy=\"25\" r=\"3.5\" fill=\"#FFF8E7\"/>\n          <circle cx=\"85\" cy=\"25\" r=\"3.5\" fill=\"#FFFDF5\"/>"
   },
   {
     "id": "lamp_moon",
@@ -588,6 +608,16 @@
     "viewBox": "0 0 70 110",
     "desc": "Analog vibes for a digital budget.",
     "svg": "<rect x=\"6\" y=\"8\" width=\"58\" height=\"96\" rx=\"3\" fill=\"#8A6438\"/>\n          <rect x=\"10\" y=\"12\" width=\"50\" height=\"88\" fill=\"#F0EAE0\"/>\n          <rect x=\"10\" y=\"42\" width=\"50\" height=\"4\" fill=\"#8A6438\"/>\n          <rect x=\"10\" y=\"72\" width=\"50\" height=\"4\" fill=\"#8A6438\"/>\n          <rect x=\"14\" y=\"22\" width=\"18\" height=\"20\" fill=\"#2B2E4A\"/>\n          <rect x=\"33\" y=\"20\" width=\"18\" height=\"22\" fill=\"#A62F26\"/>\n          <rect x=\"10\" y=\"64\" width=\"48\" height=\"8\" rx=\"2\" fill=\"#3A2A1E\"/>\n          <circle cx=\"26\" cy=\"60\" r=\"13\" fill=\"#1C1C1C\"/>\n          <circle cx=\"26\" cy=\"60\" r=\"9\" fill=\"none\" stroke=\"#3A3A3A\" stroke-width=\"1\"/>\n          <circle cx=\"26\" cy=\"60\" r=\"3\" fill=\"#A62F26\"/>\n          <circle cx=\"50\" cy=\"50\" r=\"3\" fill=\"#8A6438\"/>\n          <line x1=\"50\" y1=\"50\" x2=\"34\" y2=\"57\" stroke=\"#8A6438\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n          <rect x=\"14\" y=\"98\" width=\"36\" height=\"4\" rx=\"2\" fill=\"#2B2E4A\"/>\n          <rect x=\"14\" y=\"93\" width=\"36\" height=\"4\" rx=\"2\" fill=\"#A62F26\"/>\n          <rect x=\"14\" y=\"88\" width=\"36\" height=\"4\" rx=\"2\" fill=\"#4A6844\"/>\n          <rect x=\"14\" y=\"83\" width=\"36\" height=\"4\" rx=\"2\" fill=\"#C9A227\"/>"
+  },
+  {
+    "id": "lamp_neon",
+    "name": "Neon Dollar Sign",
+    "category": "room",
+    "slot": "lamp",
+    "price": 140,
+    "viewBox": "0 0 70 110",
+    "desc": "Bright, bold, and a little extra.",
+    "svg": "<rect x=\"14\" y=\"10\" width=\"42\" height=\"76\" rx=\"6\" fill=\"#241C38\"/>\n          <rect x=\"30\" y=\"86\" width=\"10\" height=\"12\" fill=\"#8A6438\"/>\n          <ellipse cx=\"35\" cy=\"98\" rx=\"18\" ry=\"4\" fill=\"#D6DFD0\"/>\n          <path d=\"M42,24 C42,18 28,18 28,25 C28,32 42,34 42,41 C42,48 28,48 28,42\" stroke=\"#FF4FD8\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <line x1=\"35\" y1=\"16\" x2=\"35\" y2=\"70\" stroke=\"#FF4FD8\" stroke-width=\"4\" stroke-linecap=\"round\"/>\n          <path d=\"M42,24 C42,18 28,18 28,25 C28,32 42,34 42,41 C42,48 28,48 28,42\" stroke=\"#FFD6F5\" stroke-width=\"1.5\" fill=\"none\" stroke-linecap=\"round\" opacity=\"0.7\"/>\n          <line x1=\"35\" y1=\"16\" x2=\"35\" y2=\"70\" stroke=\"#FFD6F5\" stroke-width=\"1.5\" stroke-linecap=\"round\" opacity=\"0.7\"/>"
   },
   {
     "id": "window_sunny",
