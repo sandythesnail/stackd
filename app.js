@@ -15765,7 +15765,7 @@ const SHOP_ITEMS = [
           <ellipse cx="100" cy="54" rx="4" ry="3" fill="#1C1C1C"/>`
   },
   {
-    id: 'lamp_fairy', name: 'Colorful String Lights', category: 'room', slot: 'lamp', price: 65,
+    id: 'lamp_fairy', name: 'Colorful String Lights', category: 'room', slot: 'garland', price: 65,
     // Natively horizontal now (was a tall vertical strand, viewBox 0 0 45 120) — the icon
     // itself used to only look right after mobile's room applied a 90° rotation just for
     // that one screen (see room.tsx's FairyLightsGarland); everywhere else (shop listing,
@@ -15784,7 +15784,7 @@ const SHOP_ITEMS = [
           <circle cx="85" cy="25" r="3.5" fill="#FFE45A"/>`
   },
   {
-    id: 'string_lights_white', name: 'White String Lights', category: 'room', slot: 'lamp', price: 65,
+    id: 'string_lights_white', name: 'White String Lights', category: 'room', slot: 'garland', price: 65,
     viewBox: '0 0 120 45',
     desc: 'Warm and minimal.',
     svg: `<path d="M10,10 Q35,40 60,10 Q85,40 110,10" stroke="#B8935E" stroke-width="2" fill="none"/>
@@ -15796,7 +15796,10 @@ const SHOP_ITEMS = [
   },
   {
     id: 'lamp_moon', name: 'Moon Lamp', category: 'room', slot: 'lamp', price: 165,
-    viewBox: '0 0 70 110',
+    // min-y raised to -3 (was 0, height grown to match) purely to give the moon's top edge
+    // (circle cy=18 r=18 -> top at y=0) headroom for its own stroke-width — at min-y 0 the
+    // outline's outer half sat exactly on the SVG's default clip boundary and got clipped.
+    viewBox: '0 -3 70 113',
     desc: 'Soft light for late-night budgeting.',
     // Stand recolored from #8A6438/#B8935E to #7A5230 to match desk_study's surface brown,
     // and a light-grey outline added to the moon itself.
@@ -16381,7 +16384,7 @@ let state = {
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
   coins: 0, diamonds: 0, ownedItems: [], equippedItems: [],
   dailyLoginLog: {}, claimedBadgeRewards: [], referralClaimAttempted: false,
-  ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null },
+  ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null, garland: null },
   metHammy: false, hasSeenOnboardingTour: false,
   questProgress: {}, questBossesWon: [],
   onboardingSurvey: { completed: false, moduleFamiliarity: {}, focusGoals: [], trackId: null, completedAt: null },
@@ -18208,7 +18211,7 @@ function handleShopAction(itemId) {
   const isDiamond = item.currency === 'diamond';
 
   if (item.slot) {
-    if (!state.equippedRoom) state.equippedRoom = { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null };
+    if (!state.equippedRoom) state.equippedRoom = { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null, garland: null };
     const owned = (state.ownedRoomItems || []).includes(itemId);
     const equipped = state.equippedRoom[item.slot] === itemId;
     if (equipped) {
@@ -18295,10 +18298,7 @@ function renderRoomPage() {
   scene.innerHTML = `
     <div class="room-backdrop">
       <div class="room-wall-zone" id="room-wall-zone" style="${wallpaper ? wallpaper.wallCss : ''}"></div>
-      <div class="room-title-overlay">
-        <h1 class="room-title">Hammy's Room</h1>
-        <span class="room-subtitle">Decorate with items from the Shop</span>
-      </div>
+      ${slotBlock('garland', 'Fairy lights')}
       ${slotBlock('window', 'Window')}
       ${slotBlock('wall', 'Wall art')}
       ${slotBlock('lamp', 'Lamp')}
