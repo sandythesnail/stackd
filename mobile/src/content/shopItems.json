@@ -557,7 +557,7 @@
     "price": 260,
     "viewBox": "0 0 70 110",
     "desc": "Soft light for late-night budgeting.",
-    "svg": "<rect x=\"30\" y=\"90\" width=\"10\" height=\"16\" fill=\"#8A6438\"/>\n          <ellipse cx=\"35\" cy=\"106\" rx=\"20\" ry=\"4\" fill=\"#D6DFD0\"/>\n          <line x1=\"35\" y1=\"20\" x2=\"35\" y2=\"90\" stroke=\"#B8935E\" stroke-width=\"3\"/>\n          <circle cx=\"35\" cy=\"18\" r=\"18\" fill=\"#FFF6D8\" stroke=\"#D9D9D9\" stroke-width=\"1.5\"/>\n          <circle cx=\"41\" cy=\"12\" r=\"4\" fill=\"#F5E5A8\"/>\n          <circle cx=\"30\" cy=\"24\" r=\"2.5\" fill=\"#F5E5A8\"/>"
+    "svg": "<rect x=\"30\" y=\"90\" width=\"10\" height=\"16\" fill=\"#7A5230\"/>\n          <ellipse cx=\"35\" cy=\"106\" rx=\"20\" ry=\"4\" fill=\"#D6DFD0\"/>\n          <line x1=\"35\" y1=\"20\" x2=\"35\" y2=\"90\" stroke=\"#7A5230\" stroke-width=\"3\"/>\n          <circle cx=\"35\" cy=\"18\" r=\"18\" fill=\"#FFF6D8\" stroke=\"#D9D9D9\" stroke-width=\"1.5\"/>\n          <circle cx=\"41\" cy=\"12\" r=\"4\" fill=\"#F5E5A8\"/>\n          <circle cx=\"30\" cy=\"24\" r=\"2.5\" fill=\"#F5E5A8\"/>"
   },
   {
     "id": "clock_grandfather",
