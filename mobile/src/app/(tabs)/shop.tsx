@@ -232,7 +232,7 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
           )
         ) : equipped ? (
           <View style={[styles.statusRow, styles.statusOwned]}>
-            <Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ {isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'}</Txt>
+            <Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ {isWallpaper ? 'Applied' : 'Placed'}</Txt>
           </View>
         ) : owned ? (
           <View style={[styles.statusRow, styles.statusOwned]}><Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>Owned</Txt></View>

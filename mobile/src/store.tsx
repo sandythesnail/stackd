@@ -612,15 +612,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (!item || !item.slot) return false;
         const slot = item.slot;
         const owned = state.ownedRoomItems.includes(itemId);
-        const equippedHere = state.equippedRoom[slot] === itemId;
+        // Slot-agnostic on purpose, unlike a plain `state.equippedRoom[slot] === itemId`
+        // check: 'lamp_fairy' (Fairy Lights) lives under slot 'lamp' in the WEBSITE's own
+        // catalog but was reassigned to mobile's own 'garland' slot (the website has no
+        // garland concept at all). A web sync writes that item's equip value under the key
+        // the WEBSITE thinks it belongs to ('lamp'), and normalizeRoom (webState.ts) copies
+        // equippedRoom key-for-key, so the id can end up parked under the stale 'lamp' key
+        // on mobile. `isEquipped` (slot-agnostic, checks every value) then reports it as
+        // equipped, but a slot-scoped check here would look at 'garland', find nothing, and
+        // "equip" it there too instead of ever clearing it — the button re-equips on every
+        // tap and can never reach the unequipped state. Checking/clearing every slot the id
+        // is actually sitting in fixes that regardless of which key it landed under.
+        const equippedHere = Object.values(state.equippedRoom).includes(itemId);
         const isDiamond = item.currency === 'diamond';
+        const clearItem = (room: typeof state.equippedRoom) =>
+          Object.fromEntries(Object.entries(room).map(([k, v]) => [k, v === itemId ? null : v])) as typeof state.equippedRoom;
 
         if (equippedHere) {
-          setState((s) => applyAndReport(s, { ...s, equippedRoom: { ...s.equippedRoom, [slot]: null } }, setNewAchievementIds));
+          setState((s) => applyAndReport(s, { ...s, equippedRoom: clearItem(s.equippedRoom) }, setNewAchievementIds));
           return true;
         }
         if (owned) {
-          setState((s) => applyAndReport(s, { ...s, equippedRoom: { ...s.equippedRoom, [slot]: itemId } }, setNewAchievementIds));
+          setState((s) => applyAndReport(s, { ...s, equippedRoom: { ...clearItem(s.equippedRoom), [slot]: itemId } }, setNewAchievementIds));
           return true;
         }
         const balance = isDiamond ? state.diamonds : state.coins;
@@ -630,7 +643,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           coins: isDiamond ? s.coins : s.coins - item.price,
           diamonds: isDiamond ? s.diamonds - item.price : s.diamonds,
           ownedRoomItems: [...s.ownedRoomItems, itemId],
-          equippedRoom: { ...s.equippedRoom, [slot]: itemId },
+          equippedRoom: { ...clearItem(s.equippedRoom), [slot]: itemId },
         }, setNewAchievementIds));
         return true;
       },

@@ -116,11 +116,11 @@ export default function ShopItemModal() {
     buttonLabel = `🎁 Only from the ${mysteryBoxNameFor(item.mysteryPool!)}`;
     buttonDisabled = true;
   } else if (equipped) {
-    buttonLabel = 'Unequip';
+    buttonLabel = 'Unplace';
     buttonDisabled = false;
   } else if (owned) {
     const noFreeSlot = !item.slot && state.equippedItems.length >= MAX_EQUIPPED_ITEMS;
-    buttonLabel = noFreeSlot ? 'Equip (unequip something first)' : 'Equip';
+    buttonLabel = noFreeSlot ? 'Place (unplace something first)' : 'Place';
     buttonDisabled = noFreeSlot;
   } else {
     buttonLabel = `Buy for ${item.price} ${currency}${item.price === 1 ? '' : 's'}`;
