@@ -67,9 +67,10 @@ const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
 // guess at how far is safe before it visually collides with the Room/Wardrobe tab chips
 // above the scene (nothing here clips overflow), so it may need tuning after a look.
 // Nudged down twice since (top -48% -> -46% -> -38%, height unchanged), then grown much
-// taller twice more (height 96% -> 130% -> 160%) — keeping the same bottom edge (top+height
-// = 58%) each time so this doesn't undo the "move down" nudges, only extends further upward.
-const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-102%', right: '2%', width: '27%', height: '160%', floorStanding: true };
+// taller three times more (height 96% -> 130% -> 160% -> 210%) — keeping the same bottom
+// edge (top+height = 58%) each time so this doesn't undo the "move down" nudges, only
+// extends further upward. At this point the box is more than twice the scene's own height.
+const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-152%', right: '2%', width: '27%', height: '210%', floorStanding: true };
 
 // Two rounds of picking a width % and a height % (both against DIFFERENT axes — width against
 // the scene's width, height against its height) never actually produced a square, since there's

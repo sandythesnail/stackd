@@ -24,7 +24,7 @@ import { MODULE_SOURCES } from '@/references';
  * copy-to-clipboard. */
 export default function Settings() {
   const router = useRouter();
-  const { state, level, tierName, resetProgress, debugSimulateNewDay, devOwnEverything } = useStore();
+  const { state, level, tierName, resetProgress, debugSimulateNewDay, devOwnEverything, devAddCoins } = useStore();
   const { startTour } = useOnboardingTour();
 
   const replayTour = () => {
@@ -72,6 +72,12 @@ export default function Settings() {
             title="Own everything (dev)"
             sub="Grants every Furniture Farm & Porky's Boutique item — doesn't auto-equip any of it"
             onPress={devOwnEverything}
+          />
+          <Row
+            icon="plus-circle"
+            title="Add 1,000 coins (dev)"
+            sub={`Balance: ${state.coins}`}
+            onPress={() => devAddCoins(1000)}
           />
           {authEnabled ? (
             <ClerkSignOutRow />

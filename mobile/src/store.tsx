@@ -439,6 +439,9 @@ type Ctx = {
    * 'reward' category (achievement-earned, not part of either shop tab, and not wired to
    * ownedItems by any real code path today). */
   devOwnEverything: () => void;
+  /** Dev-only: credits `amount` coins, for testing purchases (the Grandfather Clock alone
+   * is 320) without grinding lessons for XP-driven coin rewards. */
+  devAddCoins: (amount: number) => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
@@ -930,6 +933,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ownedItems: Array.from(new Set([...s.ownedItems, ...wearableIds])),
           ownedRoomItems: Array.from(new Set([...s.ownedRoomItems, ...roomIds])),
         }));
+      },
+
+      devAddCoins: (amount) => {
+        setState((s) => ({ ...s, coins: s.coins + amount }));
       },
     };
   }, [state, hydrated, dailyLoginBanner, newAchievementIds, pendingStreakDiamonds]);
