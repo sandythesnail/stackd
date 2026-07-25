@@ -30,7 +30,12 @@ const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
   // lines up with the bed's center (bed spans left 0%-30%, center 15%) instead of sitting
   // slightly left of it.
   wall: { label: 'Wall art', top: '6%', left: '4.5%', width: '21%', height: '41%' },
-  lamp: { label: 'Lamp', top: '2%', right: '2%', width: '20%', height: '54%', floorStanding: true },
+  // Right is 3%, not the naive-looking 2% — the desk's right edge sits at 22 + 52 = 74%, so
+  // the gap between the desk and the screen's right edge spans 74%-100% (26% wide); centering
+  // this 20%-wide box in that gap means (26 - 20) / 2 = 3% of leftover space on each side, i.e.
+  // right: 3%. (The Grandfather Clock's own CLOCK_LAYOUT below is wider than that 26% gap on
+  // its own, so it isn't part of this — it was never meant to fit inside it in the first place.)
+  lamp: { label: 'Lamp', top: '2%', right: '3%', width: '20%', height: '54%', floorStanding: true },
   // Moved down to the floor and over to Hammy's left flank (was tucked in the back-right
   // corner behind the lamp) so it reads as sitting right beside Hammy in the foreground.
   plant: { label: 'Plant', bottom: '6%', left: '14%', width: '17%', height: '24%', floorStanding: true },
