@@ -25,11 +25,12 @@ type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
  * slot instead of floating in the middle of empty letterboxed space above the floor line.
  * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
 const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
-  // Width previously matched the desk exactly (52%) but that read as too long — narrowed a
-  // lot further (52% -> 30%) while keeping it centered over the same spot (desk center =
-  // 22 + 52/2 = 48%, so left = 48 - 30/2 = 33%) so it still sits above the desk, just as a
-  // narrower window rather than one spanning the desk's full width.
-  window: { label: 'Window', top: '9%', left: '33%', width: '30%', height: '34%' },
+  // Widened (not made taller) toward a square, as an experiment to see how it looks — width
+  // is a % of the scene's WIDTH and height a % of its HEIGHT, two different axes, so there's
+  // no exact percentage that guarantees a true square without measuring real pixels (like
+  // FairyLightsGarland does with useWindowDimensions below); 46% is a rough eyeball guess.
+  // Still centered over the desk (center 48%, so left = 48 - 46/2 = 25%).
+  window: { label: 'Window', top: '9%', left: '25%', width: '46%', height: '34%' },
   // Left recentered from 3% to 4.5% so the poster's horizontal center (4.5 + 21/2 = 15%)
   // lines up with the bed's center (bed spans left 0%-30%, center 15%) instead of sitting
   // slightly left of it.
@@ -70,7 +71,9 @@ const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
 // since floorStanding anchors the art to the box's BOTTOM edge — this is an unverified
 // guess at how far is safe before it visually collides with the Room/Wardrobe tab chips
 // above the scene (nothing here clips overflow), so it may need tuning after a look.
-const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-48%', right: '2%', width: '27%', height: '96%', floorStanding: true };
+// Nudged down very slightly after that pass (top -48% -> -46%, height unchanged) without
+// giving back the "further back"/"much taller" ground gained above.
+const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-46%', right: '2%', width: '27%', height: '96%', floorStanding: true };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
 // no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND
