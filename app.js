@@ -15516,7 +15516,6 @@ const SHOP_ITEMS = [
           <path d="M 8 82 Q 60 72 112 82 L 109 94 Q 60 84 11 94 Z" fill="rgba(255,255,255,0.22)"/>
           <path d="M 8 82 Q 60 96 112 82" stroke="#3D1470" stroke-width="1" fill="none" opacity="0.4"/>
           <path d="M 30 88 L 34 128" stroke="#EEDCFF" stroke-width="1.2" opacity="0.4"/>
-          <path d="M 60 84 L 60 130" stroke="#EEDCFF" stroke-width="1.2" opacity="0.4"/>
           <path d="M 90 88 L 86 128" stroke="#EEDCFF" stroke-width="1.2" opacity="0.4"/>`
   },
   {
@@ -15633,19 +15632,6 @@ const SHOP_ITEMS = [
           <ellipse cx="110" cy="40" rx="22" ry="5.5" fill="var(--pink-light)"/>`
   },
   {
-    id: 'plant_pothos', name: 'Potted Pothos', category: 'room', slot: 'plant', price: 55,
-    viewBox: '0 0 80 120',
-    desc: 'Low maintenance, unlike your budget last semester.',
-    svg: `<path d="M30,90 L26,116 L54,116 L50,90 Z" fill="#C87848"/>
-          <rect x="28" y="86" width="24" height="8" fill="#A56238"/>
-          <path d="M40,90 C34,70 20,64 12,50" stroke="#4A7840" stroke-width="4" fill="none" stroke-linecap="round"/>
-          <path d="M40,90 C44,66 60,58 68,44" stroke="#4A7840" stroke-width="4" fill="none" stroke-linecap="round"/>
-          <path d="M40,90 C40,64 40,50 40,30" stroke="#4A7840" stroke-width="4" fill="none" stroke-linecap="round"/>
-          <ellipse cx="12" cy="48" rx="12" ry="8" fill="#7EC96A" transform="rotate(-30 12 48)"/>
-          <ellipse cx="68" cy="42" rx="12" ry="8" fill="#7EC96A" transform="rotate(30 68 42)"/>
-          <ellipse cx="40" cy="26" rx="10" ry="14" fill="#8FDD78"/>`
-  },
-  {
     id: 'plant_cactus', name: 'Tiny Cactus', category: 'room', slot: 'plant', price: 45,
     viewBox: '0 0 80 120',
     desc: 'Thrives on neglect. Relatable.',
@@ -15655,16 +15641,6 @@ const SHOP_ITEMS = [
           <rect x="18" y="55" width="10" height="26" rx="5" fill="#6FAE5C"/>
           <rect x="52" y="48" width="10" height="30" rx="5" fill="#6FAE5C"/>
           <circle cx="40" cy="34" r="4" fill="#FF96B8"/>`
-  },
-  {
-    id: 'plant_succulent', name: 'Succulent Trio', category: 'room', slot: 'plant', price: 50,
-    viewBox: '0 0 80 120',
-    desc: 'A little cluster of low-key vibes.',
-    svg: `<path d="M22,96 L18,116 L62,116 L58,96 Z" fill="#D68A54"/>
-          <rect x="20" y="92" width="40" height="8" fill="#B06A38"/>
-          <ellipse cx="30" cy="82" rx="12" ry="9" fill="#7EC96A"/>
-          <ellipse cx="50" cy="80" rx="13" ry="10" fill="#6FAE5C"/>
-          <ellipse cx="40" cy="70" rx="10" ry="12" fill="#8FDD78"/>`
   },
   {
     id: 'plant_fern', name: 'Leafy Fern', category: 'room', slot: 'plant', price: 55,
@@ -15702,6 +15678,31 @@ const SHOP_ITEMS = [
           <rect x="61" y="35" width="38" height="23" rx="2" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>`
   },
   {
+    id: 'desk_gaming', name: 'Gaming Desk', category: 'room', slot: 'desk', price: 130,
+    viewBox: '0 0 160 100',
+    desc: 'Dual monitors, RGB everything, zero productivity guilt.',
+    svg: `<rect x="15" y="56" width="130" height="8" rx="2" fill="#7A5230"/>
+          <rect x="21" y="64" width="6" height="28" fill="#8A6438"/>
+          <rect x="133" y="64" width="6" height="28" fill="#8A6438"/>
+          <line x1="26" y1="30" x2="26" y2="58" stroke="#B8BCC4" stroke-width="2"/>
+          <path d="M18,28 Q26,14 34,28" stroke="#B8BCC4" stroke-width="3" fill="none"/>
+          <ellipse cx="18" cy="32" rx="4" ry="6" fill="#2B2E4A"/>
+          <ellipse cx="34" cy="32" rx="4" ry="6" fill="#2B2E4A"/>
+          <circle cx="18" cy="32" r="1.5" fill="#7EC96A"/>
+          <circle cx="34" cy="32" r="1.5" fill="#7EC96A"/>
+          <rect x="50" y="54" width="20" height="3" rx="1" fill="#3A3A3A"/>
+          <rect x="57" y="48" width="6" height="6" fill="#3A3A3A"/>
+          <rect x="40" y="22" width="40" height="26" rx="2" fill="#1C1C1C"/>
+          <rect x="43" y="25" width="34" height="20" fill="#2AA8C4"/>
+          <rect x="91" y="55" width="17" height="2.5" rx="1" fill="#3A3A3A"/>
+          <rect x="97" y="50" width="5" height="5" fill="#3A3A3A"/>
+          <rect x="84" y="28" width="32" height="22" rx="2" fill="#1C1C1C"/>
+          <rect x="87" y="31" width="26" height="16" fill="#8FDD78"/>
+          <rect x="44" y="52" width="32" height="5" rx="1" fill="#1C1C1C"/>
+          <rect x="44" y="52" width="32" height="1.5" rx="0.75" fill="#FF4FD8"/>
+          <ellipse cx="100" cy="54" rx="4" ry="3" fill="#1C1C1C"/>`
+  },
+  {
     id: 'lamp_fairy', name: 'Fairy Lights', category: 'room', slot: 'lamp', price: 65,
     // Natively horizontal now (was a tall vertical strand, viewBox 0 0 45 120) — the icon
     // itself used to only look right after mobile's room applied a 90° rotation just for
@@ -15721,44 +15722,82 @@ const SHOP_ITEMS = [
           <circle cx="85" cy="25" r="3.5" fill="#FFE45A"/>`
   },
   {
-    id: 'lamp_moon', name: 'Moon Lamp', category: 'room', slot: 'lamp', price: 50,
+    id: 'string_lights_white', name: 'White String Lights', category: 'room', slot: 'lamp', price: 65,
+    viewBox: '0 0 120 45',
+    desc: 'Warm and minimal.',
+    svg: `<path d="M10,10 Q35,40 60,10 Q85,40 110,10" stroke="#B8935E" stroke-width="2" fill="none"/>
+          <circle cx="10" cy="10" r="5" fill="#FFFFFF" stroke="#AFAFAF" stroke-width="1"/>
+          <circle cx="60" cy="10" r="5" fill="#FFFFFF" stroke="#AFAFAF" stroke-width="1"/>
+          <circle cx="110" cy="10" r="5" fill="#FFFFFF" stroke="#AFAFAF" stroke-width="1"/>
+          <circle cx="35" cy="25" r="3.5" fill="#FFFFFF" stroke="#AFAFAF" stroke-width="1"/>
+          <circle cx="85" cy="25" r="3.5" fill="#FFFFFF" stroke="#AFAFAF" stroke-width="1"/>`
+  },
+  {
+    id: 'lamp_moon', name: 'Moon Lamp', category: 'room', slot: 'lamp', price: 165,
     viewBox: '0 0 70 110',
     desc: 'Soft light for late-night budgeting.',
-    svg: `<rect x="30" y="90" width="10" height="16" fill="#8A6438"/>
+    // Stand recolored from #8A6438/#B8935E to #7A5230 to match desk_study's surface brown,
+    // and a light-grey outline added to the moon itself.
+    svg: `<rect x="30" y="90" width="10" height="16" fill="#7A5230"/>
           <ellipse cx="35" cy="106" rx="20" ry="4" fill="var(--border)"/>
-          <line x1="35" y1="20" x2="35" y2="90" stroke="#B8935E" stroke-width="3"/>
-          <circle cx="35" cy="18" r="18" fill="#FFF6D8"/>
+          <line x1="35" y1="20" x2="35" y2="90" stroke="#7A5230" stroke-width="3"/>
+          <circle cx="35" cy="18" r="18" fill="#FFF6D8" stroke="#D9D9D9" stroke-width="1.5"/>
           <circle cx="41" cy="12" r="4" fill="#F5E5A8"/>
           <circle cx="30" cy="24" r="2.5" fill="#F5E5A8"/>`
   },
   {
+    id: 'clock_grandfather', name: 'Grandfather Clock', category: 'room', slot: 'lamp', price: 220,
+    viewBox: '0 0 70 110',
+    desc: 'The priciest piece on the farm — time really is money.',
+    svg: `<rect x="10" y="98" width="50" height="8" rx="2" fill="#5A3D22"/>
+          <rect x="14" y="24" width="42" height="76" rx="2" fill="#6B4A2E"/>
+          <path d="M14,27 Q35,4 56,27 Z" fill="#6B4A2E"/>
+          <rect x="22" y="54" width="26" height="40" rx="2" fill="#241C18" stroke="#3A2A1E" stroke-width="1.5"/>
+          <line x1="35" y1="58" x2="35" y2="82" stroke="#C9A227" stroke-width="2"/>
+          <circle cx="35" cy="84" r="7" fill="#C9A227" stroke="#8A6438" stroke-width="1"/>
+          <circle cx="35" cy="34" r="13" fill="#F0EAE0" stroke="#3A2A1E" stroke-width="2"/>
+          <line x1="35" y1="34" x2="35" y2="28" stroke="#3A2A1E" stroke-width="2" stroke-linecap="round"/>
+          <line x1="35" y1="34" x2="41" y2="34" stroke="#3A2A1E" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="35" cy="34" r="1.5" fill="#3A2A1E"/>`
+  },
+  {
     id: 'window_sunny', name: 'Sunny Window', category: 'room', slot: 'window', price: 90,
-    viewBox: '0 0 220 100',
+    viewBox: '0 0 160 160',
     desc: 'A bright view to budget by.',
-    svg: `<rect x="4" y="4" width="212" height="92" rx="6" fill="#8A6438"/>
-          <rect x="14" y="14" width="192" height="72" fill="#7EC1E8"/>
-          <circle cx="55" cy="34" r="14" fill="#FFE45A"/>
-          <ellipse cx="130" cy="46" rx="26" ry="10" fill="var(--white)" opacity="0.85"/>
-          <ellipse cx="160" cy="38" rx="20" ry="8" fill="var(--white)" opacity="0.85"/>
-          <rect x="14" y="14" width="192" height="72" fill="none" stroke="#8A6438" stroke-width="4"/>
-          <line x1="110" y1="14" x2="110" y2="86" stroke="#8A6438" stroke-width="4"/>
-          <line x1="14" y1="50" x2="206" y2="50" stroke="#8A6438" stroke-width="4"/>`
+    svg: `<rect x="8" y="8" width="144" height="144" rx="8" fill="#8A6438"/>
+          <rect x="20" y="20" width="120" height="120" fill="#7EC1E8"/>
+          <circle cx="55" cy="55" r="16" fill="#FFE45A"/>
+          <ellipse cx="100" cy="95" rx="22" ry="9" fill="var(--white)" opacity="0.85"/>
+          <ellipse cx="118" cy="75" rx="16" ry="7" fill="var(--white)" opacity="0.85"/>
+          <rect x="20" y="20" width="120" height="120" fill="none" stroke="#8A6438" stroke-width="5"/>
+          <line x1="80" y1="20" x2="80" y2="140" stroke="#8A6438" stroke-width="5"/>
+          <line x1="20" y1="80" x2="140" y2="80" stroke="#8A6438" stroke-width="5"/>
+          <rect x="0" y="7" width="160" height="3" fill="#5A3D22"/>
+          <circle cx="4" cy="8.5" r="3" fill="#8A6438"/>
+          <circle cx="156" cy="8.5" r="3" fill="#8A6438"/>
+          <path d="M0,2 L16,2 Q12,25 15,50 Q11,75 15,100 Q11,125 15,150 Q12,156 16,160 L0,160 Z" fill="#F6D9A0"/>
+          <path d="M160,2 L144,2 Q148,25 145,50 Q149,75 145,100 Q149,125 145,150 Q148,156 144,160 L160,160 Z" fill="#F6D9A0"/>`
   },
   {
     id: 'window_night', name: 'Starry Window', category: 'room', slot: 'window', price: 95,
-    viewBox: '0 0 220 100',
+    viewBox: '0 0 160 160',
     desc: 'Stargaze while your streak grows.',
-    svg: `<rect x="4" y="4" width="212" height="92" rx="6" fill="#5E5E68"/>
-          <rect x="14" y="14" width="192" height="72" fill="#2B2E4A"/>
-          <circle cx="150" cy="34" r="16" fill="#F5E5A8"/>
-          <circle cx="45" cy="30" r="2.5" fill="var(--white)"/>
-          <circle cx="70" cy="50" r="2" fill="var(--white)"/>
-          <circle cx="95" cy="26" r="2" fill="var(--white)"/>
-          <circle cx="185" cy="60" r="2" fill="var(--white)"/>
-          <circle cx="60" cy="70" r="2" fill="var(--white)"/>
-          <rect x="14" y="14" width="192" height="72" fill="none" stroke="#5E5E68" stroke-width="4"/>
-          <line x1="110" y1="14" x2="110" y2="86" stroke="#5E5E68" stroke-width="4"/>
-          <line x1="14" y1="50" x2="206" y2="50" stroke="#5E5E68" stroke-width="4"/>`
+    svg: `<rect x="8" y="8" width="144" height="144" rx="8" fill="#5E5E68"/>
+          <rect x="20" y="20" width="120" height="120" fill="#2B2E4A"/>
+          <circle cx="105" cy="50" r="18" fill="#F5E5A8"/>
+          <circle cx="40" cy="45" r="2.5" fill="var(--white)"/>
+          <circle cx="55" cy="75" r="2" fill="var(--white)"/>
+          <circle cx="75" cy="35" r="2" fill="var(--white)"/>
+          <circle cx="125" cy="95" r="2" fill="var(--white)"/>
+          <circle cx="45" cy="105" r="2" fill="var(--white)"/>
+          <rect x="20" y="20" width="120" height="120" fill="none" stroke="#5E5E68" stroke-width="5"/>
+          <line x1="80" y1="20" x2="80" y2="140" stroke="#5E5E68" stroke-width="5"/>
+          <line x1="20" y1="80" x2="140" y2="80" stroke="#5E5E68" stroke-width="5"/>
+          <rect x="0" y="7" width="160" height="3" fill="#5A3D22"/>
+          <circle cx="4" cy="8.5" r="3" fill="#8A6438"/>
+          <circle cx="156" cy="8.5" r="3" fill="#8A6438"/>
+          <path d="M0,2 L16,2 Q12,25 15,50 Q11,75 15,100 Q11,125 15,150 Q12,156 16,160 L0,160 Z" fill="#2F2B4A"/>
+          <path d="M160,2 L144,2 Q148,25 145,50 Q149,75 145,100 Q149,125 145,150 Q148,156 144,160 L160,160 Z" fill="#2F2B4A"/>`
   },
 
   // ── DIAMOND EXCLUSIVES (earned via 3-day streak bonuses, not coins) ──
@@ -15824,7 +15863,6 @@ const SHOP_ITEMS = [
           <path d="M 8 82 Q 60 72 112 82 L 109 94 Q 60 84 11 94 Z" fill="rgba(255,255,255,0.25)"/>
           <path d="M 8 82 Q 60 96 112 82" stroke="#A66E08" stroke-width="1" fill="none" opacity="0.4"/>
           <path d="M 30 88 L 34 128" stroke="#FFF3CC" stroke-width="1.2" opacity="0.4"/>
-          <path d="M 60 84 L 60 130" stroke="#FFF3CC" stroke-width="1.2" opacity="0.4"/>
           <path d="M 90 88 L 86 128" stroke="#FFF3CC" stroke-width="1.2" opacity="0.4"/>
           <circle cx="10" cy="92" r="4.5" fill="#8FE3F5"/>
           <circle cx="10" cy="92" r="2.3" fill="#E8FBFF"/>
@@ -17772,11 +17810,11 @@ function refreshShopModal(itemId) {
       btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>Open Box · ${shopPriceLabel(item)}</button>`;
     }
   } else if (equipped) {
-    btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Equipped'} · Remove</button>`;
+    btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${isWallpaper ? 'Applied' : 'Placed'} · Remove</button>`;
   } else if (owned && !isRoom && (state.equippedItems || []).length >= MAX_EQUIPPED_ITEMS) {
-    btn = `<button class="shop-btn shop-btn-broke" disabled>Unequip something first (max ${MAX_EQUIPPED_ITEMS})</button>`;
+    btn = `<button class="shop-btn shop-btn-broke" disabled>Unplace something first (max ${MAX_EQUIPPED_ITEMS})</button>`;
   } else if (owned) {
-    btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">${isWallpaper ? 'Apply' : isRoom ? 'Place in room' : 'Equip'}</button>`;
+    btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">${isWallpaper ? 'Apply' : 'Place'}</button>`;
   } else if (item.mysteryOnly) {
     btn = `<button class="shop-btn shop-btn-broke" disabled>${ICON_GIFT} Only from the ${mysteryBoxNameFor(item.mysteryPool)}</button>`;
   } else if (item.reward) {
@@ -17902,7 +17940,7 @@ function renderShopPage() {
       const statusLabel = isBox
         ? (boxRemaining ? shopPriceLabel(item) : '✓ All collected!')
         : equipped
-        ? (item.slot === 'wallpaper' ? '✓ Applied' : isRoom ? '✓ Placed' : '✓ Equipped')
+        ? (item.slot === 'wallpaper' ? '✓ Applied' : '✓ Placed')
         : owned ? 'Owned'
         : isLocked ? `${ICON_GIFT} ${mysteryBoxNameFor(item.mysteryPool)}`
         : isReward ? '🎓 Locked'
@@ -18091,7 +18129,10 @@ function renderRoomPage() {
       // slot box (sized to reach the floor) still showed the lamp floating in its middle.
       // Wall-mounted items (window, wall art) keep the default centered anchor.
       const par = FLOOR_STANDING_SLOTS.has(slotKey) ? ' preserveAspectRatio="xMidYMax meet"' : '';
-      return `<div class="room-slot room-slot-${slotKey}" data-slot="${slotKey}">
+      // data-item lets CSS single out one specific item within a shared slot (see the
+      // Grandfather Clock's oversized .room-slot-lamp[data-item="clock_grandfather"] rule)
+      // instead of every item in that slot being forced to the same box size.
+      return `<div class="room-slot room-slot-${slotKey}" data-slot="${slotKey}" data-item="${item.id}">
         <svg viewBox="${item.viewBox}"${par} xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>
       </div>`;
     }
@@ -18503,6 +18544,20 @@ function renderProgressPage() {
 
 // ── SETTINGS PAGE ──────────────────────────────
 function renderSettingsPage() {
+  // Dev-only: credits 1,000 coins for testing purchases (the Grandfather Clock alone is
+  // 220) without grinding lessons for XP-driven coin rewards. No equivalent existed here
+  // before — ported over alongside the mobile Settings screen's identical cheat button.
+  const devCoinsBalance = document.getElementById('dev-coins-balance');
+  if (devCoinsBalance) devCoinsBalance.textContent = `Balance: ${state.coins}`;
+  const devAddCoinsBtn = document.getElementById('dev-add-coins-btn');
+  if (devAddCoinsBtn) {
+    devAddCoinsBtn.onclick = () => {
+      state.coins += 1000;
+      saveState();
+      renderSettingsPage();
+    };
+  }
+
   const resetBtn = document.getElementById('reset-btn');
   if (resetBtn) {
     resetBtn.onclick = async () => {
