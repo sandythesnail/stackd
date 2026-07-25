@@ -67,9 +67,9 @@ const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
 // guess at how far is safe before it visually collides with the Room/Wardrobe tab chips
 // above the scene (nothing here clips overflow), so it may need tuning after a look.
 // Nudged down twice since (top -48% -> -46% -> -38%, height unchanged), then grown much
-// taller again (height 96% -> 130%) — keeping the same bottom edge (top+height = 58%) so
-// this doesn't undo the "move down" nudges, only extends further upward for the extra height.
-const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-72%', right: '2%', width: '27%', height: '130%', floorStanding: true };
+// taller twice more (height 96% -> 130% -> 160%) — keeping the same bottom edge (top+height
+// = 58%) each time so this doesn't undo the "move down" nudges, only extends further upward.
+const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-102%', right: '2%', width: '27%', height: '160%', floorStanding: true };
 
 // Two rounds of picking a width % and a height % (both against DIFFERENT axes — width against
 // the scene's width, height against its height) never actually produced a square, since there's
@@ -78,7 +78,7 @@ const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-72%', right: '2%', widt
 // cellW below) and applying that single pixel value to BOTH width and height guarantees an
 // actual square regardless of device size.
 const WINDOW_TOP = '15%';
-const WINDOW_SIZE_FRACTION = 0.42; // of screen width
+const WINDOW_SIZE_FRACTION = 0.34; // of screen width — shrunk from 0.42 to read overall smaller
 const DESK_CENTER_FRACTION = 0.48; // matches the desk slot's center (left 22% + width 52% / 2)
 function SquareWindowSlot({ item, onPress }: { item: ShopItemReal; onPress: () => void }) {
   const { width: winW } = useWindowDimensions();
