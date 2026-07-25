@@ -15542,16 +15542,6 @@ const SHOP_ITEMS = [
     wallCss: 'background-color: var(--pink-pale); background-image: radial-gradient(circle, rgba(212,137,158,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;'
   },
   {
-    id: 'wallpaper_stripes', name: 'Mint Stripe Wallpaper', category: 'room', slot: 'wallpaper', price: 55,
-    desc: 'Diagonal stripes, fully vibing.',
-    wallCss: 'background: repeating-linear-gradient(45deg, var(--green-light), var(--green-light) 10px, var(--green-pale) 10px, var(--green-pale) 20px);'
-  },
-  {
-    id: 'wallpaper_cream', name: 'Classic Cream Wallpaper', category: 'room', slot: 'wallpaper', price: 30,
-    desc: 'Simple, clean, and cozy.',
-    wallCss: 'background: var(--bg);'
-  },
-  {
     id: 'wallpaper_blue_dot', name: 'Blue Dot Wallpaper', category: 'room', slot: 'wallpaper', price: 30,
     desc: 'Soft blue polka dots.',
     wallCss: 'background-color: #DCE8F2; background-image: radial-gradient(circle, rgba(59,107,148,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;'
@@ -15560,6 +15550,11 @@ const SHOP_ITEMS = [
     id: 'wallpaper_cherry_dot', name: 'Cherry Dot Wallpaper', category: 'room', slot: 'wallpaper', price: 45,
     desc: 'Bold red polka dots.',
     wallCss: 'background-color: #F6E0DD; background-image: radial-gradient(circle, rgba(196,50,50,.32) 1.5px, transparent 1.5px); background-size: 16px 16px;'
+  },
+  {
+    id: 'wallpaper_stripes', name: 'Mint Stripe Wallpaper', category: 'room', slot: 'wallpaper', price: 55,
+    desc: 'Diagonal stripes, fully vibing.',
+    wallCss: 'background: repeating-linear-gradient(45deg, var(--green-light), var(--green-light) 10px, var(--green-pale) 10px, var(--green-pale) 20px);'
   },
   {
     id: 'wallpaper_blush_stripe', name: 'Blush Stripe Wallpaper', category: 'room', slot: 'wallpaper', price: 55,
@@ -15647,16 +15642,6 @@ const SHOP_ITEMS = [
           <ellipse cx="110" cy="40" rx="55" ry="13" fill="none" stroke="#B8935E" stroke-width="2.5" opacity="0.3"/>`
   },
   {
-    id: 'rug_braided', name: 'Braided Rug', category: 'room', slot: 'rug', price: 70,
-    viewBox: '0 0 220 70',
-    desc: 'Ringed in every color of the collection.',
-    svg: `<ellipse cx="110" cy="40" rx="105" ry="28" fill="var(--pink-light)"/>
-          <ellipse cx="110" cy="40" rx="88" ry="23" fill="var(--white)"/>
-          <ellipse cx="110" cy="40" rx="70" ry="18" fill="var(--green-light)"/>
-          <ellipse cx="110" cy="40" rx="45" ry="11" fill="var(--white)"/>
-          <ellipse cx="110" cy="40" rx="22" ry="5.5" fill="var(--pink-light)"/>`
-  },
-  {
     id: 'rug_blue', name: 'Blue Rug', category: 'room', slot: 'rug', price: 60,
     viewBox: '0 0 220 70',
     desc: 'Cool footing for a warm room.',
@@ -15671,6 +15656,16 @@ const SHOP_ITEMS = [
     svg: `<ellipse cx="110" cy="40" rx="105" ry="28" fill="#DD6D5E"/>
           <ellipse cx="110" cy="40" rx="80" ry="20" fill="none" stroke="#A62F26" stroke-width="3" opacity="0.35"/>
           <ellipse cx="110" cy="40" rx="55" ry="13" fill="none" stroke="#A62F26" stroke-width="2.5" opacity="0.3"/>`
+  },
+  {
+    id: 'rug_braided', name: 'Braided Rug', category: 'room', slot: 'rug', price: 70,
+    viewBox: '0 0 220 70',
+    desc: 'Ringed in every color of the collection.',
+    svg: `<ellipse cx="110" cy="40" rx="105" ry="28" fill="var(--pink-light)"/>
+          <ellipse cx="110" cy="40" rx="88" ry="23" fill="var(--white)"/>
+          <ellipse cx="110" cy="40" rx="70" ry="18" fill="var(--green-light)"/>
+          <ellipse cx="110" cy="40" rx="45" ry="11" fill="var(--white)"/>
+          <ellipse cx="110" cy="40" rx="22" ry="5.5" fill="var(--pink-light)"/>`
   },
   {
     id: 'plant_cactus', name: 'Tiny Cactus', category: 'room', slot: 'plant', price: 45,
