@@ -32,11 +32,9 @@ const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
   // Moved down to the floor and over to Hammy's left flank (was tucked in the back-right
   // corner behind the lamp) so it reads as sitting right beside Hammy in the foreground.
   plant: { label: 'Plant', bottom: '6%', left: '14%', width: '17%', height: '24%', floorStanding: true },
-  // Reversed course from the "much bigger" pass — narrowed back down (34%->19%) so its right
-  // edge (19%) clears the desk's left edge (22%) with a small gap, and shortened so its top
-  // edge (100-bottom-height = 51%) lands right at the poster's own bottom edge (51%) instead
-  // of overlapping it. Nudged down a smidge from there (bottom 28%->26%).
-  bed: { label: 'Bed', bottom: '26%', left: '0%', width: '19%', height: '23%', floorStanding: true },
+  // The narrowed-to-fit-the-gap version (19%x23%) read as way too small — reverted back to
+  // the big version (bottom 32%, 34%x65%) and only trimmed a smidge off the size from there.
+  bed: { label: 'Bed', bottom: '32%', left: '0%', width: '30%', height: '58%', floorStanding: true },
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
   // (bottom raised off the literal floor edge) so more of it reads as sitting BEHIND Hammy's
   // body rather than only trailing out below his feet, so the two read as "standing on it"
