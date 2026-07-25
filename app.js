@@ -15733,11 +15733,20 @@ const SHOP_ITEMS = [
     // black-outlined white screen so it actually reads as a laptop. Laptop (keyboard base +
     // screen) scaled up ~1.3x, both pieces kept centered on the desk (x=80) and the hinge
     // where they meet kept at y=56/58, so it grew without drifting off the desk surface.
+    // Small potted plant (pot/stem/leaves/flower) copied straight from mobile's desk_study
+    // (shopItems.json) at its original coordinates — it sits at x30-45, clear of the laptop
+    // at x58-102, so no rescaling needed to avoid overlap.
     svg: `<rect x="15" y="56" width="130" height="8" rx="2" fill="#7A5230"/>
           <rect x="21" y="64" width="6" height="28" fill="#8A6438"/>
           <rect x="133" y="64" width="6" height="28" fill="#8A6438"/>
           <rect x="58" y="56" width="44" height="5" rx="1" fill="var(--border)"/>
-          <rect x="61" y="35" width="38" height="23" rx="2" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>`
+          <rect x="61" y="35" width="38" height="23" rx="2" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+          <path d="M32,50 L30,56 L44,56 L42,50 Z" fill="#D68A54"/>
+          <rect x="31" y="48" width="14" height="4" fill="#B06A38"/>
+          <rect x="36" y="36" width="4" height="14" rx="2" fill="#6FAE5C"/>
+          <rect x="30" y="42" width="3" height="8" rx="1.5" fill="#6FAE5C"/>
+          <rect x="43" y="40" width="3" height="9" rx="1.5" fill="#6FAE5C"/>
+          <circle cx="38" cy="34" r="2" fill="#FF96B8"/>`
   },
   {
     id: 'desk_gaming', name: 'Gaming Desk', category: 'room', slot: 'desk', price: 130,
@@ -18292,13 +18301,31 @@ function renderRoomPage() {
     return `<div class="room-slot room-slot-${slotKey} empty" data-slot="${slotKey}" aria-label="${emptyLabel}"></div>`;
   }
 
+  // Fairy Lights span the full width of the scene as GARLAND_COUNT repeated, edge-to-edge
+  // copies instead of one stretched svg — mirrors mobile's FairyLightsGarland (room.tsx),
+  // which tiles for the same reason: a single 120x45 strand stretched to 100% width and a
+  // short height would either distort (stretch) or letterbox with dead space on both sides
+  // (meet), neither of which reads as a garland actually running across the room.
+  const GARLAND_COUNT = 3;
+  function garlandBlock() {
+    const itemId = room.garland;
+    const item = itemId ? SHOP_ITEMS.find(i => i.id === itemId) : null;
+    if (!item) {
+      return `<div class="room-slot room-slot-garland empty" data-slot="garland" aria-label="Fairy lights"></div>`;
+    }
+    const cells = Array.from({ length: GARLAND_COUNT }, () =>
+      `<div class="garland-cell"><svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg></div>`
+    ).join('');
+    return `<div class="room-slot room-slot-garland" data-slot="garland" data-item="${item.id}">${cells}</div>`;
+  }
+
   const wallpaperId = room.wallpaper;
   const wallpaper = wallpaperId ? SHOP_ITEMS.find(i => i.id === wallpaperId) : null;
 
   scene.innerHTML = `
     <div class="room-backdrop">
       <div class="room-wall-zone" id="room-wall-zone" style="${wallpaper ? wallpaper.wallCss : ''}"></div>
-      ${slotBlock('garland', 'Fairy lights')}
+      ${garlandBlock()}
       ${slotBlock('window', 'Window')}
       ${slotBlock('wall', 'Wall art')}
       ${slotBlock('lamp', 'Lamp')}

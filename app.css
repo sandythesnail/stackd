@@ -2033,32 +2033,37 @@ select.budget-input { cursor: pointer; }
    width vs. height), so no percentage pair alone can guarantee 1:1 the way this can. */
 .room-slot-window { top: 15%; left: 50%; transform: translateX(-50%); width: 20%; aspect-ratio: 1 / 1; height: auto; }
 .room-slot-wall  { top: 6%; left: 6%; width: 15%; height: 40%; }
-/* Pushed further down (top raised from 3% to 8%) on top of the app.js preserveAspectRatio
-   fix (see slotBlock/FLOOR_STANDING_SLOTS) — the box reaching the floor wasn't enough on its
-   own, since the SVG content itself was still centered within that box by default rather
-   than anchored to its bottom edge. z-index:1 keeps the lamp/moon-lamp/clock/bookshelf art
-   stacked above .room-floor — without it, floor comes later in the DOM with the same
-   default stacking level and painted over the bottom of this box (the item's stand). */
-.room-slot-lamp  { top: 8%; right: 5%; width: 13%; height: 48%; z-index: 1; }
+/* Pushed further down (top raised from 3% to 8%, then to 16%) on top of the app.js
+   preserveAspectRatio fix (see slotBlock/FLOOR_STANDING_SLOTS) — the box reaching the floor
+   wasn't enough on its own, since the SVG content itself was still centered within that box
+   by default rather than anchored to its bottom edge. z-index:1 keeps the lamp/moon-lamp/
+   clock/bookshelf art stacked above .room-floor — without it, floor comes later in the DOM
+   with the same default stacking level and painted over the bottom of this box (the item's
+   stand). */
+.room-slot-lamp  { top: 16%; right: 5%; width: 13%; height: 48%; z-index: 1; }
 /* The Grandfather Clock is a statement piece (also the most expensive item on the farm) —
    overrides the standard .room-slot-lamp box entirely via the data-item hook in slotBlock.
-   Grown from both ends while keeping the same bottom edge (top+height = 56%) as the
-   standard lamp box, so it reads as a genuinely bigger object rather than the same box
-   just relabeled. */
-.room-slot-lamp[data-item="clock_grandfather"] { top: -29%; right: 5%; width: 20%; height: 85%; }
+   Grown from both ends while keeping the same bottom edge (top+height = 64%, matching the
+   standard lamp box above) as the standard lamp box, so it reads as a genuinely bigger
+   object rather than the same box just relabeled. */
+.room-slot-lamp[data-item="clock_grandfather"] { top: -21%; right: 5%; width: 20%; height: 85%; }
 /* Fairy Lights live in their own 'garland' slot (see app.js SHOP_ITEMS + mobile's
    content/types.ts), not the 'lamp' slot, specifically so equipping them never unequips
-   whatever's in the lamp slot (moon lamp / grandfather clock / bookshelf). Hung as a wide,
-   short strip near the top of the wall — preserveAspectRatio's default "meet" keeps the
-   strand's own aspect ratio and just centers it in this box, so the box doesn't need to
-   match the svg's aspect ratio. */
-.room-slot-garland { top: 3%; left: 10%; width: 80%; height: 14%; z-index: 3; }
+   whatever's in the lamp slot (moon lamp / grandfather clock / bookshelf). Spans the full
+   scene width edge-to-edge as GARLAND_COUNT tiled copies (see garlandBlock in app.js) rather
+   than one stretched svg — matches mobile's FairyLightsGarland, which tiles for the same
+   reason a single strand can't both fill 100% width and keep its own aspect ratio. */
+.room-slot-garland { top: 0; left: 0; width: 100%; height: 8%; z-index: 3; display: flex; }
+.garland-cell { flex: 1 1 0; min-width: 0; }
+.garland-cell svg { width: 100%; height: 100%; display: block; }
 /* All the way back against the wall line (now 58%, where the floor zone starts) instead of
    partway into the foreground. */
 .room-slot-plant { bottom: 46%; left: 38%; width: 13%; height: 18%; z-index: 1; }
 /* Moved from the bottom-right corner to the left side, under the wall art poster
-   (.room-slot-wall, left: 6%) instead of floating alone opposite it. */
-.room-slot-bed   { bottom: 5%; left: 3%; width: 29%; height: 31%; z-index: 1; }
+   (.room-slot-wall, top: 6%; left: 6%; height: 40% -> bottom edge at 46%) and enlarged —
+   bottom: 13% + height: 42% puts this box's top edge at 45%, right up against the poster's
+   own bottom edge. */
+.room-slot-bed   { bottom: 13%; left: 4%; width: 40%; height: 42%; z-index: 1; }
 /* Unlike the other room-slots (positioned against the full .room-backdrop), this one is
    nested inside .room-floor (42% of the backdrop's own height — see renderRoomPage), so its
    bottom/height are percentages of THAT, not the full scene. Sized down from an earlier
@@ -2066,8 +2071,11 @@ select.budget-input { cursor: pointer; }
    behind the centered pig without dominating the whole floor. */
 .room-slot-rug   { bottom: 6%; left: 50%; transform: translateX(-50%); width: 42%; height: 45%; z-index: 1; }
 /* Centered under the window (also centered) instead of over on the left, so the desk reads
-   as the room's focal point against the back wall. */
-.room-slot-desk  { bottom: 4%; left: 50%; transform: translateX(-50%); width: 22%; height: 29%; z-index: 1; }
+   as the room's focal point against the back wall. z-index raised to 2 (above the rug's 1) —
+   both boxes are centered now, so without this the rug (later in the DOM, same stacking
+   context as room-backdrop's other children since .room-floor itself has no z-index) painted
+   over the desk entirely and neither desk item ever appeared. */
+.room-slot-desk  { bottom: 4%; left: 50%; transform: translateX(-50%); width: 34%; height: 42%; z-index: 2; }
 
 /* No visual box for an empty slot at all — matches the mobile app, which renders nothing.
    Still fully tappable (see the click handler in renderRoomPage), just invisible until
