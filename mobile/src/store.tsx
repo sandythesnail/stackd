@@ -317,7 +317,11 @@ function computeMetAchievementIds(s: AppState): string[] {
   }
   if (s.streak >= 7) met.add('on_fire');
   if (s.streak >= 30) met.add('marathoner');
-  const roomFull = ROOM_SLOTS.every((slot) => !!s.equippedRoom[slot]);
+  // 'plant' excluded: its only two purchasable items (Potted Pothos, Succulent Trio) were
+  // removed from the catalog, so the slot can never be filled again — leaving it in this
+  // check would make "Homebody" permanently unearnable instead of just requiring every
+  // slot that can actually still be furnished.
+  const roomFull = ROOM_SLOTS.filter((slot) => slot !== 'plant').every((slot) => !!s.equippedRoom[slot]);
   if (roomFull) met.add('homebody');
   if (masteredCount(s.moduleProgress, s.completedLifeTaskIds) === ALL_MODULE_IDS.length) met.add('stackd_star');
   if (s.questBossesWon.includes('credit')) met.add('crisis_averted');

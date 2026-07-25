@@ -470,26 +470,6 @@
     "svg": "<ellipse cx=\"110\" cy=\"40\" rx=\"105\" ry=\"28\" fill=\"#F2CDD7\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"90\" ry=\"24\" fill=\"#FFFFFF\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"72\" ry=\"19\" fill=\"#B2C9AE\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"56\" ry=\"14.5\" fill=\"#FFFFFF\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"38\" ry=\"10\" fill=\"#8FB8D9\"/>\n          <ellipse cx=\"110\" cy=\"40\" rx=\"20\" ry=\"5.5\" fill=\"#DD6D5E\"/>"
   },
   {
-    "id": "plant_pothos",
-    "name": "Potted Pothos",
-    "category": "room",
-    "slot": "plant",
-    "price": 55,
-    "viewBox": "0 0 80 120",
-    "desc": "Low maintenance, unlike your budget last semester.",
-    "svg": "<path d=\"M30,90 L26,116 L54,116 L50,90 Z\" fill=\"#C87848\"/>\n          <rect x=\"28\" y=\"86\" width=\"24\" height=\"8\" fill=\"#A56238\"/>\n          <path d=\"M40,87 C34,67 20,61 12,47\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M40,87 C44,63 60,55 68,41\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M40,87 C40,61 40,47 40,27\" stroke=\"#4A7840\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <ellipse cx=\"12\" cy=\"45\" rx=\"12\" ry=\"8\" fill=\"#7EC96A\" transform=\"rotate(-30 12 45)\"/>\n          <ellipse cx=\"68\" cy=\"39\" rx=\"12\" ry=\"8\" fill=\"#7EC96A\" transform=\"rotate(30 68 39)\"/>\n          <ellipse cx=\"40\" cy=\"23\" rx=\"10\" ry=\"14\" fill=\"#8FDD78\"/>"
-  },
-  {
-    "id": "plant_succulent",
-    "name": "Succulent Trio",
-    "category": "room",
-    "slot": "plant",
-    "price": 50,
-    "viewBox": "0 0 80 120",
-    "desc": "A little cluster of low-key vibes.",
-    "svg": "<path d=\"M22,96 L18,116 L62,116 L58,96 Z\" fill=\"#D68A54\"/>\n          <rect x=\"20\" y=\"92\" width=\"40\" height=\"8\" fill=\"#B06A38\"/>\n          <ellipse cx=\"30\" cy=\"88\" rx=\"12\" ry=\"9\" fill=\"#7EC96A\"/>\n          <ellipse cx=\"50\" cy=\"86\" rx=\"13\" ry=\"10\" fill=\"#6FAE5C\"/>\n          <ellipse cx=\"40\" cy=\"76\" rx=\"10\" ry=\"12\" fill=\"#8FDD78\"/>"
-  },
-  {
     "id": "bed_cozy",
     "name": "Cozy Blue Bed",
     "category": "room",
@@ -540,14 +520,14 @@
     "svg": "<rect x=\"15\" y=\"56\" width=\"130\" height=\"8\" rx=\"2\" fill=\"#7A5230\"/>\n          <rect x=\"21\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <rect x=\"133\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <rect x=\"58\" y=\"56\" width=\"44\" height=\"5\" rx=\"1\" fill=\"#D6DFD0\"/>\n          <rect x=\"61\" y=\"35\" width=\"38\" height=\"23\" rx=\"2\" fill=\"#FFFFFF\" stroke=\"#000000\" stroke-width=\"2\"/>\n          <path d=\"M32,50 L30,56 L44,56 L42,50 Z\" fill=\"#D68A54\"/>\n          <rect x=\"31\" y=\"48\" width=\"14\" height=\"4\" fill=\"#B06A38\"/>\n          <rect x=\"36\" y=\"36\" width=\"4\" height=\"14\" rx=\"2\" fill=\"#6FAE5C\"/>\n          <rect x=\"30\" y=\"42\" width=\"3\" height=\"8\" rx=\"1.5\" fill=\"#6FAE5C\"/>\n          <rect x=\"43\" y=\"40\" width=\"3\" height=\"9\" rx=\"1.5\" fill=\"#6FAE5C\"/>\n          <circle cx=\"38\" cy=\"34\" r=\"2\" fill=\"#FF96B8\"/>"
   },
   {
-    "id": "desk_piggybank",
-    "name": "Piggy Bank Desk",
+    "id": "desk_gaming",
+    "name": "Gaming Desk",
     "category": "room",
     "slot": "desk",
     "price": 130,
     "viewBox": "0 0 160 100",
-    "desc": "Where your savings actually sit.",
-    "svg": "<rect x=\"15\" y=\"56\" width=\"130\" height=\"8\" rx=\"2\" fill=\"#7A5230\"/>\n          <rect x=\"21\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <rect x=\"133\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <ellipse cx=\"72\" cy=\"42\" rx=\"20\" ry=\"14\" fill=\"#F2A8BE\"/>\n          <ellipse cx=\"56\" cy=\"44\" rx=\"6\" ry=\"5\" fill=\"#E8879F\"/>\n          <path d=\"M64,30 L60,22 L70,28 Z\" fill=\"#F2A8BE\"/>\n          <circle cx=\"62\" cy=\"38\" r=\"1.6\" fill=\"#3D2418\"/>\n          <rect x=\"60\" y=\"52\" width=\"4\" height=\"6\" fill=\"#E8879F\"/>\n          <rect x=\"82\" y=\"52\" width=\"4\" height=\"6\" fill=\"#E8879F\"/>\n          <rect x=\"70\" y=\"30\" width=\"8\" height=\"2.4\" rx=\"1\" fill=\"#B5607A\"/>\n          <ellipse cx=\"112\" cy=\"52\" rx=\"12\" ry=\"4\" fill=\"#C9A227\"/>\n          <ellipse cx=\"112\" cy=\"48\" rx=\"12\" ry=\"4\" fill=\"#E8C468\"/>\n          <ellipse cx=\"112\" cy=\"44\" rx=\"12\" ry=\"4\" fill=\"#C9A227\"/>\n          <ellipse cx=\"112\" cy=\"40\" rx=\"12\" ry=\"4\" fill=\"#E8C468\"/>\n          <text x=\"112\" y=\"43\" font-size=\"6\" text-anchor=\"middle\" fill=\"#8A6438\" font-weight=\"700\">$</text>"
+    "desc": "Dual monitors, RGB everything, zero productivity guilt.",
+    "svg": "<rect x=\"15\" y=\"56\" width=\"130\" height=\"8\" rx=\"2\" fill=\"#7A5230\"/>\n          <rect x=\"21\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <rect x=\"133\" y=\"64\" width=\"6\" height=\"28\" fill=\"#8A6438\"/>\n          <line x1=\"26\" y1=\"30\" x2=\"26\" y2=\"54\" stroke=\"#8A6438\" stroke-width=\"2\"/>\n          <path d=\"M18,28 Q26,14 34,28\" stroke=\"#3A3A3A\" stroke-width=\"3\" fill=\"none\"/>\n          <ellipse cx=\"18\" cy=\"32\" rx=\"4\" ry=\"6\" fill=\"#2B2E4A\"/>\n          <ellipse cx=\"34\" cy=\"32\" rx=\"4\" ry=\"6\" fill=\"#2B2E4A\"/>\n          <circle cx=\"18\" cy=\"32\" r=\"1.5\" fill=\"#7EC96A\"/>\n          <circle cx=\"34\" cy=\"32\" r=\"1.5\" fill=\"#7EC96A\"/>\n          <rect x=\"50\" y=\"54\" width=\"20\" height=\"3\" rx=\"1\" fill=\"#3A3A3A\"/>\n          <rect x=\"57\" y=\"48\" width=\"6\" height=\"6\" fill=\"#3A3A3A\"/>\n          <rect x=\"40\" y=\"22\" width=\"40\" height=\"26\" rx=\"2\" fill=\"#1C1C1C\"/>\n          <rect x=\"43\" y=\"25\" width=\"34\" height=\"20\" fill=\"#2AA8C4\"/>\n          <rect x=\"91\" y=\"55\" width=\"17\" height=\"2.5\" rx=\"1\" fill=\"#3A3A3A\"/>\n          <rect x=\"97\" y=\"50\" width=\"5\" height=\"5\" fill=\"#3A3A3A\"/>\n          <rect x=\"84\" y=\"28\" width=\"32\" height=\"22\" rx=\"2\" fill=\"#1C1C1C\"/>\n          <rect x=\"87\" y=\"31\" width=\"26\" height=\"16\" fill=\"#8FDD78\"/>\n          <rect x=\"48\" y=\"52\" width=\"32\" height=\"5\" rx=\"1\" fill=\"#1C1C1C\"/>\n          <rect x=\"48\" y=\"52\" width=\"32\" height=\"1.5\" rx=\"0.75\" fill=\"#FF4FD8\"/>\n          <ellipse cx=\"100\" cy=\"54\" rx=\"4\" ry=\"3\" fill=\"#1C1C1C\"/>"
   },
   {
     "id": "lamp_fairy",
@@ -567,7 +547,7 @@
     "price": 65,
     "viewBox": "0 0 120 45",
     "desc": "Warm and minimal.",
-    "svg": "<path d=\"M10,10 Q35,40 60,10 Q85,40 110,10\" stroke=\"#B8935E\" stroke-width=\"2\" fill=\"none\"/>\n          <circle cx=\"10\" cy=\"10\" r=\"5\" fill=\"#FFFDF5\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"60\" cy=\"10\" r=\"5\" fill=\"#FFF8E7\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"110\" cy=\"10\" r=\"5\" fill=\"#FFFDF5\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"35\" cy=\"25\" r=\"3.5\" fill=\"#FFF8E7\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"85\" cy=\"25\" r=\"3.5\" fill=\"#FFFDF5\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>"
+    "svg": "<path d=\"M10,10 Q35,40 60,10 Q85,40 110,10\" stroke=\"#B8935E\" stroke-width=\"2\" fill=\"none\"/>\n          <circle cx=\"10\" cy=\"10\" r=\"5\" fill=\"#FFFFFF\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"60\" cy=\"10\" r=\"5\" fill=\"#FFFFFF\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"110\" cy=\"10\" r=\"5\" fill=\"#FFFFFF\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"35\" cy=\"25\" r=\"3.5\" fill=\"#FFFFFF\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>\n          <circle cx=\"85\" cy=\"25\" r=\"3.5\" fill=\"#FFFFFF\" stroke=\"#AFAFAF\" stroke-width=\"1\"/>"
   },
   {
     "id": "lamp_moon",
@@ -587,7 +567,7 @@
     "price": 320,
     "viewBox": "0 0 70 110",
     "desc": "The priciest piece on the farm — time really is money.",
-    "svg": "<rect x=\"10\" y=\"98\" width=\"50\" height=\"8\" rx=\"2\" fill=\"#5A3D22\"/>\n          <rect x=\"14\" y=\"24\" width=\"42\" height=\"76\" rx=\"2\" fill=\"#6B4A2E\"/>\n          <path d=\"M14,24 Q35,4 56,24 Z\" fill=\"#6B4A2E\"/>\n          <circle cx=\"35\" cy=\"6\" r=\"3\" fill=\"#C9A227\"/>\n          <rect x=\"22\" y=\"54\" width=\"26\" height=\"40\" rx=\"2\" fill=\"#241C18\" stroke=\"#3A2A1E\" stroke-width=\"1.5\"/>\n          <line x1=\"35\" y1=\"58\" x2=\"35\" y2=\"82\" stroke=\"#C9A227\" stroke-width=\"2\"/>\n          <circle cx=\"35\" cy=\"84\" r=\"7\" fill=\"#C9A227\" stroke=\"#8A6438\" stroke-width=\"1\"/>\n          <circle cx=\"35\" cy=\"34\" r=\"13\" fill=\"#F0EAE0\" stroke=\"#3A2A1E\" stroke-width=\"2\"/>\n          <line x1=\"35\" y1=\"34\" x2=\"35\" y2=\"28\" stroke=\"#3A2A1E\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n          <line x1=\"35\" y1=\"34\" x2=\"41\" y2=\"34\" stroke=\"#3A2A1E\" stroke-width=\"1.5\" stroke-linecap=\"round\"/>\n          <circle cx=\"35\" cy=\"34\" r=\"1.5\" fill=\"#3A2A1E\"/>"
+    "svg": "<rect x=\"10\" y=\"98\" width=\"50\" height=\"8\" rx=\"2\" fill=\"#5A3D22\"/>\n          <rect x=\"14\" y=\"24\" width=\"42\" height=\"76\" rx=\"2\" fill=\"#6B4A2E\"/>\n          <path d=\"M14,24 Q35,4 56,24 Z\" fill=\"#6B4A2E\"/>\n          <rect x=\"22\" y=\"54\" width=\"26\" height=\"40\" rx=\"2\" fill=\"#241C18\" stroke=\"#3A2A1E\" stroke-width=\"1.5\"/>\n          <line x1=\"35\" y1=\"58\" x2=\"35\" y2=\"82\" stroke=\"#C9A227\" stroke-width=\"2\"/>\n          <circle cx=\"35\" cy=\"84\" r=\"7\" fill=\"#C9A227\" stroke=\"#8A6438\" stroke-width=\"1\"/>\n          <circle cx=\"35\" cy=\"34\" r=\"13\" fill=\"#F0EAE0\" stroke=\"#3A2A1E\" stroke-width=\"2\"/>\n          <line x1=\"35\" y1=\"34\" x2=\"35\" y2=\"28\" stroke=\"#3A2A1E\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n          <line x1=\"35\" y1=\"34\" x2=\"41\" y2=\"34\" stroke=\"#3A2A1E\" stroke-width=\"1.5\" stroke-linecap=\"round\"/>\n          <circle cx=\"35\" cy=\"34\" r=\"1.5\" fill=\"#3A2A1E\"/>"
   },
   {
     "id": "bookshelf_finance",

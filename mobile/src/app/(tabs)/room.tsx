@@ -25,10 +25,10 @@ type WardrobeCategory = 'hat' | 'accessory' | 'exclusive';
  * slot instead of floating in the middle of empty letterboxed space above the floor line.
  * Wallpaper isn't here — it's rendered as the wall zone itself, not a positioned slot. */
 const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
-  // Both nudged back up from top 10% to 6%, and the window shortened (40% -> 34% height) so
-  // it doesn't hang as low on the wall — together this frees up clearance so the poster can
-  // sit right above the bed instead of crowding the window/ceiling.
-  window: { label: 'Window', top: '6%', left: '24%', width: '48%', height: '34%' },
+  // Width/left now matched exactly to the desk slot below (left 22%, width 52%) so a window
+  // sits directly above the desk instead of just roughly overlapping it, and nudged down a
+  // touch further (6% -> 9%) so it lines up with the poster instead of sitting above it.
+  window: { label: 'Window', top: '9%', left: '22%', width: '52%', height: '34%' },
   // Left recentered from 3% to 4.5% so the poster's horizontal center (4.5 + 21/2 = 15%)
   // lines up with the bed's center (bed spans left 0%-30%, center 15%) instead of sitting
   // slightly left of it.
@@ -43,8 +43,11 @@ const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
   // Centered under Hammy (see the `hammy` style's alignSelf: 'center') — shifted further up
   // (bottom raised off the literal floor edge) so more of it reads as sitting BEHIND Hammy's
   // body rather than only trailing out below his feet, so the two read as "standing on it"
-  // rather than two separate unrelated floor items.
-  rug: { label: 'Rug', bottom: '8%', left: '16%', width: '66%', height: '50%', floorStanding: true },
+  // rather than two separate unrelated floor items. Left is 17%, not the naive-looking 16%,
+  // specifically so the rug's own center (17 + 66/2 = 50%) exactly matches Hammy's — Hammy
+  // has no explicit left/right, just alignSelf: 'center' on the full-width `scene`, which
+  // centers him at exactly 50%; a rug left of 16% put its center at 49%, a hair off Hammy's.
+  rug: { label: 'Rug', bottom: '8%', left: '17%', width: '66%', height: '50%', floorStanding: true },
   // Chasing "higher" all the way up to the literal ceiling (top 0%) put it above the window
   // instead of under it, which read wrong. Switched to bottom-anchoring like the plant above
   // (bottom + height, same 20% height) instead of top-anchoring, so its position is set by
@@ -54,6 +57,15 @@ const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
   // window, span 24%-72%, center 48%) kept from the last size pass: left = 48 - 52/2 = 22%.
   desk: { label: 'Desk', bottom: '46%', left: '22%', width: '52%', height: '20%', floorStanding: true },
 };
+
+// The Grandfather Clock (clock_grandfather) overrides the standard `lamp` box entirely —
+// it's meant to read as a genuinely bigger, statement piece of furniture (it's also the
+// most expensive item on the whole farm), not just another same-sized lamp-slot occupant.
+// Grown in both directions from the normal lamp box rather than just scaled up in place:
+// a bit further up (top 2% -> -6%) and quite a bit further down into the floor (bottom edge
+// 56% -> 66%), so the extra size reads as height AND a bigger footprint planted further
+// forward, not just the same object stretched toward the ceiling.
+const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-6%', right: '2%', width: '27%', height: '72%', floorStanding: true };
 
 // Rendered in this order, and later entries paint over earlier ones (plain DOM/JSX stacking,
 // no explicit z-index) — rug goes right after the wall-mounted pair so it sits BEHIND
@@ -130,7 +142,7 @@ export default function Room() {
             if (slot === 'garland') {
               return item ? <FairyLightsGarland key={slot} item={item} onPress={goToRoomShop} /> : null;
             }
-            const layout = SLOT_LAYOUT[slot];
+            const layout = slot === 'lamp' && item?.id === 'clock_grandfather' ? CLOCK_LAYOUT : SLOT_LAYOUT[slot];
             return (
               <RoomSlotBox
                 key={slot}
@@ -216,16 +228,14 @@ function RoomSlotBox({
 // be drawn tall and get rotated 90° just for this one screen, which left it sideways
 // everywhere else it rendered, like the shop listing), so no rotation is needed here anymore.
 // Uses a single screen-width-derived cell size instead of per-cell onLayout measurement —
-// every cell is identical, so one calculation covers the whole row. Cells overlap slightly
-// (a negative margin) so the repeats read as one continuous garland instead of visibly
-// separated segments.
+// every cell is identical, so one calculation covers the whole row. Cells used to overlap via
+// a negative margin so the repeats would read as one continuous garland, but that instead made
+// each copy's bulbs visibly double up with its neighbor's at the seam — tiled edge-to-edge
+// (no overlap) instead, accepting a plain seam between copies.
 const GARLAND_COUNT = 3;
-const GARLAND_OVERLAP = 0.12;
 function FairyLightsGarland({ item, onPress }: { item: ShopItemReal; onPress: () => void }) {
   const { width: winW } = useWindowDimensions();
-  // Oversized so GARLAND_COUNT cells, pulled together by the overlap margin below, still
-  // span the full screen width instead of leaving a gap short of the right edge.
-  const cellW = (winW / GARLAND_COUNT) * (1 + GARLAND_OVERLAP);
+  const cellW = winW / GARLAND_COUNT;
   // The item's own art is 120x45 (wide) — height ~= width * 45/120. Letterboxes to fit if a
   // cell ends up a bit off that ratio (ItemArt's own preserveAspectRatio), so this doesn't
   // need to be exact.
@@ -237,7 +247,7 @@ function FairyLightsGarland({ item, onPress }: { item: ShopItemReal; onPress: ()
           <Pressable
             key={i}
             onPress={onPress}
-            style={{ width: cellW, height: cellH, marginLeft: i === 0 ? 0 : -cellW * GARLAND_OVERLAP }}
+            style={{ width: cellW, height: cellH }}
           >
             <ItemArt item={item} fill align="mid" />
           </Pressable>
