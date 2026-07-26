@@ -1399,7 +1399,6 @@ body { background-color: var(--bg); }
 .footer-logo-wrap { display: flex; align-items: center; gap: 0.5rem; }
 .footer-logo { color: #fff; margin-bottom: 0; font-size: 1.6rem; }
 .footer-logo::after { color: var(--pig-pink); }
-.footer-brand p { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
 .footer-fine { font-size: 0.75rem; color: rgba(255,255,255,0.2); padding-top: 1.75rem; border-top: 1px solid rgba(255,255,255,0.08); }
 
 .footer-links { display: flex; gap: 4rem; }

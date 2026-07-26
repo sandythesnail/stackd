@@ -15930,10 +15930,15 @@ const SHOP_ITEMS = [
     id: 'window_sunset', name: 'Sunset Window', category: 'room', slot: 'window', price: 160,
     viewBox: '0 0 160 160',
     desc: 'Golden hour, every hour.',
+    // The sun's fill (#FFC15E) was the exact same color as the sky gradient's own bottom
+    // stop, so wherever the disc sat over that fully-faded-to-gold part of the sky it had no
+    // visible edge at all — it read as a broken/half-missing shape rather than a sun. Added a
+    // thin darker-orange ring (the gradient's own mid stop) so the disc stays defined no
+    // matter which part of the sky it overlaps.
     svg: `<defs><linearGradient id="sw-sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#6B4C8A"/><stop offset="45%" stop-color="#E8724A"/><stop offset="100%" stop-color="#FFC15E"/></linearGradient></defs>
           <rect x="8" y="8" width="144" height="144" rx="8" fill="#8A6438"/>
           <rect x="20" y="20" width="120" height="120" fill="url(#sw-sky)"/>
-          <circle cx="105" cy="100" r="18" fill="#FFC15E"/>
+          <circle cx="105" cy="100" r="18" fill="#FFC15E" stroke="#E8724A" stroke-width="2"/>
           <circle cx="100" cy="95" r="6" fill="#FFE3B0" opacity="0.5"/>
           <path d="M20,140 Q45,120 70,132 Q95,115 120,130 Q130,125 140,130 L140,140 L20,140 Z" fill="#4A2C3A"/>
           <rect x="20" y="20" width="120" height="120" fill="none" stroke="#8A6438" stroke-width="5"/>

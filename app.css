@@ -2060,22 +2060,30 @@ select.budget-input { cursor: pointer; }
 /* aspect-ratio: 1/1 (not a matching height %) guarantees a true square regardless of the
    backdrop's own aspect ratio — width% and height% are against different axes (backdrop
    width vs. height), so no percentage pair alone can guarantee 1:1 the way this can. */
-.room-slot-window { top: 11%; left: 50%; transform: translateX(-50%); width: 25%; aspect-ratio: 1 / 1; height: auto; }
-.room-slot-wall  { top: 6%; left: 14%; width: 15%; height: 40%; }
+.room-slot-window { top: 8%; left: 50%; transform: translateX(-50%); width: 25%; aspect-ratio: 1 / 1; height: auto; }
+.room-slot-wall  { top: 6%; left: 6%; width: 15%; height: 40%; }
 /* Pushed further down (top raised from 3% to 8%, then to 16%) on top of the app.js
    preserveAspectRatio fix (see slotBlock/FLOOR_STANDING_SLOTS) — the box reaching the floor
    wasn't enough on its own, since the SVG content itself was still centered within that box
    by default rather than anchored to its bottom edge. z-index:1 keeps the lamp/moon-lamp/
    clock/bookshelf art stacked above .room-floor — without it, floor comes later in the DOM
    with the same default stacking level and painted over the bottom of this box (the item's
-   stand). */
-.room-slot-lamp  { top: 16%; right: 12%; width: 13%; height: 48%; z-index: 1; }
+   stand). Grown a smidge taller (top raised, height grown, same bottom edge at 64%) — this
+   base box is the Moon Lamp's now that the shelves below have their own override. */
+.room-slot-lamp  { top: 12%; right: 12%; width: 13%; height: 52%; z-index: 1; }
 /* The Grandfather Clock is a statement piece (also the most expensive item on the farm) —
    overrides the standard .room-slot-lamp box entirely via the data-item hook in slotBlock.
    Grown from both ends while keeping the same bottom edge (top+height = 64%, matching the
    standard lamp box above) as the standard lamp box, so it reads as a genuinely bigger
    object rather than the same box just relabeled. */
 .room-slot-lamp[data-item="clock_grandfather"] { top: -21%; right: 5%; width: 20%; height: 85%; }
+/* The 3 bookshelf/shelf pieces (Bookshelf, Trophy Shelf, Record Player Shelf) get the same
+   "statement piece" treatment as the clock above — much bigger than the standard lamp-slot
+   box, same bottom edge (top + height = 64%) so they still read as furniture standing on
+   the floor rather than floating higher/lower than everything else in this slot. */
+.room-slot-lamp[data-item="bookshelf_finance"],
+.room-slot-lamp[data-item="shelf_trophy"],
+.room-slot-lamp[data-item="shelf_record_player"] { top: -21%; right: 5%; width: 22%; height: 85%; }
 /* Fairy Lights live in their own 'garland' slot (see app.js SHOP_ITEMS + mobile's
    content/types.ts), not the 'lamp' slot, specifically so equipping them never unequips
    whatever's in the lamp slot (moon lamp / grandfather clock / bookshelf). Spans the full
@@ -2092,8 +2100,9 @@ select.budget-input { cursor: pointer; }
 /* All the way back against the wall line (now 58%, where the floor zone starts) instead of
    partway into the foreground. */
 .room-slot-plant { bottom: 46%; left: 38%; width: 13%; height: 18%; z-index: 1; }
-/* Shifted right from the left edge and enlarged a smidge from the previous pass. */
-.room-slot-bed   { bottom: 13%; left: 4%; width: 43%; height: 45%; z-index: 1; }
+/* Position reverted back to the left edge (the rightward shift didn't stick); kept the
+   enlarged size from that pass since only the position was asked to go back. */
+.room-slot-bed   { bottom: 13%; left: -4%; width: 43%; height: 45%; z-index: 1; }
 /* Unlike the other room-slots (positioned against the full .room-backdrop), this one is
    nested inside .room-floor (42% of the backdrop's own height — see renderRoomPage), so its
    bottom/height are percentages of THAT, not the full scene. Kept centered (left: 50% +
