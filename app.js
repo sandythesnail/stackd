@@ -16814,6 +16814,12 @@ const PAGE_TITLES = {
   badges: 'Badges', room: 'Room', shop: 'Shop', settings: 'Settings',
 };
 
+// Which nav page was last open — kept in its own localStorage key (not the synced `state`
+// blob) since it's a local UI preference, not real progress: syncing it across devices
+// would mean opening your laptop could jump you into whatever tab you last had open on
+// your phone, which isn't what "remember where I was" means here.
+const LAST_PAGE_KEY = 'stackd_last_page';
+
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
@@ -16825,7 +16831,23 @@ function showPage(id) {
   if (subnav) subnav.classList.toggle('mobile-open', id === 'shop');
   if (id === 'shop') updateShopNavHighlight();
   document.title = `Stacked | ${PAGE_TITLES[id] || 'Dashboard'}`;
+  localStorage.setItem(LAST_PAGE_KEY, id);
   window.scrollTo(0, 0);
+}
+
+// Renders whichever content belongs on `page` — shared by the nav-item click handler and
+// the initial boot sequence (see LAST_PAGE_KEY above), so returning to a reloaded page
+// runs the exact same render call a real click on that nav item would have.
+function renderPageContent(page) {
+  if (page === 'home')          renderHome();
+  else if (page === 'progress') renderProgressPage();
+  else if (page === 'modules')  renderModulesPage();
+  else if (page === 'tools')    { compoundInterestReturnTo = null; renderToolsPage(); }
+  else if (page === 'badges')   renderBadgesPage();
+  else if (page === 'room')     renderRoomPage();
+  else if (page === 'shop')     renderShopPage();
+  else if (page === 'settings') renderSettingsPage();
+  else renderHome();
 }
 
 function updateShopNavHighlight() {
@@ -21828,14 +21850,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => {
       const page = btn.dataset.page;
       showPage(page);
-      if (page === 'home')          renderHome();
-      else if (page === 'progress') renderProgressPage();
-      else if (page === 'modules')  renderModulesPage();
-      else if (page === 'tools')    { compoundInterestReturnTo = null; renderToolsPage(); }
-      else if (page === 'badges')   renderBadgesPage();
-      else if (page === 'room')     renderRoomPage();
-      else if (page === 'shop')     renderShopPage();
-      else if (page === 'settings') renderSettingsPage();
+      renderPageContent(page);
       // Room/Shop are expandable: tapping them reveals a subnav rather than
       // being a final destination, so don't close the dropdown out from
       // under the user before they can pick Room/Wardrobe or Boutique/Farm.
@@ -21947,7 +21962,12 @@ document.addEventListener('DOMContentLoaded', () => {
   state.lifeEvents.sessionCount++;
   pendingStreakDiamonds = updateStreak();
   saveState();
-  renderHome();
+  // Reopen whichever page was active before a reload, instead of always dumping the user
+  // back on Home (see LAST_PAGE_KEY/showPage above) — page-home is the only page marked
+  // "active" in the static HTML, so anything else needs an explicit showPage swap first.
+  const lastPage = localStorage.getItem(LAST_PAGE_KEY) || 'home';
+  showPage(lastPage);
+  renderPageContent(lastPage);
 
   window.maybeShowFirstTimeExperience = runFirstLoadSequence;
   window.maybeClaimReferrerRewards = maybeClaimReferrerRewards;
