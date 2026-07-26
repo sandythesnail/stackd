@@ -82,6 +82,25 @@ export type BudgetPlan = {
   savingsGoal: number | '';
 };
 
+/** Clamps every numeric field to >= 0. The mobile UI itself can't type a negative number
+ * (the amount field's onChangeText strips non-digits — see tools.tsx), but hydrateFromRemote
+ * merges an incoming budgetPlan with a plain overwrite and no clamping of its own, so a
+ * negative value arriving via sync (e.g. from a pre-fix web client, or any future non-UI
+ * writer) would flow straight into totalIncome/totalExpenses/remaining unguarded. The app's
+ * own input safety doesn't cover data arriving from sync — this closes that gap at the data
+ * layer instead. */
+function sanitizeBudgetPlan(plan: BudgetPlan): BudgetPlan {
+  const clampAmount = (v: number | ''): number | '' => (v === '' ? '' : Math.max(0, v));
+  return {
+    incomeSources: plan.incomeSources.map((item) => ({ ...item, amount: clampAmount(item.amount) })),
+    fixedExpenses: plan.fixedExpenses.map((item) => ({ ...item, amount: clampAmount(item.amount) })),
+    variableExpenses: Object.fromEntries(
+      Object.entries(plan.variableExpenses).map(([k, v]) => [k, clampAmount(v)]),
+    ),
+    savingsGoal: clampAmount(plan.savingsGoal),
+  };
+}
+
 export type AppState = {
   coins: number;
   diamonds: number;
@@ -978,6 +997,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           xp: Math.max(state.xp, partial.xp ?? state.xp),
           lastPlayedDate,
           streak,
+          // See sanitizeBudgetPlan's comment above — this plain `...partial` spread would
+          // otherwise carry a negative income/expense/savings-goal straight through unclamped.
+          budgetPlan: partial.budgetPlan ? sanitizeBudgetPlan(partial.budgetPlan) : state.budgetPlan,
           // Union, not overwrite: an achievement unlocked (and rewarded) locally this
           // session must never be "forgotten" by a stale remote read — that would make
           // applyAchievementUnlocks pay its reward out a second time below.

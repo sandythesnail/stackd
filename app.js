@@ -19394,7 +19394,12 @@ function computeLoanPayoff({ principal, annualRatePct, monthlyPayment, maxMonths
 function buildStackedAreaChart(points, baseKey, totalKey, { width = 480, height = 220, padding = 8 } = {}) {
   const maxY = Math.max(...points.map(p => p[totalKey]), 1);
   const n = points.length;
-  const xAt = i => padding + (i / (n - 1)) * (width - padding * 2);
+  // `i / (n - 1)` is `0/0 = NaN` for a single-point series — not reachable from any real
+  // caller today (every slider that feeds this has a min high enough to always produce
+  // 2+ points), but centering the lone point instead of crashing costs nothing and closes
+  // the landmine for any future caller that passes unpadded data. Mirrors the identical
+  // fix in the mobile app's charts.ts.
+  const xAt = i => (n <= 1 ? width / 2 : padding + (i / (n - 1)) * (width - padding * 2));
   const yAt = val => height - padding - (val / maxY) * (height - padding * 2);
   const baseline = height - padding;
 

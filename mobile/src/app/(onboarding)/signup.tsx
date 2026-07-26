@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { useSignUp } from '@clerk/clerk-expo';
+import { useAuth, useSignUp } from '@clerk/clerk-expo';
 import { Screen, Spacer, Txt, Button, Field, IconButton, CheckBox } from '@/components';
 import { colors, font } from '@/theme';
 import { authEnabled } from '@/lib/env';
@@ -19,6 +19,7 @@ export default function SignUp() {
 
 function ClerkSignUp() {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const { signUp, setActive, isLoaded } = useSignUp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,6 +28,13 @@ function ClerkSignUp() {
   const [busy, setBusy] = useState(false);
   const [pendingCode, setPendingCode] = useState(false);
   const [code, setCode] = useState('');
+
+  // A signed-in user can still land here via back-navigation (the same reasoning as
+  // signin.tsx's identical guard — see its comment) — bounce forward instead of leaving a
+  // live, resubmittable signUp.create form on screen for someone already authenticated.
+  useEffect(() => {
+    if (isSignedIn) router.push('/(tabs)/home');
+  }, [isSignedIn, router]);
 
   const onCreate = async () => {
     if (!isLoaded || busy) return;

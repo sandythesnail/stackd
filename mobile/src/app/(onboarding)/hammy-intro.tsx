@@ -157,6 +157,14 @@ export default function HammyIntro() {
   const router = useRouter();
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const { width: W, height: H } = useWindowDimensions();
+  // showLine's hop-off animation (below) is only ever invoked through the timer chain set
+  // up in the mount-only useEffect further down, so the specific `showLine` closure it
+  // calls is permanently the one from the FIRST render — reading `W` directly there uses
+  // whatever width was current at mount, even if the device rotates/resizes in the
+  // ~2.3-4.9s before the hop actually fires. A ref always reflects the latest width at the
+  // moment the animation starts, regardless of which render's closure is running.
+  const wRef = useRef(W);
+  wRef.current = W;
 
   // Bank sized like the website: width-bound on phones, height-capped so the
   // 0.8-aspect drawing never overflows vertically; centered on the screen.
@@ -221,7 +229,7 @@ export default function HammyIntro() {
         const up = () => Animated.timing(hopY, { toValue: -70, duration: 165, easing: Easing.out(Easing.quad), useNativeDriver: true });
         const down = () => Animated.timing(hopY, { toValue: 0, duration: 165, easing: Easing.in(Easing.quad), useNativeDriver: true });
         Animated.parallel([
-          Animated.timing(hopX, { toValue: W * 0.75 + 260, duration: 1090, easing: Easing.linear, useNativeDriver: true }),
+          Animated.timing(hopX, { toValue: wRef.current * 0.75 + 260, duration: 1090, easing: Easing.linear, useNativeDriver: true }),
           Animated.sequence([
             Animated.timing(hopY, { toValue: 8, duration: 100, easing: Easing.out(Easing.quad), useNativeDriver: true }),
             up(), down(), up(), down(), up(), down(),

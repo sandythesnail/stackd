@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSignIn } from '@clerk/clerk-expo';
+import { useAuth, useSignIn } from '@clerk/clerk-expo';
 import { Screen, Spacer, Txt, Button, Field, Hammy, Divider } from '@/components';
 import { colors, font } from '@/theme';
 import { authEnabled } from '@/lib/env';
@@ -17,12 +17,22 @@ export default function SignIn() {
 
 function ClerkSignIn() {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const { signIn, setActive, isLoaded } = useSignIn();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // A signed-in user can still land here via back-navigation — the terminal hop into
+  // (tabs)/home below deliberately uses push, not replace (see its comment), so this
+  // screen is never actually removed from history. Bounce forward immediately instead of
+  // leaving a live, resubmittable Clerk sign-in form on screen for someone already
+  // authenticated.
+  useEffect(() => {
+    if (isSignedIn) router.push('/(tabs)/home');
+  }, [isSignedIn, router]);
 
   const onSignIn = async () => {
     if (!isLoaded || busy) return;

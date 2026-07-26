@@ -247,14 +247,11 @@ function openTermModal(term) {
   termDef.textContent = def;
   termOverlay.hidden = false;
   requestAnimationFrame(() => termOverlay.classList.add('visible'));
-  ccPaused = true;
-  clearTimeout(ccResumeTimer);
 }
 function closeTermModal() {
   if (!termOverlay) return;
   termOverlay.classList.remove('visible');
   setTimeout(() => { termOverlay.hidden = true; }, 200);
-  ccPaused = false;
 }
 if (termOverlay) {
   document.querySelectorAll('.mp-tags span').forEach(tag => {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -35,7 +35,15 @@ export default function Survey() {
   const answers: SurveyAnswers = { moduleFamiliarity: familiarity, focusGoals: [...focusGoals] };
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === trackId) ?? getRecommendedTrack(answers);
 
+  // Every Clerk handler in signin.tsx/signup.tsx guards against a double-tap firing twice;
+  // this screen had no equivalent. A fast double-tap on "Start learning" used to call
+  // finish() twice, pushing two hammy-intro instances onto the stack — each one's own
+  // (correctly ref-guarded) finish handler then pushes Home separately, leaving a
+  // duplicate Home entry and a stray hammy-intro replay reachable via back-navigation.
+  const finishing = useRef(false);
   const finish = () => {
+    if (finishing.current) return;
+    finishing.current = true;
     setOnboardingTrack(activeTrack.id);
     // The animated hammy-intro now plays right after the survey (on "Start learning"),
     // before landing on Home — see hammy-intro.tsx's own finish handler for the Home push.
