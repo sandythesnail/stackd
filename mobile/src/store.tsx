@@ -466,10 +466,19 @@ function hasClaimedToday(s: AppState) {
  * Does NOT touch coins — that's a separate player-triggered claim (claimDailyLoginBonus).
  * No-ops if today was already checked. */
 function runDailyCheck(s: AppState): { next: AppState; streakDiamondsEarned: number } {
-  const today = new Date().toDateString();
+  const now = new Date();
+  const today = now.toDateString();
   if (s.lastPlayedDate === today) return { next: s, streakDiamondsEarned: 0 };
 
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  // Subtracting a fixed 86400000ms (24h) instead of a calendar day breaks across a
+  // spring-forward DST transition: the calendar day right after one is only 23 real hours
+  // long, so for roughly an hour after local midnight on the FOLLOWING day, "now minus
+  // 24h" lands one calendar day too early and no longer matches s.lastPlayedDate — the
+  // streak spuriously resets to 1 even though the player genuinely played on consecutive
+  // days. new Date(y, m, day-1) subtracts a calendar day instead, which normalizes
+  // correctly across month/year boundaries too. Mirrors the same fix in app.js's
+  // updateStreak.
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toDateString();
   const streak = s.lastPlayedDate === yesterday ? s.streak + 1 : 1;
   const streakDiamonds = streak % STREAK_DIAMOND_INTERVAL === 0 ? STREAK_DIAMOND_REWARD : 0;
 
@@ -517,6 +526,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [pendingStreakDiamonds, setPendingStreakDiamonds] = useState(0);
   const loaded = useRef(false);
   const [hydrated, setHydrated] = useState(false);
+  /** Mirrors `state`, but buyOrEquipItem/toggleRoomSlot/openMysteryBox update it
+   * synchronously themselves (not just via the render-cycle sync below) whenever THEY
+   * mutate state. Without that, two rapid invocations of the same action before React
+   * re-renders (a fast double-tap, or any caller that doesn't disable its button between
+   * the call and the next render) would both read the same stale `state` closure, both
+   * pass the same affordability/ownership check against it, and both apply their
+   * setState update on top of it: double-charging a purchase (coins can go negative),
+   * duplicating an owned item, or misreporting a mystery-box pull as new when it was
+   * actually a duplicate the first of the two calls already granted. Scoped to just
+   * those three actions rather than every setState in this file — the narrow race that
+   * was actually reported, not a full store-wide rewrite. */
+  const liveState = useRef(state);
+  liveState.current = state;
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
@@ -593,31 +615,39 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       buyOrEquipItem: (itemId) => {
         const item = shopItemsReal.find((i) => i.id === itemId);
         if (!item || item.slot || item.isMysteryBox) return false;
-        const owned = state.ownedItems.includes(itemId);
-        const equipped = state.equippedItems.includes(itemId);
+        // Read/write against liveState.current (not the `state` closure) so two rapid
+        // calls in the same tick see each other's effect immediately — see liveState's
+        // definition above for why.
+        const s = liveState.current;
+        const owned = s.ownedItems.includes(itemId);
+        const equipped = s.equippedItems.includes(itemId);
         const isDiamond = item.currency === 'diamond';
 
         if (equipped) {
-          setState((s) => ({ ...s, equippedItems: s.equippedItems.filter((id) => id !== itemId) }));
+          const next = { ...s, equippedItems: s.equippedItems.filter((id) => id !== itemId) };
+          liveState.current = next;
+          setState(next);
           return true;
         }
         if (owned) {
-          if (state.equippedItems.length >= MAX_EQUIPPED_ITEMS) return false;
-          setState((s) => ({ ...s, equippedItems: [...s.equippedItems, itemId] }));
+          if (s.equippedItems.length >= MAX_EQUIPPED_ITEMS) return false;
+          const next = { ...s, equippedItems: [...s.equippedItems, itemId] };
+          liveState.current = next;
+          setState(next);
           return true;
         }
-        const balance = isDiamond ? state.diamonds : state.coins;
+        const balance = isDiamond ? s.diamonds : s.coins;
         if (balance < item.price) return false;
-        setState((s) => {
-          const equippedItems = s.equippedItems.length < MAX_EQUIPPED_ITEMS ? [...s.equippedItems, itemId] : s.equippedItems;
-          return {
-            ...s,
-            coins: isDiamond ? s.coins : s.coins - item.price,
-            diamonds: isDiamond ? s.diamonds - item.price : s.diamonds,
-            ownedItems: [...s.ownedItems, itemId],
-            equippedItems,
-          };
-        });
+        const equippedItems = s.equippedItems.length < MAX_EQUIPPED_ITEMS ? [...s.equippedItems, itemId] : s.equippedItems;
+        const next = {
+          ...s,
+          coins: isDiamond ? s.coins : s.coins - item.price,
+          diamonds: isDiamond ? s.diamonds - item.price : s.diamonds,
+          ownedItems: [...s.ownedItems, itemId],
+          equippedItems,
+        };
+        liveState.current = next;
+        setState(next);
         return true;
       },
 
@@ -625,7 +655,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const item = shopItemsReal.find((i) => i.id === itemId);
         if (!item || !item.slot) return false;
         const slot = item.slot;
-        const owned = state.ownedRoomItems.includes(itemId);
+        // Read/write against liveState.current (not the `state` closure) — see liveState's
+        // definition above for why (same rapid-double-call race as buyOrEquipItem).
+        const s = liveState.current;
+        const owned = s.ownedRoomItems.includes(itemId);
         // Slot-agnostic on purpose, unlike a plain `state.equippedRoom[slot] === itemId`
         // check: 'lamp_fairy' (Fairy Lights) lives under slot 'lamp' in the WEBSITE's own
         // catalog but was reassigned to mobile's own 'garland' slot (the website has no
@@ -637,55 +670,67 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // "equip" it there too instead of ever clearing it — the button re-equips on every
         // tap and can never reach the unequipped state. Checking/clearing every slot the id
         // is actually sitting in fixes that regardless of which key it landed under.
-        const equippedHere = Object.values(state.equippedRoom).includes(itemId);
+        const equippedHere = Object.values(s.equippedRoom).includes(itemId);
         const isDiamond = item.currency === 'diamond';
-        const clearItem = (room: typeof state.equippedRoom) =>
-          Object.fromEntries(Object.entries(room).map(([k, v]) => [k, v === itemId ? null : v])) as typeof state.equippedRoom;
+        const clearItem = (room: typeof s.equippedRoom) =>
+          Object.fromEntries(Object.entries(room).map(([k, v]) => [k, v === itemId ? null : v])) as typeof s.equippedRoom;
 
         if (equippedHere) {
-          setState((s) => applyAndReport(s, { ...s, equippedRoom: clearItem(s.equippedRoom) }, setNewAchievementIds));
+          const next = applyAndReport(s, { ...s, equippedRoom: clearItem(s.equippedRoom) }, setNewAchievementIds);
+          liveState.current = next;
+          setState(next);
           return true;
         }
         if (owned) {
-          setState((s) => applyAndReport(s, { ...s, equippedRoom: { ...clearItem(s.equippedRoom), [slot]: itemId } }, setNewAchievementIds));
+          const next = applyAndReport(s, { ...s, equippedRoom: { ...clearItem(s.equippedRoom), [slot]: itemId } }, setNewAchievementIds);
+          liveState.current = next;
+          setState(next);
           return true;
         }
-        const balance = isDiamond ? state.diamonds : state.coins;
+        const balance = isDiamond ? s.diamonds : s.coins;
         if (balance < item.price) return false;
-        setState((s) => applyAndReport(s, {
+        const next = applyAndReport(s, {
           ...s,
           coins: isDiamond ? s.coins : s.coins - item.price,
           diamonds: isDiamond ? s.diamonds - item.price : s.diamonds,
           ownedRoomItems: [...s.ownedRoomItems, itemId],
           equippedRoom: { ...clearItem(s.equippedRoom), [slot]: itemId },
-        }, setNewAchievementIds));
+        }, setNewAchievementIds);
+        liveState.current = next;
+        setState(next);
         return true;
       },
 
       openMysteryBox: (itemId) => {
         const item = shopItemsReal.find((i) => i.id === itemId);
         if (!item || !item.isMysteryBox || !item.mysteryPool) return null;
-        const balance = item.currency === 'diamond' ? state.diamonds : state.coins;
+        // Read/write against liveState.current (not the `state` closure) — see liveState's
+        // definition above for why. This matters especially here: without it, two rapid
+        // taps could both compute `isDuplicate` off the same pre-mutation ownedItems, so
+        // the second pull could be misreported as new (or a genuine duplicate could dodge
+        // its refund) instead of correctly seeing what the first tap just granted.
+        const s = liveState.current;
+        const balance = item.currency === 'diamond' ? s.diamonds : s.coins;
         if (balance < item.price) return null;
-        if (!mysteryPoolUnowned(item.mysteryPool, state.ownedItems).length) return null;
-        const won = pickMysteryItem(item.mysteryPool, state.ownedItems);
+        if (!mysteryPoolUnowned(item.mysteryPool, s.ownedItems).length) return null;
+        const won = pickMysteryItem(item.mysteryPool, s.ownedItems);
         if (!won) return null;
 
-        const isDuplicate = state.ownedItems.includes(won.id);
+        const isDuplicate = s.ownedItems.includes(won.id);
         const refundAmount = isDuplicate ? Math.floor(item.price * MYSTERY_DUPLICATE_REFUND_RATE) : 0;
         const refundCurrency: 'coin' | 'diamond' = item.currency === 'diamond' ? 'diamond' : 'coin';
         const isDiamond = item.currency === 'diamond';
 
-        setState((s) => {
-          const spent = isDiamond
-            ? { diamonds: s.diamonds - item.price + (isDuplicate ? refundAmount : 0) }
-            : { coins: s.coins - item.price + (isDuplicate ? refundAmount : 0) };
-          return {
-            ...s,
-            ...spent,
-            ownedItems: isDuplicate ? s.ownedItems : [...s.ownedItems, won.id],
-          };
-        });
+        const spent = isDiamond
+          ? { diamonds: s.diamonds - item.price + (isDuplicate ? refundAmount : 0) }
+          : { coins: s.coins - item.price + (isDuplicate ? refundAmount : 0) };
+        const next = {
+          ...s,
+          ...spent,
+          ownedItems: isDuplicate ? s.ownedItems : [...s.ownedItems, won.id],
+        };
+        liveState.current = next;
+        setState(next);
 
         return { item: won, isDuplicate, refundAmount, refundCurrency };
       },

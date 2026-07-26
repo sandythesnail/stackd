@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow } from '@/components';
 import { colors, font, radius } from '@/theme';
 import { modules } from '@/data';
-import { moduleContentById } from '@/content';
+import { moduleContentById, mainLessonAbsoluteIndices } from '@/content';
 import { useStore } from '@/store';
 import { SURVEY_TRACKS } from '@/survey';
 
@@ -49,6 +49,10 @@ export default function Modules() {
             // a module's main quests and its real-life sub-quest.
             const lessons = content?.lessons.filter((l) => !l.isLifeTask) ?? [];
             const guideIndex = content?.lessons.findIndex((l) => l.isLifeTask) ?? -1;
+            // ModuleLessonList's onPressLesson gives back a position in the filtered
+            // `lessons` above, not a real index into `content.quests` — translate it back.
+            // See mainLessonAbsoluteIndices.
+            const mainIndices = mainLessonAbsoluteIndices(content);
             const done = moduleDone(m.id);
             const total = moduleTotal(m.id);
             const pct = total ? done / total : 0;
@@ -94,7 +98,7 @@ export default function Modules() {
                       lessons={lessons}
                       doneIndices={moduleDoneIndices(m.id)}
                       status={status}
-                      onPressLesson={(i) => router.push({ pathname: '/learn/quest', params: { moduleId: m.id, lessonIndex: String(i) } })}
+                      onPressLesson={(i) => router.push({ pathname: '/learn/quest', params: { moduleId: m.id, lessonIndex: String(mainIndices[i] ?? i) } })}
                       tourTargetFirstLesson={status === 'active'}
                     />
                     {guideIndex >= 0 ? (

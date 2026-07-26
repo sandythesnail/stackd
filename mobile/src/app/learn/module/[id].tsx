@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Txt, IconButton, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow } from '@/components';
 import { font, colors } from '@/theme';
 import { moduleById } from '@/data';
-import { moduleContentById } from '@/content';
+import { moduleContentById, mainLessonAbsoluteIndices } from '@/content';
 import { useStore } from '@/store';
 
 /** Screen 15 — Module detail (real lessons, done/upcoming from the store's real progress).
@@ -25,12 +25,15 @@ export default function ModuleDetail() {
   // 8 main ones, just for ModuleLessonList's own rendering.
   const lessons = content?.lessons.filter((l) => !l.isLifeTask) ?? [];
   const guideIndex = content?.lessons.findIndex((l) => l.isLifeTask) ?? -1;
+  // ModuleLessonList's onPressLesson gives back a position in the filtered `lessons` above,
+  // not a real index into `content.quests` — translate it back. See mainLessonAbsoluteIndices.
+  const mainIndices = mainLessonAbsoluteIndices(content);
   const done = moduleDone(mod.id);
   const total = moduleTotal(mod.id);
   const status = moduleStatus(mod.id);
   const pct = total ? done / total : 0;
 
-  const goToLesson = (i: number) => router.push({ pathname: '/learn/quest', params: { moduleId: mod.id, lessonIndex: String(i) } });
+  const goToLesson = (i: number) => router.push({ pathname: '/learn/quest', params: { moduleId: mod.id, lessonIndex: String(mainIndices[i] ?? i) } });
   const goToGuide = () => router.push({ pathname: '/learn/quest', params: { moduleId: mod.id, lessonIndex: String(guideIndex), isLifeTask: '1' } });
 
   // router.back() no-ops with no in-app history (e.g. a direct/reloaded web URL) — fall

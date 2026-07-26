@@ -16640,9 +16640,14 @@ function addXP(amount) {
 // the same run, just never summed up and shown back to the player.
 function awardQuestXP(mod, amount) {
   if (!amount) return false;
-  const leveled = addXP(amount);
   const qp = getQP(mod);
-  if (qp) qp.xpEarned = (qp.xpEarned || 0) + amount;
+  // Replaying an already-completed quest pays half XP — see isReplay's other reader
+  // (finishQuest's coinsEarned) and where it's set (startQuest). This is the single
+  // choke point every chapter's xpOnComplete AND the boss battle's finishQuest XP flow
+  // through, so halving here covers the whole quest, not just one chapter.
+  const awarded = qp?.isReplay ? Math.round(amount * 0.5) : amount;
+  const leveled = addXP(awarded);
+  if (qp) qp.xpEarned = (qp.xpEarned || 0) + awarded;
   return leveled;
 }
 
@@ -16659,9 +16664,17 @@ let pendingStreakDiamonds = 0;
 // opening the app on a new calendar day advances it. Returns the number of diamonds
 // earned this call (0 most days) so callers can show a banner.
 function updateStreak() {
-  const today = new Date().toDateString();
+  const now = new Date();
+  const today = now.toDateString();
   if (state.lastPlayedDate === today) return 0;
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  // Subtracting a fixed 86400000ms (24h) instead of a calendar day breaks across a
+  // spring-forward DST transition: the calendar day right after one is only 23 real hours
+  // long, so for roughly an hour after local midnight on the FOLLOWING day, "now minus
+  // 24h" lands one calendar day too early — it no longer matches state.lastPlayedDate
+  // (which correctly holds yesterday), so the streak spuriously resets to 1 even though
+  // the player genuinely played on consecutive days. new Date(y, m, day-1) subtracts a
+  // calendar day instead, which JS normalizes correctly across month/year boundaries too.
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toDateString();
   state.streak = state.lastPlayedDate === yesterday ? state.streak + 1 : 1;
   state.lastPlayedDate = today;
   if (state.streak % STREAK_DIAMOND_INTERVAL === 0) {
@@ -19170,7 +19183,10 @@ function renderBudgetCalculatorPanel() {
     });
     document.querySelectorAll('#variable-rows .budget-input').forEach(input => {
       input.addEventListener('input', () => {
-        plan.variableExpenses[input.dataset.varkey] = input.value === '' ? 0 : Number(input.value);
+        // See wireRowInput's comment above: `min="0"` doesn't actually block a negative
+        // typed value, so clamp it here too rather than feeding it straight into the totals.
+        if (input.value !== '' && Number(input.value) < 0) input.value = '0';
+        plan.variableExpenses[input.dataset.varkey] = input.value === '' ? 0 : Math.max(0, Number(input.value) || 0);
         saveState();
         renderSummaryAndChart();
         highlightCallout();
@@ -19193,7 +19209,14 @@ function renderBudgetCalculatorPanel() {
       const list = kind === 'income' ? plan.incomeSources : plan.fixedExpenses;
       const item = list.find(x => x.id === row.dataset.id);
       if (!item) return;
-      item[input.dataset.field] = input.dataset.field === 'amount' ? (input.value === '' ? '' : Number(input.value)) : input.value;
+      // The `min="0"` on this input is only a soft HTML hint — the browser doesn't stop a
+      // typed negative value, it just marks the field :invalid, which nothing here checked.
+      // A negative fixed expense/income fed straight into computeBudgetTotals and inflated
+      // or deflated the remaining-balance math with no validation message shown anywhere.
+      // Clamp to 0 and snap the field's own displayed value back too, so what's stored and
+      // what's shown never disagree.
+      if (input.dataset.field === 'amount' && input.value !== '' && Number(input.value) < 0) input.value = '0';
+      item[input.dataset.field] = input.dataset.field === 'amount' ? (input.value === '' ? '' : Math.max(0, Number(input.value) || 0)) : input.value;
       saveState();
       renderSummaryAndChart();
     });
@@ -19293,7 +19316,10 @@ function renderBudgetCalculatorPanel() {
     renderSummaryAndChart();
   });
   document.getElementById('savings-goal-input').addEventListener('input', (e) => {
-    plan.savingsGoal = e.target.value === '' ? 0 : Number(e.target.value);
+    // See wireRowInput's comment above: `min="0"` doesn't actually block a negative
+    // typed value, so clamp it here too rather than feeding it straight into the totals.
+    if (e.target.value !== '' && Number(e.target.value) < 0) e.target.value = '0';
+    plan.savingsGoal = e.target.value === '' ? 0 : Math.max(0, Number(e.target.value) || 0);
     saveState();
     renderSummaryAndChart();
   });
@@ -20381,6 +20407,12 @@ function startQuest(moduleId, questId) {
     existing.done = true;
   }
   if (!existing || existing.done) {
+    // Replaying an already-completed quest (existing.done) pays reduced rewards — see
+    // isReplay's readers in awardQuestXP/finishQuest. Without this, "Replay Quest" paid
+    // full XP and coins every single time with no cap, an unlimited farm for both
+    // currencies and level progress; quizzes/bonus activities already guarded against
+    // the same thing (see finishQuiz's wasLessonDone, finishBonusActivity's wasDone).
+    const isReplay = !!(existing && existing.done);
     state.questProgress[key] = {
       chapterIdx: 0,
       dashboard: { ...quest.initialState },
@@ -20391,6 +20423,7 @@ function startQuest(moduleId, questId) {
       learnedTerms: [],
       hintsUsed: 0,
       xpEarned: 0,
+      isReplay,
       analytics: { knowledgeCheck: [], mythCards: [], polls: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null },
     };
   } else {
@@ -21754,7 +21787,11 @@ function finishQuest(mod, chosenConsequence) {
   if (qp.chapterTotal > 0 && qp.chapterScore === qp.chapterTotal) state.hadPerfect = true;
 
   const bossXP = Math.round(mod.xpReward * (chosenConsequence.xpMultiplier ?? 1));
-  const coinsEarned = qp.chapterTotal > 0 ? qp.chapterScore * 8 : 8;
+  // Same 3-per-correct-vs-8-per-correct reduction finishQuiz already applies on replay
+  // (wasLessonDone ? score*3 : score*8) — see isReplay's other reader, awardQuestXP.
+  const coinsEarned = qp.isReplay
+    ? (qp.chapterTotal > 0 ? qp.chapterScore * 3 : 3)
+    : (qp.chapterTotal > 0 ? qp.chapterScore * 8 : 8);
   state.coins = (state.coins || 0) + coinsEarned;
 
   // Streak/diamonds are earned by opening the app (see boot sequence), not by finishing a lesson.
@@ -21875,7 +21912,7 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
   document.getElementById('results-wrap').innerHTML = `
     <div class="results-grade">Quest Complete</div>
     <h2 class="results-title">${quest.topic || quest.character.name}</h2>
-    <p class="results-score">${consequenceText}</p>
+    <p class="results-score">${consequenceText}${qp.isReplay ? ' · replay (0.5× XP)' : ''}</p>
     <div class="results-rewards-row">
       <div class="results-xp-card">
         <div class="results-xp-num">+${xpEarned} XP</div>

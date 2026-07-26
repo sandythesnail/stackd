@@ -22,8 +22,12 @@ import type {
 /** A chapter reports back how much XP it earned, and — for chapters with a clear
  * right/wrong answer — whether the player got it right, so the quest can tally a real
  * score for the results screen (mirrors how knowledgecheck/poll/mythcards/priceisright
- * work on the website). */
-type Complete = (xpDelta: number, graded?: boolean) => void;
+ * work on the website). Plain `boolean` is for chapters with exactly one graded item
+ * (poll, priceisright, …) — a chapter that grades SEVERAL items in one pass
+ * (knowledgecheck's several questions, mythcards' several cards) reports the
+ * `{correct, total}` form instead of just the last item's result, so the headline score
+ * this feeds into can't disagree with the per-item detail shown on the results screen. */
+type Complete = (xpDelta: number, graded?: boolean | { correct: number; total: number }) => void;
 
 /** A vocab term the player has been taught so far this quest — ported from the website's
  * qp.learnedTerms (same {term, plain, section} shape end to end: pushLearnedTerm, the
@@ -313,8 +317,13 @@ export default function QuestPlayer() {
 
   const onComplete: Complete = (xpDelta, graded) => {
     const nextXp = xpEarned + xpDelta;
-    const nextCorrect = correctCount + (graded ? 1 : 0);
-    const nextGraded = gradedTotal + (graded !== undefined ? 1 : 0);
+    // See Complete's definition above: a multi-item chapter (knowledgecheck, mythcards)
+    // reports its own {correct, total} instead of one flat point, so a chapter with (say)
+    // 1 right out of 2 questions counts as 1/2 here too, not a full point for whichever
+    // question happened to be graded last.
+    const isTally = typeof graded === 'object' && graded !== null;
+    const nextCorrect = correctCount + (isTally ? graded.correct : graded ? 1 : 0);
+    const nextGraded = gradedTotal + (isTally ? graded.total : graded !== undefined ? 1 : 0);
     const known = new Set(terms.map((t) => t.term));
     const nextTerms = chapter.type === 'matching'
       ? [...terms, ...chapter.pairs.filter((p) => !known.has(p.term)).map((p) => ({ term: p.term, plain: p.definition, section: chapter.title }))]
@@ -1201,7 +1210,11 @@ function MythcardsView({
   }), [i]);
 
   const next = () => {
-    if (last) { onComplete((chapter.xpPerCorrect ?? 0) * correctSoFar, true); return; }
+    // Reports the real {correct, total} tally, not a flat `true` — the flat form used to
+    // count a mythcards chapter as fully correct toward the headline lesson score no
+    // matter how many cards were actually gotten right (even 0-for-N), same class of bug
+    // as knowledgecheck's onComplete above. See Complete's definition.
+    if (last) { onComplete((chapter.xpPerCorrect ?? 0) * correctSoFar, { correct: correctSoFar, total: chapter.cards.length }); return; }
     // Cuts a still-showing reaction bubble/face short instead of letting it linger over the
     // next, unresolved card until its own timer happens to fire — see ReactProps.
     clearReaction();
@@ -1269,6 +1282,12 @@ function KnowledgecheckView({
 }: { chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete } & ReactProps & ActionProps & Pick<ReportProps, 'reportKnowledgeCheck'> & FitModeProps) {
   const [i, setI] = useState(0);
   const [sel, setSel] = useState<number | null>(null);
+  // Tallies every question answered in this chapter (not just the last one), so the
+  // headline lesson score reflects the whole knowledge check — see onComplete's
+  // {correct, total} form. Previously only the LAST question's correctness was reported,
+  // so e.g. missing question 1 but getting question 2 (the last) right scored the whole
+  // chapter as fully correct even though the per-question results screen showed 1/2.
+  const [correctSoFar, setCorrectSoFar] = useState(0);
   const question = questions[chapter.qIndices[i]];
   const answered = sel !== null;
   const right = question ? sel === question.correct : false;
@@ -1283,6 +1302,7 @@ function KnowledgecheckView({
   const pick = (idx: number) => {
     setSel(idx);
     const isCorrect = question ? idx === question.correct : false;
+    if (isCorrect) setCorrectSoFar((c) => c + 1);
     // A wrong answer speaks the actual explanation (also shown in the card below) instead
     // of a generic "Not quite! Here's why:" — a right answer keeps the plain celebratory
     // pool, since "Nice! 🎉" doesn't need anything more said about it.
@@ -1290,7 +1310,7 @@ function KnowledgecheckView({
     if (question) reportKnowledgeCheck(question.q, isCorrect);
   };
   const next = () => {
-    if (last) { onComplete(0, right); return; }
+    if (last) { onComplete(0, { correct: correctSoFar, total: chapter.qIndices.length }); return; }
     // Cuts a still-showing reaction bubble/face short instead of letting it linger over the
     // next, not-yet-answered question until its own timer happens to fire — see ReactProps.
     clearReaction();
