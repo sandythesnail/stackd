@@ -388,13 +388,13 @@ type Ctx = {
   completeLesson: (moduleId: string, lessonIndex: number, xpEarned: number, opts?: {
     correctCount?: number; gradedTotal?: number;
     questId?: string; bossWon?: boolean; hintsUsed?: number; newTerms?: string[];
-  }) => number;
+  }) => { xpAwarded: number; coinsAwarded: number };
   /** Same reward shape as completeLesson (XP + the real coin formula), but for a module's
    * real-life step-by-step-guide lesson — never touches moduleProgress/mastery, and only
    * pays out once (replaying a finished life task earns nothing further). */
   completeLifeTask: (moduleId: string, xpEarned: number, opts?: {
     correctCount?: number; gradedTotal?: number; questId?: string; hintsUsed?: number; newTerms?: string[];
-  }) => number;
+  }) => { xpAwarded: number; coinsAwarded: number };
   pendingLifeEvent: () => LifeEvent | null;
   /** Applies a choice's coinDelta (if any), records the event as shown, and clears pending. */
   resolveLifeEvent: (choiceId: string) => void;
@@ -740,20 +740,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // Ported verbatim from finishQuest: coins = correct answers * 8 (or a flat 8 if
         // nothing in the quest was gradeable) — diamonds never come from a lesson finish.
         const coinsEarned = gradedTotal > 0 ? correctCount * QUEST_COIN_PER_CORRECT : QUEST_COIN_FLAT_FALLBACK;
+        // Computed once here (against liveState.current, not just inside the setState
+        // updater below) so the return value can tell results.tsx the REAL amount just
+        // applied, not the theoretical full reward — this is only ever invoked once per
+        // lesson finish (results.tsx guards it with a `recorded` ref), so there's no race
+        // between this read and the updater's own use of the same value.
+        const alreadyDone = (liveState.current.moduleProgress[moduleId] ?? []).includes(lessonIndex);
+        const advanced = lessonIndex >= 0 && lessonIndex < mainLessonCount(moduleId) && !alreadyDone;
 
         setState((s) => {
           const wasMastered = isModuleMastered(s.moduleProgress, s.completedLifeTaskIds, moduleId);
           const completed = s.moduleProgress[moduleId] ?? [];
-          // Bounded against the 8 main quests, not moduleTotal's 9 — completeLesson only
-          // ever tracks main-quest indices here; the real-life sub-quest's completion goes
-          // through completeLifeTask/completedLifeTaskIds instead (see moduleDoneCount).
-          const advanced = lessonIndex >= 0 && lessonIndex < mainLessonCount(moduleId) && !completed.includes(lessonIndex);
           const nextProgress = advanced
             ? { ...s.moduleProgress, [moduleId]: [...completed, lessonIndex].sort((a, b) => a - b) }
             : s.moduleProgress;
           let next: AppState = {
             ...s,
-            xp: s.xp + xpEarned,
+            // Gated behind `advanced` same as coins right below — previously xp was added
+            // unconditionally, so replaying an already-completed lesson (nothing stops a
+            // done lesson from being tapped again, see ModuleLessonList) paid full XP every
+            // single time with no cap, an unlimited farm. Coins were already correctly
+            // gated; xp wasn't. Mirrors completeLifeTask's identical `firstTime` gate below.
+            xp: s.xp + (advanced ? xpEarned : 0),
             coins: s.coins + (advanced ? coinsEarned : 0),
             moduleProgress: nextProgress,
             moduleStats: advanced
@@ -769,28 +777,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           };
           next = applyAndReport(s, next, setNewAchievementIds);
 
-          // Life events: a guaranteed module-unlock event takes priority over an ambient roll.
-          const justMastered = !wasMastered && isModuleMastered(next.moduleProgress, next.completedLifeTaskIds, moduleId);
-          const unlockEvent = justMastered ? LIFE_EVENT_UNLOCKS[moduleId] : undefined;
-          if (unlockEvent && !next.shownLifeEventIds.includes(unlockEvent.id)) {
-            next = { ...next, pendingLifeEventId: unlockEvent.id, shownLifeEventIds: [...next.shownLifeEventIds, unlockEvent.id] };
-          } else if (next.lifeEventCooldown > 0) {
-            next = { ...next, lifeEventCooldown: next.lifeEventCooldown - 1 };
-          } else if (Math.random() < LIFE_EVENT_CHANCE) {
-            const pick = LIFE_EVENTS[Math.floor(Math.random() * LIFE_EVENTS.length)];
-            next = { ...next, pendingLifeEventId: pick.id, lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS };
+          // Life events: a guaranteed module-unlock event takes priority over an ambient
+          // roll — but never overwrite an already-pending, unresolved event. Mirrors
+          // rollAmbientLifeEvent's identical guard (`if (state.pendingLifeEventId) return
+          // false;`). Without this, finishing a second lesson before the first one's
+          // queued event was ever shown/resolved (e.g. two completions in quick
+          // succession) silently discarded the first event — its coin payout never
+          // applied, and since it's already recorded in shownLifeEventIds it could never
+          // be re-offered either.
+          if (!next.pendingLifeEventId) {
+            const justMastered = !wasMastered && isModuleMastered(next.moduleProgress, next.completedLifeTaskIds, moduleId);
+            const unlockEvent = justMastered ? LIFE_EVENT_UNLOCKS[moduleId] : undefined;
+            if (unlockEvent && !next.shownLifeEventIds.includes(unlockEvent.id)) {
+              next = { ...next, pendingLifeEventId: unlockEvent.id, shownLifeEventIds: [...next.shownLifeEventIds, unlockEvent.id] };
+            } else if (next.lifeEventCooldown > 0) {
+              next = { ...next, lifeEventCooldown: next.lifeEventCooldown - 1 };
+            } else if (Math.random() < LIFE_EVENT_CHANCE) {
+              const pick = LIFE_EVENTS[Math.floor(Math.random() * LIFE_EVENTS.length)];
+              next = { ...next, pendingLifeEventId: pick.id, lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS };
+            }
           }
+          liveState.current = next;
           return next;
         });
-        return coinsEarned;
+        return { xpAwarded: advanced ? xpEarned : 0, coinsAwarded: advanced ? coinsEarned : 0 };
       },
 
       completeLifeTask: (moduleId, xpEarned, opts) => {
         const { correctCount = 0, gradedTotal = 0, questId, hintsUsed, newTerms } = opts ?? {};
         const coinsEarned = gradedTotal > 0 ? correctCount * QUEST_COIN_PER_CORRECT : QUEST_COIN_FLAT_FALLBACK;
+        // See completeLesson's identical comment above: computed once here (against
+        // liveState.current) so the return value reflects the REAL amount just applied,
+        // not the theoretical full reward on a replay that (correctly) adds nothing.
+        const firstTime = !liveState.current.completedLifeTaskIds.includes(moduleId);
 
         setState((s) => {
-          const firstTime = !s.completedLifeTaskIds.includes(moduleId);
           // Now that the real-life sub-quest is a required 9th lesson, finishing it can
           // itself be what pushes a module from not-mastered to mastered — same check
           // completeLesson does, just keyed off completedLifeTaskIds instead of moduleProgress.
@@ -811,21 +832,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           };
           next = applyAndReport(s, next, setNewAchievementIds);
 
-          // Life events: a guaranteed module-unlock event takes priority over an ambient roll
-          // — mirrors completeLesson's identical block.
-          const justMastered = !wasMastered && isModuleMastered(next.moduleProgress, next.completedLifeTaskIds, moduleId);
-          const unlockEvent = justMastered ? LIFE_EVENT_UNLOCKS[moduleId] : undefined;
-          if (unlockEvent && !next.shownLifeEventIds.includes(unlockEvent.id)) {
-            next = { ...next, pendingLifeEventId: unlockEvent.id, shownLifeEventIds: [...next.shownLifeEventIds, unlockEvent.id] };
-          } else if (next.lifeEventCooldown > 0) {
-            next = { ...next, lifeEventCooldown: next.lifeEventCooldown - 1 };
-          } else if (Math.random() < LIFE_EVENT_CHANCE) {
-            const pick = LIFE_EVENTS[Math.floor(Math.random() * LIFE_EVENTS.length)];
-            next = { ...next, pendingLifeEventId: pick.id, lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS };
+          // Life events: a guaranteed module-unlock event takes priority over an ambient
+          // roll — mirrors completeLesson's identical block, including the
+          // never-overwrite-a-pending-event guard (see its comment there).
+          if (!next.pendingLifeEventId) {
+            const justMastered = !wasMastered && isModuleMastered(next.moduleProgress, next.completedLifeTaskIds, moduleId);
+            const unlockEvent = justMastered ? LIFE_EVENT_UNLOCKS[moduleId] : undefined;
+            if (unlockEvent && !next.shownLifeEventIds.includes(unlockEvent.id)) {
+              next = { ...next, pendingLifeEventId: unlockEvent.id, shownLifeEventIds: [...next.shownLifeEventIds, unlockEvent.id] };
+            } else if (next.lifeEventCooldown > 0) {
+              next = { ...next, lifeEventCooldown: next.lifeEventCooldown - 1 };
+            } else if (Math.random() < LIFE_EVENT_CHANCE) {
+              const pick = LIFE_EVENTS[Math.floor(Math.random() * LIFE_EVENTS.length)];
+              next = { ...next, pendingLifeEventId: pick.id, lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS };
+            }
           }
+          liveState.current = next;
           return next;
         });
-        return coinsEarned;
+        return { xpAwarded: firstTime ? xpEarned : 0, coinsAwarded: firstTime ? coinsEarned : 0 };
       },
 
       pendingLifeEvent: () => findLifeEvent(state.pendingLifeEventId),

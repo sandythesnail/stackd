@@ -47,10 +47,15 @@ export default function Results() {
   const tierBefore = useRef(tierName).current;
   const recorded = useRef(false);
   const [coinsEarned, setCoinsEarned] = useState(0);
+  // Reflects what was ACTUALLY added to the player's xp, which is 0 on a replay of an
+  // already-completed lesson/life-task — not the theoretical full `xpForLesson` reward,
+  // which this screen used to show even when nothing was really added (see
+  // completeLesson/completeLifeTask's `xpAwarded` return value).
+  const [xpAwarded, setXpAwarded] = useState(0);
   useEffect(() => {
     if (recorded.current) return;
     recorded.current = true;
-    const earned = isLifeTask
+    const { xpAwarded: xp, coinsAwarded: coins } = isLifeTask
       ? completeLifeTask(mod.id, xpForLesson, {
         correctCount: correct,
         gradedTotal: totalQ,
@@ -66,7 +71,8 @@ export default function Results() {
         hintsUsed: hintsUsed !== undefined ? Number(hintsUsed) : undefined,
         newTerms: learnedTermNames.length ? learnedTermNames : undefined,
       });
-    setCoinsEarned(earned);
+    setXpAwarded(xp);
+    setCoinsEarned(coins);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -105,7 +111,7 @@ export default function Results() {
           {totalQ > 0 ? <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt> : null}
 
           <View style={styles.rewards}>
-            <Reward value={`+${xpForLesson}`} label="XP" />
+            <Reward value={`+${xpAwarded}`} label="XP" />
             <Reward value={<Coin size={22} />} label="Coins" big={`+${coinsEarned}`} />
           </View>
 

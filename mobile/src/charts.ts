@@ -12,7 +12,12 @@ export function buildStackedAreaChart(
 ) {
   const maxY = Math.max(...points.map((p) => p[totalKey]), 1);
   const n = points.length;
-  const xAt = (i: number) => padding + (i / (n - 1)) * (width - padding * 2);
+  // `i / (n - 1)` is `0/0 = NaN` for a single-point series (n === 1) — e.g. a 0-year
+  // compound-growth projection or a loan that's already paid off at the starting balance,
+  // both of which return exactly one point (see simulators.ts). NaN coordinates produce a
+  // broken/invisible SVG path with no error thrown. A lone point has no span to place
+  // along, so center it instead.
+  const xAt = (i: number) => (n <= 1 ? width / 2 : padding + (i / (n - 1)) * (width - padding * 2));
   const yAt = (val: number) => height - padding - (val / maxY) * (height - padding * 2);
   const baseline = height - padding;
 

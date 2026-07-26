@@ -16552,6 +16552,13 @@ function applyRemoteState(remote) {
   const localOwnedRoomItems = state.ownedRoomItems || [];
   const localQuestBossesWon = state.questBossesWon || [];
   const localUnlockedAchievements = state.unlockedAchievements || [];
+  // Missed in the pass above that added the other unions: a stale remote row reverting
+  // this while unlockedAchievements correctly survives (unioned back in below) meant
+  // checkAchievements' own guard (`!unlockedAchievements.includes(a.id)`) then saw that
+  // achievement as already unlocked and never re-paid its reward — the coins/diamonds
+  // were silently and permanently lost, with no retry path, while the badge still showed
+  // as earned.
+  const localClaimedBadgeRewards = state.claimedBadgeRewards || [];
   Object.assign(state, remote);
   state.coins = Math.max(state.coins || 0, localCoins);
   state.diamonds = Math.max(state.diamonds || 0, localDiamonds);
@@ -16580,6 +16587,7 @@ function applyRemoteState(remote) {
   state.ownedRoomItems = Array.from(new Set([...localOwnedRoomItems, ...(state.ownedRoomItems || [])]));
   state.questBossesWon = Array.from(new Set([...localQuestBossesWon, ...(state.questBossesWon || [])]));
   state.unlockedAchievements = Array.from(new Set([...localUnlockedAchievements, ...(state.unlockedAchievements || [])]));
+  state.claimedBadgeRewards = Array.from(new Set([...localClaimedBadgeRewards, ...(state.claimedBadgeRewards || [])]));
   state.completedModules = { ...(state.completedModules || {}), ...localCompletedModules };
   state.completedLessons = { ...(state.completedLessons || {}), ...localCompletedLessons };
   state.questProgress = mergeQuestProgress(localQuestProgress, state.questProgress || {});
@@ -18949,8 +18957,13 @@ function renderSettingsPage() {
   const retakeBtn = document.getElementById('retake-survey-btn');
   if (retakeBtn) {
     retakeBtn.onclick = () => {
-      state.onboardingSurvey = { completed: false, moduleFamiliarity: {}, focusGoals: [], trackId: null, completedAt: null };
-      saveState();
+      // Previously wrote completed:false straight to persisted state before the user had
+      // answered anything — if they closed the tab or navigated away before finishing the
+      // retaken survey, that stuck: runFirstLoadSequence() forces the survey open on
+      // EVERY future load until it's completed, with no way to back out. showOnboardingSurvey
+      // already resets surveyDraft fresh in-memory on its own, so there's nothing to persist
+      // here — finishOnboardingSurvey is the only place that should ever write the real
+      // (completed) result, exactly like a first-time survey.
       showOnboardingSurvey();
     };
   }
