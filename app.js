@@ -16481,7 +16481,19 @@ function applyRemoteState(remote) {
   const localLastPlayed = state.lastPlayedDate;
   const localLastSeenTier = state.lastSeenTier;
   const localHasSeenTour = state.hasSeenOnboardingTour;
+  // Same race as the streak/lastPlayedDate guard below, but for currency: this whole
+  // function runs from app-auth.js's async Clerk+Supabase load, which can easily resolve
+  // AFTER this page's own boot sequence already ran updateStreak()/claimDailyLoginBonus()
+  // and awarded today's coins/diamonds locally — but BEFORE the 2s-debounced Supabase push
+  // (scheduleSupabaseSync) has landed. Blindly taking remote's (still pre-bonus) coins/
+  // diamonds here silently reverted whatever was just earned, most visibly the streak
+  // card's reward: claim it right after a fresh page load and this remote read (still
+  // stale) would land moments later and wipe it back down. Keep whichever side is higher.
+  const localCoins = state.coins || 0;
+  const localDiamonds = state.diamonds || 0;
   Object.assign(state, remote);
+  state.coins = Math.max(state.coins || 0, localCoins);
+  state.diamonds = Math.max(state.diamonds || 0, localDiamonds);
   if (localLastPlayed && new Date(localLastPlayed) >= new Date(state.lastPlayedDate || 0)) {
     state.streak = Math.max(state.streak || 0, localStreak || 0);
     state.lastPlayedDate = localLastPlayed;
