@@ -996,8 +996,40 @@ body { background-color: var(--bg); }
 .compare-table td:last-child { color: var(--green-dark); font-weight: 700; }
 
 /* MODULES — CAROUSEL */
+/* Per-module accent palette, ported from the app's .mod-icon chips (app.css) so each
+   module's numbered badge always carries its own identity color here too, instead of
+   just alternating green/pink across all 11 regardless of which module it is. */
 .green-num-bg { background: var(--green-light); color: var(--green-dark); }
 .pink-num-bg  { background: var(--pink-light);  color: var(--pink-dark); }
+.mint-num-bg  { background: #C8F5F0; color: #1A6B64; }
+.lav-num-bg   { background: #E8D6FF; color: #6B35B8; }
+.sky-num-bg   { background: #D6EEFF; color: #1A5E8A; }
+.peach-num-bg { background: #FFE5D0; color: #8A3E1A; }
+.amber-num-bg { background: #FFEDB0; color: #8A6800; }
+.slate-num-bg { background: #E3E7F0; color: #3C4A63; }
+.berry-num-bg { background: #F5D9E8; color: #8F2D5E; }
+.indigo-num-bg{ background: #DCE0FA; color: #38408A; }
+.rust-num-bg  { background: #F5D9C8; color: #8A4A1A; }
+
+.cc-card.cc-mint   { border-top-color: #1A6B64; }
+.cc-card.cc-lav    { border-top-color: #6B35B8; }
+.cc-card.cc-sky    { border-top-color: #1A5E8A; }
+.cc-card.cc-peach  { border-top-color: #8A3E1A; }
+.cc-card.cc-amber  { border-top-color: #8A6800; }
+.cc-card.cc-slate  { border-top-color: #3C4A63; }
+.cc-card.cc-berry  { border-top-color: #8F2D5E; }
+.cc-card.cc-indigo { border-top-color: #38408A; }
+.cc-card.cc-rust   { border-top-color: #8A4A1A; }
+
+.cc-mint .mp-hook   { color: #1A6B64; }
+.cc-lav .mp-hook    { color: #6B35B8; }
+.cc-sky .mp-hook    { color: #1A5E8A; }
+.cc-peach .mp-hook  { color: #8A3E1A; }
+.cc-amber .mp-hook  { color: #8A6800; }
+.cc-slate .mp-hook  { color: #3C4A63; }
+.cc-berry .mp-hook  { color: #8F2D5E; }
+.cc-indigo .mp-hook { color: #38408A; }
+.cc-rust .mp-hook   { color: #8A4A1A; }
 
 .cc-viewport {
   position: relative; width: 100%;

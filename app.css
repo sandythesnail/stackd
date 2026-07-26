@@ -295,6 +295,35 @@ body { background: var(--bg); min-height: 100vh; }
   font-size: 1.05rem; font-weight: 700; letter-spacing: -0.3px; color: var(--text);
 }
 .section-sub { font-size: 0.75rem; color: var(--text-soft); font-weight: 500; }
+.section-head-actions { display: flex; align-items: baseline; gap: 0.85rem; }
+.section-see-all {
+  background: none; border: none; font-family: inherit; font-size: 0.78rem; font-weight: 700;
+  color: var(--green-dark); cursor: pointer; padding: 0; white-space: nowrap;
+}
+.section-see-all:hover { text-decoration: underline; }
+
+/* Home's "Keep learning" preview — first 4 modules only, ported from mobile's home.tsx
+   grid (ModuleTile/MIcon), instead of repeating the Modules tab's full 11-row accordion
+   here too. That full list was most of what made Home read as mostly whitespace once its
+   rows collapsed back down; "See all" (.section-see-all above) hands off the rest. */
+.home-mod-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
+.home-mod-tile {
+  background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius);
+  padding: 0.9rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+}
+.home-mod-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.home-mod-tile.completed { background: var(--green-pale); border-color: var(--green-light); }
+.home-mod-tile.recommended { border: 2px solid #F0C22E; background: #FFF9E6; }
+.hmt-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.65rem; }
+.hmt-title { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 0.6rem; }
+.hmt-bar-track { height: 7px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+.hmt-bar-fill { height: 100%; background: var(--pink); border-radius: 999px; transition: width 0.5s ease; }
+.hmt-bar-fill.hmt-bar-green { background: var(--green); }
+
+@media (max-width: 480px) {
+  .home-mod-tiles { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .home-mod-tile { padding: 0.75rem; }
+}
 
 /* ─── MODULE LIST ─── */
 .modules-grid {

@@ -16930,34 +16930,42 @@ function groupLessonTiles(moduleId, tiles, extraHtml = '') {
   return `<div class="module-row-lessons module-row-lessons-grouped">${sectionsHtml}${extraHtml}</div>`;
 }
 
+// Modules always stay in their fixed numeric order (01–11) — personalization only affects
+// which ones get the "Recommended" highlight (every module in the user's chosen track).
+function getTrackModuleIds() {
+  const survey = state.onboardingSurvey;
+  const activeTrack = survey && survey.completed
+    ? SURVEY_TRACKS.find(t => t.id === survey.trackId) || getRecommendedTrack(survey)
+    : null;
+  return activeTrack ? activeTrack.moduleIds : [];
+}
+
+// Shared by the full Modules list and the Home preview tiles — how many of a module's
+// units (lessons/quests, including its real-life sub-quest) are done.
+function moduleUnitsProgress(m) {
+  const quest = hasQuest(m);
+  const totalUnits = quest ? moduleUnits(m).length : m.lessons.length;
+  const unitsDone = quest
+    ? moduleUnits(m).filter(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); }).length
+    : m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
+  return { totalUnits, unitsDone, allDone: unitsDone === totalUnits };
+}
+
 function renderModuleList(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = '';
 
-  // Modules always stay in their fixed numeric order (01–11) — personalization only
-  // affects which ones get the "Recommended" highlight below (every module in the user's
-  // chosen track), never the list order, so the module list reads as a stable, predictable
-  // sequence.
-  const survey = state.onboardingSurvey;
-  const activeTrack = survey && survey.completed
-    ? SURVEY_TRACKS.find(t => t.id === survey.trackId) || getRecommendedTrack(survey)
-    : null;
-  const trackModuleIds = activeTrack ? activeTrack.moduleIds : [];
+  const trackModuleIds = getTrackModuleIds();
 
   MODULES.forEach(m => {
     const quest = hasQuest(m);
-    // moduleUnits includes the real-life sub-quest as the 9th entry — it's a required
-    // lesson now, not bonus content, so it counts toward every total/done figure below.
-    const totalUnits = quest ? moduleUnits(m).length : m.lessons.length;
-    const unitsDone = quest
-      ? moduleUnits(m).filter(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); }).length
-      : m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
-    const allDone = unitsDone === totalUnits;
+    const { totalUnits, unitsDone, allDone } = moduleUnitsProgress(m);
 
     const isRecommended = !allDone && trackModuleIds.includes(m.id);
     const row = document.createElement('div');
     row.className = 'module-row' + (allDone ? ' completed' : '') + (isRecommended ? ' recommended' : '');
+    row.dataset.moduleId = m.id;
 
     // A module with at least one lesson done but not all of them shows its actual lesson
     // count instead of the Recommended/percent badge — that in-progress state used to be
@@ -18414,6 +18422,54 @@ function renderWardrobeScene() {
 
 // ── HOME ───────────────────────────────────────
 
+// Home's "Keep learning" preview — ported from mobile's home.tsx (homeModules =
+// modules.slice(0, 4)): the first 4 modules only, as small tile cards, instead of
+// repeating the full 11-row accordion the Modules tab already owns. That full list on
+// Home was most of what made the page read as mostly empty space once expanded/scanned;
+// "See all" hands off to the real Modules page for everything past these 4.
+function renderHomeModulePreview(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+
+  const trackModuleIds = getTrackModuleIds();
+
+  MODULES.slice(0, 4).forEach(m => {
+    const { totalUnits, unitsDone, allDone } = moduleUnitsProgress(m);
+    const isRecommended = !allDone && trackModuleIds.includes(m.id);
+    const pct = totalUnits ? Math.round((unitsDone / totalUnits) * 100) : 0;
+
+    const badge = allDone
+      ? `<span class="card-badge badge-done">✓ Done</span>`
+      : isRecommended
+        ? `<span class="card-badge badge-recommend">★ Recommended</span>`
+        : `<span class="card-badge badge-progress">${pct}%</span>`;
+
+    const tile = document.createElement('div');
+    tile.className = 'home-mod-tile' + (allDone ? ' completed' : '') + (isRecommended ? ' recommended' : '');
+    tile.innerHTML = `
+      <div class="hmt-top">
+        <div class="mod-icon ${m.iconColor}">${m.icon}</div>
+        ${badge}
+      </div>
+      <div class="hmt-title">${m.title}</div>
+      <div class="hmt-bar-track"><div class="hmt-bar-fill${allDone ? ' hmt-bar-green' : ''}" style="width:${pct}%"></div></div>`;
+    tile.addEventListener('click', () => goToModule(m.id));
+    container.appendChild(tile);
+  });
+}
+
+// Jumps to the Modules tab and expands/scrolls to a specific module's row — used by the
+// Home preview tiles (mirrors mobile pushing straight into that module's detail screen).
+function goToModule(moduleId) {
+  document.getElementById('nav-modules-btn').click();
+  const row = document.querySelector(`#modules-grid .module-row[data-module-id="${moduleId}"]`);
+  if (!row) return;
+  row.classList.add('expanded');
+  row.querySelector('.module-row-header')?.setAttribute('aria-expanded', 'true');
+  row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function renderHome() {
   showPage('home');
   updateSidebarStats();
@@ -18424,7 +18480,7 @@ function renderHome() {
 
   renderHomeMascotCard(done);
 
-  renderModuleList('home-modules-grid');
+  renderHomeModulePreview('home-modules-grid');
   renderAchievementBadges('home-achievements-row', 'home-achieve-sub', { onlyUnlocked: true });
 }
 
@@ -21748,6 +21804,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // permanent bar, so it should close itself once the user has picked
   // somewhere to go. Guarded to mobile widths only — reusing the "collapsed"
   // class here must never touch desktop's icon-only sidebar mode.
+  document.getElementById('home-modules-seeall').addEventListener('click', () => {
+    document.getElementById('nav-modules-btn').click();
+  });
+
   const sidebarEl = document.getElementById('sidebar');
   function closeMobileNav() {
     if (window.matchMedia('(max-width: 768px)').matches) {
