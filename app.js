@@ -15845,6 +15845,8 @@ const SHOP_ITEMS = [
     id: 'shelf_trophy', name: 'Trophy Shelf', category: 'room', slot: 'lamp', price: 105,
     viewBox: '0 0 70 110',
     desc: 'Hardware for hitting your goals.',
+    // The blue medal + its ribbon sat at cx=30 in the middle compartment (x10-60, true
+    // center 35) — off-center by 5. Shifted both +5 so the medal centers in its shelf.
     svg: `<rect x="6" y="8" width="58" height="96" rx="3" fill="#8A6438"/>
           <rect x="10" y="12" width="50" height="88" fill="#F0EAE0"/>
           <rect x="10" y="42" width="50" height="4" fill="#8A6438"/>
@@ -15854,11 +15856,11 @@ const SHOP_ITEMS = [
           <path d="M42,18 Q50,18 50,24 Q50,29 43,28" stroke="#C9A227" stroke-width="2" fill="none"/>
           <rect x="32" y="33" width="6" height="4" fill="#C9A227"/>
           <rect x="27" y="37" width="16" height="4" rx="1" fill="#B5607A"/>
-          <path d="M24,62 L20,70 L26,67 L30,72 L34,67 L40,70 L36,62 Z" fill="#3B6B94"/>
-          <circle cx="30" cy="56" r="10" fill="#8FE3F5"/>
-          <circle cx="30" cy="56" r="10" fill="none" stroke="#2AA8C4" stroke-width="1.5"/>
-          <circle cx="30" cy="56" r="6" fill="#2AA8C4"/>
-          <circle cx="30" cy="56" r="2" fill="#E8FBFF"/>
+          <path d="M29,62 L25,70 L31,67 L35,72 L39,67 L45,70 L41,62 Z" fill="#3B6B94"/>
+          <circle cx="35" cy="56" r="10" fill="#8FE3F5"/>
+          <circle cx="35" cy="56" r="10" fill="none" stroke="#2AA8C4" stroke-width="1.5"/>
+          <circle cx="35" cy="56" r="6" fill="#2AA8C4"/>
+          <circle cx="35" cy="56" r="2" fill="#E8FBFF"/>
           <path d="M18,82 L18,92 Q18,96 23,96 Q28,96 28,92 L28,82 Z" fill="#C88A4A"/>
           <rect x="21" y="96" width="4" height="3" fill="#C88A4A"/>
           <rect x="17" y="99" width="12" height="3" rx="1" fill="#B5607A"/>
@@ -15930,15 +15932,10 @@ const SHOP_ITEMS = [
     id: 'window_sunset', name: 'Sunset Window', category: 'room', slot: 'window', price: 160,
     viewBox: '0 0 160 160',
     desc: 'Golden hour, every hour.',
-    // The sun's fill (#FFC15E) was the exact same color as the sky gradient's own bottom
-    // stop, so wherever the disc sat over that fully-faded-to-gold part of the sky it had no
-    // visible edge at all — it read as a broken/half-missing shape rather than a sun. Added a
-    // thin darker-orange ring (the gradient's own mid stop) so the disc stays defined no
-    // matter which part of the sky it overlaps.
     svg: `<defs><linearGradient id="sw-sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#6B4C8A"/><stop offset="45%" stop-color="#E8724A"/><stop offset="100%" stop-color="#FFC15E"/></linearGradient></defs>
           <rect x="8" y="8" width="144" height="144" rx="8" fill="#8A6438"/>
           <rect x="20" y="20" width="120" height="120" fill="url(#sw-sky)"/>
-          <circle cx="105" cy="100" r="18" fill="#FFC15E" stroke="#E8724A" stroke-width="2"/>
+          <circle cx="105" cy="100" r="18" fill="#FFC15E"/>
           <circle cx="100" cy="95" r="6" fill="#FFE3B0" opacity="0.5"/>
           <path d="M20,140 Q45,120 70,132 Q95,115 120,130 Q130,125 140,130 L140,140 L20,140 Z" fill="#4A2C3A"/>
           <rect x="20" y="20" width="120" height="120" fill="none" stroke="#8A6438" stroke-width="5"/>

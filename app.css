@@ -2061,7 +2061,9 @@ select.budget-input { cursor: pointer; }
    backdrop's own aspect ratio — width% and height% are against different axes (backdrop
    width vs. height), so no percentage pair alone can guarantee 1:1 the way this can. */
 .room-slot-window { top: 8%; left: 50%; transform: translateX(-50%); width: 25%; aspect-ratio: 1 / 1; height: auto; }
-.room-slot-wall  { top: 6%; left: 6%; width: 15%; height: 40%; }
+/* left: 10% centers this over the bed (.room-slot-bed: left -4%, width 43% -> center
+   17.5%; this box is width 15%, so left 17.5 - 7.5 = 10% lines the two up exactly). */
+.room-slot-wall  { top: 6%; left: 10%; width: 15%; height: 40%; }
 /* Pushed further down (top raised from 3% to 8%, then to 16%) on top of the app.js
    preserveAspectRatio fix (see slotBlock/FLOOR_STANDING_SLOTS) — the box reaching the floor
    wasn't enough on its own, since the SVG content itself was still centered within that box
