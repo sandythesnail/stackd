@@ -2047,18 +2047,18 @@ select.budget-input { cursor: pointer; }
    standard lamp box above) as the standard lamp box, so it reads as a genuinely bigger
    object rather than the same box just relabeled. */
 .room-slot-lamp[data-item="clock_grandfather"] { top: -21%; right: 5%; width: 20%; height: 85%; }
-/* Moon Lamp, same treatment as the clock override above — kept the standard box's bottom
-   edge (64%) so it still reads as sitting on the floor, just much bigger than the default
-   lamp box. */
-.room-slot-lamp[data-item="lamp_moon"] { top: -26%; right: 3%; width: 24%; height: 90%; }
 /* Fairy Lights live in their own 'garland' slot (see app.js SHOP_ITEMS + mobile's
    content/types.ts), not the 'lamp' slot, specifically so equipping them never unequips
    whatever's in the lamp slot (moon lamp / grandfather clock / bookshelf). Spans the full
    scene width edge-to-edge as GARLAND_COUNT tiled copies (see garlandBlock in app.js) rather
    than one stretched svg — matches mobile's FairyLightsGarland, which tiles for the same
-   reason a single strand can't both fill 100% width and keep its own aspect ratio. */
-.room-slot-garland { top: 0; left: 0; width: 100%; height: 8%; z-index: 3; display: flex; }
-.garland-cell { flex: 1 1 0; min-width: 0; }
+   reason a single strand can't both fill 100% width and keep its own aspect ratio.
+   aspect-ratio on each cell (rather than a fixed % height on the band) is the same fix
+   mobile applies via cellH = cellW * (45/120) in JS — deriving height from width keeps every
+   cell at the strand svg's true 120:45 ratio instead of letterboxing inside an arbitrary
+   band height. */
+.room-slot-garland { top: 2%; left: 0; width: 100%; height: auto; z-index: 3; display: flex; }
+.garland-cell { flex: 1 1 0; min-width: 0; aspect-ratio: 120 / 45; }
 .garland-cell svg { width: 100%; height: 100%; display: block; }
 /* All the way back against the wall line (now 58%, where the floor zone starts) instead of
    partway into the foreground. */
@@ -2067,7 +2067,7 @@ select.budget-input { cursor: pointer; }
    (.room-slot-wall, top: 6%; left: 6%; height: 40% -> bottom edge at 46%) and enlarged —
    bottom: 13% + height: 42% puts this box's top edge at 45%, right up against the poster's
    own bottom edge. */
-.room-slot-bed   { bottom: 13%; left: 1%; width: 40%; height: 42%; z-index: 1; }
+.room-slot-bed   { bottom: 13%; left: -4%; width: 40%; height: 42%; z-index: 1; }
 /* Unlike the other room-slots (positioned against the full .room-backdrop), this one is
    nested inside .room-floor (42% of the backdrop's own height — see renderRoomPage), so its
    bottom/height are percentages of THAT, not the full scene. Sized down from an earlier

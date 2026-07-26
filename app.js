@@ -15669,7 +15669,12 @@ const SHOP_ITEMS = [
   },
   {
     id: 'plant_cactus', name: 'Tiny Cactus', category: 'room', slot: 'plant', price: 45,
-    viewBox: '0 0 80 120',
+    // Height trimmed from 120 to 116 — the art's lowest point (the pot base) sits at y=116,
+    // so the old 0 0 80 120 viewBox left 4 units of empty space below it. With this slot's
+    // preserveAspectRatio anchored to the box's bottom edge (xMidYMax, see FLOOR_STANDING_SLOTS
+    // in app.js), that empty margin rendered as a gap between the pot and the floor — the pot
+    // looked like it was floating instead of sitting flush.
+    viewBox: '0 0 80 116',
     desc: 'Thrives on neglect. Relatable.',
     svg: `<path d="M28,90 L24,116 L56,116 L52,90 Z" fill="#D68A54"/>
           <rect x="26" y="86" width="28" height="8" fill="#B06A38"/>
@@ -18306,7 +18311,7 @@ function renderRoomPage() {
   // which tiles for the same reason: a single 120x45 strand stretched to 100% width and a
   // short height would either distort (stretch) or letterbox with dead space on both sides
   // (meet), neither of which reads as a garland actually running across the room.
-  const GARLAND_COUNT = 6;
+  const GARLAND_COUNT = 10;
   function garlandBlock() {
     const itemId = room.garland;
     const item = itemId ? SHOP_ITEMS.find(i => i.id === itemId) : null;
