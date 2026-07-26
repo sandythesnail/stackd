@@ -77,6 +77,13 @@ const SLOT_LAYOUT: Record<LayoutSlot, SlotLayout> = {
 // extends further upward. The box is now well over 2.5x the scene's own height.
 const CLOCK_LAYOUT: SlotLayout = { label: 'Lamp', top: '-202%', right: '2%', width: '27%', height: '260%', floorStanding: true };
 
+// The 3 bookshelf/shelf pieces (Bookshelf, Trophy Shelf, Record Player Shelf) get the same
+// "bigger than the standard lamp box" treatment as the clock above, ported from the
+// website's matching .room-slot-lamp[data-item="..."] override (app.css) — same bottom edge
+// as the standard lamp box (top + height = 56%), just much taller/wider.
+const SHELF_IDS = new Set(['bookshelf_finance', 'shelf_trophy', 'shelf_record_player']);
+const SHELF_LAYOUT: SlotLayout = { label: 'Lamp', top: '-34%', right: '3%', width: '28%', height: '90%', floorStanding: true };
+
 // Two rounds of picking a width % and a height % (both against DIFFERENT axes — width against
 // the scene's width, height against its height) never actually produced a square, since there's
 // no percentage pair that guarantees a 1:1 ratio without knowing the real pixel dimensions of
@@ -177,7 +184,9 @@ export default function Room() {
             if (slot === 'window') {
               return item ? <SquareWindowSlot key={slot} item={item} onPress={goToRoomShop} /> : null;
             }
-            const layout = slot === 'lamp' && item?.id === 'clock_grandfather' ? CLOCK_LAYOUT : SLOT_LAYOUT[slot];
+            const layout = slot === 'lamp' && item?.id === 'clock_grandfather' ? CLOCK_LAYOUT
+              : slot === 'lamp' && item && SHELF_IDS.has(item.id) ? SHELF_LAYOUT
+              : SLOT_LAYOUT[slot];
             return (
               <RoomSlotBox
                 key={slot}

@@ -902,13 +902,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ownedItems: Array.from(new Set([...state.ownedItems, ...(partial.ownedItems ?? [])])),
           ownedRoomItems: Array.from(new Set([...state.ownedRoomItems, ...(partial.ownedRoomItems ?? [])])),
           questBossesWon: Array.from(new Set([...state.questBossesWon, ...(partial.questBossesWon ?? [])])),
-          // Not a "growing" collection like the ones above (equipping is a swap, not an
-          // accumulation), so union doesn't apply — but the same race still applies: prefer
-          // whichever side is non-empty, and prefer LOCAL when both are, since local is the
-          // side that was actually just interacted with on this device. Only take remote's
-          // equip state on a genuinely fresh local install (nothing equipped locally yet).
-          equippedItems: state.equippedItems.length ? state.equippedItems : (partial.equippedItems ?? state.equippedItems),
-          equippedRoom: Object.values(state.equippedRoom).some(Boolean) ? state.equippedRoom : (partial.equippedRoom ?? state.equippedRoom),
+          // Previously: prefer local whenever it had anything equipped at all, only taking
+          // remote's equip state on a genuinely fresh install. That was meant to guard the
+          // same narrow race as ownedItems above (an equip made seconds before an abrupt
+          // kill, before the debounced upload landed) — but since hydrateFromRemote only
+          // ever runs ONCE per sign-in, before this session has made any local change, "local
+          // has something equipped" is true on basically every real device forever after its
+          // first equip, not just in that narrow window. In practice this meant mobile could
+          // never pick up a room/wardrobe change made on the website (or another device) —
+          // reported as "I equip something on web, open the phone, and it still shows the old
+          // room." Trusting remote here (it always includes a full equippedRoom/equippedItems
+          // once a row exists — see webToMobile) fixes that; the only remaining risk is losing
+          // an equip made in the last ~1.5s before an abrupt app kill, a much narrower and
+          // rarer case than "cross-device sync never worked."
+          equippedItems: partial.equippedItems ?? state.equippedItems,
+          equippedRoom: partial.equippedRoom ?? state.equippedRoom,
           // Coin drip is once-per-calendar-day keyed by date, so merging (not overwriting)
           // can only add a day either side is missing, never erase one either side already has.
           dailyLoginLog: { ...(partial.dailyLoginLog ?? {}), ...state.dailyLoginLog },
