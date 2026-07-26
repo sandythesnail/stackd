@@ -15668,31 +15668,6 @@ const SHOP_ITEMS = [
           <ellipse cx="110" cy="40" rx="22" ry="5.5" fill="var(--pink-light)"/>`
   },
   {
-    id: 'plant_cactus', name: 'Tiny Cactus', category: 'room', slot: 'plant', price: 45,
-    // Height trimmed from 120 to 116 — the art's lowest point (the pot base) sits at y=116,
-    // so the old 0 0 80 120 viewBox left 4 units of empty space below it. With this slot's
-    // preserveAspectRatio anchored to the box's bottom edge (xMidYMax, see FLOOR_STANDING_SLOTS
-    // in app.js), that empty margin rendered as a gap between the pot and the floor — the pot
-    // looked like it was floating instead of sitting flush.
-    viewBox: '0 0 80 116',
-    desc: 'Thrives on neglect. Relatable.',
-    svg: `<path d="M28,90 L24,116 L56,116 L52,90 Z" fill="#D68A54"/>
-          <rect x="26" y="86" width="28" height="8" fill="#B06A38"/>
-          <rect x="34" y="40" width="12" height="50" rx="6" fill="#6FAE5C"/>
-          <rect x="18" y="55" width="10" height="26" rx="5" fill="#6FAE5C"/>
-          <rect x="52" y="48" width="10" height="30" rx="5" fill="#6FAE5C"/>
-          <circle cx="40" cy="34" r="4" fill="#FF96B8"/>`
-  },
-  {
-    id: 'plant_fern', name: 'Leafy Fern', category: 'room', slot: 'plant', price: 55,
-    viewBox: '0 0 80 120',
-    desc: 'Growing steadily, like your savings.',
-    svg: `<path d="M30,90 L26,116 L54,116 L50,90 Z" fill="#C87848"/>
-          <rect x="28" y="86" width="24" height="8" fill="#A56238"/>
-          <path d="M40,88 C40,60 40,40 40,18" stroke="#4A7840" stroke-width="3" fill="none"/>
-          <path d="M40,80 L20,66 M40,80 L60,66 M40,64 L18,52 M40,64 L62,52 M40,48 L22,38 M40,48 L58,38 M40,32 L26,24 M40,32 L54,24" stroke="#5E9950" stroke-width="3" stroke-linecap="round"/>`
-  },
-  {
     id: 'bed_cozy', name: 'Cozy Blue Bed', category: 'room', slot: 'bed', price: 140,
     viewBox: '0 0 100 130',
     desc: 'Every good saver needs good rest.',
@@ -15739,14 +15714,18 @@ const SHOP_ITEMS = [
     // screen) scaled up ~1.3x, both pieces kept centered on the desk (x=80) and the hinge
     // where they meet kept at y=56/58, so it grew without drifting off the desk surface.
     // Small potted plant (pot/stem/leaves/flower) copied straight from mobile's desk_study
-    // (shopItems.json) at its original coordinates — it sits at x30-45, clear of the laptop
-    // at x58-102, so no rescaling needed to avoid overlap.
+    // (shopItems.json) — it sits at x30-45, clear of the laptop at x58-102, so no rescaling
+    // needed to avoid overlap. The pot body's path was off-center from its own rim/stem/
+    // leaves/flower (body centered on x=37, everything else on x=38 — a 1-unit drift that
+    // read as the pot not quite sitting under its own foliage) — a pre-existing bug in the
+    // source art itself, present in mobile's copy too, not something this port introduced;
+    // shifted the path +1 here so the whole plant shares one true center (x=38).
     svg: `<rect x="15" y="56" width="130" height="8" rx="2" fill="#7A5230"/>
           <rect x="21" y="64" width="6" height="28" fill="#8A6438"/>
           <rect x="133" y="64" width="6" height="28" fill="#8A6438"/>
           <rect x="58" y="56" width="44" height="5" rx="1" fill="var(--border)"/>
           <rect x="61" y="35" width="38" height="23" rx="2" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
-          <path d="M32,50 L30,56 L44,56 L42,50 Z" fill="#D68A54"/>
+          <path d="M33,50 L31,56 L45,56 L43,50 Z" fill="#D68A54"/>
           <rect x="31" y="48" width="14" height="4" fill="#B06A38"/>
           <rect x="36" y="36" width="4" height="14" rx="2" fill="#6FAE5C"/>
           <rect x="30" y="42" width="3" height="8" rx="1.5" fill="#6FAE5C"/>

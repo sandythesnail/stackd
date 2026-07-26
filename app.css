@@ -2060,8 +2060,8 @@ select.budget-input { cursor: pointer; }
 /* aspect-ratio: 1/1 (not a matching height %) guarantees a true square regardless of the
    backdrop's own aspect ratio — width% and height% are against different axes (backdrop
    width vs. height), so no percentage pair alone can guarantee 1:1 the way this can. */
-.room-slot-window { top: 15%; left: 50%; transform: translateX(-50%); width: 20%; aspect-ratio: 1 / 1; height: auto; }
-.room-slot-wall  { top: 6%; left: 6%; width: 15%; height: 40%; }
+.room-slot-window { top: 11%; left: 50%; transform: translateX(-50%); width: 25%; aspect-ratio: 1 / 1; height: auto; }
+.room-slot-wall  { top: 6%; left: 14%; width: 15%; height: 40%; }
 /* Pushed further down (top raised from 3% to 8%, then to 16%) on top of the app.js
    preserveAspectRatio fix (see slotBlock/FLOOR_STANDING_SLOTS) — the box reaching the floor
    wasn't enough on its own, since the SVG content itself was still centered within that box
@@ -2069,7 +2069,7 @@ select.budget-input { cursor: pointer; }
    clock/bookshelf art stacked above .room-floor — without it, floor comes later in the DOM
    with the same default stacking level and painted over the bottom of this box (the item's
    stand). */
-.room-slot-lamp  { top: 16%; right: 5%; width: 13%; height: 48%; z-index: 1; }
+.room-slot-lamp  { top: 16%; right: 12%; width: 13%; height: 48%; z-index: 1; }
 /* The Grandfather Clock is a statement piece (also the most expensive item on the farm) —
    overrides the standard .room-slot-lamp box entirely via the data-item hook in slotBlock.
    Grown from both ends while keeping the same bottom edge (top+height = 64%, matching the
@@ -2092,23 +2092,20 @@ select.budget-input { cursor: pointer; }
 /* All the way back against the wall line (now 58%, where the floor zone starts) instead of
    partway into the foreground. */
 .room-slot-plant { bottom: 46%; left: 38%; width: 13%; height: 18%; z-index: 1; }
-/* Moved from the bottom-right corner to the left side, under the wall art poster
-   (.room-slot-wall, top: 6%; left: 6%; height: 40% -> bottom edge at 46%) and enlarged —
-   bottom: 13% + height: 42% puts this box's top edge at 45%, right up against the poster's
-   own bottom edge. */
-.room-slot-bed   { bottom: 13%; left: -4%; width: 40%; height: 42%; z-index: 1; }
+/* Shifted right from the left edge and enlarged a smidge from the previous pass. */
+.room-slot-bed   { bottom: 13%; left: 4%; width: 43%; height: 45%; z-index: 1; }
 /* Unlike the other room-slots (positioned against the full .room-backdrop), this one is
    nested inside .room-floor (42% of the backdrop's own height — see renderRoomPage), so its
-   bottom/height are percentages of THAT, not the full scene. Sized down from an earlier
-   oversized pass (66%/90%, which read as too big) to a size that still visibly extends
-   behind the centered pig without dominating the whole floor. */
-.room-slot-rug   { bottom: 6%; left: 50%; transform: translateX(-50%); width: 42%; height: 45%; z-index: 1; }
+   bottom/height are percentages of THAT, not the full scene. Kept centered (left: 50% +
+   translateX) and anchored to the same bottom edge — only width/height grew, so the rug's
+   footprint gets bigger without shifting its position at all. */
+.room-slot-rug   { bottom: 6%; left: 50%; transform: translateX(-50%); width: 50%; height: 54%; z-index: 1; }
 /* Centered under the window (also centered) instead of over on the left, so the desk reads
    as the room's focal point against the back wall. z-index raised to 2 (above the rug's 1) —
    both boxes are centered now, so without this the rug (later in the DOM, same stacking
    context as room-backdrop's other children since .room-floor itself has no z-index) painted
    over the desk entirely and neither desk item ever appeared. */
-.room-slot-desk  { bottom: 34%; left: 50%; transform: translateX(-50%); width: 34%; height: 42%; z-index: 2; }
+.room-slot-desk  { bottom: 34%; left: 50%; transform: translateX(-50%); width: 37%; height: 45%; z-index: 2; }
 
 /* No visual box for an empty slot at all — matches the mobile app, which renders nothing.
    Still fully tappable (see the click handler in renderRoomPage), just invisible until
