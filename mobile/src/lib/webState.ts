@@ -82,6 +82,8 @@ export type WebState = {
   dailyLoginLog?: Record<string, number>;
   questBossesWon?: string[];
   budgetPlan?: BudgetPlan;
+  /** Mirrors app.js's state.resetToken — see AppState.resetToken in @/store for what it's for. */
+  resetToken?: number;
   /** Mobile-only fields stashed here so a mobile→mobile round-trip preserves them (the
    * web ignores this key). */
   _mobile?: Partial<AppState>;
@@ -155,6 +157,7 @@ export function webToMobile(web: WebState): Partial<AppState> {
     questBossesWon: arr(web.questBossesWon),
     dailyLoginLog: (web.dailyLoginLog as Record<string, number>) ?? {},
     budgetPlan: web.budgetPlan ?? DEFAULT_BUDGET_PLAN,
+    resetToken: num(web.resetToken),
     ...mobileExtras,
     moduleProgress,
     completedLifeTaskIds,
@@ -245,6 +248,7 @@ export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState
     questBossesWon: mobile.questBossesWon,
     dailyLoginLog: mobile.dailyLoginLog,
     budgetPlan: mobile.budgetPlan,
+    resetToken: mobile.resetToken,
     completedLessons,
     completedModules,
     questProgress,

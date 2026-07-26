@@ -138,6 +138,12 @@ export type AppState = {
   hasSeenOnboardingTour: boolean;
   /** Mirrors the website's state.budgetPlan exactly — see BudgetPlan above. */
   budgetPlan: BudgetPlan;
+  /** Mirrors the website's state.resetToken (app.js) — bumped to Date.now() only by an
+   * explicit "Reset all progress" (here or on web), never by ordinary play. Lets
+   * hydrateFromRemote tell "a real reset happened on some device since I last synced"
+   * apart from an ordinary stale/racy remote read, which otherwise look identical (remote's
+   * numbers are lower than local's either way). See hydrateFromRemote below. */
+  resetToken: number;
 };
 
 const DEFAULT_STATE: AppState = {
@@ -183,6 +189,7 @@ const DEFAULT_STATE: AppState = {
     },
     savingsGoal: 0,
   },
+  resetToken: 0,
 };
 
 export type MysteryResult = {
@@ -827,7 +834,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dismissNewAchievements: () => setNewAchievementIds([]),
       resetProgress: () => {
         AsyncStorage.removeItem(STORAGE_KEY);
-        setState(DEFAULT_STATE);
+        // Stamped fresh so the ordinary debounced SupabaseSync push that follows this
+        // setState (see SupabaseSync.tsx) marks the uploaded row as a real reset, not just
+        // another low-numbers snapshot — otherwise the website's applyRemoteState (and this
+        // same function on a second device) would union/max-merge it against their own
+        // still-cached pre-reset progress and silently resurrect it.
+        setState({ ...DEFAULT_STATE, resetToken: Date.now() });
         setDailyLoginBanner(null);
         setNewAchievementIds([]);
       },
@@ -852,6 +864,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // as "logs in and collects the streak reward, but coins/diamonds don't update": the
       // claim's setState really did land, then this hydrate clobbered it a moment later.
       hydrateFromRemote: (partial) => {
+        // A newer resetToken means "Reset all progress" was pushed from this account (web's
+        // Settings button, or this same function on another device) since we last synced.
+        // That must win completely and skip every union/max merge below — those exist to
+        // keep a stale remote read from undoing recent LOCAL progress, but a real reset is
+        // the opposite: remote's near-empty state is correct, and local's still-cached
+        // pre-reset numbers are what's stale. Merging them in here would silently
+        // resurrect everything the reset just wiped, then re-upload it on the next
+        // debounced push, undoing the reset. Reset to full DEFAULT_STATE (not just
+        // `...state, ...partial`) so mobile-only fields the web reset has no concept of
+        // (lifeEventCooldown, questHintsUsed, …) are wiped too, not left stale.
+        if ((partial.resetToken ?? 0) > state.resetToken) {
+          const { next, streakDiamondsEarned } = runDailyCheck({ ...DEFAULT_STATE, ...partial });
+          setState(next);
+          if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
+          return;
+        }
         // Same race as coins/diamonds/xp below, but for streak/lastPlayedDate/unlocked
         // achievements: a stale remote row (Supabase upsert hasn't landed yet) must not
         // un-advance today's already-computed streak, or applyAchievementUnlocks below
@@ -920,6 +948,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           // Coin drip is once-per-calendar-day keyed by date, so merging (not overwriting)
           // can only add a day either side is missing, never erase one either side already has.
           dailyLoginLog: { ...(partial.dailyLoginLog ?? {}), ...state.dailyLoginLog },
+          // Keep the higher token regardless of which side's `...partial`/`...state` spread
+          // above landed last, so a later hydrate can still tell a genuine reset apart from
+          // an ordinary stale read (see the resetToken check at the top of this function).
+          resetToken: Math.max(state.resetToken, partial.resetToken ?? 0),
         };
         const { next, streakDiamondsEarned } = runDailyCheck(merged);
         setState(next);

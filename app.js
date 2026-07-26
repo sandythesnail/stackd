@@ -16386,6 +16386,12 @@ function maybeShowPostCompletionOverlays(mod, leveled) {
 // ── State ──────────────────────────────────────
 let state = {
   level: 1, xp: 0, streak: 0, lastPlayedDate: null, lastSeenTier: null,
+  // Bumped to Date.now() only by an explicit "Reset all progress" (see resetToken's other
+  // writer in renderSettingsPage's reset-btn handler, and mobile's mirrored resetProgress
+  // in mobile/src/store.tsx) — lets applyRemoteState tell "a real reset happened on some
+  // device since I last synced" apart from "this is just a stale/racy remote read", which
+  // it otherwise couldn't: both look identical (remote's numbers are lower than local's).
+  resetToken: 0,
   completedModules: {}, completedLessons: {}, unlockedAchievements: [], hadPerfect: false,
   activeModuleId: null, activeLessonIdx: 0, activeQuestId: null, sessionQuestions: [],
   currentQ: 0, sessionAnswers: [], sessionScore: 0,
@@ -16424,8 +16430,8 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, lastSeenTier, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
-  const snapshot = { level, xp, streak, lastPlayedDate, lastSeenTier, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
+  const { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
+  const snapshot = { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
   localStorage.setItem('stackd_v2', JSON.stringify(snapshot));
   // Stamp which account this cached snapshot belongs to (see ensureLocalStateOwner).
   if (window.Clerk?.user) localStorage.setItem('stackd_v2_owner', Clerk.user.id);
@@ -16469,8 +16475,40 @@ function scheduleSupabaseSync(snapshot) {
   }, 2000);
 }
 
+// Per-key merge for questProgress (keyed "moduleId::questId"): prefer whichever side's
+// record actually finished the quest (done:true) over one that hasn't, and between two
+// unfinished records prefer whichever got further (higher chapterIdx). Same "a stale
+// remote snapshot must never erase progress made on this device" reasoning as the array
+// unions in applyRemoteState below, just for keyed records that also track how far along
+// they are. Mirrors mobile's moduleProgress union (mobile/src/store.tsx's hydrateFromRemote).
+function mergeQuestProgress(local, remote) {
+  const merged = { ...remote };
+  for (const key of Object.keys(local || {})) {
+    const l = local[key];
+    const r = remote[key];
+    if (!r) { merged[key] = l; continue; }
+    if (l.done && !r.done) merged[key] = l;
+    else if (!l.done && !r.done && (l.chapterIdx || 0) > (r.chapterIdx || 0)) merged[key] = l;
+  }
+  return merged;
+}
+
 function applyRemoteState(remote) {
   if (!remote) return;
+  // A newer resetToken means "Reset all progress" was pushed from this account (this
+  // device's own Settings button, or the mirrored one on mobile/src/store.tsx) since this
+  // device last synced. That must win completely and skip every guard below — those
+  // guards exist to keep a stale remote read from undoing recent LOCAL progress, but a
+  // real reset is the opposite: remote's near-empty state is the one that's correct, and
+  // local's still-cached pre-reset numbers are what's stale. Blindly union/max-merging
+  // them here would silently resurrect everything the reset just wiped, and then
+  // re-upload it, undoing the reset on the very next debounced sync.
+  if ((remote.resetToken || 0) > (state.resetToken || 0)) {
+    Object.assign(state, remote);
+    saveState();
+    renderHome();
+    return;
+  }
   // The debounced Supabase sync (see scheduleSupabaseSync) can lose the race against a
   // page reload — e.g. the user finishes a lesson and backgrounds the tab within the
   // 2s debounce window, so the remote row never picks up that day's streak bump. If we
@@ -16489,8 +16527,31 @@ function applyRemoteState(remote) {
   // diamonds here silently reverted whatever was just earned, most visibly the streak
   // card's reward: claim it right after a fresh page load and this remote read (still
   // stale) would land moments later and wipe it back down. Keep whichever side is higher.
+  //
+  // NOTE: this max() is a known imperfect heuristic for cross-device use — it assumes
+  // currency only goes up, which isn't true once you consider a purchase made on the
+  // OTHER device after this device's local cache was last written (that spend's coins
+  // would be lower on remote, and max() would keep this device's stale higher balance
+  // and re-upload it, silently "refunding" the purchase). Fixing that for real means
+  // treating currency as a server-applied delta rather than a client-mergeable absolute
+  // number; out of scope for this pass, which only fixes the same-device debounce race.
   const localCoins = state.coins || 0;
   const localDiamonds = state.diamonds || 0;
+  // The rest of these fields only ever grow by finishing a lesson/quest or buying
+  // something — never shrink — so unioning both sides (instead of trusting remote
+  // wholesale) can only add back progress a stale remote read would otherwise have
+  // erased, never resurrect something that shouldn't exist. Mirrors mobile's
+  // hydrateFromRemote (store.tsx), which needed the exact same fix for the exact same
+  // reports: finish a lesson or buy room decor, reload moments later, and it was gone
+  // because this boot-time remote read raced the 2s-debounced upload.
+  const localXp = state.xp || 0;
+  const localCompletedModules = state.completedModules || {};
+  const localCompletedLessons = state.completedLessons || {};
+  const localQuestProgress = state.questProgress || {};
+  const localOwnedItems = state.ownedItems || [];
+  const localOwnedRoomItems = state.ownedRoomItems || [];
+  const localQuestBossesWon = state.questBossesWon || [];
+  const localUnlockedAchievements = state.unlockedAchievements || [];
   Object.assign(state, remote);
   state.coins = Math.max(state.coins || 0, localCoins);
   state.diamonds = Math.max(state.diamonds || 0, localDiamonds);
@@ -16510,6 +16571,18 @@ function applyRemoteState(remote) {
   // this back to false on the very next load and show the tour again. Once seen locally, it
   // stays seen regardless of what a stale remote snapshot says.
   if (localHasSeenTour) state.hasSeenOnboardingTour = true;
+  // xp only ever grows (spending happens in coins/diamonds, never xp), so the higher side
+  // is always the more-progressed one — recompute level from the merged xp instead of
+  // trusting either side's stored level, so the two can never disagree after a merge.
+  state.xp = Math.max(state.xp || 0, localXp);
+  while (state.level < LEVEL_THRESHOLDS.length && state.xp >= xpForLevel(state.level)) state.level++;
+  state.ownedItems = Array.from(new Set([...localOwnedItems, ...(state.ownedItems || [])]));
+  state.ownedRoomItems = Array.from(new Set([...localOwnedRoomItems, ...(state.ownedRoomItems || [])]));
+  state.questBossesWon = Array.from(new Set([...localQuestBossesWon, ...(state.questBossesWon || [])]));
+  state.unlockedAchievements = Array.from(new Set([...localUnlockedAchievements, ...(state.unlockedAchievements || [])]));
+  state.completedModules = { ...(state.completedModules || {}), ...localCompletedModules };
+  state.completedLessons = { ...(state.completedLessons || {}), ...localCompletedLessons };
+  state.questProgress = mergeQuestProgress(localQuestProgress, state.questProgress || {});
   saveState();
   renderHome();
 }
@@ -18842,9 +18915,16 @@ function renderSettingsPage() {
         // saveState() already uses successfully) instead of deleting it. A delete can look
         // like it succeeded yet silently affect 0 rows if there's no delete policy under
         // row-level security, which was the actual cause of reset not sticking.
+        //
+        // resetToken is stamped fresh (not just left at DEFAULT_STATE_JSON's frozen 0) so
+        // that whichever device reads this row next — including the mobile app, whose
+        // hydrateFromRemote otherwise unions/max-merges against local and would silently
+        // resurrect (and re-upload) this device's now-stale pre-reset progress — recognizes
+        // this as a real reset instead of just another stale-looking remote snapshot.
+        const resetState = { ...JSON.parse(DEFAULT_STATE_JSON), resetToken: Date.now() };
         const { error } = await window.stackdSupabase
           .from('user_progress')
-          .upsert({ clerk_user_id: Clerk.user.id, state: JSON.parse(DEFAULT_STATE_JSON) });
+          .upsert({ clerk_user_id: Clerk.user.id, state: resetState });
         if (error) {
           console.error('Failed to reset synced progress:', error);
           alert('Progress was reset on this device, but syncing the reset to your account failed. It may come back on next login. Check your connection and try again.');
