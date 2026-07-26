@@ -15847,20 +15847,27 @@ const SHOP_ITEMS = [
     desc: 'Hardware for hitting your goals.',
     // The blue medal + its ribbon sat at cx=30 in the middle compartment (x10-60, true
     // center 35) — off-center by 5. Shifted both +5 so the medal centers in its shelf.
+    // Also: the trophy sat 1 unit above its own compartment floor (y42) and the medal circle
+    // sat right against the TOP of its compartment (y46) instead of resting on its floor
+    // (y72) — both read as floating/hanging rather than sitting on the shelf. Trophy group
+    // nudged down 1 (as far as it can go before touching the divider bar); medal's cy moved
+    // from 56 to 62 so it now rests on the y72 floor (the ribbon path is unchanged — its
+    // flared tips already reached y72, and now peek out from behind the lower medal instead
+    // of mostly showing above it).
     svg: `<rect x="6" y="8" width="58" height="96" rx="3" fill="#8A6438"/>
           <rect x="10" y="12" width="50" height="88" fill="#F0EAE0"/>
           <rect x="10" y="42" width="50" height="4" fill="#8A6438"/>
           <rect x="10" y="72" width="50" height="4" fill="#8A6438"/>
-          <path d="M28,16 L28,28 Q28,33 35,33 Q42,33 42,28 L42,16 Z" fill="#C9A227"/>
-          <path d="M28,18 Q20,18 20,24 Q20,29 27,28" stroke="#C9A227" stroke-width="2" fill="none"/>
-          <path d="M42,18 Q50,18 50,24 Q50,29 43,28" stroke="#C9A227" stroke-width="2" fill="none"/>
-          <rect x="32" y="33" width="6" height="4" fill="#C9A227"/>
-          <rect x="27" y="37" width="16" height="4" rx="1" fill="#B5607A"/>
+          <path d="M28,17 L28,29 Q28,34 35,34 Q42,34 42,29 L42,17 Z" fill="#C9A227"/>
+          <path d="M28,19 Q20,19 20,25 Q20,30 27,29" stroke="#C9A227" stroke-width="2" fill="none"/>
+          <path d="M42,19 Q50,19 50,25 Q50,30 43,29" stroke="#C9A227" stroke-width="2" fill="none"/>
+          <rect x="32" y="34" width="6" height="4" fill="#C9A227"/>
+          <rect x="27" y="38" width="16" height="4" rx="1" fill="#B5607A"/>
           <path d="M29,62 L25,70 L31,67 L35,72 L39,67 L45,70 L41,62 Z" fill="#3B6B94"/>
-          <circle cx="35" cy="56" r="10" fill="#8FE3F5"/>
-          <circle cx="35" cy="56" r="10" fill="none" stroke="#2AA8C4" stroke-width="1.5"/>
-          <circle cx="35" cy="56" r="6" fill="#2AA8C4"/>
-          <circle cx="35" cy="56" r="2" fill="#E8FBFF"/>
+          <circle cx="35" cy="62" r="10" fill="#8FE3F5"/>
+          <circle cx="35" cy="62" r="10" fill="none" stroke="#2AA8C4" stroke-width="1.5"/>
+          <circle cx="35" cy="62" r="6" fill="#2AA8C4"/>
+          <circle cx="35" cy="62" r="2" fill="#E8FBFF"/>
           <path d="M18,82 L18,92 Q18,96 23,96 Q28,96 28,92 L28,82 Z" fill="#C88A4A"/>
           <rect x="21" y="96" width="4" height="3" fill="#C88A4A"/>
           <rect x="17" y="99" width="12" height="3" rx="1" fill="#B5607A"/>
@@ -15932,11 +15939,16 @@ const SHOP_ITEMS = [
     id: 'window_sunset', name: 'Sunset Window', category: 'room', slot: 'window', price: 160,
     viewBox: '0 0 160 160',
     desc: 'Golden hour, every hour.',
+    // The sun's fill (#FFC15E) was the exact same color as the sky gradient's own bottom
+    // stop, so wherever the disc sat over that fully-faded-to-gold part of the sky it had no
+    // visible edge — it read as a broken/half-missing shape. A stroke around it looked wrong
+    // (an odd ring), so instead the sun itself is now a lighter, distinct gold that reads as
+    // a glowing disc against the sky rather than blending into it, no outline needed.
     svg: `<defs><linearGradient id="sw-sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#6B4C8A"/><stop offset="45%" stop-color="#E8724A"/><stop offset="100%" stop-color="#FFC15E"/></linearGradient></defs>
           <rect x="8" y="8" width="144" height="144" rx="8" fill="#8A6438"/>
           <rect x="20" y="20" width="120" height="120" fill="url(#sw-sky)"/>
-          <circle cx="105" cy="100" r="18" fill="#FFC15E"/>
-          <circle cx="100" cy="95" r="6" fill="#FFE3B0" opacity="0.5"/>
+          <circle cx="105" cy="100" r="18" fill="#FFE9A6"/>
+          <circle cx="100" cy="95" r="6" fill="#FFF6DC" opacity="0.6"/>
           <path d="M20,140 Q45,120 70,132 Q95,115 120,130 Q130,125 140,130 L140,140 L20,140 Z" fill="#4A2C3A"/>
           <rect x="20" y="20" width="120" height="120" fill="none" stroke="#8A6438" stroke-width="5"/>
           <line x1="80" y1="20" x2="80" y2="140" stroke="#8A6438" stroke-width="5"/>
@@ -16795,6 +16807,13 @@ function showScreen(id) {
   window.scrollTo(0, 0);
 }
 
+// Browser tab title per page — plain <title> tags are static, so without this every tab
+// just reads "Stacked | Dashboard" no matter which section is actually open.
+const PAGE_TITLES = {
+  home: 'Dashboard', progress: 'Progress', modules: 'Modules', tools: 'Tools',
+  badges: 'Badges', room: 'Room', shop: 'Shop', settings: 'Settings',
+};
+
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
@@ -16805,6 +16824,7 @@ function showPage(id) {
   const subnav = document.querySelector('.nav-subnav');
   if (subnav) subnav.classList.toggle('mobile-open', id === 'shop');
   if (id === 'shop') updateShopNavHighlight();
+  document.title = `Stacked | ${PAGE_TITLES[id] || 'Dashboard'}`;
   window.scrollTo(0, 0);
 }
 
