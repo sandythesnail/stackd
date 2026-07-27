@@ -1,8 +1,13 @@
 import { useState, ReactNode } from 'react';
-import { View, StyleSheet, ViewStyle, LayoutChangeEvent } from 'react-native';
+import { View, ScrollView, StyleSheet, ViewStyle, LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
-const MIN_SCALE = 0.85;
+// Raised from 0.85 — a 15% shrink was big enough to read as the whole screen visibly
+// "minimizing" whenever an answer's explanation card pushed content past the fit, rather
+// than a subtle reflow. Anything past what this smaller floor can absorb now scrolls
+// instead of shrinking further (see `overflowsAtFloor` below), so this only ever needs to
+// cover minor overflow, not the full range up to "unreadably tiny."
+const MIN_SCALE = 0.94;
 
 /** Fits its children into the available height instead of letting them scroll — measures
  * both the container's available height and the content's natural (unscaled) height, then
@@ -17,8 +22,8 @@ const MIN_SCALE = 0.85;
  * plain tap-driven content (teach/knowledgecheck/matching).
  *
  * Scale floors at MIN_SCALE rather than shrinking without limit — content denser than that
- * still needs a real fix (splitting into another chapter step), not an unreadably tiny
- * shrink, so this is a "cheap common case" fit, not a universal guarantee. */
+ * falls back to a scrollable container instead (see `overflowsAtFloor`), not an unreadably
+ * tiny shrink. */
 export function FitToViewport({
   children,
   style,
@@ -39,6 +44,14 @@ export function FitToViewport({
   const ready = availableH != null && naturalH != null;
   const rawScale = ready && naturalH! > availableH! ? availableH! / naturalH! : 1;
   const scale = Math.max(MIN_SCALE, rawScale);
+  // Content that's STILL taller than the container at the MIN_SCALE floor (e.g. a
+  // knowledge-check question whose answer explanation pushed the total past what the floor
+  // shrink can absorb) used to just get clipped — `root` was always `overflow: hidden`
+  // regardless of whether the floor was actually enough, silently cutting off whatever sat
+  // at the bottom (in the worst case, the last answer option itself). Falling back to a
+  // scrollable container only for this case keeps everything reachable without giving up
+  // the shrink-to-fit behavior for the common case where MIN_SCALE fits fine.
+  const overflowsAtFloor = ready && naturalH! * scale > availableH!;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: withTiming(scale, { duration: 180 }) }],
@@ -51,6 +64,17 @@ export function FitToViewport({
     opacity: withTiming(ready ? 1 : 0, { duration: ready ? 120 : 0 }),
   }));
 
+  const content = (
+    <Animated.View
+      onLayout={onContentLayout}
+      // Shrinks from the top edge, not the true center — keeps the content's top flush
+      // with the container instead of also opening a gap above it.
+      style={[contentStyle, animatedStyle, { transformOrigin: 'top center' }]}
+    >
+      {children}
+    </Animated.View>
+  );
+
   return (
     // alignItems: 'center' compensates the visual width shrink from `scale` by centering the
     // (still full-width-measured) content horizontally, splitting the gap evenly on both
@@ -60,18 +84,16 @@ export function FitToViewport({
     // that visibly kept re-shrinking/re-growing the content instead of settling). Measuring
     // at a fixed, never-adjusted width is what keeps this stable.
     <View style={[styles.root, style]} onLayout={onContainerLayout}>
-      <Animated.View
-        onLayout={onContentLayout}
-        // Shrinks from the top edge, not the true center — keeps the content's top flush
-        // with the container instead of also opening a gap above it.
-        style={[contentStyle, animatedStyle, { transformOrigin: 'top center' }]}
-      >
-        {children}
-      </Animated.View>
+      {overflowsAtFloor ? (
+        <ScrollView style={styles.scrollFallback} showsVerticalScrollIndicator={false}>
+          {content}
+        </ScrollView>
+      ) : content}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { overflow: 'hidden', alignItems: 'center' },
+  scrollFallback: { width: '100%' },
 });
