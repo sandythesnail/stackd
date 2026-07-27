@@ -8,16 +8,25 @@ import {
 } from '@/components';
 import { useUser } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
-import { user, modules } from '@/data';
+import { user, modules, type Module } from '@/data';
 import { useStore, type AchievementView } from '@/store';
 import { authEnabled } from '@/lib/env';
 import { SURVEY_TRACKS } from '@/survey';
 import { todaysHammyMood, hasModuleActivityToday } from '@/hammyMood';
 import { MOOD_FACES } from '@/hammyFaces';
 
+/** Morning/afternoon/evening by local device time — this used to always say "Good
+ * afternoon" regardless of when the user actually opened the app. */
+function timeOfDayGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 /** Greeting name from the real signed-in Clerk user when auth is on, else the local mock. */
 function Greeting() {
-  return <Txt variant="disp" style={{ fontSize: 23 }}>Good afternoon, {authEnabled ? <ClerkName /> : user.name}</Txt>;
+  return <Txt variant="disp" style={{ fontSize: 23 }}>{timeOfDayGreeting()}, {authEnabled ? <ClerkName /> : user.name}</Txt>;
 }
 function ClerkName() {
   const { user: clerkUser } = useUser();
@@ -59,7 +68,23 @@ export default function Home() {
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
   const trackModuleIds = activeTrack?.moduleIds ?? [];
 
-  const homeModules = modules.slice(0, 4).map((m) => {
+  // Both the tiles below AND nextModule further down used to read straight off `modules`
+  // in its fixed catalog order (earning, spending, saving, investing, ...) — regardless of
+  // trackModuleIds. That made the survey's whole recommended-track result invisible after
+  // onboarding: nextModule always resolved to "earning" (the first not-done entry in that
+  // fixed order) no matter which track was picked, and homeModules only ever sliced the
+  // first 4 catalog entries, so the "★ Recommended" tag could never even appear for a track
+  // that didn't happen to include one of those 4. Reordering the recommended track's
+  // modules to the front (falling back to catalog order for the rest, or entirely once
+  // there's no track) fixes both at once.
+  const orderedModules: Module[] = trackModuleIds.length
+    ? [
+        ...trackModuleIds.map((id) => modules.find((m) => m.id === id)).filter((m): m is Module => !!m),
+        ...modules.filter((m) => !trackModuleIds.includes(m.id)),
+      ]
+    : modules;
+
+  const homeModules = orderedModules.slice(0, 4).map((m) => {
     const status = moduleStatus(m.id);
     const total = moduleTotal(m.id);
     const done = moduleDone(m.id);
@@ -72,7 +97,7 @@ export default function Home() {
 
   const earnedBadges = achievements().filter((b) => b.earned).slice(0, 4);
 
-  const nextModule = modules.find((m) => moduleStatus(m.id) === 'active');
+  const nextModule = orderedModules.find((m) => moduleStatus(m.id) === 'active');
   const nextDone = nextModule ? moduleDone(nextModule.id) : 0;
   const nextTotal = nextModule ? moduleTotal(nextModule.id) : 0;
   const nextPct = nextTotal ? nextDone / nextTotal : 0;
@@ -96,7 +121,11 @@ export default function Home() {
     ? "Hammy's had a great day already, thanks to you! Keep it going?"
     : mood.msg;
   const moodFace = activeToday ? MOOD_FACES.satisfied : MOOD_FACES[mood.id];
-  const ctaLabel = activeToday ? 'Keep Hammy happy — do another module' : 'Continue quest';
+  // "Continue quest" used to sit directly above/below "Lesson N / M" on this same card —
+  // "quest" is otherwise purely an internal/code term (Results and Modules consistently
+  // say "lesson" throughout), so this one spot read as if quest and lesson were two
+  // different things.
+  const ctaLabel = activeToday ? 'Keep Hammy happy — do another module' : 'Continue lesson';
 
   return (
     <Screen edges={['top']}>
@@ -130,7 +159,7 @@ export default function Home() {
           <Stat value={<Row><Diamond /><Num>{state.diamonds}</Num></Row>} label="Diamonds" />
         </View>
 
-        {/* Continue quest */}
+        {/* Continue lesson */}
         {nextModule ? (
           <Card style={styles.questCard}>
             <View style={styles.questTop}>
@@ -142,7 +171,14 @@ export default function Home() {
             <View style={{ marginTop: 14 }}>
               <View style={styles.questMeta}>
                 <Txt style={{ fontFamily: font.displayMed, fontSize: 14, color: colors.ink }}>{nextModule.name}</Txt>
-                <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.pinkDark }}>Lesson {nextLesson + 1} / {nextTotal}</Txt>
+                {/* The real-life sub-quest is never called "Lesson N" anywhere else — the
+                    Modules tab and ModuleLessonList both show it as its own unnumbered
+                    "🎯 Real-life sub-quest" row below the 8 numbered lessons. This used to
+                    say "Lesson 9 / 9" here specifically, the one place a user would see it
+                    numbered like a regular lesson. */}
+                <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.pinkDark }}>
+                  {nextIsLifeTask ? 'Real-life sub-quest' : `Lesson ${nextLesson + 1} / ${nextTotal}`}
+                </Txt>
               </View>
               <ProgressBar value={nextPct} tone="pink" />
             </View>

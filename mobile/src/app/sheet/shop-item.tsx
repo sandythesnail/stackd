@@ -110,17 +110,22 @@ export default function ShopItemModal() {
     buttonLabel = `Open for ${item.price} ${currency}${item.price === 1 ? '' : 's'}`;
     buttonDisabled = !canAfford;
   } else if (item.reward) {
-    buttonLabel = `🎓 ${item.rewardHint ?? 'Complete all 10 modules to earn this'}`;
+    buttonLabel = `🎓 ${item.rewardHint ?? 'Complete all 11 modules to earn this'}`;
     buttonDisabled = true;
   } else if (item.mysteryOnly) {
     buttonLabel = `🎁 Only from the ${mysteryBoxNameFor(item.mysteryPool!)}`;
     buttonDisabled = true;
   } else if (equipped) {
-    buttonLabel = 'Unplace';
+    // Wallpaper is "Unapply", genuine room furniture is "Unplace" — both match this same
+    // item's status label above and the Room tab. Wearables (hats/accessories, no slot)
+    // previously said "Unplace" too, contradicting the Shop grid/Wardrobe tab's
+    // "Worn"/"Wear" for the exact same items.
+    buttonLabel = item.slot === 'wallpaper' ? 'Unapply' : item.slot ? 'Unplace' : 'Unwear';
     buttonDisabled = false;
   } else if (owned) {
     const noFreeSlot = !item.slot && state.equippedItems.length >= MAX_EQUIPPED_ITEMS;
-    buttonLabel = noFreeSlot ? 'Place (unplace something first)' : 'Place';
+    const equipVerb = item.slot === 'wallpaper' ? 'Apply' : item.slot ? 'Place' : 'Wear';
+    buttonLabel = noFreeSlot ? `${equipVerb} (take something off first)` : equipVerb;
     buttonDisabled = noFreeSlot;
   } else {
     buttonLabel = `Buy for ${item.price} ${currency}${item.price === 1 ? '' : 's'}`;

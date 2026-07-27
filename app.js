@@ -16054,7 +16054,7 @@ const SHOP_ITEMS = [
   {
     id: 'graduation_cap', name: 'Graduation Cap', category: 'reward', reward: true,
     viewBox: '14 -4 92 46',
-    desc: 'Awarded for completing all 10 modules. Can\'t be bought, only earned.',
+    desc: 'Awarded for completing all 11 modules. Can\'t be bought, only earned.',
     svg: `<defs><linearGradient id="gcp-top" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="#3D3D3D"/><stop offset="100%" stop-color="#141414"/></linearGradient></defs>
           <ellipse cx="60" cy="27" rx="19" ry="7" fill="#1C1C1C"/>
           <ellipse cx="60" cy="25" rx="19" ry="6.4" fill="#2B2B2B"/>
@@ -18138,6 +18138,13 @@ function refreshShopModal(itemId) {
   const owned = isRoom ? (state.ownedRoomItems || []).includes(itemId) : (state.ownedItems || []).includes(itemId);
   const equipped = isRoom ? state.equippedRoom[item.slot] === itemId : (state.equippedItems || []).includes(itemId);
   const canAfford = item.reward ? false : shopBalanceFor(item) >= item.price;
+  // Wallpaper is "Apply"/"Applied", genuine room furniture (a slot other than wallpaper)
+  // is "Place"/"Placed" — both already matched the Room page. Wearables (hats/accessories,
+  // isRoom false) previously fell into the same "Place"/"Placed" bucket as furniture here,
+  // which contradicted the Wardrobe tab's "Wear"/"✓ Worn" for the exact same items one
+  // screen-navigation away. Now matches Wardrobe's terminology for wearables too.
+  const equipVerb = isWallpaper ? 'Apply' : isRoom ? 'Place' : 'Wear';
+  const equippedVerb = isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Worn';
   let btn;
   if (item.isMysteryBox) {
     const remaining = mysteryPoolUnowned(item.mysteryPool).length;
@@ -18147,15 +18154,15 @@ function refreshShopModal(itemId) {
       btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>Open Box · ${shopPriceLabel(item)}</button>`;
     }
   } else if (equipped) {
-    btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${isWallpaper ? 'Applied' : 'Placed'} · Remove</button>`;
+    btn = `<button class="shop-btn shop-btn-unequip" data-id="${itemId}">✓ ${equippedVerb} · Remove</button>`;
   } else if (owned && !isRoom && (state.equippedItems || []).length >= MAX_EQUIPPED_ITEMS) {
-    btn = `<button class="shop-btn shop-btn-broke" disabled>Unplace something first (max ${MAX_EQUIPPED_ITEMS})</button>`;
+    btn = `<button class="shop-btn shop-btn-broke" disabled>Take something off first (max ${MAX_EQUIPPED_ITEMS})</button>`;
   } else if (owned) {
-    btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">${isWallpaper ? 'Apply' : 'Place'}</button>`;
+    btn = `<button class="shop-btn shop-btn-equip" data-id="${itemId}">${equipVerb}</button>`;
   } else if (item.mysteryOnly) {
     btn = `<button class="shop-btn shop-btn-broke" disabled>${ICON_GIFT} Only from the ${mysteryBoxNameFor(item.mysteryPool)}</button>`;
   } else if (item.reward) {
-    btn = `<button class="shop-btn shop-btn-broke" disabled>🎓 ${item.rewardHint || 'Complete all 10 modules to earn this'}</button>`;
+    btn = `<button class="shop-btn shop-btn-broke" disabled>🎓 ${item.rewardHint || 'Complete all 11 modules to earn this'}</button>`;
   } else {
     btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>${shopPriceLabel(item)}</button>`;
   }
@@ -18277,7 +18284,9 @@ function renderShopPage() {
       const statusLabel = isBox
         ? (boxRemaining ? shopPriceLabel(item) : '✓ All collected!')
         : equipped
-        ? (item.slot === 'wallpaper' ? '✓ Applied' : '✓ Placed')
+        // Same fix as refreshShopModal's equipVerb/equippedVerb above: wearables now say
+        // "Worn" here too, matching the Wardrobe tab instead of contradicting it.
+        ? (item.slot === 'wallpaper' ? '✓ Applied' : isRoom ? '✓ Placed' : '✓ Worn')
         : owned ? 'Owned'
         : isLocked ? `${ICON_GIFT} ${mysteryBoxNameFor(item.mysteryPool)}`
         : isReward ? '🎓 Locked'
@@ -18531,6 +18540,26 @@ function renderRoomPage() {
       renderRoomPage();
     });
   });
+
+  // Wallpaper renders into its own #room-wall-zone div, not a .room-slot element (it fills
+  // the whole backdrop rather than a discrete box), so the click-to-unequip wiring above
+  // never covered it — a returning user who'd learned "click a placed item in the Room to
+  // remove it" from every other slot got a silent dead click here instead, needing a trip
+  // back to the Shop just for wallpaper. Same click-to-remove-or-shop pattern as every
+  // other slot, applied here too.
+  const wallZone = document.getElementById('room-wall-zone');
+  if (wallZone) {
+    wallZone.addEventListener('click', () => {
+      if (wallpaper) {
+        state.equippedRoom.wallpaper = null;
+        saveState();
+        renderRoomPage();
+      } else {
+        showPage('shop');
+        renderShopPage();
+      }
+    });
+  }
 
   scene.querySelector('.room-pig').addEventListener('click', () => {
     roomActiveTab = 'wardrobe';
@@ -18976,7 +19005,7 @@ function renderSettingsPage() {
   const resetBtn = document.getElementById('reset-btn');
   if (resetBtn) {
     resetBtn.onclick = async () => {
-      if (!confirm('Reset all progress? This cannot be undone.')) return;
+      if (!confirm('Reset all progress? This wipes your XP, modules, badges, coins, diamonds, shop items, room decor, and budget plan. This cannot be undone.')) return;
       clearTimeout(supabaseSyncTimeout);
       localStorage.removeItem('stackd_v2');
       if (window.stackdSupabase && window.Clerk?.user) {
@@ -19185,7 +19214,7 @@ function renderBudgetCalculatorPanel() {
         </div>
         <div class="budget-card">
           <div class="budget-card-title">Variable Expenses</div>
-          <div class="budget-note">Food delivery and beauty services add up faster than most students expect. See your monthly total below.</div>
+          <div class="budget-note">Food delivery and beauty services add up faster than most students expect. Your combined monthly total: <strong id="budget-callout-total">$0</strong></div>
           <div class="budget-row-list" id="variable-rows"></div>
         </div>
         <div class="budget-card">
@@ -19261,6 +19290,11 @@ function renderBudgetCalculatorPanel() {
     document.querySelectorAll('.budget-row-callout').forEach(row => {
       row.classList.toggle('over-threshold', totals.deliveryBeautyTotal > 100);
     });
+    // The note above promised "your monthly total" but nothing ever actually rendered
+    // one — deliveryBeautyTotal was already computed here for the threshold check above,
+    // just never shown to the user it was being described to.
+    const totalEl = document.getElementById('budget-callout-total');
+    if (totalEl) totalEl.textContent = `$${totals.deliveryBeautyTotal.toFixed(0)}`;
   }
 
   function wireRowInput(input) {

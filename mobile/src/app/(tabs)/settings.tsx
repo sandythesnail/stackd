@@ -36,7 +36,7 @@ export default function Settings() {
   };
 
   const confirmReset = () => {
-    confirmDestructive('Reset all progress?', 'This cannot be undone.', 'Reset', () => {
+    confirmDestructive('Reset all progress?', 'This wipes your XP, modules, badges, coins, diamonds, shop items, room decor, and budget plan. This cannot be undone.', 'Reset', () => {
       resetProgress();
       // Straight back to Home, not onboarding — the user is still signed in, and
       // resetProgress() already zeroed local state, so Home immediately reflects the
@@ -56,7 +56,7 @@ export default function Settings() {
           {authEnabled ? <ClerkAccountRow /> : <Row icon="user" title="Account" sub={user.email} />}
           <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.push('/(onboarding)/survey')} />
           <Row icon="compass" title="Replay welcome tour" sub="XP, the Shop & modules, quick refresher" onPress={replayTour} />
-          <Row icon="trash-2" title="Reset all progress" sub="Clears all XP, modules, and badges permanently." danger onPress={confirmReset} />
+          <Row icon="trash-2" title="Reset all progress" sub="Clears all XP, modules, badges, coins, diamonds, shop items, room decor, and your budget plan — permanently." danger onPress={confirmReset} />
           {__DEV__ ? (
             <Row
               icon="fast-forward"

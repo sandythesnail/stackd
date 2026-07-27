@@ -232,7 +232,11 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
           )
         ) : equipped ? (
           <View style={[styles.statusRow, styles.statusOwned]}>
-            <Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ {isWallpaper ? 'Applied' : 'Placed'}</Txt>
+            {/* Wallpaper is "Applied", genuine room furniture is "Placed" — both already
+                match the Room tab. Wearables (hats/accessories, isRoom false) previously
+                said "Placed" too, contradicting the Wardrobe tab's "✓ Worn" for the exact
+                same items one tap away. Now matches Wardrobe's terminology. */}
+            <Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ {isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Worn'}</Txt>
           </View>
         ) : owned ? (
           <View style={[styles.statusRow, styles.statusOwned]}><Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>Owned</Txt></View>
