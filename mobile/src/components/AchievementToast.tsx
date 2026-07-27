@@ -17,6 +17,13 @@ export function AchievementToast() {
 
   useEffect(() => {
     if (!first) return;
+    // This component stays mounted for the app's lifetime (rendered once at the root) —
+    // when `first` is falsy it just returns null rather than unmounting, so `y` (a ref)
+    // persists across toasts. Without resetting it back off-screen here first, only the
+    // very FIRST achievement toast of the session ever actually slides in: every
+    // subsequent one starts the spring from wherever the previous toast left `y` (already
+    // 0), which is a no-op — the toast just pops into place with no animation.
+    y.setValue(-120);
     Animated.spring(y, { toValue: 0, useNativeDriver: true, friction: 8 }).start();
     const t = setTimeout(dismissNewAchievements, 3500);
     return () => clearTimeout(t);

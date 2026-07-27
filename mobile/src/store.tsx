@@ -32,6 +32,12 @@ const RARITY_WEIGHT: Record<string, number> = { common: 8, rare: 4, epic: 2, leg
 /** LEVEL_THRESHOLDS ported verbatim from app.js — xp needed to REACH each level (index = level). */
 const LEVEL_THRESHOLDS = [0, 90, 200, 330, 480, 660, 880, 1150, 1450, 1800, 2200];
 
+/** Highest real level — a player at this level has no "next level" to progress toward.
+ * Exported so screens showing "X XP to next level" (progress.tsx) can hide/adjust that
+ * copy instead of promising a level (e.g. "Level 12") that doesn't exist and can never be
+ * reached. */
+export const MAX_LEVEL = LEVEL_THRESHOLDS.length;
+
 export function xpForLevel(l: number) {
   return LEVEL_THRESHOLDS[Math.min(l, LEVEL_THRESHOLDS.length - 1)];
 }

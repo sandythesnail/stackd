@@ -56,7 +56,13 @@ export default function ModuleDetail() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <LinearGradient colors={[colors.white, mod.color]} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={[styles.hero, { borderColor: mod.color }]}>
-          <MIcon abbr={mod.icon} color={mod.textColor} size={52} r={16} fontSize={20} />
+          {/* color/textColor swapped here previously (only color was set, to mod.textColor
+              — the DARK tone) — every other MIcon call site passes color={m.color}
+              (the pale chip) with textColor={m.textColor} on top of it. With no textColor
+              prop, MIcon's own default (colors.white) kicked in, rendering this hero badge
+              as a solid dark chip with white text, the exact "white-on-color" look the
+              component's own doc comment says should never happen. */}
+          <MIcon abbr={mod.icon} color={mod.color} textColor={mod.textColor} size={52} r={16} fontSize={20} />
           <View style={{ flex: 1 }}>
             <Txt variant="h2">{content?.desc ?? mod.name}</Txt>
             <View style={styles.heroMeta}>

@@ -449,7 +449,11 @@ function BudgetPanel() {
 
   // Mirrors the website's renderBudgetCalculatorPanel: an empty income/fixed-expense list
   // (a first-time visit, or one the player cleared out entirely) gets a single starter row
-  // seeded back in, rather than showing a blank list with nothing to edit.
+  // seeded back in, rather than showing a blank list with nothing to edit. Depends on the
+  // list LENGTHS (not `[]`) so this actually re-fires if the player removes every row of
+  // either list mid-session via the × button — an empty-deps effect only ever ran once at
+  // mount, so "cleared out entirely" never actually reseeded after the first load, despite
+  // this comment claiming it does.
   useEffect(() => {
     if (plan.incomeSources.length === 0 || plan.fixedExpenses.length === 0) {
       setBudgetPlan((p) => ({
@@ -459,7 +463,7 @@ function BudgetPanel() {
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [plan.incomeSources.length, plan.fixedExpenses.length]);
 
   const [whatIfCategory, setWhatIfCategory] = useState('foodDelivery');
   const [whatIfCut, setWhatIfCut] = useState(0);
@@ -489,8 +493,13 @@ function BudgetPanel() {
     setBudgetPlan((p) => ({ ...p, fixedExpenses: p.fixedExpenses.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
   const removeIncome = (id: string) => setBudgetPlan((p) => ({ ...p, incomeSources: p.incomeSources.filter((x) => x.id !== id) }));
   const removeFixed = (id: string) => setBudgetPlan((p) => ({ ...p, fixedExpenses: p.fixedExpenses.filter((x) => x.id !== id) }));
-  const addIncome = () => setBudgetPlan((p) => ({ ...p, incomeSources: [...p.incomeSources, { id: `inc${Date.now()}`, label: 'New source', amount: '' as const }] }));
-  const addFixed = () => setBudgetPlan((p) => ({ ...p, fixedExpenses: [...p.fixedExpenses, { id: `fix${Date.now()}`, label: 'New expense', amount: '' as const }] }));
+  // A Date.now()-only id lets two rapid taps (same millisecond) mint identical ids — since
+  // every mutator above matches by `x.id === id`/`x.id !== id` and React keys rows by id
+  // (below), a collision makes editing or removing "one" row silently act on both at once.
+  // The random suffix makes that practically impossible regardless of tap timing.
+  const newRowId = (prefix: string) => `${prefix}${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const addIncome = () => setBudgetPlan((p) => ({ ...p, incomeSources: [...p.incomeSources, { id: newRowId('inc'), label: 'New source', amount: '' as const }] }));
+  const addFixed = () => setBudgetPlan((p) => ({ ...p, fixedExpenses: [...p.fixedExpenses, { id: newRowId('fix'), label: 'New expense', amount: '' as const }] }));
   const setVariable = (key: string, v: number | '') => setBudgetPlan((p) => ({ ...p, variableExpenses: { ...p.variableExpenses, [key]: v } }));
   const setSavingsGoal = (v: number | '') => setBudgetPlan((p) => ({ ...p, savingsGoal: v }));
 

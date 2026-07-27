@@ -16177,7 +16177,14 @@ const ACHIEVEMENTS = [
     icon: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>' },
   { id: 'word_nerd', tier: 'silver', color: '#3F8757', label: 'Word Nerd', desc: 'Learn 15+ vocab terms across your quests.', check: s => totalTermsLearned(s) >= 15,
     icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
-  { id: 'homebody', tier: 'silver', color: '#C08552', label: 'Homebody', desc: 'Fill every slot in Hammy\'s Room.', check: s => s.equippedRoom && Object.keys(s.equippedRoom).length > 0 && Object.values(s.equippedRoom).every(v => !!v),
+  // 'plant' is excluded below: state.equippedRoom always carries a 'plant' key, but no
+  // SHOP_ITEMS entry has slot:'plant' — the only "plant" art in the room is decoration
+  // baked into the desk_study SVG, not a placeable item. Requiring it (the original
+  // Object.values(...).every check did) made this slot permanently unfillable, which made
+  // Homebody permanently unobtainable — and since Grandmaster requires every other badge,
+  // it cascaded into Grandmaster being unobtainable too. Only require slots a player can
+  // actually fill.
+  { id: 'homebody', tier: 'silver', color: '#C08552', label: 'Homebody', desc: 'Fill every slot in Hammy\'s Room.', check: s => s.equippedRoom && Object.entries(s.equippedRoom).filter(([k]) => k !== 'plant').every(([, v]) => !!v),
     icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
   { id: 'on_fire', tier: 'gold', color: '#E8622C', label: 'On a Roll', desc: 'Play 7 days in a row.', check: s => s.streak >= 7,
     icon: '<path d="M12 2c1 4-3 5-3 9a3 3 0 0 0 6 0c0-2-1-3-1-3s2 1 2 4a5 5 0 0 1-10 0c0-5 4-6 4-10z"/>' },
@@ -16926,7 +16933,22 @@ const PAGE_TITLES = {
 // your phone, which isn't what "remember where I was" means here.
 const LAST_PAGE_KEY = 'stackd_last_page';
 
+// Every modal overlay in this app (shop item, achievement detail, daily login bonus) is a
+// position:fixed full-viewport element living outside the .page containers, so showPage's
+// page-class swap below never touches them on its own — switching nav pages while one was
+// open used to leave it stuck on top of whatever page just loaded, with no way out except
+// finding its own backdrop/close button again.
+function closeAllModals() {
+  const shopModal = document.getElementById('shop-modal');
+  if (shopModal) shopModal.setAttribute('hidden', '');
+  const achievementModal = document.getElementById('achievement-modal');
+  if (achievementModal) achievementModal.classList.remove('show');
+  const dailyLoginModal = document.getElementById('daily-login-modal');
+  if (dailyLoginModal) dailyLoginModal.classList.remove('show');
+}
+
 function showPage(id) {
+  closeAllModals();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -18484,6 +18506,21 @@ function renderRoomPage() {
     el.addEventListener('click', () => { showPage('shop'); renderShopPage(); });
   });
 
+  // A filled slot previously had no click handler at all — removing/swapping a room item
+  // was only reachable via the Shop page's own "Remove" button, not by clicking the placed
+  // item here in the room scene. Mirrors mobile's toggleRoomSlot: clicking an equipped
+  // item unequips it directly, staying on this page (an empty slot instead sends the
+  // player to the shop to browse/buy, since there's nothing to remove).
+  scene.querySelectorAll('.room-slot:not(.empty)').forEach(el => {
+    el.addEventListener('click', () => {
+      const slotKey = el.dataset.slot;
+      if (!slotKey || !state.equippedRoom) return;
+      state.equippedRoom[slotKey] = null;
+      saveState();
+      renderRoomPage();
+    });
+  });
+
   scene.querySelector('.room-pig').addEventListener('click', () => {
     roomActiveTab = 'wardrobe';
     document.getElementById('nav-room-subnav').classList.add('open');
@@ -18859,7 +18896,7 @@ function renderProgressPage() {
             <div class="pg-level-bar-track">
               <div class="pg-level-bar-fill" style="width:${pct}%"></div>
             </div>
-            <div class="pg-xp-sub">${(nextXP - state.xp).toLocaleString()} XP to Level ${state.level + 1} · ${tier.name}</div>
+            <div class="pg-xp-sub">${state.level >= LEVEL_THRESHOLDS.length ? `Max level reached · ${tier.name}` : `${(nextXP - state.xp).toLocaleString()} XP to Level ${state.level + 1} · ${tier.name}`}</div>
           </div>
         </div>
       </div>
@@ -19316,14 +19353,20 @@ function renderBudgetCalculatorPanel() {
     });
   }
 
+  // A Date.now()-only id lets two same-millisecond adds mint identical ids — row lookups
+  // throughout this panel (remove, wireRowInput) match by id, so a collision would make
+  // editing/removing "one" row silently act on both. The random suffix makes that
+  // practically impossible regardless of click timing. Mirrors the identical fix in
+  // mobile's tools.tsx.
+  const newRowId = prefix => `${prefix}${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   document.getElementById('add-income').addEventListener('click', () => {
-    plan.incomeSources.push({ id: 'inc' + Date.now(), label: 'New source', amount: '' });
+    plan.incomeSources.push({ id: newRowId('inc'), label: 'New source', amount: '' });
     saveState();
     renderRows();
     renderSummaryAndChart();
   });
   document.getElementById('add-fixed').addEventListener('click', () => {
-    plan.fixedExpenses.push({ id: 'fix' + Date.now(), label: 'New expense', amount: '' });
+    plan.fixedExpenses.push({ id: newRowId('fix'), label: 'New expense', amount: '' });
     saveState();
     renderRows();
     renderSummaryAndChart();
@@ -20976,7 +21019,17 @@ function renderHintChapter(chapter, mod, onDone) {
       <p class="teach-plain hint-placeholder">Tap Hammy to hear what they have to say.</p>
     </div>`;
 
-  const hammySide = document.getElementById('hammy-side-avatar');
+  // hammy-side-avatar is a persistent DOM node reused across every chapter (renderChapter
+  // only resets its className/innerHTML, never removes listeners) — re-entering this same
+  // hint chapter without ever tapping Hammy (e.g. exit the quest via quest-exit before
+  // answering, then resume) re-runs this function against the SAME node, stacking a
+  // second 'click' listener alongside the still-attached one from the previous visit,
+  // since only the listener that actually fires ever removes itself. Cloning replaces the
+  // node — content and classes intact, but with every previously-attached listener gone —
+  // before wiring this visit's handler, so at most one revealTip is ever live at once.
+  let hammySide = document.getElementById('hammy-side-avatar');
+  hammySide.replaceWith(hammySide.cloneNode(true));
+  hammySide = document.getElementById('hammy-side-avatar');
   hammySide.classList.add('hammy-tappable');
   hammySide.addEventListener('click', function revealTip() {
     document.getElementById('hint-bubble').innerHTML = `<p class="teach-plain">${chapter.text}</p>`;

@@ -3,7 +3,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { Screen, Header, Txt, Card, Stat, ProgressBar, MIcon } from '@/components';
 import { colors, font } from '@/theme';
 import { modules } from '@/data';
-import { useStore, xpForLevel } from '@/store';
+import { useStore, xpForLevel, MAX_LEVEL } from '@/store';
 
 /** Screen 8 — Progress. Ported from the website's renderProgressPage: 4 stat cards, a
  * "Modules Done" donut with legend, a Module Progress chart, an "XP Earned by
@@ -110,7 +110,9 @@ export default function Progress() {
                 <Txt style={styles.levelXpTxt}>{ceil.toLocaleString()} XP needed</Txt>
               </View>
               <ProgressBar value={levelPct / 100} height={10} />
-              <Txt style={styles.levelSub}>{xpToNext.toLocaleString()} XP to Level {level + 1} · {tierName}</Txt>
+              <Txt style={styles.levelSub}>
+                {level >= MAX_LEVEL ? `Max level reached · ${tierName}` : `${xpToNext.toLocaleString()} XP to Level ${level + 1} · ${tierName}`}
+              </Txt>
             </View>
           </View>
         </Card>

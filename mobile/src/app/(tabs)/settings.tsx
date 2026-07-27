@@ -190,12 +190,22 @@ function FeedbackCardBody({
   const send = async () => {
     if (!onSubmit || !message.trim() || status === 'sending') return;
     setStatus('sending');
-    const ok = await onSubmit(category, message.trim());
-    if (ok) {
-      setStatus('sent');
-      setMessage('');
-      setTimeout(() => setStatus('idle'), 2500);
-    } else {
+    // onSubmit's own supabase.from('feedback').insert(...) resolves to {error} for a
+    // Postgrest-level failure, which the `ok` check below already handles — but a
+    // network/fetch-level failure (offline, DNS) instead REJECTS the promise. Without this
+    // try/catch, that rejection left `status` stuck at 'sending' forever: the Send button
+    // stays disabled and stuck on "Sending…" with no way to retry short of leaving and
+    // re-entering Settings.
+    try {
+      const ok = await onSubmit(category, message.trim());
+      if (ok) {
+        setStatus('sent');
+        setMessage('');
+        setTimeout(() => setStatus('idle'), 2500);
+      } else {
+        setStatus('error');
+      }
+    } catch {
       setStatus('error');
     }
   };
