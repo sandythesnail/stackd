@@ -99,7 +99,7 @@ function SquareWindowSlot({ item, onPress }: { item: ShopItemReal; onPress: () =
   const left = winW * DESK_CENTER_FRACTION - size / 2;
   return (
     <View style={[styles.slot, { top: WINDOW_TOP, left, width: size, height: size }]}>
-      <Pressable style={styles.slotFilled} onPress={onPress}>
+      <Pressable style={styles.slotFilled} onPress={onPress} accessibilityRole="button" accessibilityLabel={item.name}>
         <ItemArt item={item} fill align="mid" />
       </Pressable>
     </View>
@@ -156,7 +156,7 @@ export default function Room() {
         {(['room', 'wardrobe'] as const).map((t) => {
           const on = t === tab;
           return (
-            <Pressable key={t} onPress={() => setTab(t)} style={[styles.tchip, on && styles.tchipOn]}>
+            <Pressable key={t} onPress={() => setTab(t)} style={[styles.tchip, on && styles.tchipOn]} accessibilityRole="button" accessibilityState={{ selected: on }}>
               <Txt style={[styles.tchipTxt, on && { color: colors.white }]}>{t === 'room' ? 'Room' : 'Wardrobe'}</Txt>
             </Pressable>
           );
@@ -259,7 +259,7 @@ function RoomSlotBox({
   const { label: _label, floorStanding, ...position } = layout;
   return (
     <View style={[styles.slot, position]}>
-      <Pressable style={styles.slotFilled} onPress={onPress}>
+      <Pressable style={styles.slotFilled} onPress={onPress} accessibilityRole="button" accessibilityLabel={item.name}>
         <ItemArt item={item} fill align={floorStanding ? 'bottom' : 'mid'} />
       </Pressable>
     </View>
@@ -292,6 +292,13 @@ function FairyLightsGarland({ item, onPress }: { item: ShopItemReal; onPress: ()
             key={i}
             onPress={onPress}
             style={{ width: cellW, height: cellH }}
+            // Only the first of these GARLAND_COUNT tiled copies needs to be in the
+            // accessibility tree — they're all the same actionable strip, just visually
+            // repeated, so exposing all of them would announce "Fairy Lights" 3 times in a row.
+            accessibilityElementsHidden={i > 0}
+            importantForAccessibility={i > 0 ? 'no-hide-descendants' : 'yes'}
+            accessibilityRole={i === 0 ? 'button' : undefined}
+            accessibilityLabel={i === 0 ? item.name : undefined}
           >
             <ItemArt item={item} fill align="mid" />
           </Pressable>

@@ -189,6 +189,10 @@ export default function QuestPlayer() {
   const [correctCount, setCorrectCount] = useState(0);
   const [gradedTotal, setGradedTotal] = useState(0);
   const [hintsUsed, setHintsUsed] = useState(0);
+  // Which question a knowledgecheck chapter is currently showing — kept in sync via
+  // KnowledgecheckView's onQuestionIndexChange, so the header's hint button can look up
+  // that specific question's hintTexts entry (see hintText's computation below).
+  const [kcQuestionIdx, setKcQuestionIdx] = useState(0);
   const [terms, setTerms] = useState<LearnedTerm[]>([]);
   const [bossWon, setBossWon] = useState(false);
   const [reactionMood, setReactionMood] = useState<'happy' | 'gentle' | 'streak' | null>(null);
@@ -277,7 +281,15 @@ export default function QuestPlayer() {
   const chapter = quest.chapters[chapterIdx];
   const hintsRemaining = Math.max(0, HINT_BUDGET - hintsUsed);
   const onUseHint = () => setHintsUsed((h) => h + 1);
-  const hintText = (chapter as { hintText?: string }).hintText;
+  // knowledgecheck is the one chapter type whose hint text is PER-QUESTION (hintTexts[],
+  // aligned to qIndices by position — see content/types.ts), not a single hintText like
+  // every other chapter type. The generic cast below always resolved to undefined for
+  // this type, so the hint button never rendered for any knowledge-check question even
+  // though real authored hint content exists in the data for it (see KnowledgecheckView's
+  // onQuestionIndexChange, which keeps kcQuestionIdx in sync with its internal question).
+  const hintText = chapter.type === 'knowledgecheck'
+    ? chapter.hintTexts?.[kcQuestionIdx]
+    : (chapter as { hintText?: string }).hintText;
 
   // Ported from showHammyReaction/showHammyMessage: the persistent companion's face/mood
   // reacts to every graded answer across the quest — happy, gentle, or (every 3rd correct
@@ -293,6 +305,7 @@ export default function QuestPlayer() {
   useEffect(() => {
     setReactionMood(null);
     setReactionMsg(null);
+    setKcQuestionIdx(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterIdx]);
   const reactTo = (isCorrect: boolean, customMsg?: string, gentlePool?: string[]) => {
@@ -450,6 +463,7 @@ export default function QuestPlayer() {
               onAction={onAction}
               onLayoutMode={onLayoutMode}
               onFitMode={onFitMode}
+              onQuestionIndexChange={setKcQuestionIdx}
               {...reportProps}
             />
           </Reanimated.View>
@@ -468,6 +482,7 @@ export default function QuestPlayer() {
               onAction={onAction}
               onLayoutMode={onLayoutMode}
               onFitMode={onFitMode}
+              onQuestionIndexChange={setKcQuestionIdx}
               {...reportProps}
             />
           </Reanimated.View>
@@ -491,9 +506,13 @@ export default function QuestPlayer() {
 
 function ChapterView({
   chapter, questions, moduleXpReward, charName, onComplete, reactTo, clearReaction, onAction, onLayoutMode, onFitMode,
-  reportKnowledgeCheck, reportMythCard, reportMatchingMistake, reportDecision, reportExplainback,
+  onQuestionIndexChange, reportKnowledgeCheck, reportMythCard, reportMatchingMistake, reportDecision, reportExplainback,
 }: {
   chapter: Chapter; questions: Question[]; moduleXpReward: number; charName: string; onComplete: Complete;
+  /** knowledgecheck-only: reports which question (position within its own qIndices) is
+   * currently showing, so the parent can look up that question's own hintTexts entry —
+   * see quest.tsx's hintText computation. */
+  onQuestionIndexChange?: (i: number) => void;
 } & ReactProps & ReportProps & ActionProps & LayoutModeProps & FitModeProps) {
   const reactProps: ReactProps = { reactTo, clearReaction };
   switch (chapter.type) {
@@ -505,7 +524,7 @@ function ChapterView({
     case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'poll': return <PollView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMythCard={reportMythCard} />;
-    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} onAction={onAction} onFitMode={onFitMode} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} />;
+    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} onAction={onAction} onFitMode={onFitMode} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} onQuestionIndexChange={onQuestionIndexChange} />;
     case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} onAction={onAction} onFitMode={onFitMode} {...reactProps} />;
     case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
     case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
@@ -901,8 +920,18 @@ function MatchingView({
       // up almost before the bubble finished appearing, reading as "Hammy didn't say anything."
       if (next.size === chapter.pairs.length) setTimeout(() => setReadyToAdvance(true), 950);
     } else {
+      // Term chips aren't disabled during this flash window, so the player can tap a
+      // DIFFERENT term while it's showing — capture which term was actually selected at
+      // the moment of the mistake, and only clear it if it's still the current selection
+      // when this fires. Previously this unconditionally cleared selTerm, so picking a
+      // new term during the ~500ms window got silently wiped out from under the player
+      // the instant this stale timeout landed, forcing a re-tap.
+      const termAtMistake = selTerm;
       setWrongPair(def);
-      setTimeout(() => { setWrongPair(null); setSelTerm(null); }, 500);
+      setTimeout(() => {
+        setWrongPair(null);
+        setSelTerm((cur) => (cur === termAtMistake ? null : cur));
+      }, 500);
     }
   };
 
@@ -1278,8 +1307,11 @@ function MythcardsView({
 const OPT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 function KnowledgecheckView({
-  chapter, questions, onComplete, onAction, onFitMode, reactTo, clearReaction, reportKnowledgeCheck,
-}: { chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete } & ReactProps & ActionProps & Pick<ReportProps, 'reportKnowledgeCheck'> & FitModeProps) {
+  chapter, questions, onComplete, onAction, onFitMode, reactTo, clearReaction, reportKnowledgeCheck, onQuestionIndexChange,
+}: {
+  chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete;
+  onQuestionIndexChange?: (i: number) => void;
+} & ReactProps & ActionProps & Pick<ReportProps, 'reportKnowledgeCheck'> & FitModeProps) {
   const [i, setI] = useState(0);
   const [sel, setSel] = useState<number | null>(null);
   // Tallies every question answered in this chapter (not just the last one), so the
@@ -1298,6 +1330,15 @@ function KnowledgecheckView({
     return () => onFitMode(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Keeps the parent's kcQuestionIdx in sync with this view's own internal question index,
+  // so the shared header hint button can show THIS question's hintTexts entry — see
+  // quest.tsx's hintText computation, which previously had no way to know which question
+  // of a multi-question knowledge check was actually on screen.
+  useEffect(() => {
+    onQuestionIndexChange?.(i);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i]);
 
   const pick = (idx: number) => {
     setSel(idx);
@@ -1519,7 +1560,10 @@ function PriceisrightView({
   const [guess, setGuess] = useState(Math.round((min + max) / 2 / step) * step);
   const [submitted, setSubmitted] = useState(false);
   const diff = Math.abs(guess - chapter.actualValue);
-  const close = diff <= (max - min) * 0.1;
+  // Ported from the website's renderPriceIsRightChapter (app.js), which uses 0.15 — this
+  // was 0.1 here, a stricter tolerance that could grade the exact same guess "wrong" on
+  // mobile when the website would call it "Close enough!" and count it correct.
+  const close = diff <= (max - min) * 0.15;
 
   // chapter.explanation as the spoken message, same reasoning as Microsim's tier.text —
   // Hammy actually explains the real number instead of a generic "Nice!"/"Not quite!".

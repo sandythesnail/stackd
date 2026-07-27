@@ -19,8 +19,11 @@ export default function Progress() {
   const totalQuests = modules.reduce((sum, m) => sum + moduleTotal(m.id), 0);
   const masteredCount = modules.filter((m) => moduleStatus(m.id) === 'done').length;
   const overallPct = totalQuests ? totalDone / totalQuests : 0;
-  const unlockedBadges = achievements().filter((a) => a.earned).length;
-  const totalBadges = achievements().length;
+  // Reused instead of calling achievements() twice — each call re-runs the full
+  // computeMetAchievementIds scan, so this was doubling that work on every render.
+  const allAchievements = achievements();
+  const unlockedBadges = allAchievements.filter((a) => a.earned).length;
+  const totalBadges = allAchievements.length;
 
   const base = xpForLevel(level - 1);
   const ceil = xpForLevel(level);

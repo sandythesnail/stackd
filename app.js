@@ -16354,11 +16354,21 @@ function showLifeEvent(event, onContinue) {
       continueBtn.style.display = '';
     });
   });
+  const overlay = document.getElementById('lifeevent-overlay');
   continueBtn.onclick = () => {
-    document.getElementById('lifeevent-overlay').classList.remove('visible');
+    overlay.classList.remove('visible');
+    if (overlay._a11yCleanup) overlay._a11yCleanup();
     (onContinue || renderHome)();
   };
-  document.getElementById('lifeevent-overlay').classList.add('visible');
+  // Choice buttons are still fully Tab-cycleable/focus-trapped from the moment this opens
+  // (see makeModalAccessible) — but Escape deliberately does nothing until a choice has
+  // actually been made (continueBtn visible): a life event requires a real decision, it
+  // isn't optional to dismiss, unlike every other modal in this app.
+  makeModalAccessible(overlay, () => {
+    if (continueBtn.style.display === 'none') return;
+    continueBtn.onclick();
+  });
+  overlay.classList.add('visible');
 }
 
 // Shared by finishQuiz/finishQuest/finishBonusActivity: checks for a guaranteed
@@ -16735,6 +16745,11 @@ function claimDailyLoginBonus() {
   return coins;
 }
 
+function closeDailyLoginModal(modal) {
+  modal.classList.remove('show');
+  if (modal._a11yCleanup) modal._a11yCleanup();
+}
+
 function getDailyLoginModal() {
   let modal = document.getElementById('daily-login-modal');
   if (!modal) {
@@ -16742,7 +16757,7 @@ function getDailyLoginModal() {
     modal.id = 'daily-login-modal';
     modal.className = 'achievement-modal-overlay';
     document.body.appendChild(modal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeDailyLoginModal(modal); });
   }
   return modal;
 }
@@ -16770,7 +16785,8 @@ function showDailyLoginModal(coins, diamonds = 0) {
       <button class="btn-primary" id="daily-login-modal-close">Nice!</button>
     </div>`;
   modal.classList.add('show');
-  document.getElementById('daily-login-modal-close').addEventListener('click', () => modal.classList.remove('show'));
+  document.getElementById('daily-login-modal-close').addEventListener('click', () => closeDailyLoginModal(modal));
+  makeModalAccessible(modal, () => closeDailyLoginModal(modal));
 }
 
 // ── Lightweight toasts ──────────────────────────
@@ -16933,6 +16949,60 @@ const PAGE_TITLES = {
 // your phone, which isn't what "remember where I was" means here.
 const LAST_PAGE_KEY = 'stackd_last_page';
 
+// Makes a modal overlay keyboard/screen-reader accessible: sets role="dialog"/aria-modal,
+// moves focus into it, traps Tab/Shift+Tab within its own focusable elements, restores
+// focus to whatever had it before on close, and closes on Escape. Previously no modal in
+// this app (shop item, achievement detail, daily login, life event) did any of this — a
+// keyboard user could tab straight through into hidden background content, with no
+// keyboard way to dismiss any of them at all.
+//
+// Call once per genuine "open" (not on every in-place content refresh — see openShopModal's
+// comment for why that distinction matters there). `onClose` is whatever actually hides the
+// modal (removing 'show'/'visible', or setting `hidden`) — Escape calls it the same way a
+// close button would.
+function makeModalAccessible(modalEl, onClose) {
+  modalEl.setAttribute('role', 'dialog');
+  modalEl.setAttribute('aria-modal', 'true');
+  if (!modalEl.hasAttribute('tabindex')) modalEl.setAttribute('tabindex', '-1');
+  const previouslyFocused = document.activeElement;
+
+  function focusableEls() {
+    return Array.from(modalEl.querySelectorAll(
+      'a[href], button:not([disabled]), textarea, input:not([disabled]), select, [tabindex]:not([tabindex="-1"])'
+    )).filter(el => el.offsetParent !== null);
+  }
+
+  function cleanup() {
+    modalEl.removeEventListener('keydown', onKeydown);
+    if (previouslyFocused && typeof previouslyFocused.focus === 'function') previouslyFocused.focus();
+  }
+
+  function onKeydown(e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      cleanup();
+      onClose();
+      return;
+    }
+    if (e.key === 'Tab') {
+      const els = focusableEls();
+      if (!els.length) return;
+      const first = els[0], last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }
+  modalEl.addEventListener('keydown', onKeydown);
+  modalEl._a11yCleanup = cleanup;
+
+  // rAF: give the caller's own innerHTML/attribute changes one paint to land first, so the
+  // focusable-elements query below sees the real rendered content, not a stale/empty modal.
+  requestAnimationFrame(() => {
+    const els = focusableEls();
+    (els[0] || modalEl).focus();
+  });
+}
+
 // Every modal overlay in this app (shop item, achievement detail, daily login bonus) is a
 // position:fixed full-viewport element living outside the .page containers, so showPage's
 // page-class swap below never touches them on its own — switching nav pages while one was
@@ -16940,11 +17010,11 @@ const LAST_PAGE_KEY = 'stackd_last_page';
 // finding its own backdrop/close button again.
 function closeAllModals() {
   const shopModal = document.getElementById('shop-modal');
-  if (shopModal) shopModal.setAttribute('hidden', '');
+  if (shopModal && !shopModal.hasAttribute('hidden')) closeShopModal();
   const achievementModal = document.getElementById('achievement-modal');
-  if (achievementModal) achievementModal.classList.remove('show');
+  if (achievementModal && achievementModal.classList.contains('show')) closeAchievementModal(achievementModal);
   const dailyLoginModal = document.getElementById('daily-login-modal');
-  if (dailyLoginModal) dailyLoginModal.classList.remove('show');
+  if (dailyLoginModal && dailyLoginModal.classList.contains('show')) closeDailyLoginModal(dailyLoginModal);
 }
 
 function showPage(id) {
@@ -17740,7 +17810,7 @@ function renderSurveyStep() {
     sub.textContent = "Slide to where you're really at, no wrong answer, it just helps us know where to start you off.";
     body.innerHTML = `
       <div class="survey-slider-wrap">
-        <input type="range" class="survey-slider" id="survey-slider" min="1" max="5" step="1" value="${current}">
+        <input type="range" class="survey-slider" id="survey-slider" min="1" max="5" step="1" value="${current}" aria-label="Familiarity with ${mod.title}, from ${lowLabel} to ${highLabel}">
         <div class="survey-slider-ticks">
           <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
         </div>
@@ -17874,6 +17944,11 @@ function renderAchievementBadges(containerId, subId, { onlyUnlocked = false, det
 
 const TIER_LABELS = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold', diamond: 'Diamond' };
 
+function closeAchievementModal(modal) {
+  modal.classList.remove('show');
+  if (modal._a11yCleanup) modal._a11yCleanup();
+}
+
 function getAchievementModal() {
   let modal = document.getElementById('achievement-modal');
   if (!modal) {
@@ -17881,7 +17956,7 @@ function getAchievementModal() {
     modal.id = 'achievement-modal';
     modal.className = 'achievement-modal-overlay';
     document.body.appendChild(modal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeAchievementModal(modal); });
   }
   return modal;
 }
@@ -17904,7 +17979,8 @@ function showAchievementDetail(a, isUnlocked) {
       <button class="btn-primary" id="achievement-modal-close">Close</button>
     </div>`;
   modal.classList.add('show');
-  document.getElementById('achievement-modal-close').addEventListener('click', () => modal.classList.remove('show'));
+  document.getElementById('achievement-modal-close').addEventListener('click', () => closeAchievementModal(modal));
+  makeModalAccessible(modal, () => closeAchievementModal(modal));
 }
 
 // ── PIG MASCOT ────────────────────────────────
@@ -18215,11 +18291,21 @@ function showMysteryReveal(item) {
 
 function openShopModal(itemId) {
   refreshShopModal(itemId);
-  document.getElementById('shop-modal').removeAttribute('hidden');
+  const modal = document.getElementById('shop-modal');
+  modal.removeAttribute('hidden');
+  // Only here, not inside refreshShopModal — that function also re-runs on every buy/equip
+  // click WHILE the modal is already open (to refresh its content in place), and re-running
+  // this on every one of those would reset "previously focused" to whatever's focused
+  // INSIDE the modal at that moment instead of the shop grid item that originally opened
+  // it. refreshShopModal only replaces specific child elements' innerHTML, so this outer
+  // element's own attributes/listeners survive those in-place refreshes untouched.
+  makeModalAccessible(modal, closeShopModal);
 }
 
 function closeShopModal() {
-  document.getElementById('shop-modal').setAttribute('hidden', '');
+  const modal = document.getElementById('shop-modal');
+  modal.setAttribute('hidden', '');
+  if (modal._a11yCleanup) modal._a11yCleanup();
 }
 
 // ── SHOP ───────────────────────────────────────
@@ -18906,7 +18992,7 @@ function renderProgressPage() {
       <div class="pg-chart-card pg-ring-card">
         <div class="pg-chart-title">Modules Done</div>
         <div class="pg-donut-wrap">
-          <svg viewBox="0 0 140 140" class="pg-donut-svg">
+          <svg viewBox="0 0 140 140" class="pg-donut-svg" aria-hidden="true">
             <circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--border)" stroke-width="16"/>
             <circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--green)" stroke-width="16"
               stroke-dasharray="${circ}" stroke-dashoffset="${offset}"
@@ -19221,7 +19307,7 @@ function renderBudgetCalculatorPanel() {
           <div class="budget-card-title">Savings Goal</div>
           <div class="budget-row">
             <span class="budget-row-label">I want to save</span>
-            <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" id="savings-goal-input" class="budget-input" min="0" step="5" value="${plan.savingsGoal || ''}" placeholder="0"></div>
+            <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" id="savings-goal-input" class="budget-input" min="0" step="5" value="${plan.savingsGoal || ''}" placeholder="0" aria-label="Savings goal per month"></div>
             <span class="budget-row-label">per month</span>
           </div>
         </div>
@@ -19241,8 +19327,8 @@ function renderBudgetCalculatorPanel() {
 
   function rowHtml(item, kind) {
     return `<div class="budget-row" data-id="${item.id}" data-kind="${kind}">
-      <input type="text" class="budget-input budget-input-label" value="${item.label}" placeholder="Label" data-field="label">
-      <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" class="budget-input" min="0" step="5" value="${item.amount}" placeholder="0" data-field="amount"></div>
+      <input type="text" class="budget-input budget-input-label" value="${item.label}" placeholder="Label" data-field="label" aria-label="${kind === 'income' ? 'Income source' : 'Expense'} label">
+      <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" class="budget-input" min="0" step="5" value="${item.amount}" placeholder="0" data-field="amount" aria-label="Amount for ${item.label || (kind === 'income' ? 'this income source' : 'this expense')}"></div>
       <button class="budget-row-remove" data-remove="${item.id}" type="button" aria-label="Remove">×</button>
     </div>`;
   }
@@ -19254,7 +19340,7 @@ function renderBudgetCalculatorPanel() {
       const isCallout = key === 'foodDelivery' || key === 'beauty';
       return `<div class="budget-row${isCallout ? ' budget-row-callout' : ''}" data-key="${key}">
         <span class="budget-row-label">${BUDGET_CATEGORY_LABELS[key]}</span>
-        <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" class="budget-input" min="0" step="5" value="${plan.variableExpenses[key] || ''}" placeholder="0" data-varkey="${key}"></div>
+        <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" class="budget-input" min="0" step="5" value="${plan.variableExpenses[key] || ''}" placeholder="0" data-varkey="${key}" aria-label="${BUDGET_CATEGORY_LABELS[key]} amount"></div>
       </div>`;
     }).join('');
 
@@ -19359,7 +19445,7 @@ function renderBudgetCalculatorPanel() {
 
     const categoryPicker = `
       <div class="budget-whatif-row">
-        <select class="budget-input" id="whatif-category">
+        <select class="budget-input" id="whatif-category" aria-label="Spending category to cut">
           ${BUDGET_CATEGORY_ORDER.map(key => `<option value="${key}" ${key === savedCategory ? 'selected' : ''}>${BUDGET_CATEGORY_LABELS[key].replace(/\s*\(.*?\)/, '')}</option>`).join('')}
         </select>
       </div>`;
@@ -19378,7 +19464,7 @@ function renderBudgetCalculatorPanel() {
 
     whatif.innerHTML = `
       ${categoryPicker}
-      <input type="range" class="microsim-range" id="whatif-slider" min="0" max="${maxCut}" step="1" value="${cut}">
+      <input type="range" class="microsim-range" id="whatif-slider" min="0" max="${maxCut}" step="1" value="${cut}" aria-label="Amount to cut from ${BUDGET_CATEGORY_LABELS[savedCategory].replace(/\s*\(.*?\)/, '')}">
       <p class="budget-whatif-result" id="whatif-result">Cut this by <strong>$${cut.toFixed(0)}</strong> → remaining balance becomes <strong>$${newRemaining.toFixed(0)}</strong>${plan.savingsGoal > 0 ? (newRemaining >= plan.savingsGoal ? ', enough to hit your savings goal.' : `, still $${Math.max(0, plan.savingsGoal - newRemaining).toFixed(0)} short of your goal.`) : '.'}</p>`;
 
     document.getElementById('whatif-category').addEventListener('change', (e) => {
@@ -19517,15 +19603,15 @@ function renderCompoundInterestPanel() {
           <div class="budget-card-title">Your Numbers</div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Starting amount</span><span class="microsim-slider-val" id="ci-start-val">$${sim.startingAmount}</span></div>
-            <input type="range" class="microsim-range" id="ci-start" min="0" max="5000" step="50" value="${sim.startingAmount}">
+            <input type="range" class="microsim-range" id="ci-start" min="0" max="5000" step="50" value="${sim.startingAmount}" aria-label="Starting amount">
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Monthly contribution</span><span class="microsim-slider-val" id="ci-contrib-val">$${sim.monthlyContribution}</span></div>
-            <input type="range" class="microsim-range" id="ci-contrib" min="0" max="1000" step="10" value="${sim.monthlyContribution}">
+            <input type="range" class="microsim-range" id="ci-contrib" min="0" max="1000" step="10" value="${sim.monthlyContribution}" aria-label="Monthly contribution">
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Years</span><span class="microsim-slider-val" id="ci-years-val">${sim.years}</span></div>
-            <input type="range" class="microsim-range" id="ci-years" min="1" max="47" step="1" value="${sim.years}">
+            <input type="range" class="microsim-range" id="ci-years" min="1" max="47" step="1" value="${sim.years}" aria-label="Years">
           </div>
           <div class="ci-rate-presets" id="ci-rate-presets">
             <button class="ci-preset-btn" data-mode="hysa" type="button">HYSA<span>4–5%</span></button>
@@ -19534,7 +19620,7 @@ function renderCompoundInterestPanel() {
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Annual interest rate</span><span class="microsim-slider-val" id="ci-rate-val">${sim.annualRatePct}%</span></div>
-            <input type="range" class="microsim-range" id="ci-rate" min="1" max="12" step="0.5" value="${sim.annualRatePct}">
+            <input type="range" class="microsim-range" id="ci-rate" min="1" max="12" step="0.5" value="${sim.annualRatePct}" aria-label="Annual interest rate">
           </div>
           <button class="budget-add-btn" id="ci-compare-toggle" type="button">Compare: start at 18 vs. start at 28 →</button>
         </div>
@@ -19563,7 +19649,7 @@ function renderCompoundInterestPanel() {
     const chart = buildStackedAreaChart(points, 'contributed', 'balance');
     const chartEl = document.getElementById('ci-chart');
     chartEl.innerHTML = `
-      <svg viewBox="0 0 ${chart.width} ${chart.height}" class="ci-svg">
+      <svg viewBox="0 0 ${chart.width} ${chart.height}" class="ci-svg" aria-hidden="true">
         <path d="${chart.baseArea}" class="ci-area-contrib"></path>
         <path d="${chart.deltaArea}" class="ci-area-interest"></path>
         <path d="${chart.totalLine}" class="ci-line-total" pathLength="1000"></path>
@@ -19594,6 +19680,23 @@ function renderCompoundInterestPanel() {
       <div class="ci-compare-gap">The 10-year head start is worth <strong>$${Math.round(earlyFinal - lateFinal).toLocaleString()}</strong> more by 65, from the same monthly amount.</div>`;
   }
 
+  // 'input' fires on essentially every pixel of slider drag movement (dozens of events per
+  // second) — renderMainChart/renderComparison each do a full recompute (up to 600 months)
+  // plus a full chart/SVG string rebuild, all synchronous, with no debouncing. Coalescing
+  // rapid calls to at most one per animation frame keeps a fast drag from queuing up dozens
+  // of redundant full rebuilds in a row. The preset buttons' 'click' handler below still
+  // calls these directly — a click never fires in the rapid burst a drag does.
+  let mainChartRaf = null;
+  const scheduleMainChart = () => {
+    if (mainChartRaf) return;
+    mainChartRaf = requestAnimationFrame(() => { mainChartRaf = null; renderMainChart(); });
+  };
+  let comparisonRaf = null;
+  const scheduleComparison = () => {
+    if (comparisonRaf) return;
+    comparisonRaf = requestAnimationFrame(() => { comparisonRaf = null; renderComparison(); });
+  };
+
   document.querySelectorAll('.ci-preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.ci-preset-btn').forEach(b => b.classList.remove('active'));
@@ -19610,18 +19713,18 @@ function renderCompoundInterestPanel() {
   document.getElementById('ci-start').addEventListener('input', (e) => {
     sim.startingAmount = Number(e.target.value);
     document.getElementById('ci-start-val').textContent = '$' + sim.startingAmount;
-    renderMainChart();
+    scheduleMainChart();
   });
   document.getElementById('ci-contrib').addEventListener('input', (e) => {
     sim.monthlyContribution = Number(e.target.value);
     document.getElementById('ci-contrib-val').textContent = '$' + sim.monthlyContribution;
-    renderMainChart();
-    if (document.getElementById('ci-compare-card').style.display !== 'none') renderComparison();
+    scheduleMainChart();
+    if (document.getElementById('ci-compare-card').style.display !== 'none') scheduleComparison();
   });
   document.getElementById('ci-years').addEventListener('input', (e) => {
     sim.years = Number(e.target.value);
     document.getElementById('ci-years-val').textContent = sim.years;
-    renderMainChart();
+    scheduleMainChart();
   });
   document.getElementById('ci-rate').addEventListener('input', (e) => {
     sim.annualRatePct = Number(e.target.value);
@@ -19629,8 +19732,8 @@ function renderCompoundInterestPanel() {
     document.querySelectorAll('.ci-preset-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.ci-preset-btn[data-mode="custom"]').classList.add('active');
     document.getElementById('ci-rate-val').textContent = sim.annualRatePct + '%';
-    renderMainChart();
-    if (document.getElementById('ci-compare-card').style.display !== 'none') renderComparison();
+    scheduleMainChart();
+    if (document.getElementById('ci-compare-card').style.display !== 'none') scheduleComparison();
   });
   document.getElementById('ci-compare-toggle').addEventListener('click', () => {
     const card = document.getElementById('ci-compare-card');
@@ -19664,7 +19767,7 @@ function renderLoanPayoffPanel() {
           <div class="budget-card-title">Your Loan</div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Loan balance</span><span class="microsim-slider-val" id="lp-balance-val">$${sim.loanBalance.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-balance" min="1000" max="100000" step="500" value="${sim.loanBalance}">
+            <input type="range" class="microsim-range" id="lp-balance" min="1000" max="100000" step="500" value="${sim.loanBalance}" aria-label="Loan balance">
           </div>
           <div class="ci-rate-presets" id="lp-rate-presets">
             <button class="ci-preset-btn active" data-mode="subsidized" type="button">Fed. Subsidized<span>~5.5%</span></button>
@@ -19673,7 +19776,7 @@ function renderLoanPayoffPanel() {
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Interest rate</span><span class="microsim-slider-val" id="lp-rate-val">${sim.annualRatePct}%</span></div>
-            <input type="range" class="microsim-range" id="lp-rate" min="1" max="14" step="0.25" value="${sim.annualRatePct}">
+            <input type="range" class="microsim-range" id="lp-rate" min="1" max="14" step="0.25" value="${sim.annualRatePct}" aria-label="Interest rate">
           </div>
           <div class="ci-rate-presets">
             <button class="ci-preset-btn active" data-term="10" type="button">Standard<span>10yr</span></button>
@@ -19686,19 +19789,19 @@ function renderLoanPayoffPanel() {
           <div class="budget-note">Uses take-home (net) pay, not gross salary. See the Earning module for the difference.</div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Monthly take-home pay</span><span class="microsim-slider-val" id="lp-income-val">$${sim.monthlyIncome.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-income" min="1500" max="7000" step="50" value="${sim.monthlyIncome}">
+            <input type="range" class="microsim-range" id="lp-income" min="1500" max="7000" step="50" value="${sim.monthlyIncome}" aria-label="Monthly take-home pay">
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Rent</span><span class="microsim-slider-val" id="lp-rent-val">$${sim.rent.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-rent" min="0" max="3000" step="25" value="${sim.rent}">
+            <input type="range" class="microsim-range" id="lp-rent" min="0" max="3000" step="25" value="${sim.rent}" aria-label="Rent">
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Food</span><span class="microsim-slider-val" id="lp-food-val">$${sim.food.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-food" min="0" max="1000" step="10" value="${sim.food}">
+            <input type="range" class="microsim-range" id="lp-food" min="0" max="1000" step="10" value="${sim.food}" aria-label="Food">
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Other (utilities, transport, etc.)</span><span class="microsim-slider-val" id="lp-other-val">$${sim.otherExpenses.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-other" min="0" max="1500" step="10" value="${sim.otherExpenses}">
+            <input type="range" class="microsim-range" id="lp-other" min="0" max="1500" step="10" value="${sim.otherExpenses}" aria-label="Other expenses (utilities, transport, etc.)">
           </div>
         </div>
       </div>
@@ -19752,14 +19855,13 @@ function renderLoanPayoffPanel() {
       <div class="budget-card-title">Pay Extra With What's Left Over</div>
       <div class="microsim-slider-row">
         <div class="microsim-slider-label"><span>Extra toward the loan</span><span class="microsim-slider-val" id="lp-extra-val">$${sim.extraPayment}</span></div>
-        <input type="range" class="microsim-range" id="lp-extra" min="0" max="${maxExtra}" step="5" value="${sim.extraPayment}">
+        <input type="range" class="microsim-range" id="lp-extra" min="0" max="${maxExtra}" step="5" value="${sim.extraPayment}" aria-label="Extra toward the loan">
       </div>
       <div id="lp-compare"></div>`;
     document.getElementById('lp-extra').addEventListener('input', (e) => {
       sim.extraPayment = Number(e.target.value);
       document.getElementById('lp-extra-val').textContent = '$' + sim.extraPayment;
-      renderChart(minPayment);
-      renderComparison(minPayment);
+      scheduleExtraRecalc(minPayment);
     });
     renderComparison(minPayment);
   }
@@ -19800,7 +19902,7 @@ function renderLoanPayoffPanel() {
       <span class="ci-headline-sub">paid off. Total interest paid: $${Math.round(final.totalInterest).toLocaleString()}, total paid: $${Math.round(sim.loanBalance + final.totalInterest).toLocaleString()}</span>`;
     const chart = buildStackedAreaChart(points.map(p => ({ ...p, zero: 0 })), 'zero', 'balance');
     chartEl.innerHTML = `
-      <svg viewBox="0 0 ${chart.width} ${chart.height}" class="ci-svg">
+      <svg viewBox="0 0 ${chart.width} ${chart.height}" class="ci-svg" aria-hidden="true">
         <path d="${chart.deltaArea}" class="ci-area-debt"></path>
         <path d="${chart.totalLine}" class="ci-line-debt" pathLength="1000"></path>
       </svg>`;
@@ -19814,6 +19916,27 @@ function renderLoanPayoffPanel() {
     renderChart(minPayment);
     renderExtraPaymentCard(minPayment, availableForLoan, canAffordMinimum);
   }
+
+  // Same fix as renderCompoundInterestPanel's scheduleMainChart above — 'input' fires on
+  // every pixel of slider drag movement, and renderAll's own chain (computeLoanPayoff up to
+  // 600 months, a full chart rebuild, AND re-rendering + re-attaching the Extra Payments
+  // card's own listener) is all synchronous with no debouncing. Scoped in this outer
+  // function (not inside renderExtraPaymentCard, which re-runs and re-declares its own
+  // 'input' handler on every renderAll call) so a pending frame survives that re-attachment.
+  let renderAllRaf = null;
+  const scheduleRenderAll = () => {
+    if (renderAllRaf) return;
+    renderAllRaf = requestAnimationFrame(() => { renderAllRaf = null; renderAll(); });
+  };
+  let lpExtraRaf = null;
+  const scheduleExtraRecalc = (minPayment) => {
+    if (lpExtraRaf) return;
+    lpExtraRaf = requestAnimationFrame(() => {
+      lpExtraRaf = null;
+      renderChart(minPayment);
+      renderComparison(minPayment);
+    });
+  };
 
   document.querySelectorAll('#lp-rate-presets .ci-preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -19837,33 +19960,33 @@ function renderLoanPayoffPanel() {
   document.getElementById('lp-balance').addEventListener('input', (e) => {
     sim.loanBalance = Number(e.target.value);
     document.getElementById('lp-balance-val').textContent = '$' + sim.loanBalance.toLocaleString();
-    renderAll();
+    scheduleRenderAll();
   });
   document.getElementById('lp-rate').addEventListener('input', (e) => {
     sim.annualRatePct = Number(e.target.value);
     document.querySelectorAll('#lp-rate-presets .ci-preset-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('lp-rate-val').textContent = sim.annualRatePct + '%';
-    renderAll();
+    scheduleRenderAll();
   });
   document.getElementById('lp-income').addEventListener('input', (e) => {
     sim.monthlyIncome = Number(e.target.value);
     document.getElementById('lp-income-val').textContent = '$' + sim.monthlyIncome.toLocaleString();
-    renderAll();
+    scheduleRenderAll();
   });
   document.getElementById('lp-rent').addEventListener('input', (e) => {
     sim.rent = Number(e.target.value);
     document.getElementById('lp-rent-val').textContent = '$' + sim.rent.toLocaleString();
-    renderAll();
+    scheduleRenderAll();
   });
   document.getElementById('lp-food').addEventListener('input', (e) => {
     sim.food = Number(e.target.value);
     document.getElementById('lp-food-val').textContent = '$' + sim.food.toLocaleString();
-    renderAll();
+    scheduleRenderAll();
   });
   document.getElementById('lp-other').addEventListener('input', (e) => {
     sim.otherExpenses = Number(e.target.value);
     document.getElementById('lp-other-val').textContent = '$' + sim.otherExpenses.toLocaleString();
-    renderAll();
+    scheduleRenderAll();
   });
 
   renderAll();
@@ -20185,9 +20308,9 @@ function renderSorterActivity(mod, lesson) {
     <p class="quest-prompt">${activity.intro}</p>
     <div class="sorter-pool" id="sorter-pool"></div>
     <div class="sorter-buckets">
-      <div class="sorter-bucket" data-bucket="need"><div class="sorter-bucket-title">Need</div><div class="sorter-bucket-items" id="bucket-need"></div></div>
-      <div class="sorter-bucket" data-bucket="want"><div class="sorter-bucket-title">Want</div><div class="sorter-bucket-items" id="bucket-want"></div></div>
-      <div class="sorter-bucket" data-bucket="depends"><div class="sorter-bucket-title">It Depends</div><div class="sorter-bucket-items" id="bucket-depends"></div></div>
+      <div class="sorter-bucket" data-bucket="need" role="button" tabindex="0" aria-label="Place selected item in Need"><div class="sorter-bucket-title">Need</div><div class="sorter-bucket-items" id="bucket-need"></div></div>
+      <div class="sorter-bucket" data-bucket="want" role="button" tabindex="0" aria-label="Place selected item in Want"><div class="sorter-bucket-title">Want</div><div class="sorter-bucket-items" id="bucket-want"></div></div>
+      <div class="sorter-bucket" data-bucket="depends" role="button" tabindex="0" aria-label="Place selected item in It Depends"><div class="sorter-bucket-title">It Depends</div><div class="sorter-bucket-items" id="bucket-depends"></div></div>
     </div>
     <div class="sorter-progress" id="sorter-progress"></div>`;
 
@@ -20216,17 +20339,32 @@ function renderSorterActivity(mod, lesson) {
     });
   }
 
+  // Buckets were plain divs with only a 'click' listener — no role, no tabindex, no
+  // keydown handling. A keyboard-only user could select an item chip (a real <button>,
+  // already focusable) but could never activate a bucket to actually place it: the sorter
+  // quest was completely unfinishable without a mouse. Buckets now have role="button" +
+  // tabindex="0" (see the markup above) and respond to Enter/Space the same way a click
+  // does.
+  function placeSelectedInto(bucketEl) {
+    if (!selectedId) return;
+    placements[selectedId] = bucketEl.dataset.bucket;
+    selectedId = null;
+    renderPool();
+    renderBuckets();
+    if (Object.keys(placements).length === activity.items.length) {
+      setQuestContinue('Check My Sorting →', revealResults, true);
+    }
+  }
   document.querySelectorAll('.sorter-bucket').forEach(bucketEl => {
     bucketEl.addEventListener('click', (e) => {
       if (e.target.closest('.sorter-chip.placed')) return;
-      if (!selectedId) return;
-      placements[selectedId] = bucketEl.dataset.bucket;
-      selectedId = null;
-      renderPool();
-      renderBuckets();
-      if (Object.keys(placements).length === activity.items.length) {
-        setQuestContinue('Check My Sorting →', revealResults, true);
-      }
+      placeSelectedInto(bucketEl);
+    });
+    bucketEl.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      if (e.target.closest('.sorter-chip.placed')) return;
+      e.preventDefault();
+      placeSelectedInto(bucketEl);
     });
   });
 
@@ -20494,8 +20632,16 @@ function formatMoney(val) {
 }
 
 function tweenNumber(el, from, to, { duration = 600, prefix = '', decimals = 0, money = false } = {}) {
+  // A second call on the same element before the first's duration elapses (e.g. two rapid
+  // dashboard updates in quick succession) previously started a second, independent rAF
+  // loop racing the first over the same el.textContent — both writing to it every frame,
+  // which reads as the number flickering between two different animated values. Tagging
+  // each call with its own token lets a newer call silently supersede whatever's still
+  // running instead of racing it.
+  const token = (el._tweenToken = (el._tweenToken || 0) + 1);
   const start = performance.now();
   (function frame(now) {
+    if (el._tweenToken !== token) return;
     const t = Math.min(1, (now - start) / duration);
     const eased = 1 - Math.pow(1 - t, 3);
     const val = from + (to - from) * eased;
@@ -21336,7 +21482,7 @@ function renderMicrosimChapter(chapter, mod, onDone) {
   const slidersHtml = chapter.sliders.map(s => `
     <div class="microsim-slider-row">
       <div class="microsim-slider-label"><span>${s.label}</span><span class="microsim-slider-val" id="ms-val-${s.id}">$${s.default}</span></div>
-      <input type="range" class="microsim-range" id="ms-${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.default}">
+      <input type="range" class="microsim-range" id="ms-${s.id}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.default}" aria-label="${s.label}">
     </div>`).join('');
 
   main.innerHTML = `
@@ -21782,7 +21928,7 @@ function renderPriceIsRightChapter(chapter, mod, onDone) {
   main.innerHTML = `
     <p class="quest-prompt">${chapter.prompt}</p>
     <div class="price-guess-display" id="price-guess-display">$${guess}</div>
-    <input type="range" class="microsim-range" id="price-slider" min="${range.min}" max="${range.max}" step="${range.step}" value="${guess}">
+    <input type="range" class="microsim-range" id="price-slider" min="${range.min}" max="${range.max}" step="${range.step}" value="${guess}" aria-label="Your guess">
     <button class="btn-primary price-reveal-btn" id="price-reveal">Lock In Guess</button>`;
 
   document.getElementById('price-slider').addEventListener('input', (e) => {

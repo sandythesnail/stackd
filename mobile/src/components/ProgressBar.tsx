@@ -14,6 +14,11 @@ export function ProgressBar({
   track = colors.track,
   style,
   fillColors,
+  // Every XP bar, module-completion meter, and quest meter using this component was
+  // previously silent to VoiceOver/TalkBack — no accessibilityRole/Value at all. Optional
+  // (not required) so this doesn't break any existing call site; callers can pass a real
+  // label ("Level progress", "Saving module progress", etc.) going forward.
+  accessibilityLabel = 'Progress',
 }: {
   value: number;
   tone?: 'green' | 'pink';
@@ -21,6 +26,7 @@ export function ProgressBar({
   track?: string;
   style?: ViewStyle;
   fillColors?: [string, string];
+  accessibilityLabel?: string;
 }) {
   const grad: [string, string] =
     fillColors ?? (tone === 'pink' ? [colors.pinkSoft, colors.pink] : [colors.greenBright, colors.green]);
@@ -32,6 +38,9 @@ export function ProgressBar({
   const width = anim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
   return (
     <View
+      accessibilityRole="progressbar"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityValue={{ min: 0, max: 100, now: Math.round(clamped * 100) }}
       style={[
         { height, borderRadius: 8, backgroundColor: track, overflow: 'hidden' },
         style,

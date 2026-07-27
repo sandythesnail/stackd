@@ -61,7 +61,7 @@ export default function Modules() {
             const isOpen = expanded.has(m.id);
             return (
               <View key={m.id} style={[styles.row, status === 'done' && styles.rowDone, recommended && styles.rowRecommended]}>
-                <Pressable onPress={() => toggle(m.id)} style={[styles.rowHead, recommended && styles.rowHeadRecommended]}>
+                <Pressable onPress={() => toggle(m.id)} style={[styles.rowHead, recommended && styles.rowHeadRecommended]} accessibilityRole="button" accessibilityLabel={m.name} accessibilityState={{ expanded: isOpen }}>
                   <View style={styles.rowHeadLeft}>
                     <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} />
                     <View style={{ flex: 1 }}>

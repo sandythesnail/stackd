@@ -15,7 +15,11 @@
   --white: #FFFFFF;
   --text: #2C3E2D;
   --text-mid: #5E7A5E;
-  --text-soft: #94AD8E;
+  /* Was #94AD8E — verified via WCAG relative-luminance math at only ~2.4:1 contrast
+     against white/cream (--bg, --white), well under the 4.5:1 normal-text minimum, used
+     40+ places (quest hints, budget notes, section subtitles, etc.). Darkened by scaling
+     each RGB channel by the same factor (preserves the hue, just deepens it) to ~4.66:1. */
+  --text-soft: #687963;
   --border: #D6DFD0;
   --shadow-sm: 0 2px 12px rgba(44,62,45,0.05);
   --shadow-md: 0 8px 30px rgba(44,62,45,0.08);

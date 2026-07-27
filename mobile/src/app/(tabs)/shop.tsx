@@ -44,6 +44,15 @@ function sortItems(items: ShopItemReal[]) {
   });
 }
 
+// Computed once at module load, not per-render: shopItemsReal/SHOP_CATEGORIES are both
+// static, so filtering+sorting the catalog by category doesn't depend on anything that
+// actually changes across renders (only which SUBSET of categories to show depends on the
+// active tab) — recomputing this inline inside the render's .map() over categories was
+// pure repeated work on every single re-render.
+const ITEMS_BY_CATEGORY: Record<string, ShopItemReal[]> = Object.fromEntries(
+  SHOP_CATEGORIES.map((cat) => [cat.key, sortItems(shopItemsReal.filter((i) => i.category === cat.key))]),
+);
+
 function mysteryBoxNameFor(poolKey: string) {
   return shopItemsReal.find((i) => i.isMysteryBox && i.mysteryPool === poolKey)?.name ?? 'a Mystery Box';
 }
@@ -77,7 +86,7 @@ export default function Shop() {
           {(['boutique', 'room'] as const).map((t) => {
             const on = t === tab;
             return (
-              <Pressable key={t} onPress={() => setTab(t)} style={[styles.tchip, on && styles.tchipOn]}>
+              <Pressable key={t} onPress={() => setTab(t)} style={[styles.tchip, on && styles.tchipOn]} accessibilityRole="button" accessibilityState={{ selected: on }}>
                 <Txt style={[styles.tchipTxt, on && { color: colors.white }]}>{t === 'boutique' ? 'Boutique' : 'Room'}</Txt>
               </Pressable>
             );
@@ -108,7 +117,7 @@ export default function Shop() {
         </View>
 
         {categories.map((cat, idx) => {
-          const items = sortItems(shopItemsReal.filter((i) => i.category === cat.key));
+          const items = ITEMS_BY_CATEGORY[cat.key] ?? [];
           const icon = CATEGORY_ICON[cat.key];
           // Room Decor is the only category on its tab — a titled header above it would
           // just repeat what the storefront banner above already says ("The Furniture
@@ -273,7 +282,7 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
 
   if (glow) {
     return (
-      <Pressable onPress={onPress} style={[styles.cardGlowWrap, equippedRing]}>
+      <Pressable onPress={onPress} style={[styles.cardGlowWrap, equippedRing]} accessibilityRole="button" accessibilityLabel={item.name}>
         <LinearGradient colors={['#FFFFFF', '#F0FBFF']} style={styles.cardGlowInner}>
           {cardContent}
         </LinearGradient>
@@ -282,7 +291,7 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
   }
   if (rewardCard) {
     return (
-      <Pressable onPress={onPress} style={[styles.cardRewardWrap, { opacity: 0.85 }]}>
+      <Pressable onPress={onPress} style={[styles.cardRewardWrap, { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={item.name}>
         <LinearGradient colors={['#FFFFFF', '#FFFAEE']} style={styles.cardGlowInner}>
           {cardContent}
         </LinearGradient>
@@ -290,7 +299,7 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
     );
   }
   return (
-    <Pressable style={[styles.card, equippedRing]} onPress={onPress}>
+    <Pressable style={[styles.card, equippedRing]} onPress={onPress} accessibilityRole="button" accessibilityLabel={item.name}>
       {cardContent}
     </Pressable>
   );
