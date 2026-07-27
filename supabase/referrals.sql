@@ -38,6 +38,13 @@ create policy referrals_select_own on public.referrals
 -- referred_id (never crediting someone else), and only in 'pending'/unpaid state. This is
 -- the ONLY insert path a client is allowed to use — actually paying the reward requires
 -- claim_referral_activation() below, which a plain client-side write can never do.
+--
+-- referrer_id must belong to a real user_progress row: previously any arbitrary string was
+-- accepted with no existence check at all, so a typo'd or entirely made-up id could sit in
+-- this table forever. This doesn't (and isn't meant to) prevent one person from controlling
+-- both a real referrer and a real referred account — that's an accepted, lower-stakes risk
+-- since it's capped at in-app currency and requires two genuinely distinct signups either
+-- way. It only rules out crediting an id that was never a real account to begin with.
 drop policy if exists referrals_insert_self_pending on public.referrals;
 create policy referrals_insert_self_pending on public.referrals
   for insert
@@ -46,6 +53,7 @@ create policy referrals_insert_self_pending on public.referrals
     and referrer_id <> referred_id
     and status = 'pending'
     and reward_paid = false
+    and exists (select 1 from public.user_progress where clerk_user_id = referrer_id)
   );
 
 -- 2. Secure activation function -------------------------------------------------
@@ -70,6 +78,8 @@ as $$
 declare
   v_referred_id text := auth.jwt()->>'sub';
   v_row public.referrals;
+  v_has_progress boolean;
+  v_updated_rows int;
 begin
   if v_referred_id is null then
     return jsonb_build_object('claimed', false, 'reason', 'not_authenticated');
@@ -83,18 +93,48 @@ begin
     return jsonb_build_object('claimed', false, 'reason', 'no_pending_referral');
   end if;
 
-  update public.referrals
-    set status = 'activated', activated_at = now(), reward_paid = true
-    where id = v_row.id;
+  -- Require genuine engagement (at least one completed lesson) before paying out, instead
+  -- of trusting the client to only call this after its own "finished first lesson" check.
+  -- Previously this function had NO server-side gate on that at all — it could be called
+  -- directly (e.g. via the Supabase REST/RPC endpoint, bypassing the app UI entirely) the
+  -- instant the referral row was inserted, letting a scripted throwaway account claim the
+  -- +15 coins without ever touching real content. questProgress is the authoritative
+  -- per-lesson completion record (see app.js's finishQuest/startQuest and
+  -- mobile/src/lib/webState.ts's mobileToWeb) — this checks for at least one entry marked
+  -- actually done, on either platform.
+  select exists (
+    select 1
+    from public.user_progress up, jsonb_each(coalesce(up.state->'questProgress', '{}'::jsonb)) as qp(key, value)
+    where up.clerk_user_id = v_referred_id
+      and (qp.value->>'done')::boolean is true
+  ) into v_has_progress;
+
+  if not v_has_progress then
+    return jsonb_build_object('claimed', false, 'reason', 'no_lesson_completed');
+  end if;
 
   -- Referred user: +15 coins (mirrored client-side too so their local session reflects it
-  -- immediately without waiting for the next full state reload).
+  -- immediately without waiting for the next full state reload). Done BEFORE marking the
+  -- referral activated/paid below, and its row count checked — a brand-new account's very
+  -- first autosave might not have landed yet, which previously updated 0 rows silently
+  -- while still marking reward_paid true right after, permanently losing the +15 coins
+  -- with no retry path (that same reward_paid guard blocks any future attempt). Now the
+  -- referral is only marked paid if the credit actually lands.
   update public.user_progress
     set state = jsonb_set(
       state, '{coins}',
       to_jsonb(coalesce((state->>'coins')::int, 0) + 15)
     )
     where clerk_user_id = v_referred_id;
+
+  get diagnostics v_updated_rows = row_count;
+  if v_updated_rows = 0 then
+    return jsonb_build_object('claimed', false, 'reason', 'user_progress_missing');
+  end if;
+
+  update public.referrals
+    set status = 'activated', activated_at = now(), reward_paid = true
+    where id = v_row.id;
 
   return jsonb_build_object('claimed', true, 'referrer_id', v_row.referrer_id);
 end;

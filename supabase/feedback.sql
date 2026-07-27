@@ -20,6 +20,15 @@ create table if not exists public.feedback (
 create index if not exists feedback_clerk_user_id_idx on public.feedback (clerk_user_id);
 create index if not exists feedback_created_at_idx on public.feedback (created_at desc);
 
+-- Neither column had a length guard — an authenticated user could otherwise flood this
+-- table with arbitrarily large text payloads per row (a cheap storage-exhaustion vector),
+-- not just a high row count. Postgres has no ADD CONSTRAINT IF NOT EXISTS, so drop-then-add
+-- for the same idempotent-rerun guarantee the policies below already rely on.
+alter table public.feedback drop constraint if exists feedback_message_length;
+alter table public.feedback add constraint feedback_message_length check (char_length(message) <= 4000);
+alter table public.feedback drop constraint if exists feedback_page_length;
+alter table public.feedback add constraint feedback_page_length check (page is null or char_length(page) <= 200);
+
 alter table public.feedback enable row level security;
 
 -- A signed-in user may only ever file feedback as themselves.

@@ -15,10 +15,16 @@ function loadDotEnv() {
   const envPath = path.join(ROOT, '.env');
   if (!fs.existsSync(envPath)) return;
   for (const line of fs.readFileSync(envPath, 'utf-8').split(/\r?\n/)) {
-    const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)\s*$/);
+    const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*?)\s*$/);
     if (!match) continue;
     const [, key, rawValue] = match;
-    const value = rawValue.replace(/^["']|["']$/g, '');
+    // Strip a trailing ` # comment` (only outside quotes — a quoted value's own `#` is
+    // real content) before the quote-stripping below, so e.g.
+    // `SUPABASE_ANON_KEY=abc123 # dev key` doesn't bake the literal " # dev key" suffix
+    // into every substituted HTML/JS file. Only affects local builds using a real .env
+    // file — Vercel production sets these vars directly, bypassing this parser entirely.
+    const withoutComment = /^["']/.test(rawValue) ? rawValue : rawValue.replace(/\s+#.*$/, '');
+    const value = withoutComment.replace(/^["']|["']$/g, '');
     if (!(key in process.env)) process.env[key] = value;
   }
 }
@@ -46,11 +52,27 @@ const FILES_WITH_PLACEHOLDERS = new Set([
 
 // Directories/files that aren't part of the deployed static site (tooling, the
 // separate mobile app, repo metadata) and shouldn't be copied into dist/.
+//
+// This is a blocklist, not an allowlist — anything dropped at repo root that isn't listed
+// here (or excluded by extension below) is public by default the next time this runs.
+// `.env.example` is the concrete case that slipped through before: it's tracked in git
+// (`.gitignore` explicitly un-ignores it) specifically so contributors have a template to
+// copy, but had no reason to ever be served — and nothing here would have caught a real
+// secret accidentally pasted into it before a deploy.
 const EXCLUDE_AT_ROOT = new Set([
   '.git', 'node_modules', 'dist', '.claude', '.agents', '.github',
   'mobile', 'SecurityAgent', 'supabase', 'scripts',
-  'package.json', 'package-lock.json', 'skills-lock.json', '.gitignore', 'vercel.json', '.env',
+  'package.json', 'package-lock.json', 'skills-lock.json', '.gitignore', 'vercel.json',
+  '.env', '.env.example',
 ]);
+
+// Office-document extensions are never legitimately served from the site root (unlike
+// images, which the blocklist above can't safely generalize — real favicons/mockups live
+// alongside stray reference photos at the same root). A slide deck or spreadsheet dropped
+// at repo root for reference (e.g. a presentation, a planning doc) has no such ambiguity —
+// exclude these by extension so a future one doesn't silently get published on the next
+// deploy the way one already did.
+const EXCLUDE_EXTENSIONS = new Set(['.pptx', '.ppt', '.doc', '.docx', '.xls', '.xlsx', '.key', '.numbers', '.pages']);
 
 // Render-blocking script injected at the top of every page's <head>. It bounces
 // phones / narrow viewports to the Expo app under /m/ (see m-redirect.js), while
@@ -71,6 +93,7 @@ function copyDir(srcDir, destDir, isRoot) {
   fs.mkdirSync(destDir, { recursive: true });
   for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
     if (isRoot && EXCLUDE_AT_ROOT.has(entry.name)) continue;
+    if (isRoot && !entry.isDirectory() && EXCLUDE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) continue;
     const src = path.join(srcDir, entry.name);
     const dest = path.join(destDir, entry.name);
     if (entry.isDirectory()) {

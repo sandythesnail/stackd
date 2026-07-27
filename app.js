@@ -17553,6 +17553,17 @@ function dismissTourForLessonStart(tile) {
 }
 
 function startOnboardingTour() {
+  // The tour's first step targets Home's stat row/sidebar footer — normally guaranteed to
+  // exist because finishOnboardingSurvey calls renderHome() right before this eventually
+  // runs. But runFirstLoadSequence can also call this directly at boot for a user who
+  // already finished the survey/Hammy intro in an earlier session and reloaded mid-tour
+  // (e.g. after step 4's showPage('modules') persisted 'modules' as the last page) — that
+  // boot restores whichever page was last open, not Home, so home-stats-row was never
+  // rendered this session and step 0's target lookup silently returned null (a floating,
+  // unspotlighted tooltip instead of highlighting anything). Ensuring Home is showing
+  // first makes every entry path into this function safe, not just the common one.
+  showPage('home');
+  renderHome();
   tourStepIdx = 0;
   tourOpenedMobileNav = false;
   window.scrollTo(0, 0);
@@ -20190,7 +20201,12 @@ function renderSorterActivity(mod, lesson) {
     document.querySelectorAll('.sorter-chip.placed').forEach(chipEl => {
       const item = activity.items.find(it => it.id === chipEl.dataset.id);
       const placedBucket = placements[item.id];
-      const correct = item.category === 'depends' || placedBucket === item.category;
+      // `item.category === 'depends' ||` used to short-circuit this true before ever
+      // checking placedBucket, so an "It Depends" item was graded correct no matter which
+      // bucket it was actually dropped in — despite the activity providing a dedicated
+      // third bucket specifically for these. Graded the same way as every other item now:
+      // correct only if it landed in its own matching bucket.
+      const correct = placedBucket === item.category;
       chipEl.classList.add(correct ? 'correct' : 'wrong');
       if (item.note) {
         const note = document.createElement('div');
@@ -20199,7 +20215,7 @@ function renderSorterActivity(mod, lesson) {
         chipEl.after(note);
       }
     });
-    const correctCount = activity.items.filter(it => it.category === 'depends' || placements[it.id] === it.category).length;
+    const correctCount = activity.items.filter(it => placements[it.id] === it.category).length;
     showHammyMessage(correctCount === activity.items.length ? "You caught every one!" : "A few gray areas, that's normal, that's the point.", correctCount === activity.items.length);
     const note = document.createElement('p');
     note.className = 'sorter-final-note';
