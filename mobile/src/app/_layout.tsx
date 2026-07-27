@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Platform, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { Asset } from 'expo-asset';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -26,6 +27,21 @@ import { AchievementToast, OnboardingTourProvider, Txt, Button } from '@/compone
 import { authEnabled, env } from '@/lib/env';
 import { tokenCache } from '@/lib/tokenCache';
 import { SupabaseSync } from '@/lib/SupabaseSync';
+import { MOOD_FACES, REACTION_FACES } from '@/hammyFaces';
+
+// All of Hammy's illustrated face overlays, deduped by image module — a bundled `require()`
+// asset still isn't decoded into the native image cache until something actually draws it,
+// and Hammy's face-overlay swap (see Hammy.tsx) hides the default eyes/cheeks/snout the
+// instant `face` is set, with nothing underneath while the overlay decodes for the first
+// time. That gap is exactly what read as "Hammy's face goes blank for a second" right when
+// a lesson question is answered — the very first time a given reaction face was needed.
+// Warming every face into the cache here, before Hammy ever needs one, closes it.
+// All of these come from local `require()` calls (see hammyFaces.ts), which always resolve
+// to a numeric module id on native/Metro — Asset.loadAsync's typings are just wider than
+// that (they also accept remote-URI strings), hence the cast.
+const HAMMY_FACE_IMAGES = Array.from(
+  new Set([...Object.values(MOOD_FACES), ...Object.values(REACTION_FACES)].map((f) => f.image)),
+) as number[];
 
 SplashScreen.preventAutoHideAsync();
 
@@ -76,7 +92,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
+  const [fontsLoaded] = useFonts({
     Fredoka_400Regular,
     Fredoka_500Medium,
     Fredoka_600SemiBold,
@@ -87,6 +103,15 @@ export default function RootLayout() {
     Nunito_700Bold,
     Nunito_800ExtraBold,
   });
+  const [facesLoaded, setFacesLoaded] = useState(false);
+  useEffect(() => {
+    // Best-effort: if a face image somehow fails to warm (shouldn't happen, these are all
+    // bundled local assets), fall through anyway rather than stranding the app on the
+    // splash screen forever.
+    Asset.loadAsync(HAMMY_FACE_IMAGES).catch(() => {}).finally(() => setFacesLoaded(true));
+  }, []);
+
+  const loaded = fontsLoaded && facesLoaded;
 
   useEffect(() => {
     if (loaded) SplashScreen.hideAsync();
