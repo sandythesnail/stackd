@@ -21547,7 +21547,13 @@ function renderMicrosimChapter(chapter, mod, onDone) {
 // types read as one continuous "test your assumptions" beat rather than two different UIs.
 function renderPollChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
-  clearQuestContinue();
+  // A disabled placeholder, not clearQuestContinue()'s empty slot — the Continue button
+  // lives in the sticky header above quest-body, so an empty slot popping to a real
+  // button's size the instant you answer grows the sticky header and pushes the whole
+  // question/Hammy row down with it, same category of bug as the reveal/message bubble
+  // below. Rendering the (inert) button from the start reserves that space immediately;
+  // answering just swaps it for the real, clickable one at the same size.
+  setQuestContinue('Continue →', null, false);
   // The reveal's markup (TRUE/FALSE tag + explanation) never actually depends on which
   // choice the user picks — chapter.isTrue/explanation are fixed data — so it's rendered
   // into the DOM immediately, just hidden via visibility (not display:none, and not left
