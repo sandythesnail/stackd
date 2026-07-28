@@ -428,7 +428,7 @@ export default function QuestPlayer() {
       {showCompanion ? (
         <View style={styles.companionWrap}>
           <Hammy
-            size={220}
+            size={130}
             bob
             equipped={equippedMascotItems()}
             face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
@@ -1814,9 +1814,12 @@ const styles = StyleSheet.create({
   // button on the screen's true centre line while still leaving the left corner free.
   // No top border: a divider line directly above the action button read as a stray rule
   // across the screen rather than as structure, so the bar just sits on the page.
+  // Bottom padding is deliberately heavier than the top, lifting the button off the very
+  // edge of the screen — on the web build there's no home-indicator inset underneath it to
+  // do that on its own.
   bottomBar: {
     flexDirection: 'row', alignItems: 'center', minHeight: 68,
-    paddingHorizontal: 16, paddingVertical: 10,
+    paddingHorizontal: 16, paddingTop: 8, paddingBottom: 22,
   },
   bottomSlot: { width: 48, alignItems: 'flex-start', justifyContent: 'center' },
   bottomCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
