@@ -1,0 +1,31 @@
+#!/bin/sh
+# Plays a sound when Vercel finishes deploying whatever was just pushed.
+#
+# Install (git does not version .git/hooks, so this has to be copied in once per clone):
+#   cp scripts/hooks/pre-push .git/hooks/pre-push
+#
+# pre-push rather than a post-push hook because git has no post-push hook at all. Firing
+# just BEFORE the push lands is fine here: the watcher polls until GitHub has the commit
+# and Vercel has reported a status on it, so the first second or two of "not there yet" is
+# simply an early poll it sits through.
+#
+# This can never block, slow, or fail a push: the watcher is spawned as its own detached
+# Windows process, nothing is waited on, and the hook always exits 0.
+
+root=$(git rev-parse --show-toplevel)
+script="$root/scripts/notify-vercel-deploy.ps1"
+[ -f "$script" ] || exit 0
+
+# stdin: "<local-ref> <local-sha> <remote-ref> <remote-sha>" per ref being pushed.
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # An all-zero (or empty) local sha means this ref is being DELETED, which deploys nothing.
+  case "$local_sha" in
+    *[!0]*) ;;
+    *) continue ;;
+  esac
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \
+    "Start-Process powershell -WindowStyle Hidden -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','$script','-Sha','$local_sha'" \
+    </dev/null >/dev/null 2>&1
+done
+
+exit 0
