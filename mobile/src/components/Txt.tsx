@@ -12,7 +12,7 @@ export function Txt({
   return (
     <Text
       {...rest}
-      style={[styles[variant], color ? { color } : null, styles.noSelect, style]}
+      style={[styles[variant], color ? { color } : null, style]}
     />
   );
 }
@@ -32,14 +32,4 @@ const styles = StyleSheet.create({
     color: colors.muted3,
     letterSpacing: 0.3,
   },
-  // react-native-web's <Text> is natively selectable unless told otherwise (it only opts
-  // OUT of selection when `selectable={false}`/styles.userSelect is set) — every screen
-  // here left it at the browser default, so tapping any static line of copy on a phone
-  // browser (this app runs through the web build, see m-redirect.js) triggered the OS's
-  // native text-selection UI: a blinking caret + selection handles right in the middle of
-  // the sentence, exactly like the "cursor blinking" seen after Hammy's Tip's caption and
-  // reported as showing up everywhere. `userSelect: 'none'` here (web-only; RN itself
-  // ignores unknown style keys) opts every Txt out of that, matching how a native app's
-  // text isn't selectable by default either.
-  noSelect: { userSelect: 'none' } as object,
 });
