@@ -21132,7 +21132,13 @@ function renderTeachChapter(chapter, mod, onDone) {
   function renderConcept() {
     const c = concepts[idx];
     const isLast = idx === concepts.length - 1;
-    clearQuestContinue();
+    // A disabled placeholder, not clearQuestContinue()'s empty slot — same fix as
+    // renderPollChapter: the Continue button lives in the sticky header, above quest-body,
+    // so an empty-to-populated jump there grows the header and shifts the whole
+    // question/Hammy row down the instant the word-check is answered (or immediately, for
+    // a concept with no check). Reserves the same space from the start; readyToAdvance()
+    // below swaps in the real, clickable button at the same size.
+    setQuestContinue(isLast ? 'Got it →' : 'Next Word →', null, false);
     main.innerHTML = `
       <div class="teach-tag">💡 New Word${concepts.length > 1 ? ` · ${idx + 1}/${concepts.length}` : ''}</div>
       <div class="speech-bubble teach-bubble">
