@@ -236,22 +236,6 @@ export default function QuestPlayer() {
   // with the card's actual drawn position.
   const [fitMode, setFitMode] = useState(false);
   const onFitMode = (f: boolean) => setFitMode(f);
-  // Set once a chapter's content turns out to be taller than the screen — i.e. the student
-  // has to scroll it either way. That's the cue to stand the companion Hammy down and give
-  // the whole screen over to the question itself, per the "on the larger questions I just
-  // want the question on screen" request.
-  //
-  // Latched (only ever set true, reset on chapter change) rather than tracked live, because
-  // hiding Hammy is itself what frees up the ~215px that would make the content fit again:
-  // a live check would hide him, re-measure as fitting, show him, overflow, and oscillate
-  // forever. Once a chapter has been found not to fit with him on screen, it keeps the
-  // extra room for the rest of that chapter.
-  const [contentOverflowed, setContentOverflowed] = useState(false);
-  const noteOverflow = (overflowing: boolean) => { if (overflowing) setContentOverflowed(true); };
-  // Available height of the plain-ScrollView branch, for the same overflow check on chapter
-  // types that don't use FitToViewport. A ref, not state — it's only ever read inside
-  // onContentSizeChange, and re-rendering on every layout pass would be pure waste.
-  const scrollViewHRef = useRef<number | null>(null);
   // An ambient life event (see rollAmbientLifeEvent) pauses a mid-quest chapter transition
   // the same way the website's maybeTriggerAmbientLifeEvent pauses its own "next" handlers
   // — the chapter doesn't actually advance until the event is dismissed. pendingAdvanceRef
@@ -337,8 +321,6 @@ export default function QuestPlayer() {
     setReactionMood(null);
     setReactionMsg(null);
     setKcQuestionIdx(0);
-    setContentOverflowed(false);
-    scrollViewHRef.current = null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterIdx]);
   const reactTo = (isCorrect: boolean, customMsg?: string, gentlePool?: string[]) => {
@@ -419,13 +401,13 @@ export default function QuestPlayer() {
     }
   };
 
-  // Hidden during a story chapter's intro beat or a 'hint' chapter, both of which already
-  // show their own big centered Hammy in the content area instead (StoryView/HintView), so
-  // a second Hammy up here would just be a redundant duplicate. Also stood down once a
-  // chapter's content overflows the screen (see contentOverflowed) — with one exception:
-  // story dialogue, where the companion IS the scene (the conversation is with him), so a
-  // long conversation shouldn't make him vanish part-way through it.
-  const showCompanion = layoutMode !== 'intro' && !(contentOverflowed && chapter.type !== 'story');
+  // Hidden ONLY during a story chapter's intro beat or a 'hint' chapter, both of which
+  // already show their own big Hammy in the content area instead (StoryView/HintView), so a
+  // second one up here would just be a redundant duplicate. Nothing else ever takes the
+  // companion away — an earlier version also stood him down on any chapter whose content
+  // had to scroll, which meant he vanished from exactly the long question screens he's
+  // there to react to. He stays.
+  const showCompanion = layoutMode !== 'intro';
 
   return (
     <Screen edges={['top', 'bottom']}>
@@ -438,21 +420,22 @@ export default function QuestPlayer() {
         <Txt style={styles.step}>{Math.round((chapterIdx / quest.chapters.length) * 100)}%</Txt>
         <HintCorner key={chapter.id} hintText={hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       </View>
-      {/* Companion Hammy — centered, with his speech bubble stacked directly above him (see
-          ReactionBubble). Both sit in one centered column, so the bubble lines up with him
-          by construction rather than by hand-tuned offsets, and "Good job!" reads as coming
-          out of him instead of floating off to one side. */}
+      {/* Companion Hammy on the left with his speech bubble beside him, at the same size as
+          the big Hammy on a story's intro screen. A plain flex row rather than the bubble
+          being absolutely positioned at a fixed width: the bubble just takes whatever width
+          is left over next to him, so his size and the screen's can both change without any
+          hand-tuned offsets needing to be re-tuned. */}
       {showCompanion ? (
         <View style={styles.companionWrap}>
-          <ReactionBubble message={reactionMsg} mood={reactionMood} />
           <Hammy
-            size={130}
+            size={220}
             bob
             equipped={equippedMascotItems()}
             face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
             reaction={reactionMood}
             reactionKey={reactionKey}
           />
+          <ReactionBubble message={reactionMsg} mood={reactionMood} />
         </View>
       ) : null}
       {fitMode ? (
@@ -465,7 +448,6 @@ export default function QuestPlayer() {
           key={chapter.id}
           style={[{ flex: 1 }, chapter.type === 'matching' && { justifyContent: 'center' }]}
           contentStyle={styles.content}
-          onOverflowChange={noteOverflow}
         >
           <Reanimated.View key={chapter.id} entering={FadeIn.duration(260)}>
             <ChapterView
@@ -487,18 +469,14 @@ export default function QuestPlayer() {
       ) : (
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={[styles.content, chapter.type === 'story' && layoutMode === 'normal' && styles.contentCenterDialogue]}
+          contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
-          onLayout={(e) => { scrollViewHRef.current = e.nativeEvent.layout.height; }}
-          // The FitToViewport branch reports its own overflow; this is the same signal for
-          // the chapter types that scroll normally. The few px of slack stop a rounding
-          // difference from counting as "this scrolls".
-          onContentSizeChange={(_w, h) => {
-            const available = scrollViewHRef.current;
-            if (available != null && h > available + 4) setContentOverflowed(true);
-          }}
         >
-          <Reanimated.View key={chapter.id} entering={FadeIn.duration(260)}>
+          {/* flexGrow so the chapter actually fills the scroller's height rather than
+              shrink-wrapping inside it — that's what lets a chapter whose own root asks to
+              be centered (the story intro's Hammy + caption stage) have a height to center
+              itself within. Without it those chapters just sat pinned to the top. */}
+          <Reanimated.View key={chapter.id} entering={FadeIn.duration(260)} style={styles.chapterFill}>
             <ChapterView
               chapter={chapter}
               questions={content.questions}
@@ -1834,10 +1812,11 @@ const styles = StyleSheet.create({
   // (centered). minHeight, not height, so it can't squeeze the 48px button; the two
   // bottomSlots are equal widths flanking a flex:1 middle, which is what keeps the action
   // button on the screen's true centre line while still leaving the left corner free.
+  // No top border: a divider line directly above the action button read as a stray rule
+  // across the screen rather than as structure, so the bar just sits on the page.
   bottomBar: {
     flexDirection: 'row', alignItems: 'center', minHeight: 68,
     paddingHorizontal: 16, paddingVertical: 10,
-    borderTopWidth: 1.5, borderTopColor: '#EFEFE7',
   },
   bottomSlot: { width: 48, alignItems: 'flex-start', justifyContent: 'center' },
   bottomCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -1895,41 +1874,36 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10,
   },
   tfBtnTxt: { fontFamily: font.extra, fontSize: 15 },
-  // One centered column: the reaction bubble's reserved slot on top, Hammy directly under
-  // it. Centering the column is all it takes to centre both, and it's what puts the bubble
-  // over the middle of him rather than off one shoulder.
-  companionWrap: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 6, paddingBottom: 4 },
-  // The bubble's height is reserved from the very first render whether or not there's a
-  // message, so Hammy and every bit of chapter content below him stay exactly where they
-  // are when he starts or stops talking — this screen has a long history of things nudging
-  // downward the moment feedback appeared. flex-end pins the box to the bottom of the slot
-  // (right above Hammy) and grows it upward as a message needs more room; paddingBottom is
-  // the gap its downward tail lives in. 70 fits the two lines shortFeedback's 60-char cap
-  // can produce at this width.
-  bubbleSlot: {
-    minHeight: 70, width: '100%', paddingBottom: 13, paddingHorizontal: 20,
-    alignItems: 'center', justifyContent: 'flex-end',
+  // Hammy on the left, his bubble in the space beside him. A real flex row, so the bubble
+  // sizes itself to whatever is left over rather than to a fixed width that would have to
+  // be re-tuned every time his size or the screen's changes.
+  companionWrap: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 16, paddingTop: 4, paddingBottom: 4,
   },
-  bubbleInner: { alignItems: 'center', maxWidth: 300 },
+  // No reserved height: the row's height is Hammy's, and he's far taller than any bubble
+  // this can produce — so a message appearing or clearing can't move him or anything below.
+  bubbleSlot: { flex: 1, alignItems: 'flex-start', justifyContent: 'center' },
+  bubbleInner: { alignItems: 'flex-start' },
   reactionBox: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
-    borderRadius: 16, paddingVertical: 9, paddingHorizontal: 14,
+    borderRadius: 16, paddingVertical: 9, paddingHorizontal: 13,
   },
-  reactionTxt: { fontFamily: font.bold, fontSize: 14.5, lineHeight: 19, textAlign: 'center' },
-  // A literal speech-bubble tail on the box's bottom edge, pointing down at Hammy (who now
-  // sits directly below it) — the classic border-triangle trick (colored top border,
-  // transparent left/right, zero width/height). Two stacked triangles (a larger
-  // border-colored one behind, a smaller white one in front) fake the box's own 1.5px stroke
-  // carrying around the point.
+  reactionTxt: { fontFamily: font.bold, fontSize: 14, lineHeight: 18.5 },
+  // A literal speech-bubble tail on the box's left edge, pointing at Hammy (who sits to its
+  // left) — the classic border-triangle trick (colored right border, transparent
+  // top/bottom, zero width/height). Two stacked triangles (a larger border-colored one
+  // behind, a smaller white one in front) fake the box's own 1.5px stroke carrying around
+  // the point.
   reactionTailBorder: {
-    position: 'absolute', bottom: -11, left: '50%', marginLeft: -9,
-    width: 0, height: 0, borderLeftWidth: 9, borderRightWidth: 9, borderTopWidth: 11,
-    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: colors.border,
+    position: 'absolute', top: '50%', left: -9, marginTop: -7,
+    width: 0, height: 0, borderTopWidth: 7, borderBottomWidth: 7, borderRightWidth: 9,
+    borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: colors.border,
   },
   reactionTailFill: {
-    position: 'absolute', bottom: -8.4, left: '50%', marginLeft: -7.4,
-    width: 0, height: 0, borderLeftWidth: 7.4, borderRightWidth: 7.4, borderTopWidth: 9,
-    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: colors.white,
+    position: 'absolute', top: '50%', left: -6.5, marginTop: -5.8,
+    width: 0, height: 0, borderTopWidth: 5.8, borderBottomWidth: 5.8, borderRightWidth: 7.5,
+    borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: colors.white,
   },
   // Story chapter title — pink; a normal top-aligned heading over the dialogue log, and
   // centered directly above Hammy on the intro screen (see StoryView).
@@ -1972,15 +1946,7 @@ const styles = StyleSheet.create({
   },
   ambientLifeSheetContent: { paddingHorizontal: 22, paddingBottom: 34 },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 20, gap: 12, flexGrow: 1 },
-  // A short dialogue (few beats revealed so far) used to sit pinned to the top of the
-  // screen with a dead gap below it — justifyContent: 'center' centers the whole beat log
-  // as a group instead, while still behaving like an ordinary top-anchored scroll once the
-  // beats grow taller than the screen (RN centers a ScrollView's contentContainerStyle only
-  // when its content is SHORTER than the viewport; once it overflows this has no effect and
-  // scrolling just starts from the top, same as before). The beats' own `gap: 10` (this
-  // style's `gap` above) already spaces every beat evenly, so centering the group as a whole
-  // doesn't unevenly bunch any of them.
-  contentCenterDialogue: { justifyContent: 'center' },
+  chapterFill: { flexGrow: 1 },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
   // Story beats — speaker-styled: white bordered bubble + pig-head avatar for Hammy, a

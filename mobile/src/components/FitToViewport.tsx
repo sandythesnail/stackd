@@ -28,16 +28,10 @@ export function FitToViewport({
   children,
   style,
   contentStyle,
-  onOverflowChange,
 }: {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   contentStyle?: ViewStyle;
-  /** Fires when the content stops/starts fitting even at the MIN_SCALE floor, i.e. when
-   * this falls back to a real scroller. The quest player uses it to give the whole screen
-   * over to the content (hiding the companion Hammy) once a chapter is long enough that
-   * scrolling is unavoidable anyway. */
-  onOverflowChange?: (overflowing: boolean) => void;
 }) {
   const [availableH, setAvailableH] = useState<number | null>(null);
   const [naturalH, setNaturalH] = useState<number | null>(null);
@@ -71,11 +65,6 @@ export function FitToViewport({
   useEffect(() => {
     if (overflowsAtFloor && !scrollLatched) setScrollLatched(true);
   }, [overflowsAtFloor, scrollLatched]);
-
-  useEffect(() => {
-    if (ready) onOverflowChange?.(overflowsAtFloor);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, overflowsAtFloor]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: withTiming(scale, { duration: 180 }) }],
