@@ -1185,14 +1185,18 @@ select.budget-input { cursor: pointer; }
 }
 .hammy-side-avatar { position: relative; }
 /* A white speech bubble floats above Hammy's head whenever they react, instead of plain
-   text sitting below them. */
+   text sitting below them. Deliberately NOT `display:none` while empty (no `:empty` rule
+   here anymore) — it sits in a centered column ABOVE Hammy's avatar, so collapsing to zero
+   height while empty and popping to its real height the instant a reaction message landed
+   pushed Hammy down the page right when you answered. Opacity/transform alone (below) are
+   what actually show/hide it now, so its box — and the space it reserves above Hammy —
+   never changes size, whether or not it currently holds a message. */
 .hammy-side-msg {
   position: relative; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem;
   color: var(--text); line-height: 1.3; background: #fff; border: 1.5px solid var(--border);
   border-radius: var(--radius); padding: 0.7rem 1rem; box-shadow: var(--shadow-sm);
   opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease;
 }
-.hammy-side-msg:empty { display: none; }
 .hammy-side-msg::before, .hammy-side-msg::after {
   content: ''; position: absolute; left: 50%; transform: translateX(-50%); width: 0; height: 0;
   border-left: 10px solid transparent; border-right: 10px solid transparent;
