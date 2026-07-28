@@ -1,12 +1,84 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Animated, Easing, ViewStyle, View } from 'react-native';
+import { Animated, Easing, ViewStyle, View, StyleSheet, Image as RNImage } from 'react-native';
 import Svg, {
   Defs, LinearGradient, RadialGradient, Stop, Ellipse, Circle, Path, Rect, G, ClipPath, SvgXml, Image as SvgImage,
 } from 'react-native-svg';
 import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ShopItemReal } from '@/content';
-import type { FaceOverlay } from '@/hammyFaces';
+import { REACTION_FACES, type FaceOverlay } from '@/hammyFaces';
+
+/* ─────────────── illustrated-face decode tracking ───────────────
+ * Setting `face` used to hide the base eyes/cheeks/snout in the very same render that
+ * pointed <SvgImage> at the overlay PNG — but that PNG still has to be fetched (a real
+ * network round-trip the first time each face is used on the web build, which is how this
+ * app is actually served, see m-redirect.js) and decoded before it paints. In that window
+ * the base features were already gone and the overlay hadn't drawn: Hammy's face was
+ * genuinely blank, exactly the "his face goes blank when I click an answer" report.
+ *
+ * The obvious fix — leave the base features underneath — does NOT work here: the face PNGs
+ * are 40-50% transparent by pixel count (verified), so the default eyes and snout would
+ * show straight through the illustrated face. So instead the swap simply waits: base
+ * features stay until the overlay is known-decoded, then they hand off. Worst case is the
+ * normal face for a beat, never a blank one.
+ *
+ * Decode is detected with a 1px offscreen RN <Image> (onLoad is reliable on both native and
+ * react-native-web, unlike react-native-svg's own <Image>). Results are cached per session
+ * in a module-level set so this only ever costs anything the first time a given face is
+ * shown; every later reaction swaps instantly. */
+const decodedFaces = new Set<string>();
+const decodedListeners = new Set<() => void>();
+/** `require()` yields a number on native and a string/object on web — String() is a stable
+ * key either way, and each FaceOverlay's `image` is a module-level constant. */
+const faceKey = (f: FaceOverlay) => String(f.image);
+
+function markFaceDecoded(f: FaceOverlay) {
+  const k = faceKey(f);
+  if (decodedFaces.has(k)) return;
+  decodedFaces.add(k);
+  decodedListeners.forEach((l) => l());
+}
+
+function useFaceDecoded(face?: FaceOverlay): boolean {
+  const [, bump] = useState(0);
+  const known = !!face && decodedFaces.has(faceKey(face));
+  useEffect(() => {
+    if (!face || known) return;
+    const listener = () => bump((n) => n + 1);
+    decodedListeners.add(listener);
+    return () => { decodedListeners.delete(listener); };
+  }, [face, known]);
+  return known;
+}
+
+/** Offscreen probe that reports when a face overlay has finished decoding. onError also
+ * counts as "done" — a face that can't load at all should fall back to the base features
+ * permanently rather than leaving Hammy waiting on it forever. */
+function FaceProbe({ face }: { face: FaceOverlay }) {
+  return (
+    <RNImage
+      source={face.image}
+      style={styles.faceProbe}
+      fadeDuration={0}
+      onLoad={() => markFaceDecoded(face)}
+      onError={() => markFaceDecoded(face)}
+    />
+  );
+}
+
+/** Mount once on a screen that will show reaction faces (the quest player) to start their
+ * fetch/decode up front, so the very first graded answer already has its face ready instead
+ * of showing the base face for a beat while it loads. Purely an optimization — Hammy
+ * handles an undecoded face correctly on its own (see FaceProbe above). */
+export function ReactionFacePreloader() {
+  return (
+    <>
+      {Object.values(REACTION_FACES).map((f) => (
+        decodedFaces.has(faceKey(f)) ? null : <FaceProbe key={faceKey(f)} face={f} />
+      ))}
+    </>
+  );
+}
 
 // Full-stage geometry ported from the website's CSS pig (styles.css .pig-* rules), a
 // 440×460 frame. Kept in the same coordinate space so proportions match the web mascot.
@@ -276,13 +348,18 @@ export function Hammy({
   // "last known face" var) had a real failure mode: whenever a new reaction interrupted an
   // in-flight fade (very easy to do — matching fires reactions in quick succession), the
   // opacity could end up parked at a mid-value with the listener's last update not
-  // reflecting the latest `face`, showing neither the overlay nor the base features —
-  // exactly the "face goes blank" bug. A direct swap has no intermediate state to get
-  // stuck in: `face` falsy shows only the base features, full stop; `face` set shows the
-  // overlay at a flat 1 for its whole lifetime, exactly like the website's static face
-  // masks — it never dips out mid-display, so Hammy's face can never read as blank.
-  const faceOpacity = face ? 1 : 0;
-  const displayFace = face;
+  // reflecting the latest `face`, showing neither the overlay nor the base features. A
+  // direct swap has no intermediate state to get stuck in: `face` falsy shows only the base
+  // features, full stop; `face` set shows the overlay at a flat 1 for its whole lifetime,
+  // exactly like the website's static face masks.
+  //
+  // The remaining blank-face window was the overlay's own decode, not a state race — the
+  // base features handed off to an <SvgImage> that hadn't painted yet. Gated on
+  // useFaceDecoded so the handoff only happens once there's actually something to hand off
+  // to; see the decode-tracking block at the top of this file.
+  const faceDecoded = useFaceDecoded(face);
+  const faceOpacity = face && faceDecoded ? 1 : 0;
+  const displayFace = faceDecoded ? face : undefined;
 
   // Head-only mode swaps the viewBox for the website's .pig-head-stage window instead of
   // scaling anything — coordinates inside stay in the same 440x460 space either way.
@@ -308,6 +385,9 @@ export function Hammy({
 
   return (
     <View style={[{ width, height }, style]}>
+      {/* Starts (and reports) this face's decode so the base-feature handoff above can wait
+          for it — mounted only until it lands, then never again this session. */}
+      {face && !faceDecoded ? <FaceProbe face={face} /> : null}
       {/* Ground shadow — on the website .pig-shadow sits OUTSIDE the floating .pig element,
           so it stays put while the pig bobs/bounces above it. Rendered in its own static
           Svg behind the animated one for the same effect. rgba(214,120,160,.22) with a 7px
@@ -558,6 +638,12 @@ export function Hammy({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  // 1px rather than 0 so no platform can decide there's nothing worth fetching; absolutely
+  // positioned + transparent so it never affects layout or paint.
+  faceProbe: { position: 'absolute', top: 0, left: 0, width: 1, height: 1, opacity: 0 },
+});
 
 /** Rounded-rect image slot placeholder (posters, illustrations — unrelated to Hammy). */
 export function Slot({

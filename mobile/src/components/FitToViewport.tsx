@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { View, ScrollView, StyleSheet, StyleProp, ViewStyle, LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
@@ -28,10 +28,16 @@ export function FitToViewport({
   children,
   style,
   contentStyle,
+  onOverflowChange,
 }: {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   contentStyle?: ViewStyle;
+  /** Fires when the content stops/starts fitting even at the MIN_SCALE floor, i.e. when
+   * this falls back to a real scroller. The quest player uses it to give the whole screen
+   * over to the content (hiding the companion Hammy) once a chapter is long enough that
+   * scrolling is unavoidable anyway. */
+  onOverflowChange?: (overflowing: boolean) => void;
 }) {
   const [availableH, setAvailableH] = useState<number | null>(null);
   const [naturalH, setNaturalH] = useState<number | null>(null);
@@ -51,7 +57,25 @@ export function FitToViewport({
   // at the bottom (in the worst case, the last answer option itself). Falling back to a
   // scrollable container only for this case keeps everything reachable without giving up
   // the shrink-to-fit behavior for the common case where MIN_SCALE fits fine.
-  const overflowsAtFloor = ready && naturalH! * scale > availableH!;
+  //
+  // Latched rather than recomputed freely: entering the fallback re-parents the content
+  // into a ScrollView, which re-runs its layout and re-fires onContentLayout. Any height
+  // the re-measure comes back even slightly under the threshold flipped this straight back
+  // off, which re-parented it AGAIN — a self-sustaining loop that reads on screen as the
+  // question rapidly flickering/jumping, and is the multiple-choice "glitching" bug. Once
+  // a given set of children has been found not to fit, it stays in the scroller until the
+  // children actually change (the parent remounts this per chapter), so there is no state
+  // for the two branches to oscillate between.
+  const [scrollLatched, setScrollLatched] = useState(false);
+  const overflowsAtFloor = scrollLatched || (ready && naturalH! * scale > availableH!);
+  useEffect(() => {
+    if (overflowsAtFloor && !scrollLatched) setScrollLatched(true);
+  }, [overflowsAtFloor, scrollLatched]);
+
+  useEffect(() => {
+    if (ready) onOverflowChange?.(overflowsAtFloor);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, overflowsAtFloor]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: withTiming(scale, { duration: 180 }) }],
@@ -69,7 +93,14 @@ export function FitToViewport({
       onLayout={onContentLayout}
       // Shrinks from the top edge, not the true center — keeps the content's top flush
       // with the container instead of also opening a gap above it.
-      style={[contentStyle, animatedStyle, { transformOrigin: 'top center' }]}
+      //
+      // width: '100%' is load-bearing, not cosmetic: without it this view shrink-wrapped to
+      // its content inside `root` (alignItems: 'center') but stretched to full width inside
+      // the ScrollView fallback. Two different widths means two different text wraps, which
+      // means two different measured heights — so simply crossing into the fallback could
+      // change the very measurement that decided to cross into it. Pinning the width makes
+      // the measurement identical in both branches.
+      style={[contentStyle, { width: '100%' }, animatedStyle, { transformOrigin: 'top center' }]}
     >
       {children}
     </Animated.View>

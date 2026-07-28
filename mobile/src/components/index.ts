@@ -9,7 +9,7 @@ export { Coin, Diamond, Flame, Gift } from './Currency';
 export { IconButton } from './IconButton';
 export { Field } from './Field';
 export { Option, CheckBox, LetterBadge } from './Option';
-export { Hammy, Slot } from './Hammy';
+export { Hammy, Slot, ReactionFacePreloader } from './Hammy';
 export { ItemArt } from './ItemArt';
 export { Wallpaper } from './Wallpaper';
 export { AchievementToast } from './AchievementToast';
