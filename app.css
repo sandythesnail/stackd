@@ -1177,18 +1177,11 @@ select.budget-input { cursor: pointer; }
 
 /* Two-column layout — Hammy pinned in a wide column on the left, all activity content
    (questions, choices, definitions) in the column on the right. The side column stretches
-   to match the content column's height.
-   Both columns anchor their content to the TOP (not centered) on purpose: a poll/spotcheck/
-   urlinspect reveal appends its explanation BELOW the question, growing quest-main's height
-   after the user answers. With centering, that growth recomputed both columns' vertical
-   centering on every reveal, which visibly shifted the still-on-screen question AND Hammy
-   downward the instant you answered — the exact moment you want the page to hold still, not
-   move. Top-anchoring means new content below can only ever add space below, never
-   reposition what's already visible above it. */
+   to match the content column's height so Hammy sits centered across its full height. */
 .quest-layout { display: flex; align-items: stretch; gap: 1rem; }
 .quest-side {
   flex-shrink: 0; width: 300px; display: flex; flex-direction: column; align-items: center;
-  justify-content: flex-start; text-align: center; gap: 0.7rem;
+  justify-content: center; text-align: center; gap: 0.7rem;
 }
 .hammy-side-avatar { position: relative; }
 /* A white speech bubble floats above Hammy's head whenever they react, instead of plain
@@ -1265,12 +1258,10 @@ select.budget-input { cursor: pointer; }
 .hammy-side-avatar.gentle .pig-snout,
 .hammy-side-avatar.streak .pig-snout { opacity: 0; }
 
-/* Top-anchored within whatever height the row ends up (quest-layout's min-height is set in
-   JS from the real available space, see computeAvailableQuestHeight) — see quest-side's
-   comment above for why this isn't centered: a poll/spotcheck/urlinspect reveal growing
-   quest-main's content after the user answers must only ever add space below, never
-   reposition the question (or Hammy, in the column beside it) that's already on screen. */
-.quest-main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
+/* Centers vertically within whatever height the row ends up (quest-layout's min-height is set
+   in JS from the real available space), so short content isn't squished against the top with
+   Hammy floating awkwardly beside empty space below. */
+.quest-main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
 /* Each chapter/question fades in on entry — matches the mobile app's per-chapter
    `entering={FadeIn.duration(260)}` (quest.tsx), retriggered in renderChapter() by
    removing/re-adding this class so it replays every time quest-main's content changes. */
@@ -1496,8 +1487,8 @@ select.budget-input { cursor: pointer; }
 
 /* Myth-card swipe stack */
 /* Explicit width (not just max-width) because its only children are position:absolute —
-   as a flex item (quest-main is a flex column) an element with no in-flow content has no
-   intrinsic size to stretch from and collapses to zero width otherwise. */
+   as a flex item (quest-main is now a centering flex column) an element with no in-flow
+   content has no intrinsic size to stretch from and collapses to zero width otherwise. */
 .myth-card-stack { position: relative; width: 340px; height: 320px; max-width: 100%; margin: 0 auto 0.4rem; touch-action: pan-y; flex-shrink: 0; }
 .myth-card {
   position: absolute; inset: 0; cursor: grab; perspective: 1000px;
