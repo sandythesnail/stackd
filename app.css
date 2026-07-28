@@ -1104,12 +1104,21 @@ select.budget-input { cursor: pointer; }
 .quest-stat-chip.qs-down { background: var(--pink-pale); border-color: var(--pink-light); }
 .quest-stat-chip.qs-down .qs-val { color: var(--pink-dark); }
 
-/* Glossary recap tray — terms already taught, tap one to reread its definition */
+/* Glossary recap tray — terms already taught, tap one to reread its definition.
+   Lives in the sticky header, ABOVE quest-body (the question/Hammy row) — it used to be
+   `display:none` until the first term of the quest was learned, then pop to `display:flex`
+   the instant it landed. That's the exact same category of bug as the reveal/message-
+   bubble/continue-button fixes elsewhere in this file: an empty-to-populated jump in the
+   sticky header grows it and pushes everything below (the whole centered question/Hammy
+   row) down/out of place right when a new term is learned mid-quiz. min-height reserves a
+   single chip row's worth of space from the very first chapter (quietly, at opacity:0,
+   before any term exists yet), so learning a term never changes the sticky header's size. */
 .glossary-tray {
-  display: none; flex-wrap: wrap; align-items: center; gap: 0.4rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; min-height: 2.35rem;
   padding: 0.4rem 1rem; background: var(--bg); border-bottom: 1px solid var(--border);
+  opacity: 0; visibility: hidden; transition: opacity 0.25s ease;
 }
-.glossary-tray.show { display: flex; }
+.glossary-tray.show { opacity: 1; visibility: visible; }
 .glossary-label { font-size: 0.72rem; font-weight: 700; color: var(--text-soft); }
 .glossary-chip {
   padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid var(--border); background: #fff;
