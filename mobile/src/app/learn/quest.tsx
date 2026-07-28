@@ -134,6 +134,26 @@ function shortFeedback(text: string, maxLen = 60): string {
   return trimmed.slice(0, maxLen).replace(/\s+\S*$/, '');
 }
 
+/** Every one of the 22 "you did fine" microsim feedback tiers in the content opens with the
+ * word "Solid" ("Solid. Hammy built this budget…", "Solid, taxes are covered…"). Hammy no
+ * longer SAYS it (see MicrosimView's submit), but it was still the first word of the
+ * feedback card itself. Swapped for the app's own "Good job!" at display time rather than
+ * by editing modules.json, which is extracted verbatim from the website's data and is kept
+ * that way so the two can be diffed against each other. Everything after the opener is left
+ * exactly as written, just re-capitalised where the original ran on with a comma. */
+function friendlyTierText(text: string): string {
+  // The usual shape: "Solid" as a standalone opening verdict, punctuation and all.
+  const opener = text.match(/^Solid\b[.,!]\s*/);
+  if (opener) {
+    const rest = text.slice(opener[0].length);
+    return rest ? `Good job! ${rest.charAt(0).toUpperCase()}${rest.slice(1)}` : 'Good job!';
+  }
+  // "Solid recovery, …" — here it's an adjective on the next word, not a verdict, so
+  // lifting it out would leave "Good job! Recovery, …". Swap the word itself instead.
+  if (/^Solid\s+[a-z]/.test(text)) return text.replace(/^Solid\b/, 'Great');
+  return text;
+}
+
 /** Hammy's reaction speech bubble — ported from the website's .hammy-side-msg (fades in/out
  * with a small rise instead of popping instantly, and colors green for a right answer /
  * pink for wrong), but centered directly above the companion rather than tucked off to one
@@ -623,7 +643,9 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
         disabled={hintsRemaining <= 0 && !revealed}
         onPress={press}
       >
-        <Txt style={styles.hintFabTxt}>{revealed ? '💡 HINT' : `💡 HINT ${hintsRemaining}`}</Txt>
+        {/* numberOfLines so the label can never wrap onto a second line — the button is a
+            single small pill and a wrapped "HINT 3" reads as a rendering glitch. */}
+        <Txt style={styles.hintFabTxt} numberOfLines={1}>{revealed ? '💡 HINT' : `💡 HINT ${hintsRemaining}`}</Txt>
       </Pressable>
       {/* A real Modal instead of an anchored popover — Modal renders as its own top-level
           overlay outside the normal view tree, so it always sits above everything else
@@ -1093,35 +1115,32 @@ function HintView({
   };
 
   return (
-    // Hammy is centered in the stage and STAYS there: the bubble above him is positioned
-    // out of flow (bottom: '100%' pins it to his top edge), so revealing the tip grows the
-    // bubble upward instead of pushing him down the screen. As a normal flex sibling it
-    // used to shove him down by however much taller the tip was than the "tap me" prompt,
-    // which read as him sinking every time he spoke.
+    // Hammy sits at the BOTTOM of the stage with his bubble stacked above him in normal
+    // flow. Bottom-packing is what gets both properties at once: revealing the tip grows the
+    // bubble upward into the empty space above (so Hammy doesn't sink when he speaks), and
+    // because the bubble is still a real laid-out sibling rather than positioned out of
+    // flow, a long tip extends the stage and scrolls instead of running off the top of the
+    // screen and having its first lines cut off.
     <View style={styles.hintStage}>
-      <View style={styles.hintAnchor}>
-        <Reanimated.View
-          key={revealed ? 'revealed' : 'prompt'}
-          entering={FadeInDown.duration(320).springify()}
-          style={styles.hintBubbleFloat}
-        >
-          <View style={styles.tipBubble}>
-            <View style={styles.tipBubbleTailBorder} />
-            <View style={styles.tipBubbleTailFill} />
-            <Tag tone="warm">{chapter.tag || "🐷 Hammy's Tip"}</Tag>
-            {revealed ? (
-              <Txt style={[styles.tipCaption, { marginTop: 8 }]}>{chapter.text}</Txt>
-            ) : (
-              <Txt style={[styles.storyIntroCaption, { marginTop: 8, color: colors.muted3, fontStyle: 'italic' }]}>
-                Tap Hammy to hear what they have to say.
-              </Txt>
-            )}
-          </View>
-        </Reanimated.View>
-        <Pressable onPress={tap} disabled={revealed} hitSlop={14}>
-          <Hammy size={168} bob equipped={equippedMascotItems()} reaction={revealed ? 'happy' : null} reactionKey={tapTick} />
-        </Pressable>
-      </View>
+      <Reanimated.View
+        key={revealed ? 'revealed' : 'prompt'}
+        entering={FadeInDown.duration(320).springify()}
+        style={styles.tipBubble}
+      >
+        <View style={styles.tipBubbleTailBorder} />
+        <View style={styles.tipBubbleTailFill} />
+        <Tag tone="warm">{chapter.tag || "🐷 Hammy's Tip"}</Tag>
+        {revealed ? (
+          <Txt style={[styles.tipCaption, { marginTop: 8 }]}>{chapter.text}</Txt>
+        ) : (
+          <Txt style={[styles.storyIntroCaption, { marginTop: 8, color: colors.muted3, fontStyle: 'italic' }]}>
+            Tap Hammy to hear what they have to say.
+          </Txt>
+        )}
+      </Reanimated.View>
+      <Pressable onPress={tap} disabled={revealed} hitSlop={14}>
+        <Hammy size={168} bob equipped={equippedMascotItems()} reaction={revealed ? 'happy' : null} reactionKey={tapTick} />
+      </Pressable>
     </View>
   );
 }
@@ -1249,7 +1268,7 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
         <Txt style={{ fontFamily: font.display, fontSize: 28, color: leftover < 0 ? colors.danger : colors.greenDark }}>${leftover}</Txt>
       </Card>
       {submitted ? (
-        <Card><Txt style={{ fontFamily: font.semi, fontSize: 14, color: tier.ok ? colors.greenDark : colors.pinkDark }}>{tier.text}</Txt></Card>
+        <Card><Txt style={{ fontFamily: font.semi, fontSize: 14, color: tier.ok ? colors.greenDark : colors.pinkDark }}>{friendlyTierText(tier.text)}</Txt></Card>
       ) : null}
     </View>
   );
@@ -1812,8 +1831,13 @@ const styles = StyleSheet.create({
   // Bottom padding is deliberately heavier than the top, lifting the button off the very
   // edge of the screen — on the web build there's no home-indicator inset underneath it to
   // do that on its own.
+  // height, not minHeight: at minHeight 68 the bar was SHORTER than its own contents
+  // (8 + a 48px button + 22 = 78), so the moment a chapter's action button appeared the bar
+  // grew by 10px and shoved the whole scroller — question, options, Hammy — up the screen.
+  // Pinning it to the tallest state it can ever be means an action appearing or clearing
+  // changes nothing above it.
   bottomBar: {
-    flexDirection: 'row', alignItems: 'center', minHeight: 68,
+    flexDirection: 'row', alignItems: 'center', height: 78,
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 22,
   },
   bottomSlot: { width: 48, alignItems: 'flex-start', justifyContent: 'center' },
@@ -1831,12 +1855,14 @@ const styles = StyleSheet.create({
   lookBackCount: { fontFamily: font.bold, fontSize: 12, color: colors.muted3 },
   // Holds the hint button's footprint whether or not this chapter has a hint, so the
   // progress bar and % beside it don't jump between chapters that have one and chapters
-  // that don't. Wide enough for the "💡 HINT 3" state.
-  hintSlot: { width: 74, alignItems: 'flex-end', justifyContent: 'center' },
+  // that don't. Sized for the widest state, "💡 HINT 3", with room to spare — at 74 the
+  // label had nowhere to go but onto a second line, which left the button looking broken
+  // rather than like a hint.
+  hintSlot: { width: 96, alignItems: 'flex-end', justifyContent: 'center' },
   hintFab: {
-    minWidth: 34, height: 30, paddingHorizontal: 8, borderRadius: 15,
+    minWidth: 34, height: 30, paddingHorizontal: 9, borderRadius: 15,
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderCool,
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   hintFabDisabled: { opacity: 0.4 },
   hintFabTxt: { fontFamily: font.bold, fontSize: 12, color: colors.ink },
@@ -1940,18 +1966,10 @@ const styles = StyleSheet.create({
     fontFamily: font.semi, fontSize: 17.5, lineHeight: 24, color: colors.ink,
     textAlign: 'center', maxWidth: 320,
   },
-  // Hammy's Tip (funfact) — Hammy centered in the stage with his tip bubble floating above
-  // him (tail pointing DOWN at him). hintAnchor is the positioning context the bubble hangs
-  // off; hintBubbleFloat takes it out of flow entirely (bottom: '100%' = flush with
-  // Hammy's top edge) so a long tip grows upward instead of pushing him down the screen.
-  // left/right 0 give the bubble the stage's full width to centre and wrap within, which a
-  // context sized to Hammy alone could not.
-  hintStage: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 24 },
-  hintAnchor: { position: 'relative', alignItems: 'center', width: '100%' },
-  hintBubbleFloat: {
-    position: 'absolute', bottom: '100%', left: 0, right: 0,
-    alignItems: 'center', paddingBottom: 12,
-  },
+  // Hammy's Tip (funfact) — bottom-packed so Hammy sits low on the stage and the tip bubble
+  // above him grows up into the empty space rather than pushing him down or spilling off
+  // the top. See HintView's own comment.
+  hintStage: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4, paddingTop: 12, paddingBottom: 16 },
   tipCaption: {
     fontFamily: font.bold, fontSize: 17.5, lineHeight: 24, color: colors.ink,
     textAlign: 'center', maxWidth: 320,
