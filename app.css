@@ -1543,8 +1543,14 @@ select.budget-input { cursor: pointer; }
 .poll-statement { font-size: 1.1rem; font-weight: 500; line-height: 1.45; color: var(--text); margin: 0; }
 .poll-choices { display: flex; gap: 0.75rem; width: 100%; margin-top: 0.25rem; }
 .poll-choice-btn { flex: 1; justify-content: center; text-align: center; font-weight: 700; }
-.poll-reveal { display: none; margin-top: 1rem; animation: fadeUp 0.4s ease; }
-.poll-reveal.show { display: block; }
+/* visibility (not display:none) — the reveal is rendered from the very first paint (see
+   renderPollChapter) so its space is already reserved in quest-main's height, keeping the
+   centered question/Hammy row from shifting the instant it's revealed. visibility:hidden
+   (unlike display:none) still takes up its normal layout space while invisible; .show is
+   only ever added, never removed, so a plain instant visibility flip (no transition on it)
+   is enough — opacity/transform are what actually animate in. */
+.poll-reveal { margin-top: 1rem; visibility: hidden; opacity: 0; transform: translateY(10px); transition: opacity 0.35s ease, transform 0.35s ease; }
+.poll-reveal.show { visibility: visible; opacity: 1; transform: translateY(0); }
 .poll-truth {
   border-radius: var(--radius); border: 1px solid var(--border); padding: 1rem 1.25rem;
   display: flex; flex-direction: column; align-items: center; gap: 0.4rem; text-align: center;

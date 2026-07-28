@@ -21548,6 +21548,14 @@ function renderMicrosimChapter(chapter, mod, onDone) {
 function renderPollChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
   clearQuestContinue();
+  // The reveal's markup (TRUE/FALSE tag + explanation) never actually depends on which
+  // choice the user picks — chapter.isTrue/explanation are fixed data — so it's rendered
+  // into the DOM immediately, just hidden via visibility (not display:none, and not left
+  // empty until the click). quest-main/quest-side are vertically centered as a row; if the
+  // reveal's markup only appeared after the click, quest-main's content height would grow
+  // at that moment, recentering the whole row and visibly shifting the still-on-screen
+  // question and Hammy right when you answered. Reserving its space from the very first
+  // paint means that height — and the centering it drives — never changes across the click.
   main.innerHTML = `
     <p class="quest-prompt">${chapter.intro || "Take a guess, then see the answer."}</p>
     <div class="poll-card">
@@ -21558,7 +21566,12 @@ function renderPollChapter(chapter, mod, onDone) {
         <button class="option-btn poll-choice-btn" data-choice="false">False</button>
       </div>
     </div>
-    <div class="poll-reveal" id="poll-reveal"></div>`;
+    <div class="poll-reveal" id="poll-reveal">
+      <div class="poll-truth ${chapter.isTrue ? 'is-true' : 'is-false'}">
+        <span class="myth-card-tag">${chapter.isTrue ? 'TRUE' : 'FALSE'}</span>
+        <p class="poll-explanation">${chapter.explanation}</p>
+      </div>
+    </div>`;
 
   document.getElementById('poll-choices').querySelectorAll('.poll-choice-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -21580,13 +21593,7 @@ function renderPollChapter(chapter, mod, onDone) {
       // No claimed crowd statistics here — we don't have real survey data backing any
       // specific percentage, so the reveal sticks to the actual true/false answer and why,
       // the same way a myth card does, instead of implying a poll that never happened.
-      const revealEl = document.getElementById('poll-reveal');
-      revealEl.innerHTML = `
-        <div class="poll-truth ${chapter.isTrue ? 'is-true' : 'is-false'}">
-          <span class="myth-card-tag">${chapter.isTrue ? 'TRUE' : 'FALSE'}</span>
-          <p class="poll-explanation">${chapter.explanation}</p>
-        </div>`;
-      revealEl.classList.add('show');
+      document.getElementById('poll-reveal').classList.add('show');
 
       setQuestContinue('Continue →', () => {
         if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
