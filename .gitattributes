@@ -1,0 +1,5 @@
+# core.autocrlf is on for this checkout, which would hand a fresh clone CRLF line endings.
+# Git's own bundled sh runs the pre-push hook, and it cannot parse a script with CRLF
+# endings -- it fails at the shebang. These must stay LF on every platform.
+*.sh text eol=lf
+scripts/hooks/* text eol=lf
