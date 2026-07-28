@@ -723,8 +723,10 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
  * body, so there's nothing to leak, ears are never clipped (the head window + SVG
  * overflow:visible, matching `.story-avatar.has-character { overflow: visible }`), and —
  * the actual point — equipped hats/glasses/neckwear show up in the dialogue picture too,
- * exactly like the website's story avatar. */
-function HammyHeadAvatar({ size = 56 }: { size?: number }) {
+ * exactly like the website's story avatar. Default size 36.4 = 280 * 0.13, the exact
+ * width getHammyFaceMarkup(0.13) renders at for the website's own story-avatar — the old
+ * 56 here was noticeably bigger than the website's head in the same dialogue spot. */
+function HammyHeadAvatar({ size = 36.4 }: { size?: number }) {
   const { equippedMascotItems } = useStore();
   return <Hammy headOnly size={size} bob={false} equipped={equippedMascotItems()} style={{ flexShrink: 0 }} />;
 }
