@@ -323,7 +323,10 @@ const styles = StyleSheet.create({
   tchipTxt: { fontFamily: font.extra, fontSize: 13.5, color: colors.muted3 },
   // Full-bleed: no border/radius/side padding — the scene runs edge to edge and fills
   // every bit of vertical space down to the tab bar instead of sitting in an inset card.
-  scene: { flex: 1 },
+  // overflow: 'hidden' clips tall furniture (e.g. the Grandfather Clock's slot, which
+  // reaches way above the scene via a large negative top) so its Pressable can't extend
+  // up over the Room/Wardrobe tab chips and steal taps meant for them.
+  scene: { flex: 1, overflow: 'hidden' },
   wallZone: { position: 'absolute', top: 0, left: 0, right: 0, height: '48%' },
   floorZone: {
     position: 'absolute', bottom: 0, left: 0, right: 0, height: '52%',
