@@ -15300,6 +15300,13 @@ const SHOP_ITEMS = [
     mysteryOnly: true, mysteryPool: 'hat', rarity: 'rare',
     desc: 'Cooking up a budget.',
     fit: { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: 6 },
+    // The puffy dome top (cy: -9, ry: 3, plus the toque path up to y: -9) reaches y: -12,
+    // well above the generic hat CAT_VIEWBOX's top edge (y: -4) — every other hat's art
+    // stays within that, but the chef hat's tall dome got its top sliced off in the shop
+    // grid/wardrobe preview (SVG clips to viewBox by default). Custom viewBox, same x/width
+    // and bottom edge as CAT_VIEWBOX.hat so it still scales/centers like its sibling hats,
+    // just taller so the whole dome fits.
+    viewBox: '14 -14 92 56',
     svg: `<defs><linearGradient id="ch-dome" x1="30%" y1="0%" x2="70%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#DCDCDC"/></linearGradient></defs>
           <ellipse cx="60" cy="31" rx="24" ry="5" fill="#C4C4C4"/>
           <rect x="39" y="21" width="42" height="11" rx="3" fill="#F0F0F0" stroke="#CCCCCC" stroke-width="1"/>
@@ -18014,6 +18021,25 @@ function getPigMarkup(scale) {
 const DEFAULT_ITEM_FIT = { a: 3.28, b: 0, c: 0, d: 3.4, e: 23, f: -15 };
 
 let pigOverlayUidCounter = 0;
+// Item SVGs use short, hardcoded <defs> ids (gradients/clipPaths, e.g. the Witch Hat's
+// "wh-g"/"wh-brim-g"/"wh-hl"/"wh-clip"). The same item's icon can end up in more than one
+// place in the DOM at once — a shop grid tile, a wardrobe row, the item detail modal's small
+// accessory preview next to the pig, a mystery box's win reveal — and two un-namespaced
+// copies of the same id collide: url(#id) references resolve unpredictably, silently
+// blanking/breaking fills and clips in one or both copies. This is exactly what broke the
+// Witch Hat specifically on a MYSTERY BOX DUPLICATE: pulling a duplicate requires already
+// owning the item, so its icon is already sitting un-namespaced somewhere else on the page
+// (wardrobe row/shop card) the moment the reveal renders a second un-namespaced copy on top
+// of it. getPigWithItemMarkup below already namespaces its own copies per render call —
+// this is the same fix, usable anywhere raw item.svg gets embedded directly (mirrors
+// mobile's ItemArt.tsx/Hammy.tsx, which apply the identical namespacing).
+function namespacedItemSvg(svg) {
+  const uid = 'it' + (pigOverlayUidCounter++);
+  return svg
+    .replace(/id="([^"]+)"/g, (_, id) => `id="${id}-${uid}"`)
+    .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${id}-${uid})`);
+}
+
 function getPigWithItemMarkup(scale, itemOrItems) {
   // Accepts a single item (shop preview) or an array (multiple simultaneously equipped items).
   const items = Array.isArray(itemOrItems) ? itemOrItems : (itemOrItems ? [itemOrItems] : []);
@@ -18251,13 +18277,13 @@ function refreshShopModal(itemId) {
   pigEl.innerHTML = (isWallpaper)
     ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
     : (isRoom || item.isMysteryBox)
-      ? `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
+      ? `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${namespacedItemSvg(item.svg)}</svg>`
       : getPigWithItemMarkup(0.42, item);
   const accessoryEl = document.getElementById('shop-modal-accessory');
   accessoryEl.style.display = (isRoom || item.isMysteryBox) ? 'none' : '';
   accessoryEl.innerHTML = (isRoom || item.isMysteryBox)
     ? ''
-    : `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>`;
+    : `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${namespacedItemSvg(item.svg)}</svg>`;
   document.getElementById('shop-modal-name').textContent = item.name;
   document.getElementById('shop-modal-desc').innerHTML = item.desc + (item.mysteryPool && !item.isMysteryBox
     ? `<br><span class="shop-modal-odds">${mysteryOddsLabel(item)}</span>`
@@ -18277,7 +18303,7 @@ function playMysteryBoxSpin(item) {
 function showMysteryReveal(item) {
   const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
   document.getElementById('shop-modal-box').classList.add('shop-modal-mystery');
-  document.getElementById('shop-modal-pig').innerHTML = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`;
+  document.getElementById('shop-modal-pig').innerHTML = `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${namespacedItemSvg(item.svg)}</svg>`;
   if (item.isDuplicate) {
     const currencyLabel = item.refundCurrency === 'diamond' ? `💎 ${item.refundAmount} diamonds` : `🪙 ${item.refundAmount} coins`;
     document.getElementById('shop-modal-name').textContent = `You already have: ${item.name}`;
@@ -18381,7 +18407,7 @@ function renderShopPage() {
       const preview = item.slot === 'wallpaper'
         ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
         : (isRoom || isBox)
-          ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${item.svg}</svg>`
+          ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${namespacedItemSvg(item.svg)}</svg>`
           : getPigWithItemMarkup(0.29, item);
       return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${(isReward || isLocked) && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
         ${isBox || (isDiamond && !isBox) || (isLocked && !isDiamond) ? `<span class="${isDiamond ? 'shop-exclusive-ribbon' : 'shop-gold-ribbon'}">Mystery</span>` : (isReward && !owned) ? '<span class="shop-milestone-ribbon">Reward</span>' : ''}
@@ -18565,7 +18591,7 @@ function renderRoomPage() {
       // Grandfather Clock's oversized .room-slot-lamp[data-item="clock_grandfather"] rule)
       // instead of every item in that slot being forced to the same box size.
       return `<div class="room-slot room-slot-${slotKey}" data-slot="${slotKey}" data-item="${item.id}">
-        <svg viewBox="${item.viewBox}"${par} xmlns="http://www.w3.org/2000/svg">${item.svg}</svg>
+        <svg viewBox="${item.viewBox}"${par} xmlns="http://www.w3.org/2000/svg">${namespacedItemSvg(item.svg)}</svg>
       </div>`;
     }
     return `<div class="room-slot room-slot-${slotKey} empty" data-slot="${slotKey}" aria-label="${emptyLabel}"></div>`;
@@ -18583,8 +18609,11 @@ function renderRoomPage() {
     if (!item) {
       return `<div class="room-slot room-slot-garland empty" data-slot="garland" aria-label="Fairy lights"></div>`;
     }
+    // Namespaced fresh per cell (not once for all 10) — otherwise all ten copies would
+    // share the same ids and collide with EACH OTHER, not just with any other instance
+    // elsewhere on the page.
     const cells = Array.from({ length: GARLAND_COUNT }, () =>
-      `<div class="garland-cell"><svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg></div>`
+      `<div class="garland-cell"><svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg">${namespacedItemSvg(item.svg)}</svg></div>`
     ).join('');
     return `<div class="room-slot room-slot-garland" data-slot="garland" data-item="${item.id}">${cells}</div>`;
   }
@@ -18670,7 +18699,7 @@ function renderWardrobeScene() {
     ? closetItems.map(item => {
         const isWorn = wornIds.includes(item.id);
         return `<button type="button" class="wardrobe-row${isWorn ? ' equipped' : ''}" data-id="${item.id}">
-          <span class="wardrobe-row-icon"><svg viewBox="${item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120'}" xmlns="http://www.w3.org/2000/svg">${item.svg}</svg></span>
+          <span class="wardrobe-row-icon"><svg viewBox="${item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120'}" xmlns="http://www.w3.org/2000/svg">${namespacedItemSvg(item.svg)}</svg></span>
           <span class="wardrobe-row-name">${item.name}</span>
           <span class="wardrobe-row-status">${isWorn ? '✓ Worn' : 'Wear'}</span>
         </button>`;

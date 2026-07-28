@@ -85,6 +85,7 @@
     "mysteryOnly": true,
     "mysteryPool": "hat",
     "rarity": "rare",
+    "viewBox": "14 -14 92 56",
     "desc": "Cooking up a budget.",
     "fit": {
       "a": 3.28,
