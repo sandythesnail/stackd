@@ -512,10 +512,17 @@ export function Hammy({
             <Path d={HEAD_PATH} fill={gidUrl('hm-head-shine')} opacity={headShineOpacity} />
           </G>
 
-          {/* cheeks, eyes, snout — crossfade out when an illustrated face overlay replaces
-              them (smooth version of the website's .has-face-overlay opacity transition;
-              always rendered, opacity-driven, instead of an instant conditional swap). */}
-          <G opacity={1 - faceOpacity}>
+          {/* cheeks, eyes, snout — always rendered at full opacity, even while a face overlay
+              is showing. This used to hide instantly (opacity: 1 - faceOpacity) the moment
+              `face` went truthy, on the assumption the overlay <SvgImage> below would already
+              be painted by then — but that image still has to decode (a real, sometimes
+              multi-frame delay, worse the first time a given face is used in a session), so
+              there was a real window where the base features were already hidden and the
+              overlay hadn't drawn yet: a genuinely blank face, not just a state race. Since
+              the overlay is opaque and fully covers this area once it does paint, leaving
+              these always-visible costs nothing when the overlay is up, and means the worst
+              case during its decode is "still showing the normal face" instead of blank. */}
+          <G>
             <Ellipse cx={134} cy={222} rx={28} ry={20} fill={gidUrl('hm-cheek-l')} />
             <Ellipse cx={306} cy={222} rx={28} ry={20} fill={gidUrl('hm-cheek-r')} />
 

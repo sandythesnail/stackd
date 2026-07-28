@@ -1,5 +1,5 @@
 import { useState, ReactNode } from 'react';
-import { View, ScrollView, StyleSheet, ViewStyle, LayoutChangeEvent } from 'react-native';
+import { View, ScrollView, StyleSheet, StyleProp, ViewStyle, LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 // Raised from 0.85 — a 15% shrink was big enough to read as the whole screen visibly
@@ -30,7 +30,7 @@ export function FitToViewport({
   contentStyle,
 }: {
   children: ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   contentStyle?: ViewStyle;
 }) {
   const [availableH, setAvailableH] = useState<number | null>(null);

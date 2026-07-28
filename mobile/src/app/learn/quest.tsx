@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions } from 'react-native';
+import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent } from 'react-native';
 import Reanimated, { SlideInDown, FadeInDown, FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -125,11 +125,14 @@ function shortFeedback(text: string, maxLen = 60): string {
   return trimmed.slice(0, maxLen).replace(/\s+\S*$/, '');
 }
 
-/** Hammy's reaction speech bubble, in the side column below him — ported from the website's
- * .hammy-side-msg (fades in/out with a small rise instead of popping instantly, and colors
- * green for a right answer / pink for wrong). Keeps showing the last message+mood while
- * fading out so there's text to fade from. The reserved slot's height is measured from the
- * bubble's own real layout and only ever grows to the tallest message seen so far. */
+/** Hammy's reaction speech bubble, stacked directly ABOVE him and centered — ported from the
+ * website's .hammy-side-msg, but repositioned: it used to sit in a fixed-width slot to
+ * Hammy's right (an absolutely-positioned overlay that never affected layout), which read as
+ * a small side toast rather than Hammy actually saying something. Now it's a real, normal-
+ * flow sibling above him (see companionWrap), so when it appears it visibly pushes Hammy —
+ * and the content below him — down, and disappears back to nothing (not just invisible) once
+ * cleared, instead of reserving a slot at all times. Keeps showing the last message+mood
+ * while fading out so there's text to fade from. */
 function ReactionBubble({ message, mood }: { message: string | null; mood: 'happy' | 'gentle' | 'streak' | null }) {
   const anim = useRef(new Animated.Value(0)).current;
   const [display, setDisplay] = useState(message);
@@ -141,32 +144,26 @@ function ReactionBubble({ message, mood }: { message: string | null; mood: 'happ
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message, anim]);
+  if (!display) return null;
   const textColor = displayMood === 'gentle' ? colors.pinkDark : displayMood ? colors.greenDark : colors.inkSoft;
   return (
-    // bubbleSlot's height is a fixed minHeight (see styles), reserved from the very first
-    // render whether or not a message is showing — it used to only grow to fit once a
-    // message's real height was measured after the fact, which visibly pushed the content
-    // below down the first time Hammy ever had something to say.
-    <View style={styles.bubbleSlot} pointerEvents="none">
-      {display ? (
-        <Animated.View
-          style={[styles.bubbleInner, { opacity: anim, transform: [{ translateX: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}
-        >
-          <View style={styles.reactionBox}>
-            {/* No numberOfLines/truncation here on purpose — every message that reaches
-                this bubble is already kept short at the source (see shortFeedback), so
-                there's nothing left that should ever need an ellipsis. */}
-            <Txt style={[styles.reactionTxt, { color: textColor }]}>{display}</Txt>
-            {/* A literal speech-bubble tail pointing at Hammy (he sits just to the right of
-                this bubble) — two stacked right-pointing triangles, the outer one the box's
-                own border color and slightly larger, so a thin rim of it peeks past the
-                inner white one, matching the box's own border stroke. */}
-            <View style={styles.reactionTailBorder} />
-            <View style={styles.reactionTailFill} />
-          </View>
-        </Animated.View>
-      ) : null}
-    </View>
+    <Animated.View
+      style={[styles.bubbleInner, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}
+      pointerEvents="none"
+    >
+      <View style={styles.reactionBox}>
+        {/* No numberOfLines/truncation here on purpose — every message that reaches this
+            bubble is already kept short at the source (see shortFeedback), so there's
+            nothing left that should ever need an ellipsis. */}
+        <Txt style={[styles.reactionTxt, { color: textColor }]}>{display}</Txt>
+        {/* A literal speech-bubble tail pointing DOWN at Hammy (who now sits directly below
+            this bubble, not to its side) — two stacked downward triangles, the outer one the
+            box's own border color and slightly larger, so a thin rim of it peeks past the
+            inner white one, matching the box's own border stroke. */}
+        <View style={styles.reactionTailBorder} />
+        <View style={styles.reactionTailFill} />
+      </View>
+    </Animated.View>
   );
 }
 
@@ -206,6 +203,25 @@ export default function QuestPlayer() {
   // action a chapter reports immediately on mount.
   const [action, setAction] = useState<QuestAction>(null);
   const onAction = (a: QuestAction) => setAction(a);
+  // Guards against the SAME action firing twice — a rapid double-tap (or, on the web build,
+  // a touch sometimes registering both a synthetic touch AND mouse click for one physical
+  // tap) can call action.onPress a second time before React has re-rendered with whatever
+  // state the first call just set, since a chapter view's own onAction effect only reruns
+  // once ITS state actually changes (see e.g. KnowledgecheckView's [answered, last] dep
+  // array) — until then, `action` is still the exact same object, so a second tap on the
+  // same "Next" would call the very same stale `next` closure again: on the LAST question of
+  // a knowledgecheck (or any other chapter), that's a second onComplete() call with the same
+  // captured counts, which can double-count XP/correct or otherwise wedge the chapter so it
+  // never visibly advances — exactly the "stuck, can't tap Next" reports this fixes.
+  // Comparing by reference (not a boolean) means a genuinely NEW action — the next question,
+  // or the same chapter reporting a fresh action after real state changed — is never blocked,
+  // only an exact repeat of the one just handled.
+  const firedActionRef = useRef<QuestAction>(null);
+  const handleActionPress = () => {
+    if (!action || firedActionRef.current === action) return;
+    firedActionRef.current = action;
+    action.onPress();
+  };
   // Only the story chapter's intro beat and the 'hint' chapter (Hammy's Tip, which now
   // shows its own big centered/tappable Hammy instead of the small side companion) ever
   // report 'intro'; every other chapter type leaves this at its default, and each of those
@@ -387,73 +403,41 @@ export default function QuestPlayer() {
   };
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <View style={styles.stick}>
         <IconButton name="x" size={34} iconSize={16} onPress={goBack} />
         <ProgressBar value={chapterIdx / quest.chapters.length} style={{ flex: 1 }} height={10} />
         <Txt style={styles.step}>{Math.round((chapterIdx / quest.chapters.length) * 100)}%</Txt>
         <HintCorner key={chapter.id} hintText={hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
       </View>
-      {/* Everything below shares one "header zone" so the chapter's own action button can
-          float in its top-right corner (position: absolute) instead of claiming a whole
-          row of its own — reclaims a full row of vertical space on every single chapter.
-          minHeight only kicks in for 'intro' layouts, where the companion row/glossary tray
-          are hidden and there'd otherwise be nothing in this zone to reserve room for the
-          floating button against. */}
-      <View style={[styles.headerZone, layoutMode === 'intro' && styles.headerZoneIntro]}>
-        {/* "Look back" glossary tray — ported from the website's #glossary-tray. Hidden
-            during a big-centered-Hammy 'intro' screen (and a dense 'full' chapter) same as
-            the companion row, and naturally absent until the first teach/matching chapter
-            has taught a term. */}
-        {terms.length > 0 && layoutMode === 'normal' ? <GlossaryTray terms={terms} /> : null}
-        {/* Companion row — hidden ONLY during a story chapter's intro beat or a 'hint'
-            chapter, both of which already show their own big centered Hammy in the content
-            area instead (StoryView/HintView), so a second small Hammy up here would just be
-            a redundant duplicate. Still shown during 'full' (a dense TeachChapter.fullScreen
-            walkthrough like the W-4 form) — that layout gives the glossary tray's row back to
-            the content, but was ALSO hiding the companion entirely with nothing else standing
-            in for him on screen, so a full-screen concept's own true/false check quietly lost
-            Hammy for its whole duration. hammyStage holds ONLY Hammy in normal flow, so
-            centering it centers Hammy himself; the reaction bubble is a positioned overlay
-            hugging his left side, not a flex sibling — it no longer has to fight for actual
-            centering the way a shared flex row did. */}
-        {layoutMode !== 'intro' ? (
-          <View style={styles.companionWrap}>
-            <View style={styles.hammyStage}>
-              <ReactionBubble message={reactionMsg} mood={reactionMood} />
-              <Hammy
-                size={130}
-                bob
-                equipped={equippedMascotItems()}
-                face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
-                reaction={reactionMood}
-                reactionKey={reactionKey}
-              />
-            </View>
-          </View>
-        ) : null}
-        {/* The chapter's own primary action ("Next", "Check my answer", ...), reported up
-            via onAction. Floating instead of its own row is also why it never has to
-            scroll to reach — it's always pinned to this same spot. Always flat green
-            unless a chapter opts into a different variant. Shifted further down whenever
-            the glossary tray is also showing above it (a normal-flow sibling near the same
-            top edge) so the two can never overlap — automatic, not something that has to be
-            re-tuned by hand per chapter. */}
-        {action ? (
-          <View style={[styles.actionBarFloat, terms.length > 0 && layoutMode === 'normal' && styles.actionBarFloatBelowTray]}>
-            <Button
-              label={action.label}
-              onPress={action.onPress}
-              variant={action.variant ?? 'green'}
-              disabled={action.disabled}
-              size="sm"
-              style={{ paddingHorizontal: 20 }}
-            />
-          </View>
-        ) : null}
-      </View>
+      {/* Companion Hammy — centered above the content instead of tucked into a corner, so he
+          reads as the one actually "talking" (via the reaction bubble stacked above him, see
+          ReactionBubble) rather than a small mascot off to the side. Hidden during a story
+          chapter's intro beat, a 'hint' chapter (both show their own big Hammy in the content
+          area instead), and a full-screen teach chapter like the W-4 walkthrough (dense
+          enough that the user already has to scroll — Hammy up top there just costs room with
+          nothing gained). The reaction bubble is a normal layout sibling ABOVE Hammy now, not
+          an absolutely-positioned overlay — when it appears, it genuinely pushes Hammy (and
+          the content below him) down instead of floating over things unrelated to it, so a
+          "Good job!" reads as something that just happened, not passive decoration. */}
+      {layoutMode === 'normal' ? (
+        <View style={styles.companionWrap}>
+          <ReactionBubble message={reactionMsg} mood={reactionMood} />
+          <Hammy
+            size={150}
+            bob
+            equipped={equippedMascotItems()}
+            face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
+            reaction={reactionMood}
+            reactionKey={reactionKey}
+          />
+        </View>
+      ) : null}
       {fitMode ? (
-        <FitToViewport style={{ flex: 1 }} contentStyle={styles.content}>
+        <FitToViewport
+          style={[{ flex: 1 }, chapter.type === 'matching' && { justifyContent: 'center' }]}
+          contentStyle={styles.content}
+        >
           <Reanimated.View key={chapter.id} entering={FadeIn.duration(260)}>
             <ChapterView
               chapter={chapter}
@@ -495,6 +479,27 @@ export default function QuestPlayer() {
           </Reanimated.View>
         </ScrollView>
       )}
+      {/* Bottom bar — the chapter's own primary action ("Next", "Check my answer", "Got it",
+          ...; see onAction) used to float over the header's top-right corner; it lives here
+          now, beneath all of the chapter's own content, so tapping it always comes after
+          actually reading everything above rather than being reachable as a corner tap before
+          the student has scrolled down. "Look back" (the taught-terms glossary) moved down
+          here too, collapsed into a single button that opens the same section/word popup it
+          always has (see LookBackButton) instead of a permanently-visible chip row eating
+          space at the top of every screen. */}
+      {action || (layoutMode === 'normal' && terms.length > 0) ? (
+        <View style={styles.bottomBar}>
+          {layoutMode === 'normal' && terms.length > 0 ? <LookBackButton terms={terms} /> : null}
+          {action ? (
+            <Button
+              label={action.label}
+              onPress={handleActionPress}
+              variant={action.variant ?? 'green'}
+              disabled={action.disabled}
+            />
+          ) : null}
+        </View>
+      ) : null}
       {ambientEventActive ? (
         <AmbientLifeEventModal
           pendingLifeEvent={pendingLifeEvent}
@@ -643,13 +648,18 @@ function AmbientLifeEventModal({
   );
 }
 
-/** "Look back" glossary tray — ported from the website's renderGlossaryTray/
- * showGlossarySectionPopup/showGlossaryPopup. Terms taught so far this quest, grouped by
- * the chapter they came from (so a long lesson doesn't turn into one giant wall of chips):
- * tap a section chip to see the words in it, tap a word to see its definition again, with a
- * way back to that section's list so re-checking a few words in a row doesn't mean
- * re-opening the tray each time. */
-function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
+/** "Look back" — a single button in the bottom bar (see its call site) that opens a popup
+ * over the terms taught so far this quest, grouped by the chapter they came from (so a long
+ * lesson doesn't turn into one giant wall of words): the button opens a list of sections,
+ * tapping a section shows its words, tapping a word shows its definition again — each level
+ * with its own "← Back" so re-checking a few words in a row doesn't mean closing and
+ * reopening the popup each time. Used to be a permanently-visible horizontal chip row (one
+ * chip per section) sitting at the top of every screen; collapsing it into one button and
+ * moving the section list itself inside the popup gives that space back, at the cost of one
+ * extra tap to reach a section — worth it since this is a "look back", not something checked
+ * every screen. */
+function LookBackButton({ terms }: { terms: LearnedTerm[] }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [openSectionName, setOpenSectionName] = useState<string | null>(null);
   const [openTerm, setOpenTerm] = useState<LearnedTerm | null>(null);
 
@@ -666,23 +676,14 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
   }, [terms.length]);
   const activeSection = sections.find((s) => s.name === openSectionName) ?? null;
 
-  const closeAll = () => { setOpenTerm(null); setOpenSectionName(null); };
+  const closeAll = () => { setMenuOpen(false); setOpenTerm(null); setOpenSectionName(null); };
 
   return (
     <>
-      <ScrollView
-        horizontal showsHorizontalScrollIndicator={false}
-        style={styles.glossaryTray} contentContainerStyle={styles.glossaryTrayContent}
-      >
-        <Txt style={styles.glossaryLabel}>📖 Look back:</Txt>
-        {sections.map((s) => (
-          <Pressable key={s.name} onPress={() => setOpenSectionName(s.name)} style={styles.glossaryChip}>
-            <Txt style={styles.glossaryChipTxt}>{s.name}</Txt>
-            <View style={styles.glossaryCount}><Txt style={styles.glossaryCountTxt}>{s.terms.length}</Txt></View>
-          </Pressable>
-        ))}
-      </ScrollView>
-      <Modal visible={!!activeSection} transparent animationType="fade" onRequestClose={closeAll}>
+      <Pressable onPress={() => setMenuOpen(true)} style={styles.lookBackBtn}>
+        <Txt style={styles.lookBackBtnTxt}>📖 Look back</Txt>
+      </Pressable>
+      <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={closeAll}>
         <Pressable style={styles.hintScrim} onPress={closeAll}>
           <Pressable style={styles.glossaryPopupCard} onPress={(e) => e.stopPropagation()}>
             {openTerm ? (
@@ -696,6 +697,9 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
               </>
             ) : activeSection ? (
               <>
+                <Pressable onPress={() => setOpenSectionName(null)} hitSlop={8}>
+                  <Txt style={styles.glossaryBackLink}>← Back to Look back</Txt>
+                </Pressable>
                 <Txt style={styles.glossaryPopupTitle}>{activeSection.name}</Txt>
                 <View style={styles.glossaryWordGrid}>
                   {activeSection.terms.map((t) => (
@@ -709,7 +713,20 @@ function GlossaryTray({ terms }: { terms: LearnedTerm[] }) {
                 </View>
                 <Button label="Close" variant="ghost" onPress={closeAll} style={{ marginTop: 16 }} />
               </>
-            ) : null}
+            ) : (
+              <>
+                <Txt style={styles.glossaryPopupTitle}>📖 Look back</Txt>
+                <View style={styles.glossarySectionList}>
+                  {sections.map((s) => (
+                    <Pressable key={s.name} onPress={() => setOpenSectionName(s.name)} style={styles.glossarySectionRow}>
+                      <Txt style={styles.glossarySectionRowTxt}>{s.name}</Txt>
+                      <View style={styles.glossaryCount}><Txt style={styles.glossaryCountTxt}>{s.terms.length}</Txt></View>
+                    </Pressable>
+                  ))}
+                </View>
+                <Button label="Close" variant="ghost" onPress={closeAll} style={{ marginTop: 16 }} />
+              </>
+            )}
           </Pressable>
         </Pressable>
       </Modal>
@@ -899,6 +916,19 @@ function MatchingView({
   // just checking matched.size so the Next button doesn't appear mid-reaction, before Hammy's
   // "Nice! 🎉" bubble has actually had time to show.
   const [readyToAdvance, setReadyToAdvance] = useState(false);
+  // Every term/definition chip used to size itself to just its own text — a one-word term
+  // ("Interest") sat in a visibly smaller pill than a full-sentence definition next to it,
+  // which read as an inconsistent, unfinished-looking grid rather than a matching game.
+  // Tracks the tallest chip actually measured so far (across BOTH columns) and applies that
+  // as a shared minHeight to every chip once known, the same "measure, then apply" approach
+  // FitToViewport already uses elsewhere in this file. Converges after at most one extra
+  // render per chapter: once minHeight reaches the true tallest chip's natural height, that
+  // chip's measured height stops changing, so this stops updating too.
+  const [maxChipH, setMaxChipH] = useState(0);
+  const onChipLayout = (e: LayoutChangeEvent) => {
+    const h = e.nativeEvent.layout.height;
+    setMaxChipH((cur) => (h > cur ? h : cur));
+  };
 
   useEffect(() => {
     onFitMode(true);
@@ -954,7 +984,8 @@ function MatchingView({
               key={t}
               disabled={matched.has(t)}
               onPress={() => setSelTerm(t)}
-              style={[styles.matchChip, selTerm === t && styles.matchChipOn, matched.has(t) && styles.matchChipDone]}
+              onLayout={onChipLayout}
+              style={[styles.matchChip, maxChipH > 0 && { minHeight: maxChipH }, selTerm === t && styles.matchChipOn, matched.has(t) && styles.matchChipDone]}
             >
               <Txt style={styles.matchChipTxt}>{t}</Txt>
             </Pressable>
@@ -968,7 +999,8 @@ function MatchingView({
                 key={d}
                 disabled={isDone}
                 onPress={() => pickDef(d)}
-                style={[styles.matchChip, wrongPair === d && styles.matchChipWrong, isDone && styles.matchChipDone]}
+                onLayout={onChipLayout}
+                style={[styles.matchChip, maxChipH > 0 && { minHeight: maxChipH }, wrongPair === d && styles.matchChipWrong, isDone && styles.matchChipDone]}
               >
                 <Txt style={styles.matchChipTxt}>{d}</Txt>
               </Pressable>
@@ -1716,20 +1748,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5, borderBottomColor: '#EFEFE7',
   },
   step: { fontFamily: font.bold, fontSize: 12, color: colors.green },
-  // Shared container for the glossary tray / companion row / floating action button — see
-  // the big comment at its call site. position: relative so actionBarFloat below can anchor
-  // to it. minHeight (headerZoneIntro) only applies for the 'intro' layout, where it'd
-  // otherwise be the ONLY thing determining this zone's height (everything else in it is
-  // hidden), and the floating button needs a floor to be positioned within.
-  headerZone: { position: 'relative' },
-  headerZoneIntro: { minHeight: 50 },
-  // Floats over headerZone's top-right corner instead of claiming a full row of its own —
-  // reclaims that whole row's height on every chapter (the single biggest lever pulled for
-  // "reduce scrolling" — a real ~50px back on every single screen, not just spacing trims).
-  actionBarFloat: { position: 'absolute', top: 4, right: 16 },
-  // Matches glossaryTray's own maxHeight (34) plus a little clearance, so the button sits
-  // just below the tray's chip row instead of on top of it whenever both are showing.
-  actionBarFloatBelowTray: { top: 42 },
+  // Bottom bar — "Look back" (when there are taught terms) stacked above the chapter's own
+  // primary action button (see the call site). Both used to live up in the header (a
+  // permanently-visible chip row + a button floating over its top-right corner); moved down
+  // here as a real, always-at-the-bottom row so the last thing the student does on any
+  // screen is a deliberate tap after reading everything above, not a corner tap they could
+  // reach without having read (or scrolled to) the rest of the content. The top border reads
+  // as a lightweight "control strip", the same visual language as the top `stick` bar's own
+  // bottom border.
+  bottomBar: {
+    paddingHorizontal: 18, paddingTop: 12, paddingBottom: 10, gap: 10,
+    alignItems: 'center', borderTopWidth: 1.5, borderTopColor: '#EFEFE7',
+  },
   hintFab: {
     minWidth: 34, height: 30, paddingHorizontal: 8, borderRadius: 15,
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderCool,
@@ -1742,17 +1772,14 @@ const styles = StyleSheet.create({
     width: '100%', maxWidth: 340, backgroundColor: colors.pinkBg, borderWidth: 1.5,
     borderColor: colors.pinkBorder, borderRadius: 20, padding: 20,
   },
-  // "Look back" glossary tray — a single-line horizontal scroller so it costs minimal
-  // vertical space even with several sections taught so far.
-  glossaryTray: { maxHeight: 34, flexGrow: 0 },
-  glossaryTrayContent: { alignItems: 'center', paddingHorizontal: 16, gap: 8 },
-  glossaryLabel: { fontFamily: font.bold, fontSize: 12, color: colors.muted5 },
-  glossaryChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    borderWidth: 1.5, borderColor: colors.borderCool, borderRadius: 14,
-    paddingVertical: 5, paddingHorizontal: 10, backgroundColor: colors.white,
+  // "Look back" — a single pill button in the bottom bar (see LookBackButton) that opens
+  // the same section/word popup the old always-visible chip row did.
+  lookBackBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center',
+    borderWidth: 1.5, borderColor: colors.borderCool, borderRadius: 16,
+    paddingVertical: 8, paddingHorizontal: 16, backgroundColor: colors.white,
   },
-  glossaryChipTxt: { fontFamily: font.bold, fontSize: 11.5, color: colors.ink },
+  lookBackBtnTxt: { fontFamily: font.bold, fontSize: 12.5, color: colors.ink },
   glossaryCount: {
     minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.screen,
     alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3,
@@ -1763,6 +1790,15 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: colors.border, borderRadius: 22, padding: 20,
   },
   glossaryPopupTitle: { fontFamily: font.display, fontSize: 17, color: colors.ink, marginBottom: 12 },
+  // The section list — the popup's own top level now that "Look back" is a single button
+  // instead of a row of section chips (see LookBackButton).
+  glossarySectionList: { gap: 8 },
+  glossarySectionRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+    borderWidth: 1.5, borderColor: colors.borderCool, borderRadius: 14,
+    paddingVertical: 10, paddingHorizontal: 14, backgroundColor: colors.screen,
+  },
+  glossarySectionRowTxt: { fontFamily: font.bold, fontSize: 13.5, color: colors.ink },
   glossaryWordGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   glossaryWordChip: {
     borderWidth: 1.5, borderColor: colors.borderOpt, borderRadius: 14,
@@ -1787,62 +1823,31 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10,
   },
   tfBtnTxt: { fontFamily: font.extra, fontSize: 15 },
-  // alignItems: 'center' centers hammyStage — Hammy himself, truly, this time (the reaction
-  // bubble no longer shares this flex row at all, see hammyStage/bubbleSlot below, so it
-  // can't pull him off-center the way a shared row did). paddingHorizontal is the hard
-  // safety margin the bubble's width is sized against (see bubbleSlot) so it can never run
-  // off the left edge of the screen. paddingTop clears space below the floating action
-  // button (top: 4, height 48 → bottom edge 52): the old 54 left only a 2px gap, which
-  // read as Hammy crowding the green button, and reaction bounces (see Hammy.tsx's reactY,
-  // up to -30) lifted his ears straight into it. 72 keeps a real gap at rest and through
-  // the common happy bounce (-22); when the glossary tray shows, it's a normal-flow
-  // sibling above this block, so it pushes Hammy down along with the lowered button.
-  // flex-start (not center) pins Hammy to the left edge of the stage — the reaction bubble
-  // lives to his RIGHT (see bubbleSlot), not squeezed into the remaining space on his left
-  // the way a centered Hammy needed.
-  companionWrap: { alignItems: 'flex-start', paddingHorizontal: 16, paddingTop: 32, paddingBottom: 4 },
-  // Holds ONLY Hammy in normal flow — its size IS Hammy's size, nothing else. The reaction
-  // bubble is positioned absolutely against it (see bubbleSlot), so it can sit right next to
-  // him without being a layout sibling that would fight his left alignment.
-  hammyStage: { position: 'relative' },
-  // left: '100%' parks the bubble's left edge at hammyStage's own right edge (i.e. Hammy's
-  // right edge) regardless of Hammy's exact pixel width; marginLeft adds the gap. top/bottom
-  // 0 stretches it to Hammy's full height so justifyContent: 'center' vertically centers the
-  // actual bubble within that — no measuring or magic numbers needed either way. Being fully
-  // out of flow also means the bubble growing for a longer message can never shift anything
-  // else on screen. Kept narrow (125, matching the previously-short feedback copy — see
-  // shortFeedback) so it can never reach as far right as the floating action button in the
-  // header zone's top-right corner (see actionBarFloat) even on a ~375px-wide phone.
-  // top-anchored with no fixed/matched height (was top:0 + bottom:0, forcing the slot to
-  // exactly Hammy's own height and centering within it) — now that this message stays up
-  // until the user advances instead of auto-hiding after ~1.4s (see reactTo), a longer
-  // message needed more room than Hammy's height could reliably provide, and the fixed
-  // height risked clipping/overflow. Growing downward from the top instead guarantees every
-  // word is visible regardless of length.
-  bubbleSlot: {
-    position: 'absolute', top: 0, left: '100%', marginLeft: 10,
-    width: 140, alignItems: 'flex-start',
-  },
-  bubbleInner: { alignItems: 'flex-start' },
+  // Centers Hammy (and the reaction bubble above him — a normal-flow sibling now, not an
+  // absolutely-positioned overlay, see ReactionBubble) as a group at the top of the screen.
+  // gap spaces the bubble off Hammy's head when it's showing; costs nothing when it isn't,
+  // since ReactionBubble renders null rather than reserving a slot.
+  companionWrap: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 20, paddingBottom: 6, gap: 8 },
+  bubbleInner: { alignItems: 'center' },
   reactionBox: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
-    borderRadius: 16, paddingVertical: 10, paddingHorizontal: 13,
+    borderRadius: 16, paddingVertical: 10, paddingHorizontal: 14, maxWidth: 260,
   },
-  reactionTxt: { fontFamily: font.bold, fontSize: 14.5, lineHeight: 19 },
-  // A literal speech-bubble tail on the box's left edge, pointing at Hammy (who now sits to
-  // its left, not its right) — the classic border-triangle trick (colored right border,
-  // transparent top/bottom, zero width/height). Two stacked triangles (a larger
+  reactionTxt: { fontFamily: font.bold, fontSize: 14.5, lineHeight: 19, textAlign: 'center' },
+  // A literal speech-bubble tail pointing DOWN at Hammy (who sits directly below the bubble
+  // now, not to its side) — the classic border-triangle trick (colored top border,
+  // transparent left/right, zero width/height). Two stacked triangles (a larger
   // border-colored one behind, a smaller white one in front) fake the box's own 1.5px stroke
   // carrying around the point.
   reactionTailBorder: {
-    position: 'absolute', top: '50%', left: -9, marginTop: -7,
-    width: 0, height: 0, borderTopWidth: 7, borderBottomWidth: 7, borderRightWidth: 9,
-    borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: colors.border,
+    position: 'absolute', bottom: -9, left: '50%', marginLeft: -9,
+    width: 0, height: 0, borderLeftWidth: 9, borderRightWidth: 9, borderTopWidth: 9,
+    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: colors.border,
   },
   reactionTailFill: {
-    position: 'absolute', top: '50%', left: -6.5, marginTop: -5.8,
-    width: 0, height: 0, borderTopWidth: 5.8, borderBottomWidth: 5.8, borderRightWidth: 7.5,
-    borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: colors.white,
+    position: 'absolute', bottom: -6.5, left: '50%', marginLeft: -7.5,
+    width: 0, height: 0, borderLeftWidth: 7.5, borderRightWidth: 7.5, borderTopWidth: 6.5,
+    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: colors.white,
   },
   // Story chapter title — pink, and rendered in the exact same spot whether the intro
   // screen or the dialogue log is showing, so it visibly stays put across the transition.
@@ -1914,6 +1919,7 @@ const styles = StyleSheet.create({
   matchChip: {
     borderWidth: 1.5, borderColor: colors.borderOpt, borderRadius: 14,
     paddingVertical: 8, paddingHorizontal: 12, backgroundColor: colors.white,
+    justifyContent: 'center',
   },
   matchChipOn: { borderColor: colors.green, backgroundColor: '#F1F6EF' },
   matchChipWrong: { borderColor: '#D98A9E', backgroundColor: colors.pinkBg2 },
