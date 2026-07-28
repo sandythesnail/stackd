@@ -9,7 +9,7 @@ import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
-import { LIFE_EVENT_SHEET_HEIGHT_PCT } from '@/lifeEventLayout';
+import { LIFE_EVENT_SHEET_MAX_HEIGHT_PCT } from '@/lifeEventLayout';
 import type { LifeEvent } from '@/lifeEvents';
 import { REACTION_FACES } from '@/hammyFaces';
 import { EMPTY_ANALYTICS, setPendingQuestAnalytics, type QuestAnalytics } from '@/questReport';
@@ -397,24 +397,27 @@ export default function QuestPlayer() {
       {/* Everything below shares one "header zone" so the chapter's own action button can
           float in its top-right corner (position: absolute) instead of claiming a whole
           row of its own — reclaims a full row of vertical space on every single chapter.
-          minHeight only kicks in for 'intro'/'full' layouts, where the companion row/
-          glossary tray are hidden and there'd otherwise be nothing in this zone to reserve
-          room for the floating button against. */}
-      <View style={[styles.headerZone, layoutMode !== 'normal' && styles.headerZoneIntro]}>
+          minHeight only kicks in for 'intro' layouts, where the companion row/glossary tray
+          are hidden and there'd otherwise be nothing in this zone to reserve room for the
+          floating button against. */}
+      <View style={[styles.headerZone, layoutMode === 'intro' && styles.headerZoneIntro]}>
         {/* "Look back" glossary tray — ported from the website's #glossary-tray. Hidden
             during a big-centered-Hammy 'intro' screen (and a dense 'full' chapter) same as
             the companion row, and naturally absent until the first teach/matching chapter
             has taught a term. */}
         {terms.length > 0 && layoutMode === 'normal' ? <GlossaryTray terms={terms} /> : null}
-        {/* Companion row — hidden during a story chapter's intro beat, a 'hint' chapter, or
-            a chapter opting into the full-screen layout (see TeachChapter.fullScreen), all
-            of which either show their own big centered Hammy in the content area instead
-            (StoryView/HintView) or give that space to the content entirely. hammyStage
-            holds ONLY Hammy in normal flow, so centering it centers Hammy himself; the
-            reaction bubble is a positioned overlay hugging his left side, not a flex
-            sibling — it no longer has to fight for actual centering the way a shared flex
-            row did. */}
-        {layoutMode === 'normal' ? (
+        {/* Companion row — hidden ONLY during a story chapter's intro beat or a 'hint'
+            chapter, both of which already show their own big centered Hammy in the content
+            area instead (StoryView/HintView), so a second small Hammy up here would just be
+            a redundant duplicate. Still shown during 'full' (a dense TeachChapter.fullScreen
+            walkthrough like the W-4 form) — that layout gives the glossary tray's row back to
+            the content, but was ALSO hiding the companion entirely with nothing else standing
+            in for him on screen, so a full-screen concept's own true/false check quietly lost
+            Hammy for its whole duration. hammyStage holds ONLY Hammy in normal flow, so
+            centering it centers Hammy himself; the reaction bubble is a positioned overlay
+            hugging his left side, not a flex sibling — it no longer has to fight for actual
+            centering the way a shared flex row did. */}
+        {layoutMode !== 'intro' ? (
           <View style={styles.companionWrap}>
             <View style={styles.hammyStage}>
               <ReactionBubble message={reactionMsg} mood={reactionMood} />
@@ -469,7 +472,11 @@ export default function QuestPlayer() {
           </Reanimated.View>
         </FitToViewport>
       ) : (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={[styles.content, chapter.type === 'story' && layoutMode === 'normal' && styles.contentCenterDialogue]}
+          showsVerticalScrollIndicator={false}
+        >
           <Reanimated.View key={chapter.id} entering={FadeIn.duration(260)}>
             <ChapterView
               chapter={chapter}
@@ -626,7 +633,7 @@ function AmbientLifeEventModal({
     <Modal visible transparent animationType="fade" onRequestClose={() => {}}>
       <View style={styles.ambientLifeRoot}>
         <View style={[StyleSheet.absoluteFill, styles.ambientLifeScrim]} />
-        <Reanimated.View entering={SlideInDown.duration(320)} style={[styles.ambientLifeSheet, { height: winH * LIFE_EVENT_SHEET_HEIGHT_PCT }]}>
+        <Reanimated.View entering={SlideInDown.duration(320)} style={[styles.ambientLifeSheet, { maxHeight: winH * LIFE_EVENT_SHEET_MAX_HEIGHT_PCT }]}>
           <ScrollView contentContainerStyle={styles.ambientLifeSheetContent} showsVerticalScrollIndicator={false}>
             <LifeEventCard event={event} onResolve={resolveLifeEvent} onDone={onDone} />
           </ScrollView>
@@ -1877,6 +1884,15 @@ const styles = StyleSheet.create({
   },
   ambientLifeSheetContent: { paddingHorizontal: 22, paddingBottom: 34 },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 20, gap: 12, flexGrow: 1 },
+  // A short dialogue (few beats revealed so far) used to sit pinned to the top of the
+  // screen with a dead gap below it — justifyContent: 'center' centers the whole beat log
+  // as a group instead, while still behaving like an ordinary top-anchored scroll once the
+  // beats grow taller than the screen (RN centers a ScrollView's contentContainerStyle only
+  // when its content is SHORTER than the viewport; once it overflows this has no effect and
+  // scrolling just starts from the top, same as before). The beats' own `gap: 10` (this
+  // style's `gap` above) already spaces every beat evenly, so centering the group as a whole
+  // doesn't unevenly bunch any of them.
+  contentCenterDialogue: { justifyContent: 'center' },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
   // Story beats — speaker-styled: white bordered bubble + pig-head avatar for Hammy, a

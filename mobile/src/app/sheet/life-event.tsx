@@ -6,7 +6,7 @@ import Animated, { SlideInDown } from 'react-native-reanimated';
 import { Txt, Button, LifeEventCard } from '@/components';
 import { colors } from '@/theme';
 import { useStore } from '@/store';
-import { LIFE_EVENT_SHEET_HEIGHT_PCT } from '@/lifeEventLayout';
+import { LIFE_EVENT_SHEET_MAX_HEIGHT_PCT } from '@/lifeEventLayout';
 
 /** Screen 21 — "Life happens…" life-event card. Real scenarios ported from the website's
  * LIFE_EVENTS/LIFE_EVENT_UNLOCKS, triggered by the store after a lesson completes. Presented
@@ -26,7 +26,7 @@ export default function LifeEvent() {
   };
 
   const { height: winH } = useWindowDimensions();
-  const sheetHeight = winH * LIFE_EVENT_SHEET_HEIGHT_PCT;
+  const sheetMaxHeight = winH * LIFE_EVENT_SHEET_MAX_HEIGHT_PCT;
 
   return (
     <View style={styles.root}>
@@ -34,7 +34,7 @@ export default function LifeEvent() {
         <View style={[StyleSheet.absoluteFill, styles.scrim]} />
       </View>
       <SafeAreaView edges={['bottom']} style={styles.anchor}>
-        <Animated.View entering={SlideInDown.duration(320)} style={[styles.sheet, { height: sheetHeight }]}>
+        <Animated.View entering={SlideInDown.duration(320)} style={[styles.sheet, { maxHeight: sheetMaxHeight }]}>
           <ScrollView contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
             {event ? (
               <LifeEventCard event={event} onResolve={resolveLifeEvent} onDone={done} />
