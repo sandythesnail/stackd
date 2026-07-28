@@ -134,6 +134,7 @@ export default function Home() {
         name={tierName}
         coins={state.coins}
         diamonds={state.diamonds}
+        hideCurrency
         onReplayTour={startTour}
         onGear={() => router.push('/(tabs)/settings')}
       />

@@ -44,6 +44,7 @@ export function Header({
   title,
   onGear,
   onReplayTour,
+  hideCurrency,
 }: {
   level?: number;
   name?: string;
@@ -52,13 +53,18 @@ export function Header({
   title?: string;
   onGear?: () => void;
   onReplayTour?: () => void;
+  hideCurrency?: boolean;
 }) {
   return (
     <View style={styles.hdr}>
       {title ? <Txt variant="disp" style={{ fontSize: 23 }}>{title}</Txt> : <TierBadge level={level} name={name} />}
       <View style={styles.chips}>
-        <CurrencyChip kind="coin" value={coins} />
-        <CurrencyChip kind="diamond" value={diamonds} />
+        {hideCurrency ? null : (
+          <>
+            <CurrencyChip kind="coin" value={coins} />
+            <CurrencyChip kind="diamond" value={diamonds} />
+          </>
+        )}
         {onReplayTour ? (
           <IconButton name="help-circle" size={36} iconSize={18} color={colors.muted3} onPress={onReplayTour} />
         ) : null}
