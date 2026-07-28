@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, LayoutChangeEvent } from 'react-native';
 import { colors, font } from '@/theme';
 import { REACTION_FACES } from '@/hammyFaces';
 import type { LifeEvent, LifeEventChoice } from '@/lifeEvents';
@@ -45,13 +45,25 @@ export function LifeEventCard({
   const [answeredId, setAnsweredId] = useState<string | null>(null);
   const answered = event.choices.find((c) => c.id === answeredId) ?? null;
 
+  // Answering swaps a list of choices for a chip row plus a result line, which is usually
+  // shorter — and since both surfaces that show this card size themselves to it (the
+  // post-lesson sheet and the mid-lesson popup), the whole sheet visibly shrank the moment
+  // you picked something. Locking in the height measured while unanswered keeps it put.
+  // Only ever grows (the tallest measurement wins) so applying the minHeight can't feed
+  // back into a smaller one.
+  const [lockedHeight, setLockedHeight] = useState(0);
+  const onCardLayout = (e: LayoutChangeEvent) => {
+    const h = e.nativeEvent.layout.height;
+    setLockedHeight((cur) => (h > cur ? h : cur));
+  };
+
   const pick = (choiceId: string) => {
     setAnsweredId(choiceId);
     onResolve(choiceId);
   };
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, lockedHeight > 0 && { minHeight: lockedHeight }]} onLayout={onCardLayout}>
       <View style={styles.header}>
         <Hammy size={56} bob={false} face={REACTION_FACES.gentle} />
         <View style={styles.headerText}>

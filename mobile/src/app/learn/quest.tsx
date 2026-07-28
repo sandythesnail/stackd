@@ -4,7 +4,7 @@ import Reanimated, { SlideInDown, FadeInDown, FadeIn } from 'react-native-reanim
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
-import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, LifeEventCard, FitToViewport, ReactionFacePreloader } from '@/components';
+import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, LifeEventCard, ReactionFacePreloader } from '@/components';
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
@@ -42,6 +42,18 @@ type LearnedTerm = { term: string; plain: string; section: string };
  * always-available FAB used across other interactive chapters (renderHintBudget). */
 const HINT_BUDGET = 3;
 const HINT_FREE_CHAPTER_TYPES = new Set(['story', 'teach', 'hint']);
+
+/** Chapter types tall enough by construction that the companion Hammy would be competing
+ * with the content for the screen: microsim stacks an income card, a card of sliders, a
+ * running total and a feedback card ("Planning Around an Accurate W-4" is one of these);
+ * simulator stacks a meter card on a list of decisions; spotcheck a whole posting whose
+ * every segment can sprout an explanation. These always scroll, so Hammy steps aside and
+ * lets the question have the screen.
+ *
+ * A fixed list of TYPES, not a measure-then-react rule — an earlier version hid him
+ * whenever content happened to overflow, which pulled him off ordinary questions too and
+ * made his presence unpredictable from one screen to the next. */
+const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck']);
 
 type HintProps = { hintsRemaining: number; onUseHint: () => void };
 /** Reports right/wrong to the persistent companion Hammy (see showHammyReaction on the
@@ -86,10 +98,6 @@ type ActionProps = { onAction: (action: QuestAction) => void };
 type LayoutMode = 'normal' | 'intro' | 'full';
 type LayoutModeProps = { onLayoutMode: (mode: LayoutMode) => void };
 
-/** Reported by a chapter whose content should shrink-to-fit the viewport instead of
- * scrolling — see the `fitMode` state above and FitToViewport. */
-type FitModeProps = { onFitMode: (fit: boolean) => void };
-
 /** Feeds the end-of-lesson report (see @/questReport, results.tsx) — mirrors what the
  * website's per-chapter handlers write into `qp.analytics`. Only the chapter types the
  * website itself tracks (knowledgecheck/mythcards/matching/decision/bossbattle/explainback)
@@ -132,7 +140,15 @@ function shortFeedback(text: string, maxLen = 60): string {
  * side of him: when Hammy says "Good job!" the bubble now reads as coming from him, with a
  * tail pointing down at his head. Keeps showing the last message+mood while fading out so
  * there's text to fade from. */
-function ReactionBubble({ message, mood }: { message: string | null; mood: 'happy' | 'gentle' | 'streak' | null }) {
+function ReactionBubble({
+  message, mood, centered = false,
+}: {
+  message: string | null;
+  mood: 'happy' | 'gentle' | 'streak' | null;
+  /** Sits above a centered Hammy with its tail pointing down at him, instead of beside a
+   * left-aligned one with the tail pointing left. */
+  centered?: boolean;
+}) {
   const anim = useRef(new Animated.Value(0)).current;
   const [display, setDisplay] = useState(message);
   const [displayMood, setDisplayMood] = useState(mood);
@@ -149,22 +165,25 @@ function ReactionBubble({ message, mood }: { message: string | null; mood: 'happ
     // render whether or not a message is showing — it used to only grow to fit once a
     // message's real height was measured after the fact, which visibly pushed the content
     // below down the first time Hammy ever had something to say.
-    <View style={styles.bubbleSlot} pointerEvents="none">
+    <View style={centered ? styles.bubbleSlotCentered : styles.bubbleSlot} pointerEvents="none">
       {display ? (
         <Animated.View
-          style={[styles.bubbleInner, { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}
+          style={[
+            centered ? styles.bubbleInnerCentered : styles.bubbleInner,
+            { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] },
+          ]}
         >
           <View style={styles.reactionBox}>
             {/* No numberOfLines/truncation here on purpose — every message that reaches
                 this bubble is already kept short at the source (see shortFeedback), so
                 there's nothing left that should ever need an ellipsis. */}
-            <Txt style={[styles.reactionTxt, { color: textColor }]}>{display}</Txt>
-            {/* A literal speech-bubble tail pointing down at Hammy (he sits directly below
-                this bubble) — two stacked down-pointing triangles, the outer one the box's
-                own border color and slightly larger, so a thin rim of it peeks past the
-                inner white one, matching the box's own border stroke. */}
-            <View style={styles.reactionTailBorder} />
-            <View style={styles.reactionTailFill} />
+            <Txt style={[styles.reactionTxt, centered && styles.reactionTxtCentered, { color: textColor }]}>{display}</Txt>
+            {/* A literal speech-bubble tail pointing at Hammy — two stacked triangles, the
+                outer one the box's own border color and slightly larger, so a thin rim of it
+                peeks past the inner white one, matching the box's own border stroke. Points
+                down at him when he's centered below, left at him when he's beside it. */}
+            <View style={centered ? styles.reactionTailDownBorder : styles.reactionTailBorder} />
+            <View style={centered ? styles.reactionTailDownFill : styles.reactionTailFill} />
           </View>
         </Animated.View>
       ) : null}
@@ -228,14 +247,6 @@ export default function QuestPlayer() {
   // used elsewhere in this file — so nothing here can get stuck on the wrong layout.
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('normal');
   const onLayoutMode = (m: LayoutMode) => setLayoutMode(m);
-  // Chapter types whose content is real-but-bounded (a teach concept, a knowledge-check
-  // question, a matching grid) report true here so the content area shrinks-to-fit instead
-  // of scrolling — see FitToViewport. Left false (the default, real ScrollView) for chapter
-  // types not yet audited for this, and for mythcards specifically, whose swipe gesture
-  // tracks raw screen coordinates that a visual scale transform would throw out of sync
-  // with the card's actual drawn position.
-  const [fitMode, setFitMode] = useState(false);
-  const onFitMode = (f: boolean) => setFitMode(f);
   // An ambient life event (see rollAmbientLifeEvent) pauses a mid-quest chapter transition
   // the same way the website's maybeTriggerAmbientLifeEvent pauses its own "next" handlers
   // — the chapter doesn't actually advance until the event is dismissed. pendingAdvanceRef
@@ -401,13 +412,19 @@ export default function QuestPlayer() {
     }
   };
 
-  // Hidden ONLY during a story chapter's intro beat or a 'hint' chapter, both of which
-  // already show their own big Hammy in the content area instead (StoryView/HintView), so a
-  // second one up here would just be a redundant duplicate. Nothing else ever takes the
-  // companion away — an earlier version also stood him down on any chapter whose content
-  // had to scroll, which meant he vanished from exactly the long question screens he's
-  // there to react to. He stays.
-  const showCompanion = layoutMode !== 'intro';
+  // Hidden during a story chapter's intro beat or a 'hint' chapter, both of which already
+  // show their own big Hammy in the content area instead (StoryView/HintView), so a second
+  // one up here would just be a redundant duplicate; and on the handful of chapter types
+  // that are simply too tall to share a screen with him (see TALL_CHAPTER_TYPES) plus the
+  // dense full-screen teach walkthroughs. Note this is a fixed list of chapter TYPES, not a
+  // measure-and-react rule: an earlier version hid him whenever content happened to
+  // overflow, which took him off ordinary questions too and was unpredictable from one
+  // screen to the next.
+  const showCompanion = layoutMode === 'normal' && !TALL_CHAPTER_TYPES.has(chapter.type);
+  // Centered above the content, rather than off to its left, for the two chapter types
+  // that read as a scene rather than a question: the story's dialogue (the conversation is
+  // with him) and Match It (a centered grid).
+  const companionCentered = chapter.type === 'story' || chapter.type === 'matching';
 
   return (
     <Screen edges={['top', 'bottom']}>
@@ -418,15 +435,29 @@ export default function QuestPlayer() {
         <IconButton name="x" size={34} iconSize={16} onPress={goBack} />
         <ProgressBar value={chapterIdx / quest.chapters.length} style={{ flex: 1 }} height={10} />
         <Txt style={styles.step}>{Math.round((chapterIdx / quest.chapters.length) * 100)}%</Txt>
-        <HintCorner key={chapter.id} hintText={hintText} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />
+        {/* Keyed per QUESTION, not just per chapter: a knowledge check runs several
+            questions inside one chapter, each with its own authored hint, and a single
+            instance carried its "already revealed" state across all of them — so question 2
+            onward showed as pre-revealed and handed out its hint without spending budget.
+            The fixed-width slot around it holds the space whether or not this chapter has a
+            hint at all (only about a quarter of them do), so the progress bar and % beside
+            it stop shifting as you move between chapters that have one and chapters that
+            don't. */}
+        <View style={styles.hintSlot}>
+          <HintCorner
+            key={`${chapter.id}:${kcQuestionIdx}`}
+            hintText={hintText}
+            hintsRemaining={hintsRemaining}
+            onUseHint={onUseHint}
+          />
+        </View>
       </View>
-      {/* Companion Hammy on the left with his speech bubble beside him, at the same size as
-          the big Hammy on a story's intro screen. A plain flex row rather than the bubble
-          being absolutely positioned at a fixed width: the bubble just takes whatever width
-          is left over next to him, so his size and the screen's can both change without any
-          hand-tuned offsets needing to be re-tuned. */}
+      {/* Companion Hammy. Two arrangements: centered with his bubble above him (dialogue,
+          Match It), or off to the left with the bubble beside him everywhere else. Either
+          way the bubble is positioned relative to him, never the other way round. */}
       {showCompanion ? (
-        <View style={styles.companionWrap}>
+        <View style={companionCentered ? styles.companionWrapCentered : styles.companionWrap}>
+          {companionCentered ? <ReactionBubble message={reactionMsg} mood={reactionMood} centered /> : null}
           <Hammy
             size={130}
             bob
@@ -435,65 +466,38 @@ export default function QuestPlayer() {
             reaction={reactionMood}
             reactionKey={reactionKey}
           />
-          <ReactionBubble message={reactionMsg} mood={reactionMood} />
+          {companionCentered ? null : <ReactionBubble message={reactionMsg} mood={reactionMood} />}
         </View>
       ) : null}
-      {fitMode ? (
-        <FitToViewport
-          // Keyed per chapter so each one measures itself from scratch. Without this it
-          // survives every chapter change (the fitMode false/true pair a chapter swap
-          // produces batches into a single render, so the branch never actually flips), and
-          // would carry the previous chapter's measurements — and its scroll-fallback latch
-          // — into a chapter they say nothing about.
-          key={chapter.id}
-          style={[{ flex: 1 }, chapter.type === 'matching' && { justifyContent: 'center' }]}
-          contentStyle={styles.content}
-        >
-          <Reanimated.View key={chapter.id} entering={FadeIn.duration(260)}>
-            <ChapterView
-              chapter={chapter}
-              questions={content.questions}
-              moduleXpReward={content.xpReward}
-              charName={quest.character.name}
-              onComplete={onComplete}
-              reactTo={reactTo}
-              clearReaction={clearReaction}
-              onAction={onAction}
-              onLayoutMode={onLayoutMode}
-              onFitMode={onFitMode}
-              onQuestionIndexChange={setKcQuestionIdx}
-              {...reportProps}
-            />
-          </Reanimated.View>
-        </FitToViewport>
-      ) : (
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* flexGrow so the chapter actually fills the scroller's height rather than
-              shrink-wrapping inside it — that's what lets a chapter whose own root asks to
-              be centered (the story intro's Hammy + caption stage) have a height to center
-              itself within. Without it those chapters just sat pinned to the top. */}
-          <Reanimated.View key={chapter.id} entering={FadeIn.duration(260)} style={styles.chapterFill}>
-            <ChapterView
-              chapter={chapter}
-              questions={content.questions}
-              moduleXpReward={content.xpReward}
-              charName={quest.character.name}
-              onComplete={onComplete}
-              reactTo={reactTo}
-              clearReaction={clearReaction}
-              onAction={onAction}
-              onLayoutMode={onLayoutMode}
-              onFitMode={onFitMode}
-              onQuestionIndexChange={setKcQuestionIdx}
-              {...reportProps}
-            />
-          </Reanimated.View>
-        </ScrollView>
-      )}
+      {/* One plain scroller for every chapter type. There used to be a second branch that
+          shrank a chapter's content down to fit the viewport instead of scrolling, but
+          scaling the screen is exactly what read as "the question minimizes" the moment an
+          answer's explanation appeared — content that doesn't fit simply scrolls now. */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.content, chapter.type === 'matching' && styles.contentCenter]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* flexGrow so the chapter actually fills the scroller's height rather than
+            shrink-wrapping inside it — that's what lets a chapter whose own root asks to
+            be centered (the story intro's stage, Match It's grid) have a height to center
+            itself within. Without it those chapters just sat pinned to the top. */}
+        <Reanimated.View key={chapter.id} entering={FadeIn.duration(260)} style={styles.chapterFill}>
+          <ChapterView
+            chapter={chapter}
+            questions={content.questions}
+            moduleXpReward={content.xpReward}
+            charName={quest.character.name}
+            onComplete={onComplete}
+            reactTo={reactTo}
+            clearReaction={clearReaction}
+            onAction={onAction}
+            onLayoutMode={onLayoutMode}
+            onQuestionIndexChange={setKcQuestionIdx}
+            {...reportProps}
+          />
+        </Reanimated.View>
+      </ScrollView>
       {/* Persistent bottom bar: "Look back" pinned bottom-left, the chapter's primary action
           centered. Equal-width slots on both sides (the right one deliberately empty) rather
           than absolutely positioning the Look back button, so the action button is genuinely
@@ -536,7 +540,7 @@ export default function QuestPlayer() {
 }
 
 function ChapterView({
-  chapter, questions, moduleXpReward, charName, onComplete, reactTo, clearReaction, onAction, onLayoutMode, onFitMode,
+  chapter, questions, moduleXpReward, charName, onComplete, reactTo, clearReaction, onAction, onLayoutMode,
   onQuestionIndexChange, reportKnowledgeCheck, reportMythCard, reportMatchingMistake, reportDecision, reportExplainback,
 }: {
   chapter: Chapter; questions: Question[]; moduleXpReward: number; charName: string; onComplete: Complete;
@@ -544,19 +548,19 @@ function ChapterView({
    * currently showing, so the parent can look up that question's own hintTexts entry —
    * see quest.tsx's hintText computation. */
   onQuestionIndexChange?: (i: number) => void;
-} & ReactProps & ReportProps & ActionProps & LayoutModeProps & FitModeProps) {
+} & ReactProps & ReportProps & ActionProps & LayoutModeProps) {
   const reactProps: ReactProps = { reactTo, clearReaction };
   switch (chapter.type) {
     case 'story': return <StoryView chapter={chapter} charName={charName} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
-    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} onFitMode={onFitMode} {...reactProps} />;
-    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} onAction={onAction} onFitMode={onFitMode} {...reactProps} reportMatchingMistake={reportMatchingMistake} />;
+    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} {...reactProps} />;
+    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMatchingMistake={reportMatchingMistake} />;
     case 'hint': return <HintView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
     case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
     case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'poll': return <PollView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMythCard={reportMythCard} />;
-    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} onAction={onAction} onFitMode={onFitMode} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} onQuestionIndexChange={onQuestionIndexChange} />;
-    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} onAction={onAction} onFitMode={onFitMode} {...reactProps} />;
+    case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} onAction={onAction} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} onQuestionIndexChange={onQuestionIndexChange} />;
+    case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
     case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
@@ -802,12 +806,16 @@ function StoryView({
   }, [showIntro, i, last]);
 
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    // The dialogue log is centered as a column (each beat sized to its own text and
+    // centered on screen, under the centered companion Hammy) rather than a stack of
+    // full-width rows pinned to the left edge.
+    <View style={[{ gap: 10, flex: 1 }, !showIntro && styles.storyLog]}>
       {/* The title sits centered directly above Hammy on the intro screen — it's the whole
           headline of that screen, so it belongs with him rather than pinned off in the
-          top-left corner while he's centered further down. On the dialogue log after it,
-          it goes back to a normal top-aligned heading above the conversation. */}
-      {chapter.title && !showIntro ? <Txt style={styles.storyTitle}>{chapter.title}</Txt> : null}
+          top-left corner while he's centered further down. On the dialogue log after it, it
+          stays a fixed heading at the top, so each new beat appears below the last instead
+          of shifting everything already read. */}
+      {chapter.title && !showIntro ? <Txt style={[styles.storyTitle, styles.storyTitleCentered]}>{chapter.title}</Txt> : null}
       {showIntro ? (
         <View style={styles.storyIntroStage}>
           {chapter.title ? <Txt style={[styles.storyTitle, styles.storyTitleCentered]}>{chapter.title}</Txt> : null}
@@ -829,7 +837,7 @@ function StoryView({
                 </View>
               )) : null}
               <View style={[styles.storyBubble, isNarrator && styles.storyBubbleNarrator]}>
-                <Txt style={[styles.storyBubbleTxt, isNarrator && styles.storyBubbleNarratorTxt]}>{beat.text}</Txt>
+                <Txt style={[styles.storyBubbleTxt, styles.storyBubbleTxtCentered, isNarrator && styles.storyBubbleNarratorTxt]}>{beat.text}</Txt>
               </View>
             </Reanimated.View>
           );
@@ -841,8 +849,8 @@ function StoryView({
 
 /* ───────────────────────── teach ───────────────────────── */
 function TeachView({
-  chapter, onComplete, onAction, onLayoutMode, onFitMode, reactTo, clearReaction,
-}: { chapter: TeachChapter; onComplete: Complete } & ReactProps & ActionProps & LayoutModeProps & FitModeProps) {
+  chapter, onComplete, onAction, onLayoutMode, reactTo, clearReaction,
+}: { chapter: TeachChapter; onComplete: Complete } & ReactProps & ActionProps & LayoutModeProps) {
   const router = useRouter();
   const [i, setI] = useState(0);
   const [answered, setAnswered] = useState<boolean | null>(null);
@@ -856,12 +864,6 @@ function TeachView({
     return () => onLayoutMode('normal');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapter.fullScreen]);
-
-  useEffect(() => {
-    onFitMode(true);
-    return () => onFitMode(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const pick = (guess: boolean) => {
     setAnswered(guess);
@@ -883,8 +885,7 @@ function TeachView({
 
   return (
     // Keyed to the concept index so each concept swap gets its own fade in/out instead of an
-    // instant cut — this also smooths over FitToViewport's resize (a new concept usually has
-    // a different natural height), which without a fade read as a jarring snap-resize.
+    // instant cut.
     <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Card style={{ gap: 8 }}>
@@ -924,8 +925,8 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function MatchingView({
-  chapter, onComplete, onAction, onFitMode, reactTo, reportMatchingMistake,
-}: { chapter: MatchingChapter; onComplete: Complete } & ReactProps & Pick<ReportProps, 'reportMatchingMistake'> & ActionProps & FitModeProps) {
+  chapter, onComplete, onAction, reactTo, reportMatchingMistake,
+}: { chapter: MatchingChapter; onComplete: Complete } & ReactProps & Pick<ReportProps, 'reportMatchingMistake'> & ActionProps) {
   const [terms] = useState(() => shuffle(chapter.pairs.map((p) => p.term)));
   const [defs] = useState(() => shuffle(chapter.pairs.map((p) => p.definition)));
   const [matched, setMatched] = useState<Set<string>>(new Set());
@@ -939,8 +940,7 @@ function MatchingView({
   // ("Interest") sat in a visibly smaller pill than a full-sentence definition next to it,
   // which read as an inconsistent, unfinished-looking grid rather than a matching game.
   // Tracks the tallest chip actually measured so far (across BOTH columns) and applies that
-  // as a shared minHeight to every chip once known, the same "measure, then apply" approach
-  // FitToViewport already uses elsewhere in this file. Converges after at most one extra
+  // as a shared minHeight to every chip once known. Converges after at most one extra
   // render per chapter: once minHeight reaches the true tallest chip's natural height, that
   // chip's measured height stops changing, so this stops updating too.
   const [maxChipH, setMaxChipH] = useState(0);
@@ -966,12 +966,6 @@ function MatchingView({
       Animated.spring(v, { toValue: 1, friction: 4.5, tension: 150, useNativeDriver: true }),
     ]).start();
   };
-
-  useEffect(() => {
-    onFitMode(true);
-    return () => onFitMode(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     // Requires an actual tap on Next now, rather than auto-completing on a timer — this used
@@ -1099,22 +1093,35 @@ function HintView({
   };
 
   return (
+    // Hammy is centered in the stage and STAYS there: the bubble above him is positioned
+    // out of flow (bottom: '100%' pins it to his top edge), so revealing the tip grows the
+    // bubble upward instead of pushing him down the screen. As a normal flex sibling it
+    // used to shove him down by however much taller the tip was than the "tap me" prompt,
+    // which read as him sinking every time he spoke.
     <View style={styles.hintStage}>
-      <Reanimated.View key={revealed ? 'revealed' : 'prompt'} entering={FadeInDown.duration(320).springify()} style={styles.tipBubble}>
-        <View style={styles.tipBubbleTailBorder} />
-        <View style={styles.tipBubbleTailFill} />
-        <Tag tone="warm">{chapter.tag || "🐷 Hammy's Tip"}</Tag>
-        {revealed ? (
-          <Txt style={[styles.tipCaption, { marginTop: 8 }]}>{chapter.text}</Txt>
-        ) : (
-          <Txt style={[styles.storyIntroCaption, { marginTop: 8, color: colors.muted3, fontStyle: 'italic' }]}>
-            Tap Hammy to hear what they have to say.
-          </Txt>
-        )}
-      </Reanimated.View>
-      <Pressable onPress={tap} disabled={revealed} hitSlop={14}>
-        <Hammy size={168} bob equipped={equippedMascotItems()} reaction={revealed ? 'happy' : null} reactionKey={tapTick} />
-      </Pressable>
+      <View style={styles.hintAnchor}>
+        <Reanimated.View
+          key={revealed ? 'revealed' : 'prompt'}
+          entering={FadeInDown.duration(320).springify()}
+          style={styles.hintBubbleFloat}
+        >
+          <View style={styles.tipBubble}>
+            <View style={styles.tipBubbleTailBorder} />
+            <View style={styles.tipBubbleTailFill} />
+            <Tag tone="warm">{chapter.tag || "🐷 Hammy's Tip"}</Tag>
+            {revealed ? (
+              <Txt style={[styles.tipCaption, { marginTop: 8 }]}>{chapter.text}</Txt>
+            ) : (
+              <Txt style={[styles.storyIntroCaption, { marginTop: 8, color: colors.muted3, fontStyle: 'italic' }]}>
+                Tap Hammy to hear what they have to say.
+              </Txt>
+            )}
+          </View>
+        </Reanimated.View>
+        <Pressable onPress={tap} disabled={revealed} hitSlop={14}>
+          <Hammy size={168} bob equipped={equippedMascotItems()} reaction={revealed ? 'happy' : null} reactionKey={tapTick} />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -1408,11 +1415,11 @@ function MythcardsView({
 const OPT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 function KnowledgecheckView({
-  chapter, questions, onComplete, onAction, onFitMode, reactTo, clearReaction, reportKnowledgeCheck, onQuestionIndexChange,
+  chapter, questions, onComplete, onAction, reactTo, clearReaction, reportKnowledgeCheck, onQuestionIndexChange,
 }: {
   chapter: KnowledgecheckChapter; questions: Question[]; onComplete: Complete;
   onQuestionIndexChange?: (i: number) => void;
-} & ReactProps & ActionProps & Pick<ReportProps, 'reportKnowledgeCheck'> & FitModeProps) {
+} & ReactProps & ActionProps & Pick<ReportProps, 'reportKnowledgeCheck'>) {
   const [i, setI] = useState(0);
   const [sel, setSel] = useState<number | null>(null);
   // Tallies every question answered in this chapter (not just the last one), so the
@@ -1425,12 +1432,6 @@ function KnowledgecheckView({
   const answered = sel !== null;
   const right = question ? sel === question.correct : false;
   const last = i + 1 >= chapter.qIndices.length;
-
-  useEffect(() => {
-    onFitMode(true);
-    return () => onFitMode(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Keeps the parent's kcQuestionIdx in sync with this view's own internal question index,
   // so the shared header hint button can show THIS question's hintTexts entry — see
@@ -1468,8 +1469,7 @@ function KnowledgecheckView({
   if (!question) return null;
   return (
     // Keyed to the question index so each question swap gets its own fade in/out instead of
-    // an instant cut — also smooths over FitToViewport's resize between questions of
-    // different lengths, which without a fade read as a jarring snap-resize.
+    // an instant cut.
     <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{question.q}</Txt>
@@ -1489,10 +1489,10 @@ function KnowledgecheckView({
         })}
       </View>
       {answered ? (
-        // Shortened (not the raw question.exp) — a long explanation was the single biggest
-        // driver of FitToViewport having to shrink the screen noticeably, which read as "the
-        // screen minimizes" when the text ran long. 110 chars, not shortFeedback's default 60
-        // (tuned for the narrow companion bubble) — this is a full-width card with more room.
+        // Shortened (not the raw question.exp) so the answer card stays compact enough that
+        // the options above it and the Next button below stay on screen together. 110 chars,
+        // not shortFeedback's default 60 (tuned for the narrow companion bubble) — this is a
+        // full-width card with more room.
         <Card><Txt variant="lead" style={{ fontSize: 13, color: right ? colors.greenDark : colors.pinkDark }}>{shortFeedback(question.exp, 110)}</Txt></Card>
       ) : null}
     </Reanimated.View>
@@ -1522,19 +1522,13 @@ function MeterTrack({ pct, height = 14 }: { pct: number; height?: number }) {
   );
 }
 
-function SimulatorView({ chapter, onComplete, onAction, onFitMode, reactTo }: { chapter: SimulatorChapter; onComplete: Complete } & ActionProps & ReactProps & FitModeProps) {
+function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: SimulatorChapter; onComplete: Complete } & ActionProps & ReactProps) {
   // meterKey/meterMin/meterMax are missing on 2/22 real chapters — fall back to a plain 0-100 score.
   const meterKey = chapter.meterKey ?? 'score';
   const meterMin = chapter.meterMin ?? 0;
   const meterMax = chapter.meterMax ?? 100;
   const [meter, setMeter] = useState((meterMin + meterMax) / 2);
   const [used, setUsed] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    onFitMode(true);
-    return () => onFitMode(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const apply = (d: SimulatorChapter['decisions'][number]) => {
     setMeter((m) => Math.min(meterMax, Math.max(meterMin, m + d.scoreDelta)));
@@ -1802,10 +1796,11 @@ function UrlinspectView({ chapter, onComplete, onAction, reactTo }: { chapter: U
 }
 
 const styles = StyleSheet.create({
+  // No bottom border — a rule straight across the screen under the progress bar read as a
+  // stray line rather than as structure.
   stick: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 9,
-    borderBottomWidth: 1.5, borderBottomColor: '#EFEFE7',
   },
   step: { fontFamily: font.bold, fontSize: 12, color: colors.green },
   // Persistent bottom bar holding "Look back" (left) and the chapter's primary action
@@ -1834,6 +1829,10 @@ const styles = StyleSheet.create({
   },
   lookBackIcon: { fontSize: 15 },
   lookBackCount: { fontFamily: font.bold, fontSize: 12, color: colors.muted3 },
+  // Holds the hint button's footprint whether or not this chapter has a hint, so the
+  // progress bar and % beside it don't jump between chapters that have one and chapters
+  // that don't. Wide enough for the "💡 HINT 3" state.
+  hintSlot: { width: 74, alignItems: 'flex-end', justifyContent: 'center' },
   hintFab: {
     minWidth: 34, height: 30, paddingHorizontal: 8, borderRadius: 15,
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderCool,
@@ -1884,15 +1883,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingHorizontal: 16, paddingTop: 4, paddingBottom: 4,
   },
+  // The centered arrangement (dialogue, Match It): a column, bubble above Hammy.
+  companionWrapCentered: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 4, paddingBottom: 4 },
   // No reserved height: the row's height is Hammy's, and he's far taller than any bubble
   // this can produce — so a message appearing or clearing can't move him or anything below.
   bubbleSlot: { flex: 1, alignItems: 'flex-start', justifyContent: 'center' },
   bubbleInner: { alignItems: 'flex-start' },
+  // Stacked above Hammy, so here the height IS reserved from the first render (he has no
+  // width to hide it in) — otherwise he and the whole chapter under him would drop by the
+  // bubble's height the moment he first said anything. flex-end grows a longer message
+  // upward from the tail; paddingBottom is the gap the tail itself lives in.
+  bubbleSlotCentered: {
+    minHeight: 70, width: '100%', paddingBottom: 13, paddingHorizontal: 20,
+    alignItems: 'center', justifyContent: 'flex-end',
+  },
+  bubbleInnerCentered: { alignItems: 'center', maxWidth: 300 },
   reactionBox: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
     borderRadius: 16, paddingVertical: 9, paddingHorizontal: 13,
   },
   reactionTxt: { fontFamily: font.bold, fontSize: 14, lineHeight: 18.5 },
+  reactionTxtCentered: { textAlign: 'center' },
   // A literal speech-bubble tail on the box's left edge, pointing at Hammy (who sits to its
   // left) — the classic border-triangle trick (colored right border, transparent
   // top/bottom, zero width/height). Two stacked triangles (a larger border-colored one
@@ -1908,6 +1919,18 @@ const styles = StyleSheet.create({
     width: 0, height: 0, borderTopWidth: 5.8, borderBottomWidth: 5.8, borderRightWidth: 7.5,
     borderTopColor: 'transparent', borderBottomColor: 'transparent', borderRightColor: colors.white,
   },
+  // The same tail rotated for the centered arrangement: on the box's bottom edge, pointing
+  // down at the Hammy directly below it.
+  reactionTailDownBorder: {
+    position: 'absolute', bottom: -11, left: '50%', marginLeft: -9,
+    width: 0, height: 0, borderLeftWidth: 9, borderRightWidth: 9, borderTopWidth: 11,
+    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: colors.border,
+  },
+  reactionTailDownFill: {
+    position: 'absolute', bottom: -8.4, left: '50%', marginLeft: -7.4,
+    width: 0, height: 0, borderLeftWidth: 7.4, borderRightWidth: 7.4, borderTopWidth: 9,
+    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: colors.white,
+  },
   // Story chapter title — pink; a normal top-aligned heading over the dialogue log, and
   // centered directly above Hammy on the intro screen (see StoryView).
   storyTitle: { fontFamily: font.display, fontSize: 19, color: colors.pinkDark },
@@ -1917,9 +1940,18 @@ const styles = StyleSheet.create({
     fontFamily: font.semi, fontSize: 17.5, lineHeight: 24, color: colors.ink,
     textAlign: 'center', maxWidth: 320,
   },
-  // Hammy's Tip (funfact) — the bubble sits at the TOP of the stage with Hammy below it
-  // (see hintStage), so the tail now points DOWN toward Hammy instead of up.
-  hintStage: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: 18, paddingTop: 20, paddingVertical: 24 },
+  // Hammy's Tip (funfact) — Hammy centered in the stage with his tip bubble floating above
+  // him (tail pointing DOWN at him). hintAnchor is the positioning context the bubble hangs
+  // off; hintBubbleFloat takes it out of flow entirely (bottom: '100%' = flush with
+  // Hammy's top edge) so a long tip grows upward instead of pushing him down the screen.
+  // left/right 0 give the bubble the stage's full width to centre and wrap within, which a
+  // context sized to Hammy alone could not.
+  hintStage: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 24 },
+  hintAnchor: { position: 'relative', alignItems: 'center', width: '100%' },
+  hintBubbleFloat: {
+    position: 'absolute', bottom: '100%', left: 0, right: 0,
+    alignItems: 'center', paddingBottom: 12,
+  },
   tipCaption: {
     fontFamily: font.bold, fontSize: 17.5, lineHeight: 24, color: colors.ink,
     textAlign: 'center', maxWidth: 320,
@@ -1950,12 +1982,20 @@ const styles = StyleSheet.create({
   ambientLifeSheetContent: { paddingHorizontal: 22, paddingBottom: 34 },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 20, gap: 12, flexGrow: 1 },
   chapterFill: { flexGrow: 1 },
+  // Only for chapters whose content is fixed and doesn't grow as you interact with it (Match
+  // It). Centering anything that GROWS — the dialogue log — would push everything already
+  // on screen upward with each addition, which is what this used to do to the conversation.
+  contentCenter: { justifyContent: 'center' },
+  // Dialogue log: each beat sized to its own text and centered as a column.
+  storyLog: { alignItems: 'center' },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
   // Story beats — speaker-styled: white bordered bubble + pig-head avatar for Hammy, a
   // plain muted italic box with no avatar for the narrator (ported from .story-bubble /
   // .story-bubble.narrator / .story-avatar).
-  storyBeat: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  // maxWidth so a beat centers as a column instead of stretching edge to edge; the row
+  // itself still shrink-wraps to its bubble.
+  storyBeat: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', maxWidth: '100%' },
   storyAvatar: {
     width: 56, height: 56, borderRadius: 28, backgroundColor: colors.screen,
     alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden',
@@ -1966,6 +2006,7 @@ const styles = StyleSheet.create({
     borderRadius: 16, padding: 14,
   },
   storyBubbleTxt: { fontFamily: font.semi, fontSize: 14.5, lineHeight: 20, color: colors.ink },
+  storyBubbleTxtCentered: { textAlign: 'center' },
   storyBubbleNarrator: { backgroundColor: colors.screen, borderColor: colors.border },
   storyBubbleNarratorTxt: { fontFamily: font.medium, fontStyle: 'italic', color: colors.muted2 },
   // Matching grid — centered as a block with one shared gap between every chip, so the two
