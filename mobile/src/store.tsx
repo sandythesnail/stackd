@@ -20,12 +20,17 @@ export const QUEST_COIN_PER_CORRECT = 8;
 export const QUEST_COIN_FLAT_FALLBACK = 8;
 
 /** STREAK_DIAMOND_INTERVAL/REWARD ported verbatim from app.js (updateStreak) — a
- * once-per-calendar-day streak bonus, auto-credited at boot. DAILY_LOGIN_COINS is a flat
- * "thanks for showing up" coin drip claimed by tapping the streak card (claimDailyLoginBonus),
- * same as the website's click-to-collect flow. */
+ * once-per-calendar-day streak bonus, auto-credited at boot. DAILY_LOGIN_BASE/STEP/CAP_COINS
+ * are also ported verbatim from app.js (claimDailyLoginBonus) — the click-to-collect coin
+ * drip scales up 2 coins per consecutive login day (10, 12, 14, ...), capped at 20, not a
+ * flat amount. A previous version of this file paid a flat 15 regardless of day number,
+ * which happened to sit close to the middle of the real curve but was wrong at both ends
+ * (day 1 paid too much, day 5+ paid too little). */
 const STREAK_DIAMOND_INTERVAL = 3;
 const STREAK_DIAMOND_REWARD = 5;
-const DAILY_LOGIN_COINS = 15;
+const DAILY_LOGIN_BASE_COINS = 10;
+const DAILY_LOGIN_STEP_COINS = 2;
+const DAILY_LOGIN_CAP_COINS = 20;
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
 const RARITY_WEIGHT: Record<string, number> = { common: 8, rare: 4, epic: 2, legendary: 1 };
 
@@ -907,7 +912,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       claimDailyLoginBonus: () => {
         const today = new Date().toDateString();
         const alreadyClaimed = hasClaimedToday(state);
-        const coins = alreadyClaimed ? 0 : DAILY_LOGIN_COINS;
+        const dayNumber = Object.keys(state.dailyLoginLog).length + 1;
+        const coins = alreadyClaimed ? 0 : Math.min(
+          DAILY_LOGIN_BASE_COINS + DAILY_LOGIN_STEP_COINS * (dayNumber - 1),
+          DAILY_LOGIN_CAP_COINS,
+        );
         const diamonds = pendingStreakDiamonds;
         if (coins === 0 && diamonds === 0) return;
         setPendingStreakDiamonds(0);

@@ -299,7 +299,7 @@
     "svg": "<path d=\"M20,64 Q60,90 100,64 L100,70 Q60,96 20,70 Z\" fill=\"#C0C0C8\"/>\n          <path d=\"M20,64 Q60,90 100,64 L98,66 Q60,92 22,66 Z\" fill=\"#EFEFF4\" opacity=\"0.6\"/>\n          <circle cx=\"60\" cy=\"88\" r=\"6\" fill=\"#4A90D9\"/>\n          <circle cx=\"60\" cy=\"88\" r=\"6\" fill=\"none\" stroke=\"#2C6FB8\" stroke-width=\"1.5\"/>\n          <circle cx=\"58\" cy=\"86\" r=\"2\" fill=\"rgba(255,255,255,0.6)\"/>"
   },
   {
-    "id": "wallpaper_sage_dot",
+    "id": "wallpaper_sage",
     "name": "Sage Dot Wallpaper",
     "category": "room",
     "slot": "wallpaper",
@@ -308,7 +308,7 @@
     "wallCss": "background-color: var(--green-pale); background-image: radial-gradient(circle, rgba(107,143,101,.3) 1.5px, transparent 1.5px); background-size: 16px 16px;"
   },
   {
-    "id": "wallpaper_blush_dot",
+    "id": "wallpaper_blush",
     "name": "Blush Dot Wallpaper",
     "category": "room",
     "slot": "wallpaper",
@@ -335,12 +335,12 @@
     "wallCss": "background-color: #F6E0DD; background-image: radial-gradient(circle, rgba(196,50,50,.32) 1.5px, transparent 1.5px); background-size: 16px 16px;"
   },
   {
-    "id": "wallpaper_sage_stripe",
-    "name": "Sage Stripe Wallpaper",
+    "id": "wallpaper_stripes",
+    "name": "Mint Stripe Wallpaper",
     "category": "room",
     "slot": "wallpaper",
     "price": 55,
-    "desc": "Diagonal green stripes, fully vibing.",
+    "desc": "Diagonal stripes, fully vibing.",
     "wallCss": "background: repeating-linear-gradient(45deg, var(--green-light), var(--green-light) 10px, var(--green-pale) 10px, var(--green-pale) 20px);"
   },
   {
@@ -555,8 +555,8 @@
     "name": "Moon Lamp",
     "category": "room",
     "slot": "lamp",
-    "price": 260,
-    "viewBox": "0 0 70 110",
+    "price": 165,
+    "viewBox": "0 -3 70 113",
     "desc": "Soft light for late-night budgeting.",
     "svg": "<rect x=\"30\" y=\"90\" width=\"10\" height=\"16\" fill=\"#7A5230\"/>\n          <ellipse cx=\"35\" cy=\"106\" rx=\"20\" ry=\"4\" fill=\"#D6DFD0\"/>\n          <line x1=\"35\" y1=\"20\" x2=\"35\" y2=\"90\" stroke=\"#7A5230\" stroke-width=\"3\"/>\n          <circle cx=\"35\" cy=\"18\" r=\"18\" fill=\"#FFF6D8\" stroke=\"#D9D9D9\" stroke-width=\"1.5\"/>\n          <circle cx=\"41\" cy=\"12\" r=\"4\" fill=\"#F5E5A8\"/>\n          <circle cx=\"30\" cy=\"24\" r=\"2.5\" fill=\"#F5E5A8\"/>"
   },
@@ -565,7 +565,7 @@
     "name": "Grandfather Clock",
     "category": "room",
     "slot": "lamp",
-    "price": 320,
+    "price": 220,
     "viewBox": "0 0 70 110",
     "desc": "The priciest piece on the farm — time really is money.",
     "svg": "<rect x=\"10\" y=\"98\" width=\"50\" height=\"8\" rx=\"2\" fill=\"#5A3D22\"/>\n          <rect x=\"14\" y=\"24\" width=\"42\" height=\"76\" rx=\"2\" fill=\"#6B4A2E\"/>\n          <path d=\"M14,27 Q35,4 56,27 Z\" fill=\"#6B4A2E\"/>\n          <rect x=\"22\" y=\"54\" width=\"26\" height=\"40\" rx=\"2\" fill=\"#241C18\" stroke=\"#3A2A1E\" stroke-width=\"1.5\"/>\n          <line x1=\"35\" y1=\"58\" x2=\"35\" y2=\"82\" stroke=\"#C9A227\" stroke-width=\"2\"/>\n          <circle cx=\"35\" cy=\"84\" r=\"7\" fill=\"#C9A227\" stroke=\"#8A6438\" stroke-width=\"1\"/>\n          <circle cx=\"35\" cy=\"34\" r=\"13\" fill=\"#F0EAE0\" stroke=\"#3A2A1E\" stroke-width=\"2\"/>\n          <line x1=\"35\" y1=\"34\" x2=\"35\" y2=\"28\" stroke=\"#3A2A1E\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n          <line x1=\"35\" y1=\"34\" x2=\"41\" y2=\"34\" stroke=\"#3A2A1E\" stroke-width=\"1.5\" stroke-linecap=\"round\"/>\n          <circle cx=\"35\" cy=\"34\" r=\"1.5\" fill=\"#3A2A1E\"/>"
