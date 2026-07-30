@@ -188,6 +188,78 @@ const BODY_PATH = 'M 150 0 A 150 125 0 0 1 300 125 V 135 A 138 115 0 0 1 162 250
 // bottom (132.48,119.04).
 const HEAD_PATH = 'M 138 0 A 138 124 0 0 1 276 124 V 128.96 A 132.48 119.04 0 0 1 143.52 248 H 132.48 A 132.48 119.04 0 0 1 0 128.96 V 124 A 138 124 0 0 1 138 0 Z';
 
+/* ─────────────── per-frame idle motion ───────────────
+ * react-native-svg's web G/Ellipse are plain class components with no native-driver support,
+ * so Animated.createAnimatedComponent(G/Ellipse) throws on mount there (fine on native).
+ * The blink/ear-wiggle/tail-wag values therefore have to reach the SVG through React state,
+ * which is why all three loops run with useNativeDriver: false.
+ *
+ * That state used to live in <Hammy> itself, which meant EVERY animation frame re-rendered
+ * the entire mascot: all ~20 <Defs> gradients, every body/head/arm/foot path, the face
+ * overlay, and — by far the worst — each equipped cosmetic, whose render re-runs a regex
+ * id-namespacing pass over the item's SVG source and re-parses the result through SvgXml.
+ * Three continuous loops on a 60fps clock made that the app's steady-state cost on every
+ * screen showing Hammy, purely to move an ear a few degrees.
+ *
+ * Each motion now owns its own frame state in a leaf component, so a frame re-renders only
+ * the handful of nodes that actually move. The pig's static geometry renders once. */
+
+/** Latest value of one Animated value as state — deliberately scoped to a single leaf so
+ * subscribing to a 60fps clock only re-renders that leaf. */
+function useFrameValue(anim: Animated.Value, initial: number): number {
+  const [value, setValue] = useState(initial);
+  useEffect(() => {
+    const id = anim.addListener((v) => setValue(v.value));
+    return () => anim.removeListener(id);
+  }, [anim]);
+  return value;
+}
+
+/** tailWag: rotate -5° → 8° about the .pig-tail transform-origin (16% 55% of its 44×44 box
+ * → 7.04, 24.2). */
+function PigTail({ tail }: { tail: Animated.Value }) {
+  const t = useFrameValue(tail, 0);
+  return (
+    <G transform={`rotate(${(-5 + 13 * t).toFixed(3)} 7.04 24.2)`}>
+      <Path
+        d="M 9,31 C 9,11 27,5 39,15 C 51,25 49,41 39,47 C 29,53 17,49 15,41 C 13,33 21,31 27,33"
+        fill="none" stroke="#F7ADD0" strokeWidth={6} strokeLinecap="round"
+        transform="scale(0.7857)"
+      />
+      <Circle cx={21.2} cy={25.9} r={2.75} fill="#F0A0BE" />
+    </G>
+  );
+}
+
+/** earWiggleL: rotate -18° → -26°. The right ear renders this same node mirrored by its
+ * parent transform, which is what produces the website's +18°→+26° counterpart. */
+function PigEar({ earL, fill, shadowFill }: { earL: Animated.Value; fill: string; shadowFill: string }) {
+  const t = useFrameValue(earL, 0);
+  return (
+    <G transform={`rotate(${(-18 - 8 * t).toFixed(3)} 32 74)`}>
+      <Path d={EAR_PATH} fill={fill} />
+      <Path d={EAR_PATH} fill={shadowFill} />
+      <G transform="translate(19 18)"><Path d={EAR_INNER_PATH} fill="#F48BB0" /></G>
+    </G>
+  );
+}
+
+/** pigBlink: squash the whole eye group — pupils AND shines together, like the web's scaleY
+ * on .pig-eye squashes its child shine divs — about the shared eye centerline y=193. */
+function PigEyes({ blink }: { blink: Animated.Value }) {
+  const s = useFrameValue(blink, 1);
+  return (
+    <G transform={`translate(0 ${(193 * (1 - s)).toFixed(3)}) scale(1 ${s.toFixed(4)})`}>
+      <Circle cx={141} cy={193} r={19} fill="#3A2230" />
+      <Circle cx={299} cy={193} r={19} fill="#3A2230" />
+      <Circle cx={134.5} cy={186.5} r={6.5} fill="#FFFFFF" />
+      <Circle cx={148.5} cy={201.5} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
+      <Circle cx={292.5} cy={186.5} r={6.5} fill="#FFFFFF" />
+      <Circle cx={306.5} cy={201.5} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
+    </G>
+  );
+}
+
 /**
  * Hammy the pig — the real mascot, redrawn as SVG from the web app's CSS illustration
  * (gradients/shapes ported from styles.css .pig-*). Idle animation: gentle float, eye
@@ -346,30 +418,6 @@ export function Hammy({
     return () => { blinkLoop.stop(); earLoop.stop(); tailLoop.stop(); };
   }, [blink, earL, tail]);
 
-  // react-native-svg's web G/Ellipse are plain class components with no native-driver
-  // support, so Animated.createAnimatedComponent(G/Ellipse) throws on mount there (fine
-  // on native). Drive plain elements from listener-updated state instead — works
-  // identically on both platforms since these loops already run with useNativeDriver: false.
-  const [eyeScaleY, setEyeScaleY] = useState(1);
-  const [earLTransform, setEarLTransform] = useState('rotate(-18 32 74)');
-  const [tailTransform, setTailTransform] = useState('rotate(-5 7.04 24.2)');
-
-  useEffect(() => {
-    const earLInterp = earL.interpolate({ inputRange: [0, 1], outputRange: ['rotate(-18 32 74)', 'rotate(-26 32 74)'] });
-    // .pig-tail transform-origin is 16% 55% of its 44×44 box → (7.04, 24.2).
-    const tailInterp = tail.interpolate({ inputRange: [0, 1], outputRange: ['rotate(-5 7.04 24.2)', 'rotate(8 7.04 24.2)'] });
-    const ids = [
-      blink.addListener(({ value }) => setEyeScaleY(value)),
-      earLInterp.addListener(({ value }) => setEarLTransform(value as unknown as string)),
-      tailInterp.addListener(({ value }) => setTailTransform(value as unknown as string)),
-    ];
-    return () => {
-      blink.removeListener(ids[0]);
-      earLInterp.removeListener(ids[1]);
-      tailInterp.removeListener(ids[2]);
-    };
-  }, [blink, earL, tail]);
-
   // Swap between the default eyes/cheeks/snout and an illustrated face overlay. This used
   // to crossfade via an Animated-driven opacity + a `displayFace` staging value, but that
   // three-piece dance (anim value, a value-listener syncing React state, and a staged
@@ -406,10 +454,6 @@ export function Hammy({
   // instead of .6) so the illustrated face blends into flatter skin.
   const moldOpacity = 1 - faceOpacity;
   const headShineOpacity = 1 - faceOpacity * (1 - 0.35 / 0.6);
-
-  // Squash the whole eye group — pupils AND shines together, like the web's scaleY on
-  // .pig-eye squashes its child shine divs — about the shared eye centerline y=193.
-  const blinkTransform = `translate(0 ${(193 * (1 - eyeScaleY)).toFixed(3)}) scale(1 ${eyeScaleY.toFixed(4)})`;
 
   return (
     <View style={[{ width, height }, style]}>
@@ -565,14 +609,7 @@ export function Hammy({
 
           {/* tail — 44×44 box at (362,236); wag pivots at the CSS transform-origin 16% 55%. */}
           <G transform="translate(362 236)">
-            <G transform={tailTransform}>
-              <Path
-                d="M 9,31 C 9,11 27,5 39,15 C 51,25 49,41 39,47 C 29,53 17,49 15,41 C 13,33 21,31 27,33"
-                fill="none" stroke="#F7ADD0" strokeWidth={6} strokeLinecap="round"
-                transform="scale(0.7857)"
-              />
-              <Circle cx={21.2} cy={25.9} r={2.75} fill="#F0A0BE" />
-            </G>
+            <PigTail tail={tail} />
           </G>
 
           {/* body — drawn BEFORE the arms: the website's DOM order paints arms on top of the
@@ -599,18 +636,10 @@ export function Hammy({
           {/* ears — right ear mirrors the left (flipped gradient/shadow/wiggle in one
               transform, exactly the earWiggleL/earWiggleR ±18→±26 pair). */}
           <G transform="translate(106 54)">
-            <G transform={earLTransform}>
-              <Path d={EAR_PATH} fill={gidUrl('hm-ear')} />
-              <Path d={EAR_PATH} fill={gidUrl('hm-ear-shadow')} />
-              <G transform="translate(19 18)"><Path d={EAR_INNER_PATH} fill="#F48BB0" /></G>
-            </G>
+            <PigEar earL={earL} fill={gidUrl('hm-ear')} shadowFill={gidUrl('hm-ear-shadow')} />
           </G>
           <G transform="translate(334 54) scale(-1 1)">
-            <G transform={earLTransform}>
-              <Path d={EAR_PATH} fill={gidUrl('hm-ear')} />
-              <Path d={EAR_PATH} fill={gidUrl('hm-ear-shadow')} />
-              <G transform="translate(19 18)"><Path d={EAR_INNER_PATH} fill="#F48BB0" /></G>
-            </G>
+            <PigEar earL={earL} fill={gidUrl('hm-ear')} shadowFill={gidUrl('hm-ear-shadow')} />
           </G>
 
           {/* head */}
@@ -629,14 +658,7 @@ export function Hammy({
 
             {/* Both eyes + their shines squash together on the blink (the web scales the
                 whole .pig-eye element, shine children included). */}
-            <G transform={blinkTransform}>
-              <Circle cx={141} cy={193} r={19} fill="#3A2230" />
-              <Circle cx={299} cy={193} r={19} fill="#3A2230" />
-              <Circle cx={134.5} cy={186.5} r={6.5} fill="#FFFFFF" />
-              <Circle cx={148.5} cy={201.5} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
-              <Circle cx={292.5} cy={186.5} r={6.5} fill="#FFFFFF" />
-              <Circle cx={306.5} cy={201.5} r={3.5} fill="#FFFFFF" fillOpacity={0.7} />
-            </G>
+            <PigEyes blink={blink} />
 
             {/* soft drop shadow drawn first so it peeks out from beneath the fill */}
             <Ellipse cx={220} cy={216} rx={59} ry={42} fill={gidUrl('hm-snout-drop')} />
