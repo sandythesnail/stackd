@@ -69,6 +69,9 @@ export type WebState = {
   streak?: number;
   lastPlayedDate?: string | null;
   lastSeenTier?: string | null;
+  /** Mirrors app.js's state.lastModuleActivityDate — the last calendar day the player worked
+   * on a module, which both apps use to show a satisfied Hammy on Home for the rest of it. */
+  lastModuleActivityDate?: string | null;
   completedModules?: Record<string, LessonRecord>;
   completedLessons?: Record<string, LessonRecord>;
   questProgress?: Record<string, QuestProgressRecord>;
@@ -101,11 +104,30 @@ const num = (v: unknown, d = 0) => (typeof v === 'number' && Number.isFinite(v) 
 const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
 
 /** Mobile-only AppState fields that the web schema has no home for (kept under `_mobile`). */
+// NOTE: lastModuleActivityDate does NOT belong here — the website has the same field and
+// drives the same Home behaviour off it (app.js's hasModuleActivityToday). Stashing it under
+// `_mobile`, which the web ignores, is why finishing a lesson on one device left Hammy
+// "happy" there and still on the day's grumpy/sleepy/etc. mood on the other. It's a shared
+// top-level field in both directions now.
 const MOBILE_ONLY_KEYS = [
   'shownLifeEventIds', 'pendingLifeEventId', 'lifeEventCooldown', 'onboardingTrackId',
-  'questHintsUsed', 'termsLearned', 'lastModuleActivityDate', 'completedLifeTaskIds',
+  'questHintsUsed', 'termsLearned', 'completedLifeTaskIds',
   'hasSeenOnboardingTour',
 ] as const;
+
+/** `Date.toDateString()` values ("Wed Jul 29 2026") don't order lexicographically, so compare
+ * them as real dates. Used to merge lastModuleActivityDate, which only ever moves forward:
+ * having worked on a module on EITHER device is the truth for both, so the later day wins and
+ * a sync can never walk the flag backwards. */
+function laterDateString(a: string | null | undefined, b: string | null | undefined): string | null {
+  if (!a) return b ?? null;
+  if (!b) return a;
+  const ta = Date.parse(a);
+  const tb = Date.parse(b);
+  if (Number.isNaN(ta)) return b;
+  if (Number.isNaN(tb)) return a;
+  return ta >= tb ? a : b;
+}
 
 function extractMobileOnly(m: AppState): Partial<AppState> {
   const out: Record<string, unknown> = {};
@@ -142,6 +164,12 @@ export function webToMobile(web: WebState): Partial<AppState> {
   const completedLifeTaskIds = Array.from(
     new Set([...(mobileExtras.completedLifeTaskIds ?? []), ...webLifeTaskIds])
   );
+  // Reads the shared top-level field, but still honours a value stashed under `_mobile` by an
+  // older mobile build that treated this as mobile-only — whichever day is later wins.
+  const lastModuleActivityDate = laterDateString(
+    web.lastModuleActivityDate,
+    mobileExtras.lastModuleActivityDate
+  );
 
   return {
     coins: num(web.coins),
@@ -161,6 +189,8 @@ export function webToMobile(web: WebState): Partial<AppState> {
     ...mobileExtras,
     moduleProgress,
     completedLifeTaskIds,
+    // After the spread: an old `_mobile` stash must not shadow the merged value above.
+    lastModuleActivityDate,
   };
 }
 
@@ -238,6 +268,9 @@ export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState
     xp: mobile.xp,
     streak: mobile.streak,
     lastPlayedDate: mobile.lastPlayedDate,
+    // Shared with the web's own Home mascot (app.js's hasModuleActivityToday). Merged rather
+    // than assigned so a push can't walk it back to an older day than the remote already had.
+    lastModuleActivityDate: laterDateString(base.lastModuleActivityDate, mobile.lastModuleActivityDate),
     coins: mobile.coins,
     diamonds: mobile.diamonds,
     ownedItems: mobile.ownedItems,

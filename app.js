@@ -16423,6 +16423,10 @@ let state = {
   dailyLoginLog: {}, claimedBadgeRewards: [], referralClaimAttempted: false,
   ownedRoomItems: [], equippedRoom: { wall: null, lamp: null, plant: null, bed: null, rug: null, wallpaper: null, window: null, desk: null, garland: null },
   metHammy: false, hasSeenOnboardingTour: false,
+  // Last calendar day the player worked on a module — drives Home's satisfied Hammy (see
+  // hasModuleActivityToday). Declared here, not just written ad hoc by
+  // markModuleActivityToday, so the reset-progress flow's DEFAULT_STATE_JSON clears it too.
+  lastModuleActivityDate: null,
   questProgress: {}, questBossesWon: [],
   onboardingSurvey: { completed: false, moduleFamiliarity: {}, focusGoals: [], trackId: null, completedAt: null },
   budgetPlan: {
@@ -16454,8 +16458,12 @@ function loadState() {
 }
 
 function saveState() {
-  const { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
-  const snapshot = { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
+  // lastModuleActivityDate is in here deliberately: it was missing, so Home's "Hammy's mood
+  // is lifted" state was never written to localStorage OR synced, and reverted to the daily
+  // mood on every reload — and the mobile app, which sets the same field, had no shared
+  // field to hand it to (see mobile/src/lib/webState.ts).
+  const { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, lastModuleActivityDate, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
+  const snapshot = { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, lastModuleActivityDate, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
   localStorage.setItem('stackd_v2', JSON.stringify(snapshot));
   // Stamp which account this cached snapshot belongs to (see ensureLocalStateOwner).
   if (window.Clerk?.user) localStorage.setItem('stackd_v2_owner', Clerk.user.id);
