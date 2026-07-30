@@ -108,6 +108,22 @@ type LayoutModeProps = { onLayoutMode: (mode: LayoutMode) => void };
  * way into a tip. Seeding the mode from the chapter data closes that window; the views
  * still report as before, which is what drives the modes that change mid-chapter (the story
  * intro handing off to its dialogue log). */
+/** Hint text for a teach chapter's true/false check.
+ *
+ * Not a single teach chapter in the content has an authored hintText — 0 of 329, while
+ * knowledgecheck/decision/bossbattle are fully covered — so the hint button was permanently
+ * dead on the true/false question, which is the most common graded question in the app. The
+ * concept's own plain-English definition is sitting right there and is exactly what the
+ * check is testing, so it's offered as the hint rather than leaving the button greyed out.
+ *
+ * Concepts with no check are informational, and get no hint (nothing to answer). TeachChapter
+ * has no hintText field at all, so there's no authored value to prefer over this. */
+function teachHint(chapter: TeachChapter, conceptIdx: number): string | undefined {
+  const concept = chapter.concepts[conceptIdx];
+  if (!concept?.check?.statement || !concept.plain) return undefined;
+  return `Remember what ${concept.term} means — ${concept.plain}`;
+}
+
 function initialLayoutMode(chapter: Chapter): LayoutMode {
   // Hammy's Tip is always its own full stage with a big tappable Hammy (HintView).
   if (chapter.type === 'hint') return 'intro';
@@ -294,12 +310,21 @@ export default function QuestPlayer() {
   // repeat across quests) and nothing validates them, whereas the index is the actual
   // identity of the chapter being played. Same for longChapterIdx below.
   const [reportedLayout, setReportedLayout] = useState<{ chapterIdx: number; mode: LayoutMode } | null>(null);
-  // NOTE: hiding the companion on chapters that overflow the screen was tried here and taken
-  // back out. Measuring can only happen after the chapter has laid out, so Hammy was drawn,
-  // held through the chapter's 260ms fade-in, and then yanked — a visible preview of him on
-  // the way into a question rather than the clean absence intended. It also judged ordinary
-  // first questions "long" and took him off them. Hammy's presence is decided from the
-  // chapter alone (see showCompanion); if specific screens should lose him, name them.
+  // Chapters that overflow the screen drop the companion, so the question gets the full
+  // height and doesn't have to be scrolled.
+  //
+  // The catch is that "does this overflow" can only be answered after layout, and an earlier
+  // attempt at this simply hid him once the answer arrived — which DREW him first, held him
+  // through the chapter's 260ms fade-in, then yanked him: a half-second preview of Hammy on
+  // the way into a question. So he starts every chapter mounted but invisible instead
+  // (companionMeasuring). That reserves exactly the space he'd occupy, so the measurement is
+  // taken against the layout that includes him, and the outcome is either "reveal him in
+  // place", with no reflow at all, or "collapse the space", with no Hammy ever painted.
+  //
+  // Latched to doesn't-fit per chapter: collapsing his space frees ~140px, which would make
+  // the content fit, which would bring him back and overflow again.
+  const [fitState, setFitState] = useState<{ chapterIdx: number; fits: boolean } | null>(null);
+  const scrollViewportRef = useRef(0);
   // An ambient life event (see rollAmbientLifeEvent) pauses a mid-quest chapter transition
   // the same way the website's maybeTriggerAmbientLifeEvent pauses its own "next" handlers
   // — the chapter doesn't actually advance until the event is dismissed. pendingAdvanceRef
@@ -368,7 +393,9 @@ export default function QuestPlayer() {
   // onQuestionIndexChange, which keeps kcQuestionIdx in sync with its internal question).
   const hintText = chapter.type === 'knowledgecheck'
     ? chapter.hintTexts?.[kcQuestionIdx]
-    : (chapter as { hintText?: string }).hintText;
+    : chapter.type === 'teach'
+      ? teachHint(chapter, kcQuestionIdx)
+      : (chapter as { hintText?: string }).hintText;
 
   // Ported from showHammyReaction/showHammyMessage: the persistent companion's face/mood
   // reacts to every graded answer across the quest — happy, gentle, or (every 3rd correct
@@ -470,6 +497,34 @@ export default function QuestPlayer() {
     : initialLayoutMode(chapter);
   const onLayoutMode = (m: LayoutMode) => setReportedLayout({ chapterIdx, mode: m });
 
+  // null until this chapter has been measured — see fitState. Hammy is invisible-but-spaced
+  // in that window, so nothing here can flash him.
+  const chapterFits = fitState?.chapterIdx === chapterIdx ? fitState.fits : null;
+  const measureFit = (contentHeight: number) => {
+    const viewport = scrollViewportRef.current;
+    if (!viewport) return;
+    // Decided once, on the way in, and never revisited for this chapter. Two reasons:
+    // collapsing Hammy's space frees ~140px, which would make the content fit, bring him
+    // back and overflow again; and a chapter that only outgrows the screen once an answer
+    // reveals its explanation would otherwise make him vanish at the exact moment he's
+    // reacting to that answer.
+    if (fitState?.chapterIdx === chapterIdx) return;
+    // A few px of slack so content landing a hair over — a rounded line height, a hairline
+    // border — isn't treated as a scrolling chapter.
+    setFitState({ chapterIdx, fits: contentHeight <= viewport + 8 });
+  };
+  // Fail-safe: decide "fits" if no measurement has arrived shortly after the chapter opens.
+  // onContentSizeChange only fires when the size actually CHANGES, so two chapters that
+  // happen to lay out to the same height would otherwise leave this stuck at null — and null
+  // renders Hammy invisible, which is a far worse failure than showing him on a long
+  // chapter. Whichever lands first wins; this is a floor, not the normal path.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFitState((s) => (s?.chapterIdx === chapterIdx ? s : { chapterIdx, fits: true }));
+    }, 220);
+    return () => clearTimeout(timer);
+  }, [chapterIdx]);
+
   // Hidden during a story chapter's intro beat or a 'hint' chapter, both of which already
   // show their own big Hammy in the content area instead (StoryView/HintView), so a second
   // one up here would just be a redundant duplicate; and on the handful of chapter types
@@ -489,6 +544,9 @@ export default function QuestPlayer() {
   // Match It sits higher up the screen than the other centered chapter — Hammy tight under
   // the progress bar, and the grid lifted off centre rather than floating in the middle.
   const raised = chapter.type === 'matching';
+  // Smaller on the vocab chapter, where the term card + its true/false check are what have to
+  // fit without scrolling; a little bigger on Match It, which has room to spare.
+  const companionSize = chapter.type === 'teach' ? 104 : chapter.type === 'matching' ? 144 : 130;
 
   return (
     <Screen edges={['top', 'bottom']}>
@@ -522,14 +580,15 @@ export default function QuestPlayer() {
       {/* Companion Hammy. Two arrangements: centered with his bubble above him (dialogue,
           Match It), or off to the left with the bubble beside him everywhere else. Either
           way the bubble is positioned relative to him, never the other way round. */}
-      {showCompanion ? (
+      {showCompanion && chapterFits !== false ? (
         <View style={[
           companionCentered ? styles.companionWrapCentered : styles.companionWrap,
           raised && styles.companionWrapRaised,
+          chapterFits === null && styles.companionMeasuring,
         ]}>
           {companionCentered ? <ReactionBubble message={reactionMsg} mood={reactionMood} centered /> : null}
           <Hammy
-            size={130}
+            size={companionSize}
             bob
             equipped={equippedMascotItems()}
             face={reactionMood ? REACTION_FACES[reactionMood] : undefined}
@@ -551,6 +610,8 @@ export default function QuestPlayer() {
           raised && styles.contentRaised,
         ]}
         showsVerticalScrollIndicator={false}
+        onLayout={(e) => { scrollViewportRef.current = e.nativeEvent.layout.height; }}
+        onContentSizeChange={(_w, h) => measureFit(h)}
       >
         {/* flexGrow so the chapter actually fills the scroller's height rather than
             shrink-wrapping inside it — that's what lets a chapter whose own root asks to
@@ -626,7 +687,7 @@ function ChapterView({
   const reactProps: ReactProps = { reactTo, clearReaction };
   switch (chapter.type) {
     case 'story': return <StoryView chapter={chapter} charName={charName} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
-    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} {...reactProps} />;
+    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} {...reactProps} onQuestionIndexChange={onQuestionIndexChange} />;
     case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMatchingMistake={reportMatchingMistake} />;
     case 'hint': return <HintView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
     case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
@@ -677,11 +738,10 @@ function tfState(optionValue: boolean, answered: boolean | null, isTrue: boolean
 /** Hint control, pinned in the header's top-right corner beside the progress bar — ported
  * budget logic from renderHintBudget.
  *
- * Always rendered, on every chapter. It used to return null on chapters with no authored
- * hint (story, teach, Hammy's Tip, and the ~three quarters of question chapters that simply
- * have none), so the control appeared and vanished as you moved through a lesson and its
- * corner read as broken. Chapters with nothing to give now say so when tapped, and cost no
- * budget — only a real hint spends one.
+ * Always rendered, on every chapter, so the corner never changes shape as you move through a
+ * lesson — but greyed out and genuinely unpressable wherever there's no hint to give (a
+ * story beat, a tip) or the budget's spent. It only opens on chapters that can actually
+ * answer, and only those spend budget.
  *
  * Tapping opens a modal rather than pushing chapter content around, so revealing a hint
  * never moves anything else. */
@@ -692,7 +752,8 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
   // which explains itself, instead of hitting a dead button with no feedback.
   const canGiveHint = !!hintText && (revealed || hintsRemaining > 0);
   const press = () => {
-    if (canGiveHint && !revealed) {
+    if (!canGiveHint) return;
+    if (!revealed) {
       onUseHint();
       setRevealed(true);
     }
@@ -702,6 +763,7 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
     <>
       <Pressable
         style={[styles.hintFab, !canGiveHint && styles.hintFabDisabled]}
+        disabled={!canGiveHint}
         onPress={press}
       >
         {/* numberOfLines so the label can never wrap onto a second line — the button is a
@@ -715,14 +777,8 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.hintScrim} onPress={() => setOpen(false)}>
           <Pressable style={styles.hintModalCard} onPress={(e) => e.stopPropagation()}>
-            <Tag tone="pink">{canGiveHint ? "HAMMY'S HINT" : 'NO HINT AVAILABLE'}</Tag>
-            <Txt variant="lead" style={{ fontSize: 14, marginTop: 8 }}>
-              {canGiveHint
-                ? hintText
-                : hintText
-                  ? "You've used all your hints for this lesson — have a go at this one on your own!"
-                  : "No hints available for this bit — there's nothing to answer yet. Hammy saves them for the questions."}
-            </Txt>
+            <Tag tone="pink">HAMMY'S HINT</Tag>
+            <Txt variant="lead" style={{ fontSize: 14, marginTop: 8 }}>{hintText}</Txt>
             <Button label="Got it" onPress={() => setOpen(false)} style={{ marginTop: 16 }} />
           </Pressable>
         </Pressable>
@@ -938,10 +994,19 @@ function StoryView({
 
 /* ───────────────────────── teach ───────────────────────── */
 function TeachView({
-  chapter, onComplete, onAction, onLayoutMode, reactTo, clearReaction,
-}: { chapter: TeachChapter; onComplete: Complete } & ReactProps & ActionProps & LayoutModeProps) {
+  chapter, onComplete, onAction, onLayoutMode, reactTo, clearReaction, onQuestionIndexChange,
+}: {
+  chapter: TeachChapter; onComplete: Complete;
+  /** Reports which concept is showing, so the header's hint button can offer THAT concept's
+   * definition (see teachHint) rather than the first one's. */
+  onQuestionIndexChange?: (i: number) => void;
+} & ReactProps & ActionProps & LayoutModeProps) {
   const router = useRouter();
   const [i, setI] = useState(0);
+  useEffect(() => {
+    onQuestionIndexChange?.(i);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i]);
   const [answered, setAnswered] = useState<boolean | null>(null);
   const concept = chapter.concepts[i];
   const last = i + 1 >= chapter.concepts.length;
@@ -1988,6 +2053,9 @@ const styles = StyleSheet.create({
   companionWrapCentered: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 4, paddingBottom: 4 },
   // Match It only: pulls Hammy up tight under the progress bar. Paired with contentRaised.
   companionWrapRaised: { paddingTop: 0, paddingBottom: 0 },
+  // Mounted (so it reserves its space for the fit measurement) but not yet painted — see
+  // fitState. Only ever set for the frame or two before a chapter is measured.
+  companionMeasuring: { opacity: 0 },
   // No reserved height: the row's height is Hammy's, and he's far taller than any bubble
   // this can produce — so a message appearing or clearing can't move him or anything below.
   bubbleSlot: { flex: 1, alignItems: 'flex-start', justifyContent: 'center' },
