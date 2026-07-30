@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Platform, StyleSheet } from 'react-native';
+import { View, Platform, StyleSheet, Image } from 'react-native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { Asset } from 'expo-asset';
@@ -30,18 +30,35 @@ import { SupabaseSync } from '@/lib/SupabaseSync';
 import { MOOD_FACES, REACTION_FACES } from '@/hammyFaces';
 
 // All of Hammy's illustrated face overlays, deduped by image module — a bundled `require()`
-// asset still isn't decoded into the native image cache until something actually draws it,
-// and Hammy's face-overlay swap (see Hammy.tsx) hides the default eyes/cheeks/snout the
-// instant `face` is set, with nothing underneath while the overlay decodes for the first
-// time. That gap is exactly what read as "Hammy's face goes blank for a second" right when
-// a lesson question is answered — the very first time a given reaction face was needed.
-// Warming every face into the cache here, before Hammy ever needs one, closes it.
-// All of these come from local `require()` calls (see hammyFaces.ts), which always resolve
-// to a numeric module id on native/Metro — Asset.loadAsync's typings are just wider than
-// that (they also accept remote-URI strings), hence the cast.
-const HAMMY_FACE_IMAGES = Array.from(
+// asset still isn't decoded into the image cache until something actually draws it, and
+// Hammy's face-overlay swap (see Hammy.tsx) hides the default eyes/cheeks/snout the instant
+// `face` is set, with nothing underneath while the overlay decodes for the first time. That
+// gap is exactly what read as "Hammy's face goes blank for a second" right when a lesson
+// question is answered — the very first time a given reaction face was needed. Warming every
+// face here, before Hammy ever needs one, closes it; that warm is the ONLY thing standing
+// between a cold first show and a blank beat, since the swap itself is deliberately ungated.
+const HAMMY_FACE_MODULES = Array.from(
   new Set([...Object.values(MOOD_FACES), ...Object.values(REACTION_FACES)].map((f) => f.image)),
-) as number[];
+);
+
+// `require()` of an image resolves to a numeric module id on native, and to a
+// `{ uri, width, height }` object on web/Metro. Asset.loadAsync accepts either (see
+// Asset.fromModule), hence the cast past its narrower typings — but it only actually
+// FETCHES on native: expo-asset's web downloadAsync (ExpoAsset.web.ts) resolves the url
+// straight back without touching the network, so on web this warms nothing at all.
+// Image.prefetch does issue the request there, and populates react-native-web's own uri
+// cache along with the browser's, so warm the web build through that instead.
+const HAMMY_FACE_IMAGES = HAMMY_FACE_MODULES as number[];
+const HAMMY_FACE_URIS = HAMMY_FACE_MODULES
+  .map((m) => (typeof m === 'object' && m !== null && 'uri' in m ? (m as { uri: string }).uri : null))
+  .filter((uri): uri is string => !!uri);
+
+function warmHammyFaces(): Promise<unknown> {
+  if (Platform.OS === 'web') {
+    return Promise.all(HAMMY_FACE_URIS.map((uri) => Image.prefetch(uri)));
+  }
+  return Asset.loadAsync(HAMMY_FACE_IMAGES);
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -108,7 +125,7 @@ export default function RootLayout() {
     // Best-effort: if a face image somehow fails to warm (shouldn't happen, these are all
     // bundled local assets), fall through anyway rather than stranding the app on the
     // splash screen forever.
-    Asset.loadAsync(HAMMY_FACE_IMAGES).catch(() => {}).finally(() => setFacesLoaded(true));
+    warmHammyFaces().catch(() => {}).finally(() => setFacesLoaded(true));
   }, []);
 
   const loaded = fontsLoaded && facesLoaded;

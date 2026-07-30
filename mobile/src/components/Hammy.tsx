@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Animated, Easing, ViewStyle, View, StyleSheet, Image as RNImage } from 'react-native';
 import Svg, {
   Defs, LinearGradient, RadialGradient, Stop, Ellipse, Circle, Path, Rect, G, ClipPath, SvgXml, Image as SvgImage,
@@ -8,101 +8,36 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ShopItemReal } from '@/content';
 import { REACTION_FACES, type FaceOverlay } from '@/hammyFaces';
 
-/* ─────────────── illustrated-face decode tracking ───────────────
- * Setting `face` used to hide the base eyes/cheeks/snout in the very same render that
- * pointed <SvgImage> at the overlay PNG — but that PNG still has to be fetched (a real
- * network round-trip the first time each face is used on the web build, which is how this
- * app is actually served, see m-redirect.js) and decoded before it paints. In that window
- * the base features were already gone and the overlay hadn't drawn: Hammy's face was
- * genuinely blank, exactly the "his face goes blank when I click an answer" report.
+/* ─────────────── illustrated-face overlays ───────────────
+ * Setting `face` hides the base eyes/cheeks/snout and draws a cropped PNG in their place.
+ * The base features can't simply stay underneath: the face PNGs are 40-50% transparent by
+ * pixel count (verified), so the default eyes and snout would show straight through.
  *
- * The obvious fix — leave the base features underneath — does NOT work here: the face PNGs
- * are 40-50% transparent by pixel count (verified), so the default eyes and snout would
- * show straight through the illustrated face. So instead the swap simply waits: base
- * features stay until the overlay is known-decoded, then they hand off. Worst case is the
- * normal face for a beat, never a blank one.
+ * This swap used to be gated on a decode signal — an offscreen probe <Image> whose onLoad
+ * told Hammy the overlay was ready to hand off to, so a slow first fetch could never leave
+ * the face blank for a beat. That gate is gone, because its failure mode was far worse than
+ * the flicker it prevented: any path where the signal didn't arrive left Hammy stuck on his
+ * default face permanently, with no error and nothing to notice in a diff, and it repeatedly
+ * found such paths on the web build. (react-native-web's <Image> restarts its load effect
+ * whenever the onLoad prop changes identity and ABORTS the in-flight request when it does;
+ * it also short-circuits to its LOADED state without ever calling onLoad when the uri is
+ * already in its ImageUriCache. Both silently stall a decode-gated swap forever.)
  *
- * Decode is detected with a 1px offscreen RN <Image> (onLoad is reliable on both native and
- * react-native-web, unlike react-native-svg's own <Image>). Results are cached per session
- * in a module-level set so this only ever costs anything the first time a given face is
- * shown; every later reaction swaps instantly. */
-const decodedFaces = new Set<string>();
-const decodedListeners = new Set<() => void>();
-/** `require()` yields a number on native and a string/object on web — String() is a stable
- * key either way, and each FaceOverlay's `image` is a module-level constant. */
-const faceKey = (f: FaceOverlay) => String(f.image);
+ * A face now shows the moment it's set. Every overlay is a bundled local asset that
+ * _layout.tsx warms into the image cache before the app renders its first screen, and
+ * ReactionFacePreloader warms the quest player's reaction faces again on entry, so in
+ * practice there's nothing to wait for. The worst case is a brief blank on a cold first
+ * show — self-correcting, and visibly a glitch rather than a mascot that quietly never
+ * emotes again. */
 
-function markFaceDecoded(f: FaceOverlay) {
-  const k = faceKey(f);
-  if (decodedFaces.has(k)) return;
-  decodedFaces.add(k);
-  decodedListeners.forEach((l) => l());
-}
-
-function useFaceDecoded(face?: FaceOverlay): boolean {
-  const [, bump] = useState(0);
-  const known = !!face && decodedFaces.has(faceKey(face));
-  useEffect(() => {
-    if (!face || known) return;
-    const listener = () => bump((n) => n + 1);
-    decodedListeners.add(listener);
-    // Re-check after subscribing: a decode that landed between this render and this effect
-    // would otherwise have fired its notification with nobody listening, stranding Hammy on
-    // the base face until some unrelated re-render happened to pick the change up.
-    if (decodedFaces.has(faceKey(face))) listener();
-    return () => { decodedListeners.delete(listener); };
-  }, [face, known]);
-  return known;
-}
-
-/** How long to wait on a quiet probe before showing the face anyway — see FaceProbe. */
-const FACE_DECODE_FALLBACK_MS = 1200;
-
-/** Offscreen probe that reports when a face overlay has finished decoding. onError also
- * counts as "done" — a face that can't load at all should fall back to the base features
- * permanently rather than leaving Hammy waiting on it forever.
- *
- * memo + useCallback here are load-bearing, not tidiness. react-native-web's <Image> re-runs
- * its internal load effect whenever its onLoad/onError props change identity, and that
- * effect's cleanup ABORTS the in-flight request (ImageLoader.abort nulls the image's
- * onload). Hammy re-renders every frame while its blink/ear/tail loops run — those drive
- * React state, not the native driver — so inline handlers meant the probe's request was
- * aborted and restarted ~60x a second and its `load` never fired once. faceDecoded stayed
- * false forever and Hammy sat on the default face permanently: the "Hammy's face never
- * changes" bug, web-only, since native's <Image> hands onLoad to the host view with no
- * abort cycle. Keeping this component and its handlers stable lets the request finish.
- *
- * The timer is a second safety net for a different react-native-web path to the same stall:
- * it short-circuits straight to its LOADED state, without ever calling onLoad, when the uri
- * is already in its ImageUriCache. Every face is a bundled local asset already warmed at
- * startup (see _layout.tsx), so treating a probe that's stayed quiet as decoded is safe —
- * worst case is the brief blank this gate exists to avoid, instead of a permanent one. */
-const FaceProbe = memo(function FaceProbe({ face }: { face: FaceOverlay }) {
-  const done = useCallback(() => markFaceDecoded(face), [face]);
-  useEffect(() => {
-    const timer = setTimeout(done, FACE_DECODE_FALLBACK_MS);
-    return () => clearTimeout(timer);
-  }, [done]);
-  return (
-    <RNImage
-      source={face.image}
-      style={styles.faceProbe}
-      fadeDuration={0}
-      onLoad={done}
-      onError={done}
-    />
-  );
-});
-
-/** Mount once on a screen that will show reaction faces (the quest player) to start their
- * fetch/decode up front, so the very first graded answer already has its face ready instead
- * of showing the base face for a beat while it loads. Purely an optimization — Hammy
- * handles an undecoded face correctly on its own (see FaceProbe above). */
+/** Warms face overlays into the image cache: a 1px offscreen RN <Image> per face, no
+ * callbacks and nothing gated on it. Mounted on screens about to show reaction faces (the
+ * quest player) so the first graded answer draws from cache. */
 export function ReactionFacePreloader() {
   return (
     <>
       {Object.values(REACTION_FACES).map((f) => (
-        decodedFaces.has(faceKey(f)) ? null : <FaceProbe key={faceKey(f)} face={f} />
+        <RNImage key={String(f.image)} source={f.image} style={styles.faceProbe} fadeDuration={0} />
       ))}
     </>
   );
@@ -424,18 +359,15 @@ export function Hammy({
   // "last known face" var) had a real failure mode: whenever a new reaction interrupted an
   // in-flight fade (very easy to do — matching fires reactions in quick succession), the
   // opacity could end up parked at a mid-value with the listener's last update not
-  // reflecting the latest `face`, showing neither the overlay nor the base features. A
-  // direct swap has no intermediate state to get stuck in: `face` falsy shows only the base
-  // features, full stop; `face` set shows the overlay at a flat 1 for its whole lifetime,
-  // exactly like the website's static face masks.
+  // reflecting the latest `face`, showing neither the overlay nor the base features.
   //
-  // The remaining blank-face window was the overlay's own decode, not a state race — the
-  // base features handed off to an <SvgImage> that hadn't painted yet. Gated on
-  // useFaceDecoded so the handoff only happens once there's actually something to hand off
-  // to; see the decode-tracking block at the top of this file.
-  const faceDecoded = useFaceDecoded(face);
-  const faceOpacity = face && faceDecoded ? 1 : 0;
-  const displayFace = faceDecoded ? face : undefined;
+  // A direct swap derived straight from the `face` prop has no intermediate state to get
+  // stuck in, and nothing that can stall: `face` falsy shows only the base features, full
+  // stop; `face` set shows the overlay at a flat 1 for its whole lifetime, exactly like the
+  // website's static face masks. See the overlay notes at the top of this file for why this
+  // is deliberately ungated.
+  const faceOpacity = face ? 1 : 0;
+  const displayFace = face;
 
   // Head-only mode swaps the viewBox for the website's .pig-head-stage window instead of
   // scaling anything — coordinates inside stay in the same 440x460 space either way.
@@ -457,9 +389,6 @@ export function Hammy({
 
   return (
     <View style={[{ width, height }, style]}>
-      {/* Starts (and reports) this face's decode so the base-feature handoff above can wait
-          for it — mounted only until it lands, then never again this session. */}
-      {face && !faceDecoded ? <FaceProbe face={face} /> : null}
       {/* Ground shadow — on the website .pig-shadow sits OUTSIDE the floating .pig element,
           so it stays put while the pig bobs/bounces above it. Rendered in its own static
           Svg behind the animated one for the same effect. rgba(214,120,160,.22) with a 7px
