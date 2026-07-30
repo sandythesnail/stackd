@@ -17,11 +17,23 @@ export const HAMMY_MOODS: HammyMood[] = [
   { id: 'wink', label: 'playful', msg: "Hammy's feeling playful today. Play along — finish a module!" },
 ];
 
-export function todaysHammyMood(): HammyMood {
-  const dateStr = new Date().toDateString();
+function moodIndexForDate(date: Date): number {
+  const dateStr = date.toDateString();
   let hash = 0;
   for (let i = 0; i < dateStr.length; i++) hash = (hash * 31 + dateStr.charCodeAt(i)) | 0;
-  return HAMMY_MOODS[Math.abs(hash) % HAMMY_MOODS.length];
+  return Math.abs(hash) % HAMMY_MOODS.length;
+}
+
+export function todaysHammyMood(): HammyMood {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  let idx = moodIndexForDate(today);
+  // The date-string hash alone can land on the same mood two days running — bump to the
+  // next one whenever that happens so the mood always changes day over day, while staying
+  // deterministic from the date (no stored "last mood" needed).
+  if (idx === moodIndexForDate(yesterday)) idx = (idx + 1) % HAMMY_MOODS.length;
+  return HAMMY_MOODS[idx];
 }
 
 /** Flips Home's Hammy to a satisfied/happy message for the rest of the day once a lesson
