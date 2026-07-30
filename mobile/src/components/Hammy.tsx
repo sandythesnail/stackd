@@ -367,6 +367,10 @@ export function Hammy({
   // website's static face masks. See the overlay notes at the top of this file for why this
   // is deliberately ungated.
   const faceOpacity = face ? 1 : 0;
+  // A `keepBase` overlay (the mouth-only wrong-answer reaction) is additive: it draws over the
+  // resting face rather than replacing it, so the base features and the full body/head shading
+  // all stay put. Every other face still swaps them out wholesale.
+  const baseHidden = face && !face.keepBase ? 1 : 0;
   const displayFace = face;
 
   // Head-only mode swaps the viewBox for the website's .pig-head-stage window instead of
@@ -384,8 +388,8 @@ export function Hammy({
   // While a face overlay shows, the website also softens the body/head shading
   // (.has-face-overlay: body loses both insets; head keeps only its white shine at .35
   // instead of .6) so the illustrated face blends into flatter skin.
-  const moldOpacity = 1 - faceOpacity;
-  const headShineOpacity = 1 - faceOpacity * (1 - 0.35 / 0.6);
+  const moldOpacity = 1 - baseHidden;
+  const headShineOpacity = 1 - baseHidden * (1 - 0.35 / 0.6);
 
   return (
     <View style={[{ width, height }, style]}>
@@ -581,7 +585,7 @@ export function Hammy({
           {/* cheeks, eyes, snout — crossfade out when an illustrated face overlay replaces
               them (smooth version of the website's .has-face-overlay opacity transition;
               always rendered, opacity-driven, instead of an instant conditional swap). */}
-          <G opacity={1 - faceOpacity}>
+          <G opacity={1 - baseHidden}>
             <Ellipse cx={134} cy={222} rx={28} ry={20} fill={gidUrl('hm-cheek-l')} />
             <Ellipse cx={306} cy={222} rx={28} ry={20} fill={gidUrl('hm-cheek-r')} />
 

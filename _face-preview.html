@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hammy — wrong-answer mouth preview</title>
+<!-- Dev-only throwaway (like the old _hammy-preview.html). Loads the REAL styles.css/app.css
+     and the same pig markup getPigMarkup() emits, so what you see here is what the quest
+     player shows. Safe to delete. -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="app.css?v=33">
+<style>
+  body { padding: 2.5rem 2rem 4rem; font-family: var(--font-body, system-ui); }
+  h1 { font-family: var(--font-display); font-size: 1.4rem; margin-bottom: 0.25rem; }
+  .lede { color: var(--text-soft); font-size: 0.85rem; margin-bottom: 1.75rem; max-width: 46rem; line-height: 1.5; }
+  .row { display: flex; gap: 2rem; flex-wrap: wrap; align-items: flex-start; }
+  .cell {
+    background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius);
+    padding: 1.5rem 1.75rem 1rem; box-shadow: var(--shadow-sm);
+  }
+  .cell h2 { font-family: var(--font-display); font-size: 0.95rem; margin-bottom: 0.15rem; }
+  .cell p { font-size: 0.75rem; color: var(--text-soft); margin-bottom: 1rem; max-width: 15rem; }
+  .cell.new h2 { color: var(--green-dark); }
+  .stage { display: flex; justify-content: center; }
+
+  /* The "before" cell re-creates the retired full-face swap, whose rules were removed from
+     app.css when the wrong-answer reaction became mouth-only. Preview-local on purpose. */
+  .cell.old .hammy-side-avatar.gentle .hammy-face-overlay {
+    background-image: url('faces/hammy-gentle.png?v=18');
+    top: 98px; left: 90px; width: 260px; height: 200px; background-size: cover;
+  }
+  .cell.old .hammy-side-avatar.gentle .pig-eye,
+  .cell.old .hammy-side-avatar.gentle .pig-cheek,
+  .cell.old .hammy-side-avatar.gentle .pig-snout { opacity: 0; }
+  .cell.old .hammy-side-avatar.gentle .pig-head { box-shadow: inset 16px 16px 30px rgba(255,255,255,.35); }
+  .cell.old .hammy-side-avatar.gentle .pig-body { box-shadow: none; }
+
+  .controls { display: flex; gap: 0.6rem; margin-bottom: 2rem; flex-wrap: wrap; align-items: center; }
+  .controls button {
+    font-family: var(--font-display); font-weight: 700; font-size: 0.8rem; cursor: pointer;
+    background: var(--green-dark); color: #fff; border: none; padding: 0.6rem 1.1rem;
+    border-radius: 999px;
+  }
+  .controls button.ghost { background: #fff; color: var(--text); border: 1.5px solid var(--border); }
+  .controls label { font-size: 0.78rem; color: var(--text-soft); display: flex; align-items: center; gap: 0.4rem; }
+
+  .zoomed { margin-top: 2.5rem; }
+  .zoomed figure { display: inline-block; margin: 0 1.5rem 0 0; text-align: center; vertical-align: top; }
+  .zoomed figcaption { font-size: 0.72rem; color: var(--text-soft); margin-top: 0.4rem; }
+  .swatch { background: #ffc6db; border-radius: 12px; padding: 0.75rem; }
+  .swatch img { display: block; image-rendering: auto; }
+</style>
+</head>
+<body>
+
+<h1>Hammy's wrong-answer mouth</h1>
+<p class="lede">
+  All three are the real CSS Hammy at <code>scale 0.64</code> — the size the desktop quest
+  companion renders at — with the <code>.gentle</code> reaction class applied. The new version
+  keeps the resting face untouched and adds only the mouth, lifted off the new artwork as an
+  alpha mask. Note the mouth is deliberately off to the right, the way it's drawn on the source
+  pig; <code>left</code> in app.css is the one number to change if it should sit dead centre.
+</p>
+
+<div class="controls">
+  <button id="replay">Replay the reaction</button>
+  <button id="toggle" class="ghost">Show resting face</button>
+  <label><input type="checkbox" id="outline"> outline the overlay box</label>
+</div>
+
+<div class="row" id="row"></div>
+
+<div class="zoomed">
+  <p class="lede" style="margin-bottom:0.9rem">
+    The mask on its own over Hammy's head pink, at 1&times; / 2&times; / 6&times; the box's real
+    48&times;30 size — the last one is well past what ever renders, just to show the extraction.
+  </p>
+  <figure><div class="swatch"><img src="faces/hammy-mouth-confused.png?v=1" width="48" height="30" alt=""></div><figcaption>1&times; (real size)</figcaption></figure>
+  <figure><div class="swatch"><img src="faces/hammy-mouth-confused.png?v=1" width="96" height="60" alt=""></div><figcaption>2&times;</figcaption></figure>
+  <figure><div class="swatch"><img src="faces/hammy-mouth-confused.png?v=1" width="288" height="180" alt=""></div><figcaption>6&times;</figcaption></figure>
+</div>
+
+<script>
+// Verbatim copy of getPigMarkup() + withFaceOverlay() from app.js, so this preview can't drift
+// from the real markup without someone noticing here first.
+function getPigMarkup(scale) {
+  return `<div class="pig-stage" style="--pig-scale:${scale}">
+  <div class="pig-inner">
+    <div class="pig-shadow"></div>
+    <div class="pig">
+      <div class="pig-foot l"></div><div class="pig-foot r"></div>
+      <div class="pig-tail"></div>
+      <div class="pig-body"></div><div class="pig-tummy"></div>
+      <div class="pig-arm l"></div><div class="pig-arm r"></div>
+      <div class="pig-ear l"><div class="pig-ear-inner"></div></div>
+      <div class="pig-ear r"><div class="pig-ear-inner"></div></div>
+      <div class="pig-head">
+        <div class="pig-cheek l"></div><div class="pig-cheek r"></div>
+        <div class="pig-eye l"><div class="shine1"></div><div class="shine2"></div></div>
+        <div class="pig-eye r"><div class="shine1"></div><div class="shine2"></div></div>
+        <div class="pig-snout"><div class="pig-nostril l"></div><div class="pig-nostril r"></div></div>
+      </div>
+    </div>
+  </div>
+</div>`;
+}
+function withFaceOverlay(pigMarkup) {
+  return pigMarkup.replace(/(<\/div>\s*<\/div>\s*<\/div>\s*)$/, '<div class="hammy-face-overlay"></div>$1');
+}
+
+const CELLS = [
+  { cls: 'rest', title: 'Resting face', note: 'no reaction — for reference', react: false },
+  { cls: 'new', title: 'New — resting face + mouth', note: 'hammy-mouth-confused.png, added over the untouched face', react: true },
+  { cls: 'old', title: 'Before — full-face swap', note: 'hammy-gentle.png replaced the whole face', react: true },
+];
+
+document.getElementById('row').innerHTML = CELLS.map(c => `
+  <div class="cell ${c.cls}">
+    <h2>${c.title}</h2>
+    <p>${c.note}</p>
+    <div class="stage">
+      <div class="hammy-side-avatar${c.react ? ' gentle' : ''}" data-react="${c.react}">${withFaceOverlay(getPigMarkup(0.64))}</div>
+    </div>
+  </div>`).join('');
+
+const reactive = () => [...document.querySelectorAll('.hammy-side-avatar[data-react="true"]')];
+let showing = true;
+
+document.getElementById('replay').onclick = () => {
+  showing = true;
+  document.getElementById('toggle').textContent = 'Show resting face';
+  // Drop and re-add the class on the next frame so the wobble keyframes restart.
+  reactive().forEach(a => a.classList.remove('gentle'));
+  requestAnimationFrame(() => requestAnimationFrame(() => reactive().forEach(a => a.classList.add('gentle'))));
+};
+
+document.getElementById('toggle').onclick = (e) => {
+  showing = !showing;
+  e.target.textContent = showing ? 'Show resting face' : 'Show reaction face';
+  reactive().forEach(a => a.classList.toggle('gentle', showing));
+};
+
+document.getElementById('outline').onchange = (e) => {
+  document.querySelectorAll('.hammy-face-overlay').forEach(o => {
+    o.style.outline = e.target.checked ? '1px solid rgba(0,128,255,.85)' : '';
+  });
+};
+</script>
+</body>
+</html>

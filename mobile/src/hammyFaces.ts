@@ -5,7 +5,13 @@
  * answer in the quest player. */
 import type { ImageSourcePropType } from 'react-native';
 
-export type FaceOverlay = { image: ImageSourcePropType; top: number; left: number; width: number; height: number };
+export type FaceOverlay = {
+  image: ImageSourcePropType; top: number; left: number; width: number; height: number;
+  /** Draw ON TOP of the resting face instead of replacing it — Hammy keeps its own eyes,
+   *  cheeks, snout and shading, and only this overlay's own art is added. Used by the
+   *  mouth-only wrong-answer reaction; see Hammy.tsx. */
+  keepBase?: boolean;
+};
 
 const DEFAULT_OVERLAY = { top: 145, left: 90, width: 260, height: 155 };
 
@@ -26,6 +32,8 @@ export const MOOD_FACES: Record<string, FaceOverlay> = {
 /** happy/streak share the default position; gentle is taller and shifted up. */
 export const REACTION_FACES: Record<'happy' | 'gentle' | 'streak', FaceOverlay> = {
   happy: { image: require('../assets/images/hammy-faces/hammy-streak.png'), ...DEFAULT_OVERLAY },
-  gentle: { image: require('../assets/images/hammy-faces/hammy-gentle.png'), top: 98, left: 90, width: 260, height: 200 },
+  // Wrong answer adds only a mouth to the resting face rather than replacing it — the confused
+  // pig's mouth from newconfusedface.png as an alpha mask. Box mirrors app.css exactly.
+  gentle: { image: require('../assets/images/hammy-faces/hammy-mouth-confused.png'), top: 258, left: 214, width: 48, height: 30, keepBase: true },
   streak: { image: require('../assets/images/hammy-faces/hammy-happy.png'), ...DEFAULT_OVERLAY },
 };
