@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Animated, Easing, ViewStyle, View, StyleSheet, Image as RNImage } from 'react-native';
 import Svg, {
   Defs, LinearGradient, RadialGradient, Stop, Ellipse, Circle, Path, Rect, G, ClipPath, SvgXml, Image as SvgImage,
@@ -46,25 +46,53 @@ function useFaceDecoded(face?: FaceOverlay): boolean {
     if (!face || known) return;
     const listener = () => bump((n) => n + 1);
     decodedListeners.add(listener);
+    // Re-check after subscribing: a decode that landed between this render and this effect
+    // would otherwise have fired its notification with nobody listening, stranding Hammy on
+    // the base face until some unrelated re-render happened to pick the change up.
+    if (decodedFaces.has(faceKey(face))) listener();
     return () => { decodedListeners.delete(listener); };
   }, [face, known]);
   return known;
 }
 
+/** How long to wait on a quiet probe before showing the face anyway — see FaceProbe. */
+const FACE_DECODE_FALLBACK_MS = 1200;
+
 /** Offscreen probe that reports when a face overlay has finished decoding. onError also
  * counts as "done" — a face that can't load at all should fall back to the base features
- * permanently rather than leaving Hammy waiting on it forever. */
-function FaceProbe({ face }: { face: FaceOverlay }) {
+ * permanently rather than leaving Hammy waiting on it forever.
+ *
+ * memo + useCallback here are load-bearing, not tidiness. react-native-web's <Image> re-runs
+ * its internal load effect whenever its onLoad/onError props change identity, and that
+ * effect's cleanup ABORTS the in-flight request (ImageLoader.abort nulls the image's
+ * onload). Hammy re-renders every frame while its blink/ear/tail loops run — those drive
+ * React state, not the native driver — so inline handlers meant the probe's request was
+ * aborted and restarted ~60x a second and its `load` never fired once. faceDecoded stayed
+ * false forever and Hammy sat on the default face permanently: the "Hammy's face never
+ * changes" bug, web-only, since native's <Image> hands onLoad to the host view with no
+ * abort cycle. Keeping this component and its handlers stable lets the request finish.
+ *
+ * The timer is a second safety net for a different react-native-web path to the same stall:
+ * it short-circuits straight to its LOADED state, without ever calling onLoad, when the uri
+ * is already in its ImageUriCache. Every face is a bundled local asset already warmed at
+ * startup (see _layout.tsx), so treating a probe that's stayed quiet as decoded is safe —
+ * worst case is the brief blank this gate exists to avoid, instead of a permanent one. */
+const FaceProbe = memo(function FaceProbe({ face }: { face: FaceOverlay }) {
+  const done = useCallback(() => markFaceDecoded(face), [face]);
+  useEffect(() => {
+    const timer = setTimeout(done, FACE_DECODE_FALLBACK_MS);
+    return () => clearTimeout(timer);
+  }, [done]);
   return (
     <RNImage
       source={face.image}
       style={styles.faceProbe}
       fadeDuration={0}
-      onLoad={() => markFaceDecoded(face)}
-      onError={() => markFaceDecoded(face)}
+      onLoad={done}
+      onError={done}
     />
   );
-}
+});
 
 /** Mount once on a screen that will show reaction faces (the quest player) to start their
  * fetch/decode up front, so the very first graded answer already has its face ready instead
