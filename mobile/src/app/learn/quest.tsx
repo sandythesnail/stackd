@@ -55,6 +55,17 @@ const HINT_FREE_CHAPTER_TYPES = new Set(['story', 'teach', 'hint']);
  * made his presence unpredictable from one screen to the next. */
 const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck']);
 
+/** The only chapter types that may lose the companion to an overflowing screen (see
+ * fitState). Everything else keeps him at whatever height it lays out to.
+ *
+ * An allow-list, not a blanket rule, because a blanket one kept taking him off screens that
+ * have room for him — the vocab card and "What Do Most People Think?" both read as Hammy
+ * simply being missing rather than as the question getting more space. These are the dense,
+ * genuinely scroll-heavy question types where losing him is the point. */
+const OVERFLOW_HIDEABLE_TYPES = new Set([
+  'knowledgecheck', 'decision', 'bossbattle', 'mythcards', 'explainback', 'urlinspect', 'priceisright',
+]);
+
 type HintProps = { hintsRemaining: number; onUseHint: () => void };
 /** Reports right/wrong to the persistent companion Hammy (see showHammyReaction on the
  * website) so its face/message reacts — happy, gentle, or a 3-in-a-row streak callout. An
@@ -154,7 +165,8 @@ const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn fro
 /** Matching has no explanation to point to (it's just a retry, not a right-answer reveal),
  * so a wrong match gets its own phrasing instead of HAMMY_GENTLE_MSGS's "here's why" —
  * ported from the website's HAMMY_TRYAGAIN_MSGS. */
-const HAMMY_TRYAGAIN_MSGS = ['Not quite, try again!', 'Close, give it another shot!', "Not quite, look at the definitions above if you're stuck."];
+// "below", not "above": Match It's definitions sit under the terms now.
+const HAMMY_TRYAGAIN_MSGS = ['Not quite, try again!', 'Close, give it another shot!', "Not quite, look at the definitions below if you're stuck."];
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
 /** Keeps a spoken reaction message short enough to never need truncating — the reaction
@@ -272,9 +284,19 @@ export default function QuestPlayer() {
   const [kcQuestionIdx, setKcQuestionIdx] = useState(0);
   const [terms, setTerms] = useState<LearnedTerm[]>([]);
   const [bossWon, setBossWon] = useState(false);
-  const [reactionMood, setReactionMood] = useState<'happy' | 'gentle' | 'streak' | null>(null);
-  const [reactionMsg, setReactionMsg] = useState<string | null>(null);
-  const [reactionKey, setReactionKey] = useState(0);
+  // Tagged with the chapter it belongs to. It used to be three loose values cleared by an
+  // effect on chapterIdx, and an effect runs AFTER the new chapter has already rendered — so
+  // the first frame of the next chapter still carried the last one's mood. On a chapter where
+  // the companion was hidden, that was the first frame he existed: he mounted holding a
+  // "gentle" reaction and played the wobble, so getting a question wrong with Hammy off
+  // screen made him shake on arrival at the NEXT screen. Reading it per chapter means a
+  // reaction simply doesn't exist outside the chapter that raised it.
+  const [reaction, setReaction] = useState<
+    { chapterIdx: number; mood: 'happy' | 'gentle' | 'streak'; msg: string; key: number } | null
+  >(null);
+  // Separate monotonic counter so repeat-same-mood reactions still replay the animation (see
+  // Hammy's reactionKey) — it must not reset when a reaction is cleared.
+  const reactionSeqRef = useRef(0);
   const [answerStreak, setAnswerStreak] = useState(0);
   // Each chapter view remounts on chapter change (see ChapterView's key={chapter.id} below)
   // and reports its own fresh action on mount, so no separate reset-on-chapterIdx effect is
@@ -406,33 +428,34 @@ export default function QuestPlayer() {
   // No auto-hide timer — the message/mood stay up (so the user has time to actually read
   // the feedback) until clearReaction() fires, which every chapter view already calls right
   // as it advances to the next question/concept (see e.g. TeachView/KnowledgecheckView's
-  // next()). Chapter changes reset it too, so nothing can carry a stale reaction across into
-  // a not-yet-answered concept in the next chapter.
+  // next()). A chapter change drops it with no clearing step at all, since the reaction is
+  // read per chapter (activeReaction below).
   useEffect(() => {
-    setReactionMood(null);
-    setReactionMsg(null);
     setKcQuestionIdx(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterIdx]);
+  // Only the reaction raised by the chapter on screen counts — see `reaction`'s declaration.
+  const activeReaction = reaction?.chapterIdx === chapterIdx ? reaction : null;
+  const reactionMood = activeReaction?.mood ?? null;
+  const reactionMsg = activeReaction?.msg ?? null;
+  const reactionKey = activeReaction?.key ?? 0;
   const reactTo = (isCorrect: boolean, customMsg?: string, gentlePool?: string[]) => {
     let msg: string;
+    let mood: 'happy' | 'gentle' | 'streak';
     if (customMsg) {
       msg = customMsg;
-      setReactionMood(isCorrect ? 'happy' : 'gentle');
+      mood = isCorrect ? 'happy' : 'gentle';
     } else {
       const nextStreak = isCorrect ? answerStreak + 1 : 0;
       setAnswerStreak(nextStreak);
       const isStreak = isCorrect && nextStreak > 0 && nextStreak % 3 === 0;
-      setReactionMood(isCorrect ? (isStreak ? 'streak' : 'happy') : 'gentle');
+      mood = isCorrect ? (isStreak ? 'streak' : 'happy') : 'gentle';
       msg = isStreak ? `🎉 ${nextStreak} in a row! You're on fire!` : isCorrect ? pickRandom(HAMMY_CORRECT_MSGS) : pickRandom(gentlePool ?? HAMMY_GENTLE_MSGS);
     }
-    setReactionMsg(msg);
-    setReactionKey((k) => k + 1);
+    reactionSeqRef.current += 1;
+    setReaction({ chapterIdx, mood, msg, key: reactionSeqRef.current });
   };
-  const clearReaction = () => {
-    setReactionMood(null);
-    setReactionMsg(null);
-  };
+  const clearReaction = () => setReaction(null);
 
   const onComplete: Complete = (xpDelta, graded) => {
     const nextXp = xpEarned + xpDelta;
@@ -527,11 +550,14 @@ export default function QuestPlayer() {
 
   // Hidden during a story chapter's intro beat or a 'hint' chapter, both of which already
   // show their own big Hammy in the content area instead (StoryView/HintView), so a second
-  // one up here would just be a redundant duplicate; and on the handful of chapter types
-  // that are simply too tall to share a screen with him (see TALL_CHAPTER_TYPES) plus the
-  // dense full-screen teach walkthroughs. A fixed list of chapter TYPES on purpose — see the
-  // note by reportedLayout for what measuring the content instead cost.
-  const showCompanion = layoutMode === 'normal' && !TALL_CHAPTER_TYPES.has(chapter.type);
+  // one up here would just be a redundant duplicate; on the handful of chapter types that
+  // are simply too tall to share a screen with him (see TALL_CHAPTER_TYPES) plus the dense
+  // full-screen teach walkthroughs; and on an OVERFLOW_HIDEABLE_TYPES chapter that measured
+  // taller than the screen.
+  const canHideForOverflow = OVERFLOW_HIDEABLE_TYPES.has(chapter.type);
+  const showCompanion = layoutMode === 'normal'
+    && !TALL_CHAPTER_TYPES.has(chapter.type)
+    && !(canHideForOverflow && chapterFits === false);
   // Centered above the content, rather than off to its left, for the two chapter types
   // that read as a scene rather than a question: the story's dialogue (the conversation is
   // with him) and Match It (a centered grid).
@@ -580,11 +606,13 @@ export default function QuestPlayer() {
       {/* Companion Hammy. Two arrangements: centered with his bubble above him (dialogue,
           Match It), or off to the left with the bubble beside him everywhere else. Either
           way the bubble is positioned relative to him, never the other way round. */}
-      {showCompanion && chapterFits !== false ? (
+      {showCompanion ? (
         <View style={[
           companionCentered ? styles.companionWrapCentered : styles.companionWrap,
           raised && styles.companionWrapRaised,
-          chapterFits === null && styles.companionMeasuring,
+          // Only the chapters that could actually lose him wait to be measured; everywhere
+          // else he's drawn straight away, with no invisible first frame.
+          canHideForOverflow && chapterFits === null && styles.companionMeasuring,
         ]}>
           {companionCentered ? <ReactionBubble message={reactionMsg} mood={reactionMood} centered /> : null}
           <Hammy
