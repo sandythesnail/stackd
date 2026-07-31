@@ -17,14 +17,19 @@ import { Hammy } from './Hammy';
 type ChipTone = 'pos' | 'neg' | 'neutral';
 
 /** Mirrors the website's buildLifeEventEffectChips: the mobile LifeEvent model only tracks
- * coinDelta (no checking/savings/credit sim), so a choice is either a coin change or, like
- * the site's fallback, "No financial impact". */
+ * coinDelta (no checking/savings/credit sim), so a choice either shows a coin change or
+ * nothing at all.
+ *
+ * A choice with no coin change shows NO chip. There used to be a "No financial impact"
+ * neutral pill (the website's fallback) but a chip that exists only to say nothing happened
+ * is noise — the outcome text below already tells that story, and the empty row reads as a
+ * missing value rather than a deliberate one. */
 function effectChips(choice: LifeEventChoice): { text: string; tone: ChipTone }[] {
   if (choice.coinDelta) {
     const up = choice.coinDelta > 0;
     return [{ text: `${up ? '+' : '−'}${Math.abs(choice.coinDelta)} coins`, tone: up ? 'pos' : 'neg' }];
   }
-  return [{ text: 'No financial impact', tone: 'neutral' }];
+  return [];
 }
 
 const CHIP: Record<ChipTone, { bg: string; color: string; border?: string }> = {
@@ -83,19 +88,24 @@ export function LifeEventCard({
         </>
       ) : (
         <>
-          <View style={styles.chipRow}>
-            {effectChips(answered).map((chip, i) => {
-              const c = CHIP[chip.tone];
-              return (
-                <View
-                  key={i}
-                  style={[styles.chip, { backgroundColor: c.bg }, c.border ? { borderWidth: 1, borderColor: c.border } : null]}
-                >
-                  <Txt style={[styles.chipTxt, { color: c.color }]}>{chip.text}</Txt>
-                </View>
-              );
-            })}
-          </View>
+          {/* Dropped entirely when there's nothing to report, rather than left as an empty
+              row — the row carries its own spacing, so rendering it chipless would leave a
+              gap where the pill used to be. */}
+          {effectChips(answered).length > 0 ? (
+            <View style={styles.chipRow}>
+              {effectChips(answered).map((chip, i) => {
+                const c = CHIP[chip.tone];
+                return (
+                  <View
+                    key={i}
+                    style={[styles.chip, { backgroundColor: c.bg }, c.border ? { borderWidth: 1, borderColor: c.border } : null]}
+                  >
+                    <Txt style={[styles.chipTxt, { color: c.color }]}>{chip.text}</Txt>
+                  </View>
+                );
+              })}
+            </View>
+          ) : null}
           <Txt style={styles.body}>{answered.result}</Txt>
           <Button label="Continue" onPress={onDone} style={{ marginTop: 4 }} />
         </>

@@ -47,13 +47,40 @@ const HINT_FREE_CHAPTER_TYPES = new Set(['story', 'teach', 'hint']);
  * with the content for the screen: microsim stacks an income card, a card of sliders, a
  * running total and a feedback card ("Planning Around an Accurate W-4" is one of these);
  * simulator stacks a meter card on a list of decisions; spotcheck a whole posting whose
- * every segment can sprout an explanation. These always scroll, so Hammy steps aside and
- * lets the question have the screen.
+ * every segment can sprout an explanation; bossbattle keeps its full choice list on screen
+ * and then adds the outcome underneath it. These always scroll, so Hammy steps aside and
+ * lets the question have the whole screen.
  *
- * A fixed list of TYPES, not a measure-then-react rule — an earlier version hid him
- * whenever content happened to overflow, which pulled him off ordinary questions too and
- * made his presence unpredictable from one screen to the next. */
-const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck']);
+ * A fixed list of TYPES, decided before the first paint — never a measure-then-react rule.
+ * See estimatedChapterHeight below for the one case that needs to look at the content, and
+ * why even that is computed rather than measured. */
+const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck', 'bossbattle']);
+
+/** Roughly how tall a knowledge-check question will lay out, in px, WITHOUT measuring it.
+ *
+ * Quick Checks are the one type whose height genuinely swings with the content: a short
+ * question with three short options leaves room for Hammy, while a long stem with four
+ * wordy options plus the explanation card that appears after answering does not — and
+ * that's the case where the student had to scroll to see whether they got it right.
+ *
+ * This is estimated from the text rather than measured on purpose. The measured version is
+ * exactly what caused Hammy to blink out and back on every Quick Check: you can't know the
+ * height until after layout, so he had to start hidden and be revealed a frame (or a 220ms
+ * fail-safe) later. Estimating lets the decision be made during render, before anything is
+ * painted, so he is either there from the first frame or never drawn at all.
+ *
+ * Deliberately counts the explanation card even before an answer is given, so the layout
+ * doesn't reshuffle at the moment of answering. Constants are the real styles: ~19px lines
+ * at ~34 chars for the stem, options at 54px plus their own wrapping, the card at 40px. */
+function estimatedQuestionHeight(q: Question): number {
+  const lines = (text: string, perLine: number) => Math.max(1, Math.ceil(text.length / perLine));
+  const title = 26;
+  const stem = lines(q.q, 34) * 20;
+  const options = q.opts.reduce((sum, o) => sum + 54 + (lines(o, 30) - 1) * 19, 0);
+  const explanation = 40 + lines(q.exp.slice(0, 110), 40) * 18;
+  const gaps = 10 * 3;
+  return title + stem + options + explanation + gaps;
+}
 
 /* There used to be a second, MEASURED way to lose the companion: an allow-list of dense
  * chapter types (knowledgecheck, decision, bossbattle, mythcards, explainback, urlinspect,
@@ -280,6 +307,8 @@ export default function QuestPlayer() {
   const content = moduleContentById(mod.id);
   const li = Number(lessonIndex ?? 0);
   const quest = content?.quests[li];
+  // Drives the dense-Quick-Check decision below — read here so it's available during render.
+  const { height: winHeight } = useWindowDimensions();
 
   const [chapterIdx, setChapterIdx] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
@@ -526,13 +555,31 @@ export default function QuestPlayer() {
     : initialLayoutMode(chapter);
   const onLayoutMode = (m: LayoutMode) => setReportedLayout({ chapterIdx, mode: m });
 
+  // A Quick Check only gives up the companion when its own content genuinely won't fit
+  // beside him — the long-stem, four-wordy-option questions where the explanation card
+  // landed below the fold and the student had to scroll to find out if they were right.
+  // Short ones keep him. Computed from the text during render (see estimatedQuestionHeight),
+  // never measured, so there's no frame where he's hidden pending an answer.
+  //
+  // The budget is this window minus the chrome that's always there: the progress header, the
+  // bottom action bar, both safe areas, and the ~150px the companion row itself occupies. If
+  // the question needs more than what's left, he's the thing that goes.
+  const CHROME_H = 200;
+  const COMPANION_H = 150;
+  const denseQuickCheck = chapter.type === 'knowledgecheck'
+    && chapter.qIndices.some((qi) => {
+      const q = content.questions[qi];
+      return !!q && estimatedQuestionHeight(q) > winHeight - CHROME_H - COMPANION_H;
+    });
+
   // Hidden during a story chapter's intro beat or a 'hint' chapter, both of which already
   // show their own big Hammy in the content area instead (StoryView/HintView), so a second
   // one up here would just be a redundant duplicate; on the handful of chapter types that
   // are simply too tall to share a screen with him (see TALL_CHAPTER_TYPES) plus the dense
-  // full-screen teach walkthroughs; and on an OVERFLOW_HIDEABLE_TYPES chapter that measured
-  // taller than the screen.
-  const showCompanion = layoutMode === 'normal' && !TALL_CHAPTER_TYPES.has(chapter.type);
+  // full-screen teach walkthroughs; and on a Quick Check measured too dense to share.
+  const showCompanion = layoutMode === 'normal'
+    && !TALL_CHAPTER_TYPES.has(chapter.type)
+    && !denseQuickCheck;
   // Centered above the content, rather than off to its left, for the two chapter types
   // that read as a scene rather than a question: the story's dialogue (the conversation is
   // with him) and Match It (a centered grid).
@@ -1557,7 +1604,10 @@ function MythcardsView({
     : dragDir === 'true' ? colors.green : dragDir === 'false' ? '#D98A9E' : colors.borderOpt;
 
   return (
-    <View style={{ gap: 10 }}>
+    // flex + centered: the swipe card is a fixed-height thing in a tall scroller, so left
+    // top-anchored it sat high with a large dead band beneath it. Centering spreads that
+    // space above and below, putting the card under the thumb rather than up by the header.
+    <View style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 13.5 }}>
         Read the card, then swipe right if you think it&apos;s <Txt style={{ fontFamily: font.extra }}>true</Txt>, left if you think
@@ -1751,13 +1801,9 @@ function BossbattleView({
   chapter, moduleXpReward, onComplete, onAction, reactTo, reportDecision,
 }: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete } & ActionProps & ReactProps & Pick<ReportProps, 'reportDecision'>) {
   const [pickedId, setPickedId] = useState<string | null>(null);
-  // Dismissible: the outcome opens over the choices, and closing it leaves them (and the
-  // highlighted pick) readable while "Finish quest →" waits in the bottom bar.
-  const [outcomeOpen, setOutcomeOpen] = useState(false);
   const picked = chapter.choices.find((c) => c.id === pickedId);
   const pick = (c: BossbattleChapter['choices'][number]) => {
     setPickedId(c.id);
-    setOutcomeOpen(true);
     reportDecision('Boss battle', c.label);
     reactTo(c.consequence.xpMultiplier >= 1);
   };
@@ -1771,11 +1817,11 @@ function BossbattleView({
       <Tag tone="warm">⚔ BOSS CHALLENGE</Tag>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.scenario}</Txt>
-      {/* The choices stay put once one is taken — the outcome arrives over them in a sheet
-          rather than replacing them. Swapping the list out for the consequence card used to
-          erase the question the moment it was answered, so there was nothing left on screen
-          to read the outcome against: you couldn't see what you'd picked, or what the other
-          options had been. The picked row now stays highlighted underneath. */}
+      {/* The choices stay on screen once one is taken, with the pick highlighted and the
+          outcome added below — no popup, and no swapping the list out for a bare card, which
+          used to erase the question the moment it was answered (you could no longer see what
+          you'd chosen or what the alternatives were). This chapter type hides the companion
+          Hammy (TALL_CHAPTER_TYPES), so there's a full screen to lay all of it out in. */}
       <View style={{ gap: 10 }}>
         {chapter.choices.map((c) => (
           <Option
@@ -1786,18 +1832,14 @@ function BossbattleView({
           />
         ))}
       </View>
-      <Modal visible={!!picked && outcomeOpen} transparent animationType="fade" onRequestClose={() => setOutcomeOpen(false)}>
-        <Pressable style={styles.hintScrim} onPress={() => setOutcomeOpen(false)}>
-          <Reanimated.View entering={SlideInDown.duration(320)} style={{ width: '100%', alignItems: 'center' }}>
-            <Pressable style={styles.bossOutcomeCard} onPress={(e) => e.stopPropagation()}>
-              <Tag tone="warm">⚔ HOW IT PLAYED OUT</Tag>
-              <Txt style={styles.bossOutcomePick}>You chose: {picked?.label}</Txt>
-              <Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked?.consequence.text}</Txt>
-              <Button label="Got it" onPress={() => setOutcomeOpen(false)} style={{ marginTop: 4 }} />
-            </Pressable>
-          </Reanimated.View>
-        </Pressable>
-      </Modal>
+      {picked ? (
+        <Reanimated.View entering={FadeInDown.duration(320)}>
+          <Card style={{ gap: 6 }}>
+            <Txt style={styles.bossOutcomePick}>HOW IT PLAYED OUT</Txt>
+            <Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.consequence.text}</Txt>
+          </Card>
+        </Reanimated.View>
+      ) : null}
     </View>
   );
 }
@@ -2062,11 +2104,7 @@ const styles = StyleSheet.create({
     width: '100%', maxWidth: 340, backgroundColor: colors.pinkBg, borderWidth: 1.5,
     borderColor: colors.pinkBorder, borderRadius: 20, padding: 20,
   },
-  bossOutcomeCard: {
-    backgroundColor: colors.card, borderRadius: 24, borderWidth: 1.5, borderColor: colors.border,
-    padding: 20, gap: 10, width: '100%', maxWidth: 420, alignItems: 'flex-start',
-  },
-  bossOutcomePick: { fontFamily: font.extra, fontSize: 13, color: colors.muted3 },
+  bossOutcomePick: { fontFamily: font.extra, fontSize: 11.5, color: colors.muted5, letterSpacing: 0.4 },
   glossaryPopupList: { gap: 16, paddingBottom: 2 },
   glossarySectionName: { fontFamily: font.bold, fontSize: 12, color: colors.muted5, textTransform: 'uppercase', letterSpacing: 0.4 },
   glossaryPopupCard: {
