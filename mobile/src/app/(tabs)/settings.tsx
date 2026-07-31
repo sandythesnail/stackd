@@ -6,7 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useUser, useClerk, useAuth } from '@clerk/clerk-expo';
 import { Screen, Header, Txt, Button, Card, Coin, Diamond, useOnboardingTour } from '@/components';
-import { colors, font } from '@/theme';
+import { colors, font, selectableInput } from '@/theme';
 import { user, modules } from '@/data';
 import { useStore } from '@/store';
 import { authEnabled } from '@/lib/env';
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   feedbackInput: {
     marginTop: 10, minHeight: 88, fontFamily: font.semi, fontSize: 14, color: colors.ink,
     backgroundColor: colors.screen, borderRadius: 14, borderWidth: 1.5, borderColor: colors.borderOpt,
-    paddingVertical: 12, paddingHorizontal: 14,
+    paddingVertical: 12, paddingHorizontal: 14, ...selectableInput,
   },
   invite: { borderRadius: 24, borderWidth: 1.5, borderColor: colors.pinkBorder2, padding: 18 },
   inviteH: { fontFamily: font.displayMed, fontSize: 16, color: colors.pinkDark },

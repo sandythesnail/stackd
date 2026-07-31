@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { View, TextInput, StyleSheet, ViewStyle, KeyboardTypeOptions } from 'react-native';
-import { colors } from '@/theme';
+import { colors, selectableInput } from '@/theme';
 import { Txt } from './Txt';
 
 /**
@@ -81,5 +81,5 @@ const styles = StyleSheet.create({
     borderColor: colors.green,
   },
   val: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: colors.ink, flexShrink: 1 },
-  input: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: colors.ink, flex: 1, padding: 0 },
+  input: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: colors.ink, flex: 1, padding: 0, ...selectableInput },
 });

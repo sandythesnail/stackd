@@ -90,6 +90,18 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
   );
 }
 
+/* Txt already sets userSelect:'none' per text node, but that can't reach what sits AROUND the
+ * text — the Views a screen is built from, and Hammy, who is an <svg> on web. Clicking either
+ * still started a native selection and parked a blinking text caret at the click point (the
+ * "vertical line, as if you were typing" seen mid-question and over Hammy). user-select
+ * inherits, so declaring it once on the root covers every descendant regardless of type;
+ * Txt's own copy stays as the explicit per-text guarantee. Real TextInputs opt back in at
+ * their own style (Field, explainback, the tools calculators, settings) — without that,
+ * inheriting `none` would make the field's own text unselectable while typing in it. */
+const rootStyles = StyleSheet.create({
+  noSelect: { userSelect: 'none' } as object,
+});
+
 const errStyles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.screen, alignItems: 'center', justifyContent: 'center', padding: 28 },
   title: { fontFamily: font.display, fontSize: 22, color: colors.ink, textAlign: 'center' },
@@ -137,7 +149,7 @@ export default function RootLayout() {
   if (!loaded) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={[{ flex: 1 }, rootStyles.noSelect]}>
       <SafeAreaProvider>
         <AuthGate>
         <StoreProvider>

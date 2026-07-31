@@ -35,6 +35,27 @@ body { font-family: var(--font); color: var(--text); -webkit-font-smoothing: ant
 a { text-decoration: none; color: inherit; }
 button { cursor: pointer; border: none; background: none; font-family: inherit; }
 
+/* Nothing on the page is selectable text except real form fields.
+   Every element here is UI, not a document: clicking a lesson question, a card, a button or
+   the CSS pig would otherwise start a native text selection, and the browser puts a blinking
+   text caret at the click point while it does — which is the "vertical line, as if you were
+   typing" that showed up mid-question and on top of Hammy. The pig is the most visible case
+   because it's built from ordinary divs (.pig-*), so a click lands in normal selectable flow
+   content the same as a paragraph would.
+   This is the same rule the Expo build already applies (mobile/src/components/Txt.tsx's
+   noSelect), just hoisted to the document instead of per-text-node — user-select inherits, so
+   one declaration on body covers containers, pseudo-elements and the mascot, none of which a
+   per-text fix can reach. Real inputs opt back in below, so typing, editing, and copying out
+   of the budget/explainback fields all still work exactly as before. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+input, textarea, select, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* ── Shared components ── */
 .logo {
   font-family: var(--font-display);

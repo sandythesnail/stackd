@@ -3,7 +3,7 @@ import { View, ScrollView, Pressable, StyleSheet, TextInput } from 'react-native
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Screen, Header, Txt, Card, Tag, Segmented, StackedAreaChart } from '@/components';
-import { colors, font } from '@/theme';
+import { colors, font, selectableInput } from '@/theme';
 import { useStore, type BudgetLineItem } from '@/store';
 import { computeCompoundGrowth, computeLoanMinPayment, computeLoanPayoff, SeriesPoint } from '@/simulators';
 
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
   lineLabelInput: {
     flex: 1, fontFamily: font.semi, fontSize: 14, color: colors.ink,
     backgroundColor: colors.screen, borderRadius: 10, borderWidth: 1.5, borderColor: colors.borderOpt,
-    paddingVertical: 9, paddingHorizontal: 11,
+    paddingVertical: 9, paddingHorizontal: 11, ...selectableInput,
   },
   amountWrap: {
     flexDirection: 'row', alignItems: 'center',
@@ -660,7 +660,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9, paddingHorizontal: 10, gap: 2,
   },
   amountPrefix: { fontFamily: font.extra, fontSize: 14, color: colors.muted4 },
-  amountInput: { flex: 1, fontFamily: font.extra, fontSize: 14, color: colors.ink, padding: 0 },
+  amountInput: { flex: 1, fontFamily: font.extra, fontSize: 14, color: colors.ink, padding: 0, ...selectableInput },
   removeBtn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   removeTxt: { fontFamily: font.bold, fontSize: 18, color: colors.muted5, lineHeight: 20 },
 

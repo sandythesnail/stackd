@@ -173,6 +173,15 @@ export const radius = {
 
 export const space = (n: number) => n * 4;
 
+/** Every TextInput needs this in its style.
+ *
+ * The root layout declares `userSelect: 'none'` for the whole app (see _layout.tsx) so that
+ * tapping ordinary UI — a card, a question, Hammy — can't start a text selection and leave a
+ * blinking caret behind. user-select inherits, so on the web build a field would otherwise
+ * inherit `none` and you couldn't select, drag or copy the text you just typed into it. This
+ * puts a real input back to normal; it's a no-op on native, which has no such inheritance. */
+export const selectableInput = { userSelect: 'text' } as object;
+
 /** Soft ambient card shadow. */
 export const softShadow = {
   shadowColor: '#2C3E2D',
