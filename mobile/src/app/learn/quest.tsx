@@ -1338,11 +1338,13 @@ function DecisionView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked]);
   return (
-    // Centered rather than top-anchored: a short title/prompt + 2-3 white choice buttons
-    // rarely fills the screen, so top-anchoring (the default) left all the slack as one big
-    // empty gap under the buttons, above the fixed bottom action bar. Centering splits that
-    // slack instead, pulling both the title/prompt and the buttons down off the top edge.
-    <View style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
+    // Top-anchored, so the title and prompt sit directly under Hammy and STAY there. This
+    // was centred, which looked balanced until you answered: the outcome card is a different
+    // height from the choice list it replaces, so the whole column re-centred around it and
+    // the question you'd just read jumped up the screen. Pinning it to the top means only
+    // the part that actually changes moves. The slack that centring used to absorb is
+    // handled by dropping the companion instead (companionWrapDeep).
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       {!picked ? (
