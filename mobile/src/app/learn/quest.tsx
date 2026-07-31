@@ -560,11 +560,19 @@ export default function QuestPlayer() {
   // decisions ("First Paycheck Lands" — a prompt and a couple of choices) and the swipe
   // cards (one fixed-height card). All drop Hammy further down the screen — the swipe cards
   // furthest, being the shortest content of the three.
-  const companionDrop = chapter.type === 'poll' || chapter.type === 'decision'
-    ? styles.companionWrapLow
-    : chapter.type === 'mythcards'
-      ? styles.companionWrapLowest
-      : null;
+  // Decisions go deepest of all. Before an answer they're only a prompt and two choices, and
+  // after one the choices are REPLACED by the outcome card — so unlike the poll (which
+  // appends its explanation) they never grow past what the screen already had room for, and
+  // the space under them is dead either way. Applied to every decision, not just the ones
+  // whose outcome carries a comparison chart: the two are indistinguishable until answered,
+  // so moving Hammy only on the charted ones would look like he'd drifted at random.
+  const companionDrop = chapter.type === 'decision'
+    ? styles.companionWrapDeep
+    : chapter.type === 'poll'
+      ? styles.companionWrapLow
+      : chapter.type === 'mythcards'
+        ? styles.companionWrapLowest
+        : null;
   // Smaller on the vocab chapter, where the term card + its true/false check are what have to
   // fit without scrolling; a little bigger on Match It, which has room to spare.
   const companionSize = chapter.type === 'teach' ? 104 : chapter.type === 'matching' ? 144 : 130;
@@ -2143,9 +2151,15 @@ const styles = StyleSheet.create({
     borderColor: colors.pinkBorder, borderRadius: 20, padding: 20,
   },
   bossOutcomePick: { fontFamily: font.extra, fontSize: 11.5, color: colors.muted5, letterSpacing: 0.4 },
-  // Same shape as bossOutcomePick, in the danger red — the one bit of colour distinguishing
-  // "your move" from "the consequence" in an otherwise identical pair of cards.
-  bossChoseLabel: { fontFamily: font.extra, fontSize: 11.5, color: colors.danger, letterSpacing: 0.4 },
+  // A filled pill rather than bare small-caps like bossOutcomePick: this is the label that
+  // has to carry "this was YOUR move, not the right answer", so it gets the danger red on
+  // its matching tint. alignSelf keeps it hugging its own text instead of stretching the
+  // card's full width, which is what makes it read as a badge.
+  bossChoseLabel: {
+    fontFamily: font.extra, fontSize: 11.5, color: colors.danger, letterSpacing: 0.4,
+    backgroundColor: colors.dangerBg, borderRadius: 999,
+    paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start', overflow: 'hidden',
+  },
   glossaryPopupList: { gap: 16, paddingBottom: 2 },
   glossarySectionName: { fontFamily: font.bold, fontSize: 12, color: colors.muted5, textTransform: 'uppercase', letterSpacing: 0.4 },
   glossaryPopupCard: {
@@ -2196,6 +2210,9 @@ const styles = StyleSheet.create({
   // short chapter types leave spare. See companionDrop.
   companionWrapLow: { paddingTop: 40, paddingBottom: 10 },
   companionWrapLowest: { paddingTop: 58, paddingBottom: 12 },
+  // Decisions only. Deliberately short of the point where the post-answer state (outcome
+  // text plus a comparison chart, the tallest thing this type renders) would start to scroll.
+  companionWrapDeep: { paddingTop: 76, paddingBottom: 12 },
   // No reserved height: the row's height is Hammy's, and he's far taller than any bubble
   // this can produce — so a message appearing or clearing can't move him or anything below.
   bubbleSlot: { flex: 1, alignItems: 'flex-start', justifyContent: 'center' },
