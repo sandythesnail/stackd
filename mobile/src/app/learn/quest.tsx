@@ -555,11 +555,12 @@ export default function QuestPlayer() {
   // Match It sits higher up the screen than the other centered chapter — Hammy tight under
   // the progress bar, and the grid lifted off centre rather than floating in the middle.
   const raised = chapter.type === 'matching';
-  // Two chapter types leave a lot of room under the bottom action bar and read as top-heavy
-  // at the default companion padding: the poll (a statement and two buttons) and the swipe
-  // cards (one fixed-height card). Both drop Hammy further down the screen — the swipe cards
-  // furthest, since they're the shortest content of the two.
-  const companionDrop = chapter.type === 'poll'
+  // Short chapter types leave a lot of room under the bottom action bar and read as
+  // top-heavy at the default companion padding: the poll (a statement and two buttons),
+  // decisions ("First Paycheck Lands" — a prompt and a couple of choices) and the swipe
+  // cards (one fixed-height card). All drop Hammy further down the screen — the swipe cards
+  // furthest, being the shortest content of the three.
+  const companionDrop = chapter.type === 'poll' || chapter.type === 'decision'
     ? styles.companionWrapLow
     : chapter.type === 'mythcards'
       ? styles.companionWrapLowest
