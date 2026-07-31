@@ -1627,9 +1627,20 @@ function MythcardsView({
   const rotate = resolved
     ? '0deg'
     : pan.x.interpolate({ inputRange: [-220, 0, 220], outputRange: ['-14deg', '0deg', '14deg'] });
+  // Once resolved, the card's colour reports whether you were RIGHT — not which way you
+  // swiped. It used to key off guessedTrue, so swiping "true" painted the card green even
+  // when true was the wrong call, and swiping "false" painted it pink even when false was
+  // correct. Half of all answers were coloured backwards, which is what made this screen
+  // hard to read. While still dragging, the colour does track direction — there's no verdict
+  // yet, so green/pink there is just a preview of which way you're about to commit.
   const borderColor = resolved
-    ? (resolved.guessedTrue ? colors.green : '#D98A9E')
+    ? (resolved.guessedRight ? colors.green : '#D98A9E')
     : dragDir === 'true' ? colors.green : dragDir === 'false' ? '#D98A9E' : colors.borderOpt;
+  // A full tint behind the card as well as the border, so the verdict reads at a glance
+  // rather than from a 2px edge.
+  const cardBg = resolved
+    ? (resolved.guessedRight ? colors.tagGreenBg : colors.pinkBg2)
+    : colors.white;
 
   return (
     // flex + centered: the swipe card is a fixed-height thing in a tall scroller, so left
@@ -1645,7 +1656,7 @@ function MythcardsView({
       <View style={styles.mythStack}>
         <Animated.View
           {...(resolved ? {} : panResponder.panHandlers)}
-          style={[styles.mythCard, { borderColor, transform: [{ translateX: pan.x }, { rotate }] }]}
+          style={[styles.mythCard, { borderColor, backgroundColor: cardBg, transform: [{ translateX: pan.x }, { rotate }] }]}
         >
           {!resolved ? (
             <>
@@ -1655,9 +1666,16 @@ function MythcardsView({
             </>
           ) : (
             <>
-              <Tag tone={resolved.guessedTrue ? 'green' : 'pink'}>{card.isTrue ? 'TRUE' : 'FALSE'}</Tag>
+              {/* Leads with the verdict, not the answer. This tag used to show the card's
+                  actual truth ("TRUE"/"FALSE") but take its COLOUR from the swipe direction,
+                  so it could read FALSE in green — the answer and the colour saying opposite
+                  things at the same time. Correctness is what you want first; the actual
+                  truth of the statement is in the line below and in the explanation. */}
+              <Tag tone={resolved.guessedRight ? 'green' : 'pink'}>
+                {resolved.guessedRight ? '✓ CORRECT' : '✕ NOT QUITE'}
+              </Tag>
               <Txt style={[styles.mythGuessLine, { color: resolved.guessedRight ? colors.greenDark : colors.pinkDark }]}>
-                You said {resolved.guessedTrue ? 'True' : 'False'}, {resolved.guessedRight ? 'and that is right.' : 'not quite.'}
+                You said {resolved.guessedTrue ? 'True' : 'False'} — it&apos;s {card.isTrue ? 'True' : 'False'}.
               </Txt>
               <Txt variant="lead" style={{ fontSize: 13, color: resolved.guessedRight ? colors.greenDark : colors.pinkDark }}>{card.explanation}</Txt>
             </>
