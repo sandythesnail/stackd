@@ -48,15 +48,17 @@ const HINT_FREE_CHAPTER_TYPES = new Set(['story', 'teach', 'hint']);
  * running total and a feedback card ("Planning Around an Accurate W-4" is one of these);
  * simulator stacks a meter card on a list of decisions; spotcheck a whole posting whose
  * every segment can sprout an explanation; bossbattle keeps its full choice list on screen
- * and then adds the outcome underneath it. These always scroll, so Hammy steps aside and
+ * and then adds the outcome underneath it; knowledgecheck (Quick Check) stacks a question
+ * stem, four options and an explanation card. These always scroll, so Hammy steps aside and
  * lets the question have the whole screen.
  *
  * A fixed list of TYPES, decided before the first paint — never a measure-then-react rule,
  * and never content-dependent. Both of those were tried and both went wrong: measuring made
  * him blink (the height isn't known until after layout, so he had to start hidden), and a
- * per-question size ESTIMATE caught so many questions that he effectively disappeared from
- * the lesson. Anything not on this list keeps him and scrolls if it must. */
-const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck', 'bossbattle']);
+ * per-question size ESTIMATE was so unpredictable it took him off ordinary questions too.
+ * Quick Checks are on the list wholesale for that reason — every one of them, not the long
+ * ones, so his presence is never a surprise. Anything not listed keeps him and scrolls. */
+const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck', 'bossbattle', 'knowledgecheck']);
 
 /* There used to be a second, MEASURED way to lose the companion: an allow-list of dense
  * chapter types (knowledgecheck, decision, bossbattle, mythcards, explainback, urlinspect,
@@ -1844,21 +1846,23 @@ function BossbattleView({
           you can still see which answer produced it. Nothing here is scrollable by design:
           one choice row plus one card always fits the screen this chapter type gets to
           itself (bossbattle is in TALL_CHAPTER_TYPES, so there's no companion Hammy). */}
-      <View style={{ gap: 6 }}>
-        {/* Labels the surviving row once the others collapse away — without it the single
-            highlighted option reads as "the answer" rather than "the one you picked". */}
-        {picked ? <Txt style={styles.bossOutcomePick}>YOU CHOSE</Txt> : null}
+      {!picked ? (
         <View style={{ gap: 10 }}>
-          {(picked ? [picked] : chapter.choices).map((c) => (
-            <Option
-              key={c.id}
-              label={c.label}
-              state={picked ? 'on' : 'default'}
-              onPress={picked ? undefined : () => pick(c)}
-            />
+          {chapter.choices.map((c) => (
+            <Option key={c.id} label={c.label} onPress={() => pick(c)} />
           ))}
         </View>
-      </View>
+      ) : (
+        // Once answered, the choice you took becomes a labelled card matching the outcome
+        // card below it — same white box, same small caps heading — rather than a lone
+        // highlighted option row, which read as "the correct answer" instead of "yours".
+        // The heading is red against the outcome's grey so the pair reads as a sequence:
+        // this is what you did, this is what came of it.
+        <Card style={{ gap: 6 }}>
+          <Txt style={styles.bossChoseLabel}>YOU CHOSE</Txt>
+          <Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.label}</Txt>
+        </Card>
+      )}
       {picked ? (
         <AnswerFeedback>
           <Card style={{ gap: 6 }}>
@@ -2138,6 +2142,9 @@ const styles = StyleSheet.create({
     borderColor: colors.pinkBorder, borderRadius: 20, padding: 20,
   },
   bossOutcomePick: { fontFamily: font.extra, fontSize: 11.5, color: colors.muted5, letterSpacing: 0.4 },
+  // Same shape as bossOutcomePick, in the danger red — the one bit of colour distinguishing
+  // "your move" from "the consequence" in an otherwise identical pair of cards.
+  bossChoseLabel: { fontFamily: font.extra, fontSize: 11.5, color: colors.danger, letterSpacing: 0.4 },
   glossaryPopupList: { gap: 16, paddingBottom: 2 },
   glossarySectionName: { fontFamily: font.bold, fontSize: 12, color: colors.muted5, textTransform: 'uppercase', letterSpacing: 0.4 },
   glossaryPopupCard: {
