@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent } from 'react-native';
 import Reanimated, { SlideInDown, FadeInDown, FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -73,13 +73,31 @@ const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck', 'bossb
  * doesn't reshuffle at the moment of answering. Constants are the real styles: ~19px lines
  * at ~34 chars for the stem, options at 54px plus their own wrapping, the card at 40px. */
 function estimatedQuestionHeight(q: Question): number {
-  const lines = (text: string, perLine: number) => Math.max(1, Math.ceil(text.length / perLine));
   const title = 26;
-  const stem = lines(q.q, 34) * 20;
-  const options = q.opts.reduce((sum, o) => sum + 54 + (lines(o, 30) - 1) * 19, 0);
-  const explanation = 40 + lines(q.exp.slice(0, 110), 40) * 18;
+  const stem = textLines(q.q, 34) * 20;
+  const options = q.opts.reduce((sum, o) => sum + 54 + (textLines(o, 30) - 1) * 19, 0);
+  const explanation = 40 + textLines(q.exp.slice(0, 110), 40) * 18;
   const gaps = 10 * 3;
   return title + stem + options + explanation + gaps;
+}
+
+const textLines = (text: string, perLine: number) => Math.max(1, Math.ceil(text.length / perLine));
+
+/** Same idea as estimatedQuestionHeight, for a vocabulary concept: the definition card (term,
+ * plain-English explanation, italic analogy) plus the optional true/false check beneath it.
+ * A long definition with a wordy analogy and a check is exactly the screen where the student
+ * was scrolling to reach the buttons, so the companion steps aside on those. */
+function estimatedConceptHeight(c: TeachChapter['concepts'][number]): number {
+  const title = 26;
+  const term = 24;
+  const plain = textLines(c.plain, 36) * 20;
+  const analogy = c.analogy ? textLines(c.analogy, 40) * 18 + 6 : 0;
+  const card = 36; // Card padding, top and bottom
+  const check = c.check?.statement
+    ? 36 + textLines(c.check.statement, 34) * 19 + 54 + 24 // card + statement + buttons + result
+    : 0;
+  const gaps = 10 * 2;
+  return title + term + plain + analogy + card + check + gaps;
 }
 
 /* There used to be a second, MEASURED way to lose the companion: an allow-list of dense
@@ -555,31 +573,38 @@ export default function QuestPlayer() {
     : initialLayoutMode(chapter);
   const onLayoutMode = (m: LayoutMode) => setReportedLayout({ chapterIdx, mode: m });
 
-  // A Quick Check only gives up the companion when its own content genuinely won't fit
-  // beside him — the long-stem, four-wordy-option questions where the explanation card
-  // landed below the fold and the student had to scroll to find out if they were right.
-  // Short ones keep him. Computed from the text during render (see estimatedQuestionHeight),
-  // never measured, so there's no frame where he's hidden pending an answer.
+  // Quick Checks and vocabulary chapters give up the companion only when their own content
+  // genuinely won't fit beside him — the long-stem, four-wordy-option questions and the
+  // long-definition-plus-check concepts where the student had to scroll to reach the answer
+  // buttons or the result. Short ones keep him. Computed from the text during render (see
+  // estimatedQuestionHeight/estimatedConceptHeight), never measured, so there's no frame
+  // where he's hidden pending a decision.
   //
   // The budget is this window minus the chrome that's always there: the progress header, the
   // bottom action bar, both safe areas, and the ~150px the companion row itself occupies. If
   // the question needs more than what's left, he's the thing that goes.
   const CHROME_H = 200;
   const COMPANION_H = 150;
-  const denseQuickCheck = chapter.type === 'knowledgecheck'
-    && chapter.qIndices.some((qi) => {
+  const contentBudget = winHeight - CHROME_H - COMPANION_H;
+  // Judged across every question/concept in the chapter, not just the one on screen, so the
+  // companion can't appear and vanish as you move between items within a single chapter.
+  const denseChapter = chapter.type === 'knowledgecheck'
+    ? chapter.qIndices.some((qi) => {
       const q = content.questions[qi];
-      return !!q && estimatedQuestionHeight(q) > winHeight - CHROME_H - COMPANION_H;
-    });
+      return !!q && estimatedQuestionHeight(q) > contentBudget;
+    })
+    : chapter.type === 'teach'
+      ? chapter.concepts.some((c) => estimatedConceptHeight(c) > contentBudget)
+      : false;
 
   // Hidden during a story chapter's intro beat or a 'hint' chapter, both of which already
   // show their own big Hammy in the content area instead (StoryView/HintView), so a second
   // one up here would just be a redundant duplicate; on the handful of chapter types that
   // are simply too tall to share a screen with him (see TALL_CHAPTER_TYPES) plus the dense
-  // full-screen teach walkthroughs; and on a Quick Check measured too dense to share.
+  // full-screen teach walkthroughs; and on a Quick Check or vocab chapter too dense to share.
   const showCompanion = layoutMode === 'normal'
     && !TALL_CHAPTER_TYPES.has(chapter.type)
-    && !denseQuickCheck;
+    && !denseChapter;
   // Centered above the content, rather than off to its left, for the two chapter types
   // that read as a scene rather than a question: the story's dialogue (the conversation is
   // with him) and Match It (a centered grid).
@@ -1095,7 +1120,9 @@ function TeachView({
   return (
     // Keyed to the concept index so each concept swap gets its own fade in/out instead of an
     // instant cut.
-    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
+    // Top-anchored for the same reason as the poll and Quick Check above: the true/false
+    // result appearing must not re-flow the definition being read.
+    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Card style={{ gap: 8 }}>
         <Txt style={styles.term}>{concept.term}</Txt>
@@ -1113,9 +1140,11 @@ function TeachView({
             <TrueFalseButton label="False" state={tfState(false, answered, concept.check?.isTrue)} onPress={answered === null ? () => pick(false) : undefined} />
           </View>
           {answered !== null ? (
-            <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === concept.check?.isTrue ? colors.greenDark : colors.pinkDark }}>
-              {answered === concept.check?.isTrue ? 'Correct!' : `Not quite — that's ${concept.check?.isTrue ? 'true' : 'false'}.`}
-            </Txt>
+            <AnswerFeedback>
+              <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === concept.check?.isTrue ? colors.greenDark : colors.pinkDark }}>
+                {answered === concept.check?.isTrue ? 'Correct!' : `Not quite — that's ${concept.check?.isTrue ? 'true' : 'false'}.`}
+              </Txt>
+            </AnswerFeedback>
           ) : null}
         </Card>
       ) : null}
@@ -1366,6 +1395,7 @@ function DecisionView({
           ))}
         </View>
       ) : (
+        <AnswerFeedback>
         <Card style={{ gap: 12 }}>
           <Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.outcome.text}</Txt>
           {/* Ported from the website's renderDecisionOutcome pg-column-chart — a real
@@ -1373,6 +1403,7 @@ function DecisionView({
               pay" as two bars. Only some decision chapters carry `compare` data. */}
           {picked.outcome.compare ? <ColumnChart data={picked.outcome.compare} /> : null}
         </Card>
+        </AnswerFeedback>
       )}
     </View>
   );
@@ -1396,6 +1427,17 @@ function ColumnChart({ data }: { data: { label: string; value: number }[] }) {
       ))}
     </View>
   );
+}
+
+/** Wraps a chapter's answer feedback so every type reveals it the same way: a short
+ * rise-and-fade in the space below the question, never a hard pop.
+ *
+ * Purely additive — it animates the feedback's OWN entrance and nothing else on screen
+ * moves, which is the whole point. Feedback blocks are the last child of a top-anchored
+ * column everywhere they're used, so revealing one extends the column downward instead of
+ * re-flowing the question above it. */
+function AnswerFeedback({ children }: { children: ReactNode }) {
+  return <Reanimated.View entering={FadeInDown.duration(300)}>{children}</Reanimated.View>;
 }
 
 /* ───────────────────────── microsim ───────────────────────── */
@@ -1430,11 +1472,11 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
   }, [submitted, tier.ok]);
 
   return (
-    // Centered, so the slack a slider chapter has left over after its cards is shared above
-    // and below instead of pooling into one dead band under the last card ("Budgeting From
-    // Net, Not Gross" was mostly that band). These chapters hide the companion Hammy
-    // (TALL_CHAPTER_TYPES), so there's a lot of height to distribute.
-    <View style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
+    // Deliberately top-anchored. Centering this was tried and reverted: it bought a bit of
+    // bottom space but shifted the sliders up the moment the feedback card appeared, so the
+    // control you'd just been dragging moved out from under your finger as you read the
+    // result. Everything above the feedback stays exactly where it was laid out.
+    <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       <Card style={{ gap: 4 }}>
@@ -1466,11 +1508,9 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
         <Txt style={{ fontFamily: font.display, fontSize: 28, color: leftover < 0 ? colors.danger : colors.greenDark }}>${leftover}</Txt>
       </Card>
       {submitted ? (
-        // Slides up as it fades in rather than just appearing — locking in a budget is the
-        // payoff beat of this chapter type and it previously just popped into existence.
-        <Reanimated.View entering={FadeInDown.duration(320)}>
+        <AnswerFeedback>
           <Card><Txt style={{ fontFamily: font.semi, fontSize: 14, color: tier.ok ? colors.greenDark : colors.pinkDark }}>{friendlyTierText(tier.text)}</Txt></Card>
-        </Reanimated.View>
+        </AnswerFeedback>
       ) : null}
     </View>
   );
@@ -1485,11 +1525,12 @@ function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollCha
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answered]);
   return (
-    // Centered so the block sits lower and the slack isn't left as one gap above the bottom
-    // action bar. Type sizes here are a notch under the shared defaults: with Hammy on screen,
-    // an intro plus a statement plus the explanation card is right at the height where a
-    // "What Do Most People Think?" would start scrolling, and a true/false shouldn't.
-    <View style={{ gap: 9, flex: 1, justifyContent: 'center' }}>
+    // Top-anchored, NOT centered. Centering re-flowed the whole question upward the instant
+    // the explanation appeared — the statement you were still reading slid out from under
+    // you. Everything above the feedback now stays exactly where it started; the feedback
+    // extends the column downward instead. Type is a notch under the shared defaults so the
+    // question, both buttons and the explanation all fit beside Hammy without scrolling.
+    <View style={{ gap: 9, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 13.5, lineHeight: 19 }}>{chapter.intro}</Txt>
       <Card style={{ padding: 15 }}><Txt style={{ fontFamily: font.displayMed, fontSize: 14.5, color: colors.ink }}>{chapter.statement}</Txt></Card>
@@ -1498,14 +1539,14 @@ function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollCha
         <TrueFalseButton label="False" state={tfState(false, answered, chapter.isTrue)} onPress={answered === null ? () => pick(false) : undefined} />
       </View>
       {answered !== null ? (
-        <Reanimated.View entering={FadeInDown.duration(300)}>
+        <AnswerFeedback>
           <Card style={{ padding: 15 }}>
             <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === chapter.isTrue ? colors.greenDark : colors.pinkDark }}>
               {answered === chapter.isTrue ? 'Correct!' : 'Not quite.'}
             </Txt>
             <Txt variant="lead" style={{ fontSize: 12.5, lineHeight: 17.5, marginTop: 4, color: answered === chapter.isTrue ? colors.greenDark : colors.pinkDark }}>{chapter.explanation}</Txt>
           </Card>
-        </Reanimated.View>
+        </AnswerFeedback>
       ) : null}
     </View>
   );
@@ -1700,7 +1741,11 @@ function KnowledgecheckView({
   return (
     // Keyed to the question index so each question swap gets its own fade in/out instead of
     // an instant cut.
-    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
+    // Top-anchored. Centering made the entire question jump upward the moment an answer was
+    // tapped (the column re-centred around the newly added explanation card) — with the fade
+    // on top of the shift, the question read as blinking out and coming back. The `key` still
+    // scopes the fade to a real question CHANGE, so answering re-renders in place.
+    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{question.q}</Txt>
       <View style={{ gap: 10 }}>
@@ -1723,7 +1768,9 @@ function KnowledgecheckView({
         // the options above it and the Next button below stay on screen together. 110 chars,
         // not shortFeedback's default 60 (tuned for the narrow companion bubble) — this is a
         // full-width card with more room.
-        <Card><Txt variant="lead" style={{ fontSize: 13, color: right ? colors.greenDark : colors.pinkDark }}>{shortFeedback(question.exp, 110)}</Txt></Card>
+        <AnswerFeedback>
+          <Card><Txt variant="lead" style={{ fontSize: 13, color: right ? colors.greenDark : colors.pinkDark }}>{shortFeedback(question.exp, 110)}</Txt></Card>
+        </AnswerFeedback>
       ) : null}
     </Reanimated.View>
   );
@@ -1817,28 +1864,30 @@ function BossbattleView({
       <Tag tone="warm">⚔ BOSS CHALLENGE</Tag>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.scenario}</Txt>
-      {/* The choices stay on screen once one is taken, with the pick highlighted and the
-          outcome added below — no popup, and no swapping the list out for a bare card, which
-          used to erase the question the moment it was answered (you could no longer see what
-          you'd chosen or what the alternatives were). This chapter type hides the companion
-          Hammy (TALL_CHAPTER_TYPES), so there's a full screen to lay all of it out in. */}
+      {/* Third approach to this, after a popup (dismissed as intrusive) and keeping the full
+          list on screen (which pushed the outcome below the fold on longer scenarios).
+          Answering collapses the list to just the chosen row, and the outcome takes the space
+          the other options were using — so the result lands in view without scrolling, and
+          you can still see which answer produced it. Nothing here is scrollable by design:
+          one choice row plus one card always fits the screen this chapter type gets to
+          itself (bossbattle is in TALL_CHAPTER_TYPES, so there's no companion Hammy). */}
       <View style={{ gap: 10 }}>
-        {chapter.choices.map((c) => (
+        {(picked ? [picked] : chapter.choices).map((c) => (
           <Option
             key={c.id}
             label={c.label}
-            state={picked?.id === c.id ? 'on' : 'default'}
+            state={picked ? 'on' : 'default'}
             onPress={picked ? undefined : () => pick(c)}
           />
         ))}
       </View>
       {picked ? (
-        <Reanimated.View entering={FadeInDown.duration(320)}>
+        <AnswerFeedback>
           <Card style={{ gap: 6 }}>
             <Txt style={styles.bossOutcomePick}>HOW IT PLAYED OUT</Txt>
             <Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.consequence.text}</Txt>
           </Card>
-        </Reanimated.View>
+        </AnswerFeedback>
       ) : null}
     </View>
   );
@@ -1929,12 +1978,14 @@ function PriceisrightView({
         />
       </Card>
       {submitted ? (
-        <Card>
-          <Txt style={{ fontFamily: font.bold, fontSize: 13, color: close ? colors.greenDark : colors.pinkDark }}>
-            {close ? 'Close enough!' : `Actual: $${chapter.actualValue}`}
-          </Txt>
-          <Txt variant="lead" style={{ fontSize: 13, marginTop: 4, color: close ? colors.greenDark : colors.pinkDark }}>{chapter.explanation}</Txt>
-        </Card>
+        <AnswerFeedback>
+          <Card>
+            <Txt style={{ fontFamily: font.bold, fontSize: 13, color: close ? colors.greenDark : colors.pinkDark }}>
+              {close ? 'Close enough!' : `Actual: $${chapter.actualValue}`}
+            </Txt>
+            <Txt variant="lead" style={{ fontSize: 13, marginTop: 4, color: close ? colors.greenDark : colors.pinkDark }}>{chapter.explanation}</Txt>
+          </Card>
+        </AnswerFeedback>
       ) : null}
     </View>
   );
@@ -1984,12 +2035,14 @@ function ExplainbackView({
         placeholderTextColor={colors.muted6}
       />
       {submitted ? (
-        <Card style={{ gap: 6 }}>
-          <Txt style={{ fontFamily: font.bold, fontSize: 13, color: hitKeywords.length ? colors.greenDark : colors.pinkDark }}>
-            {hitKeywords.length ? `Nice — you covered: ${hitKeywords.join(', ')}` : "Here's the full picture:"}
-          </Txt>
-          <Txt variant="lead" style={{ fontSize: 13 }}>{chapter.fullDefinition}</Txt>
-        </Card>
+        <AnswerFeedback>
+          <Card style={{ gap: 6 }}>
+            <Txt style={{ fontFamily: font.bold, fontSize: 13, color: hitKeywords.length ? colors.greenDark : colors.pinkDark }}>
+              {hitKeywords.length ? `Nice — you covered: ${hitKeywords.join(', ')}` : "Here's the full picture:"}
+            </Txt>
+            <Txt variant="lead" style={{ fontSize: 13 }}>{chapter.fullDefinition}</Txt>
+          </Card>
+        </AnswerFeedback>
       ) : null}
     </View>
   );
@@ -2037,11 +2090,13 @@ function UrlinspectView({ chapter, onComplete, onAction, reactTo }: { chapter: U
         </View>
       </Card>
       {revealed ? (
-        <Card style={{ gap: 8 }}>
-          {chapter.parts.filter((p) => p.isSuspicious).map((p) => (
-            <Txt key={p.id} variant="lead" style={{ fontSize: 12.5 }}>• {p.note}</Txt>
-          ))}
-        </Card>
+        <AnswerFeedback>
+          <Card style={{ gap: 8 }}>
+            {chapter.parts.filter((p) => p.isSuspicious).map((p) => (
+              <Txt key={p.id} variant="lead" style={{ fontSize: 12.5 }}>• {p.note}</Txt>
+            ))}
+          </Card>
+        </AnswerFeedback>
       ) : null}
     </View>
   );
@@ -2139,12 +2194,16 @@ const styles = StyleSheet.create({
   // Hammy on the left, his bubble in the space beside him. A real flex row, so the bubble
   // sizes itself to whatever is left over rather than to a fixed width that would have to
   // be re-tuned every time his size or the screen's changes.
+  // paddingTop well over paddingBottom on purpose: this row sits directly under the progress
+  // header, and at even padding Hammy read as crowded up against it with all the slack left
+  // below him. The extra top space centres him in the band between the header and the
+  // question instead. Costs nothing in fit — the row's height is Hammy's either way.
   companionWrap: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 16, paddingTop: 4, paddingBottom: 4,
+    paddingHorizontal: 16, paddingTop: 16, paddingBottom: 6,
   },
   // The centered arrangement (dialogue, Match It): a column, bubble above Hammy.
-  companionWrapCentered: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 4, paddingBottom: 4 },
+  companionWrapCentered: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 6 },
   // Match It only: pulls Hammy up tight under the progress bar. Paired with contentRaised.
   companionWrapRaised: { paddingTop: 0, paddingBottom: 0 },
   // No reserved height: the row's height is Hammy's, and he's far taller than any bubble
