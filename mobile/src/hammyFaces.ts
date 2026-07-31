@@ -29,9 +29,12 @@ export const MOOD_FACES: Record<string, FaceOverlay> = {
   satisfied: { image: require('../assets/images/hammy-faces/hammy-happy.png'), ...DEFAULT_OVERLAY },
 };
 
-/** happy/streak share the default position; gentle is taller and shifted up. */
+/** streak keeps the full-face swap; happy/gentle add only a mouth to the resting face. */
 export const REACTION_FACES: Record<'happy' | 'gentle' | 'streak', FaceOverlay> = {
-  happy: { image: require('../assets/images/hammy-faces/hammy-streak.png'), ...DEFAULT_OVERLAY },
+  // Right answer adds only a mouth to the resting face rather than replacing it — the
+  // shockhappy pig's own mouth (outline + tongue) lifted off its skin as an alpha mask, same
+  // technique as gentle below. Box mirrors app.css exactly.
+  happy: { image: require('../assets/images/hammy-faces/hammy-mouth-happy.png'), top: 260, left: 204, width: 32, height: 37, keepBase: true },
   // Wrong answer adds only a mouth to the resting face rather than replacing it — the confused
   // pig's mouth from newconfusedface.png as an alpha mask. Box mirrors app.css exactly.
   gentle: { image: require('../assets/images/hammy-faces/hammy-mouth-confused.png'), top: 258, left: 214, width: 48, height: 30, keepBase: true },

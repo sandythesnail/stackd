@@ -22269,7 +22269,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // a completely blank face for however long the network took. URLs must match the CSS
   // exactly (including the ?v= cache-busters) to hit the same cache entries.
   [
-    'faces/hammy-streak.png?v=17', 'faces/hammy-mouth-confused.png?v=1', 'faces/hammy-happy.png?v=17',
+    'faces/hammy-mouth-happy.png?v=1', 'faces/hammy-mouth-confused.png?v=1', 'faces/hammy-happy.png?v=17',
     'faces/star-face.png', 'faces/sleepy-face.png', 'faces/curious-face.png',
     'faces/angry-face.png', 'faces/love-face.png', 'faces/nervy-face.png',
     'faces/sad-face.png', 'faces/surprise-face.png', 'faces/wink-face.png',

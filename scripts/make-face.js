@@ -12,6 +12,7 @@
  *
  *   node scripts/make-face.js                    rebuild hammy-mouth-confused.png (web + mobile)
  *   node scripts/make-face.js --face             rebuild the full-face crop hammy-confused.png
+ *   node scripts/make-face.js --happy-mouth      rebuild hammy-mouth-happy.png (web + mobile)
  *   node scripts/make-face.js --profile <png>    print a PNG's mid-row/col alpha falloff
  *
  * No dependencies — PNG in/out is done here with zlib, since the repo deliberately has none.
@@ -62,6 +63,60 @@ const MOUTH = {
   // Kills the snout's lower shading, which creeps into the top rows as a few percent of coverage.
   floor: 0.07, band: 0.08,
 };
+
+/** The correct-answer MOUTH: shockhappy.png's open two-tone mouth (dark outline + lighter
+ *  tongue), lifted off its skin as an alpha mask, same idea as MOUTH above but keyed
+ *  differently. MOUTH's single-`ink` coverage solve fits the confused pig's mouth because
+ *  that stroke is one flat dark tone; this mouth has two distinct tones inside the same
+ *  shape (see faces/README.md), so flattening it to one ink colour would either lose the
+ *  tongue or turn the whole mouth into a hollow ring. Instead this keys every pixel against
+ *  its own local *skin* colour (the same dilate-then-blur estimate MOUTH uses) and keeps the
+ *  pixel's OWN colour wherever it's far enough from that skin tone — so both the outline and
+ *  the tongue survive intact, and only the surrounding face skin drops to transparent.
+ *
+ *  Box/threshold maths (source px -> the pig's 440x460 frame) live in faces/README.md.
+ *  shockhappy.png is a single ~1250px-wide pig (not a multi-pig sheet needing scribble-out
+ *  like newconfusedface.png), so there's no CONFUSED-style crop step needed first. */
+const HAPPY_MOUTH = {
+  src: 'faces/shockhappy.png',
+  out: ['faces/hammy-mouth-happy.png', 'mobile/assets/images/hammy-faces/hammy-mouth-happy.png'],
+  // Mouth ink (outline) spans x 582..677, y 725..838; this box adds an even margin on every
+  // side so the feathered key-out has room to fall off before the crop edge.
+  box: { x: 572, y: 715, w: 115, h: 133 },
+  // Radius for the local-skin estimate: bigger than the mouth's own ~95x113px silhouette so
+  // the dilation actually reaches past it to real cheek skin instead of sampling its own ink.
+  skinRadius: 60,
+  // Distance (in RGB units) from that local skin below which a pixel is skin, not mouth;
+  // `band` is the ease width above it. Tuned so the cheek's own shading gradient (a soft,
+  // low-distance drift) stays fully transparent while the mouth's much larger jump in both
+  // directions (dark outline AND lighter tongue) both clear the floor.
+  floor: 18, band: 30,
+};
+
+/** Builds the two-tone mouth mask: per pixel, distance from a local-skin estimate becomes
+ *  alpha (smoothstepped over `floor..floor+band`), and the pixel keeps its OWN source colour
+ *  rather than being flattened to one ink tone — see HAPPY_MOUTH's comment for why. */
+function buildTwoToneMouth(spec) {
+  const img = decode(path.join(ROOT, spec.src));
+  const skin = estimateSkin(img, spec.skinRadius);
+  const { width: sw, data } = img;
+  const out = new Uint8Array(spec.box.w * spec.box.h * 4);
+  for (let y = 0; y < spec.box.h; y++) for (let x = 0; x < spec.box.w; x++) {
+    const sx = spec.box.x + x, sy = spec.box.y + y;
+    const i = (sy * sw + sx) * 4, s3 = (sy * sw + sx) * 3;
+    const dr = data[i] - skin[s3], dg = data[i + 1] - skin[s3 + 1], db = data[i + 2] - skin[s3 + 2];
+    const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+    const t = Math.max(0, Math.min(1, (dist - spec.floor) / spec.band));
+    const a = t * t * (3 - 2 * t);
+    const d = (y * spec.box.w + x) * 4;
+    out[d] = data[i]; out[d + 1] = data[i + 1]; out[d + 2] = data[i + 2];
+    out[d + 3] = Math.round(255 * a);
+  }
+  for (const o of spec.out) {
+    encode(path.join(ROOT, o), { width: spec.box.w, height: spec.box.h, data: out });
+    console.log(`wrote ${o}  ${spec.box.w}x${spec.box.h}`);
+  }
+}
 
 /* Oval cut-out, shared by every face in faces/. Fully opaque inside normalised elliptical
  * radius R_IN, eased to fully transparent at R_OUT. */
@@ -397,6 +452,8 @@ if (args[0] === '--profile') {
   args.slice(1).forEach(profile);
 } else if (args[0] === '--face') {
   build(CONFUSED);
+} else if (args[0] === '--happy-mouth') {
+  buildTwoToneMouth(HAPPY_MOUTH);
 } else {
   buildMouth(MOUTH);
 }

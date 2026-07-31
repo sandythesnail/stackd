@@ -9,10 +9,17 @@ Two families:
 | Family | Files | Used for |
 | --- | --- | --- |
 | Daily moods | `*-face.png` | Home mascot's rotating mood (`.mood-*` in app.css) |
-| Reactions | `hammy-happy` / `hammy-streak` / `hammy-confused` | Transient face after a graded answer in the quest player |
+| Reactions | `hammy-mouth-happy` / `hammy-mouth-confused` / `hammy-happy` | Transient face after a graded answer in the quest player |
 
-`hammy-confused.png` is the wrong-answer face. It replaced `hammy-gentle.png` (still in the repo,
-unused, if you ever want to go back).
+Right and wrong answers (`.happy`/`.gentle`) are both mouth-only overlays now — Hammy keeps its
+resting eyes/cheeks/snout, and only a mouth mask (lifted off the source art as an alpha layer)
+gets added. `hammy-mouth-happy.png` (from `shockhappy.png`) and `hammy-mouth-confused.png`
+(from `newconfusedface.png`) are built by `scripts/make-face.js`'s `buildTwoToneMouth`/
+`buildMouth` respectively — see the `HAPPY_MOUTH`/`MOUTH` spec comments there for why they use
+different extraction techniques (one mouth is two-tone — outline + tongue — the other is a
+single flat stroke). Every-3rd-in-a-row (`.streak`) is the only reaction still a full-face swap,
+reusing `hammy-happy.png`. `hammy-gentle.png` and `hammy-streak.png` are the old full-face swaps
+`.gentle`/`.happy` used to use — still in the repo, unused, if you ever want to go back.
 
 ## The crop recipe
 

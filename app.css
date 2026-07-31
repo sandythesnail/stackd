@@ -1235,15 +1235,22 @@ select.budget-input { cursor: pointer; }
   background-size: cover; background-position: center; background-repeat: no-repeat;
   z-index: 3; pointer-events: none; opacity: 0; transition: opacity 0.15s ease;
 }
-.hammy-side-avatar.happy .hammy-face-overlay { opacity: 1; background-image: url('faces/hammy-streak.png?v=17'); }
-/* Wrong answer is the one reaction that does NOT swap the whole face. It keeps Hammy's resting
-   CSS face — eyes, cheeks, snout, shading, all untouched — and only adds a mouth: the confused
-   pig's own mouth from faces/newconfusedface.png, lifted off its skin as an alpha mask so just
-   the stroke lands here (see faces/README.md, and note the deliberately lopsided placement —
-   `left` is what to nudge if it should sit dead centre instead).
-   Because nothing underneath is hidden, this rule is absent from every "hide the base features"
-   selector below, and `contain` keeps the short mask from being cropped by the inherited
-   `cover`. */
+/* Right answer no longer swaps the whole face either — same mouth-only technique as gentle
+   just below: Hammy keeps its resting eyes/cheeks/snout, and only the shockhappy pig's own
+   mouth (outline + tongue, lifted off its skin as an alpha mask) is added. Box mirrors
+   mobile/src/hammyFaces.ts's REACTION_FACES.happy exactly (see faces/README.md). */
+.hammy-side-avatar.happy .hammy-face-overlay {
+  opacity: 1; background-image: url('faces/hammy-mouth-happy.png?v=1');
+  top: 260px; left: 204px; width: 32px; height: 37px; background-size: contain;
+}
+/* Wrong answer is the other reaction that does NOT swap the whole face. It keeps Hammy's
+   resting CSS face — eyes, cheeks, snout, shading, all untouched — and only adds a mouth: the
+   confused pig's own mouth from faces/newconfusedface.png, lifted off its skin as an alpha
+   mask so just the stroke lands here (see faces/README.md, and note the deliberately lopsided
+   placement — `left` is what to nudge if it should sit dead centre instead).
+   Because nothing underneath is hidden, happy/gentle are both absent from every "hide the base
+   features" selector below (only streak still swaps the whole face), and `contain` keeps the
+   short mask from being cropped by the inherited `cover`. */
 .hammy-side-avatar.gentle .hammy-face-overlay {
   opacity: 1; background-image: url('faces/hammy-mouth-confused.png?v=1');
   top: 258px; left: 214px; width: 48px; height: 30px; background-size: contain;
@@ -1253,18 +1260,14 @@ select.budget-input { cursor: pointer; }
    blend into the pig's skin instead of a hard rectangle) — leaving the original CSS eyes at
    full opacity underneath would show through that fade and double up as ghosting. */
 .pig-eye, .pig-cheek { transition: opacity 0.15s ease; }
-.hammy-side-avatar.happy .pig-eye,
 .hammy-side-avatar.streak .pig-eye,
-.hammy-side-avatar.happy .pig-cheek,
 .hammy-side-avatar.streak .pig-cheek { opacity: 0; }
 /* The illustration has its own shading baked in on the side it covers — drop just the
    bottom-right inset shadow (the part that would otherwise fall right behind the art) but
    keep the top-left highlight, so the head keeps its dimensional look on the left. */
-.hammy-side-avatar.happy .pig-head,
 .hammy-side-avatar.streak .pig-head { box-shadow: inset 16px 16px 30px rgba(255,255,255,.35); }
 /* The body's own shading peeks up behind the chin/lower-face area where it overlaps the
    head — flatten it too while a mood is active, same reasoning as the head. */
-.hammy-side-avatar.happy .pig-body,
 .hammy-side-avatar.streak .pig-body { box-shadow: none; }
 /* The illustration draws its own nose — the CSS snout is a distinctly different pink oval
    sitting on top of the head gradient, so it reads as a hard outline behind the art. Hide it
@@ -1274,7 +1277,6 @@ select.budget-input { cursor: pointer; }
    a blank-faced flash on every single reaction. Crossfading all the swapped features on the
    same clock means some face is always at full combined opacity. */
 .pig-snout, .pig-eye, .pig-cheek { transition: opacity 0.15s ease; }
-.hammy-side-avatar.happy .pig-snout,
 .hammy-side-avatar.streak .pig-snout { opacity: 0; }
 
 /* Centers vertically within whatever height the row ends up (quest-layout's min-height is set
