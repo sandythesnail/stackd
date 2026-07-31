@@ -51,54 +51,12 @@ const HINT_FREE_CHAPTER_TYPES = new Set(['story', 'teach', 'hint']);
  * and then adds the outcome underneath it. These always scroll, so Hammy steps aside and
  * lets the question have the whole screen.
  *
- * A fixed list of TYPES, decided before the first paint — never a measure-then-react rule.
- * See estimatedChapterHeight below for the one case that needs to look at the content, and
- * why even that is computed rather than measured. */
+ * A fixed list of TYPES, decided before the first paint — never a measure-then-react rule,
+ * and never content-dependent. Both of those were tried and both went wrong: measuring made
+ * him blink (the height isn't known until after layout, so he had to start hidden), and a
+ * per-question size ESTIMATE caught so many questions that he effectively disappeared from
+ * the lesson. Anything not on this list keeps him and scrolls if it must. */
 const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck', 'bossbattle']);
-
-/** Roughly how tall a knowledge-check question will lay out, in px, WITHOUT measuring it.
- *
- * Quick Checks are the one type whose height genuinely swings with the content: a short
- * question with three short options leaves room for Hammy, while a long stem with four
- * wordy options plus the explanation card that appears after answering does not — and
- * that's the case where the student had to scroll to see whether they got it right.
- *
- * This is estimated from the text rather than measured on purpose. The measured version is
- * exactly what caused Hammy to blink out and back on every Quick Check: you can't know the
- * height until after layout, so he had to start hidden and be revealed a frame (or a 220ms
- * fail-safe) later. Estimating lets the decision be made during render, before anything is
- * painted, so he is either there from the first frame or never drawn at all.
- *
- * Deliberately counts the explanation card even before an answer is given, so the layout
- * doesn't reshuffle at the moment of answering. Constants are the real styles: ~19px lines
- * at ~34 chars for the stem, options at 54px plus their own wrapping, the card at 40px. */
-function estimatedQuestionHeight(q: Question): number {
-  const title = 26;
-  const stem = textLines(q.q, 34) * 20;
-  const options = q.opts.reduce((sum, o) => sum + 54 + (textLines(o, 30) - 1) * 19, 0);
-  const explanation = 40 + textLines(q.exp.slice(0, 110), 40) * 18;
-  const gaps = 10 * 3;
-  return title + stem + options + explanation + gaps;
-}
-
-const textLines = (text: string, perLine: number) => Math.max(1, Math.ceil(text.length / perLine));
-
-/** Same idea as estimatedQuestionHeight, for a vocabulary concept: the definition card (term,
- * plain-English explanation, italic analogy) plus the optional true/false check beneath it.
- * A long definition with a wordy analogy and a check is exactly the screen where the student
- * was scrolling to reach the buttons, so the companion steps aside on those. */
-function estimatedConceptHeight(c: TeachChapter['concepts'][number]): number {
-  const title = 26;
-  const term = 24;
-  const plain = textLines(c.plain, 36) * 20;
-  const analogy = c.analogy ? textLines(c.analogy, 40) * 18 + 6 : 0;
-  const card = 36; // Card padding, top and bottom
-  const check = c.check?.statement
-    ? 36 + textLines(c.check.statement, 34) * 19 + 54 + 24 // card + statement + buttons + result
-    : 0;
-  const gaps = 10 * 2;
-  return title + term + plain + analogy + card + check + gaps;
-}
 
 /* There used to be a second, MEASURED way to lose the companion: an allow-list of dense
  * chapter types (knowledgecheck, decision, bossbattle, mythcards, explainback, urlinspect,
@@ -325,8 +283,6 @@ export default function QuestPlayer() {
   const content = moduleContentById(mod.id);
   const li = Number(lessonIndex ?? 0);
   const quest = content?.quests[li];
-  // Drives the dense-Quick-Check decision below — read here so it's available during render.
-  const { height: winHeight } = useWindowDimensions();
 
   const [chapterIdx, setChapterIdx] = useState(0);
   const [xpEarned, setXpEarned] = useState(0);
@@ -573,38 +529,18 @@ export default function QuestPlayer() {
     : initialLayoutMode(chapter);
   const onLayoutMode = (m: LayoutMode) => setReportedLayout({ chapterIdx, mode: m });
 
-  // Quick Checks and vocabulary chapters give up the companion only when their own content
-  // genuinely won't fit beside him — the long-stem, four-wordy-option questions and the
-  // long-definition-plus-check concepts where the student had to scroll to reach the answer
-  // buttons or the result. Short ones keep him. Computed from the text during render (see
-  // estimatedQuestionHeight/estimatedConceptHeight), never measured, so there's no frame
-  // where he's hidden pending a decision.
-  //
-  // The budget is this window minus the chrome that's always there: the progress header, the
-  // bottom action bar, both safe areas, and the ~150px the companion row itself occupies. If
-  // the question needs more than what's left, he's the thing that goes.
-  const CHROME_H = 200;
-  const COMPANION_H = 150;
-  const contentBudget = winHeight - CHROME_H - COMPANION_H;
-  // Judged across every question/concept in the chapter, not just the one on screen, so the
-  // companion can't appear and vanish as you move between items within a single chapter.
-  const denseChapter = chapter.type === 'knowledgecheck'
-    ? chapter.qIndices.some((qi) => {
-      const q = content.questions[qi];
-      return !!q && estimatedQuestionHeight(q) > contentBudget;
-    })
-    : chapter.type === 'teach'
-      ? chapter.concepts.some((c) => estimatedConceptHeight(c) > contentBudget)
-      : false;
-
   // Hidden during a story chapter's intro beat or a 'hint' chapter, both of which already
   // show their own big Hammy in the content area instead (StoryView/HintView), so a second
-  // one up here would just be a redundant duplicate; on the handful of chapter types that
-  // are simply too tall to share a screen with him (see TALL_CHAPTER_TYPES) plus the dense
-  // full-screen teach walkthroughs; and on a Quick Check or vocab chapter too dense to share.
-  const showCompanion = layoutMode === 'normal'
-    && !TALL_CHAPTER_TYPES.has(chapter.type)
-    && !denseChapter;
+  // one up here would just be a redundant duplicate; and on the handful of chapter types
+  // that are simply too tall to share a screen with him (see TALL_CHAPTER_TYPES) plus the
+  // dense full-screen teach walkthroughs.
+  //
+  // Nothing content-dependent decides this any more. A per-question height estimate was
+  // tried, to drop him only on Quick Checks and vocab cards that wouldn't fit beside him —
+  // but the threshold caught almost everything, so in practice he vanished from the ordinary
+  // questions too. He's worth more on screen than the handful of scroll-free screens the
+  // estimate bought; long chapters scroll instead.
+  const showCompanion = layoutMode === 'normal' && !TALL_CHAPTER_TYPES.has(chapter.type);
   // Centered above the content, rather than off to its left, for the two chapter types
   // that read as a scene rather than a question: the story's dialogue (the conversation is
   // with him) and Match It (a centered grid).
@@ -617,6 +553,15 @@ export default function QuestPlayer() {
   // Match It sits higher up the screen than the other centered chapter — Hammy tight under
   // the progress bar, and the grid lifted off centre rather than floating in the middle.
   const raised = chapter.type === 'matching';
+  // Two chapter types leave a lot of room under the bottom action bar and read as top-heavy
+  // at the default companion padding: the poll (a statement and two buttons) and the swipe
+  // cards (one fixed-height card). Both drop Hammy further down the screen — the swipe cards
+  // furthest, since they're the shortest content of the two.
+  const companionDrop = chapter.type === 'poll'
+    ? styles.companionWrapLow
+    : chapter.type === 'mythcards'
+      ? styles.companionWrapLowest
+      : null;
   // Smaller on the vocab chapter, where the term card + its true/false check are what have to
   // fit without scrolling; a little bigger on Match It, which has room to spare.
   const companionSize = chapter.type === 'teach' ? 104 : chapter.type === 'matching' ? 144 : 130;
@@ -657,6 +602,7 @@ export default function QuestPlayer() {
         <View style={[
           companionCentered ? styles.companionWrapCentered : styles.companionWrap,
           raised && styles.companionWrapRaised,
+          companionDrop,
         ]}>
           {companionCentered ? <ReactionBubble message={reactionMsg} mood={reactionMood} centered /> : null}
           <Hammy
@@ -1429,15 +1375,36 @@ function ColumnChart({ data }: { data: { label: string; value: number }[] }) {
   );
 }
 
-/** Wraps a chapter's answer feedback so every type reveals it the same way: a short
- * rise-and-fade in the space below the question, never a hard pop.
+/** Wraps a chapter's answer feedback so every type reveals it the same way: a quick
+ * side-to-side shake as it fades in.
  *
- * Purely additive — it animates the feedback's OWN entrance and nothing else on screen
- * moves, which is the whole point. Feedback blocks are the last child of a top-anchored
- * column everywhere they're used, so revealing one extends the column downward instead of
- * re-flowing the question above it. */
+ * Deliberately NOT a rise — the feedback used to slide up into place, which reads as the
+ * result shoving the question around even though nothing above it actually moves. A shake
+ * is horizontal, so it draws the eye to the result without implying any vertical shift, and
+ * it settles in a third of a second.
+ *
+ * Runs once on mount (the block is conditionally rendered, so mount IS the reveal). Both
+ * channels are transform/opacity only, hence useNativeDriver. */
 function AnswerFeedback({ children }: { children: ReactNode }) {
-  return <Reanimated.View entering={FadeInDown.duration(300)}>{children}</Reanimated.View>;
+  // useState's lazy initialiser rather than useRef().current: same "create once, keep the
+  // same instance" behaviour, without reading a ref during render (which the react-hooks
+  // lint rule flags, since a ref read at that point can't be relied on to be up to date).
+  const [shake] = useState(() => new Animated.Value(0));
+  const [fade] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const step = (toValue: number, duration: number) =>
+      Animated.timing(shake, { toValue, duration, easing: Easing.out(Easing.quad), useNativeDriver: true });
+    Animated.parallel([
+      Animated.timing(fade, { toValue: 1, duration: 180, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      // Decaying wobble: a firm first kick, then progressively smaller until it rests.
+      Animated.sequence([step(-7, 60), step(7, 70), step(-4, 60), step(3, 55), step(0, 55)]),
+    ]).start();
+  }, [shake, fade]);
+  return (
+    <Animated.View style={{ opacity: fade, transform: [{ translateX: shake }] }}>
+      {children}
+    </Animated.View>
+  );
 }
 
 /* ───────────────────────── microsim ───────────────────────── */
@@ -1530,7 +1497,10 @@ function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollCha
     // you. Everything above the feedback now stays exactly where it started; the feedback
     // extends the column downward instead. Type is a notch under the shared defaults so the
     // question, both buttons and the explanation all fit beside Hammy without scrolling.
-    <View style={{ gap: 9, flex: 1 }}>
+    //
+    // paddingTop rather than centring is how this sits lower down the screen: it's a fixed
+    // offset, so it uses the spare room without reintroducing the shift-on-answer.
+    <View style={{ gap: 9, flex: 1, paddingTop: 22 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 13.5, lineHeight: 19 }}>{chapter.intro}</Txt>
       <Card style={{ padding: 15 }}><Txt style={{ fontFamily: font.displayMed, fontSize: 14.5, color: colors.ink }}>{chapter.statement}</Txt></Card>
@@ -1652,8 +1622,7 @@ function MythcardsView({
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 13.5 }}>
         Read the card, then swipe right if you think it&apos;s <Txt style={{ fontFamily: font.extra }}>true</Txt>, left if you think
-        it&apos;s <Txt style={{ fontFamily: font.extra }}>false</Txt>. Take your time — the answer stays on screen until you&apos;re
-        ready to move on.
+        it&apos;s <Txt style={{ fontFamily: font.extra }}>false</Txt>.
       </Txt>
       <Txt style={styles.mythProgress}>Card {i + 1} of {chapter.cards.length}</Txt>
       <View style={styles.mythStack}>
@@ -1871,15 +1840,20 @@ function BossbattleView({
           you can still see which answer produced it. Nothing here is scrollable by design:
           one choice row plus one card always fits the screen this chapter type gets to
           itself (bossbattle is in TALL_CHAPTER_TYPES, so there's no companion Hammy). */}
-      <View style={{ gap: 10 }}>
-        {(picked ? [picked] : chapter.choices).map((c) => (
-          <Option
-            key={c.id}
-            label={c.label}
-            state={picked ? 'on' : 'default'}
-            onPress={picked ? undefined : () => pick(c)}
-          />
-        ))}
+      <View style={{ gap: 6 }}>
+        {/* Labels the surviving row once the others collapse away — without it the single
+            highlighted option reads as "the answer" rather than "the one you picked". */}
+        {picked ? <Txt style={styles.bossOutcomePick}>YOU CHOSE</Txt> : null}
+        <View style={{ gap: 10 }}>
+          {(picked ? [picked] : chapter.choices).map((c) => (
+            <Option
+              key={c.id}
+              label={c.label}
+              state={picked ? 'on' : 'default'}
+              onPress={picked ? undefined : () => pick(c)}
+            />
+          ))}
+        </View>
       </View>
       {picked ? (
         <AnswerFeedback>
@@ -2206,6 +2180,10 @@ const styles = StyleSheet.create({
   companionWrapCentered: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 6 },
   // Match It only: pulls Hammy up tight under the progress bar. Paired with contentRaised.
   companionWrapRaised: { paddingTop: 0, paddingBottom: 0 },
+  // Poll / swipe-cards: pushes him further down the screen again, into the room those two
+  // short chapter types leave spare. See companionDrop.
+  companionWrapLow: { paddingTop: 40, paddingBottom: 10 },
+  companionWrapLowest: { paddingTop: 58, paddingBottom: 12 },
   // No reserved height: the row's height is Hammy's, and he's far taller than any bubble
   // this can produce — so a message appearing or clearing can't move him or anything below.
   bubbleSlot: { flex: 1, alignItems: 'flex-start', justifyContent: 'center' },

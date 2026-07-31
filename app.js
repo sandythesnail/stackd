@@ -21799,7 +21799,7 @@ function renderMythCardsChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
   clearQuestContinue();
   main.innerHTML = `
-    <p class="quest-prompt">Read the card, then swipe right if you think it's <strong>true</strong>, left if you think it's <strong>false</strong>. Take your time. The answer stays on screen until you're ready to move on.</p>
+    <p class="quest-prompt">Read the card, then swipe right if you think it's <strong>true</strong>, left if you think it's <strong>false</strong>.</p>
     <div class="myth-card-stack" id="myth-card-stack"></div>
     <div class="myth-next-wrap" id="myth-next-wrap"></div>
     <div class="myth-progress" id="myth-progress">Card 1 of ${chapter.cards.length}</div>`;
