@@ -421,6 +421,7 @@
           {
             "id": "gnp_t4",
             "type": "teach",
+            "fullScreen": true,
             "title": "Why the Offer-Letter Number Is Never the Whole Story",
             "concepts": [
               {

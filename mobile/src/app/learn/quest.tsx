@@ -1341,7 +1341,10 @@ function DecisionView({
           ))}
         </View>
       ) : (
-        <AnswerFeedback>
+        // Deliberately NOT wrapped in AnswerFeedback. This outcome REPLACES the choice list
+        // rather than being appended below it, so the whole panel is already changing — and
+        // animating a card that contains a bar chart made the bars themselves look like they
+        // were moving, which reads as the numbers being unstable. It just appears.
         <Card style={{ gap: 12 }}>
           <Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.outcome.text}</Txt>
           {/* Ported from the website's renderDecisionOutcome pg-column-chart — a real
@@ -1349,7 +1352,6 @@ function DecisionView({
               pay" as two bars. Only some decision chapters carry `compare` data. */}
           {picked.outcome.compare ? <ColumnChart data={picked.outcome.compare} /> : null}
         </Card>
-        </AnswerFeedback>
       )}
     </View>
   );
@@ -1375,13 +1377,14 @@ function ColumnChart({ data }: { data: { label: string; value: number }[] }) {
   );
 }
 
-/** Wraps a chapter's answer feedback so every type reveals it the same way: a quick
- * side-to-side shake as it fades in.
+/** Wraps a chapter's answer feedback so every type reveals it the same way: a soft fade with
+ * a barely-there nudge as it settles.
  *
- * Deliberately NOT a rise — the feedback used to slide up into place, which reads as the
- * result shoving the question around even though nothing above it actually moves. A shake
- * is horizontal, so it draws the eye to the result without implying any vertical shift, and
- * it settles in a third of a second.
+ * Third pass at this. A rise-into-place read as the result shoving the question around (even
+ * though nothing above it moves), and a proper ±7px shake was too loud for something that
+ * fires on literally every answer in the lesson. This keeps the shape of a shake — a small
+ * horizontal settle, so the eye catches the new block — at an amplitude you notice without
+ * being interrupted by. Nothing on screen changes position.
  *
  * Runs once on mount (the block is conditionally rendered, so mount IS the reveal). Both
  * channels are transform/opacity only, hence useNativeDriver. */
@@ -1395,9 +1398,10 @@ function AnswerFeedback({ children }: { children: ReactNode }) {
     const step = (toValue: number, duration: number) =>
       Animated.timing(shake, { toValue, duration, easing: Easing.out(Easing.quad), useNativeDriver: true });
     Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 180, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      // Decaying wobble: a firm first kick, then progressively smaller until it rests.
-      Animated.sequence([step(-7, 60), step(7, 70), step(-4, 60), step(3, 55), step(0, 55)]),
+      Animated.timing(fade, { toValue: 1, duration: 240, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      // Two small beats and done — under 3px, so it registers as the block arriving rather
+      // than as the block objecting.
+      Animated.sequence([step(-2.5, 90), step(1.5, 90), step(0, 80)]),
     ]).start();
   }, [shake, fade]);
   return (
