@@ -60,6 +60,29 @@ function warmHammyFaces(): Promise<unknown> {
   return Asset.loadAsync(HAMMY_FACE_IMAGES);
 }
 
+/* Document-level guard against stray text carets on the web build.
+ *
+ * The React-tree rule below (rootStyles.noSelect) can't be the whole story: react-native's
+ * <Modal> renders through a DOM portal attached to document.body, so the Look-back glossary,
+ * the hint popup and the achievement detail sheet all mount OUTSIDE this component tree and
+ * inherit nothing from it — and so does the ErrorBoundary above, which renders in place of
+ * the tree rather than inside it. Anything mounted that way was still selectable, and clicking
+ * it parked a blinking caret at the click point.
+ *
+ * Declaring it on html/body instead covers the document, portals included, since user-select
+ * inherits. Guarded on `document` because expo's static web output server-renders this module.
+ * Real form fields opt back in here as well as at their own style (theme.ts's selectableInput)
+ * — a portal-mounted input would otherwise inherit `none` with no component-level style to
+ * save it. */
+if (Platform.OS === 'web' && typeof document !== 'undefined' && !document.getElementById('stackd-no-select')) {
+  const noSelectStyle = document.createElement('style');
+  noSelectStyle.id = 'stackd-no-select';
+  noSelectStyle.textContent =
+    'html,body,#root{-webkit-user-select:none;user-select:none;}'
+    + 'input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;user-select:text;}';
+  document.head.appendChild(noSelectStyle);
+}
+
 SplashScreen.preventAutoHideAsync();
 
 /** Expo Router convention: exporting a named `ErrorBoundary` from a route/layout file

@@ -55,16 +55,20 @@ const HINT_FREE_CHAPTER_TYPES = new Set(['story', 'teach', 'hint']);
  * made his presence unpredictable from one screen to the next. */
 const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck']);
 
-/** The only chapter types that may lose the companion to an overflowing screen (see
- * fitState). Everything else keeps him at whatever height it lays out to.
+/* There used to be a second, MEASURED way to lose the companion: an allow-list of dense
+ * chapter types (knowledgecheck, decision, bossbattle, mythcards, explainback, urlinspect,
+ * priceisright) that started Hammy invisible-but-spaced, measured whether the laid-out
+ * chapter overflowed, then either revealed him or collapsed his space.
  *
- * An allow-list, not a blanket rule, because a blanket one kept taking him off screens that
- * have room for him — the vocab card and "What Do Most People Think?" both read as Hammy
- * simply being missing rather than as the question getting more space. These are the dense,
- * genuinely scroll-heavy question types where losing him is the point. */
-const OVERFLOW_HIDEABLE_TYPES = new Set([
-  'knowledgecheck', 'decision', 'bossbattle', 'mythcards', 'explainback', 'urlinspect', 'priceisright',
-]);
+ * It's gone, because the invisible window WAS the "Hammy disappears for a second and comes
+ * back" bug: the measurement is keyed per chapter, so every advance into one of those types
+ * blanked him until the measurement landed (or until a 220ms fail-safe fired) — on every
+ * Quick Check and every decision, not just on the rare chapter that genuinely overflowed.
+ * Fading the reveal only made the gap smoother, not shorter.
+ *
+ * Chapters that don't fit now simply scroll, which they already did in every other respect.
+ * TALL_CHAPTER_TYPES above still drops him, but that's a static per-type decision made before
+ * the first paint, so it never flashes. */
 
 type HintProps = { hintsRemaining: number; onUseHint: () => void };
 /** Reports right/wrong to the persistent companion Hammy (see showHammyReaction on the
@@ -156,6 +160,10 @@ type ReportProps = {
   reportDecision: (title: string, choice: string) => void;
   reportExplainback: (term: string, tier: 'great' | 'ok' | 'retry') => void;
 };
+
+/** Banks a word in the Look-back book the instant it's taught — see quest.tsx's learnTerm.
+ * Only the two chapter types that actually teach vocabulary take this (teach, matching). */
+type LearnTermProps = { learnTerm: (t: LearnedTerm) => void };
 
 /** Ported from app.js's HAMMY_CORRECT_MSGS/HAMMY_GENTLE_MSGS, plus "Good job!"/"Nice try!"
  * added to each pool per direct request. Only two celebration emoji in rotation — hands
@@ -283,6 +291,23 @@ export default function QuestPlayer() {
   // that specific question's hintTexts entry (see hintText's computation below).
   const [kcQuestionIdx, setKcQuestionIdx] = useState(0);
   const [terms, setTerms] = useState<LearnedTerm[]>([]);
+  // Mirrors `terms` synchronously. The final chapter's onComplete builds the results payload
+  // in the same handler that can add the last word, and a setState isn't visible yet at that
+  // point — same staleness dodge analyticsRef makes just below, for the same reason.
+  const termsRef = useRef<LearnedTerm[]>([]);
+  /** Puts a word in the Look-back book the moment it's actually taught.
+   *
+   * This used to happen in onComplete, i.e. only once the whole vocab/Match It chapter was
+   * finished and left behind — so the book still read 0 while the student sat there reading
+   * their first word, and every word landed one chapter later than it was learned. Now each
+   * view calls this as it reveals a concept (or as a pair is matched), so 📖 ticks up in step
+   * with the learning, first word included. Deduped by term: concepts are re-reported on
+   * every re-render of a chapter, and the same word can be taught in more than one section. */
+  const learnTerm = (t: LearnedTerm) => {
+    if (termsRef.current.some((x) => x.term === t.term)) return;
+    termsRef.current = [...termsRef.current, t];
+    setTerms(termsRef.current);
+  };
   const [bossWon, setBossWon] = useState(false);
   // Tagged with the chapter it belongs to. It used to be three loose values cleared by an
   // effect on chapterIdx, and an effect runs AFTER the new chapter has already rendered — so
@@ -332,21 +357,6 @@ export default function QuestPlayer() {
   // repeat across quests) and nothing validates them, whereas the index is the actual
   // identity of the chapter being played. Same for longChapterIdx below.
   const [reportedLayout, setReportedLayout] = useState<{ chapterIdx: number; mode: LayoutMode } | null>(null);
-  // Chapters that overflow the screen drop the companion, so the question gets the full
-  // height and doesn't have to be scrolled.
-  //
-  // The catch is that "does this overflow" can only be answered after layout, and an earlier
-  // attempt at this simply hid him once the answer arrived — which DREW him first, held him
-  // through the chapter's 260ms fade-in, then yanked him: a half-second preview of Hammy on
-  // the way into a question. So he starts every chapter mounted but invisible instead (see
-  // companionOpacity below). That reserves exactly the space he'd occupy, so the measurement
-  // is taken against the layout that includes him, and the outcome is either "fade him in
-  // place", with no reflow at all, or "collapse the space", with no Hammy ever painted.
-  //
-  // Latched to doesn't-fit per chapter: collapsing his space frees ~140px, which would make
-  // the content fit, which would bring him back and overflow again.
-  const [fitState, setFitState] = useState<{ chapterIdx: number; fits: boolean } | null>(null);
-  const scrollViewportRef = useRef(0);
   // An ambient life event (see rollAmbientLifeEvent) pauses a mid-quest chapter transition
   // the same way the website's maybeTriggerAmbientLifeEvent pauses its own "next" handlers
   // — the chapter doesn't actually advance until the event is dismissed. pendingAdvanceRef
@@ -466,18 +476,15 @@ export default function QuestPlayer() {
     const isTally = typeof graded === 'object' && graded !== null;
     const nextCorrect = correctCount + (isTally ? graded.correct : graded ? 1 : 0);
     const nextGraded = gradedTotal + (isTally ? graded.total : graded !== undefined ? 1 : 0);
-    const known = new Set(terms.map((t) => t.term));
-    const nextTerms = chapter.type === 'matching'
-      ? [...terms, ...chapter.pairs.filter((p) => !known.has(p.term)).map((p) => ({ term: p.term, plain: p.definition, section: chapter.title }))]
-      : chapter.type === 'teach'
-        ? [...terms, ...chapter.concepts.filter((c) => !known.has(c.term)).map((c) => ({ term: c.term, plain: c.plain, section: chapter.title }))]
-        : terms;
+    // Words are banked by learnTerm as they're taught, not swept up here on the way out —
+    // see its comment. termsRef is read rather than `terms` so a word learned in this very
+    // handler still makes the results payload.
     const nextBossWon = bossWon || chapter.type === 'bossbattle';
     const isFinalChapter = chapterIdx + 1 >= quest.chapters.length;
 
     const advance = () => {
       if (isFinalChapter) {
-        setPendingQuestAnalytics({ ...analyticsRef.current, learnedTerms: nextTerms });
+        setPendingQuestAnalytics({ ...analyticsRef.current, learnedTerms: termsRef.current });
         router.replace({
           pathname: '/learn/results',
           params: {
@@ -492,7 +499,6 @@ export default function QuestPlayer() {
       setXpEarned(nextXp);
       setCorrectCount(nextCorrect);
       setGradedTotal(nextGraded);
-      setTerms(nextTerms);
       setBossWon(nextBossWon);
       setChapterIdx(chapterIdx + 1);
     };
@@ -520,44 +526,13 @@ export default function QuestPlayer() {
     : initialLayoutMode(chapter);
   const onLayoutMode = (m: LayoutMode) => setReportedLayout({ chapterIdx, mode: m });
 
-  // null until this chapter has been measured — see fitState. Hammy is invisible-but-spaced
-  // in that window, so nothing here can flash him.
-  const chapterFits = fitState?.chapterIdx === chapterIdx ? fitState.fits : null;
-  const measureFit = (contentHeight: number) => {
-    const viewport = scrollViewportRef.current;
-    if (!viewport) return;
-    // Decided once, on the way in, and never revisited for this chapter. Two reasons:
-    // collapsing Hammy's space frees ~140px, which would make the content fit, bring him
-    // back and overflow again; and a chapter that only outgrows the screen once an answer
-    // reveals its explanation would otherwise make him vanish at the exact moment he's
-    // reacting to that answer.
-    if (fitState?.chapterIdx === chapterIdx) return;
-    // A few px of slack so content landing a hair over — a rounded line height, a hairline
-    // border — isn't treated as a scrolling chapter.
-    setFitState({ chapterIdx, fits: contentHeight <= viewport + 8 });
-  };
-  // Fail-safe: decide "fits" if no measurement has arrived shortly after the chapter opens.
-  // onContentSizeChange only fires when the size actually CHANGES, so two chapters that
-  // happen to lay out to the same height would otherwise leave this stuck at null — and null
-  // renders Hammy invisible, which is a far worse failure than showing him on a long
-  // chapter. Whichever lands first wins; this is a floor, not the normal path.
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFitState((s) => (s?.chapterIdx === chapterIdx ? s : { chapterIdx, fits: true }));
-    }, 220);
-    return () => clearTimeout(timer);
-  }, [chapterIdx]);
-
   // Hidden during a story chapter's intro beat or a 'hint' chapter, both of which already
   // show their own big Hammy in the content area instead (StoryView/HintView), so a second
   // one up here would just be a redundant duplicate; on the handful of chapter types that
   // are simply too tall to share a screen with him (see TALL_CHAPTER_TYPES) plus the dense
   // full-screen teach walkthroughs; and on an OVERFLOW_HIDEABLE_TYPES chapter that measured
   // taller than the screen.
-  const canHideForOverflow = OVERFLOW_HIDEABLE_TYPES.has(chapter.type);
-  const showCompanion = layoutMode === 'normal'
-    && !TALL_CHAPTER_TYPES.has(chapter.type)
-    && !(canHideForOverflow && chapterFits === false);
+  const showCompanion = layoutMode === 'normal' && !TALL_CHAPTER_TYPES.has(chapter.type);
   // Centered above the content, rather than off to its left, for the two chapter types
   // that read as a scene rather than a question: the story's dialogue (the conversation is
   // with him) and Match It (a centered grid).
@@ -573,25 +548,6 @@ export default function QuestPlayer() {
   // Smaller on the vocab chapter, where the term card + its true/false check are what have to
   // fit without scrolling; a little bigger on Match It, which has room to spare.
   const companionSize = chapter.type === 'teach' ? 104 : chapter.type === 'matching' ? 144 : 130;
-
-  // Companion reveal fade — canHideForOverflow chapters start invisible-but-spaced (see the
-  // fitState comment above), then this fades him in once the measurement resolves,
-  // instead of the flat opacity:0 -> opacity:1 snap that read as Hammy "flickering"/vanishing
-  // and popping back on nearly every chapter change (chapterFits resets per chapterIdx, so
-  // that snap fired constantly, not just on the rare chapter that actually overflows). A
-  // fresh Animated.Value per chapterIdx (via useMemo, not useEffect) is what keeps the HIDE
-  // side of this instant and glitch-free — it's initialized already-invisible synchronously
-  // during render, so there's no stale "still visible from the last chapter" frame to flash
-  // before it drops; only the REVEAL side is ever animated.
-  const companionOpacity = useMemo(
-    () => new Animated.Value(canHideForOverflow ? 0 : 1),
-    [chapterIdx, canHideForOverflow],
-  );
-  useEffect(() => {
-    if (canHideForOverflow && chapterFits) {
-      Animated.timing(companionOpacity, { toValue: 1, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
-    }
-  }, [chapterFits, canHideForOverflow, companionOpacity]);
 
   return (
     <Screen edges={['top', 'bottom']}>
@@ -626,12 +582,9 @@ export default function QuestPlayer() {
           Match It), or off to the left with the bubble beside him everywhere else. Either
           way the bubble is positioned relative to him, never the other way round. */}
       {showCompanion ? (
-        <Animated.View style={[
+        <View style={[
           companionCentered ? styles.companionWrapCentered : styles.companionWrap,
           raised && styles.companionWrapRaised,
-          // Only the chapters that could actually lose him wait to be measured; everywhere
-          // else he's at opacity 1 from the first frame, with no fade to wait out.
-          canHideForOverflow && { opacity: companionOpacity },
         ]}>
           {companionCentered ? <ReactionBubble message={reactionMsg} mood={reactionMood} centered /> : null}
           <Hammy
@@ -643,7 +596,7 @@ export default function QuestPlayer() {
             reactionKey={reactionKey}
           />
           {companionCentered ? null : <ReactionBubble message={reactionMsg} mood={reactionMood} />}
-        </Animated.View>
+        </View>
       ) : null}
       {/* One plain scroller for every chapter type. There used to be a second branch that
           shrank a chapter's content down to fit the viewport instead of scrolling, but
@@ -657,8 +610,6 @@ export default function QuestPlayer() {
           raised && styles.contentRaised,
         ]}
         showsVerticalScrollIndicator={false}
-        onLayout={(e) => { scrollViewportRef.current = e.nativeEvent.layout.height; }}
-        onContentSizeChange={(_w, h) => measureFit(h)}
       >
         {/* flexGrow so the chapter actually fills the scroller's height rather than
             shrink-wrapping inside it — that's what lets a chapter whose own root asks to
@@ -676,6 +627,7 @@ export default function QuestPlayer() {
             onAction={onAction}
             onLayoutMode={onLayoutMode}
             onQuestionIndexChange={setKcQuestionIdx}
+            learnTerm={learnTerm}
             {...reportProps}
           />
         </Reanimated.View>
@@ -724,18 +676,19 @@ export default function QuestPlayer() {
 function ChapterView({
   chapter, questions, moduleXpReward, charName, onComplete, reactTo, clearReaction, onAction, onLayoutMode,
   onQuestionIndexChange, reportKnowledgeCheck, reportMythCard, reportMatchingMistake, reportDecision, reportExplainback,
+  learnTerm,
 }: {
   chapter: Chapter; questions: Question[]; moduleXpReward: number; charName: string; onComplete: Complete;
   /** knowledgecheck-only: reports which question (position within its own qIndices) is
    * currently showing, so the parent can look up that question's own hintTexts entry —
    * see quest.tsx's hintText computation. */
   onQuestionIndexChange?: (i: number) => void;
-} & ReactProps & ReportProps & ActionProps & LayoutModeProps) {
+} & ReactProps & ReportProps & ActionProps & LayoutModeProps & LearnTermProps) {
   const reactProps: ReactProps = { reactTo, clearReaction };
   switch (chapter.type) {
     case 'story': return <StoryView chapter={chapter} charName={charName} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
-    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} {...reactProps} onQuestionIndexChange={onQuestionIndexChange} />;
-    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMatchingMistake={reportMatchingMistake} />;
+    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} {...reactProps} onQuestionIndexChange={onQuestionIndexChange} learnTerm={learnTerm} />;
+    case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMatchingMistake={reportMatchingMistake} learnTerm={learnTerm} />;
     case 'hint': return <HintView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
     case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
     case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
@@ -1041,19 +994,27 @@ function StoryView({
 
 /* ───────────────────────── teach ───────────────────────── */
 function TeachView({
-  chapter, onComplete, onAction, onLayoutMode, reactTo, clearReaction, onQuestionIndexChange,
+  chapter, onComplete, onAction, onLayoutMode, reactTo, clearReaction, onQuestionIndexChange, learnTerm,
 }: {
   chapter: TeachChapter; onComplete: Complete;
   /** Reports which concept is showing, so the header's hint button can offer THAT concept's
    * definition (see teachHint) rather than the first one's. */
   onQuestionIndexChange?: (i: number) => void;
-} & ReactProps & ActionProps & LayoutModeProps) {
+} & ReactProps & ActionProps & LayoutModeProps & LearnTermProps) {
   const router = useRouter();
   const [i, setI] = useState(0);
   useEffect(() => {
     onQuestionIndexChange?.(i);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i]);
+  // Bank the word as it appears on screen, not when the chapter is finished — this is the
+  // moment the student actually learns it, so 📖 should tick over now (including on the very
+  // first concept of the very first vocab chapter, which used to sit at 0).
+  useEffect(() => {
+    const c = chapter.concepts[i];
+    if (c) learnTerm({ term: c.term, plain: c.plain, section: chapter.title });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i, chapter.title]);
   const [answered, setAnswered] = useState<boolean | null>(null);
   const concept = chapter.concepts[i];
   const last = i + 1 >= chapter.concepts.length;
@@ -1087,7 +1048,7 @@ function TeachView({
   return (
     // Keyed to the concept index so each concept swap gets its own fade in/out instead of an
     // instant cut.
-    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
+    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Card style={{ gap: 8 }}>
         <Txt style={styles.term}>{concept.term}</Txt>
@@ -1126,8 +1087,8 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function MatchingView({
-  chapter, onComplete, onAction, reactTo, reportMatchingMistake,
-}: { chapter: MatchingChapter; onComplete: Complete } & ReactProps & Pick<ReportProps, 'reportMatchingMistake'> & ActionProps) {
+  chapter, onComplete, onAction, reactTo, reportMatchingMistake, learnTerm,
+}: { chapter: MatchingChapter; onComplete: Complete } & ReactProps & Pick<ReportProps, 'reportMatchingMistake'> & ActionProps & LearnTermProps) {
   const [terms] = useState(() => shuffle(chapter.pairs.map((p) => p.term)));
   const [defs] = useState(() => shuffle(chapter.pairs.map((p) => p.definition)));
   const [matched, setMatched] = useState<Set<string>>(new Set());
@@ -1187,6 +1148,9 @@ function MatchingView({
       setMatched(next);
       setSelTerm(null);
       playPop(selTerm);
+      // Into the Look-back book the moment the pair is matched — that's when this word is
+      // learned, rather than when the whole grid is finished. See quest.tsx's learnTerm.
+      learnTerm({ term: selTerm, plain: def, section: chapter.title });
       // Long enough for Hammy's "Nice! 🎉" reaction bubble to actually be seen (it fades in
       // over 250ms) before the Next button appears — at the old 400ms the button could show
       // up almost before the bubble finished appearing, reading as "Hammy didn't say anything."
@@ -1419,7 +1383,11 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
   }, [submitted, tier.ok]);
 
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    // Centered, so the slack a slider chapter has left over after its cards is shared above
+    // and below instead of pooling into one dead band under the last card ("Budgeting From
+    // Net, Not Gross" was mostly that band). These chapters hide the companion Hammy
+    // (TALL_CHAPTER_TYPES), so there's a lot of height to distribute.
+    <View style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       <Card style={{ gap: 4 }}>
@@ -1451,7 +1419,11 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
         <Txt style={{ fontFamily: font.display, fontSize: 28, color: leftover < 0 ? colors.danger : colors.greenDark }}>${leftover}</Txt>
       </Card>
       {submitted ? (
-        <Card><Txt style={{ fontFamily: font.semi, fontSize: 14, color: tier.ok ? colors.greenDark : colors.pinkDark }}>{friendlyTierText(tier.text)}</Txt></Card>
+        // Slides up as it fades in rather than just appearing — locking in a budget is the
+        // payoff beat of this chapter type and it previously just popped into existence.
+        <Reanimated.View entering={FadeInDown.duration(320)}>
+          <Card><Txt style={{ fontFamily: font.semi, fontSize: 14, color: tier.ok ? colors.greenDark : colors.pinkDark }}>{friendlyTierText(tier.text)}</Txt></Card>
+        </Reanimated.View>
       ) : null}
     </View>
   );
@@ -1466,21 +1438,27 @@ function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollCha
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answered]);
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    // Centered so the block sits lower and the slack isn't left as one gap above the bottom
+    // action bar. Type sizes here are a notch under the shared defaults: with Hammy on screen,
+    // an intro plus a statement plus the explanation card is right at the height where a
+    // "What Do Most People Think?" would start scrolling, and a true/false shouldn't.
+    <View style={{ gap: 9, flex: 1, justifyContent: 'center' }}>
       <Txt variant="h2">{chapter.title}</Txt>
-      <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
-      <Card><Txt style={{ fontFamily: font.displayMed, fontSize: 15, color: colors.ink }}>{chapter.statement}</Txt></Card>
+      <Txt variant="lead" style={{ fontSize: 13.5, lineHeight: 19 }}>{chapter.intro}</Txt>
+      <Card style={{ padding: 15 }}><Txt style={{ fontFamily: font.displayMed, fontSize: 14.5, color: colors.ink }}>{chapter.statement}</Txt></Card>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <TrueFalseButton label="True" state={tfState(true, answered, chapter.isTrue)} onPress={answered === null ? () => pick(true) : undefined} />
         <TrueFalseButton label="False" state={tfState(false, answered, chapter.isTrue)} onPress={answered === null ? () => pick(false) : undefined} />
       </View>
       {answered !== null ? (
-        <Card>
-          <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === chapter.isTrue ? colors.greenDark : colors.pinkDark }}>
-            {answered === chapter.isTrue ? 'Correct!' : 'Not quite.'}
-          </Txt>
-          <Txt variant="lead" style={{ fontSize: 13, marginTop: 4, color: answered === chapter.isTrue ? colors.greenDark : colors.pinkDark }}>{chapter.explanation}</Txt>
-        </Card>
+        <Reanimated.View entering={FadeInDown.duration(300)}>
+          <Card style={{ padding: 15 }}>
+            <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === chapter.isTrue ? colors.greenDark : colors.pinkDark }}>
+              {answered === chapter.isTrue ? 'Correct!' : 'Not quite.'}
+            </Txt>
+            <Txt variant="lead" style={{ fontSize: 12.5, lineHeight: 17.5, marginTop: 4, color: answered === chapter.isTrue ? colors.greenDark : colors.pinkDark }}>{chapter.explanation}</Txt>
+          </Card>
+        </Reanimated.View>
       ) : null}
     </View>
   );
@@ -1672,7 +1650,7 @@ function KnowledgecheckView({
   return (
     // Keyed to the question index so each question swap gets its own fade in/out instead of
     // an instant cut.
-    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
+    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{question.q}</Txt>
       <View style={{ gap: 10 }}>
@@ -1773,9 +1751,13 @@ function BossbattleView({
   chapter, moduleXpReward, onComplete, onAction, reactTo, reportDecision,
 }: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete } & ActionProps & ReactProps & Pick<ReportProps, 'reportDecision'>) {
   const [pickedId, setPickedId] = useState<string | null>(null);
+  // Dismissible: the outcome opens over the choices, and closing it leaves them (and the
+  // highlighted pick) readable while "Finish quest →" waits in the bottom bar.
+  const [outcomeOpen, setOutcomeOpen] = useState(false);
   const picked = chapter.choices.find((c) => c.id === pickedId);
   const pick = (c: BossbattleChapter['choices'][number]) => {
     setPickedId(c.id);
+    setOutcomeOpen(true);
     reportDecision('Boss battle', c.label);
     reactTo(c.consequence.xpMultiplier >= 1);
   };
@@ -1785,19 +1767,37 @@ function BossbattleView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked]);
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    <View style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
       <Tag tone="warm">⚔ BOSS CHALLENGE</Tag>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.scenario}</Txt>
-      {!picked ? (
-        <View style={{ gap: 10 }}>
-          {chapter.choices.map((c) => (
-            <Option key={c.id} label={c.label} onPress={() => pick(c)} />
-          ))}
-        </View>
-      ) : (
-        <Card><Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.consequence.text}</Txt></Card>
-      )}
+      {/* The choices stay put once one is taken — the outcome arrives over them in a sheet
+          rather than replacing them. Swapping the list out for the consequence card used to
+          erase the question the moment it was answered, so there was nothing left on screen
+          to read the outcome against: you couldn't see what you'd picked, or what the other
+          options had been. The picked row now stays highlighted underneath. */}
+      <View style={{ gap: 10 }}>
+        {chapter.choices.map((c) => (
+          <Option
+            key={c.id}
+            label={c.label}
+            state={picked?.id === c.id ? 'on' : 'default'}
+            onPress={picked ? undefined : () => pick(c)}
+          />
+        ))}
+      </View>
+      <Modal visible={!!picked && outcomeOpen} transparent animationType="fade" onRequestClose={() => setOutcomeOpen(false)}>
+        <Pressable style={styles.hintScrim} onPress={() => setOutcomeOpen(false)}>
+          <Reanimated.View entering={SlideInDown.duration(320)} style={{ width: '100%', alignItems: 'center' }}>
+            <Pressable style={styles.bossOutcomeCard} onPress={(e) => e.stopPropagation()}>
+              <Tag tone="warm">⚔ HOW IT PLAYED OUT</Tag>
+              <Txt style={styles.bossOutcomePick}>You chose: {picked?.label}</Txt>
+              <Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked?.consequence.text}</Txt>
+              <Button label="Got it" onPress={() => setOutcomeOpen(false)} style={{ marginTop: 4 }} />
+            </Pressable>
+          </Reanimated.View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -2062,6 +2062,11 @@ const styles = StyleSheet.create({
     width: '100%', maxWidth: 340, backgroundColor: colors.pinkBg, borderWidth: 1.5,
     borderColor: colors.pinkBorder, borderRadius: 20, padding: 20,
   },
+  bossOutcomeCard: {
+    backgroundColor: colors.card, borderRadius: 24, borderWidth: 1.5, borderColor: colors.border,
+    padding: 20, gap: 10, width: '100%', maxWidth: 420, alignItems: 'flex-start',
+  },
+  bossOutcomePick: { fontFamily: font.extra, fontSize: 13, color: colors.muted3 },
   glossaryPopupList: { gap: 16, paddingBottom: 2 },
   glossarySectionName: { fontFamily: font.bold, fontSize: 12, color: colors.muted5, textTransform: 'uppercase', letterSpacing: 0.4 },
   glossaryPopupCard: {
