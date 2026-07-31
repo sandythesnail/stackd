@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
 import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, LifeEventCard, ReactionFacePreloader } from '@/components';
-import { colors, font } from '@/theme';
+import { colors, font, selectableInput } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
@@ -338,9 +338,9 @@ export default function QuestPlayer() {
   // The catch is that "does this overflow" can only be answered after layout, and an earlier
   // attempt at this simply hid him once the answer arrived — which DREW him first, held him
   // through the chapter's 260ms fade-in, then yanked him: a half-second preview of Hammy on
-  // the way into a question. So he starts every chapter mounted but invisible instead
-  // (companionMeasuring). That reserves exactly the space he'd occupy, so the measurement is
-  // taken against the layout that includes him, and the outcome is either "reveal him in
+  // the way into a question. So he starts every chapter mounted but invisible instead (see
+  // companionOpacity below). That reserves exactly the space he'd occupy, so the measurement
+  // is taken against the layout that includes him, and the outcome is either "fade him in
   // place", with no reflow at all, or "collapse the space", with no Hammy ever painted.
   //
   // Latched to doesn't-fit per chapter: collapsing his space frees ~140px, which would make
@@ -574,6 +574,25 @@ export default function QuestPlayer() {
   // fit without scrolling; a little bigger on Match It, which has room to spare.
   const companionSize = chapter.type === 'teach' ? 104 : chapter.type === 'matching' ? 144 : 130;
 
+  // Companion reveal fade — canHideForOverflow chapters start invisible-but-spaced (see the
+  // fitState comment above), then this fades him in once the measurement resolves,
+  // instead of the flat opacity:0 -> opacity:1 snap that read as Hammy "flickering"/vanishing
+  // and popping back on nearly every chapter change (chapterFits resets per chapterIdx, so
+  // that snap fired constantly, not just on the rare chapter that actually overflows). A
+  // fresh Animated.Value per chapterIdx (via useMemo, not useEffect) is what keeps the HIDE
+  // side of this instant and glitch-free — it's initialized already-invisible synchronously
+  // during render, so there's no stale "still visible from the last chapter" frame to flash
+  // before it drops; only the REVEAL side is ever animated.
+  const companionOpacity = useMemo(
+    () => new Animated.Value(canHideForOverflow ? 0 : 1),
+    [chapterIdx, canHideForOverflow],
+  );
+  useEffect(() => {
+    if (canHideForOverflow && chapterFits) {
+      Animated.timing(companionOpacity, { toValue: 1, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+    }
+  }, [chapterFits, canHideForOverflow, companionOpacity]);
+
   return (
     <Screen edges={['top', 'bottom']}>
       {/* Warms the three reaction faces' decode while the student is still on chapter 1, so
@@ -607,12 +626,12 @@ export default function QuestPlayer() {
           Match It), or off to the left with the bubble beside him everywhere else. Either
           way the bubble is positioned relative to him, never the other way round. */}
       {showCompanion ? (
-        <View style={[
+        <Animated.View style={[
           companionCentered ? styles.companionWrapCentered : styles.companionWrap,
           raised && styles.companionWrapRaised,
           // Only the chapters that could actually lose him wait to be measured; everywhere
-          // else he's drawn straight away, with no invisible first frame.
-          canHideForOverflow && chapterFits === null && styles.companionMeasuring,
+          // else he's at opacity 1 from the first frame, with no fade to wait out.
+          canHideForOverflow && { opacity: companionOpacity },
         ]}>
           {companionCentered ? <ReactionBubble message={reactionMsg} mood={reactionMood} centered /> : null}
           <Hammy
@@ -624,7 +643,7 @@ export default function QuestPlayer() {
             reactionKey={reactionKey}
           />
           {companionCentered ? null : <ReactionBubble message={reactionMsg} mood={reactionMood} />}
-        </View>
+        </Animated.View>
       ) : null}
       {/* One plain scroller for every chapter type. There used to be a second branch that
           shrank a chapter's content down to fit the viewport instead of scrolling, but
@@ -1322,7 +1341,11 @@ function DecisionView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked]);
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    // Centered rather than top-anchored: a short title/prompt + 2-3 white choice buttons
+    // rarely fills the screen, so top-anchoring (the default) left all the slack as one big
+    // empty gap under the buttons, above the fixed bottom action bar. Centering splits that
+    // slack instead, pulling both the title/prompt and the buttons down off the top edge.
+    <View style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       {!picked ? (
@@ -2081,9 +2104,6 @@ const styles = StyleSheet.create({
   companionWrapCentered: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 4, paddingBottom: 4 },
   // Match It only: pulls Hammy up tight under the progress bar. Paired with contentRaised.
   companionWrapRaised: { paddingTop: 0, paddingBottom: 0 },
-  // Mounted (so it reserves its space for the fit measurement) but not yet painted — see
-  // fitState. Only ever set for the frame or two before a chapter is measured.
-  companionMeasuring: { opacity: 0 },
   // No reserved height: the row's height is Hammy's, and he's far taller than any bubble
   // this can produce — so a message appearing or clearing can't move him or anything below.
   bubbleSlot: { flex: 1, alignItems: 'flex-start', justifyContent: 'center' },
@@ -2252,7 +2272,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1.5, borderColor: colors.borderField, borderRadius: 16,
     padding: 14, minHeight: 100, fontFamily: font.semi, fontSize: 14, color: colors.ink,
-    textAlignVertical: 'top',
+    textAlignVertical: 'top', ...selectableInput,
   },
   urlPart: {
     fontFamily: font.bold, fontSize: 13, color: colors.ink,

@@ -104,8 +104,11 @@ export default function Results() {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* The 3-in-a-row streak face (not a generic 'happy' one) — this screen is
               already a celebration moment, so Hammy gets the same excited expression as an
-              in-quest streak callout, not the default neutral face. */}
-          <Hammy size={150} equipped={equippedMascotItems()} face={REACTION_FACES.streak} style={{ marginTop: 6 }} />
+              in-quest streak callout, not the default neutral face.
+              floatAmplitude is turned down from the default 14 — at this tight marginTop,
+              right under the screen's top edge, the default float rise clipped into the
+              safe area on every cycle ("Hammy goes off screen"). */}
+          <Hammy size={150} equipped={equippedMascotItems()} face={REACTION_FACES.streak} floatAmplitude={6} style={{ marginTop: 6 }} />
           <Tag textColor={colors.greenDark} style={styles.tag}>🎉 LESSON COMPLETE</Tag>
           <Txt style={styles.title}>{lesson?.title ?? mod.name} —{'\n'}{allCorrect ? 'nailed it!' : 'done!'}</Txt>
           {totalQ > 0 ? <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt> : null}

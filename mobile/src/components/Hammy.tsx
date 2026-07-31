@@ -205,6 +205,7 @@ function PigEyes({ blink }: { blink: Animated.Value }) {
 export function Hammy({
   size = 120,
   bob = true,
+  floatAmplitude = 14,
   pig: _pig = '#E27EA0',
   equipped = [],
   headOnly = false,
@@ -215,6 +216,12 @@ export function Hammy({
 }: {
   size?: number;
   bob?: boolean;
+  /** Peak upward travel (px) of the idle float, ported from the website's pigFloat at 14 —
+   * that default is right for a small companion Hammy, but was too much for the bigger,
+   * tight-margined results-screen Hammy (marginTop: 6), whose rise clipped into the screen's
+   * top safe area on every float cycle. Turn it down per-instance rather than shrinking the
+   * float everywhere. */
+  floatAmplitude?: number;
   pig?: string;
   /** Currently-worn shop items, matrix-transformed onto the mascot (see EquippedItem). */
   equipped?: ShopItemReal[];
@@ -266,11 +273,11 @@ export function Hammy({
   const startFloat = () => {
     floatLoopRef.current?.stop();
     // Ported verbatim from the website's @keyframes pigFloat (4.2s, ease-in-out): the peak
-    // isn't just -14px up, it's translateY(-14px) rotate(1deg) — a whole-body tilt synced
-    // with the rise, from rotate(-1deg) at rest.
+    // isn't just floatAmplitude px up, it's translateY(-floatAmplitude) rotate(1deg) — a
+    // whole-body tilt synced with the rise, from rotate(-1deg) at rest.
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(floatY, { toValue: -14, duration: 2100, easing: CSS_EASE, useNativeDriver: true }),
+        Animated.timing(floatY, { toValue: -floatAmplitude, duration: 2100, easing: CSS_EASE, useNativeDriver: true }),
         Animated.timing(floatY, { toValue: 0, duration: 2100, easing: CSS_EASE, useNativeDriver: true }),
       ])
     );
@@ -383,7 +390,7 @@ export function Hammy({
   // The idle float's own tilt (see startFloat above) — a separate transform entry from
   // reactRotDeg so the two compose (idle tilt, then any one-shot reaction wobble on top)
   // instead of one overwriting the other.
-  const floatRotDeg = floatY.interpolate({ inputRange: [-14, 0], outputRange: ['1deg', '-1deg'] });
+  const floatRotDeg = floatY.interpolate({ inputRange: [-floatAmplitude, 0], outputRange: ['1deg', '-1deg'] });
 
   // While a face overlay shows, the website also softens the body/head shading
   // (.has-face-overlay: body loses both insets; head keeps only its white shine at .35
