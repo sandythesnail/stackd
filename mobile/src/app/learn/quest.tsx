@@ -36,12 +36,17 @@ type Complete = (xpDelta: number, graded?: boolean | { correct: number; total: n
  * (pushLearnedTerm(mod, c.term, c.plain, chapter.title)). */
 type LearnedTerm = { term: string; plain: string; section: string };
 
-/** Ported verbatim from app.js — a limited "Ask Hammy for a hint" budget available during
- * interactive chapters only, so getting stuck doesn't leave the student with nowhere to turn.
- * Separate from the 'hint' CHAPTER TYPE (Hammy's Tip, see HintView) — this is the small
- * always-available FAB used across other interactive chapters (renderHintBudget). */
-const HINT_BUDGET = 3;
-const HINT_FREE_CHAPTER_TYPES = new Set(['story', 'teach', 'hint']);
+/* "Ask Hammy for a hint" used to be a budget of 3 per lesson, ported from app.js. It's gone:
+ * a lesson runs a median 13 chapters, so spending the three early greyed the button out for
+ * the whole rest of the lesson, which is why hints looked disabled on nearly every question.
+ * Being stuck is exactly when you want the hint, and rationing them mostly punished the
+ * students who needed them most. Hints are now available wherever one is authored, as often
+ * as you like. hintsUsed is still counted and still reported to the results screen — it's a
+ * signal about the lesson, it just no longer gates anything.
+ *
+ * (A HINT_FREE_CHAPTER_TYPES set lived here too, exempting story/teach/hint from the budget.
+ * It was never referenced anywhere — dead since it was written — and with no budget left to
+ * be exempt from there's nothing for it to do.) */
 
 /** Chapter types tall enough by construction that the companion Hammy would be competing
  * with the content for the screen: microsim stacks an income card, a card of sliders, a
@@ -75,7 +80,7 @@ const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck', 'bossb
  * TALL_CHAPTER_TYPES above still drops him, but that's a static per-type decision made before
  * the first paint, so it never flashes. */
 
-type HintProps = { hintsRemaining: number; onUseHint: () => void };
+type HintProps = { onUseHint: () => void };
 /** Reports right/wrong to the persistent companion Hammy (see showHammyReaction on the
  * website) so its face/message reacts — happy, gentle, or a 3-in-a-row streak callout. An
  * optional `customMsg` puts specific narration text in the bubble instead of a random
@@ -420,7 +425,6 @@ export default function QuestPlayer() {
   }
 
   const chapter = quest.chapters[chapterIdx];
-  const hintsRemaining = Math.max(0, HINT_BUDGET - hintsUsed);
   const onUseHint = () => setHintsUsed((h) => h + 1);
   // knowledgecheck is the one chapter type whose hint text is PER-QUESTION (hintTexts[],
   // aligned to qIndices by position — see content/types.ts), not a single hintText like
@@ -589,16 +593,14 @@ export default function QuestPlayer() {
         {/* Keyed per QUESTION, not just per chapter: a knowledge check runs several
             questions inside one chapter, each with its own authored hint, and a single
             instance carried its "already revealed" state across all of them — so question 2
-            onward showed as pre-revealed and handed out its hint without spending budget.
-            The fixed-width slot around it holds the space whether or not this chapter has a
-            hint at all (only about a quarter of them do), so the progress bar and % beside
+            onward showed as pre-revealed. The fixed-width slot around it holds the space
+            whether or not this chapter has a hint at all, so the progress bar and % beside
             it stop shifting as you move between chapters that have one and chapters that
             don't. */}
         <View style={styles.hintSlot}>
           <HintCorner
             key={`${chapter.id}:${kcQuestionIdx}`}
             hintText={hintText}
-            hintsRemaining={hintsRemaining}
             onUseHint={onUseHint}
           />
         </View>
@@ -774,14 +776,16 @@ function tfState(optionValue: boolean, answered: boolean | null, isTrue: boolean
  *
  * Tapping opens a modal rather than pushing chapter content around, so revealing a hint
  * never moves anything else. */
-function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string } & HintProps) {
+function HintCorner({ hintText, onUseHint }: { hintText?: string } & HintProps) {
   const [revealed, setRevealed] = useState(false);
   const [open, setOpen] = useState(false);
-  // Nothing authored for this chapter, or the budget's gone: the tap still opens the modal,
-  // which explains itself, instead of hitting a dead button with no feedback.
-  const canGiveHint = !!hintText && (revealed || hintsRemaining > 0);
+  // Chapters with nothing authored render no button at all rather than a permanently greyed
+  // one. A disabled control implies "you could have this, but not right now", which was a
+  // lie here — story beats and Hammy's own Tip chapters are never getting a hint, so the
+  // button could only ever sit there dead. The surrounding slot keeps its width either way,
+  // so the progress bar beside it doesn't shift as chapters come and go.
+  if (!hintText) return null;
   const press = () => {
-    if (!canGiveHint) return;
     if (!revealed) {
       onUseHint();
       setRevealed(true);
@@ -790,14 +794,10 @@ function HintCorner({ hintText, hintsRemaining, onUseHint }: { hintText?: string
   };
   return (
     <>
-      <Pressable
-        style={[styles.hintFab, !canGiveHint && styles.hintFabDisabled]}
-        disabled={!canGiveHint}
-        onPress={press}
-      >
+      <Pressable style={styles.hintFab} onPress={press}>
         {/* numberOfLines so the label can never wrap onto a second line — the button is a
-            single small pill and a wrapped "HINT 3" reads as a rendering glitch. */}
-        <Txt style={styles.hintFabTxt} numberOfLines={1}>{revealed ? '💡 HINT' : `💡 HINT ${hintsRemaining}`}</Txt>
+            single small pill and a wrapped label reads as a rendering glitch. */}
+        <Txt style={styles.hintFabTxt} numberOfLines={1}>💡 HINT</Txt>
       </Pressable>
       {/* A real Modal instead of an anchored popover — Modal renders as its own top-level
           overlay outside the normal view tree, so it always sits above everything else
@@ -2145,7 +2145,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderCool,
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
-  hintFabDisabled: { opacity: 0.4 },
   hintFabTxt: { fontFamily: font.bold, fontSize: 12, color: colors.ink },
   hintScrim: { flex: 1, backgroundColor: 'rgba(22,32,23,0.55)', alignItems: 'center', justifyContent: 'center', padding: 26 },
   hintModalCard: {
