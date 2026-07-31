@@ -79,7 +79,15 @@ if (Platform.OS === 'web' && typeof document !== 'undefined' && !document.getEle
   noSelectStyle.id = 'stackd-no-select';
   noSelectStyle.textContent =
     'html,body,#root{-webkit-user-select:none;user-select:none;}'
-    + 'input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;user-select:text;}';
+    + 'input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;user-select:text;}'
+    // Widow control, app-wide. `pretty` is inherited, so declaring it once on the root reaches
+    // every piece of text: it costs the last line a little length to avoid leaving one or two
+    // words stranded on their own. Headings opt into `balance` on top of that (Txt's `balance`
+    // prop, which sets data-balance), which evens ALL the lines rather than only rescuing the
+    // last — better for short, often-centred display type like the results screen's lesson
+    // title. Both degrade to normal wrapping on browsers that don't implement them.
+    + 'html,body,#root{text-wrap:pretty;}'
+    + '[data-balance]{text-wrap:balance;}';
   document.head.appendChild(noSelectStyle);
 }
 

@@ -110,7 +110,11 @@ export default function Results() {
               safe area on every cycle ("Hammy goes off screen"). */}
           <Hammy size={150} equipped={equippedMascotItems()} face={REACTION_FACES.streak} floatAmplitude={6} style={{ marginTop: 6 }} />
           <Tag textColor={colors.greenDark} style={styles.tag}>🎉 LESSON COMPLETE</Tag>
-          <Txt style={styles.title}>{lesson?.title ?? mod.name} —{'\n'}{allCorrect ? 'nailed it!' : 'done!'}</Txt>
+          {/* balance: 32px display type over titles that run up to 65 characters, so this
+              wrapped to four or five lines and regularly left one or two words alone on the
+              last one. The trailing "— nailed it!" is kept on its own line by the explicit
+              break, so balancing only ever redistributes the title itself. */}
+          <Txt balance style={styles.title}>{lesson?.title ?? mod.name} —{'\n'}{allCorrect ? 'nailed it!' : 'done!'}</Txt>
           {totalQ > 0 ? <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt> : null}
 
           <View style={styles.rewards}>

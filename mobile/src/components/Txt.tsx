@@ -1,17 +1,41 @@
-import { Text, TextProps, StyleSheet } from 'react-native';
+import { Text, TextProps, StyleSheet, Platform } from 'react-native';
 import { colors, font } from '@/theme';
 
 type Variant = 'disp' | 'h1' | 'h2' | 'h3' | 'lead' | 'tiny' | 'body' | 'bold' | 'label';
+
+/** Headings default to balanced wrapping — see the `balance` prop. */
+const HEADING_VARIANTS = new Set<Variant>(['disp', 'h1', 'h2', 'h3']);
 
 export function Txt({
   variant = 'body',
   color,
   style,
+  balance,
   ...rest
-}: TextProps & { variant?: Variant; color?: string }) {
+}: TextProps & {
+  variant?: Variant;
+  color?: string;
+  /** Evens out the line lengths instead of filling each line before wrapping, so a heading
+   * can't end on a dangling word or two (`text-wrap: balance`).
+   *
+   * Defaults ON for the heading variants and off elsewhere; pass it explicitly for a heading
+   * that doesn't use a variant (results.tsx's lesson title is one — 32px display type, and
+   * the longest real titles run 65 characters, which is where this looked worst).
+   *
+   * Implemented as a data attribute matched by a rule in the global stylesheet (_layout.tsx)
+   * rather than a style key, because react-native-web filters style props against its own
+   * supported list and `textWrap` isn't on it — it would be dropped silently. Web-only;
+   * `dataSet` is a react-native-web prop, hence the Platform guard. Widows are prevented
+   * app-wide by `text-wrap: pretty` in that same stylesheet, so this is the stronger
+   * treatment for headings, not the only line of defence. */
+  balance?: boolean;
+}) {
+  const shouldBalance = balance ?? HEADING_VARIANTS.has(variant);
+  const webProps = Platform.OS === 'web' && shouldBalance ? { dataSet: { balance: 'true' } } : null;
   return (
     <Text
       {...rest}
+      {...webProps}
       style={[styles[variant], color ? { color } : null, styles.noSelect, style]}
     />
   );
