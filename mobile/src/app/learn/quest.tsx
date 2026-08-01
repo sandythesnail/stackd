@@ -678,8 +678,16 @@ export default function QuestPlayer() {
             itself within. Without it those chapters just sat pinned to the top. */}
         {/* Each chapter arrives from the right rather than cross-fading in place, so
             advancing through a quest reads as travelling forward through it. Keyed on the
-            chapter id, so this plays once per chapter and never on a re-render within one. */}
-        <Reanimated.View key={chapter.id} entering={FadeInRight.duration(300).springify().damping(18)} style={styles.chapterFill}>
+            chapter id, so this plays once per chapter and never on a re-render within one.
+            Kept deliberately small and quick: 10px of travel over 170ms, and no spring. The
+            spring's overshoot plus the default 25px made every question visibly swing into
+            place, which is a lot of movement to sit through on a fifteen-chapter quest — this
+            is meant to register as a page turn, not as an animation you wait for. */}
+        <Reanimated.View
+          key={chapter.id}
+          entering={FadeInRight.duration(170).withInitialValues({ transform: [{ translateX: 10 }] })}
+          style={styles.chapterFill}
+        >
           <ChapterView
             chapter={chapter}
             questions={content.questions}

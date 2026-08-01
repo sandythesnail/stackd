@@ -128,7 +128,14 @@ export function Button({
 }
 
 const styles = StyleSheet.create({
-  wrapper: { alignSelf: 'center', justifyContent: 'flex-start' },
+  // Deliberately no alignSelf. Before this was two layers the button was a single Pressable,
+  // so it inherited its parent's alignItems like any other flex child — which is how a button
+  // in a full-width column stretched to fill it, and one inside an alignItems:'center' row
+  // hugged its label. Pinning the wrapper to 'center' here broke the first case everywhere at
+  // once: the error screen's "Try again"/"Go home" and the results screen's "Continue" all
+  // collapsed to the width of their text. Leaving it `auto` restores the original behaviour
+  // at every call site without any of them having to ask for it.
+  wrapper: { justifyContent: 'flex-start' },
   bezel: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
   face: {
     // stretch, so the face fills a wrapper that was given a width and the wrapper hugs the
