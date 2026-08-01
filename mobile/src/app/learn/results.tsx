@@ -110,11 +110,7 @@ export default function Results() {
               safe area on every cycle ("Hammy goes off screen"). */}
           <Hammy size={150} equipped={equippedMascotItems()} face={REACTION_FACES.streak} floatAmplitude={6} style={{ marginTop: 6 }} />
           <Tag textColor={colors.greenDark} style={styles.tag}>🎉 LESSON COMPLETE</Tag>
-          {/* balance: 32px display type over titles that run up to 65 characters, so this
-              wrapped to four or five lines and regularly left one or two words alone on the
-              last one. The trailing "— nailed it!" is kept on its own line by the explicit
-              break, so balancing only ever redistributes the title itself. */}
-          <Txt balance style={styles.title}>{lesson?.title ?? mod.name} —{'\n'}{allCorrect ? 'nailed it!' : 'done!'}</Txt>
+          <Txt style={styles.title}>{titleWithDash(lesson?.title ?? mod.name)}{"\n"}{allCorrect ? "nailed it!" : "done!"}</Txt>
           {totalQ > 0 ? <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt> : null}
 
           <View style={styles.rewards}>
@@ -140,6 +136,34 @@ export default function Results() {
       </SafeAreaView>
     </LinearGradient>
   );
+}
+
+const NBSP = "\u00A0";
+const EM_DASH = "\u2014";
+/** Keeps a heading from ending on a single stranded word, and does nothing otherwise.
+ *
+ * The last two words are joined with a non-breaking space, and the trailing em dash is glued
+ * to the final word so it can't be orphaned by itself either. That's deliberately narrower
+ * than `text-wrap: balance`, which this replaced: balance re-flows EVERY line of EVERY title,
+ * so short titles that were wrapping fine got shuffled too. This only ever changes the layout
+ * in the one case being complained about — if the last two words already share a line, the
+ * non-breaking space sits at a break the engine wasn't going to take, and nothing moves.
+ *
+ * Bails out under three words: with only two, binding them makes the whole title one
+ * unbreakable run, which overflows instead of wrapping. Widow control everywhere else in the
+ * app is still `text-wrap: pretty` from the global stylesheet (_layout.tsx); this is the
+ * layout-free version for the one heading big enough to strand words regularly, and unlike
+ * the CSS it also works on native. */
+function titleWithDash(title: string) {
+  const words = title.trim().split(/\s+/);
+  // The em dash trails the title on the same line ("- nailed it!" is forced onto the next line
+  // by an explicit break), so bind it to the final word: a lone dash is the worst widow of all.
+  words[words.length - 1] += NBSP + EM_DASH;
+  // Binding the last two words is the entire fix, and it is a no-op unless the last one was
+  // about to be stranded: if they already share a line, the non-breaking space sits at a break
+  // the engine was never going to take.
+  if (words.length >= 3) words.splice(-2, 2, words.slice(-2).join(NBSP));
+  return words.join(" ");
 }
 
 function Reward({ value, label, big }: { value: React.ReactNode; label: string; big?: string }) {
