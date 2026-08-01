@@ -74,19 +74,24 @@ export function Option({
 }
 
 const styles = StyleSheet.create({
+  // Sized so four options, their question and an explanation card fit one screen together in
+  // the quest player, which is the densest thing this component is asked to do (Quick Check —
+  // see TALL_CHAPTER_TYPES in learn/quest.tsx). paddingVertical was 15 and the row 2px-bordered;
+  // at 12/1.75 a four-option question gives back ~28px, which is most of what that screen was
+  // over by, without the row dropping below a comfortable 46px tap target.
   opt: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 13,
-    borderWidth: 2,
+    gap: 11,
+    borderWidth: 1.75,
     borderRadius: 18,
-    paddingVertical: 15,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
   },
-  label: { fontFamily: font.bold, fontSize: 15.5, color: colors.ink, flexShrink: 1 },
+  label: { fontFamily: font.bold, fontSize: 15, lineHeight: 20, color: colors.ink, flexShrink: 1 },
   letter: {
-    minWidth: 24,
-    height: 24,
+    minWidth: 22,
+    height: 22,
     borderRadius: 7,
     borderWidth: 1.5,
     backgroundColor: colors.screen,

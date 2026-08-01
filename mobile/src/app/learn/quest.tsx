@@ -63,7 +63,13 @@ type LearnedTerm = { term: string; plain: string; section: string };
  * per-question size ESTIMATE was so unpredictable it took him off ordinary questions too.
  * Quick Checks are on the list wholesale for that reason — every one of them, not the long
  * ones, so his presence is never a surprise. Anything not listed keeps him and scrolls. */
-const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck', 'bossbattle', 'knowledgecheck']);
+// priceisright and explainback joined the list for the same reason the others are on it, not
+// as a judgement call: both put a full-width control (a slider, a multiline text box) above an
+// authored explanation that runs to a dozen lines, and neither could fit that beside him
+// without shrinking the explanation to a size nobody would read. Both are also chapters you
+// operate rather than converse with — a keyboard covers his corner of the screen on
+// explainback anyway — so he loses least by stepping aside here.
+const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck', 'bossbattle', 'knowledgecheck', 'priceisright', 'explainback']);
 
 /* There used to be a second, MEASURED way to lose the companion: an allow-list of dense
  * chapter types (knowledgecheck, decision, bossbattle, mythcards, explainback, urlinspect,
@@ -566,6 +572,22 @@ export default function QuestPlayer() {
   // Match It sits higher up the screen than the other centered chapter — Hammy tight under
   // the progress bar, and the grid lifted off centre rather than floating in the middle.
   const raised = chapter.type === 'matching';
+  // The grid is vertically centred, so the only way to lift it is to weight the bottom: extra
+  // paddingBottom shifts the centre of the free space upward. How much free space there is
+  // depends on the grid, and a weight tuned for a small one pushed a big one off the bottom
+  // of the screen — so the full lift is only taken when there is genuinely room for it.
+  //
+  // Pair COUNT alone isn't the test: every chip is forced to the tallest chip's height (see
+  // maxChipH), so one 137-character definition makes all three rows of a three-pair grid as
+  // tall as a six-pair one. The definition length has to be in the condition too.
+  //
+  // Read straight off the chapter data, which cannot change while the chapter is on screen,
+  // so this stays a static decision made before the first paint rather than the
+  // measure-then-react rule this file has rejected elsewhere.
+  const matchLift = chapter.type === 'matching'
+    && chapter.pairs.length <= 4
+    && chapter.pairs.every((p) => p.definition.length <= 70)
+    ? 72 : 12;
   // Short chapter types leave a lot of room under the bottom action bar and read as
   // top-heavy at the default companion padding: the poll (a statement and two buttons),
   // decisions ("First Paycheck Lands" — a prompt and a couple of choices) and the swipe
@@ -584,9 +606,10 @@ export default function QuestPlayer() {
       : chapter.type === 'mythcards'
         ? styles.companionWrapLowest
         : null;
-  // Smaller on the vocab chapter, where the term card + its true/false check are what have to
-  // fit without scrolling; a little bigger on Match It, which has room to spare.
-  const companionSize = chapter.type === 'teach' ? 104 : chapter.type === 'matching' ? 144 : 130;
+  // Smaller on the vocab chapter, where a 599-character definition is what has to fit without
+  // scrolling. Match It used to take a larger 144 for having room to spare — it doesn't on a
+  // six-pair grid, so it sits at the standard size like everything else now.
+  const companionSize = chapter.type === 'teach' ? 104 : 130;
 
   return (
     <Screen edges={['top', 'bottom']}>
@@ -645,7 +668,7 @@ export default function QuestPlayer() {
         contentContainerStyle={[
           styles.content,
           chapter.type === 'matching' && styles.contentCenter,
-          raised && styles.contentRaised,
+          raised && { paddingTop: 0, paddingBottom: matchLift },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -1052,6 +1075,13 @@ function TeachView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i, chapter.title]);
   const [answered, setAnswered] = useState<boolean | null>(null);
+  // Each concept plays as two beats: read the definition, then answer its check. They used to
+  // share one screen, which is what made this the app's biggest source of scrolling — the
+  // longest `plain` in the content runs 599 characters (~15 lines at this size), so definition
+  // and check together came to ~525px against the ~495px a teach chapter gets beside Hammy.
+  // Split, the reading beat tops out around 486px and the check beat around 264px, so both
+  // land inside one screen without shrinking anything the student is trying to read.
+  const [beat, setBeat] = useState<'read' | 'check'>('read');
   const concept = chapter.concepts[i];
   const last = i + 1 >= chapter.concepts.length;
   // Some concepts have no statement at all (check: {} or absent) — informational only, no quiz.
@@ -1073,31 +1103,45 @@ function TeachView({
     // next, not-yet-answered concept until its own timer happens to fire — see ReactProps.
     clearReaction();
     setI(i + 1);
+    setBeat('read');
     setAnswered(null);
   };
 
   useEffect(() => {
-    onAction(!hasCheck || answered !== null ? { label: last ? 'Next' : 'Got it', onPress: next } : null);
+    if (beat === 'read') {
+      // A concept with no check is informational — its "Got it" goes straight on to the next
+      // one rather than to an empty check beat.
+      onAction(hasCheck
+        ? { label: 'Got it', onPress: () => setBeat('check') }
+        : { label: last ? 'Next' : 'Got it', onPress: next });
+      return;
+    }
+    onAction(answered !== null ? { label: last ? 'Next' : 'Got it', onPress: next } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasCheck, answered, last]);
+  }, [beat, hasCheck, answered, last, i]);
 
   return (
-    // Keyed to the concept index so each concept swap gets its own fade in/out instead of an
-    // instant cut.
+    // Keyed to the concept AND the beat, so moving from the definition to its check gets its
+    // own fade rather than an instant cut, same as a concept swap does.
     // Top-anchored for the same reason as the poll and Quick Check above: the true/false
-    // result appearing must not re-flow the definition being read.
-    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
+    // result appearing must not re-flow the statement being read.
+    <Reanimated.View key={`${i}:${beat}`} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
-      <Card style={{ gap: 8 }}>
-        <Txt style={styles.term}>{concept.term}</Txt>
-        <Txt variant="lead" style={{ fontSize: 14 }}>{concept.plain}</Txt>
-        <Txt style={{ fontFamily: font.semi, fontSize: 12.5, color: colors.muted3, fontStyle: 'italic' }}>{concept.analogy}</Txt>
-        {concept.linkOut ? (
-          <Button label={`${concept.linkOut.label} →`} variant="ghost" size="sm" onPress={() => router.push('/(tabs)/tools')} />
-        ) : null}
-      </Card>
-      {hasCheck ? (
+      {beat === 'read' ? (
+        <Card style={styles.conceptCard}>
+          <Txt style={styles.term}>{concept.term}</Txt>
+          <Txt variant="lead" style={styles.conceptPlain}>{concept.plain}</Txt>
+          <Txt style={styles.conceptAnalogy}>{concept.analogy}</Txt>
+          {concept.linkOut ? (
+            <Button label={`${concept.linkOut.label} →`} variant="ghost" size="sm" onPress={() => router.push('/(tabs)/tools')} />
+          ) : null}
+        </Card>
+      ) : (
+        // The term rides along on the check beat so the question still has its subject
+        // attached — the definition itself is one tap back, and the header's hint button
+        // offers it verbatim (see teachHint).
         <Card style={{ gap: 10 }}>
+          <Txt style={styles.term}>{concept.term}</Txt>
           <Txt style={{ fontFamily: font.displayMed, fontSize: 14, color: colors.ink }}>{concept.check?.statement}</Txt>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TrueFalseButton label="True" state={tfState(true, answered, concept.check?.isTrue)} onPress={answered === null ? () => pick(true) : undefined} />
@@ -1111,7 +1155,7 @@ function TeachView({
             </AnswerFeedback>
           ) : null}
         </Card>
-      ) : null}
+      )}
     </Reanimated.View>
   );
 }
@@ -1353,7 +1397,12 @@ function DecisionView({
     // handled by dropping the companion instead (companionWrapDeep).
     <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
-      <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
+      {/* Tighter leading than the shared `lead` variant: the longest scenario in the content
+          runs 310 characters, which is seven lines here, and at 22 those seven lines plus the
+          outcome card and its chart were the last thing in the player still overflowing. 19
+          keeps this readable and buys the chart its room back without moving Hammy, whose
+          position on this chapter type is deliberate (see companionWrapDeep). */}
+      <Txt variant="lead" style={styles.decisionText}>{chapter.prompt}</Txt>
       {!picked ? (
         <View style={{ gap: 10 }}>
           {chapter.choices.map((c) => (
@@ -1365,8 +1414,8 @@ function DecisionView({
         // rather than being appended below it, so the whole panel is already changing — and
         // animating a card that contains a bar chart made the bars themselves look like they
         // were moving, which reads as the numbers being unstable. It just appears.
-        <Card style={{ gap: 12 }}>
-          <Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.outcome.text}</Txt>
+        <Card style={styles.decisionOutcomeCard}>
+          <Txt variant="lead" style={styles.decisionText} color={colors.ink}>{picked.outcome.text}</Txt>
           {/* Ported from the website's renderDecisionOutcome pg-column-chart — a real
               comparison chart instead of just prose, e.g. "saved this check" vs. "take-home
               pay" as two bars. Only some decision chapters carry `compare` data. */}
@@ -1467,21 +1516,25 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
     // bottom space but shifted the sliders up the moment the feedback card appeared, so the
     // control you'd just been dragging moved out from under your finger as you read the
     // result. Everything above the feedback stays exactly where it was laid out.
-    <View style={{ gap: 10, flex: 1 }}>
+    // gap 8 and tightened cards throughout: this chapter stacks four cards plus its feedback,
+    // so every card's padding is paid five times over and the budget it left for the sliders
+    // themselves was what pushed the longest ones (eight fixed costs, three sliders) past the
+    // bottom of the screen.
+    <View style={{ gap: 8, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
-      <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
-      <Card style={{ gap: 4 }}>
+      <Txt variant="lead" style={styles.simPrompt}>{chapter.prompt}</Txt>
+      <Card style={styles.simCard}>
         <Txt style={styles.term}>Income: ${chapter.income}</Txt>
         {chapter.fixedCosts.map((f) => (
           <View key={f.label} style={styles.rowBetween}>
-            <Txt variant="lead" style={{ fontSize: 12.5 }}>{f.label}</Txt>
+            <Txt variant="lead" style={styles.simRowTxt}>{f.label}</Txt>
             <Txt style={{ fontFamily: font.bold, fontSize: 12.5 }}>${f.amount}</Txt>
           </View>
         ))}
       </Card>
-      <Card style={{ gap: 11 }}>
+      <Card style={[styles.simCard, { gap: 8 }]}>
         {chapter.sliders.map((s) => (
-          <View key={s.id} style={{ gap: 4 }}>
+          <View key={s.id} style={{ gap: 2 }}>
             <View style={styles.rowBetween}>
               <Txt style={{ fontFamily: font.semi, fontSize: 12.5, color: colors.muted1 }}>{s.label}</Txt>
               <Txt style={{ fontFamily: font.extra, fontSize: 12.5 }}>${values[s.id]}</Txt>
@@ -1494,13 +1547,13 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
           </View>
         ))}
       </Card>
-      <Card style={{ alignItems: 'center', gap: 2 }}>
+      <Card style={[styles.simCard, { alignItems: 'center', gap: 0 }]}>
         <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.muted5 }}>LEFT OVER</Txt>
-        <Txt style={{ fontFamily: font.display, fontSize: 28, color: leftover < 0 ? colors.danger : colors.greenDark }}>${leftover}</Txt>
+        <Txt style={{ fontFamily: font.display, fontSize: 24, color: leftover < 0 ? colors.danger : colors.greenDark }}>${leftover}</Txt>
       </Card>
       {submitted ? (
         <AnswerFeedback>
-          <Card><Txt style={{ fontFamily: font.semi, fontSize: 14, color: tier.ok ? colors.greenDark : colors.pinkDark }}>{friendlyTierText(tier.text)}</Txt></Card>
+          <Card style={styles.simCard}><Txt style={{ fontFamily: font.semi, fontSize: 13.5, lineHeight: 18 }} color={tier.ok ? colors.greenDark : colors.pinkDark}>{friendlyTierText(tier.text)}</Txt></Card>
         </AnswerFeedback>
       ) : null}
     </View>
@@ -1756,10 +1809,10 @@ function KnowledgecheckView({
     // tapped (the column re-centred around the newly added explanation card) — with the fade
     // on top of the shift, the question read as blinking out and coming back. The `key` still
     // scopes the fade to a real question CHANGE, so answering re-renders in place.
-    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
+    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 9, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
-      <Txt variant="lead" style={{ fontSize: 14 }}>{question.q}</Txt>
-      <View style={{ gap: 10 }}>
+      <Txt variant="lead" style={styles.kcQuestion}>{question.q}</Txt>
+      <View style={{ gap: 8 }}>
         {question.opts.map((c, idx) => {
           const st = !answered ? 'default' : idx === question.correct ? 'correct' : idx === sel ? 'wrong' : 'default';
           return (
@@ -1776,11 +1829,12 @@ function KnowledgecheckView({
       </View>
       {answered ? (
         // Shortened (not the raw question.exp) so the answer card stays compact enough that
-        // the options above it and the Next button below stay on screen together. 110 chars,
+        // the options above it and the Next button below stay on screen together. 85 chars,
         // not shortFeedback's default 60 (tuned for the narrow companion bubble) — this is a
-        // full-width card with more room.
+        // full-width card with more room, but at the old 110 the longest questions spilled
+        // this card onto a fourth line and took the whole screen over budget.
         <AnswerFeedback>
-          <Card><Txt variant="lead" style={{ fontSize: 13, color: right ? colors.greenDark : colors.pinkDark }}>{shortFeedback(question.exp, 110)}</Txt></Card>
+          <Card style={styles.kcAnswerCard}><Txt variant="lead" style={{ fontSize: 13, lineHeight: 18 }} color={right ? colors.greenDark : colors.pinkDark}>{shortFeedback(question.exp, 85)}</Txt></Card>
         </AnswerFeedback>
       ) : null}
     </Reanimated.View>
@@ -1912,47 +1966,90 @@ function BossbattleView({
 }
 
 /* ───────────────────────── spotcheck ───────────────────────── */
+/** Two phases. First the document itself, with every line tappable. Then a walkthrough of the
+ * lines that turned out to matter, one at a time.
+ *
+ * The walkthrough is the fix for this chapter type being the app's worst offender for
+ * scrolling by a wide margin. Revealing used to expand EVERY segment's explanation inline at
+ * once — seven segments each growing four or five lines inside one card, ~1070px of content
+ * against the ~621px a chapter without Hammy gets. Collapsing the list once answered is the
+ * same move BossbattleView already makes for the same reason ("the outcome takes the space
+ * the other options were using"), and it brings the revealed state down to roughly 313px.
+ *
+ * The review set is deliberately not just the red flags: it's every red flag PLUS anything the
+ * student flagged that was actually fine. A wrong flag is exactly the case where the
+ * explanation is worth reading ("this math checks out, but still worth a quick multiply"), and
+ * dropping it would silently skip feedback on the mistake they actually made. Lines that are
+ * fine and weren't flagged have nothing to say and are left out. */
 function SpotcheckView({ chapter, onComplete, onAction, reactTo }: { chapter: SpotcheckChapter; onComplete: Complete } & ActionProps & ReactProps) {
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [revealed, setRevealed] = useState(false);
+  const [reviewIdx, setReviewIdx] = useState(0);
   const toggle = (id: string) => setFlagged((prev) => {
     const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
   });
+  const flags = chapter.segments.filter((s) => s.isRedFlag);
+  const caught = flags.filter((s) => flagged.has(s.id));
+  const review = chapter.segments.filter((s) => s.isRedFlag || flagged.has(s.id));
   const reveal = () => {
     setRevealed(true);
-    const flags = chapter.segments.filter((s) => s.isRedFlag);
-    const caughtCount = flags.filter((s) => flagged.has(s.id)).length;
-    reactTo(caughtCount === flags.length);
+    reactTo(caught.length === flags.length);
   };
 
+  // `flagged` has to be in the deps, not just `revealed`. The action object holds a closure,
+  // and with only [revealed] the one reported on mount — captured when nothing was flagged
+  // yet — was still the one the button fired. So `reveal` graded against an empty set and
+  // Hammy reacted as though you'd caught nothing, every time, no matter how you actually did.
+  // The verdicts shown in the review cards were always right (they read state during render),
+  // which is what hid this: only his reaction was wrong.
   useEffect(() => {
-    onAction(revealed ? { label: 'Next', onPress: () => onComplete(0) } : { label: 'Check my answers', onPress: reveal });
+    if (!revealed) { onAction({ label: 'Check my answers', onPress: reveal }); return; }
+    const lastReview = reviewIdx + 1 >= review.length;
+    onAction({
+      label: lastReview ? 'Next' : 'Next line',
+      onPress: () => (lastReview ? onComplete(0) : setReviewIdx(reviewIdx + 1)),
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revealed]);
+  }, [revealed, reviewIdx, review.length, flagged]);
+
+  if (revealed && review.length) {
+    const s = review[Math.min(reviewIdx, review.length - 1)];
+    const wasFlagged = flagged.has(s.id);
+    // Three verdicts, because "was it a red flag" and "did you catch it" are different
+    // questions and the student needs both answered.
+    const verdict = s.isRedFlag
+      ? (wasFlagged ? { tone: 'green' as const, label: '✓ YOU CAUGHT THIS' } : { tone: 'pink' as const, label: '✕ YOU MISSED THIS' })
+      : { tone: 'lock' as const, label: '— ACTUALLY FINE' };
+    return (
+      <View style={{ gap: 10, flex: 1 }}>
+        <Txt variant="h2">{chapter.title}</Txt>
+        <Txt style={styles.reviewProgress}>
+          You caught {caught.length} of {flags.length} · reviewing {reviewIdx + 1} of {review.length}
+        </Txt>
+        <Reanimated.View key={s.id} entering={FadeIn.duration(220)} style={{ gap: 10 }}>
+          <Card style={{ gap: 8 }}>
+            <Tag tone={verdict.tone}>{verdict.label}</Tag>
+            <Txt style={styles.segmentTxt}>{s.text}</Txt>
+            <Txt variant="lead" style={{ fontSize: 13 }}>{s.explanation}</Txt>
+          </Card>
+        </Reanimated.View>
+      </View>
+    );
+  }
 
   return (
     <View style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
-      <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
-      <Card style={{ gap: 10 }}>
+      <Txt variant="lead" style={styles.spotcheckIntro}>{chapter.intro}</Txt>
+      <Card style={styles.spotcheckCard}>
         <Txt style={styles.term}>{chapter.postingTitle}</Txt>
-        {chapter.segments.map((s) => {
-          const isFlagged = flagged.has(s.id);
-          const showResult = revealed;
-          return (
-            <Pressable key={s.id} disabled={revealed} onPress={() => toggle(s.id)}>
-              <View style={[
-                styles.segment,
-                isFlagged && styles.segmentFlagged,
-                showResult && s.isRedFlag && styles.segmentBad,
-                showResult && !s.isRedFlag && isFlagged && styles.segmentOk,
-              ]}>
-                <Txt style={{ fontFamily: font.semi, fontSize: 13, color: colors.ink }}>{s.text}</Txt>
-                {showResult ? <Txt variant="lead" style={{ fontSize: 12, marginTop: 4 }}>{s.explanation}</Txt> : null}
-              </View>
-            </Pressable>
-          );
-        })}
+        {chapter.segments.map((s) => (
+          <Pressable key={s.id} onPress={() => toggle(s.id)}>
+            <View style={[styles.segment, flagged.has(s.id) && styles.segmentFlagged]}>
+              <Txt style={styles.segmentTxt}>{s.text}</Txt>
+            </View>
+          </Pressable>
+        ))}
       </Card>
     </View>
   );
@@ -2080,10 +2177,13 @@ function UrlinspectView({ chapter, onComplete, onAction, reactTo }: { chapter: U
     reactTo(caughtCount === suspicious.length);
   };
 
+  // `flagged` in the deps for the same reason as SpotcheckView's: without it the button keeps
+  // firing the closure captured on mount, so `reveal` grades against an empty set and Hammy
+  // reacts as though nothing was caught however well you did.
   useEffect(() => {
     onAction(revealed ? { label: 'Next', onPress: () => onComplete(0) } : { label: 'Reveal the risky parts', onPress: reveal });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revealed]);
+  }, [revealed, flagged]);
 
   return (
     <View style={{ gap: 10, flex: 1 }}>
@@ -2208,11 +2308,14 @@ const styles = StyleSheet.create({
   glossaryPopupTerm: { fontFamily: font.display, fontSize: 18, color: colors.ink },
   glossaryPopupDef: { fontFamily: font.medium, fontSize: 14, lineHeight: 20, color: colors.muted1, marginTop: 6 },
   // Decision-outcome comparison chart.
-  columnChart: { flexDirection: 'row', gap: 16, alignItems: 'flex-end', paddingTop: 4 },
-  columnChartCol: { flex: 1, alignItems: 'center', gap: 5 },
+  columnChart: { flexDirection: 'row', gap: 16, alignItems: 'flex-end' },
+  columnChartCol: { flex: 1, alignItems: 'center', gap: 4 },
   columnChartVal: { fontFamily: font.bold, fontSize: 12.5, color: colors.ink },
+  // 76, not 92: the bars only ever compare two or three values, so the extra height bought
+  // no resolution and came straight out of the outcome text's budget on the decisions that
+  // carry a chart — the tallest state this chapter type has.
   columnChartBarWrap: {
-    width: '68%', height: 92, justifyContent: 'flex-end',
+    width: '68%', height: 72, justifyContent: 'flex-end',
     backgroundColor: colors.screen, borderRadius: 6, overflow: 'hidden',
   },
   columnChartBar: { width: '100%', backgroundColor: colors.green, borderRadius: 6 },
@@ -2234,16 +2337,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingTop: 16, paddingBottom: 6,
   },
   // The centered arrangement (dialogue, Match It): a column, bubble above Hammy.
-  companionWrapCentered: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 6 },
+  companionWrapCentered: { alignItems: 'center', paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 },
   // Match It only: pulls Hammy up tight under the progress bar. Paired with contentRaised.
   companionWrapRaised: { paddingTop: 0, paddingBottom: 0 },
   // Poll / swipe-cards: pushes him further down the screen again, into the room those two
   // short chapter types leave spare. See companionDrop.
-  companionWrapLow: { paddingTop: 40, paddingBottom: 10 },
-  companionWrapLowest: { paddingTop: 58, paddingBottom: 12 },
+  companionWrapLow: { paddingTop: 28, paddingBottom: 10 },
+  companionWrapLowest: { paddingTop: 40, paddingBottom: 12 },
   // Decisions only. Deliberately short of the point where the post-answer state (outcome
-  // text plus a comparison chart, the tallest thing this type renders) would start to scroll.
-  companionWrapDeep: { paddingTop: 76, paddingBottom: 12 },
+  // text plus a comparison chart, the tallest thing this type renders) would start to scroll —
+  // which is exactly why this came down from 76: on the longest outcomes there was no spare
+  // room to drop him into, and the padding meant to absorb slack was pushing the chart off
+  // the bottom instead. 40 still reads as "lower than the others" on the short ones.
+  companionWrapDeep: { paddingTop: 40, paddingBottom: 12 },
   // No reserved height: the row's height is Hammy's, and he's far taller than any bubble
   // this can produce — so a message appearing or clearing can't move him or anything below.
   bubbleSlot: { flex: 1, alignItems: 'flex-start', justifyContent: 'center' },
@@ -2252,8 +2358,12 @@ const styles = StyleSheet.create({
   // width to hide it in) — otherwise he and the whole chapter under him would drop by the
   // bubble's height the moment he first said anything. flex-end grows a longer message
   // upward from the tail; paddingBottom is the gap the tail itself lives in.
+  // 56 rather than 70: still taller than any single-line message this can produce (the
+  // reserved height is only there so he doesn't drop when he first speaks), and the 14px it
+  // gives back goes to the two chapter types that use the centered arrangement — the dialogue
+  // log and Match It, both of which were running just over a screen on their longest content.
   bubbleSlotCentered: {
-    minHeight: 70, width: '100%', paddingBottom: 13, paddingHorizontal: 20,
+    minHeight: 56, width: '100%', paddingBottom: 13, paddingHorizontal: 20,
     alignItems: 'center', justifyContent: 'flex-end',
   },
   bubbleInnerCentered: { alignItems: 'center', maxWidth: 300 },
@@ -2343,9 +2453,6 @@ const styles = StyleSheet.create({
   },
   ambientLifeSheetContent: { paddingHorizontal: 22, paddingBottom: 34 },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 20, gap: 12, flexGrow: 1 },
-  // Match It only. The grid is vertically centred (contentCenter), so the way to lift it is
-  // to weight the bottom — extra paddingBottom shifts the centre of the free space upward.
-  contentRaised: { paddingTop: 0, paddingBottom: 72 },
   chapterFill: { flexGrow: 1 },
   // Only for chapters whose content is fixed and doesn't grow as you interact with it (Match
   // It). Centering anything that GROWS — the dialogue log — would push everything already
@@ -2354,6 +2461,13 @@ const styles = StyleSheet.create({
   // Dialogue log: each beat sized to its own text and centered as a column.
   storyLog: { alignItems: 'center' },
   term: { fontFamily: font.display, fontSize: 17, color: colors.ink },
+  // The vocab definition card. Tighter than a default Card on both padding and leading,
+  // because this is the one block in the app that regularly runs to fifteen lines and it has
+  // to clear the screen on its own. 20/14 is still a 1.43 ratio — comfortable body leading,
+  // just not the 22 the shared `lead` variant uses for short paragraphs.
+  conceptCard: { gap: 8, padding: 15 },
+  conceptPlain: { fontSize: 14, lineHeight: 20 },
+  conceptAnalogy: { fontFamily: font.semi, fontSize: 12.5, lineHeight: 16, color: colors.muted3, fontStyle: 'italic' },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
   // Story beats — speaker-styled: white bordered bubble + pig-head avatar for Hammy, a
   // plain muted italic box with no avatar for the narrator (ported from .story-bubble /
@@ -2368,27 +2482,27 @@ const styles = StyleSheet.create({
   storyAvatarTxt: { fontSize: 22 },
   storyBubble: {
     flex: 1, flexShrink: 1, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.borderOpt,
-    borderRadius: 16, padding: 14,
+    borderRadius: 16, padding: 12,
   },
-  storyBubbleTxt: { fontFamily: font.semi, fontSize: 14.5, lineHeight: 20, color: colors.ink },
+  storyBubbleTxt: { fontFamily: font.semi, fontSize: 14.5, lineHeight: 19, color: colors.ink },
   storyBubbleTxtCentered: { textAlign: 'center' },
   storyBubbleNarrator: { backgroundColor: colors.screen, borderColor: colors.border },
   storyBubbleNarratorTxt: { fontFamily: font.medium, fontStyle: 'italic', color: colors.muted2 },
   // Matching grid — centered as a block with one shared gap between every chip, so the two
   // columns read as evenly-spaced rows down the middle rather than two ragged lists.
-  matchWrap: { gap: 14, flex: 1, justifyContent: 'center' },
+  matchWrap: { gap: 10, flex: 1, justifyContent: 'center' },
   matchTitle: { textAlign: 'center' },
   matchGrid: { flexDirection: 'row', gap: 10 },
-  matchCol: { flex: 1, gap: 10 },
+  matchCol: { flex: 1, gap: 8 },
   matchChip: {
     borderWidth: 1.5, borderColor: colors.borderOpt, borderRadius: 14,
-    paddingVertical: 8, paddingHorizontal: 12, backgroundColor: colors.white,
+    paddingVertical: 7, paddingHorizontal: 11, backgroundColor: colors.white,
     justifyContent: 'center',
   },
   matchChipOn: { borderColor: colors.green, backgroundColor: '#F1F6EF' },
   matchChipWrong: { borderColor: '#D98A9E', backgroundColor: colors.pinkBg2 },
   matchChipDone: { borderColor: colors.green, backgroundColor: colors.tagGreenBg, opacity: 0.6 },
-  matchChipTxt: { fontFamily: font.semi, fontSize: 12.5, color: colors.ink },
+  matchChipTxt: { fontFamily: font.semi, fontSize: 12.5, lineHeight: 16, color: colors.ink },
   // Myth/fact swipeable flashcards.
   mythStack: { alignItems: 'center', paddingVertical: 4 },
   mythCard: {
@@ -2405,10 +2519,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ink, borderRadius: 2,
   },
   meterScaleTxt: { fontFamily: font.bold, fontSize: 10.5, color: colors.muted5 },
-  segment: { borderRadius: 12, padding: 10, borderWidth: 1.5, borderColor: colors.borderOpt },
+  // Tighter than a default Card/gap pair: the unrevealed document is a list of up to eight
+  // segments that all have to be on screen at once for "tap the suspicious lines" to be a
+  // fair question, so the savings here are what keep the longest one inside a single screen.
+  // (The revealed half no longer competes for this space at all — see SpotcheckView.)
+  kcQuestion: { fontSize: 14, lineHeight: 19 },
+  decisionText: { fontSize: 14, lineHeight: 19 },
+  decisionOutcomeCard: { gap: 8, padding: 14 },
+  simCard: { gap: 3, padding: 14 },
+  simPrompt: { fontSize: 13.5, lineHeight: 19 },
+  simRowTxt: { fontSize: 12.5, lineHeight: 18 },
+  kcAnswerCard: { padding: 14 },
+  spotcheckIntro: { fontSize: 13.5, lineHeight: 19 },
+  spotcheckCard: { gap: 6, padding: 15 },
+  segment: { borderRadius: 12, padding: 8, borderWidth: 1.5, borderColor: colors.borderOpt },
+  segmentTxt: { fontFamily: font.semi, fontSize: 13, lineHeight: 17, color: colors.ink },
   segmentFlagged: { borderColor: colors.pink, backgroundColor: colors.pinkBg2 },
-  segmentBad: { borderColor: colors.danger, backgroundColor: colors.dangerBg },
-  segmentOk: { borderColor: colors.lockBorder, backgroundColor: colors.lockBg },
+  reviewProgress: { fontFamily: font.bold, fontSize: 11.5, color: colors.muted5 },
   input: {
     borderWidth: 1.5, borderColor: colors.borderField, borderRadius: 16,
     padding: 14, minHeight: 100, fontFamily: font.semi, fontSize: 14, color: colors.ink,
