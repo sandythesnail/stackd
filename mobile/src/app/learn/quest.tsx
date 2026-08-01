@@ -299,7 +299,18 @@ export default function QuestPlayer() {
   // Which question a knowledgecheck chapter is currently showing — kept in sync via
   // KnowledgecheckView's onQuestionIndexChange, so the header's hint button can look up
   // that specific question's hintTexts entry (see hintText's computation below).
-  const [kcQuestionIdx, setKcQuestionIdx] = useState(0);
+  //
+  // Tagged with the chapter it was reported for, the same pattern `reaction` and
+  // `reportedLayout` use, and for the same two reasons. It reads as 0 for any chapter other
+  // than the one that reported it, so the outgoing chapter's question number can't be used
+  // to index the incoming chapter's hints for the frame before that chapter's own mount
+  // effect lands. And it replaces a `useEffect(() => setKcQuestionIdx(0), [chapterIdx])`
+  // that sat BELOW the `if (!quest || !content)` early return further down — a hook called
+  // conditionally, so any render that went from no-quest to quest (or back) would change the
+  // hook count and throw "rendered more hooks than during the previous render".
+  const [kcQuestion, setKcQuestion] = useState<{ chapterIdx: number; idx: number } | null>(null);
+  const kcQuestionIdx = kcQuestion?.chapterIdx === chapterIdx ? kcQuestion.idx : 0;
+  const setKcQuestionIdx = (idx: number) => setKcQuestion({ chapterIdx, idx });
   const [terms, setTerms] = useState<LearnedTerm[]>([]);
   // Mirrors `terms` synchronously. The final chapter's onComplete builds the results payload
   // in the same handler that can add the last word, and a setState isn't visible yet at that
@@ -449,10 +460,6 @@ export default function QuestPlayer() {
   // as it advances to the next question/concept (see e.g. TeachView/KnowledgecheckView's
   // next()). A chapter change drops it with no clearing step at all, since the reaction is
   // read per chapter (activeReaction below).
-  useEffect(() => {
-    setKcQuestionIdx(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapterIdx]);
   // Only the reaction raised by the chapter on screen counts — see `reaction`'s declaration.
   const activeReaction = reaction?.chapterIdx === chapterIdx ? reaction : null;
   const reactionMood = activeReaction?.mood ?? null;
@@ -806,7 +813,7 @@ function HintCorner({ hintText, onUseHint }: { hintText?: string } & HintProps) 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.hintScrim} onPress={() => setOpen(false)}>
           <Pressable style={styles.hintModalCard} onPress={(e) => e.stopPropagation()}>
-            <Tag tone="pink">HAMMY'S HINT</Tag>
+            <Tag tone="gold">HAMMY'S HINT</Tag>
             <Txt variant="lead" style={{ fontSize: 14, marginTop: 8 }}>{hintText}</Txt>
             <Button label="Got it" onPress={() => setOpen(false)} style={{ marginTop: 16 }} />
           </Pressable>
@@ -2165,9 +2172,14 @@ const styles = StyleSheet.create({
   },
   hintFabTxt: { fontFamily: font.bold, fontSize: 12, color: colors.ink },
   hintScrim: { flex: 1, backgroundColor: 'rgba(22,32,23,0.55)', alignItems: 'center', justifyContent: 'center', padding: 26 },
+  // White card with the yellow "come collect" outline, matching a recommended module tile
+  // (mtileRecommended in ModuleBits) — a hint is an offer, so it gets the same reward glow
+  // rather than the pink tint it used to share with Hammy's other speech.
   hintModalCard: {
-    width: '100%', maxWidth: 340, backgroundColor: colors.pinkBg, borderWidth: 1.5,
-    borderColor: colors.pinkBorder, borderRadius: 20, padding: 20,
+    width: '100%', maxWidth: 340, backgroundColor: colors.white, borderWidth: 2,
+    borderColor: colors.reward, borderRadius: 20, padding: 20,
+    shadowColor: colors.reward, shadowOpacity: 0.25, shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 }, elevation: 3,
   },
   bossOutcomePick: { fontFamily: font.extra, fontSize: 11.5, color: colors.muted5, letterSpacing: 0.4 },
   // A filled pill rather than bare small-caps like bossOutcomePick: this is the label that
