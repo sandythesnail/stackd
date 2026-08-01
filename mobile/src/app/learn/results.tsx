@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, Easing } from 'react-native';
+import Reanimated, {
+  FadeInDown, useSharedValue, useAnimatedStyle, useAnimatedProps, withTiming, withDelay,
+} from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -109,26 +112,42 @@ export default function Results() {
               right under the screen's top edge, the default float rise clipped into the
               safe area on every cycle ("Hammy goes off screen"). */}
           <Hammy size={150} equipped={equippedMascotItems()} face={REACTION_FACES.streak} floatAmplitude={6} style={{ marginTop: 6 }} />
-          <Tag textColor={colors.greenDark} style={styles.tag}>🎉 LESSON COMPLETE</Tag>
-          <Txt style={styles.title}>{titleWithDash(lesson?.title ?? mod.name)}{"\n"}{allCorrect ? "nailed it!" : "done!"}</Txt>
-          {totalQ > 0 ? <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt> : null}
+          {/* The whole screen arrives as a cascade rather than all at once: tag, then
+              headline, then the rewards, then the level bar, then the report. Each step is a
+              short rise-and-fade on a stagger, which is what turns a static summary into a
+              sequence you watch land. Delays are cumulative and deliberately front-loaded —
+              everything is on screen inside a second. */}
+          <Reanimated.View entering={FadeInDown.delay(80).duration(340).springify()}>
+            <Tag textColor={colors.greenDark} style={styles.tag}>🎉 LESSON COMPLETE</Tag>
+          </Reanimated.View>
+          <Reanimated.View entering={FadeInDown.delay(180).duration(360).springify()}>
+            <Txt style={styles.title}>{titleWithDash(lesson?.title ?? mod.name)}{"\n"}{allCorrect ? "nailed it!" : "done!"}</Txt>
+            {totalQ > 0 ? <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt> : null}
+          </Reanimated.View>
 
-          <View style={styles.rewards}>
-            <Reward value={`+${xpAwarded}`} label="XP" />
-            <Reward value={<Coin size={22} />} label="Coins" big={`+${coinsEarned}`} />
-          </View>
+          <Reanimated.View style={styles.rewards} entering={FadeInDown.delay(300).duration(380).springify()}>
+            {/* Both reward numbers count up from zero rather than appearing at their final
+                value — the XP and coins are the payoff for the whole lesson, so they get to
+                be watched being earned. */}
+            <Reward value={<CountUp to={xpAwarded} prefix="+" />} label="XP" />
+            <Reward value={<Coin size={22} />} label="Coins" big={<CountUp to={coinsEarned} prefix="+" />} />
+          </Reanimated.View>
 
-          <View style={styles.levelWrap}>
+          <Reanimated.View style={styles.levelWrap} entering={FadeInDown.delay(420).duration(380).springify()}>
             <View style={styles.levelRow}>
               <Txt style={styles.levelTiny}>LEVEL {level}</Txt>
               <Txt style={styles.levelTiny}>{Math.round(pct)}% to Level {level + 1}</Txt>
             </View>
             <View style={styles.levelTrack}>
-              <View style={[styles.levelFill, { width: `${pct}%` }]} />
+              {/* Grows from empty to the real percentage, so you see the progress you just
+                  made rather than a bar that was always that full. */}
+              <GrowBar pct={pct} />
             </View>
-          </View>
+          </Reanimated.View>
 
-          <QuestReportCard report={report} learnedTerms={learnedTerms} equipped={equippedMascotItems()} />
+          <Reanimated.View style={{ width: '100%' }} entering={FadeInDown.delay(540).duration(400).springify()}>
+            <QuestReportCard report={report} learnedTerms={learnedTerms} equipped={equippedMascotItems()} />
+          </Reanimated.View>
         </ScrollView>
         <View style={styles.footer}>
           <Button label="Continue" variant="pink" onPress={continuePress} />
@@ -166,7 +185,40 @@ function titleWithDash(title: string) {
   return words.join(" ");
 }
 
-function Reward({ value, label, big }: { value: React.ReactNode; label: string; big?: string }) {
+/** Ticks a number up from zero to `to`. Runs on a JS timer rather than a Reanimated worklet
+ * because the thing being animated is the TEXT itself — there's no transform that turns "0"
+ * into "42", so each frame has to re-render. Capped at ~28 steps regardless of the value, so
+ * a 5-coin reward and a 400-XP one take the same time and neither floods the render queue. */
+function CountUp({ to, prefix = '', duration = 900 }: { to: number; prefix?: string; duration?: number }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (to <= 0) { setN(to); return; }
+    const steps = Math.min(28, Math.max(1, to));
+    const stepMs = duration / steps;
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      // Ease-out, so it sprints then settles rather than crawling linearly to the total.
+      const t = i / steps;
+      setN(Math.round(to * (1 - Math.pow(1 - t, 3))));
+      if (i >= steps) { setN(to); clearInterval(id); }
+    }, stepMs);
+    return () => clearInterval(id);
+  }, [to, duration]);
+  return <Txt style={styles.rewardB}>{prefix}{n}</Txt>;
+}
+
+/** The level bar's fill, growing from empty to `pct` once on mount. */
+function GrowBar({ pct }: { pct: number }) {
+  const w = useSharedValue(0);
+  useEffect(() => {
+    w.value = withDelay(520, withTiming(pct, { duration: 700, easing: Easing.out(Easing.cubic) }));
+  }, [pct, w]);
+  const style = useAnimatedStyle(() => ({ width: `${w.value}%` }));
+  return <Reanimated.View style={[styles.levelFill, style]} />;
+}
+
+function Reward({ value, label, big }: { value: React.ReactNode; label: string; big?: React.ReactNode }) {
   return (
     <View style={styles.reward}>
       {typeof value === 'string' ? (
@@ -189,14 +241,23 @@ function MasteryRing({ pct }: { pct: number }) {
   const stroke = 9;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
+  // Sweeps from empty to the real score instead of appearing already filled, so the ring
+  // reads as your result being tallied. Driven through animatedProps rather than state —
+  // strokeDashoffset is an SVG prop, not a style, so it can't ride a transform.
+  const offset = useSharedValue(c);
+  useEffect(() => {
+    offset.value = withDelay(640, withTiming(c * (1 - pct / 100), { duration: 950, easing: Easing.out(Easing.cubic) }));
+  }, [pct, c, offset]);
+  const animatedProps = useAnimatedProps(() => ({ strokeDashoffset: offset.value }));
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={colors.border} strokeWidth={stroke} fill="none" />
-        <Circle
+        <AnimatedCircle
           cx={size / 2} cy={size / 2} r={r}
           stroke={colors.green} strokeWidth={stroke} fill="none" strokeLinecap="round"
-          strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)}
+          strokeDasharray={c}
+          animatedProps={animatedProps}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </Svg>
@@ -206,6 +267,8 @@ function MasteryRing({ pct }: { pct: number }) {
     </View>
   );
 }
+
+const AnimatedCircle = Reanimated.createAnimatedComponent(Circle);
 
 /** "Scroll down to see your progress report, then Hammy's advice" — ported from the
  * website's buildQuestReport/renderQuestResults (app.js), which only ever built this for

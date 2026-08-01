@@ -2,7 +2,8 @@ import { ReactNode } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { useEffect } from 'react';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence } from 'react-native-reanimated';
 import { colors, font } from '@/theme';
 import { Txt } from './Txt';
 import { TourTarget } from './OnboardingTour';
@@ -45,7 +46,19 @@ function TabButton({
   navigation: TabBarProps['navigation'];
 }) {
   const scale = useSharedValue(1);
+  // The icon hops when its tab BECOMES the active one — separate from the press squeeze, so
+  // arriving at a tab by any route (a deep link, a Continue button, the tour) plays it too,
+  // not just a direct tap. Lift rather than grow: at this size a scale-up reads as a wobble.
+  const lift = useSharedValue(0);
+  useEffect(() => {
+    if (!focused) return;
+    lift.value = withSequence(
+      withSpring(-5, { damping: 8, stiffness: 460 }),
+      withSpring(0, { damping: 12, stiffness: 320 }),
+    );
+  }, [focused, lift]);
   const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const iconStyle = useAnimatedStyle(() => ({ transform: [{ translateY: lift.value }] }));
   return (
     <AnimatedPressable
       style={[styles.tab, animatedStyle]}
@@ -56,7 +69,7 @@ function TabButton({
         if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
       }}
     >
-      {meta.render(color)}
+      <Animated.View style={iconStyle}>{meta.render(color)}</Animated.View>
       <Txt style={[styles.label, { color }]}>{meta.label}</Txt>
     </AnimatedPressable>
   );

@@ -1,6 +1,9 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { Pressable, View, StyleSheet, ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import Animated, {
+  useSharedValue, useAnimatedStyle, withSpring, withSequence, withTiming,
+} from 'react-native-reanimated';
 import { colors, font } from '@/theme';
 import { Txt } from './Txt';
 
@@ -60,18 +63,55 @@ export function Option({
   style?: ViewStyle;
 }) {
   const s = STATE[state];
+  // Two separate channels so they can't fight each other: `press` is the finger-down squeeze,
+  // `verdict` is the one-shot reaction when this row turns out to be right or wrong. Both are
+  // transform-only, so they run on the UI thread and never disturb the rows around them.
+  const press = useSharedValue(0);
+  const verdict = useSharedValue(0);
+  const shake = useSharedValue(0);
+  useEffect(() => {
+    if (state === 'correct') {
+      // A confident pop — this is the row the eye should land on.
+      verdict.value = withSequence(
+        withSpring(1, { damping: 9, stiffness: 320 }),
+        withSpring(0, { damping: 14, stiffness: 260 }),
+      );
+    } else if (state === 'wrong') {
+      // Deliberately smaller than the correct row's pop and sideways rather than bigger:
+      // the wrong answer should register without becoming the loudest thing on screen.
+      shake.value = withSequence(
+        withTiming(-4, { duration: 55 }),
+        withTiming(4, { duration: 55 }),
+        withTiming(-2.5, { duration: 50 }),
+        withTiming(0, { duration: 45 }),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: 1 - press.value * 0.025 + verdict.value * 0.04 },
+      { translateX: shake.value },
+    ],
+  }));
+
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
-      style={[styles.opt, { borderColor: s.border, backgroundColor: s.bg }, style]}
+      onPressIn={() => { press.value = withTiming(1, { duration: 70 }); }}
+      onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 400 }); }}
+      style={[styles.opt, { borderColor: s.border, backgroundColor: s.bg }, style, animStyle]}
     >
       {control === 'letter' && letter ? <LetterBadge letter={letter} state={state} /> : null}
       {control === 'check' ? <CheckBox on={state !== 'default'} /> : null}
       <Txt style={styles.label}>{label}</Txt>
       {right ? <View style={{ marginLeft: 'auto' }}>{right}</View> : null}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const styles = StyleSheet.create({
   // Sized so four options, their question and an explanation card fit one screen together in

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import Reanimated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow } from '@/components';
 import { colors, font, radius } from '@/theme';
@@ -42,7 +43,7 @@ export default function Modules() {
         </View>
 
         <View style={{ gap: 12 }}>
-          {modules.map((m) => {
+          {modules.map((m, rowIdx) => {
             const content = moduleContentById(m.id);
             // The real-life step-by-step guide lesson is surfaced separately, right below
             // the main list, via RealLifeSubQuestRow — same split the website makes between
@@ -60,7 +61,14 @@ export default function Modules() {
             const recommended = status === 'active' && trackModuleIds.includes(m.id);
             const isOpen = expanded.has(m.id);
             return (
-              <View key={m.id} style={[styles.row, status === 'done' && styles.rowDone, recommended && styles.rowRecommended]}>
+              // Rows cascade in on a short stagger rather than the whole list appearing at
+              // once. Capped at 10 steps so the bottom of an 11-module list isn't still
+              // arriving half a second after the top — past that they land together.
+              <Reanimated.View
+                key={m.id}
+                entering={FadeInDown.delay(Math.min(rowIdx, 10) * 45).duration(320).springify().damping(18)}
+                style={[styles.row, status === 'done' && styles.rowDone, recommended && styles.rowRecommended]}
+              >
                 <Pressable onPress={() => toggle(m.id)} style={[styles.rowHead, recommended && styles.rowHeadRecommended]} accessibilityRole="button" accessibilityLabel={m.name} accessibilityState={{ expanded: isOpen }}>
                   <View style={styles.rowHeadLeft}>
                     <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} />
@@ -109,7 +117,7 @@ export default function Modules() {
                     ) : null}
                   </View>
                 ) : null}
-              </View>
+              </Reanimated.View>
             );
           })}
         </View>

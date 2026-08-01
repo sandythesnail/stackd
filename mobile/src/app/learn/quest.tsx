@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent } from 'react-native';
-import Reanimated, { SlideInDown, FadeInDown, FadeIn } from 'react-native-reanimated';
+import Reanimated, { SlideInDown, FadeInDown, FadeIn, FadeInRight } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
@@ -676,7 +676,10 @@ export default function QuestPlayer() {
             shrink-wrapping inside it — that's what lets a chapter whose own root asks to
             be centered (the story intro's stage, Match It's grid) have a height to center
             itself within. Without it those chapters just sat pinned to the top. */}
-        <Reanimated.View key={chapter.id} entering={FadeIn.duration(260)} style={styles.chapterFill}>
+        {/* Each chapter arrives from the right rather than cross-fading in place, so
+            advancing through a quest reads as travelling forward through it. Keyed on the
+            chapter id, so this plays once per chapter and never on a re-render within one. */}
+        <Reanimated.View key={chapter.id} entering={FadeInRight.duration(300).springify().damping(18)} style={styles.chapterFill}>
           <ChapterView
             chapter={chapter}
             questions={content.questions}
@@ -1075,13 +1078,6 @@ function TeachView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i, chapter.title]);
   const [answered, setAnswered] = useState<boolean | null>(null);
-  // Each concept plays as two beats: read the definition, then answer its check. They used to
-  // share one screen, which is what made this the app's biggest source of scrolling — the
-  // longest `plain` in the content runs 599 characters (~15 lines at this size), so definition
-  // and check together came to ~525px against the ~495px a teach chapter gets beside Hammy.
-  // Split, the reading beat tops out around 486px and the check beat around 264px, so both
-  // land inside one screen without shrinking anything the student is trying to read.
-  const [beat, setBeat] = useState<'read' | 'check'>('read');
   const concept = chapter.concepts[i];
   const last = i + 1 >= chapter.concepts.length;
   // Some concepts have no statement at all (check: {} or absent) — informational only, no quiz.
@@ -1103,45 +1099,37 @@ function TeachView({
     // next, not-yet-answered concept until its own timer happens to fire — see ReactProps.
     clearReaction();
     setI(i + 1);
-    setBeat('read');
     setAnswered(null);
   };
 
   useEffect(() => {
-    if (beat === 'read') {
-      // A concept with no check is informational — its "Got it" goes straight on to the next
-      // one rather than to an empty check beat.
-      onAction(hasCheck
-        ? { label: 'Got it', onPress: () => setBeat('check') }
-        : { label: last ? 'Next' : 'Got it', onPress: next });
-      return;
-    }
-    onAction(answered !== null ? { label: last ? 'Next' : 'Got it', onPress: next } : null);
+    onAction(!hasCheck || answered !== null ? { label: last ? 'Next' : 'Got it', onPress: next } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beat, hasCheck, answered, last, i]);
+  }, [hasCheck, answered, last, i]);
 
   return (
-    // Keyed to the concept AND the beat, so moving from the definition to its check gets its
-    // own fade rather than an instant cut, same as a concept swap does.
+    // Keyed to the concept index so each concept swap gets its own fade in/out instead of an
+    // instant cut.
     // Top-anchored for the same reason as the poll and Quick Check above: the true/false
-    // result appearing must not re-flow the statement being read.
-    <Reanimated.View key={`${i}:${beat}`} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
+    // result appearing must not re-flow the definition being read.
+    //
+    // Definition and check share one screen. This was split across two beats to keep the
+    // longest concepts inside a single screen (the longest `plain` in the content runs 599
+    // characters), and put back by product decision — reading the definition and answering
+    // its check belong together. The cost is that the densest vocab chapters scroll again;
+    // the tightened card metrics below claw back some of it but not all.
+    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
-      {beat === 'read' ? (
-        <Card style={styles.conceptCard}>
-          <Txt style={styles.term}>{concept.term}</Txt>
-          <Txt variant="lead" style={styles.conceptPlain}>{concept.plain}</Txt>
-          <Txt style={styles.conceptAnalogy}>{concept.analogy}</Txt>
-          {concept.linkOut ? (
-            <Button label={`${concept.linkOut.label} →`} variant="ghost" size="sm" onPress={() => router.push('/(tabs)/tools')} />
-          ) : null}
-        </Card>
-      ) : (
-        // The term rides along on the check beat so the question still has its subject
-        // attached — the definition itself is one tap back, and the header's hint button
-        // offers it verbatim (see teachHint).
-        <Card style={{ gap: 10 }}>
-          <Txt style={styles.term}>{concept.term}</Txt>
+      <Card style={styles.conceptCard}>
+        <Txt style={styles.term}>{concept.term}</Txt>
+        <Txt variant="lead" style={styles.conceptPlain}>{concept.plain}</Txt>
+        <Txt style={styles.conceptAnalogy}>{concept.analogy}</Txt>
+        {concept.linkOut ? (
+          <Button label={`${concept.linkOut.label} →`} variant="ghost" size="sm" onPress={() => router.push('/(tabs)/tools')} />
+        ) : null}
+      </Card>
+      {hasCheck ? (
+        <Card style={styles.conceptCheckCard}>
           <Txt style={{ fontFamily: font.displayMed, fontSize: 14, color: colors.ink }}>{concept.check?.statement}</Txt>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TrueFalseButton label="True" state={tfState(true, answered, concept.check?.isTrue)} onPress={answered === null ? () => pick(true) : undefined} />
@@ -1155,7 +1143,7 @@ function TeachView({
             </AnswerFeedback>
           ) : null}
         </Card>
-      )}
+      ) : null}
     </Reanimated.View>
   );
 }
@@ -2466,6 +2454,7 @@ const styles = StyleSheet.create({
   // to clear the screen on its own. 20/14 is still a 1.43 ratio — comfortable body leading,
   // just not the 22 the shared `lead` variant uses for short paragraphs.
   conceptCard: { gap: 8, padding: 15 },
+  conceptCheckCard: { gap: 9, padding: 14 },
   conceptPlain: { fontSize: 14, lineHeight: 20 },
   conceptAnalogy: { fontFamily: font.semi, fontSize: 12.5, lineHeight: 16, color: colors.muted3, fontStyle: 'italic' },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between' },
