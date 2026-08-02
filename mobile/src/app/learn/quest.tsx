@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent } from 'react-native';
-import Reanimated, {
-  SlideInDown, FadeInDown, FadeIn, FadeInRight,
-  useSharedValue, useAnimatedStyle, withTiming, withSpring,
-} from 'react-native-reanimated';
+import Reanimated, { SlideInDown, FadeInDown, FadeIn, FadeInRight } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
@@ -1410,9 +1407,9 @@ function DecisionView({
           position on this chapter type is deliberate (see companionWrapDeep). */}
       <Txt variant="lead" style={styles.decisionText}>{chapter.prompt}</Txt>
       {!picked ? (
-        <View style={{ gap: 9 }}>
-          {chapter.choices.map((c, idx) => (
-            <DecisionChoice key={c.id} label={c.label} index={idx} onPress={() => pick(c)} />
+        <View style={{ gap: 10 }}>
+          {chapter.choices.map((c) => (
+            <Option key={c.id} label={c.label} onPress={() => pick(c)} />
           ))}
         </View>
       ) : (
@@ -1432,39 +1429,6 @@ function DecisionView({
         </Reanimated.View>
       )}
     </View>
-  );
-}
-
-/** A branching path, not an answer option.
- *
- * These used to be plain `Option` rows, which is the same component the Quick Check uses for
- * real multiple-choice questions — so a decision looked like a question with a right answer,
- * when the whole point is that it's a choice with a consequence. This is deliberately a
- * different object: a coloured stripe running down the leading edge, a trailing arrow, tighter
- * corners, and no letter badge or checkbox anywhere near it. It reads as "take this route".
- *
- * The stagger on entry is doing the same work — the routes appear one after another rather
- * than arriving as a block, which is how a list of options presents itself. Pressing nudges
- * the row toward its own arrow instead of just dimming it. */
-function DecisionChoice({ label, index, onPress }: { label: string; index: number; onPress: () => void }) {
-  const press = useSharedValue(0);
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: press.value * 4 }, { scale: 1 - press.value * 0.015 }],
-  }));
-  return (
-    <Reanimated.View entering={FadeInDown.delay(index * 70).duration(300).springify().damping(16)}>
-      <Pressable
-        onPress={onPress}
-        onPressIn={() => { press.value = withTiming(1, { duration: 90 }); }}
-        onPressOut={() => { press.value = withSpring(0, { damping: 20, stiffness: 400, overshootClamping: true }); }}
-      >
-        <Reanimated.View style={[styles.decisionChoice, animStyle]}>
-          <View style={styles.decisionChoiceStripe} />
-          <Txt style={styles.decisionChoiceTxt}>{label}</Txt>
-          <Txt style={styles.decisionChoiceArrow}>→</Txt>
-        </Reanimated.View>
-      </Pressable>
-    </Reanimated.View>
   );
 }
 
@@ -2645,17 +2609,6 @@ const styles = StyleSheet.create({
   kcQuestion: { fontSize: 14, lineHeight: 19 },
   decisionText: { fontSize: 14, lineHeight: 19 },
   decisionOutcomeCard: { gap: 8, padding: 14 },
-  // The stripe sits flush against the leading edge, so there is no paddingLeft and the row
-  // clips to its own radius. Slightly shorter than the Option row it replaced (12/1.5/19
-  // against 12/1.75/20), so the swap costs no height on a chapter type that had none spare.
-  decisionChoice: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderOpt,
-    borderRadius: 14, paddingVertical: 12, paddingRight: 14, overflow: 'hidden',
-  },
-  decisionChoiceStripe: { width: 4, alignSelf: 'stretch', backgroundColor: colors.pinkSoft },
-  decisionChoiceTxt: { flex: 1, fontFamily: font.bold, fontSize: 14.5, lineHeight: 19, color: colors.ink },
-  decisionChoiceArrow: { fontFamily: font.extra, fontSize: 15, color: colors.muted5 },
   simCard: { gap: 3, padding: 14 },
   simPrompt: { fontSize: 13.5, lineHeight: 19 },
   simRowTxt: { fontSize: 12.5, lineHeight: 18 },
