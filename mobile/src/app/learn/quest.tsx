@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent } from 'react-native';
-import Reanimated, { SlideInDown, FadeInDown, FadeIn, FadeInRight } from 'react-native-reanimated';
+import Reanimated, {
+  SlideInDown, FadeInDown, FadeIn, FadeInRight, FadeInUp, ZoomIn,
+  useSharedValue, useAnimatedStyle, withTiming, withSpring, withSequence,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
@@ -782,16 +785,60 @@ function ChapterView({
  * inline check, poll). Once answered, BOTH buttons recolor: whichever one holds the
  * correct answer turns green regardless of which was tapped, and the player's own wrong
  * tap (if any) turns pink — exactly the website's `classList.add('correct'/'wrong')` logic. */
+/* It also moves, which it did not before this. Poll and every teach chapter's inline check run
+ * through here, so this pair is the single most-tapped control in the whole player — and it was
+ * the only one in the file that answered a tap purely by recolouring, with no squeeze under the
+ * finger and no reaction to being right or wrong. The two channels are lifted wholesale from
+ * `Option` (a confident pop on the correct button, a smaller sideways shake on a wrong one) so
+ * that answering True/False feels the same as answering a Quick Check rather than like a
+ * different, flatter control that happens to sit in the same lesson. */
 function TrueFalseButton({
   label, state, onPress,
 }: { label: string; state: 'default' | 'correct' | 'wrong'; onPress?: () => void }) {
   const c = TF_STATE[state];
+  const press = useSharedValue(0);
+  const verdict = useSharedValue(0);
+  const shake = useSharedValue(0);
+  useEffect(() => {
+    if (state === 'correct') {
+      verdict.value = withSequence(
+        withSpring(1, { damping: 9, stiffness: 320 }),
+        withSpring(0, { damping: 14, stiffness: 260 }),
+      );
+    } else if (state === 'wrong') {
+      shake.value = withSequence(
+        withTiming(-4, { duration: 55 }),
+        withTiming(4, { duration: 55 }),
+        withTiming(-2.5, { duration: 50 }),
+        withTiming(0, { duration: 45 }),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: 1 - press.value * 0.03 + verdict.value * 0.045 },
+      { translateX: shake.value },
+    ],
+  }));
   return (
-    <Pressable disabled={state !== 'default' && !onPress} onPress={onPress} style={[styles.tfBtn, { borderColor: c.border, backgroundColor: c.bg }]}>
+    <ReanimatedPressable
+      disabled={state !== 'default' && !onPress}
+      onPress={onPress}
+      onPressIn={() => { press.value = withTiming(1, { duration: 70 }); }}
+      onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 400 }); }}
+      style={[styles.tfBtn, { borderColor: c.border, backgroundColor: c.bg }, animStyle]}
+    >
       <Txt style={[styles.tfBtnTxt, { color: c.text }]}>{label}</Txt>
-    </Pressable>
+    </ReanimatedPressable>
   );
 }
+/* Distinct from the `AnimatedPressable` further down, which Matching builds from React
+ * Native's own Animated — this one has to be a Reanimated host because the style above comes
+ * from useAnimatedStyle. Created once at module scope for the same reason as that one:
+ * createAnimatedComponent inside a render makes a new component type every pass and remounts
+ * the button. */
+const ReanimatedPressable = Reanimated.createAnimatedComponent(Pressable);
 const TF_STATE: Record<'default' | 'correct' | 'wrong', { border: string; bg: string; text: string }> = {
   default: { border: colors.borderOpt, bg: colors.white, text: colors.ink },
   correct: { border: colors.green, bg: colors.tagGreenBg, text: colors.greenDark },
@@ -1818,18 +1865,25 @@ function KnowledgecheckView({
     <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 9, flex: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={styles.kcQuestion}>{question.q}</Txt>
+      {/* The options deal in one at a time rather than landing as a block. It's ~50ms apart,
+          so the whole set is down well before anyone could have finished reading the stem —
+          it isn't a wait, it's the difference between a question being dealt and a question
+          being pasted. Scoped to a real question CHANGE by the parent's key={i}: these
+          wrappers keep their keys when an answer is tapped, so nothing re-enters mid-question
+          and the letters stay put while Option runs its own correct/wrong reaction. */}
       <View style={{ gap: 8 }}>
         {question.opts.map((c, idx) => {
           const st = !answered ? 'default' : idx === question.correct ? 'correct' : idx === sel ? 'wrong' : 'default';
           return (
-            <Option
-              key={c}
-              label={c}
-              control="letter"
-              letter={OPT_LETTERS[idx]}
-              state={st}
-              onPress={() => !answered && pick(idx)}
-            />
+            <Reanimated.View key={c} entering={FadeInDown.delay(idx * 50).duration(260).springify().damping(17)}>
+              <Option
+                label={c}
+                control="letter"
+                letter={OPT_LETTERS[idx]}
+                state={st}
+                onPress={() => !answered && pick(idx)}
+              />
+            </Reanimated.View>
           );
         })}
       </View>
@@ -1870,6 +1924,96 @@ function MeterTrack({ pct, height = 14 }: { pct: number; height?: number }) {
   );
 }
 
+/** The meter's headline number, counted rather than cut to.
+ *
+ * It used to re-render straight to the new score while MeterTrack's needle took 600ms to slide
+ * there, so the two halves of the same reading disagreed for the whole slide — the number was
+ * already at 65 while the needle was visibly still leaving 50. Same duration and same
+ * cubic-out curve as the needle, so they arrive together. */
+function CountUpNumber({ value, style }: { value: number; style?: object }) {
+  const [shown, setShown] = useState(value);
+  const fromRef = useRef(value);
+  useEffect(() => {
+    const start = fromRef.current;
+    const delta = value - start;
+    if (delta === 0) return;
+    const t0 = Date.now();
+    let raf = 0;
+    const tick = () => {
+      const p = Math.min(1, (Date.now() - t0) / 600);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setShown(start + delta * eased);
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else fromRef.current = value;
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      // Whatever the number had reached is where the next count starts from, so an interrupted
+      // run (tapping a second habit mid-slide) continues from what's on screen instead of
+      // snapping back to the previous resting value first.
+      fromRef.current = value;
+    };
+  }, [value]);
+  return <Txt style={style}>{Math.round(shown)}</Txt>;
+}
+
+/** A habit you try out, not an option you pick.
+ *
+ * These were plain `Option` rows — the same component the Quick Check uses for real
+ * multiple-choice questions — which made a simulator look like a question with a right answer
+ * you get one shot at. It isn't: every row is meant to be tapped, in any order, and the point
+ * of tapping is to SEE what that habit does to the meter. So the row is built around the
+ * reveal instead.
+ *
+ * Each one carries a score chip on its trailing edge, sized and positioned identically before
+ * and after the tap. Unopened it's a muted "?", which is the whole invitation — there's a
+ * number hidden there and tapping is how you read it. Opened, the chip pops into the real
+ * delta in its own colour and the authored note unfolds underneath, so the explanation STAYS
+ * on the row that earned it. (Hammy still narrates it too, but his bubble is gone in a couple
+ * of seconds and takes the reasoning with it — which meant that on a four-habit chapter you
+ * could finish having read every note and be able to see none of them.) */
+function HabitChoice({
+  label, note, delta, revealed, index, onPress,
+}: { label: string; note: string; delta: number; revealed: boolean; index: number; onPress: () => void }) {
+  const press = useSharedValue(0);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 - press.value * 0.02 }] }));
+  const good = delta >= 0;
+  return (
+    <Reanimated.View entering={FadeInDown.delay(index * 60).duration(280).springify().damping(16)}>
+      <Pressable
+        disabled={revealed}
+        onPress={onPress}
+        onPressIn={() => { press.value = withTiming(1, { duration: 80 }); }}
+        onPressOut={() => { press.value = withSpring(0, { damping: 20, stiffness: 400, overshootClamping: true }); }}
+      >
+        <Reanimated.View style={[styles.habit, revealed && (good ? styles.habitGood : styles.habitBad), animStyle]}>
+          <View style={styles.habitHead}>
+            <Txt style={styles.habitLabel}>{label}</Txt>
+            {/* Keyed on `revealed` so the chip genuinely remounts and plays ZoomIn on the
+                swap — without the key React reuses the node and the number would just
+                change underneath the same static circle. */}
+            <Reanimated.View
+              key={revealed ? 'on' : 'off'}
+              entering={revealed ? ZoomIn.duration(300).springify().damping(11) : undefined}
+              style={[styles.habitChip, revealed && (good ? styles.habitChipGood : styles.habitChipBad)]}
+            >
+              <Txt style={[styles.habitChipTxt, revealed && styles.habitChipTxtOn]}>
+                {revealed ? `${good ? '+' : '−'}${Math.abs(delta)}` : '?'}
+              </Txt>
+            </Reanimated.View>
+          </View>
+          {revealed ? (
+            <Reanimated.View entering={FadeInDown.duration(240)}>
+              <Txt style={[styles.habitNote, { color: good ? colors.greenDark : colors.pinkDark }]}>{note}</Txt>
+            </Reanimated.View>
+          ) : null}
+        </Reanimated.View>
+      </Pressable>
+    </Reanimated.View>
+  );
+}
+
 function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: SimulatorChapter; onComplete: Complete } & ActionProps & ReactProps) {
   // meterKey/meterMin/meterMax are missing on 2/22 real chapters — fall back to a plain 0-100 score.
   const meterKey = chapter.meterKey ?? 'score';
@@ -1877,10 +2021,20 @@ function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: Si
   const meterMax = chapter.meterMax ?? 100;
   const [meter, setMeter] = useState((meterMin + meterMax) / 2);
   const [used, setUsed] = useState<Set<string>>(new Set());
+  // The delta that floats up off the meter on each tap. Keyed by a counter rather than by the
+  // value, so tapping two habits worth the same number still replays the animation.
+  const [floatDelta, setFloatDelta] = useState<{ value: number; key: number } | null>(null);
+  const floatSeqRef = useRef(0);
+  const floatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (floatTimerRef.current) clearTimeout(floatTimerRef.current); }, []);
 
   const apply = (d: SimulatorChapter['decisions'][number]) => {
     setMeter((m) => Math.min(meterMax, Math.max(meterMin, m + d.scoreDelta)));
     setUsed((prev) => new Set(prev).add(d.id));
+    floatSeqRef.current += 1;
+    setFloatDelta({ value: d.scoreDelta, key: floatSeqRef.current });
+    if (floatTimerRef.current) clearTimeout(floatTimerRef.current);
+    floatTimerRef.current = setTimeout(() => setFloatDelta(null), 1400);
     // Hammy narrates the actual explanation for this decision (ported from
     // showHammyMessage) instead of a generic "Nice!"/"Not quite".
     reactTo(d.scoreDelta >= 0, shortFeedback(d.note));
@@ -1898,16 +2052,35 @@ function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: Si
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
       <Card style={{ gap: 4 }}>
         <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.muted5, textTransform: 'uppercase' }}>{meterKey}</Txt>
-        <Txt style={{ fontFamily: font.display, fontSize: 28, color: colors.greenDark }}>{Math.round(meter)}</Txt>
+        <View style={styles.meterValueRow}>
+          <CountUpNumber value={meter} style={styles.meterValue} />
+          {/* Rises out of the number it just changed, so the score's movement has a visible
+              cause sitting right next to it rather than only being inferable from the needle. */}
+          {floatDelta ? (
+            <Reanimated.View key={floatDelta.key} entering={FadeInUp.duration(340)}>
+              <Txt style={[styles.meterFloat, { color: floatDelta.value >= 0 ? colors.green : colors.pink }]}>
+                {floatDelta.value >= 0 ? '+' : '−'}{Math.abs(floatDelta.value)}
+              </Txt>
+            </Reanimated.View>
+          ) : null}
+        </View>
         <MeterTrack pct={pct} />
         <View style={styles.rowBetween}>
           <Txt style={styles.meterScaleTxt}>{meterMin}</Txt>
           <Txt style={styles.meterScaleTxt}>{meterMax}</Txt>
         </View>
       </Card>
-      <View style={{ gap: 10 }}>
-        {chapter.decisions.map((d) => (
-          <Option key={d.id} label={d.label} state={used.has(d.id) ? 'on' : 'default'} onPress={() => !used.has(d.id) && apply(d)} />
+      <View style={{ gap: 9 }}>
+        {chapter.decisions.map((d, i) => (
+          <HabitChoice
+            key={d.id}
+            label={d.label}
+            note={d.note}
+            delta={d.scoreDelta}
+            revealed={used.has(d.id)}
+            index={i}
+            onPress={() => apply(d)}
+          />
         ))}
       </View>
     </View>
@@ -2602,6 +2775,35 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ink, borderRadius: 2,
   },
   meterScaleTxt: { fontFamily: font.bold, fontSize: 10.5, color: colors.muted5 },
+  // baseline alignment, so the floating delta sits on the same line as the big number rather
+  // than centred against its full 28px cap height.
+  meterValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  meterValue: { fontFamily: font.display, fontSize: 28, color: colors.greenDark },
+  meterFloat: { fontFamily: font.display, fontSize: 16 },
+  // A habit tile, not a quiz option. Column rather than row (the note unfolds underneath the
+  // label), no letter badge, and a trailing score chip that is the reason to tap.
+  habit: {
+    gap: 7,
+    borderWidth: 1.75, borderColor: colors.borderOpt, borderRadius: 18,
+    backgroundColor: colors.white, paddingVertical: 11, paddingHorizontal: 14,
+  },
+  habitGood: { borderColor: colors.green, backgroundColor: colors.tagGreenBg },
+  habitBad: { borderColor: '#D98A9E', backgroundColor: colors.pinkBg2 },
+  habitHead: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+  habitLabel: { flex: 1, fontFamily: font.bold, fontSize: 14.5, lineHeight: 19, color: colors.ink },
+  // Fixed width whether it holds "?" or "−12", so revealing a habit never re-wraps the label
+  // beside it — the row's height is settled before the tap and the note is the only thing
+  // that moves.
+  habitChip: {
+    minWidth: 46, height: 27, borderRadius: 999, paddingHorizontal: 8,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.track, borderWidth: 1.5, borderColor: colors.borderOpt,
+  },
+  habitChipGood: { backgroundColor: colors.green, borderColor: colors.green },
+  habitChipBad: { backgroundColor: '#D98A9E', borderColor: '#D98A9E' },
+  habitChipTxt: { fontFamily: font.extra, fontSize: 13, color: colors.muted4 },
+  habitChipTxtOn: { color: colors.white },
+  habitNote: { fontFamily: font.semi, fontSize: 12.5, lineHeight: 17 },
   // Tighter than a default Card/gap pair: the unrevealed document is a list of up to eight
   // segments that all have to be on screen at once for "tap the suspicious lines" to be a
   // fair question, so the savings here are what keep the longest one inside a single screen.

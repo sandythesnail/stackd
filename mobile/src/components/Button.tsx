@@ -23,10 +23,11 @@ const VARIANTS: Record<Variant, { bg: string; text: string; shadow: string; bord
  * stops there, so the release reads as the button returning rather than recoiling. */
 const PRESS_SPRING = { damping: 20, stiffness: 460, overshootClamping: true };
 /** How far the face sits above its bezel, and therefore how far it travels when pressed.
- * 3px, down from 5: the travel is meant to read as the button giving under a finger, and at 5
- * it was a visible drop — the face moved far enough that the eye tracked the movement instead
- * of registering the press. */
-const DEPTH = { lg: 3, sm: 2.5 };
+ * 2px, down from 3 (and 5 before that): the travel is meant to read as the button giving under
+ * a finger, not as a drop the eye tracks. Now that the bezel actually disappears under the face
+ * (see the `top: depth` offset below) the press reads as deeper than the number suggests — the
+ * shadow going away is most of the effect, and the movement only has to hint at it. */
+const DEPTH = { lg: 2, sm: 2 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -88,11 +89,12 @@ export function Button({
   const depth = DEPTH[size];
   const split = splitStyle(style);
 
-  // The face rides down by `depth`; the bezel is revealed by the gap the face leaves above it,
-  // so as the face descends the visible slab shrinks to zero at exactly the same rate.
+  // The face rides down by `depth` onto a bezel that is inset from the top by exactly `depth`,
+  // so at full press the face covers the slab completely and the shadow is simply gone. No
+  // opacity channel: the face used to dim 5% on the way down, which on a saturated fill read
+  // as a flicker on top of the movement rather than as part of it.
   const faceStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: press.value * depth }],
-    opacity: 1 - press.value * 0.05,
   }));
 
   return (
@@ -106,9 +108,18 @@ export function Button({
       style={[styles.wrapper, { height: h + depth }, split.wrapper]}
     >
       {/* The bezel. A full-height slab behind the face rather than a thin strip under it, so
-          the rounded bottom corners stay solid at every point in the press. */}
+          the rounded bottom corners stay solid at every point in the press.
+
+          `top: depth` is the whole trick and it used to be `top: 0`, which is what made the
+          press look broken. The wrapper is `height + depth` tall and the face sits at the top
+          of it, so a bezel pinned to the wrapper's own top edge sat BEHIND the face at rest
+          (correct — the only part showing was the strip below it) and then, once the face rode
+          down by `depth`, re-emerged as a dark rim along the TOP of the button. The shadow
+          appeared to jump from under the button to over it on every tap. Insetting the slab by
+          the same `depth` the face travels means the two line up exactly at full press: the
+          shadow shrinks away under the face instead of moving. */}
       <Animated.View
-        style={[styles.bezel, { borderRadius: r, backgroundColor: v.shadow }]}
+        style={[styles.bezel, { top: depth, borderRadius: r, backgroundColor: v.shadow }]}
         pointerEvents="none"
       />
       <Animated.View
@@ -143,7 +154,8 @@ const styles = StyleSheet.create({
   // collapsed to the width of their text. Leaving it `auto` restores the original behaviour
   // at every call site without any of them having to ask for it.
   wrapper: { justifyContent: 'flex-start' },
-  bezel: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 },
+  // `top` is supplied per instance (= the press depth) — see the bezel's own comment above.
+  bezel: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   face: {
     // stretch, so the face fills a wrapper that was given a width and the wrapper hugs the
     // face when it wasn't — either way the bezel pinned to the wrapper's edges lines up.
