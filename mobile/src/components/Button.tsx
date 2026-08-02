@@ -17,9 +17,16 @@ const VARIANTS: Record<Variant, { bg: string; text: string; shadow: string; bord
   disabled: { bg: colors.disBg, text: colors.disText, shadow: colors.disShadow },
 };
 
-const PRESS_SPRING = { damping: 18, stiffness: 420 };
-/** How far the face sits above its bezel, and therefore how far it travels when pressed. */
-const DEPTH = { lg: 5, sm: 4 };
+/** overshootClamping is the important part. A plain spring back to 0 sails PAST it, which
+ * drives translateY negative — the face lifts clear of its bezel and the button appears to
+ * pop up off the page before settling. Clamped, the face rises to its resting position and
+ * stops there, so the release reads as the button returning rather than recoiling. */
+const PRESS_SPRING = { damping: 20, stiffness: 460, overshootClamping: true };
+/** How far the face sits above its bezel, and therefore how far it travels when pressed.
+ * 3px, down from 5: the travel is meant to read as the button giving under a finger, and at 5
+ * it was a visible drop — the face moved far enough that the eye tracked the movement instead
+ * of registering the press. */
+const DEPTH = { lg: 3, sm: 2.5 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -85,7 +92,7 @@ export function Button({
   // so as the face descends the visible slab shrinks to zero at exactly the same rate.
   const faceStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: press.value * depth }],
-    opacity: 1 - press.value * 0.08,
+    opacity: 1 - press.value * 0.05,
   }));
 
   return (

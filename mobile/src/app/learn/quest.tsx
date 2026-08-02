@@ -846,10 +846,17 @@ function HintCorner({ hintText, onUseHint }: { hintText?: string } & HintProps) 
           reported rendering behind Hammy/content instead of on top of it. */}
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.hintScrim} onPress={() => setOpen(false)}>
-          <Pressable style={styles.hintModalCard} onPress={(e) => e.stopPropagation()}>
-            <Tag tone="gold">HAMMY'S HINT</Tag>
-            <Txt variant="lead" style={{ fontSize: 14, marginTop: 8 }}>{hintText}</Txt>
-            <Button label="Got it" onPress={() => setOpen(false)} style={{ marginTop: 16 }} />
+          {/* The yellow highlight is a real view wrapped around the card, not a shadow. A
+              platform shadow was uneven on every side: shadowRadius spreads softly and
+              `elevation` biases the whole thing downward on Android, so the glow read as
+              thicker along the bottom than the top. A halo view with equal padding on all
+              four sides is even by construction, on every platform, with nothing to tune. */}
+          <Pressable style={styles.hintModalHalo} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.hintModalCard}>
+              <Tag tone="gold">HAMMY'S HINT</Tag>
+              <Txt variant="lead" style={{ fontSize: 14, marginTop: 8 }}>{hintText}</Txt>
+              <Button label="Got it" onPress={() => setOpen(false)} style={{ marginTop: 16 }} />
+            </View>
           </Pressable>
         </Pressable>
       </Modal>
@@ -1905,58 +1912,113 @@ function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: Si
 }
 
 /* ───────────────────────── bossbattle ───────────────────────── */
+/** Pick a move, then Check answer, then a verdict popup.
+ *
+ * Fourth approach to this chapter. It has been an intrusive popup, then the full list kept on
+ * screen with the outcome appended (which pushed the result below the fold on long scenarios),
+ * then the list collapsing to just the chosen row. All three had the same underlying problem:
+ * the boss battle is the graded finale of a quest and none of them ever said whether you got
+ * it RIGHT. "How it played out" narrates a consequence and leaves the student to infer the
+ * verdict from its tone, which is a lot to ask of a paragraph.
+ *
+ * So selection is now separate from commitment — tap a choice, change your mind freely, then
+ * Check answer — and the verdict arrives as a popup that leads with a tick or a cross before
+ * any prose. The consequence text is still the explanation, it just no longer has to carry the
+ * grade as well.
+ *
+ * "Right" is the choice with the highest xpMultiplier. The content scores every boss choice on
+ * a 0.4–1.25 scale with exactly one top option per chapter, so the best move is already
+ * unambiguous in the data — nothing new had to be authored for this. */
 function BossbattleView({
   chapter, moduleXpReward, onComplete, onAction, reactTo, reportDecision,
 }: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete } & ActionProps & ReactProps & Pick<ReportProps, 'reportDecision'>) {
   const [pickedId, setPickedId] = useState<string | null>(null);
+  const [checked, setChecked] = useState(false);
   const picked = chapter.choices.find((c) => c.id === pickedId);
-  const pick = (c: BossbattleChapter['choices'][number]) => {
-    setPickedId(c.id);
-    reportDecision('Boss battle', c.label);
-    reactTo(c.consequence.xpMultiplier >= 1);
+  const best = chapter.choices.reduce((a, b) => (b.consequence.xpMultiplier > a.consequence.xpMultiplier ? b : a));
+  const isRight = !!picked && picked.id === best.id;
+
+  const check = () => {
+    if (!picked) return;
+    setChecked(true);
+    // Reported here rather than on selection: before Check answer a tap is just a highlight
+    // the student can move around, so recording it then logged every option they hovered over
+    // as a decision they made.
+    reportDecision('Boss battle', picked.label);
+    reactTo(isRight);
   };
+  // Ported verbatim from finishQuest: bossXP = Math.round(module.xpReward * xpMultiplier).
+  //
+  // Guarded because there are now two ways to fire it — the popup's own button and the bottom
+  // bar's, which is still live behind the scrim — and the boss battle is the last chapter of
+  // its quest, so a double fire means completing the whole lesson twice.  The bottom bar has
+  // its own per-action guard (see fireAction); this covers the popup's button and the Android
+  // back button, which neither of them can see.
+  const finishedRef = useRef(false);
+  const finish = () => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    onComplete(Math.round(moduleXpReward * (picked?.consequence.xpMultiplier ?? 0)));
+  };
+
   useEffect(() => {
-    // Ported verbatim from finishQuest: bossXP = Math.round(module.xpReward * xpMultiplier).
-    onAction(picked ? { label: 'Finish quest →', onPress: () => onComplete(Math.round(moduleXpReward * picked.consequence.xpMultiplier)) } : null);
+    onAction(checked
+      ? { label: 'Finish quest →', onPress: finish }
+      : { label: 'Check answer', onPress: check, disabled: !pickedId });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [picked]);
+  }, [checked, pickedId]);
+
   return (
     <View style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
       <Tag tone="warm">⚔ BOSS CHALLENGE</Tag>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.scenario}</Txt>
-      {/* Third approach to this, after a popup (dismissed as intrusive) and keeping the full
-          list on screen (which pushed the outcome below the fold on longer scenarios).
-          Answering collapses the list to just the chosen row, and the outcome takes the space
-          the other options were using — so the result lands in view without scrolling, and
-          you can still see which answer produced it. Nothing here is scrollable by design:
-          one choice row plus one card always fits the screen this chapter type gets to
-          itself (bossbattle is in TALL_CHAPTER_TYPES, so there's no companion Hammy). */}
-      {!picked ? (
-        <View style={{ gap: 10 }}>
-          {chapter.choices.map((c) => (
-            <Option key={c.id} label={c.label} onPress={() => pick(c)} />
-          ))}
+      {/* Every choice stays on screen the whole time, before and after checking. Nothing here
+          is scrollable by design: four rows and a scenario fit the screen this chapter type
+          gets to itself (bossbattle is in TALL_CHAPTER_TYPES, so there is no companion Hammy),
+          and the verdict now lives in a popup rather than competing for the same space. */}
+      <View style={{ gap: 10 }}>
+        {chapter.choices.map((c) => {
+          // Before checking, the selected row is simply highlighted — no verdict is implied.
+          // After, the rows carry the answer too, so the popup isn't the only place it exists.
+          const state = !checked
+            ? (c.id === pickedId ? 'on' : 'default')
+            : c.id === best.id ? 'correct'
+              : c.id === pickedId ? 'wrong' : 'default';
+          return (
+            <Option
+              key={c.id}
+              label={c.label}
+              state={state}
+              onPress={() => !checked && setPickedId(c.id)}
+            />
+          );
+        })}
+      </View>
+
+      <Modal visible={checked} transparent animationType="fade" onRequestClose={finish}>
+        <View style={styles.bossScrim}>
+          <Reanimated.View entering={FadeInDown.duration(260).springify().damping(15)} style={styles.bossVerdictCard}>
+            {/* The mark comes first and is the biggest thing in the card — the whole point of
+                this popup is that the grade should not have to be inferred from the prose
+                under it. */}
+            <View style={[styles.bossVerdictMark, isRight ? styles.bossVerdictMarkOk : styles.bossVerdictMarkBad]}>
+              <Txt style={styles.bossVerdictGlyph}>{isRight ? '✓' : '✕'}</Txt>
+            </View>
+            <Txt style={[styles.bossVerdictTitle, { color: isRight ? colors.greenDark : colors.pinkDark }]}>
+              {isRight ? 'Correct!' : 'Not quite'}
+            </Txt>
+            <Txt variant="lead" style={styles.bossVerdictBody}>{picked?.consequence.text}</Txt>
+            {!isRight ? (
+              <View style={styles.bossBetterMove}>
+                <Txt style={styles.bossBetterMoveLabel}>THE STRONGER MOVE</Txt>
+                <Txt variant="lead" style={styles.bossBetterMoveTxt}>{best.label}</Txt>
+              </View>
+            ) : null}
+            <Button label="Finish quest →" onPress={finish} style={{ marginTop: 16, width: '100%' }} />
+          </Reanimated.View>
         </View>
-      ) : (
-        // Once answered, the choice you took becomes a labelled card matching the outcome
-        // card below it — same white box, same small caps heading — rather than a lone
-        // highlighted option row, which read as "the correct answer" instead of "yours".
-        // The heading is red against the outcome's grey so the pair reads as a sequence:
-        // this is what you did, this is what came of it.
-        <Card style={{ gap: 6 }}>
-          <Txt style={styles.bossChoseLabel}>YOU CHOSE</Txt>
-          <Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.label}</Txt>
-        </Card>
-      )}
-      {picked ? (
-        <AnswerFeedback>
-          <Card style={{ gap: 6 }}>
-            <Txt style={styles.bossOutcomePick}>HOW IT PLAYED OUT</Txt>
-            <Txt variant="lead" style={{ fontSize: 14, color: colors.ink }}>{picked.consequence.text}</Txt>
-          </Card>
-        </AnswerFeedback>
-      ) : null}
+      </Modal>
     </View>
   );
 }
@@ -2271,22 +2333,37 @@ const styles = StyleSheet.create({
   // White card with the yellow "come collect" outline, matching a recommended module tile
   // (mtileRecommended in ModuleBits) — a hint is an offer, so it gets the same reward glow
   // rather than the pink tint it used to share with Hammy's other speech.
+  //
+  // The glow is this halo view's padding rather than a platform shadow, so it is exactly as
+  // thick on all four sides. The radii are kept in step deliberately: 20 inside + 5 of padding
+  // = 25 outside, which is what keeps the ring an even width around the corners too instead of
+  // pinching at them.
+  hintModalHalo: {
+    width: '100%', maxWidth: 350, backgroundColor: 'rgba(240,194,46,0.30)',
+    borderRadius: 25, padding: 5,
+  },
   hintModalCard: {
-    width: '100%', maxWidth: 340, backgroundColor: colors.white, borderWidth: 2,
+    backgroundColor: colors.white, borderWidth: 2,
     borderColor: colors.reward, borderRadius: 20, padding: 20,
-    shadowColor: colors.reward, shadowOpacity: 0.25, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 0 }, elevation: 3,
   },
-  bossOutcomePick: { fontFamily: font.extra, fontSize: 11.5, color: colors.muted5, letterSpacing: 0.4 },
-  // A filled pill rather than bare small-caps like bossOutcomePick: this is the label that
-  // has to carry "this was YOUR move, not the right answer", so it gets the danger red on
-  // its matching tint. alignSelf keeps it hugging its own text instead of stretching the
-  // card's full width, which is what makes it read as a badge.
-  bossChoseLabel: {
-    fontFamily: font.extra, fontSize: 11.5, color: colors.danger, letterSpacing: 0.4,
-    backgroundColor: colors.dangerBg, borderRadius: 999,
-    paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start', overflow: 'hidden',
+  // Boss-battle verdict popup. Centred and narrow — it is a result, not a page.
+  bossScrim: { flex: 1, backgroundColor: 'rgba(22,32,23,0.55)', alignItems: 'center', justifyContent: 'center', padding: 26 },
+  bossVerdictCard: {
+    width: '100%', maxWidth: 340, backgroundColor: colors.white, borderWidth: 1.5,
+    borderColor: colors.border, borderRadius: 22, padding: 22, alignItems: 'center',
   },
+  bossVerdictMark: { width: 62, height: 62, borderRadius: 31, alignItems: 'center', justifyContent: 'center' },
+  bossVerdictMarkOk: { backgroundColor: colors.green },
+  bossVerdictMarkBad: { backgroundColor: colors.pink },
+  bossVerdictGlyph: { fontFamily: font.extra, fontSize: 32, lineHeight: 38, color: colors.white },
+  bossVerdictTitle: { fontFamily: font.display, fontSize: 23, marginTop: 10 },
+  bossVerdictBody: { fontSize: 13.5, lineHeight: 19, textAlign: 'center', marginTop: 8 },
+  bossBetterMove: {
+    width: '100%', backgroundColor: colors.screen, borderRadius: 14,
+    padding: 12, marginTop: 14, gap: 4,
+  },
+  bossBetterMoveLabel: { fontFamily: font.extra, fontSize: 10.5, color: colors.muted5, letterSpacing: 0.4 },
+  bossBetterMoveTxt: { fontSize: 13, lineHeight: 18, color: colors.ink },
   glossaryPopupList: { gap: 16, paddingBottom: 2 },
   glossarySectionName: { fontFamily: font.bold, fontSize: 12, color: colors.muted5, textTransform: 'uppercase', letterSpacing: 0.4 },
   glossaryPopupCard: {
