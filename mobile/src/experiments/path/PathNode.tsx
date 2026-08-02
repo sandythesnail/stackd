@@ -46,6 +46,7 @@ export function PathNode({
   const [focused, setFocused] = useState(false);
   const press = useSharedValue(0);
   const pulse = useSharedValue(0);
+  const ripple = useSharedValue(0);
 
   useEffect(() => {
     if (state !== 'current' || reducedMotion) {
@@ -65,12 +66,39 @@ export function PathNode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, reducedMotion]);
 
+  useEffect(() => {
+    if (state !== 'current' || reducedMotion) {
+      cancelAnimation(ripple);
+      ripple.value = 0;
+      return;
+    }
+    ripple.value = 0;
+    ripple.value = withRepeat(
+      withTiming(1, { duration: 2100, easing: Easing.out(Easing.quad) }),
+      -1,
+      false,
+    );
+    return () => cancelAnimation(ripple);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, reducedMotion]);
+
   const bodyStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: '45deg' }, { scale: 1 - press.value * 0.06 }],
+    transform: [
+      { rotate: '45deg' },
+      // Breathes with the halo so the node itself is alive, not just its glow.
+      { scale: (1 + pulse.value * 0.045) * (1 - press.value * 0.06) },
+    ],
   }));
   const haloStyle = useAnimatedStyle(() => ({
     opacity: 0.13 + pulse.value * 0.2,
     transform: [{ rotate: '45deg' }, { scale: 1.06 + pulse.value * 0.16 }],
+  }));
+  // A ring thrown off the node and out into the page — the one effect here that leaves the
+  // node's own footprint, so the recommendation reads at the edge of vision rather than
+  // only when you're looking straight at it.
+  const rippleStyle = useAnimatedStyle(() => ({
+    opacity: (1 - ripple.value) * 0.5,
+    transform: [{ rotate: '45deg' }, { scale: 1 + ripple.value * 1.15 }],
   }));
 
   const isCurrent = state === 'current';
@@ -84,7 +112,10 @@ export function PathNode({
   return (
     <View style={styles.slot}>
       {isCurrent ? (
-        <Reanimated.View pointerEvents="none" style={[styles.halo, haloStyle]} />
+        <>
+          <Reanimated.View pointerEvents="none" style={[styles.ripple, rippleStyle]} />
+          <Reanimated.View pointerEvents="none" style={[styles.halo, haloStyle]} />
+        </>
       ) : null}
 
       <Pressable
@@ -155,6 +186,10 @@ const styles = StyleSheet.create({
   halo: {
     position: 'absolute', width: NODE_SIZE, height: NODE_SIZE,
     borderRadius: 18, backgroundColor: colors.green,
+  },
+  ripple: {
+    position: 'absolute', width: NODE_SIZE, height: NODE_SIZE,
+    borderRadius: 18, borderWidth: 2.5, borderColor: colors.green,
   },
   focusRing: {
     position: 'absolute', width: NODE_SIZE + 14, height: NODE_SIZE + 14, borderRadius: 19,

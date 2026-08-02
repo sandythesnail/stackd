@@ -3,7 +3,12 @@ import {
   View, ScrollView, Pressable, StyleSheet, useWindowDimensions, type LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path as SvgPath } from 'react-native-svg';
+import Svg, { Path as SvgPath, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+import Reanimated, {
+  useSharedValue, useAnimatedStyle, useAnimatedScrollHandler, interpolate,
+  FadeInDown, ZoomIn, type SharedValue,
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { colors } from '@/theme';
 import { modules, type Module } from '@/data';
@@ -15,9 +20,13 @@ import { MOOD_FACES } from '@/hammyFaces';
 import { T, Bar, Pill, useReducedMotion } from './bits';
 import { PathNode, type NodeState } from './PathNode';
 import { NODE_BOX, snakePositions, smoothPath, pathHeight } from './geometry';
+import { DeviceFrame, AmbientBackdrop, Sheen, TrailComet, Sparkles, PHONE_W } from './effects';
 
-/** Design target from the brief: a 390px mobile column, centred on anything wider. */
-const COLUMN = 390;
+/** Design target from the brief: a 390px mobile column. On a desktop-width window the whole
+ * thing now sits inside a phone shell (see DeviceFrame) rather than floating as a bare column. */
+const COLUMN = PHONE_W;
+
+const AnimatedScrollView = Reanimated.createAnimatedComponent(ScrollView);
 
 /* ─────────────────────────── view model ─────────────────────────── */
 
@@ -55,6 +64,14 @@ const DEMO_LIFE_TASKS = ['earning'];
 /* ─────────────────────────── screen ─────────────────────────── */
 
 export default function PathScreen() {
+  return (
+    <DeviceFrame>
+      <PathBody />
+    </DeviceFrame>
+  );
+}
+
+function PathBody() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
@@ -64,6 +81,8 @@ export default function PathScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const sectionY = useRef<Record<string, number>>({});
   const railH = useRef(0);
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => { scrollY.value = e.contentOffset.y; });
 
   const colWidth = Math.min(width, COLUMN);
   const centerX = colWidth / 2;
@@ -180,11 +199,14 @@ export default function PathScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScrollView
+      <AmbientBackdrop scrollY={scrollY} />
+      <AnimatedScrollView
         ref={scrollRef}
         stickyHeaderIndices={[1]}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
       >
         {/* [0] title + data toggle */}
         <View style={[styles.col, { width: colWidth }]}>
@@ -262,8 +284,17 @@ export default function PathScreen() {
               onPress={() => openLesson(recommended.moduleId, recommended.lessonIndex)}
               accessibilityRole="button"
               accessibilityLabel={`Recommended next: ${recommendedNode.title}, in ${recommendedSection.module.name}. Start lesson.`}
-              style={({ pressed }) => [styles.recCard, pressed && { opacity: 0.9 }]}
+              style={({ pressed }) => [styles.recCard, pressed && { transform: [{ scale: 0.985 }] }]}
             >
+              {/* Warm wash behind the card so the one thing being recommended isn't the same
+                  flat white as everything else on the screen. */}
+              <LinearGradient
+                colors={['#FFFDF4', '#FFF6DE']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <Sheen width={colWidth - 36} reducedMotion={reducedMotion} />
               <View style={{ flex: 1 }}>
                 <Pill label="RECOMMENDED FOR YOU" bg={colors.rewardBadgeBg} fg={colors.rewardBadgeText} />
                 <T weight="display" size={17} style={{ marginTop: 7 }} numberOfLines={2}>
@@ -299,13 +330,14 @@ export default function PathScreen() {
             // Peeking Hammys are rationed: each is a live SVG, and a dozen of them on one
             // scrolling web page is the expensive kind of node. Every fourth section.
             peek={si % 4 === 1}
+            scrollY={scrollY}
             onLayout={(y) => { sectionY.current[section.module.id] = y; }}
             onPressNode={openLesson}
           />
         ))}
 
         <View style={{ height: 40 }} />
-      </ScrollView>
+      </AnimatedScrollView>
     </SafeAreaView>
   );
 }
@@ -313,13 +345,14 @@ export default function PathScreen() {
 /* ─────────────────────────── one module ─────────────────────────── */
 
 function SectionView({
-  section, colWidth, centerX, reducedMotion, peek, onLayout, onPressNode,
+  section, colWidth, centerX, reducedMotion, peek, scrollY, onLayout, onPressNode,
 }: {
   section: Section;
   colWidth: number;
   centerX: number;
   reducedMotion: boolean;
   peek: boolean;
+  scrollY: SharedValue<number>;
   onLayout: (y: number) => void;
   onPressNode: (moduleId: string, lessonIndex: number) => void;
 }) {
@@ -337,8 +370,23 @@ function SectionView({
   const mainD = smoothPath(hasSpur ? pts.slice(0, -1) : pts);
   const spurD = hasSpur ? smoothPath(pts.slice(-2)) : '';
 
+  // The trail you've actually walked, drawn in green over the grey one. Progress stops
+  // being a number in a header and becomes the shape of the path itself — which is the
+  // whole reason to draw a path instead of a list.
+  const firstUndone = nodes.findIndex((n) => n.state !== 'completed');
+  const walked = firstUndone === -1 ? nodes.length : firstUndone;
+  const walkedD = walked >= 2 ? smoothPath(pts.slice(0, walked)) : '';
+
   const currentIdx = nodes.findIndex((n) => n.state === 'current');
   const currentPt = currentIdx >= 0 ? pts[currentIdx] : null;
+  const cometFrom = currentIdx > 0 ? pts[currentIdx - 1] : null;
+
+  // Peekers drift against the scroll. Section y isn't known until layout, so this reads the
+  // measured value out of a shared value updated in onLayout below.
+  const myY = useSharedValue(0);
+  const peekStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: interpolate(scrollY.value - myY.value, [-600, 600], [26, -26], 'clamp') }],
+  }));
   // Hammy stands on whichever side of the column the node ISN'T, so he can never sit over
   // the tap target. pointerEvents:none on every decorative Hammy as a second guarantee.
   const hammyOnLeft = currentPt ? currentPt.x > centerX : true;
@@ -348,7 +396,10 @@ function SectionView({
   return (
     <View
       style={[styles.section, { width: colWidth }]}
-      onLayout={(e: LayoutChangeEvent) => onLayout(e.nativeEvent.layout.y)}
+      onLayout={(e: LayoutChangeEvent) => {
+        onLayout(e.nativeEvent.layout.y);
+        myY.value = e.nativeEvent.layout.y;
+      }}
     >
       {section.trackTitle ? (
         <View style={styles.trackBoundary}>
@@ -360,7 +411,10 @@ function SectionView({
         </View>
       ) : null}
 
-      <View style={styles.sectionHead}>
+      <Reanimated.View
+        entering={reducedMotion ? undefined : FadeInDown.duration(340)}
+        style={styles.sectionHead}
+      >
         <View style={[styles.modBadge, { backgroundColor: mod.color }]}>
           <T weight="display" size={15} color={mod.textColor}>{mod.icon}</T>
         </View>
@@ -375,26 +429,39 @@ function SectionView({
             mascot never pushes the first node down the screen. */}
         {section.mastered ? (
           <View pointerEvents="none" style={{ alignItems: 'center' }}>
-            <Hammy headOnly size={46} bob={false} face={MOOD_FACES.love} />
+            <Sparkles reducedMotion={reducedMotion} />
+            <Hammy headOnly size={46} bob={!reducedMotion} floatAmplitude={4} face={MOOD_FACES.love} />
             <Pill label="DONE" bg={colors.tagGreenBg} fg={colors.tagGreenText} style={{ marginTop: 2 }} />
           </View>
         ) : section.trackTitle ? (
           <View pointerEvents="none">
-            <Hammy headOnly size={44} bob={false} face={MOOD_FACES.curious} />
+            <Hammy headOnly size={44} bob={!reducedMotion} floatAmplitude={4} face={MOOD_FACES.curious} />
           </View>
         ) : null}
-      </View>
+      </Reanimated.View>
 
       <View style={{ height: h, width: colWidth }}>
         {/* The trail, behind everything. */}
         <Svg width={colWidth} height={h} style={StyleSheet.absoluteFill} pointerEvents="none">
-          <SvgPath
-            d={mainD}
-            stroke={colors.track2}
-            strokeWidth={9}
-            strokeLinecap="round"
-            fill="none"
-          />
+          <Defs>
+            <SvgGradient id={`walked-${mod.id}`} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={colors.greenBright} />
+              <Stop offset="1" stopColor={colors.green} />
+            </SvgGradient>
+          </Defs>
+          {/* Soft under-stroke: a wider, paler line beneath the trail so it sits ON the page
+              instead of being a flat rule drawn across it. */}
+          <SvgPath d={mainD} stroke={colors.borderCool} strokeWidth={15} strokeLinecap="round" fill="none" />
+          <SvgPath d={mainD} stroke={colors.track2} strokeWidth={9} strokeLinecap="round" fill="none" />
+          {walkedD ? (
+            <SvgPath
+              d={walkedD}
+              stroke={`url(#walked-${mod.id})`}
+              strokeWidth={9}
+              strokeLinecap="round"
+              fill="none"
+            />
+          ) : null}
           {spurD ? (
             <SvgPath
               d={spurD}
@@ -407,15 +474,20 @@ function SectionView({
           ) : null}
         </Svg>
 
+        {/* Dots running the last stretch into the recommended node. */}
+        {currentPt && cometFrom ? (
+          <TrailComet from={cometFrom} to={currentPt} reducedMotion={reducedMotion} />
+        ) : null}
+
         {/* Hammy peeking from behind the curve — behind the SVG in stacking order and
             non-interactive, pushed half off the column edge so he reads as peeking. */}
         {peek ? (
-          <View
+          <Reanimated.View
             pointerEvents="none"
-            style={[styles.peek, { top: h * 0.42, [hammyOnLeft ? 'right' : 'left']: -26 }]}
+            style={[styles.peek, { top: h * 0.42, [hammyOnLeft ? 'right' : 'left']: -26 }, peekStyle]}
           >
             <Hammy headOnly size={62} bob={!reducedMotion} floatAmplitude={5} face={MOOD_FACES.wink} />
-          </View>
+          </Reanimated.View>
         ) : null}
 
         {/* Hammy gesturing at the recommended node. */}
@@ -438,8 +510,11 @@ function SectionView({
         ) : null}
 
         {nodes.map((n, i) => (
-          <View
+          <Reanimated.View
             key={n.key}
+            // Nodes drop in one after another rather than all at once, so a section reads as
+            // being laid down along the trail. Skipped entirely under reduced motion.
+            entering={reducedMotion ? undefined : ZoomIn.delay(i * 55).duration(320).springify().damping(14)}
             style={{
               position: 'absolute',
               left: pts[i].x - NODE_BOX / 2,
@@ -455,7 +530,7 @@ function SectionView({
               reducedMotion={reducedMotion}
               onPress={() => onPressNode(n.moduleId, n.lessonIndex)}
             />
-          </View>
+          </Reanimated.View>
         ))}
       </View>
     </View>
@@ -490,6 +565,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14,
     backgroundColor: colors.white, borderRadius: 22, padding: 16,
     borderWidth: 2, borderColor: colors.reward,
+    // Clips the sheen sweep and the gradient wash to the card's rounded corners.
+    overflow: 'hidden',
   },
   recCta: {
     marginTop: 10, alignSelf: 'flex-start', backgroundColor: colors.green,
