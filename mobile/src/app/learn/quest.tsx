@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent } from 'react-native';
-import Reanimated, { SlideInDown, FadeInDown, FadeIn, FadeInRight } from 'react-native-reanimated';
+import Reanimated, {
+  SlideInDown, FadeInDown, FadeIn, FadeInRight,
+  useSharedValue, useAnimatedStyle, withTiming, withSpring,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
@@ -1407,16 +1410,18 @@ function DecisionView({
           position on this chapter type is deliberate (see companionWrapDeep). */}
       <Txt variant="lead" style={styles.decisionText}>{chapter.prompt}</Txt>
       {!picked ? (
-        <View style={{ gap: 10 }}>
-          {chapter.choices.map((c) => (
-            <Option key={c.id} label={c.label} onPress={() => pick(c)} />
+        <View style={{ gap: 9 }}>
+          {chapter.choices.map((c, idx) => (
+            <DecisionChoice key={c.id} label={c.label} index={idx} onPress={() => pick(c)} />
           ))}
         </View>
       ) : (
-        // Deliberately NOT wrapped in AnswerFeedback. This outcome REPLACES the choice list
-        // rather than being appended below it, so the whole panel is already changing — and
-        // animating a card that contains a bar chart made the bars themselves look like they
-        // were moving, which reads as the numbers being unstable. It just appears.
+        // Deliberately NOT wrapped in AnswerFeedback, and the entrance is opacity-only. This
+        // outcome REPLACES the choice list rather than being appended below it, so the whole
+        // panel is already changing — and MOVING a card that contains a bar chart made the
+        // bars themselves look like they were sliding, which reads as the numbers being
+        // unstable. A plain fade has nothing to mistake for the data changing.
+        <Reanimated.View entering={FadeIn.duration(260)}>
         <Card style={styles.decisionOutcomeCard}>
           <Txt variant="lead" style={styles.decisionText} color={colors.ink}>{picked.outcome.text}</Txt>
           {/* Ported from the website's renderDecisionOutcome pg-column-chart — a real
@@ -1424,8 +1429,42 @@ function DecisionView({
               pay" as two bars. Only some decision chapters carry `compare` data. */}
           {picked.outcome.compare ? <ColumnChart data={picked.outcome.compare} /> : null}
         </Card>
+        </Reanimated.View>
       )}
     </View>
+  );
+}
+
+/** A branching path, not an answer option.
+ *
+ * These used to be plain `Option` rows, which is the same component the Quick Check uses for
+ * real multiple-choice questions — so a decision looked like a question with a right answer,
+ * when the whole point is that it's a choice with a consequence. This is deliberately a
+ * different object: a coloured stripe running down the leading edge, a trailing arrow, tighter
+ * corners, and no letter badge or checkbox anywhere near it. It reads as "take this route".
+ *
+ * The stagger on entry is doing the same work — the routes appear one after another rather
+ * than arriving as a block, which is how a list of options presents itself. Pressing nudges
+ * the row toward its own arrow instead of just dimming it. */
+function DecisionChoice({ label, index, onPress }: { label: string; index: number; onPress: () => void }) {
+  const press = useSharedValue(0);
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: press.value * 4 }, { scale: 1 - press.value * 0.015 }],
+  }));
+  return (
+    <Reanimated.View entering={FadeInDown.delay(index * 70).duration(300).springify().damping(16)}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => { press.value = withTiming(1, { duration: 90 }); }}
+        onPressOut={() => { press.value = withSpring(0, { damping: 20, stiffness: 400, overshootClamping: true }); }}
+      >
+        <Reanimated.View style={[styles.decisionChoice, animStyle]}>
+          <View style={styles.decisionChoiceStripe} />
+          <Txt style={styles.decisionChoiceTxt}>{label}</Txt>
+          <Txt style={styles.decisionChoiceArrow}>→</Txt>
+        </Reanimated.View>
+      </Pressable>
+    </Reanimated.View>
   );
 }
 
@@ -1996,10 +2035,15 @@ function BossbattleView({
         })}
       </View>
 
+      {/* A bottom sheet rather than a centred dialog, matching the ambient life-event overlay
+          above so the two read as the same kind of interruption. It also rises from the same
+          edge the Check answer button sits on, so the verdict arrives from where the tap
+          happened, and it leaves the choice rows visible above it. */}
       <Modal visible={checked} transparent animationType="fade" onRequestClose={finish}>
-        <View style={styles.bossScrim}>
-          <Reanimated.View entering={FadeInDown.duration(260).springify().damping(15)} style={styles.bossVerdictCard}>
-            {/* The mark comes first and is the biggest thing in the card — the whole point of
+        <View style={styles.bossSheetRoot}>
+          <View style={[StyleSheet.absoluteFill, styles.ambientLifeScrim]} />
+          <Reanimated.View entering={SlideInDown.duration(300)} style={styles.bossVerdictSheet}>
+            {/* The mark comes first and is the biggest thing in the sheet — the whole point of
                 this popup is that the grade should not have to be inferred from the prose
                 under it. */}
             <View style={[styles.bossVerdictMark, isRight ? styles.bossVerdictMarkOk : styles.bossVerdictMarkBad]}>
@@ -2346,11 +2390,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white, borderWidth: 2,
     borderColor: colors.reward, borderRadius: 20, padding: 20,
   },
-  // Boss-battle verdict popup. Centred and narrow — it is a result, not a page.
-  bossScrim: { flex: 1, backgroundColor: 'rgba(22,32,23,0.55)', alignItems: 'center', justifyContent: 'center', padding: 26 },
-  bossVerdictCard: {
-    width: '100%', maxWidth: 340, backgroundColor: colors.white, borderWidth: 1.5,
-    borderColor: colors.border, borderRadius: 22, padding: 22, alignItems: 'center',
+  // Boss-battle verdict — a bottom sheet, same shape and radius as the ambient life-event
+  // overlay so the two read as one pattern rather than two different kinds of popup.
+  bossSheetRoot: { flex: 1, justifyContent: 'flex-end' },
+  bossVerdictSheet: {
+    backgroundColor: colors.white, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    paddingTop: 22, paddingHorizontal: 22, paddingBottom: 30, alignItems: 'center',
   },
   bossVerdictMark: { width: 62, height: 62, borderRadius: 31, alignItems: 'center', justifyContent: 'center' },
   bossVerdictMarkOk: { backgroundColor: colors.green },
@@ -2600,6 +2645,17 @@ const styles = StyleSheet.create({
   kcQuestion: { fontSize: 14, lineHeight: 19 },
   decisionText: { fontSize: 14, lineHeight: 19 },
   decisionOutcomeCard: { gap: 8, padding: 14 },
+  // The stripe sits flush against the leading edge, so there is no paddingLeft and the row
+  // clips to its own radius. Slightly shorter than the Option row it replaced (12/1.5/19
+  // against 12/1.75/20), so the swap costs no height on a chapter type that had none spare.
+  decisionChoice: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderOpt,
+    borderRadius: 14, paddingVertical: 12, paddingRight: 14, overflow: 'hidden',
+  },
+  decisionChoiceStripe: { width: 4, alignSelf: 'stretch', backgroundColor: colors.pinkSoft },
+  decisionChoiceTxt: { flex: 1, fontFamily: font.bold, fontSize: 14.5, lineHeight: 19, color: colors.ink },
+  decisionChoiceArrow: { fontFamily: font.extra, fontSize: 15, color: colors.muted5 },
   simCard: { gap: 3, padding: 14 },
   simPrompt: { fontSize: 13.5, lineHeight: 19 },
   simRowTxt: { fontSize: 12.5, lineHeight: 18 },
