@@ -1,11 +1,11 @@
 /** Visual-effects layer for the /experiments/path prototype: the desktop phone shell, the
  * ambient backdrop, and the reusable motion pieces. All self-contained; nothing here is
  * imported by the production app. */
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import Reanimated, {
   useSharedValue, useAnimatedStyle, withRepeat, withTiming, withDelay,
-  cancelAnimation, interpolate, Easing, type SharedValue,
+  cancelAnimation, interpolate, Easing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '@/theme';
@@ -51,25 +51,24 @@ export function DeviceFrame({ children }: { children: ReactNode }) {
   );
 }
 
-/** Soft moving colour behind the whole path.
+/** The page's background wash.
  *
- * Three oversized, very low-opacity pastel discs drifting at different rates as you scroll.
- * Deliberately under 10% opacity — this is meant to register as the page having depth, not
- * as decoration you notice. Parallax comes off the same scroll value the peeking mascots
- * use, so everything ambient moves as one system. */
-export function AmbientBackdrop({ scrollY }: { scrollY: SharedValue<number> }) {
-  const a = useAnimatedStyle(() => ({ transform: [{ translateY: -scrollY.value * 0.06 }] }));
-  const b = useAnimatedStyle(() => ({ transform: [{ translateY: -scrollY.value * 0.11 }] }));
-  const c = useAnimatedStyle(() => ({ transform: [{ translateY: -scrollY.value * 0.04 }] }));
+ * This used to also carry three oversized pastel discs (green, pink, blue) drifting against
+ * the scroll. They're gone — on a screen that already has coloured module badges, a pink CTA
+ * card and a green trail, they were one more thing competing for attention rather than the
+ * quiet depth they were meant to add. What's left is the cream-to-sage gradient only. */
+export function AmbientBackdrop() {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <LinearGradient
-        colors={[colors.screen, '#F3F6EE', '#EFF4F2']}
-        style={StyleSheet.absoluteFill}
-      />
-      <Reanimated.View style={[styles.blob, { top: 120, left: -110, backgroundColor: colors.greenSoft }, a]} />
-      <Reanimated.View style={[styles.blob, { top: 620, right: -130, backgroundColor: colors.pinkBorder }, b]} />
-      <Reanimated.View style={[styles.blob, { top: 1180, left: -90, backgroundColor: '#C8E4F5' }, c]} />
+      {/* Flat cream, and nothing else.
+       *
+       * Four things have been tried behind this screen — drifting pastel discs, a dot
+       * lattice, a cream-to-sage gradient, and a raised sheet against a deeper canvas — and
+       * every one was turned down. The background is plain on purpose now; it is not a
+       * placeholder waiting to be decorated. If this screen wants more visual interest it
+       * should come from the content (the trail, the nodes, the cards), not from the space
+       * behind it. */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.screen }]} />
     </View>
   );
 }
@@ -111,16 +110,20 @@ export function Sheen({ width, reducedMotion }: { width: number; reducedMotion: 
   );
 }
 
-/** A dot running the last stretch of trail into the recommended node, on a loop.
+/** Dots running the last stretch of trail into the recommended node, on a loop.
  *
- * The recommended node already glows; this points AT it from the direction of travel, so
- * the eye is led along the path rather than just landing somewhere bright. Plain Views on a
- * straight interpolation between the two node centres — close enough to the curve over one
- * segment, and it avoids animating SVG path properties, which is the fragile part of doing
- * this on the web build. */
+ * The recommended node already glows; these point AT it from the direction of travel, so the
+ * eye is led along the path rather than just landing somewhere bright.
+ *
+ * They follow the drawn curve, not a straight line between the two node centres. The straight
+ * version visibly left the trail wherever that stretch bowed, which is worse than not having
+ * them — the entire job of these dots is to be ON the line. `samples` comes from
+ * geometry.segmentSamples, which walks the same bézier the SVG renders; interpolating across
+ * that polyline keeps them on it without animating any SVG property, which is the part that's
+ * fragile in a web build. */
 export function TrailComet({
-  from, to, reducedMotion,
-}: { from: { x: number; y: number }; to: { x: number; y: number }; reducedMotion: boolean }) {
+  samples, reducedMotion,
+}: { samples: { x: number; y: number }[]; reducedMotion: boolean }) {
   const t = useSharedValue(0);
   useEffect(() => {
     if (reducedMotion) return;
@@ -129,14 +132,19 @@ export function TrailComet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reducedMotion]);
 
+  const n = samples.length;
+  const input = useMemo(() => samples.map((_, i) => (n > 1 ? i / (n - 1) : 0)), [samples, n]);
+  const xs = useMemo(() => samples.map((s) => s.x), [samples]);
+  const ys = useMemo(() => samples.map((s) => s.y), [samples]);
+
   const dot = (lag: number) =>
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useAnimatedStyle(() => {
       const p = Math.max(0, Math.min(1, t.value - lag));
       return {
         transform: [
-          { translateX: interpolate(p, [0, 1], [from.x, to.x]) - 5 },
-          { translateY: interpolate(p, [0, 1], [from.y, to.y]) - 5 },
+          { translateX: interpolate(p, input, xs) - 5 },
+          { translateY: interpolate(p, input, ys) - 5 },
           { scale: interpolate(p, [0, 0.5, 1], [0.5, 1, 0.4]) },
         ],
         opacity: p <= 0 || p >= 1 ? 0 : interpolate(p, [0, 0.25, 0.8, 1], [0, 1, 1, 0]),
@@ -147,53 +155,12 @@ export function TrailComet({
   const d1 = dot(0.14);
   const d2 = dot(0.28);
 
-  if (reducedMotion) return null;
+  if (reducedMotion || n < 2) return null;
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Reanimated.View style={[styles.comet, d0]} />
       <Reanimated.View style={[styles.comet, styles.cometFaint, d1]} />
       <Reanimated.View style={[styles.comet, styles.cometFaint, d2]} />
-    </View>
-  );
-}
-
-/** Three little diamonds drifting up out of a finished module. */
-export function Sparkles({ reducedMotion }: { reducedMotion: boolean }) {
-  const t = useSharedValue(0);
-  useEffect(() => {
-    if (reducedMotion) return;
-    t.value = withRepeat(withTiming(1, { duration: 2600, easing: Easing.linear }), -1, false);
-    return () => cancelAnimation(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reducedMotion]);
-
-  const spark = (lag: number, dx: number, size: number) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useAnimatedStyle(() => {
-      const p = (t.value + lag) % 1;
-      return {
-        transform: [
-          { translateX: dx + interpolate(p, [0, 1], [0, dx > 0 ? 6 : -6]) },
-          { translateY: interpolate(p, [0, 1], [8, -26]) },
-          { rotate: '45deg' },
-          { scale: interpolate(p, [0, 0.3, 1], [0.4, 1, 0.5]) },
-        ],
-        opacity: interpolate(p, [0, 0.2, 0.7, 1], [0, 0.95, 0.7, 0]),
-        width: size,
-        height: size,
-      };
-    });
-
-  const s0 = spark(0, -13, 7);
-  const s1 = spark(0.33, 4, 5);
-  const s2 = spark(0.66, 13, 6);
-
-  if (reducedMotion) return null;
-  return (
-    <View pointerEvents="none" style={styles.sparkWrap}>
-      <Reanimated.View style={[styles.spark, s0]} />
-      <Reanimated.View style={[styles.spark, s1]} />
-      <Reanimated.View style={[styles.spark, s2]} />
     </View>
   );
 }
@@ -220,7 +187,6 @@ const styles = StyleSheet.create({
   },
   btn: { position: 'absolute', width: 3, borderRadius: 3, backgroundColor: '#0B110C' },
 
-  blob: { position: 'absolute', width: 300, height: 300, borderRadius: 200, opacity: 0.16 },
 
   sheenWrap: { position: 'absolute', top: -30, bottom: -30, left: 0 },
 
@@ -230,6 +196,4 @@ const styles = StyleSheet.create({
   },
   cometFaint: { opacity: 0.5, backgroundColor: colors.greenBright },
 
-  sparkWrap: { position: 'absolute', top: 0, left: 0, right: 0, height: 40, alignItems: 'center' },
-  spark: { position: 'absolute', borderRadius: 2, backgroundColor: colors.reward },
 });

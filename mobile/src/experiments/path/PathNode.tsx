@@ -31,7 +31,7 @@ const STATE_WORDS: Record<NodeState, string> = {
  * It is not weaker, it is elsewhere.
  */
 export function PathNode({
-  title, state, index, accentBg, accentFg, reducedMotion, onPress,
+  title, state, index, accentBg, accentFg, reducedMotion, onPress, onHoverIn, onHoverOut,
 }: {
   title: string;
   state: NodeState;
@@ -42,6 +42,11 @@ export function PathNode({
   accentFg: string;
   reducedMotion: boolean;
   onPress: () => void;
+  /** Pointer enter/leave. react-native-web maps these onto real mouse events, and they are
+   * simply never called on touch — so the hover preview is a desktop affordance that costs
+   * a phone nothing, and every node still has the tap preview as its primary route. */
+  onHoverIn?: () => void;
+  onHoverOut?: () => void;
 }) {
   const [focused, setFocused] = useState(false);
   const press = useSharedValue(0);
@@ -122,8 +127,10 @@ export function PathNode({
         onPress={onPress}
         onPressIn={() => { press.value = withTiming(1, { duration: 80 }); }}
         onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 400 }); }}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onFocus={() => { setFocused(true); onHoverIn?.(); }}
+        onBlur={() => { setFocused(false); onHoverOut?.(); }}
+        onHoverIn={onHoverIn}
+        onHoverOut={onHoverOut}
         focusable
         accessibilityRole="button"
         // Announces title AND state, so the path is navigable without seeing it.
