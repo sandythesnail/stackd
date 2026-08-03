@@ -11,7 +11,7 @@ const LEVEL_THRESHOLDS = [0, 90, 200, 330, 480, 660, 880, 1150, 1450, 1800, 2200
 // basing the "Graduate" label on level alone let players see it without finishing everything.
 // Bands are tuned against MODULES.length (11): the top tier requires every module done.
 const TIERS = [
-  { min: 0, max: 2,  name: 'Broke Freshman' },
+  { min: 0, max: 2,  name: 'Frugal Freshman' },
   { min: 3, max: 4,  name: 'Budget Apprentice' },
   { min: 5, max: 7,  name: 'Money-Aware Sophomore' },
   { min: 8, max: 10, name: 'Money Manager' },

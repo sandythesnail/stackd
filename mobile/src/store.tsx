@@ -64,7 +64,7 @@ export function xpProgressPct(xp: number, level: number) {
 
 /** TIERS ported verbatim from app.js — keyed by count of MASTERED modules (0-11), not level. */
 const TIERS = [
-  { min: 0, max: 2, name: 'Broke Freshman' },
+  { min: 0, max: 2, name: 'Frugal Freshman' },
   { min: 3, max: 4, name: 'Budget Apprentice' },
   { min: 5, max: 7, name: 'Money-Aware Sophomore' },
   { min: 8, max: 10, name: 'Money Manager' },
