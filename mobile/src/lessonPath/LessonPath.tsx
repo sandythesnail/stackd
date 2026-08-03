@@ -1,0 +1,520 @@
+import { useEffect, useMemo, useState } from 'react';
+import { View, Pressable, Modal, StyleSheet } from 'react-native';
+import Svg, { Path as SvgPath, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+import Reanimated, {
+  useSharedValue, useAnimatedStyle, withRepeat, withTiming, cancelAnimation, interpolate,
+  FadeInDown, SlideInDown, ZoomIn,
+} from 'react-native-reanimated';
+import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { colors } from '@/theme';
+import { modules, type Module } from '@/data';
+import { moduleContentById } from '@/content';
+import { SURVEY_TRACKS } from '@/survey';
+import { useStore } from '@/store';
+import { MIcon, Hammy } from '@/components';
+import { MOOD_FACES, REACTION_FACES, type FaceOverlay } from '@/hammyFaces';
+import { T, Bar, Pill, useReducedMotion } from './bits';
+import { PathNode, type NodeState } from './PathNode';
+import { NODE_BOX, snakePositions, smoothPath, pathHeight, segmentSamples } from './geometry';
+
+/** One distinct expression per module — eleven modules, eleven different faces.
+ *
+ * Two of these are the quest player's own answer reactions, which a student already knows
+ * from answering questions: `happy` (correct) on Saving, `gentle` (wrong) on Loans. Both are
+ * `keepBase` overlays — Hammy keeps his eyes, cheeks and snout and only the mouth changes —
+ * so they read subtler than the nine full-face swaps around them.
+ *
+ * `satisfied` is the one face left unused. It and `REACTION_FACES.streak` are both
+ * hammy-happy.png at the default crop, so it was only ever a duplicate under another name. */
+const MODULE_FACE: Record<string, FaceOverlay> = {
+  earning: MOOD_FACES.wink,
+  spending: MOOD_FACES.surprise,
+  saving: REACTION_FACES.happy,
+  investing: MOOD_FACES.star,
+  credit: MOOD_FACES.sleepy,
+  risk: MOOD_FACES.nervy,
+  loans: REACTION_FACES.gentle,
+  taxes: MOOD_FACES.sad,
+  psychology: MOOD_FACES.love,
+  career: MOOD_FACES.curious,
+  scams: MOOD_FACES.angry,
+};
+
+const STATE_LABEL: Record<NodeState, string> = {
+  completed: 'COMPLETED',
+  current: 'RECOMMENDED NEXT',
+  available: 'NOT STARTED',
+  optional: 'OPTIONAL EXTRA',
+};
+
+type PathNodeData = {
+  key: string; moduleId: string; lessonIndex: number; title: string; state: NodeState;
+  /** The lesson's authored one-paragraph scenario (LessonSummary.hook) — what the preview
+   * is for, since a title alone rarely says what a lesson is actually about. */
+  hook: string;
+};
+
+type Section = {
+  module: Module; nodes: PathNodeData[]; done: number; total: number; mastered: boolean;
+};
+
+/**
+ * Home's "Keep learning" section: one module's lessons as a winding path of diamond nodes.
+ *
+ * Replaces the four-tile module grid. The trade it makes is guidance without a cage — the
+ * recommended lesson is unmistakable (saturated fill, halo, dots running into it, and the
+ * survey's gold outline on its module) while every other node keeps full contrast and stays
+ * tappable, including ones far ahead. Nothing here is ever dimmed, because a dimmed node is
+ * indistinguishable from a locked one and nothing in this app is locked.
+ *
+ * One module is on screen at a time, opening on whichever holds the recommended lesson, with
+ * chevrons paging through the catalog.
+ */
+export function LessonPath({ width }: { width: number }) {
+  const router = useRouter();
+  const reducedMotion = useReducedMotion();
+  const { state, moduleDoneIndices, moduleStatus, moduleTotal, nextLessonIndex } = useStore();
+
+  const [pickedModule, setPickedModule] = useState<string | null>(null);
+  const [preview, setPreview] = useState<PathNodeData | null>(null);
+
+  const centerX = width / 2;
+
+  /** Deliberately the same ordering Home's continue-lesson card uses, so the card and the
+   * highlighted node can never point at different lessons. */
+  const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
+  const trackModuleIds = activeTrack?.moduleIds ?? [];
+  const orderedModules: Module[] = trackModuleIds.length
+    ? [
+        ...trackModuleIds.map((id) => modules.find((m) => m.id === id)).filter((m): m is Module => !!m),
+        ...modules.filter((m) => !trackModuleIds.includes(m.id)),
+      ]
+    : modules;
+
+  const nextModule = orderedModules.find((m) => moduleStatus(m.id) === 'active');
+  const nextLesson = nextModule ? Math.max(0, nextLessonIndex(nextModule.id)) : -1;
+  const recommended = nextModule && nextLesson >= 0
+    ? { moduleId: nextModule.id, lessonIndex: nextLesson }
+    : null;
+
+  const sections: Section[] = useMemo(() => modules.map((m) => {
+    const content = moduleContentById(m.id);
+    const lessons = content?.lessons ?? [];
+    const mainLessons = lessons.filter((l) => !l.isLifeTask);
+    const done = new Set(moduleDoneIndices(m.id));
+    const lifeDone = state.completedLifeTaskIds.includes(m.id);
+
+    const nodes: PathNodeData[] = mainLessons.map((l, i) => ({
+      key: `${m.id}-${i}`,
+      moduleId: m.id,
+      lessonIndex: i,
+      title: l.title,
+      hook: l.hook,
+      state: done.has(i)
+        ? 'completed'
+        : recommended?.moduleId === m.id && recommended.lessonIndex === i
+          ? 'current'
+          : 'available',
+    }));
+
+    const life = lessons.find((l) => l.isLifeTask);
+    if (life) {
+      nodes.push({
+        key: `${m.id}-life`,
+        moduleId: m.id,
+        lessonIndex: lessons.indexOf(life),
+        title: life.title,
+        hook: life.hook,
+        // The real-life step-by-step guide is the one genuinely aside lesson in the content
+        // (isLifeTask) — it carries the optional state rather than one being invented.
+        state: lifeDone ? 'completed' : 'optional',
+      });
+    }
+
+    const doneCount = done.size + (lifeDone ? 1 : 0);
+    const total = moduleTotal(m.id);
+    return { module: m, nodes, done: doneCount, total, mastered: total > 0 && doneCount >= total };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [state.moduleProgress, state.completedLifeTaskIds, recommended?.moduleId, recommended?.lessonIndex]);
+
+  const shownId = pickedModule ?? recommended?.moduleId ?? modules[0].id;
+  const shownIdx = Math.max(0, sections.findIndex((s) => s.module.id === shownId));
+  const shownSection = sections[shownIdx];
+  const pageBy = (delta: number) => {
+    const next = (shownIdx + delta + sections.length) % sections.length;
+    setPickedModule(sections[next].module.id);
+  };
+
+  const openLesson = (n: PathNodeData) => {
+    router.push({
+      pathname: '/learn/quest',
+      params: {
+        moduleId: n.moduleId,
+        lessonIndex: String(n.lessonIndex),
+        ...(n.state === 'optional' ? { isLifeTask: '1' } : {}),
+      },
+    });
+  };
+
+  if (!shownSection) return null;
+
+  return (
+    <>
+      <SectionView
+        key={shownSection.module.id}
+        section={shownSection}
+        width={width}
+        centerX={centerX}
+        reducedMotion={reducedMotion}
+        position={`${shownIdx + 1} of ${sections.length}`}
+        recommendedTrack={
+          activeTrack && recommended?.moduleId === shownSection.module.id ? activeTrack.title : null
+        }
+        onPrev={() => pageBy(-1)}
+        onNext={() => pageBy(1)}
+        onPressNode={setPreview}
+      />
+
+      <PreviewSheet
+        node={preview}
+        moduleName={sections.find((s) => s.module.id === preview?.moduleId)?.module.name ?? ''}
+        total={sections.find((s) => s.module.id === preview?.moduleId)?.total ?? 0}
+        reducedMotion={reducedMotion}
+        onClose={() => setPreview(null)}
+        onStart={() => {
+          const n = preview;
+          setPreview(null);
+          if (n) openLesson(n);
+        }}
+      />
+    </>
+  );
+}
+
+/* ─────────────────────────── one module ─────────────────────────── */
+
+function SectionView({
+  section, width, centerX, reducedMotion, position, recommendedTrack, onPrev, onNext, onPressNode,
+}: {
+  section: Section;
+  width: number;
+  centerX: number;
+  reducedMotion: boolean;
+  position: string;
+  /** Non-null only when THIS module is the one the onboarding survey pointed at. */
+  recommendedTrack: string | null;
+  onPrev: () => void;
+  onNext: () => void;
+  onPressNode: (node: PathNodeData) => void;
+}) {
+  const [hovered, setHovered] = useState<number | null>(null);
+  const { module: mod, nodes } = section;
+  const lastIdx = nodes.length - 1;
+  // The optional real-life lesson swings 1.5x further off the line than the wave would take
+  // it, so "not on the main line" is said by position and not only by styling.
+  const pts = snakePositions(nodes.length, centerX, (i) => (nodes[i]?.state === 'optional' ? 1.5 : 1));
+  const h = pathHeight(nodes.length);
+  const hasSpur = nodes[lastIdx]?.state === 'optional' && pts.length >= 2;
+  const mainD = smoothPath(hasSpur ? pts.slice(0, -1) : pts);
+  const spurD = hasSpur ? smoothPath(pts.slice(-2)) : '';
+
+  // The stretch already walked, drawn in green over the grey — progress becomes the shape of
+  // the path rather than a number in the header, which is the reason to draw a path at all.
+  const firstUndone = nodes.findIndex((n) => n.state !== 'completed');
+  const walked = firstUndone === -1 ? nodes.length : firstUndone;
+  const walkedD = walked >= 2 ? smoothPath(pts.slice(0, walked)) : '';
+
+  const currentIdx = nodes.findIndex((n) => n.state === 'current');
+  const cometSamples = currentIdx > 0 ? segmentSamples(pts, currentIdx - 1) : [];
+
+  const pct = section.total ? section.done / section.total : 0;
+  const face = MODULE_FACE[mod.id];
+
+  return (
+    <View style={{ width }}>
+      {/* The row is always rendered at a fixed height; only its contents are conditional.
+          Mounting and unmounting it moved the module name, the path and everything under it
+          on every page, which read as the page jumping. */}
+      <View style={styles.recLabelRow}>
+        {recommendedTrack ? (
+          <>
+            <Pill label="★ RECOMMENDED FOR YOU" bg={colors.rewardBadgeBg} fg={colors.rewardBadgeText} />
+            <T weight="bold" size={10.5} color={colors.muted4}>from your {recommendedTrack} track</T>
+          </>
+        ) : null}
+      </View>
+
+      <Reanimated.View
+        key={mod.id}
+        entering={reducedMotion ? undefined : FadeInDown.duration(300)}
+        style={[styles.sectionHead, recommendedTrack ? styles.sectionHeadRec : null]}
+      >
+        <PagerButton dir="left" label="Previous module" onPress={onPrev} />
+        <MIcon abbr={mod.icon} color={mod.color} textColor={mod.textColor} />
+        <View style={{ flex: 1 }}>
+          <T weight="display" size={16} numberOfLines={1}>{mod.name}</T>
+          <View style={styles.headMeta}>
+            <T weight="bold" size={11} color={colors.muted3}>{section.done}/{section.total}</T>
+            <Bar value={pct} tint={section.mastered ? colors.green : mod.textColor} height={6} />
+          </View>
+        </View>
+        <View pointerEvents="none" style={{ alignItems: 'center' }}>
+          <Hammy headOnly size={40} bob={false} face={face} />
+          {section.mastered ? (
+            <Pill label="DONE" bg={colors.tagGreenBg} fg={colors.tagGreenText} style={{ marginTop: 2 }} />
+          ) : null}
+        </View>
+        <PagerButton dir="right" label="Next module" onPress={onNext} />
+      </Reanimated.View>
+
+      <T weight="bold" size={10.5} color={colors.muted5} style={styles.position}>
+        MODULE {position}
+      </T>
+
+      <View style={{ height: h, width }}>
+        <Svg width={width} height={h} style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Defs>
+            <SvgGradient id={`walked-${mod.id}`} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={colors.greenBright} />
+              <Stop offset="1" stopColor={colors.green} />
+            </SvgGradient>
+          </Defs>
+          {/* A wider pale under-stroke so the trail sits ON the page rather than being a
+              rule ruled across it. */}
+          <SvgPath d={mainD} stroke={colors.borderCool} strokeWidth={15} strokeLinecap="round" fill="none" />
+          <SvgPath d={mainD} stroke={colors.track2} strokeWidth={9} strokeLinecap="round" fill="none" />
+          {walkedD ? (
+            <SvgPath d={walkedD} stroke={`url(#walked-${mod.id})`} strokeWidth={9} strokeLinecap="round" fill="none" />
+          ) : null}
+          {spurD ? (
+            <SvgPath d={spurD} stroke={colors.borderOpt} strokeWidth={6} strokeLinecap="round" strokeDasharray="2 12" fill="none" />
+          ) : null}
+        </Svg>
+
+        {cometSamples.length ? <TrailComet samples={cometSamples} reducedMotion={reducedMotion} /> : null}
+
+        {nodes.map((n, i) => (
+          <Reanimated.View
+            key={n.key}
+            entering={reducedMotion ? undefined : ZoomIn.delay(i * 55).duration(320).springify().damping(14)}
+            style={{ position: 'absolute', left: pts[i].x - NODE_BOX / 2, top: pts[i].y - NODE_BOX / 2 }}
+          >
+            <PathNode
+              title={n.title}
+              state={n.state}
+              index={i + 1}
+              accentBg={mod.color}
+              accentFg={mod.textColor}
+              reducedMotion={reducedMotion}
+              onPress={() => onPressNode(n)}
+              onHoverIn={() => setHovered(i)}
+              onHoverOut={() => setHovered((cur) => (cur === i ? null : cur))}
+            />
+          </Reanimated.View>
+        ))}
+
+        {/* Hover/focus card. Clamped to the column and non-interactive, so it can never eat
+            the tap it is describing. Rendered last so it draws over its neighbours. */}
+        {hovered !== null && nodes[hovered] ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.tip,
+              {
+                top: Math.max(0, pts[hovered].y - NODE_BOX / 2 - 62),
+                left: Math.min(Math.max(6, pts[hovered].x - 110), width - 226),
+              },
+            ]}
+          >
+            <T weight="extra" size={9} color={colors.muted5} style={{ letterSpacing: 0.7 }}>
+              {STATE_LABEL[nodes[hovered].state]}
+            </T>
+            <T weight="displayMed" size={13} color={colors.ink} numberOfLines={2}>{nodes[hovered].title}</T>
+            <T weight="body" size={11} color={colors.muted2} numberOfLines={3} style={{ marginTop: 2 }}>
+              {nodes[hovered].hook}
+            </T>
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+/* ─────────────────────────── pieces ─────────────────────────── */
+
+function PagerButton({ dir, label, onPress }: { dir: 'left' | 'right'; label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => [styles.pager, pressed && { backgroundColor: colors.canvas }]}
+    >
+      <Feather name={dir === 'left' ? 'chevron-left' : 'chevron-right'} size={20} color={colors.muted2} />
+    </Pressable>
+  );
+}
+
+/** Dots running the last stretch of trail into the recommended node.
+ *
+ * They follow the drawn curve rather than a straight line between the two node centres —
+ * `segmentSamples` walks the same bézier the SVG renders, so they stay on the trail wherever
+ * it bows. Plain Views, because animating SVG path properties is the fragile part on web. */
+function TrailComet({ samples, reducedMotion }: { samples: { x: number; y: number }[]; reducedMotion: boolean }) {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    if (reducedMotion) return;
+    t.value = withRepeat(withTiming(1, { duration: 1600 }), -1, false);
+    return () => cancelAnimation(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reducedMotion]);
+
+  const n = samples.length;
+  const input = useMemo(() => samples.map((_, i) => (n > 1 ? i / (n - 1) : 0)), [samples, n]);
+  const xs = useMemo(() => samples.map((s) => s.x), [samples]);
+  const ys = useMemo(() => samples.map((s) => s.y), [samples]);
+
+  const dot = (lag: number) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useAnimatedStyle(() => {
+      const p = Math.max(0, Math.min(1, t.value - lag));
+      return {
+        transform: [
+          { translateX: interpolate(p, input, xs) - 5 },
+          { translateY: interpolate(p, input, ys) - 5 },
+          { scale: interpolate(p, [0, 0.5, 1], [0.5, 1, 0.4]) },
+        ],
+        opacity: p <= 0 || p >= 1 ? 0 : interpolate(p, [0, 0.25, 0.8, 1], [0, 1, 1, 0]),
+      };
+    });
+
+  const d0 = dot(0);
+  const d1 = dot(0.14);
+  const d2 = dot(0.28);
+
+  if (reducedMotion || n < 2) return null;
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Reanimated.View style={[styles.comet, d0]} />
+      <Reanimated.View style={[styles.comet, styles.cometFaint, d1]} />
+      <Reanimated.View style={[styles.comet, styles.cometFaint, d2]} />
+    </View>
+  );
+}
+
+/** Look before you leap — a bottom sheet, matching the shape the quest player already uses
+ * for its own interruptions, rising from the edge the thumb is already near. The call to
+ * action is worded from the node's state, because "Start lesson" is wrong in three of the
+ * four cases. */
+function PreviewSheet({
+  node, moduleName, total, reducedMotion, onClose, onStart,
+}: {
+  node: PathNodeData | null;
+  moduleName: string;
+  total: number;
+  reducedMotion: boolean;
+  onClose: () => void;
+  onStart: () => void;
+}) {
+  if (!node) return null;
+  const done = node.state === 'completed';
+  const cta = done ? 'Do it again' : node.state === 'current' ? 'Continue lesson' : 'Start lesson';
+  const tone = node.state === 'current' ? colors.green : done ? colors.greenDark : colors.pink;
+
+  return (
+    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.sheetRoot}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close preview" />
+        <Reanimated.View
+          entering={reducedMotion ? undefined : SlideInDown.duration(280)}
+          style={styles.previewSheet}
+        >
+          <View style={styles.grabber} />
+          <View style={styles.previewHead}>
+            <Pill
+              label={STATE_LABEL[node.state]}
+              bg={done ? colors.tagGreenBg : node.state === 'current' ? colors.rewardBadgeBg : colors.tagPinkBg}
+              fg={done ? colors.tagGreenText : node.state === 'current' ? colors.rewardBadgeText : colors.tagPinkText}
+            />
+            <T weight="bold" size={11} color={colors.muted4}>
+              {moduleName}{total ? ` · Lesson ${node.lessonIndex + 1} of ${total}` : ''}
+            </T>
+          </View>
+
+          <T weight="display" size={20} style={{ marginTop: 10 }}>{node.title}</T>
+          <T weight="body" size={13.5} color={colors.muted2} style={styles.previewHook}>{node.hook}</T>
+
+          {done ? (
+            <T weight="bold" size={11.5} color={colors.greenDark} style={{ marginTop: 10 }}>
+              ✓ You already finished this one. Replaying it won&apos;t change your progress.
+            </T>
+          ) : null}
+
+          <Pressable onPress={onStart} accessibilityRole="button" style={[styles.previewCta, { backgroundColor: tone }]}>
+            <T weight="extra" size={14.5} color={colors.white}>{cta}</T>
+          </Pressable>
+          <Pressable onPress={onClose} accessibilityRole="button" style={styles.previewClose}>
+            <T weight="extra" size={13} color={colors.muted2}>Not now</T>
+          </Pressable>
+        </Reanimated.View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  // Fixed height, always occupied — 22px is the Pill's own laid-out height, so the reserved
+  // space matches the label exactly and there's no slack when it isn't showing.
+  recLabelRow: { height: 22, flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 7 },
+  // A transparent 2px border and the same padding in the base style, so turning the gold on
+  // recolours the box without moving anything.
+  sectionHead: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginHorizontal: -8, paddingHorizontal: 6, paddingVertical: 8,
+    borderRadius: 20, borderWidth: 2, borderColor: 'transparent', marginBottom: 2,
+  },
+  // Exactly the treatment ModuleTile's `recommended` prop uses, so the path and the module
+  // grid can't drift apart on what "recommended" looks like.
+  sectionHeadRec: {
+    borderColor: colors.reward,
+    backgroundColor: colors.rewardBg,
+    shadowColor: colors.reward,
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 3,
+  },
+  headMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 3 },
+  pager: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  position: { textAlign: 'center', letterSpacing: 1, marginBottom: 6 },
+
+  tip: {
+    position: 'absolute', width: 220, backgroundColor: colors.white,
+    borderWidth: 1.5, borderColor: colors.borderOpt, borderRadius: 14,
+    paddingVertical: 9, paddingHorizontal: 12, gap: 1,
+    shadowColor: '#2C3E2D', shadowOpacity: 0.16, shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 }, elevation: 6,
+  },
+
+  comet: {
+    position: 'absolute', top: 0, left: 0, width: 10, height: 10, borderRadius: 5,
+    backgroundColor: colors.green,
+  },
+  cometFaint: { opacity: 0.5, backgroundColor: colors.greenBright },
+
+  sheetRoot: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(22,32,23,0.45)' },
+  previewSheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 26, borderTopRightRadius: 26,
+    paddingTop: 10, paddingHorizontal: 22, paddingBottom: 26,
+  },
+  grabber: {
+    width: 42, height: 4, borderRadius: 2, backgroundColor: colors.track,
+    alignSelf: 'center', marginBottom: 14,
+  },
+  previewHead: { flexDirection: 'row', alignItems: 'center', gap: 9, flexWrap: 'wrap' },
+  previewHook: { marginTop: 8, lineHeight: 19 },
+  previewCta: { marginTop: 18, borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
+  previewClose: { marginTop: 4, paddingVertical: 11, alignItems: 'center' },
+});

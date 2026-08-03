@@ -2,14 +2,15 @@ import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  Screen, Header, Txt, Card, Button, ProgressBar, Tag, Stat, Speech, Hammy,
-  SectionHead, MIcon, ModuleTile, BadgeMedal, AchievementDetailModal, Flame, Coin, Diamond, CurrencyChip,
+  Screen, Header, Txt, Card, Button, ProgressBar, Stat, Speech, Hammy,
+  SectionHead, BadgeMedal, AchievementDetailModal, Flame, Coin, Diamond, CurrencyChip,
   TourTarget, useOnboardingTour,
 } from '@/components';
 import { useUser } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
 import { user, modules, type Module } from '@/data';
 import { useStore, type AchievementView } from '@/store';
+import { LessonPath } from '@/lessonPath/LessonPath';
 import { authEnabled } from '@/lib/env';
 import { SURVEY_TRACKS } from '@/survey';
 import { todaysHammyMood, hasModuleActivityToday } from '@/hammyMood';
@@ -45,6 +46,7 @@ export default function Home() {
     loginBonusPending, claimDailyLoginBonus,
   } = useStore();
   const [selectedBadge, setSelectedBadge] = useState<AchievementView | null>(null);
+  const [pathWidth, setPathWidth] = useState(0);
   const { startTour } = useOnboardingTour();
 
   // First-login spotlight tour (XP, then Shop) — gated on the persisted flag, right after a
@@ -68,32 +70,21 @@ export default function Home() {
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
   const trackModuleIds = activeTrack?.moduleIds ?? [];
 
-  // Both the tiles below AND nextModule further down used to read straight off `modules`
-  // in its fixed catalog order (earning, spending, saving, investing, ...) — regardless of
-  // trackModuleIds. That made the survey's whole recommended-track result invisible after
-  // onboarding: nextModule always resolved to "earning" (the first not-done entry in that
-  // fixed order) no matter which track was picked, and homeModules only ever sliced the
-  // first 4 catalog entries, so the "★ Recommended" tag could never even appear for a track
-  // that didn't happen to include one of those 4. Reordering the recommended track's
-  // modules to the front (falling back to catalog order for the rest, or entirely once
-  // there's no track) fixes both at once.
+  // nextModule below used to read straight off `modules` in its fixed catalog order
+  // (earning, spending, saving, ...) regardless of trackModuleIds, which made the survey's
+  // whole recommended-track result invisible after onboarding — it always resolved to
+  // "earning", the first not-done entry in that fixed order, no matter which track was
+  // picked. Putting the recommended track's modules first (falling back to catalog order
+  // for the rest, or entirely once there's no track) fixes it.
+  //
+  // LessonPath repeats this ordering deliberately, so the continue-lesson card below and the
+  // highlighted node on the path can never point at different lessons.
   const orderedModules: Module[] = trackModuleIds.length
     ? [
         ...trackModuleIds.map((id) => modules.find((m) => m.id === id)).filter((m): m is Module => !!m),
         ...modules.filter((m) => !trackModuleIds.includes(m.id)),
       ]
     : modules;
-
-  const homeModules = orderedModules.slice(0, 4).map((m) => {
-    const status = moduleStatus(m.id);
-    const total = moduleTotal(m.id);
-    const done = moduleDone(m.id);
-    const pct = total ? done / total : 0;
-    const recommended = status === 'active' && trackModuleIds.includes(m.id);
-    const tone = status === 'done' ? ('green' as const) : recommended ? ('gold' as const) : ('pink' as const);
-    const tag = status === 'done' ? '✓ Done' : recommended ? '★ Recommended' : `${Math.round(pct * 100)}%`;
-    return { ...m, status, total, done, pct, tone, tag, recommended };
-  });
 
   const earnedBadges = achievements().filter((b) => b.earned).slice(0, 4);
 
@@ -205,34 +196,23 @@ export default function Home() {
         ) : null}
 
         <SectionHead title="Keep learning" action="See all →" onAction={() => router.push('/(tabs)/modules')} />
-        <View style={styles.grid}>
-          {homeModules.map((m, i) => {
-            const isFirst = i === 0;
-            const tile = (
-              <ModuleTile
-                key={m.id}
-                recommended={m.recommended}
-                onPress={() => router.push(`/learn/module/${m.id}`)}
-                // The width/flexGrow that size this tile within the row move to the
-                // TourTarget wrapper for the first tile — a percentage width on BOTH the
-                // wrapper and its child would resolve against each other instead of the
-                // row, shrinking the tile instead of just sizing it once.
-                style={isFirst ? { flex: 1 } : styles.gridItem}
-              >
-                <View style={styles.tileTop}>
-                  <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} />
-                  <Tag tone={m.tone} style={styles.miniTag}>{m.tag}</Tag>
-                </View>
-                <Txt style={styles.tileName}>{m.name}</Txt>
-                <ProgressBar value={m.pct} tone={m.tone === 'pink' ? 'pink' : 'green'} height={7} />
-              </ModuleTile>
-            );
-            // Only the first tile is a tour stop (see OnboardingTour.tsx's "Start a
-            // module" step) — same "point at a real, already-on-screen element" approach
-            // as the XP/Shop steps.
-            return isFirst ? <TourTarget key={m.id} id="tour-module" style={styles.gridItem}>{tile}</TourTarget> : tile;
-          })}
-        </View>
+        {/* The four-tile module grid is now a winding path of the CURRENT module's lessons
+            (see @/lessonPath). It reads as a journey rather than a list, and it makes the
+            recommendation unmistakable without dimming anything — every node stays at full
+            contrast and stays tappable, including ones far ahead, because a dimmed node is
+            indistinguishable from a locked one and nothing in this app is locked.
+         *
+         * Still the "Start a module" tour stop: TourTarget points at whatever real element
+         * is on screen, and the path is now that element.
+         *
+         * `width` is measured rather than assumed — the path positions its nodes at absolute
+         * offsets computed from the column's centre, so it needs a real number, and the 22px
+         * horizontal padding on this scroller means the screen width would be wrong. */}
+        <TourTarget id="tour-module">
+          <View onLayout={(e) => setPathWidth(e.nativeEvent.layout.width)}>
+            {pathWidth > 0 ? <LessonPath width={pathWidth} /> : null}
+          </View>
+        </TourTarget>
 
         <SectionHead title="Recent badges" action={`All ${achievements().length} →`} onAction={() => router.push('/(tabs)/badges')} style={{ marginTop: 2 }} />
         <View style={styles.badgeRow}>
@@ -283,11 +263,6 @@ const styles = StyleSheet.create({
   questTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   questMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 },
   ambientNudge: { fontSize: 11.5, textAlign: 'center', marginTop: 9, color: colors.pinkText },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  gridItem: { width: '47.5%', flexGrow: 1 },
-  tileTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  miniTag: { paddingVertical: 3, paddingHorizontal: 9 },
-  tileName: { fontFamily: font.extra, fontSize: 13.5, color: colors.ink },
   badgeRow: { flexDirection: 'row', gap: 12, paddingBottom: 6 },
   badgeCell: { flex: 1, alignItems: 'center', gap: 8 },
   badgeLbl: { fontFamily: font.extra, fontSize: 10.5, color: colors.muted1, textAlign: 'center' },
