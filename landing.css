@@ -1196,9 +1196,17 @@ body { background-color: var(--bg); }
   padding: 1.25rem 1.75rem; display: flex; align-items: center; justify-content: space-between;
   font-size: 1.05rem; font-weight: 600; color: var(--text);
 }
-.live-badge {
-  font-size: 0.78rem; font-weight: 700; color: var(--green-dark);
-  background: var(--green-light); padding: 0.2rem 0.65rem; border-radius: var(--radius-sm); letter-spacing: 0.3px;
+/* Deliberately neutral rather than the green "Live" pill this replaced — a coloured status
+   chip on a dashboard reads as a live system, which is the impression this section must not
+   give. Paired with .admin-disclaimer below the metrics. */
+.sample-badge {
+  font-size: 0.78rem; font-weight: 700; color: var(--text-mid);
+  background: var(--border); padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-sm); letter-spacing: 0.3px;
+}
+.admin-disclaimer {
+  text-align: center; font-size: 0.85rem; font-weight: 600; color: var(--text-soft);
+  padding: 0.9rem 2rem 0; margin: 0;
 }
 .admin-metrics { display: flex; justify-content: space-around; padding: 2.5rem 2rem; border-bottom: 1px solid var(--border); }
 .am { text-align: center; }
