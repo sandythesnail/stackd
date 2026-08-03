@@ -69,19 +69,27 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.hasSeenOnboardingTour]);
 
-  // The tour's last step spotlights a node inside the lesson path (see OnboardingTour.tsx),
-  // which sits well below the fold on this screen — nothing else in the tour needs scrolling,
-  // since every other target is either the stat row at the top or a tab-bar icon. The tour's
-  // own two measurement attempts (immediate + 200ms) both land while this scroll is still
-  // animating, so tell it to measure again once the scroll has settled, or the spotlight
-  // would sit wherever the node USED to be.
+  // The tour's lesson-path step spotlights a node that sits well below the fold on this
+  // screen — nothing else in the tour needs scrolling, since every other target is either the
+  // stat row at the top or a tab-bar icon. Scroll it into view when that step opens.
+  const tourNeedsPath = activeTargetId === 'tour-lesson-node';
   useEffect(() => {
-    if (activeTargetId !== 'tour-lesson-node') return;
+    if (!tourNeedsPath) return;
     // A little headroom, so the spotlight cutout isn't flush against the top of the viewport.
     scrollRef.current?.scrollTo({ y: Math.max(0, pathY - 24), animated: true });
+    // Backstop for the onScroll tracking below: momentum/animated scrolls don't always emit
+    // a final event exactly at rest, and if the path was already in view the scroll is a
+    // no-op that emits nothing at all.
     const t = setTimeout(remeasureActive, 420);
     return () => clearTimeout(t);
-  }, [activeTargetId, pathY, remeasureActive]);
+  }, [tourNeedsPath, pathY, remeasureActive]);
+
+  // Re-measure on every scroll frame while that step is live, so the spotlight hole travels
+  // WITH the node instead of staying where the node was when the step opened. Without this
+  // the cutout sat over whatever content happened to slide under it for the length of the
+  // scroll, which was the most obvious glitch in this step. Attached only during that step,
+  // so ordinary scrolling costs nothing.
+  const onTourScroll = tourNeedsPath ? remeasureActive : undefined;
 
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
   const trackModuleIds = activeTrack?.moduleIds ?? [];
@@ -145,7 +153,13 @@ export default function Home() {
         onReplayTour={startTour}
         onGear={() => router.push('/(tabs)/settings')}
       />
-      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        onScroll={onTourScroll}
+        scrollEventThrottle={16}
+      >
         <Greeting />
 
         <View style={styles.statRow}>

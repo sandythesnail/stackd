@@ -12,7 +12,7 @@ import { modules, type Module } from '@/data';
 import { moduleContentById } from '@/content';
 import { SURVEY_TRACKS } from '@/survey';
 import { useStore } from '@/store';
-import { MIcon, Hammy, MaybeTourTarget, useOnboardingTour } from '@/components';
+import { MIcon, Hammy, MaybeTourTarget, TourCallout, useOnboardingTour } from '@/components';
 import { MOOD_FACES, REACTION_FACES, type FaceOverlay } from '@/hammyFaces';
 import { T, Bar, Pill, useReducedMotion } from './bits';
 import { PathNode, type NodeState } from './PathNode';
@@ -74,6 +74,7 @@ type Section = {
 export function LessonPath({ width }: { width: number }) {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
+  const { endIfWaitingOn } = useOnboardingTour();
   const { state, moduleDoneIndices, moduleStatus, moduleTotal, nextLessonIndex } = useStore();
 
   const [pickedModule, setPickedModule] = useState<string | null>(null);
@@ -181,7 +182,12 @@ export function LessonPath({ width }: { width: number }) {
         moduleName={sections.find((s) => s.module.id === preview?.moduleId)?.module.name ?? ''}
         total={sections.find((s) => s.module.id === preview?.moduleId)?.total ?? 0}
         reducedMotion={reducedMotion}
-        onClose={() => setPreview(null)}
+        onClose={() => {
+          // Backing out of the sheet while the tour is pointing at its CTA would leave the
+          // tour on a step whose target is gone, with no Next button to escape via.
+          endIfWaitingOn('tour-lesson-start');
+          setPreview(null);
+        }}
         onStart={() => {
           const n = preview;
           setPreview(null);
@@ -433,10 +439,16 @@ function PreviewSheet({
   onClose: () => void;
   onStart: () => void;
 }) {
+  const { activeTargetId, advanceIfWaitingOn } = useOnboardingTour();
   if (!node) return null;
   const done = node.state === 'completed';
   const cta = done ? 'Do it again' : node.state === 'current' ? 'Continue lesson' : 'Start lesson';
   const tone = node.state === 'current' ? colors.green : done ? colors.greenDark : colors.pink;
+  // The tour's final step follows the user in here and points at this button (see
+  // OnboardingTour.tsx). Only ever the recommended node's sheet: that's the one the previous
+  // step sent them to, and the only one whose CTA reads "Continue lesson".
+  const isTourTarget = node.state === 'current';
+  const tourHighlighted = isTourTarget && activeTargetId === 'tour-lesson-start';
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
@@ -467,7 +479,20 @@ function PreviewSheet({
             </T>
           ) : null}
 
-          <Pressable onPress={onStart} accessibilityRole="button" style={[styles.previewCta, { backgroundColor: tone }]}>
+          <TourCallout forTarget="tour-lesson-start" style={{ marginTop: 16 }} />
+
+          {/* No TourTarget wrapper: an inSheet step is never measured for a spotlight (the
+              sheet draws its own scrim and callout), so the button just needs the ring and
+              the advance call. */}
+          <Pressable
+            onPress={() => {
+              // Safe unconditionally — a no-op unless the tour is waiting on this button.
+              advanceIfWaitingOn('tour-lesson-start');
+              onStart();
+            }}
+            accessibilityRole="button"
+            style={[styles.previewCta, { backgroundColor: tone }, tourHighlighted && styles.previewCtaTour]}
+          >
             <T weight="extra" size={14.5} color={colors.white}>{cta}</T>
           </Pressable>
           <Pressable onPress={onClose} accessibilityRole="button" style={styles.previewClose}>
@@ -532,5 +557,12 @@ const styles = StyleSheet.create({
   previewHead: { flexDirection: 'row', alignItems: 'center', gap: 9, flexWrap: 'wrap' },
   previewHook: { marginTop: 8, lineHeight: 19 },
   previewCta: { marginTop: 18, borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
+  // Same reward yellow as the path node's tour ring, so "the thing the tour wants tapped"
+  // looks identical in both places.
+  previewCtaTour: {
+    borderWidth: 3.5, borderColor: colors.reward,
+    shadowColor: colors.reward, shadowOpacity: 0.55, shadowRadius: 9,
+    shadowOffset: { width: 0, height: 0 }, elevation: 6,
+  },
   previewClose: { marginTop: 4, paddingVertical: 11, alignItems: 'center' },
 });

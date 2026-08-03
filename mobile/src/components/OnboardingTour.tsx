@@ -13,20 +13,45 @@ import { Button } from './Button';
 // duration and a comparable curve, so the tour feels the same on both platforms.
 const TOUR_TRANSITION_MS = 250;
 const TOUR_EASING = Easing.inOut(Easing.ease);
+// How long a step may stay blank waiting for its target to be measured before the overlay
+// gives up and shows a centred, targetless tooltip. Sized to comfortably cover Home's
+// animated scroll to the lesson path (see (tabs)/home.tsx).
+const SETTLE_GRACE_MS = 600;
 
 /** Mirrors the website's onboarding spotlight tour (see app.js's ONBOARDING_TOUR_STEPS) —
- * five stops (XP, the Shop, Tools, Modules, starting the first lesson), shown once right
- * after a first-time user finishes the onboarding survey. Copy stays as tight as possible
- * on purpose — this is a quick "point at a real element, explain it, Next" tour, not a
- * wall of text.
+ * six stops (XP, the Shop, Tools, Modules, picking the first lesson, then actually starting
+ * it), shown once right after a first-time user finishes the onboarding survey. Copy stays
+ * as tight as possible on purpose — this is a quick "point at a real element, explain it,
+ * Next" tour, not a wall of text.
  *
- * Only the LAST step (the recommended lesson node) requires a real tap instead of a Next
- * button — every earlier step just explains a tab and moves on, so advancing them doesn't
- * need the user to actually be on that tab yet. The whole tour now runs on Home: the last
- * step points at Home's own lesson path rather than hopping to the Modules tab first, so
- * there's no navigation in the middle of the tour at all.
+ * The last TWO steps require a real tap instead of a Next button — every earlier step just
+ * explains a tab and moves on, so advancing them doesn't need the user to actually be on
+ * that tab yet. The whole tour runs on Home: it points at Home's own lesson path rather than
+ * hopping to the Modules tab, so there's no navigation in the middle of the tour at all.
+ *
+ * Tapping a path node doesn't open the lesson directly, it opens the preview sheet — so the
+ * tour would have ended on a screen the user hadn't finished acting on. The final step
+ * follows them into that sheet and points at its "Continue lesson" button, which is the tap
+ * that actually starts a lesson.
  */
-const TOUR_STEPS: { targetId: string; title: string; body: string; requiresRealClick?: boolean }[] = [
+type TourStep = {
+  targetId: string;
+  title: string;
+  body: string;
+  requiresRealClick?: boolean;
+  /** True when the target lives inside a react-native Modal (the lesson preview sheet). The
+   * provider draws NO overlay for these: on native a Modal is its own window and renders
+   * above anything the provider puts on screen, so a spotlight would simply be hidden behind
+   * it. The sheet already dims its own background, and renders <TourCallout> itself instead —
+   * one scrim, one card, no competing overlays. */
+  inSheet?: boolean;
+  /** True when the target isn't on screen until the hosting screen scrolls it into view, so
+   * it can't be measured for a few hundred milliseconds after the step opens. Changes what
+   * the overlay shows in the meantime — see openStep's `blind`. */
+  scrollsIntoView?: boolean;
+};
+
+const TOUR_STEPS: TourStep[] = [
   {
     targetId: 'tour-xp',
     title: 'Earn XP as you go',
@@ -62,9 +87,20 @@ const TOUR_STEPS: { targetId: string; title: string; body: string; requiresRealC
     // The path sits well below the fold, so Home scrolls it into view itself when this step
     // opens and calls remeasureActive once that's settled — see (tabs)/home.tsx.
     targetId: 'tour-lesson-node',
-    title: 'Start a lesson',
-    body: 'Tap this lesson to start it — finish them in order to complete the module.',
+    title: 'Pick your first lesson',
+    body: 'Tap this one to see what it covers — finish them in order to complete the module.',
     requiresRealClick: true,
+    scrollsIntoView: true,
+  },
+  {
+    // The preview sheet that a path node opens (see LessonPath's PreviewSheet). Its call to
+    // action reads "Continue lesson" for the recommended node, which is the one the previous
+    // step just had the user tap, so the copy here names that button directly.
+    targetId: 'tour-lesson-start',
+    title: 'Now start it',
+    body: 'Tap Continue lesson and you\'re in. Everything you finish earns XP and coins.',
+    requiresRealClick: true,
+    inSheet: true,
   },
 ];
 
@@ -79,6 +115,11 @@ type TourCtx = {
    * that's actually the case right now, a no-op otherwise, so it's always safe to call
    * unconditionally alongside the element's normal onPress behavior. */
   advanceIfWaitingOn: (targetId: string) => void;
+  /** The mirror of advanceIfWaitingOn, for when the user backs OUT of the element a
+   * requiresRealClick step is waiting on (dismissing the lesson preview sheet) instead of
+   * acting on it. Ends the tour rather than leaving it pointing at something no longer on
+   * screen, which it has no button to escape from. A no-op unless that's the live step. */
+  endIfWaitingOn: (targetId: string) => void;
   /** The current step's targetId, or null when the tour isn't active — lets a real element
    * (e.g. the recommended lesson node) know it should render its own yellow "tap me"
    * highlight right now, on top of the tour's own neutral spotlight ring. */
@@ -88,6 +129,11 @@ type TourCtx = {
    * step) — the tour's own measurement fires immediately and again 200ms later, both of which
    * can be too early for an animated scroll. No-op when no tour is running. */
   remeasureActive: () => void;
+  /** Everything <TourCallout> needs to draw the step card itself, for an in-sheet step the
+   * provider deliberately doesn't overlay. Null when no tour is running. */
+  activeCallout: { targetId: string; stepNum: number; totalSteps: number; title: string; body: string } | null;
+  /** Ends the tour and marks it seen — what the callout's own "Skip tour" calls. */
+  skipTour: () => void;
 };
 
 const TourContext = createContext<TourCtx | null>(null);
@@ -126,62 +172,123 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
   const targets = useRef(new Map<string, RefObject<View | null>>()).current;
   const [stepIdx, setStepIdx] = useState<number | null>(null);
   const [rect, setRect] = useState<MeasuredRect | null>(null);
+  // True from the moment a step opens until its target has actually been measured (or the
+  // grace period below expires). See TourOverlay: while this is on and there's no rect yet,
+  // the overlay shows a plain scrim and NO tooltip, instead of parking the tooltip in the
+  // centre of the screen and then flying it to the real position a frame or two later. That
+  // flight was the single most visible piece of jank on the lesson-path step, which can't be
+  // measured until Home has finished scrolling it into view.
+  const [settling, setSettling] = useState(false);
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // stepIdx is mirrored into a ref, updated synchronously by setStep rather than in an
+  // effect, so the callbacks below can read the live step without listing it as a dependency.
+  // That keeps registerTarget/unregisterTarget referentially STABLE: TourTarget's effect
+  // depends on them, so when they changed identity on every step change (which they used to)
+  // every mounted TourTarget in the tree unregistered and re-registered itself six times a
+  // tour, briefly emptying the map the spotlight measures from.
+  const stepIdxRef = useRef<number | null>(null);
+  const setStep = useCallback((idx: number | null) => {
+    stepIdxRef.current = idx;
+    setStepIdx(idx);
+  }, []);
+
+  const endSettling = useCallback(() => {
+    if (settleTimer.current) { clearTimeout(settleTimer.current); settleTimer.current = null; }
+    setSettling(false);
+  }, []);
 
   const measure = useCallback((idx: number) => {
     const ref = targets.get(TOUR_STEPS[idx].targetId);
     if (!ref?.current) { setRect(null); return; }
     ref.current.measureInWindow((x, y, width, height) => {
-      setRect(width > 0 || height > 0 ? { x, y, width, height } : null);
+      // Ignore a measurement that arrives after the step already moved on.
+      if (stepIdxRef.current !== idx) return;
+      if (width > 0 || height > 0) {
+        setRect({ x, y, width, height });
+        endSettling();
+      } else {
+        setRect(null);
+      }
     });
-  }, [targets]);
+  }, [targets, endSettling]);
 
-  const startTour = useCallback(() => {
-    setRect(null);
-    setStepIdx(0);
-    // The target that matters most for step 1 (the Home stat row) has usually just mounted
-    // a beat earlier from the survey->home navigation, so give layout two passes to settle
-    // before trusting a measurement — one rAF, one short timeout as a fallback for anything
-    // slower (a font swap, a still-finishing screen transition).
-    requestAnimationFrame(() => measure(0));
-    setTimeout(() => measure(0), 200);
-  }, [measure]);
-
-  const goToStep = useCallback((idx: number) => {
-    setStepIdx(idx);
-    setRect(null);
+  /** Opens a step, then measures its target on the next frame and again shortly after (a font
+   * swap or a still-finishing transition can move it).
+   *
+   * `blind` decides what's on screen in between, and the two cases genuinely differ. A step
+   * whose target is already mounted and on screen (every tab icon) measures within a frame,
+   * so KEEPING the previous spotlight lets the card glide from the old target to the new one
+   * — the transition this tour has always had. A step whose target has to be scrolled into
+   * view first can't be measured for a few hundred milliseconds, and holding the old
+   * spotlight there would park the cutout over unrelated content for that whole time; those
+   * steps clear it and hold the card back instead (see `settling` and TourOverlay's
+   * hideCard). The grace period bounds the wait, so a genuinely missing target degrades to
+   * the centred fallback rather than looking like a hang. */
+  const openStep = useCallback((idx: number, blind = false) => {
+    setStep(idx);
+    if (blind || TOUR_STEPS[idx].scrollsIntoView) {
+      setRect(null);
+      setSettling(true);
+      if (settleTimer.current) clearTimeout(settleTimer.current);
+      settleTimer.current = setTimeout(() => setSettling(false), SETTLE_GRACE_MS);
+    }
     requestAnimationFrame(() => measure(idx));
     setTimeout(() => measure(idx), 200);
-  }, [measure]);
+  }, [measure, setStep]);
+
+  useEffect(() => () => { if (settleTimer.current) clearTimeout(settleTimer.current); }, []);
+
+  // Starting fresh is always blind: any rect still in state belongs to a previous run of the
+  // tour, and flashing the first card at last time's position would be worse than a beat of
+  // nothing.
+  const startTour = useCallback(() => openStep(0, true), [openStep]);
+  const goToStep = useCallback((idx: number) => openStep(idx), [openStep]);
 
   const finish = useCallback(() => {
-    setStepIdx(null);
+    setStep(null);
+    endSettling();
     markOnboardingTourSeen();
-  }, [markOnboardingTourSeen]);
+  }, [markOnboardingTourSeen, setStep, endSettling]);
 
-  // Both of these read `stepIdx` directly and call finish()/goToStep() as plain, top-level
-  // calls — NOT from inside a setStepIdx(i => ...) updater the way this used to be written.
-  // Dispatching a second setStepIdx (which is what finish() and goToStep() each do) from
-  // inside another setStepIdx's updater function is exactly the kind of thing that produces
-  // "the tour gets stuck / a step lingers" bugs: the updater's own `return` and the nested
-  // dispatch can race, and the two updates don't reliably compose into one clean transition.
-  // Reading `stepIdx` from the closure and depending on it here instead is simpler and can't
-  // go stale — this function is recreated fresh every time stepIdx actually changes.
+  // These read the step and call finish()/goToStep() as plain, top-level calls — NOT from
+  // inside a setStepIdx(i => ...) updater the way this used to be written. Dispatching a
+  // second setStepIdx (which is what finish() and goToStep() each do) from inside another
+  // setStepIdx's updater function is exactly the kind of thing that produces "the tour gets
+  // stuck / a step lingers" bugs: the updater's own `return` and the nested dispatch can
+  // race, and the two updates don't reliably compose into one clean transition.
   const advance = useCallback(() => {
-    if (stepIdx === null) return;
-    if (stepIdx + 1 >= TOUR_STEPS.length) { finish(); return; }
-    goToStep(stepIdx + 1);
-  }, [stepIdx, finish, goToStep]);
+    const idx = stepIdxRef.current;
+    if (idx === null) return;
+    if (idx + 1 >= TOUR_STEPS.length) { finish(); return; }
+    goToStep(idx + 1);
+  }, [finish, goToStep]);
+
+  // Reads the live step from the ref rather than the closure, so this stays referentially
+  // stable — it's called from onPress handlers deep in the tree (a path node, the preview
+  // sheet's CTA) that shouldn't re-render every time the tour moves.
+  const waitingOn = (targetId: string) => {
+    const idx = stepIdxRef.current;
+    if (idx === null) return null;
+    const step = TOUR_STEPS[idx];
+    return step.requiresRealClick && step.targetId === targetId ? idx : null;
+  };
 
   const advanceIfWaitingOn = useCallback((targetId: string) => {
-    if (stepIdx === null) return;
-    const step = TOUR_STEPS[stepIdx];
-    if (!step.requiresRealClick || step.targetId !== targetId) return;
-    if (stepIdx + 1 >= TOUR_STEPS.length) { finish(); return; }
-    goToStep(stepIdx + 1);
-  }, [stepIdx, finish, goToStep]);
+    const idx = waitingOn(targetId);
+    if (idx === null) return;
+    if (idx + 1 >= TOUR_STEPS.length) { finish(); return; }
+    goToStep(idx + 1);
+  }, [finish, goToStep]);
+
+  const endIfWaitingOn = useCallback((targetId: string) => {
+    if (waitingOn(targetId) === null) return;
+    finish();
+  }, [finish]);
 
   const registerTarget = useCallback((id: string, ref: RefObject<View | null>) => {
     targets.set(id, ref);
+    const stepIdx = stepIdxRef.current;
     // The Shop/Modules tabs (inside the always-mounted TabBar) are present from the very
     // first render, but a tab SCREEN's own targets (the Home stat row, the lesson path's
     // recommended node) mount/unmount as the user navigates, and the path node in particular
@@ -191,32 +298,52 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
     if (stepIdx !== null && TOUR_STEPS[stepIdx].targetId === id) {
       requestAnimationFrame(() => measure(stepIdx));
     }
-  }, [targets, stepIdx, measure]);
+  }, [targets, measure]);
   const unregisterTarget = useCallback((id: string) => { targets.delete(id); }, [targets]);
 
   const remeasureActive = useCallback(() => {
-    if (stepIdx !== null) measure(stepIdx);
-  }, [stepIdx, measure]);
+    const idx = stepIdxRef.current;
+    if (idx !== null) measure(idx);
+  }, [measure]);
 
   const activeStep = stepIdx !== null ? TOUR_STEPS[stepIdx] : null;
 
+  const activeCallout = useMemo(
+    () => (activeStep && stepIdx !== null
+      ? {
+          targetId: activeStep.targetId,
+          stepNum: stepIdx + 1,
+          totalSteps: TOUR_STEPS.length,
+          title: activeStep.title,
+          body: activeStep.body,
+        }
+      : null),
+    [activeStep, stepIdx],
+  );
+
   const ctxValue = useMemo<TourCtx>(
     () => ({
-      registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, remeasureActive,
+      registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, endIfWaitingOn,
+      remeasureActive, activeCallout, skipTour: finish,
       activeTargetId: activeStep?.targetId ?? null,
     }),
-    [registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, remeasureActive, activeStep],
+    [
+      registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, endIfWaitingOn,
+      remeasureActive, activeCallout, finish, activeStep,
+    ],
   );
 
   return (
     <TourContext.Provider value={ctxValue}>
       {children}
-      {activeStep ? (
+      {/* inSheet steps draw nothing here on purpose — see TourStep.inSheet. */}
+      {activeStep && !activeStep.inSheet ? (
         <TourOverlay
           step={activeStep}
           stepNum={stepIdx! + 1}
           totalSteps={TOUR_STEPS.length}
           rect={rect}
+          settling={settling}
           isLast={stepIdx === TOUR_STEPS.length - 1}
           onNext={advance}
           onSkip={finish}
@@ -227,12 +354,15 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
 }
 
 function TourOverlay({
-  step, stepNum, totalSteps, rect, isLast, onNext, onSkip,
+  step, stepNum, totalSteps, rect, settling, isLast, onNext, onSkip,
 }: {
   step: { title: string; body: string; requiresRealClick?: boolean };
   stepNum: number;
   totalSteps: number;
   rect: MeasuredRect | null;
+  /** The step has opened but its target hasn't been measured yet — hold the card back rather
+   * than showing it somewhere it's about to move away from. See the provider's `settling`. */
+  settling: boolean;
   isLast: boolean;
   onNext: () => void;
   onSkip: () => void;
@@ -266,10 +396,18 @@ function TourOverlay({
     tooltipLeft = Math.min(Math.max(margin, spotlight.x), winW - tooltipW - margin);
   } else {
     // No measurable target (not on screen yet, or mid-transition) — center the tooltip so
-    // the step's text is always readable instead of the tour silently doing nothing.
+    // the step's text is always readable instead of the tour silently doing nothing. While
+    // the step is still settling this position is never SHOWN (see hideCard); it only exists
+    // so the card can lay out and report its real height before it appears.
     tooltipTop = winH / 2 - measuredTooltipH / 2;
     tooltipLeft = (winW - tooltipW) / 2;
   }
+
+  // Held back until there's a real position to show it in. Without this the card appeared
+  // dead-centre the instant a step opened and then slid to the target a frame or two later —
+  // on the lesson-path step, which can't be measured until Home has scrolled it into view,
+  // that slide was long and unmistakably janky.
+  const hideCard = settling && !spotlight;
 
   // Animates the tooltip smoothly between positions instead of snapping — matches the
   // website's `transition: top/left 0.25s ease` on .tour-tooltip. Lazily initialized from
@@ -280,12 +418,24 @@ function TourOverlay({
   // itself is enough of a highlight on its own.)
   const animTooltipTop = useRef(new Animated.Value(tooltipTop)).current;
   const animTooltipLeft = useRef(new Animated.Value(tooltipLeft)).current;
+  // Whether the card is coming back from being hidden. The first positioned frame after that
+  // must SNAP rather than ease: easing from the off-screen holding position would reintroduce
+  // exactly the flight hideCard exists to prevent. Starts true so the very first frame of a
+  // freshly mounted overlay snaps too.
+  const wasHidden = useRef(true);
 
   useEffect(() => {
+    if (hideCard) { wasHidden.current = true; return; }
+    if (wasHidden.current) {
+      animTooltipTop.setValue(tooltipTop);
+      animTooltipLeft.setValue(tooltipLeft);
+      wasHidden.current = false;
+      return;
+    }
     const timing = (value: Animated.Value, toValue: number) => Animated.timing(value, { toValue, duration: TOUR_TRANSITION_MS, easing: TOUR_EASING, useNativeDriver: false });
     Animated.parallel([timing(animTooltipTop, tooltipTop), timing(animTooltipLeft, tooltipLeft)]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tooltipTop, tooltipLeft]);
+  }, [tooltipTop, tooltipLeft, hideCard]);
 
   // Any spotlighted element needs to stay genuinely tappable, not just visually
   // not-covered — a single full-screen Pressable (the fallback below) would swallow a tap
@@ -343,7 +493,14 @@ function TourOverlay({
 
       <Animated.View
         onLayout={(e) => setMeasuredTooltipH(e.nativeEvent.layout.height)}
-        style={[styles.tooltip, { top: animTooltipTop, left: animTooltipLeft, width: tooltipW }]}
+        pointerEvents={hideCard ? 'none' : 'auto'}
+        style={[
+          styles.tooltip,
+          { top: animTooltipTop, left: animTooltipLeft, width: tooltipW },
+          // Kept mounted while hidden rather than unmounted, so its onLayout height is
+          // already known by the time it appears and it doesn't reposition on arrival.
+          hideCard && styles.tooltipHidden,
+        ]}
       >
         <Txt style={styles.stepLabel}>{`STEP ${stepNum} OF ${totalSteps}`}</Txt>
         <Txt style={styles.title}>{step.title}</Txt>
@@ -369,6 +526,26 @@ function TourOverlay({
   );
 }
 
+/** The step card, rendered INLINE by a screen that already owns its own scrim — today only
+ * the lesson preview sheet (see TourStep.inSheet, which is why the provider draws no overlay
+ * for that step). Renders nothing unless the tour is currently sitting on `forTarget`, so it's
+ * safe to leave mounted unconditionally. Carries no Next button: an inSheet step is always a
+ * requiresRealClick one, so the real button beside it is the only way forward, plus Skip. */
+export function TourCallout({ forTarget, style }: { forTarget: string; style?: ViewStyle }) {
+  const { activeCallout, skipTour } = useOnboardingTour();
+  if (!activeCallout || activeCallout.targetId !== forTarget) return null;
+  return (
+    <View style={[styles.callout, style]}>
+      <Txt style={styles.stepLabel}>{`STEP ${activeCallout.stepNum} OF ${activeCallout.totalSteps}`}</Txt>
+      <Txt style={styles.title}>{activeCallout.title}</Txt>
+      <Txt style={styles.body}>{activeCallout.body}</Txt>
+      <Pressable onPress={skipTour} hitSlop={8} style={styles.calloutSkip}>
+        <Txt style={styles.skip}>Skip tour</Txt>
+      </Pressable>
+    </View>
+  );
+}
+
 /** One opaque, touch-blocking strip of the "frame" around a punched-through spotlight hole. */
 function BlockRect({ x, y, width, height }: { x: number; y: number; width: number; height: number }) {
   if (width <= 0 || height <= 0) return null;
@@ -382,6 +559,15 @@ const styles = StyleSheet.create({
     shadowColor: '#2C3E2D', shadowOpacity: 0.16, shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 }, elevation: 6,
   },
+  tooltipHidden: { opacity: 0 },
+  // Reward-yellow rather than the plain white of the floating tooltip: inside the sheet this
+  // sits among the sheet's own chrome, and needs to read as the tour talking, not as more
+  // sheet. Same yellow as the highlight ring it's pointing at.
+  callout: {
+    backgroundColor: colors.rewardBg, borderWidth: 1.5, borderColor: colors.reward,
+    borderRadius: radius.lg, padding: 14,
+  },
+  calloutSkip: { alignSelf: 'flex-start', marginTop: 10 },
   stepLabel: { fontFamily: font.extra, fontSize: 10.5, letterSpacing: 0.5, color: colors.muted4, marginBottom: 5 },
   title: { fontFamily: font.display, fontSize: 16.5, color: colors.ink, marginBottom: 5 },
   body: { fontFamily: font.semi, fontSize: 13, color: colors.muted1, lineHeight: 18.5 },
