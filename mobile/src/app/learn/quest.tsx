@@ -537,7 +537,7 @@ export default function QuestPlayer() {
     // step-by-step guides in the Real Life tab) are excluded entirely — they're already a
     // real-world scenario walkthrough, so a random life-event popup mid-way doesn't fit.
     // hasFiredAmbientRef caps it at one popup per lesson (see its declaration above).
-    if (!isLifeTask && !isFinalChapter && !hasFiredAmbientRef.current && rollAmbientLifeEvent()) {
+    if (!isLifeTask && !isFinalChapter && !hasFiredAmbientRef.current && rollAmbientLifeEvent(mod.id)) {
       hasFiredAmbientRef.current = true;
       pendingAdvanceRef.current = advance;
       setAmbientEventActive(true);

@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { shopItemsReal, moduleContentById } from '@/content';
 import type { RoomSlot, ShopItemReal } from '@/content';
 import { ACHIEVEMENTS, BADGE_TIER_REWARD, MODULE_MASTERY_ACHIEVEMENT, type Achievement } from '@/achievements';
-import { LIFE_EVENTS, LIFE_EVENT_UNLOCKS, LIFE_EVENT_CHANCE, LIFE_EVENT_COOLDOWN_SESSIONS, type LifeEvent } from '@/lifeEvents';
+import { LIFE_EVENTS, LIFE_EVENT_UNLOCKS, LIFE_EVENT_CHANCE, LIFE_EVENT_COOLDOWN_SESSIONS, pickAmbientLifeEvent, type LifeEvent } from '@/lifeEvents';
 
 const STORAGE_KEY = 'stackd_state_v1';
 
@@ -135,7 +135,10 @@ export type AppState = {
    * lesson in the module rather than a single snapshot). */
   moduleStats: Record<string, { xp: number; correct: number; total: number }>;
   unlockedAchievementIds: string[];
-  /** Guaranteed-unlock life events (LIFE_EVENT_UNLOCKS) already shown, so each fires once. */
+  /** Life events already shown. Guaranteed-unlock ones (LIFE_EVENT_UNLOCKS) live here so each
+   * fires exactly once, ever; ambient ones are recorded too so the rotation doesn't repeat
+   * itself until the pool is used up. See pickAmbientLifeEvent, which owns that distinction —
+   * it resets only the ambient half. */
   shownLifeEventIds: string[];
   /** Set when a life event should be shown next; cleared once the player dismisses it. */
   pendingLifeEventId: string | null;
@@ -433,8 +436,9 @@ type Ctx = {
    * just when a whole lesson finishes (completeLesson has its own separate guaranteed-unlock
    * + ambient roll for that). Same cooldown/chance gate as completeLesson's ambient branch.
    * Returns whether an event actually got queued, so the caller knows to pause and wait for
-   * it to be dismissed before continuing. */
-  rollAmbientLifeEvent: () => boolean;
+   * it to be dismissed before continuing. Pass the module being played so the scenario can
+   * match the topic — see pickAmbientLifeEvent. */
+  rollAmbientLifeEvent: (moduleId?: string) => boolean;
   /** Set when a claimed reward is worth telling the player about; null once dismissed. */
   dailyLoginBanner: { streak: number; loginCoins: number; streakDiamonds: number } | null;
   dismissDailyLoginBanner: () => void;
@@ -823,8 +827,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             } else if (next.lifeEventCooldown > 0) {
               next = { ...next, lifeEventCooldown: next.lifeEventCooldown - 1 };
             } else if (Math.random() < LIFE_EVENT_CHANCE) {
-              const pick = LIFE_EVENTS[Math.floor(Math.random() * LIFE_EVENTS.length)];
-              next = { ...next, pendingLifeEventId: pick.id, lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS };
+              // Prefers a scenario tagged to the module just played, and won't repeat one
+              // until the pool runs out — see pickAmbientLifeEvent.
+              const picked = pickAmbientLifeEvent(moduleId, next.shownLifeEventIds);
+              if (picked) {
+                next = {
+                  ...next,
+                  pendingLifeEventId: picked.event.id,
+                  shownLifeEventIds: picked.seenIds,
+                  lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS,
+                };
+              }
             }
           }
           liveState.current = next;
@@ -873,8 +886,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             } else if (next.lifeEventCooldown > 0) {
               next = { ...next, lifeEventCooldown: next.lifeEventCooldown - 1 };
             } else if (Math.random() < LIFE_EVENT_CHANCE) {
-              const pick = LIFE_EVENTS[Math.floor(Math.random() * LIFE_EVENTS.length)];
-              next = { ...next, pendingLifeEventId: pick.id, lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS };
+              // Prefers a scenario tagged to the module just played, and won't repeat one
+              // until the pool runs out — see pickAmbientLifeEvent.
+              const picked = pickAmbientLifeEvent(moduleId, next.shownLifeEventIds);
+              if (picked) {
+                next = {
+                  ...next,
+                  pendingLifeEventId: picked.event.id,
+                  shownLifeEventIds: picked.seenIds,
+                  lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS,
+                };
+              }
             }
           }
           liveState.current = next;
@@ -895,15 +917,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }));
       },
 
-      rollAmbientLifeEvent: () => {
+      rollAmbientLifeEvent: (moduleId) => {
         if (state.pendingLifeEventId) return false;
         if (state.lifeEventCooldown > 0) {
           setState((s) => ({ ...s, lifeEventCooldown: s.lifeEventCooldown - 1 }));
           return false;
         }
         if (Math.random() >= LIFE_EVENT_CHANCE) return false;
-        const pick = LIFE_EVENTS[Math.floor(Math.random() * LIFE_EVENTS.length)];
-        setState((s) => ({ ...s, pendingLifeEventId: pick.id, lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS }));
+        // Read through liveState rather than the `state` closure: this fires mid-quest, and
+        // a roll on an earlier chapter may already have added to the seen list this tick.
+        const picked = pickAmbientLifeEvent(moduleId, liveState.current.shownLifeEventIds);
+        if (!picked) return false;
+        setState((s) => ({
+          ...s,
+          pendingLifeEventId: picked.event.id,
+          shownLifeEventIds: picked.seenIds,
+          lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS,
+        }));
         return true;
       },
 
