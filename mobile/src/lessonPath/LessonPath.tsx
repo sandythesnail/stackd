@@ -53,6 +53,11 @@ type PathNodeData = {
   /** The lesson's authored one-paragraph scenario (LessonSummary.hook) — what the preview
    * is for, since a title alone rarely says what a lesson is actually about. */
   hook: string;
+  /** Whether this node IS the module's real-life sub-quest (LessonSummary.isLifeTask).
+   * Deliberately its own field rather than being read back off `state`: the node's state
+   * changes to 'completed' once it's finished, so anything keying off state === 'optional'
+   * silently stops being true for exactly the lessons that have been played. */
+  isLifeTask?: boolean;
 };
 
 type Section = {
@@ -127,6 +132,7 @@ export function LessonPath({ width }: { width: number }) {
         lessonIndex: lessons.indexOf(life),
         title: life.title,
         hook: life.hook,
+        isLifeTask: true,
         // The real-life step-by-step guide is the one genuinely aside lesson in the content
         // (isLifeTask) — it carries the optional state rather than one being invented.
         state: lifeDone ? 'completed' : 'optional',
@@ -153,7 +159,8 @@ export function LessonPath({ width }: { width: number }) {
       params: {
         moduleId: n.moduleId,
         lessonIndex: String(n.lessonIndex),
-        ...(n.state === 'optional' ? { isLifeTask: '1' } : {}),
+        // Keyed off the node's identity, not its state — see PathNodeData.isLifeTask.
+        ...(n.isLifeTask ? { isLifeTask: '1' } : {}),
       },
     });
   };
@@ -220,9 +227,14 @@ function SectionView({
   const lastIdx = nodes.length - 1;
   // The optional real-life lesson swings 1.5x further off the line than the wave would take
   // it, so "not on the main line" is said by position and not only by styling.
-  const pts = snakePositions(nodes.length, centerX, (i) => (nodes[i]?.state === 'optional' ? 1.5 : 1));
+  // Both of these key off isLifeTask rather than state === 'optional' for the same reason
+  // openLesson does: the sub-quest's state flips to 'completed' once it's played, which used
+  // to pull it back onto the main line and delete its dashed spur the moment you finished it
+  // — the one lesson that is meant to read as "elsewhere" stopped looking that way exactly
+  // when it had been visited.
+  const pts = snakePositions(nodes.length, centerX, (i) => (nodes[i]?.isLifeTask ? 1.5 : 1));
   const h = pathHeight(nodes.length);
-  const hasSpur = nodes[lastIdx]?.state === 'optional' && pts.length >= 2;
+  const hasSpur = !!nodes[lastIdx]?.isLifeTask && pts.length >= 2;
   const mainD = smoothPath(hasSpur ? pts.slice(0, -1) : pts);
   const spurD = hasSpur ? smoothPath(pts.slice(-2)) : '';
 
