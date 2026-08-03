@@ -4,7 +4,6 @@ import {
 } from 'react';
 import { Animated, Easing, View, Pressable, StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native';
 import Svg, { Defs, Mask, Rect } from 'react-native-svg';
-import { useRouter } from 'expo-router';
 import { colors, font, radius } from '@/theme';
 import { useStore } from '@/store';
 import { Txt } from './Txt';
@@ -21,12 +20,11 @@ const TOUR_EASING = Easing.inOut(Easing.ease);
  * on purpose — this is a quick "point at a real element, explain it, Next" tour, not a
  * wall of text.
  *
- * Only the LAST step (the first lesson tile) requires a real tap instead of a Next button —
- * every earlier step just explains a tab and moves on, so advancing them doesn't need the
- * user to actually be on that tab yet. Reaching the lesson-tile step specifically DOES
- * require being on the Modules screen (it's a real, measured element there), so `advance`
- * below navigates there itself when it reaches this step, rather than relying on a real tap
- * on the Modules tab the way the tour used to.
+ * Only the LAST step (the recommended lesson node) requires a real tap instead of a Next
+ * button — every earlier step just explains a tab and moves on, so advancing them doesn't
+ * need the user to actually be on that tab yet. The whole tour now runs on Home: the last
+ * step points at Home's own lesson path rather than hopping to the Modules tab first, so
+ * there's no navigation in the middle of the tour at all.
  */
 const TOUR_STEPS: { targetId: string; title: string; body: string; requiresRealClick?: boolean }[] = [
   {
@@ -53,17 +51,19 @@ const TOUR_STEPS: { targetId: string; title: string; body: string; requiresRealC
     body: 'Everything you can learn lives here, organized module by module.',
   },
   {
-    // The Modules screen starts with the active (for a first-time user, the first) module
-    // already expanded by default — see (tabs)/modules.tsx's initial `expanded` state — so
-    // this is measurable the moment the tour navigates there (see advance below), no forced-
-    // open step needed the way the website's equivalent step has to force its module row
-    // open. Advanced by the real tap itself, not a Next button (see requiresRealClick
-    // handling below and ModuleLessonList.tsx's advanceIfWaitingOn call) — the user
-    // practices the actual navigation instead of reading about it, and gets a yellow
-    // highlight ring around the exact tile to tap (see LessonRow).
-    targetId: 'tour-lesson-tile',
+    // Home's lesson path (see @/lessonPath) opens on whichever module holds the recommended
+    // lesson and draws that lesson as its `current` node — for a first-time user, the first
+    // node of their survey track's first module. THAT node is this step's target, so the
+    // tour stays on Home start to finish. Advanced by the real tap itself, not a Next button
+    // (see requiresRealClick handling below and LessonPath.tsx's advanceIfWaitingOn call) —
+    // the user practices the actual navigation instead of reading about it, and gets a yellow
+    // highlight ring around the exact node to tap (see PathNode's `tourHighlighted`).
+    //
+    // The path sits well below the fold, so Home scrolls it into view itself when this step
+    // opens and calls remeasureActive once that's settled — see (tabs)/home.tsx.
+    targetId: 'tour-lesson-node',
     title: 'Start a lesson',
-    body: 'Tap this first lesson to start it — finish them in order to complete the module.',
+    body: 'Tap this lesson to start it — finish them in order to complete the module.',
     requiresRealClick: true,
   },
 ];
@@ -80,9 +80,14 @@ type TourCtx = {
    * unconditionally alongside the element's normal onPress behavior. */
   advanceIfWaitingOn: (targetId: string) => void;
   /** The current step's targetId, or null when the tour isn't active — lets a real element
-   * (e.g. the first lesson tile) know it should render its own yellow "tap me" highlight
-   * right now, on top of the tour's own neutral spotlight ring. */
+   * (e.g. the recommended lesson node) know it should render its own yellow "tap me"
+   * highlight right now, on top of the tour's own neutral spotlight ring. */
   activeTargetId: string | null;
+  /** Re-measure the CURRENT step's target. For a screen that has to move its own target into
+   * view before the spotlight can land on it (Home scrolls its lesson path up for the last
+   * step) — the tour's own measurement fires immediately and again 200ms later, both of which
+   * can be too early for an animated scroll. No-op when no tour is running. */
+  remeasureActive: () => void;
 };
 
 const TourContext = createContext<TourCtx | null>(null);
@@ -118,7 +123,6 @@ export function MaybeTourTarget({ id, children, style }: { id?: string; children
 
 export function OnboardingTourProvider({ children }: { children: ReactNode }) {
   const { markOnboardingTourSeen } = useStore();
-  const router = useRouter();
   const targets = useRef(new Map<string, RefObject<View | null>>()).current;
   const [stepIdx, setStepIdx] = useState<number | null>(null);
   const [rect, setRect] = useState<MeasuredRect | null>(null);
@@ -143,16 +147,11 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
   }, [measure]);
 
   const goToStep = useCallback((idx: number) => {
-    // The lesson-tile step is the one step that needs the user to actually be on the
-    // Modules screen — every earlier step only points at an always-mounted tab icon, so
-    // nothing forced navigation before. Push there ourselves now that reaching this step no
-    // longer depends on a real tap on the Modules tab (see TOUR_STEPS' comment above).
-    if (TOUR_STEPS[idx].targetId === 'tour-lesson-tile') router.push('/(tabs)/modules');
     setStepIdx(idx);
     setRect(null);
     requestAnimationFrame(() => measure(idx));
     setTimeout(() => measure(idx), 200);
-  }, [measure, router]);
+  }, [measure]);
 
   const finish = useCallback(() => {
     setStepIdx(null);
@@ -184,21 +183,29 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
   const registerTarget = useCallback((id: string, ref: RefObject<View | null>) => {
     targets.set(id, ref);
     // The Shop/Modules tabs (inside the always-mounted TabBar) are present from the very
-    // first render, but a tab SCREEN's own targets (the Home stat row, a Modules lesson
-    // tile) mount/unmount as the user navigates — if one registers itself WHILE its step is
-    // already active and waiting, take the opportunity to measure it immediately instead of
-    // leaving a stale/missing spotlight.
+    // first render, but a tab SCREEN's own targets (the Home stat row, the lesson path's
+    // recommended node) mount/unmount as the user navigates, and the path node in particular
+    // moves to a different lesson as progress changes — if one registers itself WHILE its
+    // step is already active and waiting, take the opportunity to measure it immediately
+    // instead of leaving a stale/missing spotlight.
     if (stepIdx !== null && TOUR_STEPS[stepIdx].targetId === id) {
       requestAnimationFrame(() => measure(stepIdx));
     }
   }, [targets, stepIdx, measure]);
   const unregisterTarget = useCallback((id: string) => { targets.delete(id); }, [targets]);
 
+  const remeasureActive = useCallback(() => {
+    if (stepIdx !== null) measure(stepIdx);
+  }, [stepIdx, measure]);
+
   const activeStep = stepIdx !== null ? TOUR_STEPS[stepIdx] : null;
 
   const ctxValue = useMemo<TourCtx>(
-    () => ({ registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, activeTargetId: activeStep?.targetId ?? null }),
-    [registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, activeStep],
+    () => ({
+      registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, remeasureActive,
+      activeTargetId: activeStep?.targetId ?? null,
+    }),
+    [registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, remeasureActive, activeStep],
   );
 
   return (
@@ -347,8 +354,13 @@ function TourOverlay({
           </Pressable>
           {/* requiresRealClick steps advance only via the real element itself — Next would
               just be a redundant second way to skip past actually tapping the thing being
-              taught, so it's left out entirely rather than shown disabled. */}
-          {step.requiresRealClick ? null : (
+              taught, so it's left out entirely rather than shown disabled.
+              UNLESS there's nothing measured to tap: a requiresRealClick step with no rect
+              has no element on screen to advance it and no button either, which is a dead
+              end the user can only escape via Skip. The lesson-path node isn't rendered at
+              all once every module is mastered, so this is reachable, not theoretical —
+              falling back to the button keeps the tour finishable in that case. */}
+          {step.requiresRealClick && rect ? null : (
             <Button label={isLast ? 'Got it →' : 'Next →'} size="sm" onPress={onNext} style={styles.nextBtn} />
           )}
         </View>

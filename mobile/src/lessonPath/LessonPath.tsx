@@ -12,7 +12,7 @@ import { modules, type Module } from '@/data';
 import { moduleContentById } from '@/content';
 import { SURVEY_TRACKS } from '@/survey';
 import { useStore } from '@/store';
-import { MIcon, Hammy } from '@/components';
+import { MIcon, Hammy, MaybeTourTarget, useOnboardingTour } from '@/components';
 import { MOOD_FACES, REACTION_FACES, type FaceOverlay } from '@/hammyFaces';
 import { T, Bar, Pill, useReducedMotion } from './bits';
 import { PathNode, type NodeState } from './PathNode';
@@ -209,6 +209,7 @@ function SectionView({
   onPressNode: (node: PathNodeData) => void;
 }) {
   const [hovered, setHovered] = useState<number | null>(null);
+  const { activeTargetId, advanceIfWaitingOn } = useOnboardingTour();
   const { module: mod, nodes } = section;
   const lastIdx = nodes.length - 1;
   // The optional real-life lesson swings 1.5x further off the line than the wave would take
@@ -294,25 +295,40 @@ function SectionView({
 
         {cometSamples.length ? <TrailComet samples={cometSamples} reducedMotion={reducedMotion} /> : null}
 
-        {nodes.map((n, i) => (
-          <Reanimated.View
-            key={n.key}
-            entering={reducedMotion ? undefined : ZoomIn.delay(i * 55).duration(320).springify().damping(14)}
-            style={{ position: 'absolute', left: pts[i].x - NODE_BOX / 2, top: pts[i].y - NODE_BOX / 2 }}
-          >
-            <PathNode
-              title={n.title}
-              state={n.state}
-              index={i + 1}
-              accentBg={mod.color}
-              accentFg={mod.textColor}
-              reducedMotion={reducedMotion}
-              onPress={() => onPressNode(n)}
-              onHoverIn={() => setHovered(i)}
-              onHoverOut={() => setHovered((cur) => (cur === i ? null : cur))}
-            />
-          </Reanimated.View>
-        ))}
+        {nodes.map((n, i) => {
+          // The recommended node is the onboarding tour's "Start a lesson" stop (see
+          // OnboardingTour.tsx). Exactly one node per path can be `current`, and the path
+          // opens on the module holding it, so this is the single element the tour needs —
+          // every other node renders unwrapped via MaybeTourTarget.
+          const isTourTarget = n.state === 'current';
+          return (
+            <Reanimated.View
+              key={n.key}
+              entering={reducedMotion ? undefined : ZoomIn.delay(i * 55).duration(320).springify().damping(14)}
+              style={{ position: 'absolute', left: pts[i].x - NODE_BOX / 2, top: pts[i].y - NODE_BOX / 2 }}
+            >
+              <MaybeTourTarget id={isTourTarget ? 'tour-lesson-node' : undefined}>
+                <PathNode
+                  title={n.title}
+                  state={n.state}
+                  index={i + 1}
+                  accentBg={mod.color}
+                  accentFg={mod.textColor}
+                  reducedMotion={reducedMotion}
+                  tourHighlighted={isTourTarget && activeTargetId === 'tour-lesson-node'}
+                  onPress={() => {
+                    // Safe to call unconditionally — a no-op unless the tour is genuinely
+                    // waiting on this exact node right now.
+                    if (isTourTarget) advanceIfWaitingOn('tour-lesson-node');
+                    onPressNode(n);
+                  }}
+                  onHoverIn={() => setHovered(i)}
+                  onHoverOut={() => setHovered((cur) => (cur === i ? null : cur))}
+                />
+              </MaybeTourTarget>
+            </Reanimated.View>
+          );
+        })}
 
         {/* Hover/focus card. Clamped to the column and non-interactive, so it can never eat
             the tap it is describing. Rendered last so it draws over its neighbours. */}

@@ -31,7 +31,7 @@ const STATE_WORDS: Record<NodeState, string> = {
  * It is not weaker, it is elsewhere.
  */
 export function PathNode({
-  title, state, index, accentBg, accentFg, reducedMotion, onPress, onHoverIn, onHoverOut,
+  title, state, index, accentBg, accentFg, reducedMotion, tourHighlighted, onPress, onHoverIn, onHoverOut,
 }: {
   title: string;
   state: NodeState;
@@ -41,6 +41,11 @@ export function PathNode({
   accentBg: string;
   accentFg: string;
   reducedMotion: boolean;
+  /** True while the onboarding tour's "Start a lesson" step is pointing at THIS node — draws
+   * the yellow "tap me" ring on top of the node's own green recommended treatment, so the
+   * one node the tour wants tapped is unmistakable inside the spotlight cutout. See
+   * OnboardingTour.tsx. */
+  tourHighlighted?: boolean;
   onPress: () => void;
   /** Pointer enter/leave. react-native-web maps these onto real mouse events, and they are
    * simply never called on touch — so the hover preview is a desktop affordance that costs
@@ -142,6 +147,7 @@ export function PathNode({
         {/* A real, visible focus ring. react-native-web gives a Pressable no default outline
             worth keeping, so this is drawn rather than inherited — same diamond, offset out. */}
         {focused ? <View pointerEvents="none" style={styles.focusRing} /> : null}
+        {tourHighlighted ? <View pointerEvents="none" style={styles.tourRing} /> : null}
 
         <Reanimated.View
           style={[
@@ -201,6 +207,15 @@ const styles = StyleSheet.create({
   focusRing: {
     position: 'absolute', width: NODE_SIZE + 14, height: NODE_SIZE + 14, borderRadius: 19,
     borderWidth: 3, borderColor: colors.ink, transform: [{ rotate: '45deg' }],
+  },
+  // The same yellow the rest of the app uses for "come collect this" (colors.reward — the
+  // recommended-module outline, the streak claim), sitting one step further out than the
+  // focus ring so the two can be on at once without overlapping.
+  tourRing: {
+    position: 'absolute', width: NODE_SIZE + 22, height: NODE_SIZE + 22, borderRadius: 22,
+    borderWidth: 3.5, borderColor: colors.reward, transform: [{ rotate: '45deg' }],
+    shadowColor: colors.reward, shadowOpacity: 0.55, shadowRadius: 9,
+    shadowOffset: { width: 0, height: 0 }, elevation: 6,
   },
   nextTag: {
     position: 'absolute', bottom: -6, backgroundColor: colors.greenDark,

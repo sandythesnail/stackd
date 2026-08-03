@@ -91,23 +91,12 @@ export default function Modules() {
                 {isOpen ? (
                   <View style={styles.rowBody}>
                     <ProgressBar value={pct} tone={status === 'done' ? 'green' : 'pink'} height={7} style={{ marginBottom: 12 }} />
-                    {/* The ACTIVE module's first lesson row is the onboarding tour's "Start a
-                        lesson" stop (see OnboardingTour.tsx / ModuleLessonList.tsx's
-                        tourTargetFirstLesson) — keyed to `status === 'active'`, not array
-                        position (idx === 0 was always "earning" regardless of which module
-                        the user's survey track actually starts on; if that wasn't earning,
-                        earning's row was never expanded, so the target never mounted and the
-                        tour got stuck on this step with no real element to tap and no Next
-                        button to fall back on). The active module is the one guaranteed to
-                        auto-expand (see the `expanded` initializer above), so this is always
-                        measurable the moment the tour navigates here. */}
                     <ModuleLessonList
                       moduleId={m.id}
                       lessons={lessons}
                       doneIndices={moduleDoneIndices(m.id)}
                       status={status}
                       onPressLesson={(i) => router.push({ pathname: '/learn/quest', params: { moduleId: m.id, lessonIndex: String(mainIndices[i] ?? i) } })}
-                      tourTargetFirstLesson={status === 'active'}
                     />
                     {guideIndex >= 0 ? (
                       <RealLifeSubQuestRow

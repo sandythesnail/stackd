@@ -1,6 +1,6 @@
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Screen, Header, Txt, Card, Button, ProgressBar, Stat, Speech, Hammy,
   SectionHead, BadgeMedal, AchievementDetailModal, Flame, Coin, Diamond, CurrencyChip,
@@ -47,7 +47,9 @@ export default function Home() {
   } = useStore();
   const [selectedBadge, setSelectedBadge] = useState<AchievementView | null>(null);
   const [pathWidth, setPathWidth] = useState(0);
-  const { startTour } = useOnboardingTour();
+  const [pathY, setPathY] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const { startTour, activeTargetId, remeasureActive } = useOnboardingTour();
 
   // First-login spotlight tour (XP, then Shop) — gated on the persisted flag, right after a
   // new user lands here from the onboarding survey. The delay gives the survey->home screen
@@ -66,6 +68,20 @@ export default function Home() {
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.hasSeenOnboardingTour]);
+
+  // The tour's last step spotlights a node inside the lesson path (see OnboardingTour.tsx),
+  // which sits well below the fold on this screen — nothing else in the tour needs scrolling,
+  // since every other target is either the stat row at the top or a tab-bar icon. The tour's
+  // own two measurement attempts (immediate + 200ms) both land while this scroll is still
+  // animating, so tell it to measure again once the scroll has settled, or the spotlight
+  // would sit wherever the node USED to be.
+  useEffect(() => {
+    if (activeTargetId !== 'tour-lesson-node') return;
+    // A little headroom, so the spotlight cutout isn't flush against the top of the viewport.
+    scrollRef.current?.scrollTo({ y: Math.max(0, pathY - 24), animated: true });
+    const t = setTimeout(remeasureActive, 420);
+    return () => clearTimeout(t);
+  }, [activeTargetId, pathY, remeasureActive]);
 
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
   const trackModuleIds = activeTrack?.moduleIds ?? [];
@@ -129,7 +145,7 @@ export default function Home() {
         onReplayTour={startTour}
         onGear={() => router.push('/(tabs)/settings')}
       />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Greeting />
 
         <View style={styles.statRow}>
@@ -202,17 +218,23 @@ export default function Home() {
             contrast and stays tappable, including ones far ahead, because a dimmed node is
             indistinguishable from a locked one and nothing in this app is locked.
          *
-         * Still the "Start a module" tour stop: TourTarget points at whatever real element
-         * is on screen, and the path is now that element.
+         * The tour's "Start a lesson" stop lives INSIDE this, on the path's recommended node
+         * rather than on the whole section — see LessonPath.tsx's MaybeTourTarget. (It used
+         * to be wrapped in a TourTarget of its own, id "tour-module", but no step had pointed
+         * at that id since the "start a module" step was replaced; it spotlighted nothing.)
          *
          * `width` is measured rather than assumed — the path positions its nodes at absolute
          * offsets computed from the column's centre, so it needs a real number, and the 22px
-         * horizontal padding on this scroller means the screen width would be wrong. */}
-        <TourTarget id="tour-module">
-          <View onLayout={(e) => setPathWidth(e.nativeEvent.layout.width)}>
-            {pathWidth > 0 ? <LessonPath width={pathWidth} /> : null}
-          </View>
-        </TourTarget>
+         * horizontal padding on this scroller means the screen width would be wrong. `y` is
+         * captured off the same layout pass, for the tour scroll above. */}
+        <View
+          onLayout={(e) => {
+            setPathWidth(e.nativeEvent.layout.width);
+            setPathY(e.nativeEvent.layout.y);
+          }}
+        >
+          {pathWidth > 0 ? <LessonPath width={pathWidth} /> : null}
+        </View>
 
         <SectionHead title="Recent badges" action={`All ${achievements().length} →`} onAction={() => router.push('/(tabs)/badges')} style={{ marginTop: 2 }} />
         <View style={styles.badgeRow}>
