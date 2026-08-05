@@ -256,10 +256,9 @@ function ReactionBubble({
   }, [message, anim]);
   const textColor = displayMood === 'gentle' ? colors.pinkDark : displayMood ? colors.greenDark : colors.inkSoft;
   return (
-    // bubbleSlot's height is a fixed minHeight (see styles), reserved from the very first
-    // render whether or not a message is showing — it used to only grow to fit once a
-    // message's real height was measured after the fact, which visibly pushed the content
-    // below down the first time Hammy ever had something to say.
+    // The slot's height is fixed and reserved from the very first render, whether or not a
+    // message is showing, and the bubble inside is out of flow — so nothing here can move
+    // Hammy or the chapter below him, however long the message runs. See bubbleSlotCentered.
     <View style={centered ? styles.bubbleSlotCentered : styles.bubbleSlot} pointerEvents="none">
       {display ? (
         <Animated.View
@@ -268,7 +267,7 @@ function ReactionBubble({
             { opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] },
           ]}
         >
-          <View style={styles.reactionBox}>
+          <View style={[styles.reactionBox, centered && styles.reactionBoxCentered]}>
             {/* No numberOfLines/truncation here on purpose — every message that reaches
                 this bubble is already kept short at the source (see shortFeedback), so
                 there's nothing left that should ever need an ellipsis. */}
@@ -2609,19 +2608,35 @@ const styles = StyleSheet.create({
   // this can produce — so a message appearing or clearing can't move him or anything below.
   bubbleSlot: { flex: 1, alignItems: 'flex-start', justifyContent: 'center' },
   bubbleInner: { alignItems: 'flex-start' },
-  // Stacked above Hammy, so here the height IS reserved from the first render (he has no
-  // width to hide it in) — otherwise he and the whole chapter under him would drop by the
-  // bubble's height the moment he first said anything. flex-end grows a longer message
-  // upward from the tail; paddingBottom is the gap the tail itself lives in.
-  // 56 rather than 70: still taller than any single-line message this can produce (the
-  // reserved height is only there so he doesn't drop when he first speaks), and the 14px it
-  // gives back goes to the two chapter types that use the centered arrangement — the dialogue
-  // log and Match It, both of which were running just over a screen on their longest content.
-  bubbleSlotCentered: {
-    minHeight: 56, width: '100%', paddingBottom: 13, paddingHorizontal: 20,
-    alignItems: 'center', justifyContent: 'flex-end',
+  // Stacked above Hammy, so here the height IS reserved (he has no width to hide it in) —
+  // otherwise he and the whole chapter under him move by the bubble's height whenever he
+  // starts or stops speaking.
+  //
+  // TWO things keep it still, and both are load-bearing:
+  //  1. A fixed `height`, not `minHeight`. At minHeight 56 the slot was SHORTER than a
+  //     two-line message (a 58px box plus the 13px tail gap = 71), so the bubble grew the
+  //     slot and shoved Hammy and the whole chapter down, then let them snap back up when it
+  //     cleared. Only some messages did it, which is what made it look intermittent: of the
+  //     three try-again lines Match It picks from at random, "Not quite, look at the
+  //     definitions below if you're stuck." (57 chars) wraps to two lines and the other two
+  //     don't. Same class of bug as bottomBar's height above, and the same fix — pin the slot
+  //     to the tallest state it can ever be in.
+  //  2. The bubble inside is absolutely positioned, so it is out of flow entirely and its
+  //     height CANNOT feed back into the layout. 71 is sized for the two-line worst case that
+  //     messages actually reach (they're capped at 60 chars by shortFeedback), but should
+  //     anything ever render taller, it now overflows upward into the padding above Hammy
+  //     instead of pushing the chapter around.
+  //
+  // Anchored by `bottom` on the bubble rather than paddingBottom on the slot, so the 13px
+  // tail gap is measured from the slot's own bottom edge with no padding-box ambiguity for
+  // the absolute child.
+  bubbleSlotCentered: { height: 71, width: '100%' },
+  bubbleInnerCentered: {
+    position: 'absolute', left: 20, right: 20, bottom: 13, alignItems: 'center',
   },
-  bubbleInnerCentered: { alignItems: 'center', maxWidth: 300 },
+  // maxWidth lives on the box itself now — the wrapper it used to sit on is stretched edge to
+  // edge by left/right, so a cap there would no longer constrain the text.
+  reactionBoxCentered: { maxWidth: 300 },
   reactionBox: {
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border,
     borderRadius: 16, paddingVertical: 9, paddingHorizontal: 13,

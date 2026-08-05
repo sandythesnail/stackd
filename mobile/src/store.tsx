@@ -558,6 +558,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * mirrors app.js's module-level `pendingStreakDiamonds` (in-memory only, not persisted,
    * so it naturally clears itself on next launch same as the website). */
   const [pendingStreakDiamonds, setPendingStreakDiamonds] = useState(0);
+  /** Same job for pendingStreakDiamonds that liveState does for state (see below): claiming
+   * has to know the amount RIGHT NOW, and a setState updater can't tell it — updaters run
+   * during the next render, not at call time, so reading the banked amount out of one would
+   * always come back as the pre-claim value and let a double-tap bank it twice. Every write
+   * to pendingStreakDiamonds goes through this ref as well. */
+  const livePendingDiamonds = useRef(0);
+  const bankStreakDiamonds = (n: number) => {
+    livePendingDiamonds.current += n;
+    setPendingStreakDiamonds((p) => p + n);
+  };
   const loaded = useRef(false);
   const [hydrated, setHydrated] = useState(false);
   /** Mirrors `state`, but buyOrEquipItem/toggleRoomSlot/openMysteryBox update it
@@ -593,7 +603,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
       const { next, streakDiamondsEarned } = runDailyCheck(loadedState);
       setState(next);
-      if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
+      if (streakDiamondsEarned > 0) bankStreakDiamonds(streakDiamondsEarned);
       loaded.current = true;
       setHydrated(true);
     });
@@ -940,24 +950,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dailyLoginBanner,
       dismissDailyLoginBanner: () => setDailyLoginBanner(null),
       claimDailyLoginBonus: () => {
+        // Read/write against liveState.current (not the `state` closure) — see liveState's
+        // comment. The streak card is a bare Pressable that isn't disabled between the tap
+        // and the next render, so a double-tap called this twice in one tick: both reads saw
+        // the same pre-claim state, both found today missing from dailyLoginLog, and both
+        // credited the day's coins — paying the drip out twice for one day. Writing the log
+        // entry back to liveState.current immediately means the second call sees the day as
+        // already claimed and pays nothing, which is what hasClaimedToday was there to
+        // guarantee in the first place.
+        const s = liveState.current;
         const today = new Date().toDateString();
-        const alreadyClaimed = hasClaimedToday(state);
-        const dayNumber = Object.keys(state.dailyLoginLog).length + 1;
+        const alreadyClaimed = hasClaimedToday(s);
+        const dayNumber = Object.keys(s.dailyLoginLog).length + 1;
         const coins = alreadyClaimed ? 0 : Math.min(
           DAILY_LOGIN_BASE_COINS + DAILY_LOGIN_STEP_COINS * (dayNumber - 1),
           DAILY_LOGIN_CAP_COINS,
         );
-        const diamonds = pendingStreakDiamonds;
+        // Same race on the diamond half: read and zeroed through livePendingDiamonds, so the
+        // second of two calls in a tick sees 0 rather than the pre-claim value and can't
+        // bank the same milestone reward twice.
+        const diamonds = livePendingDiamonds.current;
         if (coins === 0 && diamonds === 0) return;
+        livePendingDiamonds.current = 0;
         setPendingStreakDiamonds(0);
-        setState((s) =>
-          applyAchievementUnlocks({
-            ...s,
-            coins: s.coins + coins,
-            dailyLoginLog: alreadyClaimed ? s.dailyLoginLog : { ...s.dailyLoginLog, [today]: coins },
-          }),
-        );
-        setDailyLoginBanner({ streak: state.streak, loginCoins: coins, streakDiamonds: diamonds });
+        const next = applyAchievementUnlocks({
+          ...s,
+          coins: s.coins + coins,
+          dailyLoginLog: alreadyClaimed ? s.dailyLoginLog : { ...s.dailyLoginLog, [today]: coins },
+        });
+        liveState.current = next;
+        setState(next);
+        setDailyLoginBanner({ streak: s.streak, loginCoins: coins, streakDiamonds: diamonds });
       },
       setOnboardingTrack: (trackId) => setState((s) => ({ ...s, onboardingTrackId: trackId })),
       markOnboardingTourSeen: () => setState((s) => (s.hasSeenOnboardingTour ? s : { ...s, hasSeenOnboardingTour: true })),
@@ -1011,7 +1034,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if ((partial.resetToken ?? 0) > state.resetToken) {
           const { next, streakDiamondsEarned } = runDailyCheck({ ...DEFAULT_STATE, ...partial });
           setState(next);
-          if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
+          if (streakDiamondsEarned > 0) bankStreakDiamonds(streakDiamondsEarned);
           return;
         }
         // Same race as coins/diamonds/xp below, but for streak/lastPlayedDate/unlocked
@@ -1092,13 +1115,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         };
         const { next, streakDiamondsEarned } = runDailyCheck(merged);
         setState(next);
-        if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
+        if (streakDiamondsEarned > 0) bankStreakDiamonds(streakDiamondsEarned);
       },
       debugSimulateNewDay: () => {
         const yesterday = new Date(Date.now() - 86400000).toDateString();
         const { next, streakDiamondsEarned } = runDailyCheck({ ...state, lastPlayedDate: yesterday });
         setState(next);
-        if (streakDiamondsEarned > 0) setPendingStreakDiamonds((p) => p + streakDiamondsEarned);
+        if (streakDiamondsEarned > 0) bankStreakDiamonds(streakDiamondsEarned);
       },
       devOwnEverything: () => {
         const wearableIds = shopItemsReal

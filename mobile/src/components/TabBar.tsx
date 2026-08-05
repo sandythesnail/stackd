@@ -2,14 +2,9 @@ import { ReactNode } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useEffect } from 'react';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence } from 'react-native-reanimated';
 import { colors, font } from '@/theme';
 import { Txt } from './Txt';
 import { TourTarget } from './OnboardingTour';
-
-const TAB_PRESS_SPRING = { damping: 16, stiffness: 380 };
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 /** Minimal structural subset of the props expo-router's Tabs passes to `tabBar`. */
 type TabBarProps = {
@@ -32,6 +27,16 @@ const ICONS: Record<
   shop: { label: 'Shop', render: (c) => <Feather name="shopping-bag" size={25} color={c} /> },
 };
 
+/** No motion at all on a tab — no press squeeze, no hop when it becomes active. Both used to
+ * be here (a scale-to-0.9 spring on press, and a -5px lift replayed every time a tab BECAME
+ * focused) and both were removed deliberately: the tab bar is hit on essentially every
+ * navigation in the app, so a bounce on each one is a lot of movement to sit through, and the
+ * lift in particular fired on arrivals the user never tapped for (deep links, Continue
+ * buttons, the onboarding tour) which read as the bar twitching by itself.
+ *
+ * The active tab is now shown by state rather than by motion: green icon and label (as
+ * before) plus a pale-green pill behind them. The pill is always laid out and only changes
+ * color, so making a tab active never changes the bar's size or shifts anything. */
 function TabButton({
   route,
   focused,
@@ -45,33 +50,19 @@ function TabButton({
   meta: { label: string; render: (color: string) => ReactNode };
   navigation: TabBarProps['navigation'];
 }) {
-  const scale = useSharedValue(1);
-  // The icon hops when its tab BECOMES the active one — separate from the press squeeze, so
-  // arriving at a tab by any route (a deep link, a Continue button, the tour) plays it too,
-  // not just a direct tap. Lift rather than grow: at this size a scale-up reads as a wobble.
-  const lift = useSharedValue(0);
-  useEffect(() => {
-    if (!focused) return;
-    lift.value = withSequence(
-      withSpring(-5, { damping: 8, stiffness: 460 }),
-      withSpring(0, { damping: 12, stiffness: 320 }),
-    );
-  }, [focused, lift]);
-  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  const iconStyle = useAnimatedStyle(() => ({ transform: [{ translateY: lift.value }] }));
   return (
-    <AnimatedPressable
-      style={[styles.tab, animatedStyle]}
-      onPressIn={() => { scale.value = withSpring(0.9, TAB_PRESS_SPRING); }}
-      onPressOut={() => { scale.value = withSpring(1, TAB_PRESS_SPRING); }}
+    <Pressable
+      style={styles.tab}
       onPress={() => {
         const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
         if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
       }}
     >
-      <Animated.View style={iconStyle}>{meta.render(color)}</Animated.View>
-      <Txt style={[styles.label, { color }]}>{meta.label}</Txt>
-    </AnimatedPressable>
+      <View style={[styles.pill, focused && styles.pillOn]}>
+        {meta.render(color)}
+        <Txt style={[styles.label, { color }]}>{meta.label}</Txt>
+      </View>
+    </Pressable>
   );
 }
 
@@ -112,6 +103,14 @@ const styles = StyleSheet.create({
     paddingTop: 9,
     paddingHorizontal: 4,
   },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  // Always rendered, transparent until focused — so the highlight appearing is purely a color
+  // change and can never resize the bar or nudge a neighbouring tab.
+  pill: {
+    alignItems: 'center', justifyContent: 'center', gap: 4,
+    alignSelf: 'stretch', paddingVertical: 6, borderRadius: 14,
+    backgroundColor: 'transparent',
+  },
+  pillOn: { backgroundColor: colors.greenPale },
   label: { fontFamily: font.extra, fontSize: 10.5 },
 });
