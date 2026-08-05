@@ -89,8 +89,11 @@ body { background: var(--bg); min-height: 100vh; }
 .nav-subitem:hover { background: var(--bg); color: var(--text); }
 .nav-subitem.active { background: var(--green-pale); color: var(--green-dark); }
 
+/* Six stacked things (level chip, tier, XP, bar, coins, diamonds) were crammed into a small
+   block with very tight leading. More room between them, and the two currency counts — the
+   entire point of the shop — are no longer the smallest text in the group. */
 .sidebar-footer {
-  padding: 1rem 0.5rem 0; border-top: 1px solid var(--border);
+  padding: 1.15rem 0.5rem 0.35rem; border-top: 1px solid var(--border);
   overflow: hidden; white-space: nowrap;
 }
 
@@ -107,12 +110,12 @@ body { background: var(--bg); min-height: 100vh; }
   .sidebar.collapsed + .app-main { margin-left: 68px; }
 }
 .sf-meta {
-  display: flex; align-items: center; margin-bottom: 0.3rem;
+  display: flex; align-items: center; margin-bottom: 0.5rem;
 }
 .sf-tier {
-  display: block; font-size: 0.7rem; font-weight: 600; color: var(--text-mid);
-  white-space: normal; overflow: visible; text-overflow: unset; line-height: 1.35;
-  margin-bottom: 0.4rem;
+  display: block; font-size: 0.74rem; font-weight: 600; color: var(--text-mid);
+  white-space: normal; overflow: visible; text-overflow: unset; line-height: 1.4;
+  margin-bottom: 0.6rem;
 }
 .sf-level-chip {
   font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.5rem;
@@ -120,7 +123,7 @@ body { background: var(--bg); min-height: 100vh; }
 }
 .sf-xp-label {
   font-family: var(--font-display); font-size: 1rem; font-weight: 700;
-  color: var(--text); margin-bottom: 0.4rem;
+  color: var(--text); margin-bottom: 0.5rem;
 }
 .sf-bar-track { height: 4px; background: var(--border); border-radius: 999px; overflow: hidden; }
 .sf-bar-fill {
@@ -1063,8 +1066,13 @@ select.budget-input { cursor: pointer; }
 .btn-next:hover { background: var(--green-dark); }
 
 /* ─── QUEST ENGINE (narrative modules) ─── */
+/* The quest screen is a fixed-height flex column — topbar, chrome, scrolling body, footer —
+   rather than one long scrolling page. The scroll now lives on .quest-body alone, which is
+   what lets the primary action sit permanently at the bottom of the viewport instead of
+   below whatever content happens to be on the step. */
+#screen-quest.active { display: flex; flex-direction: column; overflow: hidden; }
 .quest-topbar {
-  position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border);
+  flex-shrink: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border);
   padding: 0.55rem 1rem 0.4rem;
 }
 .quest-topbar-row { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.2rem; }
@@ -1072,14 +1080,19 @@ select.budget-input { cursor: pointer; }
    the quest chrome stays cream so there's no white band across the top of the lesson. */
 .quest-prog-track { flex: 1; height: 8px; background: #fff; border-radius: 999px; overflow: hidden; }
 .quest-prog-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width 0.4s ease; width: 0%; }
-.quest-pct { font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; color: var(--green-dark); white-space: nowrap; min-width: 40px; text-align: right; }
+/* No percentage readout beside the bar. It tracked steps *completed* while the counter
+   below names the step you're *on*, so "Step 9 of 17" sat next to 47% and read as a bug.
+   The bar and the step count already say the same thing without contradicting each other. */
 .quest-counter { display: block; font-size: 0.7rem; font-weight: 600; color: var(--text-soft); padding-left: 42px; }
 
 /* All the "chrome" below the topbar (dashboard, glossary tray, hints, continue) is bundled
    into one sticky group so it stays pinned together right under the topbar, and the continue
    button lives here too, so it's always reachable at the top without scrolling. Dashboard and
    the hint/continue controls share a single row (no separate bar + divider line underneath). */
-.quest-sticky-header { position: sticky; top: 58px; z-index: 9; background: var(--bg); }
+.quest-sticky-header { flex-shrink: 0; z-index: 9; background: var(--bg); }
+/* Collapses to nothing when the step has no hint and no glossary, instead of leaving an
+   empty band under the topbar. */
+.quest-sticky-header:not(:has(.hint-ask-btn)):not(:has(.glossary-chip)) { display: none; }
 
 .quest-toolrow {
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
@@ -1155,7 +1168,8 @@ select.budget-input { cursor: pointer; }
 }
 .glossary-popup-back:hover { color: var(--green-dark); }
 
-/* Action bar — hint budget and the chapter's Continue button, sharing the dashboard's row. */
+/* Action bar — hint budget only now. The Continue button used to live up here in the
+   top-right; it moved to .quest-footer so the primary action has exactly one home. */
 .quest-action-bar { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
 .hint-budget:empty { display: none; }
 .hint-ask-btn {
@@ -1164,32 +1178,72 @@ select.budget-input { cursor: pointer; }
   font-family: inherit; cursor: pointer; transition: opacity 0.2s;
 }
 .hint-ask-btn:disabled { opacity: 0.45; cursor: default; }
-.quest-continue-slot { margin-left: auto; }
+/* ── The one and only primary action ──
+   Pinned to the bottom of the quest screen, full width of the content column, on every
+   step. Previously this button appeared top-right on some steps, inline at the bottom of
+   the content on others, and not at all on steps that weren't complete yet — three
+   positions for the same action, so the user had to re-find "next" on every screen. */
+.quest-footer {
+  flex-shrink: 0; background: var(--bg); border-top: 1px solid var(--border);
+  padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+}
+.quest-continue-slot { max-width: 1360px; margin: 0 auto; }
 .quest-continue-fab {
-  font-family: inherit; font-size: 0.88rem; font-weight: 700; color: var(--text-soft);
+  display: block; width: 100%;
+  font-family: inherit; font-size: 0.95rem; font-weight: 700; color: var(--text-soft);
   background: var(--bg); border: 1.5px solid var(--border); border-radius: 999px;
-  padding: 0.5rem 1.2rem; cursor: not-allowed; transition: background 0.25s, color 0.25s, border-color 0.25s, box-shadow 0.25s;
+  padding: 0.75rem 1.2rem; cursor: not-allowed;
+  transition: background 0.25s, color 0.25s, border-color 0.25s, box-shadow 0.25s;
 }
 .quest-continue-fab.ready {
   color: #fff; background: var(--green); border-color: var(--green); cursor: pointer;
   box-shadow: 0 0 0 3px rgba(107,143,101,0.22);
 }
 .quest-continue-fab.ready:hover { background: var(--green-dark); }
-.quest-continue-fab:disabled { pointer-events: none; }
+/* Disabled, never absent — the step that isn't finished yet still shows the control in
+   place, so nothing below it shifts when the step completes. */
+.quest-continue-fab:disabled { pointer-events: none; opacity: 0.75; }
 
 /* Wider than the old 1080px cap — on any screen with room to spare, this gives the content
    column (questions, options, feedback, boss-battle choices) meaningfully more width so text
    wraps to fewer lines, without changing Hammy's own size at all. Hammy's column is a fixed
    300px either way, so a wider container just shifts his position further left in absolute
    terms and hands every extra pixel to the flexible content column beside him. */
-.quest-body { max-width: 1360px; margin: 0 auto; padding: 0.6rem 1rem 1.5rem; }
+.quest-body {
+  flex: 1; min-height: 0; overflow-y: auto; position: relative;
+  max-width: 1360px; width: 100%; margin: 0 auto; padding: 0.6rem 1rem 1.5rem;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.quest-body::-webkit-scrollbar { display: none; width: 0; }
+
+/* Scroll cue — the scrollbars are hidden throughout this app, so when a step's content runs
+   past the fold (e.g. the comparison chart under a decision outcome) there was nothing at all
+   telling you more existed below. This chevron appears only while there is more to scroll to,
+   and clicking it scrolls. */
+.quest-scroll-cue {
+  position: sticky; bottom: 0; z-index: 5;
+  margin: 0 auto; width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; color: var(--green-dark);
+  border: 1.5px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  cursor: pointer; animation: questScrollCue 1.6s ease-in-out infinite;
+}
+.quest-scroll-cue[hidden] { display: none; }
+@keyframes questScrollCue {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+@media (prefers-reduced-motion: reduce) { .quest-scroll-cue { animation: none; } }
 
 /* Two-column layout — Hammy pinned in a wide column on the left, all activity content
    (questions, choices, definitions) in the column on the right. The side column stretches
    to match the content column's height so Hammy sits centered across its full height. */
 .quest-layout { display: flex; align-items: stretch; gap: 1rem; }
+/* Hammy at ~60% of his old footprint. At 300px he was the widest, loudest thing on a screen
+   whose job is to ask a question — he took roughly a quarter of the viewport and pulled the
+   eye away from the content column beside him. */
 .quest-side {
-  flex-shrink: 0; width: 300px; display: flex; flex-direction: column; align-items: center;
+  flex-shrink: 0; width: 190px; display: flex; flex-direction: column; align-items: center;
   justify-content: center; text-align: center; gap: 0.7rem;
 }
 .hammy-side-avatar { position: relative; }
@@ -1301,8 +1355,12 @@ select.budget-input { cursor: pointer; }
    character + caption below it instead of sitting at the left edge. */
 .quest-title-row.centered { text-align: center; margin-left: 0; }
 .quest-prompt { font-size: 1.12rem; font-weight: 500; line-height: 1.5; color: var(--text); margin-bottom: 0.85rem; }
-.quest-outcome-text { font-size: 0.95rem; color: var(--text-mid); line-height: 1.55; margin-bottom: 0.75rem; }
-.quest-continue-btn { margin-top: 1rem; }
+/* This is the teaching content of the step, not a caption. It was set in the same pale
+   gray as secondary UI text and read noticeably lighter than the question above it — the
+   one sentence the user is meant to take away was the hardest thing on the screen to read. */
+.quest-outcome-text { font-size: 1rem; color: var(--text); line-height: 1.6; margin-bottom: 0.75rem; }
+/* .quest-continue-btn is gone — the myth-card stack was the last chapter type injecting its
+   own inline "next" button; it now uses the shared footer slot like everything else. */
 .quest-kc-counter { font-size: 0.78rem; font-weight: 600; color: var(--text-soft); margin-bottom: 0.5rem; }
 
 /* Story beats */
@@ -1426,14 +1484,33 @@ select.budget-input { cursor: pointer; }
 }
 .match-chip:hover:not(.matched) { border-color: var(--green); }
 .match-chip.selected { border-color: var(--green); background: var(--green-pale); color: var(--green-dark); }
-.match-chip.matched { border-color: var(--green-light); background: var(--green-pale); color: var(--green-dark); opacity: 0.6; cursor: default; }
 .match-defs { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.5rem; }
 .match-def-card {
   padding: 0.85rem 1rem; border-radius: var(--radius); border: 1.5px solid var(--border); background: #fff;
-  font-size: 0.98rem; line-height: 1.45; color: var(--text-mid); cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  font-size: 0.98rem; line-height: 1.45; color: var(--text); cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap;
 }
+.match-def-text { flex: 1; min-width: 0; }
 .match-def-card:hover:not(.matched) { border-color: var(--green); }
-.match-def-card.matched { border-color: var(--green-light); background: var(--green-pale); color: var(--green-dark); opacity: 0.6; cursor: default; }
+/* A completed pair is marked by a green border and a check — NOT by fading it out. The old
+   treatment dropped matched rows to 0.6 opacity with gray-green text, which made the content
+   the user had just got right the least legible thing on the screen (and put it under WCAG AA).
+   Text stays at full contrast; only the border and the check change. */
+.match-def-card.matched {
+  border-color: var(--green); border-width: 2px; background: #fff;
+  color: var(--text); cursor: default;
+}
+.match-def-card.matched::after {
+  content: '✓'; flex-shrink: 0; align-self: center;
+  color: var(--green-dark); font-weight: 800; font-size: 1.05rem;
+}
+/* The word that was matched, moved inline into the definition it belongs to. */
+.match-paired-term {
+  flex-shrink: 0; align-self: center;
+  padding: 0.3rem 0.7rem; border-radius: 999px;
+  background: var(--green-pale); border: 1.5px solid var(--green);
+  font-size: 0.88rem; font-weight: 700; color: var(--green-dark);
+}
 .match-chip.shake, .match-def-card.shake { animation: matchShake 0.4s ease; border-color: var(--pink); background: var(--pink-pale); }
 @keyframes matchShake {
   0%, 100% { transform: translateX(0); }
@@ -1458,7 +1535,19 @@ select.budget-input { cursor: pointer; }
 }
 
 /* Decision outcome comparison reuses .pg-column-chart/.pg-col/.pg-col-bar from Progress page */
-.decision-choice-btn { margin-bottom: 0; }
+.decision-choice-btn { margin-bottom: 0; position: relative; flex-wrap: wrap; gap: 0.5rem; }
+.decision-choice-label { flex: 1; min-width: 0; }
+/* After answering, each option says what it was: the one you picked, and the one that was
+   the better move. Without these the two options rendered identically post-answer and the
+   only feedback was Hammy's bubble. */
+.choice-mark {
+  flex-shrink: 0; font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.6px; padding: 0.2rem 0.5rem; border-radius: 999px; white-space: nowrap;
+}
+.choice-mark-yours { background: var(--text); color: #fff; }
+.choice-mark-best { background: var(--green); color: #fff; }
+/* Picked the best option: one badge is enough, and it should read as the win. */
+.decision-choice-btn.chosen.correct .choice-mark-yours { background: var(--green-dark); }
 .decision-outcome { margin-top: 1rem; animation: fadeUp 0.4s ease; }
 
 /* Knowledge-check split — options on the left, the correct/incorrect explanation in its own
@@ -1481,8 +1570,8 @@ select.budget-input { cursor: pointer; }
    knowledge-check answer's own explanation still read as green. Color now comes from the
    shared .correct-state/.wrong-state .feedback-exp rules above. */
 .feedback-panel.kc-panel .feedback-exp { font-size: 1.12rem; line-height: 1.5; font-weight: 500; }
-.feedback-panel.kc-panel .btn-next { font-size: 0.95rem; padding: 0.7rem 1.5rem; }
-.feedback-panel.kc-panel .btn-next { align-self: flex-end; }
+/* The panel no longer holds its own Next button — advancing happens from the shared
+   bottom footer, in the same spot on every chapter type. */
 @media (max-width: 640px) { .kc-split { flex-direction: column; } }
 
 /* Micro-sim */
@@ -1502,9 +1591,17 @@ select.budget-input { cursor: pointer; }
 }
 .microsim-leftover { font-family: var(--font-display); font-size: 1.1rem; color: var(--green-dark); }
 .microsim-leftover.negative { color: var(--pink-dark); }
-.microsim-result { padding: 1rem; border-radius: var(--radius); margin-top: 0.5rem; font-size: 0.9rem; line-height: 1.6; animation: fadeUp 0.4s ease; }
-.microsim-result.ok { background: var(--green-pale); color: var(--text); }
-.microsim-result.bad { background: var(--pink-pale); color: var(--text); }
+.microsim-result { padding: 1rem; border-radius: var(--radius); margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.6; animation: fadeUp 0.4s ease; border: 1.5px solid transparent; }
+.microsim-result p { color: var(--text); }
+.microsim-result-label { font-weight: 800; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 0.3rem; }
+.microsim-result.ok { background: var(--green-pale); border-color: var(--green-light); }
+.microsim-result.ok .microsim-result-label { color: var(--green-dark); }
+/* Valid but suboptimal — deliberately neither the green "correct" treatment nor the pink
+   "wrong" one, so the visual state agrees with what the text says instead of contradicting it. */
+.microsim-result.partial { background: #FBF3DF; border-color: #E4CE93; }
+.microsim-result.partial .microsim-result-label { color: #7A5D14; }
+.microsim-result.bad { background: var(--pink-pale); border-color: var(--pink-light); }
+.microsim-result.bad .microsim-result-label { color: var(--pink-dark); }
 
 /* Myth-card swipe stack */
 /* Explicit width (not just max-width) because its only children are position:absolute —
@@ -1550,7 +1647,8 @@ select.budget-input { cursor: pointer; }
 @keyframes flyOffLeft  { to { transform: translateX(-140%) rotate(-18deg); opacity: 0; } }
 .myth-card.fly-right { animation: flyOffRight 0.4s ease forwards; }
 .myth-card.fly-left  { animation: flyOffLeft 0.4s ease forwards; }
-.myth-next-wrap { display: flex; justify-content: center; margin-bottom: 0.35rem; min-height: 38px; }
+/* No longer holds a button (the footer does), so it no longer reserves a button's height. */
+.myth-next-wrap { display: flex; justify-content: center; }
 .myth-progress { text-align: center; font-size: 0.75rem; font-weight: 600; color: var(--text-soft); }
 .myth-done { animation: fadeUp 0.4s ease; }
 
@@ -1658,10 +1756,35 @@ select.budget-input { cursor: pointer; }
 
 /* Price is right */
 .price-guess-display { font-family: var(--font-display); font-size: 2.25rem; font-weight: 700; text-align: center; color: var(--text); margin: 1rem 0 0.5rem; }
-.price-reveal-btn { margin-top: 1.5rem; }
 .price-reveal-block { margin-top: 1.25rem; animation: fadeUp 0.4s ease; }
 .price-actual-label { font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
-.price-diff { font-weight: 500; color: var(--text-soft); }
+.price-diff { font-weight: 500; color: var(--text-mid); }
+/* The teaching sentence of the step. It was a pale gray on cream that read lighter than the
+   question above it — i.e. the actual content was the hardest thing on screen to read. */
+.price-explanation { color: var(--text); font-size: 0.95rem; line-height: 1.6; }
+
+/* Both answers on one rail: the user's guess and the real value, each labelled. */
+.price-marker-rail {
+  position: relative; height: 62px; margin: 0.15rem 0 0.5rem;
+  animation: fadeUp 0.4s ease;
+}
+.price-marker-rail[hidden] { display: none; }
+.price-marker { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+.price-marker-pin { width: 2px; height: 14px; border-radius: 1px; }
+.price-marker-label {
+  display: flex; flex-direction: column; align-items: center; gap: 0.05rem;
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  white-space: nowrap; margin-top: 0.15rem;
+}
+.price-marker-label strong { font-family: var(--font-display); font-size: 1rem; letter-spacing: 0; }
+.price-marker-guess { color: var(--text-mid); }
+.price-marker-guess .price-marker-pin { background: var(--text-soft); }
+.price-marker-actual { color: var(--green-dark); }
+.price-marker-actual .price-marker-pin { background: var(--green); }
+/* Guess and answer landed close enough that the two labels would collide — drop the guess
+   marker below the answer's so both stay legible. */
+.price-marker-rail.markers-tight .price-marker-guess { top: 30px; }
+.price-marker-rail.markers-tight .price-marker-guess .price-marker-pin { display: none; }
 
 /* Boss battle */
 .boss-banner {
@@ -2566,16 +2689,18 @@ select.budget-input { cursor: pointer; }
 .icon-coin, .icon-diamond, .icon-gift { vertical-align: -0.15em; flex-shrink: 0; }
 
 /* ─── SIDEBAR COINS ─── */
+/* These two are the shop's entire currency, so they get real size and spacing rather than
+   being the smallest lines in an already cramped block. */
 .sf-coins {
-  margin-top: 0.55rem; padding-top: 0.55rem;
+  margin-top: 0.85rem; padding-top: 0.85rem;
   border-top: 1px solid var(--border);
-  font-size: 0.78rem; font-weight: 700; color: var(--text-mid);
-  display: flex; align-items: center; gap: 0.35rem;
+  font-size: 0.92rem; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 0.4rem;
 }
 .sf-diamonds {
-  margin-top: 0.35rem;
-  font-size: 0.78rem; font-weight: 700; color: #1C8CA8;
-  display: flex; align-items: center; gap: 0.35rem;
+  margin-top: 0.55rem;
+  font-size: 0.92rem; font-weight: 700; color: #1C8CA8;
+  display: flex; align-items: center; gap: 0.4rem;
 }
 
 /* ─── SHOP PAGE ─── */
@@ -2631,6 +2756,44 @@ select.budget-input { cursor: pointer; }
   padding: 0.3rem 0.65rem; display: inline-block;
 }
 
+/* The plainest statement on the page of the thing that makes this shop defensible inside a
+   financial-literacy curriculum: the currency is earned, never sold. */
+.shop-earned-notice {
+  display: flex; align-items: flex-start; gap: 0.7rem;
+  background: var(--green-pale); border: 1.5px solid var(--green-light);
+  border-radius: var(--radius); padding: 0.85rem 1.1rem; margin-top: 1rem;
+}
+.shop-earned-notice-icon { font-size: 1.05rem; line-height: 1.5; flex-shrink: 0; }
+.shop-earned-notice p {
+  margin: 0; font-size: 0.86rem; line-height: 1.55; color: var(--text);
+}
+.shop-earned-notice strong { color: var(--green-dark); }
+
+/* Mystery boxes, in their own row above the items rather than mixed into the same grid. */
+.shop-box-row {
+  border: 1.5px dashed var(--border); border-radius: var(--radius);
+  padding: 0.9rem 1rem 1rem; background: rgba(255,255,255,0.5);
+  display: flex; flex-direction: column; gap: 0.8rem;
+}
+.shop-box-row-head { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+.shop-box-row-title { font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; color: var(--text); }
+.shop-box-row-note { font-size: 0.75rem; color: var(--text-mid); }
+.shop-items-grid-boxes { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+/* Boxes read as a different kind of thing from the items they contain. */
+.shop-box-card { background: #FFFDF5; border-style: dashed; border-color: #E4CE93; }
+.shop-box-card .shop-item-price { color: #7A5D14; }
+
+/* Odds disclosed once, per tier, where the number is actually informative — instead of the
+   same "Common · 18%" repeated across five sibling cards. */
+.shop-odds-legend {
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+  font-size: 0.74rem; font-weight: 700; color: var(--text-mid);
+  padding-top: 0.15rem;
+}
+.shop-odds-legend-label { font-weight: 600; color: var(--text-mid); }
+.shop-odds-legend-item { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--text); }
+.shop-odds-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
 /* Category sections */
 .shop-category { display: flex; flex-direction: column; gap: 1rem; margin-top: 0.8rem; }
 .shop-cat-header {
@@ -2642,9 +2805,13 @@ select.budget-input { cursor: pointer; }
   font-family: var(--font-display);
   font-size: 1rem; font-weight: 700; color: var(--text);
 }
+/* margin-left:auto pushed these flush against the right edge with no breathing room, so at
+   slightly narrower widths they clipped or wrapped awkwardly. They keep the right-hand
+   position but now have a real margin and are allowed to wrap onto their own line. */
 .shop-cat-tag {
   font-size: 0.68rem; font-weight: 700; color: #1C8CA8; background: #E8FBFF;
-  border: 1px solid #8FE3F5; border-radius: 999px; padding: 0.2rem 0.6rem; margin-left: auto;
+  border: 1px solid #8FE3F5; border-radius: 999px; padding: 0.2rem 0.6rem;
+  margin-left: auto; margin-right: 0.25rem; max-width: 100%; white-space: normal;
 }
 .shop-category-exclusive .shop-cat-header { border-bottom-color: #8FE3F5; }
 
@@ -2730,13 +2897,21 @@ select.budget-input { cursor: pointer; }
 .shop-card-body {
   padding: 0.75rem 1rem 0.85rem;
   display: flex; flex-direction: column; gap: 0.15rem;
+  flex: 1;
 }
+/* Reserve two lines for every title. "Diamond Mystery Box" wraps while its row-mates don't,
+   which pushed that one card's price/rarity row a line lower than everything beside it and
+   broke the horizontal baseline across the row. */
 .shop-item-name {
   font-family: var(--font-display);
   font-size: 0.95rem; font-weight: 700; color: var(--text);
+  line-height: 1.3; min-height: calc(2 * 1.3em);
 }
+/* Pinned to the bottom of the card body so the status/price line sits on a shared baseline
+   even when a card carries an extra odds row and its neighbours don't. */
 .shop-item-price {
-  font-size: 0.8rem; color: var(--text-soft); font-weight: 600;
+  font-size: 0.8rem; color: var(--text-mid); font-weight: 600;
+  margin-top: auto;
 }
 .shop-card.shop-equipped .shop-item-price { color: var(--green-dark); }
 .shop-card.shop-owned .shop-item-price { color: var(--pink-dark); }
@@ -2750,12 +2925,22 @@ select.budget-input { cursor: pointer; }
 }
 
 /* Shop modal */
+/* Centered on the CONTENT area, not the whole viewport. The overlay is fixed to the viewport
+   while the region the user is actually looking at is inset by the sidebar, so a plain
+   `justify-content: center` landed the dialog visibly left of the content it belongs to.
+   Offsetting the overlay's left edge by the sidebar width puts the two centers back together. */
 .shop-modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.42);
   z-index: 999;
   display: flex; align-items: center; justify-content: center;
   padding: 1.5rem;
+}
+/* Done with padding rather than `left`, so the dimmed backdrop still covers the whole
+   window (including the sidebar) while the dialog itself centers on the content area. */
+@media (min-width: 769px) {
+  .shop-modal-overlay { padding-left: calc(1.5rem + 220px); }
+  .sidebar.collapsed ~ .shop-modal-overlay { padding-left: calc(1.5rem + 68px); }
 }
 .shop-modal-overlay[hidden] { display: none; }
 .shop-modal {
@@ -2772,6 +2957,9 @@ select.budget-input { cursor: pointer; }
   border: none; cursor: pointer; transition: background 0.18s; z-index: 1;
 }
 .shop-modal-close:hover { background: var(--pink-light); }
+/* .shop-modal-close sets display:flex, which beats the [hidden] UA rule — showMysteryReveal
+   hides this button so its reveal has a single dismiss control, and needs this to stick. */
+.shop-modal-close[hidden] { display: none; }
 .shop-modal-pig {
   background: #fff;
   padding: 1.25rem 1rem;

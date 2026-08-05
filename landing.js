@@ -14,14 +14,44 @@ window.addEventListener('load', async function () {
 // Typewriter effect on hero subtitle
 const typewriterEl = document.getElementById('hero-typewriter');
 const typewriterText = 'Budgeting, saving, and investing, taught in quick lessons that actually stick. Earn streaks and rewards while you learn.';
+// The value proposition finishes typing in ~1.1s, not ~4s. At the old 28ms-per-character
+// pace this sentence was still mid-word five seconds in, which meant most visitors decided
+// whether to stay before the page had finished saying what the product does. Reveal is
+// batched a few characters per tick so the speed-up doesn't cost a timer per character.
+const TW_CHARS_PER_TICK = 3;
+const TW_TICK_MS = 24;
 let twIndex = 0;
 function typeNextChar() {
   if (!typewriterEl || twIndex > typewriterText.length) return;
   typewriterEl.textContent = typewriterText.slice(0, twIndex);
-  twIndex++;
-  setTimeout(typeNextChar, 28);
+  twIndex += TW_CHARS_PER_TICK;
+  if (twIndex > typewriterText.length) twIndex = typewriterText.length + 1;
+  setTimeout(typeNextChar, TW_TICK_MS);
 }
-window.addEventListener('load', () => setTimeout(typeNextChar, 600));
+// Reserve exactly the height the finished sentence needs, measured rather than guessed, so
+// the CTA underneath never shifts while the text types and no dead space is left over when
+// it stops. Re-measured on resize because where the sentence wraps changes with the viewport.
+function reserveTypewriterHeight() {
+  if (!typewriterEl) return;
+  const typed = typewriterEl.textContent;
+  typewriterEl.style.minHeight = '';
+  typewriterEl.textContent = typewriterText;
+  const full = typewriterEl.offsetHeight;
+  typewriterEl.textContent = typed;
+  typewriterEl.style.minHeight = full + 'px';
+}
+
+window.addEventListener('load', () => {
+  if (!typewriterEl) return;
+  reserveTypewriterHeight();
+  // Anyone who has asked the OS to reduce motion just gets the finished sentence.
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    typewriterEl.textContent = typewriterText;
+    return;
+  }
+  setTimeout(typeNextChar, 200);
+});
+window.addEventListener('resize', reserveTypewriterHeight);
 
 // Topic ticker: clone the word list enough times to always fill the
 // viewport (so wide screens never run out of content mid-loop), flipping

@@ -183,10 +183,14 @@ body { background-color: var(--bg); }
 .hero-dot {
   color: var(--pig-pink);
 }
+/* No hardcoded min-height here any more. The height this sentence needs depends on where it
+   wraps, which depends on the viewport — a fixed guess either under-reserves (CTA jumps down
+   mid-type) or over-reserves (dead space between the copy and the CTA). landing.js measures
+   the finished sentence and sets min-height inline instead, so the reservation is exact and
+   the CTA sits a consistent 1.5rem below the text at every width. */
 .hero-p {
   font-size: 1.35rem; color: var(--text-mid); max-width: 520px;
-  line-height: 1.6; margin-bottom: 2.5rem; font-weight: 500;
-  min-height: 6.5rem;
+  line-height: 1.6; margin-bottom: 1.5rem; font-weight: 500;
 }
 .hero-ctas { display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: center; }
 .hero-stats {

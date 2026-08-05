@@ -18240,6 +18240,30 @@ function mysteryOddsLabel(item) {
   return `<span style="color:${RARITY_COLOR[rarity]}">${RARITY_LABEL[rarity]} · ${pctStr}%</span>`;
 }
 
+// Rarity alone for the card face. Every common in a pool shares one drop chance, so printing
+// it on each of five cards in a row made the number read as decoration rather than
+// information. The actual odds are still disclosed — per tier, once, in the legend under the
+// section header (mysteryOddsLegend) and again in full on the box's own modal.
+function itemRarityLabel(item) {
+  const rarity = itemRarity(item);
+  return `<span style="color:${RARITY_COLOR[rarity]}">${RARITY_LABEL[rarity]}</span>`;
+}
+
+// One row of "this tier drops this often", derived from the same weights the roll uses.
+function mysteryOddsLegend(poolKey) {
+  const pool = mysteryPoolAll(poolKey);
+  if (!pool.length) return '';
+  const tiers = RARITY_ORDER.filter(r => pool.some(i => itemRarity(i) === r));
+  const totalWeight = pool.reduce((sum, i) => sum + RARITY_WEIGHT[itemRarity(i)], 0);
+  const cells = tiers.map(r => {
+    const count = pool.filter(i => itemRarity(i) === r).length;
+    const pct = (RARITY_WEIGHT[r] * count) / totalWeight * 100;
+    const pctStr = pct >= 10 ? Math.round(pct) : Math.round(pct * 10) / 10;
+    return `<span class="shop-odds-legend-item"><span class="shop-odds-legend-dot" style="background:${RARITY_COLOR[r]}"></span>${RARITY_LABEL[r]} · ${pctStr}%</span>`;
+  }).join('');
+  return `<div class="shop-odds-legend"><span class="shop-odds-legend-label">Drop rates per box:</span>${cells}</div>`;
+}
+
 function refreshShopModal(itemId) {
   const item = SHOP_ITEMS.find(i => i.id === itemId);
   if (!item) return;
@@ -18276,6 +18300,8 @@ function refreshShopModal(itemId) {
   } else {
     btn = `<button class="shop-btn shop-btn-buy${canAfford ? '' : ' shop-btn-broke'}" data-id="${itemId}"${canAfford ? '' : ' disabled'}>${shopPriceLabel(item)}</button>`;
   }
+  // Restore the corner ✕ — showMysteryReveal hides it so its reveal has a single dismiss.
+  document.getElementById('shop-modal-close').hidden = false;
   const vb = item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120';
   const pigEl = document.getElementById('shop-modal-pig');
   // Mystery boxes: this left panel becomes a large box picture instead of a pig preview,
@@ -18321,6 +18347,10 @@ function showMysteryReveal(item) {
     document.getElementById('shop-modal-desc').textContent = item.desc;
   }
   document.getElementById('shop-modal-btn-wrap').innerHTML = `<button class="shop-btn shop-btn-equip" data-id="${item.id}">Nice!</button>`;
+  // One way out of the reveal, not two. The corner ✕ and the full-width button sat side by
+  // side doing the same job; the button is the one that also equips what you just won, so
+  // it's the one that stays. refreshShopModal restores the ✕ for every other modal state.
+  document.getElementById('shop-modal-close').hidden = true;
 }
 
 function openShopModal(itemId) {
@@ -18390,7 +18420,7 @@ function renderShopPage() {
     });
     const isExclusiveCat = cat.key === 'exclusive';
     const isRewardCat = cat.key === 'reward';
-    const cardsHtml = items.map(item => {
+    const cardHtml = (item) => {
       const isRoom = !!item.slot;
       const isDiamond = item.currency === 'diamond';
       const isReward = !!item.reward;
@@ -18411,13 +18441,13 @@ function renderShopPage() {
         : isLocked ? `${ICON_GIFT} ${mysteryBoxNameFor(item.mysteryPool)}`
         : isReward ? '🎓 Locked'
         : shopPriceLabel(item);
-      const oddsLabel = isPoolItem ? `<div class="shop-item-odds">${mysteryOddsLabel(item)}</div>` : '';
+      const oddsLabel = isPoolItem ? `<div class="shop-item-odds">${itemRarityLabel(item)}</div>` : '';
       const preview = item.slot === 'wallpaper'
         ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
         : (isRoom || isBox)
           ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${namespacedItemSvg(item.svg)}</svg>`
           : getPigWithItemMarkup(0.29, item);
-      return `<div class="shop-card${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${(isReward || isLocked) && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
+      return `<div class="shop-card${isBox ? ' shop-box-card' : ''}${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${(isReward || isLocked) && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
         ${isBox || (isDiamond && !isBox) || (isLocked && !isDiamond) ? `<span class="${isDiamond ? 'shop-exclusive-ribbon' : 'shop-gold-ribbon'}">Mystery</span>` : (isReward && !owned) ? '<span class="shop-milestone-ribbon">Reward</span>' : ''}
         <div class="shop-preview">
           ${preview}
@@ -18428,7 +18458,25 @@ function renderShopPage() {
           ${oddsLabel}
         </div>
       </div>`;
-    }).join('');
+    };
+
+    // Mystery boxes get their own row above the items, not a slot in the same grid. A box
+    // card shows a price where each of its four neighbours showed a rarity — same visual
+    // container, same position, different kind of information — which made the row's
+    // bottom line unreadable at a glance.
+    const boxes = items.filter(i => i.isMysteryBox);
+    const regular = items.filter(i => !i.isMysteryBox);
+    const poolKeys = [...new Set(boxes.map(b => b.mysteryPool))];
+    const boxRowHtml = boxes.length ? `
+      <div class="shop-box-row">
+        <div class="shop-box-row-head">
+          <span class="shop-box-row-title">${ICON_GIFT} Mystery boxes</span>
+          <span class="shop-box-row-note">Random item from this section's pool</span>
+        </div>
+        <div class="shop-items-grid shop-items-grid-boxes">${boxes.map(cardHtml).join('')}</div>
+        ${poolKeys.map(mysteryOddsLegend).join('')}
+      </div>` : '';
+
     return `<div class="shop-category${isExclusiveCat ? ' shop-category-exclusive' : ''}">
       <div class="shop-cat-header">
         <span class="shop-cat-icon">${cat.icon}</span>
@@ -18436,7 +18484,8 @@ function renderShopPage() {
         ${isExclusiveCat ? '<span class="shop-cat-tag">Earned via streaks, not coins</span>' : ''}
         ${isRewardCat ? '<span class="shop-cat-tag">Earned through major milestones, not bought</span>' : ''}
       </div>
-      <div class="shop-items-grid">${cardsHtml}</div>
+      ${boxRowHtml}
+      <div class="shop-items-grid">${regular.map(cardHtml).join('')}</div>
     </div>`;
   }).join('');
 
@@ -18467,8 +18516,21 @@ function renderShopPage() {
         </div>
       </div>`;
 
+  // Stated plainly and up front, above the shelves rather than buried in a FAQ. The whole
+  // reason this shop can sit inside a financial-literacy curriculum that teaches impulse
+  // spending is that neither currency is ever bought — but nothing on the page said so, and
+  // mystery boxes plus rarity tiers plus two currencies otherwise read as a loot box.
+  const earnedOnlyNotice = `
+    <div class="shop-earned-notice">
+      <span class="shop-earned-notice-icon" aria-hidden="true">🔒</span>
+      <p><strong>Coins and diamonds can only be earned.</strong> You earn coins by finishing
+      lessons and diamonds by keeping a streak. Neither can be bought with real money, and
+      Stacked never asks students for payment.</p>
+    </div>`;
+
   grid.innerHTML = `
     ${storefrontHtml}
+    ${earnedOnlyNotice}
     ${categoriesHtml}`;
 
   grid.querySelectorAll('.shop-card[data-item-id]').forEach(card => {
@@ -20085,13 +20147,12 @@ function startBonusActivity(moduleId, lessonIdx) {
   document.getElementById('glossary-tray').classList.remove('show');
   document.getElementById('hint-budget').innerHTML = '';
   document.getElementById('quest-side').style.display = 'flex';
-  document.getElementById('hammy-side-avatar').innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItems()));
+  document.getElementById('hammy-side-avatar').innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.38, getEquippedItems()));
   document.getElementById('hammy-side-avatar').className = 'hammy-side-avatar';
   document.getElementById('hammy-side-msg').textContent = '';
   document.getElementById('hammy-side-msg').className = 'hammy-side-msg';
   document.getElementById('quest-counter').textContent = lesson.title;
   document.getElementById('quest-prog-fill').style.width = '0%';
-  document.getElementById('quest-pct').textContent = '';
   const titleRow = document.getElementById('quest-title-row');
   titleRow.textContent = lesson.title;
   titleRow.classList.remove('centered');
@@ -20138,7 +20199,6 @@ function renderDecisionChainActivity(mod, lesson) {
   function updateActivityProgress(step) {
     const pct = Math.round((step / totalSteps) * 100);
     document.getElementById('quest-prog-fill').style.width = pct + '%';
-    document.getElementById('quest-pct').textContent = pct + '%';
   }
 
   function renderIntro() {
@@ -20258,7 +20318,6 @@ function renderBossChallengeActivity(mod, lesson) {
   function updateProgress(step) {
     const pct = Math.round((step / totalSteps) * 100);
     document.getElementById('quest-prog-fill').style.width = pct + '%';
-    document.getElementById('quest-pct').textContent = pct + '%';
   }
 
   function renderIntro() {
@@ -20365,7 +20424,6 @@ function renderSorterActivity(mod, lesson) {
     document.getElementById('sorter-progress').textContent = `${placedCount} of ${activity.items.length} sorted`;
     const pct = Math.round((placedCount / activity.items.length) * 100);
     document.getElementById('quest-prog-fill').style.width = pct + '%';
-    document.getElementById('quest-pct').textContent = pct + '%';
   }
 
   function renderBuckets() {
@@ -20443,7 +20501,6 @@ function renderCalloutActivity(mod, lesson) {
   const main = document.getElementById('quest-main');
   clearQuestContinue();
   document.getElementById('quest-prog-fill').style.width = '100%';
-  document.getElementById('quest-pct').textContent = '100%';
 
   let exampleHtml = '';
   if (activity.example) {
@@ -20770,17 +20827,27 @@ function getChapterTitle(chapter) {
   return chapter.title || CHAPTER_TITLE_FALLBACK[chapter.type] || '';
 }
 
-// Real pixel measurement of whatever room is left under the sticky header (instead of a vh
-// guess), used to make the Hammy/content row fill the screen so both can be vertically
+// Real pixel measurement of whatever room is left inside the scrolling quest body (instead
+// of a vh guess), used to make the Hammy/content row fill that space so both are vertically
 // centered together rather than sitting squished at the top when content is short.
+// quest-body is now itself the scroll container and already excludes the topbar, the chrome
+// row and the footer, so its own clientHeight is the available space — no subtracting.
 function computeAvailableQuestHeight() {
-  const screenEl = document.getElementById('screen-quest');
-  const topbarH = document.querySelector('.quest-topbar').offsetHeight;
-  const stickyH = document.getElementById('quest-sticky-header').offsetHeight;
-  const bodyStyles = getComputedStyle(document.getElementById('quest-body'));
+  const bodyEl = document.getElementById('quest-body');
+  const bodyStyles = getComputedStyle(bodyEl);
   const bodyPadV = parseFloat(bodyStyles.paddingTop) + parseFloat(bodyStyles.paddingBottom);
   const titleH = document.getElementById('quest-title-row').offsetHeight;
-  return screenEl.clientHeight - topbarH - stickyH - bodyPadV - titleH;
+  return bodyEl.clientHeight - bodyPadV - titleH;
+}
+
+// Shows the scroll chevron only while the step's content actually runs past the fold, and
+// hides it again once you reach the bottom.
+function updateQuestScrollCue() {
+  const bodyEl = document.getElementById('quest-body');
+  const cue = document.getElementById('quest-scroll-cue');
+  if (!bodyEl || !cue) return;
+  const remaining = bodyEl.scrollHeight - bodyEl.clientHeight - bodyEl.scrollTop;
+  cue.hidden = remaining <= 24;
 }
 
 function renderChapter(mod, idx) {
@@ -20788,9 +20855,12 @@ function renderChapter(mod, idx) {
   const chapter = chapters[idx];
   const total = chapters.length;
 
+  // The bar fills by steps completed; the counter names the step you're on. Both are shown,
+  // but the numeric percentage that used to sit beside the bar is gone — printing "47%"
+  // next to "Step 9 of 17" put two different (both defensible) readings of progress on
+  // screen at once, which just read as arithmetic that didn't add up.
   const pct = Math.round((idx / total) * 100);
   document.getElementById('quest-prog-fill').style.width = pct + '%';
-  document.getElementById('quest-pct').textContent = pct + '%';
   document.getElementById('quest-counter').textContent = `Step ${idx + 1} of ${total}`;
   renderQuestDashboard(mod);
   document.getElementById('quest-dashboard').classList.toggle('highlight', !!chapter.highlightDashboard);
@@ -20808,7 +20878,9 @@ function renderChapter(mod, idx) {
   const hammyMsg = document.getElementById('hammy-side-msg');
   questSide.style.display = HAMMY_SIDE_HIDDEN_TYPES.includes(chapter.type) ? 'none' : 'flex';
   hammySide.className = 'hammy-side-avatar';
-  hammySide.innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.64, getEquippedItems()));
+  // ~60% of the old desktop scale. Hammy was the loudest element on a screen where the
+  // question should be; at 0.38 he still reads as a character without competing with it.
+  hammySide.innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.38, getEquippedItems()));
   hammyMsg.className = 'hammy-side-msg';
   hammyMsg.textContent = '';
 
@@ -20840,18 +20912,46 @@ function renderChapter(mod, idx) {
     case 'priceisright': renderPriceIsRightChapter(chapter, mod, onDone); break;
     case 'bossbattle': renderBossBattleChapter(chapter, mod); break;
   }
+
+  document.getElementById('quest-body').scrollTop = 0;
+  initQuestScrollCue();
+  updateQuestScrollCue();
 }
 
-// Shared top-right Continue control — every chapter renderer calls this instead of
-// building its own button, so Continue is always in the same reachable spot (never at
-// the bottom of long content) and visually "lights up" green only once it's actually usable.
+// Wires the scroll cue once. A ResizeObserver rather than a one-shot check after render,
+// because several chapter types grow their content *after* the initial paint (a decision
+// appends its outcome chart, a spotcheck swaps in its summary) — that's exactly when a step
+// starts overflowing, so that's when the cue needs to appear.
+let questScrollCueReady = false;
+function initQuestScrollCue() {
+  if (questScrollCueReady) return;
+  const bodyEl = document.getElementById('quest-body');
+  const layoutEl = document.getElementById('quest-layout');
+  const cue = document.getElementById('quest-scroll-cue');
+  if (!bodyEl || !layoutEl || !cue) return;
+  questScrollCueReady = true;
+  bodyEl.addEventListener('scroll', updateQuestScrollCue, { passive: true });
+  window.addEventListener('resize', updateQuestScrollCue);
+  cue.addEventListener('click', () => {
+    bodyEl.scrollBy({ top: bodyEl.clientHeight * 0.8, behavior: 'smooth' });
+  });
+  if (window.ResizeObserver) new ResizeObserver(updateQuestScrollCue).observe(layoutEl);
+}
+
+// Shared primary action — every chapter renderer calls this instead of building its own
+// button, so the "next" control is always in the same place: full width, pinned to the
+// bottom of the quest screen. It lights up green only once the step is actually complete.
 function setQuestContinue(label, onClick, enabled = true) {
   const el = document.getElementById('quest-continue-slot');
   el.innerHTML = `<button class="quest-continue-fab ${enabled ? 'ready' : ''}" id="quest-continue-btn" ${enabled ? '' : 'disabled'}>${label}</button>`;
   if (enabled && onClick) document.getElementById('quest-continue-btn').addEventListener('click', onClick);
 }
+// Deliberately NOT an empty slot. A step that isn't finished yet still renders the control,
+// disabled, so the footer keeps its height and nothing shifts at the moment you complete the
+// step. Callers that want a specific inert label (e.g. "Lock In Budget") pass it themselves
+// via setQuestContinue(label, null, false).
 function clearQuestContinue() {
-  document.getElementById('quest-continue-slot').innerHTML = '';
+  setQuestContinue('Continue →', null, false);
 }
 
 function advanceChapter(mod) {
@@ -21082,12 +21182,18 @@ function renderHintBudget(mod, chapterType, hintText) {
 }
 
 
-const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it!', 'Great job!'];
+// One affirmation, not a random pick from four. Getting "Great job!" on one match and "You
+// got it!" on the very next one under identical circumstances read as accidental rather than
+// responsive — the variation carried no information. The only copy that changes now is the
+// streak line below, which changes because something actually changed.
+const HAMMY_CORRECT_MSGS = ['Nice one! 🎉'];
 // "Here's why / here's what's true" only makes sense when an explanation is actually shown
 // nearby (quick checks, myth cards, price guesses, decisions). Matching has no explanation to
 // point to — it's just a retry — so it gets its own, context-appropriate phrasing.
-const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn from it:", "Close! Here's what's true:"];
-const HAMMY_TRYAGAIN_MSGS = ["Not quite, try again!", "Close, give it another shot!", "Not quite, look at the definitions above if you're stuck."];
+// Standardized alongside HAMMY_CORRECT_MSGS above. "Close!" in particular was being shown
+// on answers that weren't close at all — the copy claimed something the app hadn't measured.
+const HAMMY_GENTLE_MSGS = ["Not quite — here's why:"];
+const HAMMY_TRYAGAIN_MSGS = ["Not quite — check the definitions above if you're stuck."];
 const HAMMY_OUTCOME_GENTLE_MSGS = ["Hmm, that one stings a bit.", "That'll cost her some points.", "Not the best move there."];
 
 // Shared emotional-feedback moment, used after EVERY activity across the whole quest (knowledge
@@ -21327,15 +21433,26 @@ function renderMatchingChapter(chapter, mod, onDone) {
   defs.forEach(d => {
     const card = document.createElement('div');
     card.className = 'match-def-card';
-    card.textContent = d.text;
+    const defTextEl = document.createElement('span');
+    defTextEl.className = 'match-def-text';
+    defTextEl.textContent = d.text;
+    card.appendChild(defTextEl);
     card.addEventListener('click', () => {
       if (card.classList.contains('matched') || selectedPairIdx === null) return;
       const isCorrect = d.pairIdx === selectedPairIdx;
       showHammyReaction(mod, isCorrect, 'match');
       if (isCorrect) {
-        selectedTermEl.classList.remove('selected');
-        selectedTermEl.classList.add('matched');
+        // The matched word moves inline into the definition it belongs to. Previously a
+        // matched pair only showed which word and which definition were used up, never
+        // which went with which — so once the round was over there was nothing on screen
+        // to actually review.
+        const matchedTermEl = selectedTermEl;
         card.classList.add('matched');
+        const pairedTermEl = document.createElement('span');
+        pairedTermEl.className = 'match-paired-term';
+        pairedTermEl.textContent = matchedTermEl.textContent;
+        card.insertBefore(pairedTermEl, card.firstChild);
+        matchedTermEl.remove();
         matchedCount++;
         selectedTermEl = null;
         selectedPairIdx = null;
@@ -21369,10 +21486,10 @@ function renderExplainbackChapter(chapter, mod, onDone) {
   clearQuestContinue();
   main.innerHTML = `
     <p class="quest-prompt">${chapter.prompt}</p>
-    <textarea class="explainback-input" id="eb-input" rows="3" placeholder="Type your answer here. There's no wrong way to start."></textarea>
-    <button class="btn-primary" id="eb-check">Check My Answer</button>`;
+    <textarea class="explainback-input" id="eb-input" rows="3" placeholder="Type your answer here. There's no wrong way to start."></textarea>`;
 
-  document.getElementById('eb-check').addEventListener('click', () => {
+  // Same shared bottom slot as every other chapter, rather than its own inline button.
+  setQuestContinue('Check My Answer →', () => {
     const val = document.getElementById('eb-input').value.toLowerCase();
     const matched = chapter.keywords.filter(k => val.includes(k.toLowerCase())).length;
     let feedbackText, tier;
@@ -21383,7 +21500,6 @@ function renderExplainbackChapter(chapter, mod, onDone) {
     const qp = getQP(mod);
     qp.analytics.explainback = { term: chapter.title || 'In Your Own Words', tier };
     saveState();
-    document.getElementById('eb-check').remove();
     document.getElementById('eb-input').disabled = true;
     showHammyReaction(mod, matched >= 1);
 
@@ -21397,7 +21513,7 @@ function renderExplainbackChapter(chapter, mod, onDone) {
       if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
       onDone();
     }, true);
-  });
+  }, true);
 }
 
 // ── Chapter type: story ─────────────────────────
@@ -21461,6 +21577,13 @@ function renderStoryChapter(chapter, mod, onDone) {
 }
 
 // ── Chapter type: decision ──────────────────────
+// Net effect across every dashboard stat a choice touches — not just creditScore — so
+// modules whose decisions move checking/savings/etc. are still scored accurately instead
+// of always reading as "good."
+function decisionDeltaSum(choice) {
+  return Object.values(choice.outcome.delta || {}).reduce((a, b) => a + b, 0);
+}
+
 function renderDecisionChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
   clearQuestContinue();
@@ -21468,21 +21591,43 @@ function renderDecisionChapter(chapter, mod, onDone) {
     <p class="quest-prompt">${chapter.prompt}</p>
     <div class="decision-choices" id="decision-choices"></div>`;
   const choicesEl = document.getElementById('decision-choices');
-  chapter.choices.forEach(choice => {
+  // The best available option, by the same delta the outcome itself is scored on.
+  const bestSum = Math.max(...chapter.choices.map(decisionDeltaSum));
+
+  chapter.choices.forEach((choice, i) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn decision-choice-btn';
-    btn.textContent = choice.label;
+    btn.innerHTML = `<span class="decision-choice-label">${choice.label}</span>`;
     btn.addEventListener('click', () => {
-      choicesEl.querySelectorAll('button').forEach(b => b.disabled = true);
+      const deltaSum = decisionDeltaSum(choice);
+      const wasGoodChoice = deltaSum >= 0;
+      const pickedBest = deltaSum === bestSum;
+
+      // Mark up what actually happened, on the answers themselves. Previously both options
+      // just went disabled and rendered identically after answering — the only signal that
+      // you'd got it wrong was Hammy's speech bubble, which left the core learning moment
+      // with no visual feedback attached to the thing being learned.
+      choicesEl.querySelectorAll('.decision-choice-btn').forEach((b, j) => {
+        b.disabled = true;
+        const isChosen = j === i;
+        const isBest = decisionDeltaSum(chapter.choices[j]) === bestSum;
+        if (isBest) b.classList.add('correct');
+        else if (isChosen) b.classList.add('wrong');
+        if (isChosen) {
+          b.classList.add('chosen');
+          b.insertAdjacentHTML('beforeend', '<span class="choice-mark choice-mark-yours">Your pick</span>');
+        }
+        if (isBest && !(isChosen && pickedBest)) {
+          b.insertAdjacentHTML('beforeend', '<span class="choice-mark choice-mark-best">✓ Better move</span>');
+        } else if (isBest) {
+          b.insertAdjacentHTML('beforeend', '<span class="choice-mark choice-mark-best">✓ Best move</span>');
+        }
+      });
+
       applyQuestStateDelta(mod, choice.outcome.delta || {});
       const qp = getQP(mod);
       qp.analytics.decisions.push({ title: chapter.title, choice: choice.label });
       saveState();
-      // Net effect across every dashboard stat the choice touches — not just creditScore —
-      // so modules whose decisions move checking/savings/etc. still get an accurate
-      // positive/negative Hammy reaction instead of always reading as "good."
-      const deltaSum = Object.values(choice.outcome.delta || {}).reduce((a, b) => a + b, 0);
-      const wasGoodChoice = deltaSum >= 0;
       renderDecisionOutcome(chapter, choice.outcome, mod, wasGoodChoice, onDone);
     });
     choicesEl.appendChild(btn);
@@ -21551,9 +21696,22 @@ function renderMicrosimChapter(chapter, mod, onDone) {
   // Lock In Budget lives in the shared top-right Continue slot, same as every other chapter.
   function lockBudget() {
     const leftover = computeLeftover();
-    const tier = chapter.feedbackTiers.find(t => leftover <= t.maxLeftover);
+    const tierIdx = chapter.feedbackTiers.findIndex(t => leftover <= t.maxLeftover);
+    const tier = chapter.feedbackTiers[tierIdx];
+    // Three outcomes, not two. A budget that balances but leaves the goal barely funded is
+    // its own result: it used to trigger the same "You got it!" as the best answer, while
+    // the panel underneath said the opposite ("growing slowly at this rate") — two different
+    // verdicts on the same answer, on the same screen. The last tier is the strongest
+    // outcome by construction (tiers ascend by maxLeftover), so any earlier passing tier is
+    // valid-but-suboptimal.
+    const isBestTier = tierIdx === chapter.feedbackTiers.length - 1;
+    const outcome = !tier.ok ? 'bad' : isBestTier ? 'ok' : 'partial';
     clearQuestContinue();
-    showHammyReaction(mod, tier.ok);
+    if (outcome === 'partial') {
+      showHammyMessage("That works — here's how to make it work harder.", true);
+    } else {
+      showHammyReaction(mod, tier.ok);
+    }
     // Swap the interactive sliders out for a compact recap of what was chosen, instead of
     // appending the result underneath everything — that extra height was pushing the page
     // past the viewport and forcing a scroll right when the result appears.
@@ -21566,11 +21724,12 @@ function renderMicrosimChapter(chapter, mod, onDone) {
         ${chosenHtml}
       </div>
       <div class="microsim-leftover-row"><span>Left over</span><span class="microsim-leftover ${leftover < 0 ? 'negative' : ''}">$${leftover}</span></div>
-      <div class="microsim-result ${tier.ok ? 'ok' : 'bad'}">
+      <div class="microsim-result ${outcome}">
+        <p class="microsim-result-label">${outcome === 'ok' ? '✓ Nailed it' : outcome === 'partial' ? 'That works — but it can work harder' : 'That budget doesn\'t balance'}</p>
         <p>${tier.text}</p>
-        ${tier.ok ? '' : '<button class="btn-secondary" id="microsim-retry-btn">Try Again</button>'}
+        ${outcome === 'bad' ? '<button class="btn-secondary" id="microsim-retry-btn">Try Again</button>' : ''}
       </div>`;
-    if (tier.ok) {
+    if (outcome !== 'bad') {
       setQuestContinue('Continue →', () => {
         if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
         onDone();
@@ -21590,13 +21749,10 @@ function renderMicrosimChapter(chapter, mod, onDone) {
 // types read as one continuous "test your assumptions" beat rather than two different UIs.
 function renderPollChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
-  // A disabled placeholder, not clearQuestContinue()'s empty slot — the Continue button
-  // lives in the sticky header above quest-body, so an empty slot popping to a real
-  // button's size the instant you answer grows the sticky header and pushes the whole
-  // question/Hammy row down with it, same category of bug as the reveal/message bubble
-  // below. Rendering the (inert) button from the start reserves that space immediately;
-  // answering just swaps it for the real, clickable one at the same size.
-  setQuestContinue('Continue →', null, false);
+  // clearQuestContinue() now renders exactly this disabled placeholder for every chapter, so
+  // the footer's height is reserved from the first paint and answering only swaps the inert
+  // button for the live one at the same size.
+  clearQuestContinue();
   // The reveal's markup (TRUE/FALSE tag + explanation) never actually depends on which
   // choice the user picks — chapter.isTrue/explanation are fixed data — so it's rendered
   // into the DOM immediately, just hidden via visibility (not display:none, and not left
@@ -21831,6 +21987,9 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
   function renderCards() {
     container.innerHTML = '';
     if (nextWrap()) nextWrap().innerHTML = '';
+    // Disabled placeholder while the top card is still unanswered, so the footer keeps its
+    // height and the button doesn't appear from nowhere on the swipe.
+    clearQuestContinue();
     const visible = cards.slice(cardIdx, cardIdx + 3);
     visible.forEach((card, i) => {
       const el = document.createElement('div');
@@ -21882,19 +22041,18 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
         const resolvedIdx = cardIdx;
         onCardResolved({ cardIndex: resolvedIdx, guessedRight });
 
+        // Advance from the shared bottom slot rather than a button injected under the card
+        // stack — this was the fourth distinct place the lesson's "next" control could
+        // appear. Same behaviour, same position as every other chapter.
         const isLastCard = resolvedIdx === cards.length - 1;
-        const btn = document.createElement('button');
-        btn.className = 'btn-primary quest-continue-btn';
-        btn.textContent = isLastCard ? 'Continue →' : 'Next Card →';
-        btn.addEventListener('click', () => {
+        setQuestContinue(isLastCard ? 'Continue →' : 'Next Card →', () => {
           el.classList.add(dx > 0 ? 'fly-right' : 'fly-left');
-          btn.remove();
+          clearQuestContinue();
           setTimeout(() => {
             cardIdx++;
             if (cardIdx >= cards.length) onAllDone(); else renderCards();
           }, 400);
-        });
-        if (nextWrap()) nextWrap().appendChild(btn);
+        }, true);
       } else {
         el.style.transform = '';
         el.style.borderColor = '';
@@ -21978,37 +22136,70 @@ function renderSimulatorChapter(chapter, mod, onDone) {
 // ── Chapter type: priceisright ──────────────────
 function renderPriceIsRightChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
-  clearQuestContinue();
   const range = chapter.guessRange;
   let guess = Math.round((range.min + range.max) / 2 / range.step) * range.step;
+  const pctOf = (v) => ((v - range.min) / (range.max - range.min)) * 100;
+
   main.innerHTML = `
     <p class="quest-prompt">${chapter.prompt}</p>
     <div class="price-guess-display" id="price-guess-display">$${guess}</div>
     <input type="range" class="microsim-range" id="price-slider" min="${range.min}" max="${range.max}" step="${range.step}" value="${guess}" aria-label="Your guess">
-    <button class="btn-primary price-reveal-btn" id="price-reveal">Lock In Guess</button>`;
+    <div class="price-marker-rail" id="price-marker-rail" hidden>
+      <div class="price-marker price-marker-guess" id="price-marker-guess">
+        <span class="price-marker-pin"></span>
+        <span class="price-marker-label">Your guess<strong id="price-marker-guess-val"></strong></span>
+      </div>
+      <div class="price-marker price-marker-actual" id="price-marker-actual">
+        <span class="price-marker-pin"></span>
+        <span class="price-marker-label">Actual<strong id="price-marker-actual-val"></strong></span>
+      </div>
+    </div>`;
 
   document.getElementById('price-slider').addEventListener('input', (e) => {
     guess = parseInt(e.target.value, 10);
     document.getElementById('price-guess-display').textContent = `$${guess}`;
   });
-  document.getElementById('price-reveal').addEventListener('click', () => {
-    document.getElementById('price-reveal').remove();
-    document.getElementById('price-slider').disabled = true;
+
+  function reveal() {
+    const slider = document.getElementById('price-slider');
+    slider.disabled = true;
     const diff = Math.abs(guess - chapter.actualValue);
     const wasClose = diff <= (range.max - range.min) * 0.15;
-    tweenNumber(document.getElementById('price-guess-display'), guess, chapter.actualValue, { prefix: '$' });
+
+    // Both numbers stay on screen. The slider used to snap from the user's guess to the
+    // actual value and the headline number tweened over to it too, which erased what they
+    // actually said — leaving them to reconstruct it from the "$X off" figure. Now their
+    // guess keeps its own marker on the rail and the answer gets a second one beside it.
+    slider.value = guess;
+    const rail = document.getElementById('price-marker-rail');
+    rail.hidden = false;
+    const guessMarker = document.getElementById('price-marker-guess');
+    const actualMarker = document.getElementById('price-marker-actual');
+    guessMarker.style.left = pctOf(guess) + '%';
+    actualMarker.style.left = pctOf(chapter.actualValue) + '%';
+    document.getElementById('price-marker-guess-val').textContent = `$${guess}`;
+    document.getElementById('price-marker-actual-val').textContent = `$${chapter.actualValue}`;
+    // When the two land close together their labels would overlap; flip the guess label to
+    // the opposite side so both stay readable.
+    rail.classList.toggle('markers-tight', Math.abs(pctOf(guess) - pctOf(chapter.actualValue)) < 22);
+
+    document.getElementById('price-guess-display').textContent = `$${guess}`;
     const revealBlock = document.createElement('div');
     revealBlock.className = 'price-reveal-block';
     revealBlock.innerHTML = `
-      <p class="price-actual-label">Actual answer: $${chapter.actualValue} <span class="price-diff">(you were $${diff} off)</span></p>
-      <p>${chapter.explanation}</p>`;
+      <p class="price-actual-label">Actual answer: $${chapter.actualValue} <span class="price-diff">(your guess of $${guess} was $${diff} off)</span></p>
+      <p class="price-explanation">${chapter.explanation}</p>`;
     main.appendChild(revealBlock);
     showHammyReaction(mod, wasClose);
     setQuestContinue('Continue →', () => {
       if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
       onDone();
     }, true);
-  });
+  }
+
+  // Lives in the shared bottom slot like every other chapter's primary action, instead of
+  // as its own full-width button inline under the slider.
+  setQuestContinue('Lock In Guess →', reveal, true);
 }
 
 // ── Chapter type: knowledgecheck (reuses buildQuestionBlock) ──
@@ -22038,7 +22229,6 @@ function renderKnowledgeCheckChapter(chapter, mod, onDone) {
               <p class="feedback-label" id="kc-feedback-label"></p>
               <p class="feedback-exp" id="kc-feedback-exp"></p>
             </div>
-            <button class="btn-next" id="kc-next">Next</button>
           </div>
         </div>
       </div>`;
@@ -22055,12 +22245,12 @@ function renderKnowledgeCheckChapter(chapter, mod, onDone) {
       qp.analytics.knowledgeCheck.push({ question: q.q, isCorrect });
       saveState();
       showHammyReaction(mod, isCorrect);
+      // The advance control lives in the shared bottom footer, not inside the feedback
+      // panel, so it stays in the same place across every chapter type.
       const isLast = qIdx === questions.length - 1;
-      document.getElementById('kc-next').textContent = isLast ? 'Continue' : 'Next';
-    });
-
-    document.getElementById('kc-next').addEventListener('click', () => {
-      if (qIdx < questions.length - 1) { qIdx++; renderQ(); } else { onDone(); }
+      setQuestContinue(isLast ? 'Continue →' : 'Next question →', () => {
+        if (qIdx < questions.length - 1) { qIdx++; renderQ(); } else { onDone(); }
+      }, true);
     });
   }
   renderQ();
