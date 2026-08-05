@@ -59,7 +59,13 @@ function TabButton({
       }}
     >
       <View style={[styles.pill, focused && styles.pillOn]}>
-        {meta.render(color)}
+        {/* Fixed-height box around the glyph so every pill is the same size. The six icons
+            aren't drawn at one size — the pig is 27 and the calculator 26, against 25 for the
+            rest — and since they're glyphs, their laid-out height follows the icon font's own
+            metrics rather than the nominal size. Left to size themselves, the Room and Tools
+            highlights came out a couple of pixels taller than the other four, which is
+            visible when the boxes are filled in and sitting side by side. */}
+        <View style={styles.iconBox}>{meta.render(color)}</View>
         <Txt style={[styles.label, { color }]}>{meta.label}</Txt>
       </View>
     </Pressable>
@@ -112,5 +118,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   pillOn: { backgroundColor: colors.greenPale },
-  label: { fontFamily: font.extra, fontSize: 10.5 },
+  iconBox: { height: 28, alignItems: 'center', justifyContent: 'center' },
+  // Explicit lineHeight for the same reason as iconBox: the labels all share one font and
+  // size, but pinning it means the pill's height is a fixed number rather than something the
+  // font's metrics get a vote in.
+  label: { fontFamily: font.extra, fontSize: 10.5, lineHeight: 14 },
 });

@@ -1972,9 +1972,14 @@ function CountUpNumber({ value, style }: { value: number; style?: object }) {
  * on the row that earned it. (Hammy still narrates it too, but his bubble is gone in a couple
  * of seconds and takes the reasoning with it — which meant that on a four-habit chapter you
  * could finish having read every note and be able to see none of them.) */
+/** The decision's `note` is deliberately NOT rendered here. It used to unfold underneath the
+ * label on reveal, but Hammy already speaks that same sentence in his bubble the moment you
+ * tap (see SimulatorView's apply → reactTo), so the tile was repeating word for word what he
+ * was saying — a wall of text on a screen that's meant to read as a quick tap-and-see-the-
+ * needle-move. The tile keeps the two things only it can show: the habit and its score. */
 function HabitChoice({
-  label, note, delta, revealed, index, onPress,
-}: { label: string; note: string; delta: number; revealed: boolean; index: number; onPress: () => void }) {
+  label, delta, revealed, index, onPress,
+}: { label: string; delta: number; revealed: boolean; index: number; onPress: () => void }) {
   const press = useSharedValue(0);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 - press.value * 0.02 }] }));
   const good = delta >= 0;
@@ -2002,11 +2007,6 @@ function HabitChoice({
               </Txt>
             </Reanimated.View>
           </View>
-          {revealed ? (
-            <Reanimated.View entering={FadeInDown.duration(240)}>
-              <Txt style={[styles.habitNote, { color: good ? colors.greenDark : colors.pinkDark }]}>{note}</Txt>
-            </Reanimated.View>
-          ) : null}
         </Reanimated.View>
       </Pressable>
     </Reanimated.View>
@@ -2074,7 +2074,6 @@ function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: Si
           <HabitChoice
             key={d.id}
             label={d.label}
-            note={d.note}
             delta={d.scoreDelta}
             revealed={used.has(d.id)}
             index={i}
@@ -2795,10 +2794,10 @@ const styles = StyleSheet.create({
   meterValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   meterValue: { fontFamily: font.display, fontSize: 28, color: colors.greenDark },
   meterFloat: { fontFamily: font.display, fontSize: 16 },
-  // A habit tile, not a quiz option. Column rather than row (the note unfolds underneath the
-  // label), no letter badge, and a trailing score chip that is the reason to tap.
+  // A habit tile, not a quiz option: no letter badge, and a trailing score chip that is the
+  // reason to tap. Holds only the label and that chip — the explanation that used to unfold
+  // underneath is Hammy's line to speak now (see HabitChoice).
   habit: {
-    gap: 7,
     borderWidth: 1.75, borderColor: colors.borderOpt, borderRadius: 18,
     backgroundColor: colors.white, paddingVertical: 11, paddingHorizontal: 14,
   },
@@ -2818,7 +2817,6 @@ const styles = StyleSheet.create({
   habitChipBad: { backgroundColor: '#D98A9E', borderColor: '#D98A9E' },
   habitChipTxt: { fontFamily: font.extra, fontSize: 13, color: colors.muted4 },
   habitChipTxtOn: { color: colors.white },
-  habitNote: { fontFamily: font.semi, fontSize: 12.5, lineHeight: 17 },
   // Tighter than a default Card/gap pair: the unrevealed document is a list of up to eight
   // segments that all have to be on screen at once for "tap the suspicious lines" to be a
   // fair question, so the savings here are what keep the longest one inside a single screen.
