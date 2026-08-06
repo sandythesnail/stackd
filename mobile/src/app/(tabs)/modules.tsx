@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
-import Reanimated, { FadeInDown } from 'react-native-reanimated';
+import { View, ScrollView, Pressable, StyleSheet, Easing } from 'react-native';
+import Reanimated, {
+  FadeInDown, FadeOut, LinearTransition, useSharedValue, useAnimatedStyle, withTiming,
+} from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow } from '@/components';
@@ -22,6 +24,22 @@ import { SURVEY_TRACKS } from '@/survey';
  * a reassigned `let`, and flipped in an effect rather than during render, so it stays out of
  * the render pass entirely. */
 const listAnim = { played: false };
+
+/** The row's disclosure chevron, turning between its two positions instead of cutting. The
+ * rotation runs on the same 240ms curve as the card's own height transition, so the arrow and
+ * the body it controls are visibly one movement. */
+function Chevron({ open }: { open: boolean }) {
+  const t = useSharedValue(open ? 1 : 0);
+  useEffect(() => {
+    t.value = withTiming(open ? 1 : 0, { duration: 240, easing: Easing.out(Easing.cubic) });
+  }, [open, t]);
+  const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${-90 + t.value * 90}deg` }] }));
+  return (
+    <Reanimated.View style={style}>
+      <Feather name="chevron-down" size={18} color={colors.muted4} />
+    </Reanimated.View>
+  );
+}
 
 export default function Modules() {
   const router = useRouter();
@@ -101,9 +119,25 @@ export default function Modules() {
               <Reanimated.View
                 key={m.id}
                 entering={animateRows ? FadeInDown.delay(Math.min(rowIdx, 10) * 45).duration(320).springify().damping(18) : undefined}
+                // Carries the card's height change when its body opens or closes, and slides
+                // the rows below it along with it, so the list reflows as one motion instead
+                // of jumping to the new arrangement. Kept to a plain eased duration rather
+                // than a spring: eleven cards springing past their resting height at once is
+                // the sort of movement that gets tiring on a tab you live in.
+                layout={LinearTransition.duration(240).easing(Easing.out(Easing.cubic))}
                 style={[styles.row, status === 'done' && styles.rowDone, recommended && styles.rowRecommended]}
               >
-                <Pressable onPress={() => toggle(m.id)} style={[styles.rowHead, recommended && styles.rowHeadRecommended]} accessibilityRole="button" accessibilityLabel={m.name} accessibilityState={{ expanded: isOpen }}>
+                <Pressable
+                  onPress={() => toggle(m.id)}
+                  // A touch of press feedback so the header reads as a control before it
+                  // does anything — the same treatment the lesson rows inside it already get
+                  // from ListRow, just done with the pressed flag since there's no spring to
+                  // match here.
+                  style={({ pressed }) => [styles.rowHead, recommended && styles.rowHeadRecommended, pressed && styles.rowHeadPressed]}
+                  accessibilityRole="button"
+                  accessibilityLabel={m.name}
+                  accessibilityState={{ expanded: isOpen }}
+                >
                   <View style={styles.rowHeadLeft}>
                     <MIcon abbr={m.icon} color={m.color} textColor={m.textColor} />
                     <View style={{ flex: 1 }}>
@@ -131,16 +165,20 @@ export default function Modules() {
                     {/* A real icon, rotated, rather than the ▾/▸ glyph pair this used to
                         draw: those are two different characters at two different widths, so
                         the control changed size as you opened and closed it. */}
-                    <Feather
-                      name="chevron-down"
-                      size={18}
-                      color={colors.muted4}
-                      style={{ transform: [{ rotate: isOpen ? '0deg' : '-90deg' }] }}
-                    />
+                    <Chevron open={isOpen} />
                   </View>
                 </Pressable>
                 {isOpen ? (
-                  <View style={styles.rowBody}>
+                  // The lesson list unfolds rather than appearing. It fades up a few pixels
+                  // into place while the card's own `layout` transition above carries the
+                  // height change, so the row grows into its contents as one movement instead
+                  // of snapping to a new size with the list already sitting in it. Closing is
+                  // quicker than opening — you've decided, and there's nothing left to read.
+                  <Reanimated.View
+                    entering={FadeInDown.duration(220).easing(Easing.out(Easing.cubic))}
+                    exiting={FadeOut.duration(110)}
+                    style={styles.rowBody}
+                  >
                     <ProgressBar value={pct} tone={status === 'done' ? 'green' : 'pink'} height={7} style={{ marginBottom: 12 }} />
                     <ModuleLessonList
                       moduleId={m.id}
@@ -155,7 +193,7 @@ export default function Modules() {
                         onPress={() => router.push({ pathname: '/learn/quest', params: { moduleId: m.id, lessonIndex: String(guideIndex), isLifeTask: '1' } })}
                       />
                     ) : null}
-                  </View>
+                  </Reanimated.View>
                 ) : null}
               </Reanimated.View>
             );
@@ -186,6 +224,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   rowHeadRecommended: { backgroundColor: colors.rewardBg },
+  rowHeadPressed: { backgroundColor: colors.screen },
   rowHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
   rowTitle: { fontFamily: font.extra, fontSize: 14.5, color: colors.ink },
   rowDesc: { fontFamily: font.medium, fontSize: 11.5, color: colors.muted4, marginTop: 2 },

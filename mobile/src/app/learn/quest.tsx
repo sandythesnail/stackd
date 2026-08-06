@@ -1205,7 +1205,11 @@ function TeachView({
   const concept = chapter.concepts[i];
   const last = i + 1 >= chapter.concepts.length;
   // Some concepts have no statement at all (check: {} or absent) — informational only, no quiz.
-  const hasCheck = !!concept.check?.statement;
+  // Optional-chained through `concept` as well: a teach chapter with an empty concepts array
+  // would otherwise throw here and take the whole lesson down with a red screen, rather than
+  // degrading to a skippable chapter. No such chapter exists in the content today; this costs
+  // nothing and means a future one can't crash a student mid-lesson.
+  const hasCheck = !!concept?.check?.statement;
 
   useEffect(() => {
     onLayoutMode(chapter.fullScreen ? 'full' : 'normal');
@@ -1230,6 +1234,9 @@ function TeachView({
     onAction(!hasCheck || answered !== null ? { label: last ? 'Next' : 'Got it', onPress: next } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasCheck, answered, last, i]);
+
+  // After every hook, so the hook order is identical whether or not there's a concept to show.
+  if (!concept) return null;
 
   return (
     // Keyed to the concept index so each concept swap gets its own fade in/out instead of an
@@ -1841,7 +1848,7 @@ function MythcardsView({
             <>
               <Tag tone="warm">TRUE OR FALSE?</Tag>
               <Txt style={styles.mythCardTxt}>{card.myth}</Txt>
-              <Txt style={styles.mythSwipeHint}>← False   ·   True →</Txt>
+              <Txt style={styles.mythSwipeHint}>← Swipe False   ·   Swipe True →</Txt>
             </>
           ) : (
             <>
@@ -1861,6 +1868,18 @@ function MythcardsView({
           )}
         </Animated.View>
       </View>
+      {/* Buttons as well as the swipe, not instead of it. A swipe is the only gesture in the
+          whole lesson player that has no visible control behind it — if it doesn't register,
+          or the student never thinks to try it, this chapter had no way forward at all and
+          nothing on screen to suggest one. The same two buttons every other true/false
+          chapter uses, so answering here matches answering anywhere else; they're gone once
+          the card is resolved, since the answer is on the card by then. */}
+      {!resolved ? (
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <TrueFalseButton label="False" state="default" onPress={() => commit(false)} />
+          <TrueFalseButton label="True" state="default" onPress={() => commit(true)} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -2202,10 +2221,13 @@ function BossbattleView({
     onComplete(Math.round(moduleXpReward * (picked?.consequence.xpMultiplier ?? 0)));
   };
 
+  // No bottom-bar action once the verdict sheet is up. The scrim is only 55% opaque, so the
+  // bar stayed visible underneath it — a second, dimmed "Finish quest →" sitting below the
+  // sheet's own copy of the same button, which reads as the screen having two of them. The
+  // sheet's button and the Android back gesture (onRequestClose) both reach `finish`, so
+  // nothing is lost by clearing it.
   useEffect(() => {
-    onAction(checked
-      ? { label: 'Finish quest →', onPress: finish }
-      : { label: 'Check answer', onPress: check, disabled: !pickedId });
+    onAction(checked ? null : { label: 'Check answer', onPress: check, disabled: !pickedId });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checked, pickedId]);
 
@@ -2318,6 +2340,26 @@ function SpotcheckView({ chapter, onComplete, onAction, reactTo }: { chapter: Sp
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed, reviewIdx, review.length, flagged]);
+
+  // Nothing to walk through: this posting had no red flags in it and the student flagged
+  // nothing either. Without this branch the screen simply stayed on the document after
+  // "Check my answers", unchanged, with the button quietly relabelled to Next — the one case
+  // where the chapter answered a question by appearing to ignore it.
+  if (revealed && !review.length) {
+    return (
+      <View style={{ gap: 10, flex: 1 }}>
+        <Txt variant="h2">{chapter.title}</Txt>
+        <Reanimated.View entering={FadeIn.duration(220)}>
+          <Card style={{ gap: 8 }}>
+            <Tag tone="green">✓ NOTHING TO FLAG</Tag>
+            <Txt variant="lead" style={{ fontSize: 13 }}>
+              Right call — there was nothing wrong with this one, and you didn&apos;t flag anything that was fine.
+            </Txt>
+          </Card>
+        </Reanimated.View>
+      </View>
+    );
+  }
 
   if (revealed && review.length) {
     const s = review[Math.min(reviewIdx, review.length - 1)];
@@ -2517,8 +2559,22 @@ function UrlinspectView({ chapter, onComplete, onAction, reactTo }: { chapter: U
       {revealed ? (
         <AnswerFeedback>
           <Card style={{ gap: 8 }}>
-            {chapter.parts.filter((p) => p.isSuspicious).map((p) => (
-              <Txt key={p.id} variant="lead" style={{ fontSize: 12.5 }}>• {p.note}</Txt>
+            {/* Every risky part, PLUS any safe part the student flagged — the same review set
+                SpotcheckView builds, and for the same reason: a wrong flag is precisely where
+                the explanation is worth reading, and listing only the risky parts meant the
+                mistake they actually made went unmentioned. Every safe segment in the content
+                carries an authored note, so there's real text to show for it. Safe parts they
+                left alone have nothing to say and stay out. */}
+            {chapter.parts.filter((p) => p.isSuspicious || flagged.has(p.id)).map((p) => (
+              <View key={p.id} style={{ flexDirection: 'row', gap: 7 }}>
+                <Txt style={{ fontFamily: font.bold, fontSize: 12.5, color: p.isSuspicious ? colors.pinkDark : colors.greenDark }}>
+                  {p.isSuspicious ? '⚑' : '✓'}
+                </Txt>
+                <Txt variant="lead" style={{ flex: 1, fontSize: 12.5 }}>
+                  {!p.isSuspicious ? <Txt style={{ fontFamily: font.extra }}>You flagged this, but it&apos;s fine — </Txt> : null}
+                  {p.note}
+                </Txt>
+              </View>
             ))}
           </Card>
         </AnswerFeedback>
