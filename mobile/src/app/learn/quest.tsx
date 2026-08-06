@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent } from 'react-native';
+import { Alert, Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent } from 'react-native';
 import Reanimated, {
   SlideInDown, FadeInDown, FadeIn, FadeInRight, FadeInUp, ZoomIn,
   useSharedValue, useAnimatedStyle, withTiming, withSpring, withSequence,
@@ -432,6 +432,23 @@ export default function QuestPlayer() {
     else router.replace(`/learn/module/${mod.id}`);
   };
 
+  // Nothing about a part-finished lesson is saved — the store records a lesson only once its
+  // final chapter completes (see completeLesson) — so leaving chapter 12 of 15 throws away
+  // ten minutes of work and restarts from the beginning. The X sits in the corner nearest
+  // the thumb on the most-tapped screen in the app, and it used to do that silently on the
+  // first tap. Chapter 1 leaves without ceremony; there's nothing to lose yet.
+  const confirmQuit = () => {
+    if (chapterIdx === 0) { goBack(); return; }
+    Alert.alert(
+      'Leave this lesson?',
+      "You're partway through. Your progress in this lesson isn't saved, so you'd start it again from the beginning.",
+      [
+        { text: 'Keep going', style: 'cancel' },
+        { text: 'Leave', style: 'destructive', onPress: goBack },
+      ],
+    );
+  };
+
   if (!quest || !content) {
     return (
       <Screen edges={['top']}>
@@ -619,9 +636,14 @@ export default function QuestPlayer() {
           the first graded answer already has its face ready — see Hammy.tsx. */}
       <ReactionFacePreloader />
       <View style={styles.stick}>
-        <IconButton name="x" size={34} iconSize={16} onPress={goBack} />
-        <ProgressBar value={chapterIdx / quest.chapters.length} style={{ flex: 1 }} height={10} />
-        <Txt style={styles.step}>{Math.round((chapterIdx / quest.chapters.length) * 100)}%</Txt>
+        <IconButton name="x" size={34} iconSize={16} onPress={confirmQuit} />
+        {/* chapterIdx + 1, i.e. how far you've got INCLUDING the chapter you're reading.
+            Counting only the chapters behind you meant a lesson opened at a flat 0% and its
+            final chapter reported 93% — the bar could never fill, however much you did.
+            The count beside it replaces a percentage, which was the bar's own information
+            written out twice; "4/15" is the thing the bar can't tell you. */}
+        <ProgressBar value={(chapterIdx + 1) / quest.chapters.length} style={{ flex: 1 }} height={10} />
+        <Txt style={styles.step}>{chapterIdx + 1}/{quest.chapters.length}</Txt>
         {/* Keyed per QUESTION, not just per chapter: a knowledge check runs several
             questions inside one chapter, each with its own authored hint, and a single
             instance carried its "already revealed" state across all of them — so question 2

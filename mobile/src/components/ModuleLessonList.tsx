@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
-import { colors, font } from '@/theme';
+import { Feather } from '@expo/vector-icons';
+import { colors, font, radius } from '@/theme';
 import { Txt } from './Txt';
 import { ListRow } from './ModuleBits';
 import { Button } from './Button';
@@ -40,6 +41,12 @@ export function ModuleLessonList({
   const nextIdx = lessons.findIndex((_, i) => !doneSet.has(i));
   const rowStatusFor = (i: number) =>
     status === 'done' || doneSet.has(i) ? 'done' : i === nextIdx ? 'active' : 'upcoming';
+  // Whether the player has finished anything in this module decides what the next-up row is
+  // allowed to CALL itself. Nothing here tracks part-finished lessons — a lesson is done or
+  // it isn't — so the next-up row cannot honestly claim to be in progress. On an untouched
+  // module it's the starting point; on one you've been working through it's where you left
+  // off. See LessonRow.
+  const started = doneIndices.length > 0;
   const sections = resolveLessonSections(moduleId, lessons.length);
 
   if (sections) {
@@ -54,6 +61,7 @@ export function ModuleLessonList({
             done={doneIndices.filter((i) => i >= sec.start && i < sec.end).length}
             defaultOpen={nextIdx >= sec.start && nextIdx < sec.end}
             rowStatusFor={rowStatusFor}
+            started={started}
             onPressLesson={onPressLesson}
           />
         ))}
@@ -68,6 +76,7 @@ export function ModuleLessonList({
           lesson={lesson}
           index={i}
           status={rowStatusFor(i)}
+          started={started}
           onPress={() => onPressLesson(i)}
         />
       ))}
@@ -88,10 +97,20 @@ export function RealLifeSubQuestRow({ moduleId, onPress }: { moduleId: string; o
   if (!guide) return null;
   const done = state.completedLifeTaskIds.includes(moduleId);
   return (
+    // Built like the lesson rows above rather than as one line of small text in a tinted
+    // box. This is a REQUIRED lesson — moduleTotal counts it, and the module isn't mastered
+    // without it — but it was drawn lighter than the eight rows it ranks alongside, which
+    // read as an optional footnote. Same node/title/chevron anatomy as a LessonRow, in the
+    // module's pink accent so it still reads as a different KIND of lesson.
     <Pressable onPress={onPress} style={[styles.subQuest, done && styles.subQuestDone]}>
-      <Txt style={[styles.subQuestTxt, done && styles.subQuestTxtDone]}>
-        {done ? '✓' : '🎯'} Real-life sub-quest: {guide.title} →
-      </Txt>
+      <View style={[styles.subQuestNode, done && styles.subQuestNodeDone]}>
+        <Txt style={styles.subQuestNodeTxt}>{done ? '✓' : '🎯'}</Txt>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Txt style={[styles.subQuestKicker, done && styles.subQuestTxtDone]}>REAL-LIFE SUB-QUEST</Txt>
+        <Txt style={[styles.subQuestTitle, done && styles.subQuestTxtDone]}>{guide.title}</Txt>
+      </View>
+      <Feather name="chevron-right" size={18} color={done ? colors.greenDark : colors.pinkDark} />
     </Pressable>
   );
 }
@@ -106,6 +125,7 @@ function LessonSectionBlock({
   done,
   defaultOpen,
   rowStatusFor,
+  started,
   onPressLesson,
 }: {
   label: string;
@@ -114,6 +134,7 @@ function LessonSectionBlock({
   done: number;
   defaultOpen: boolean;
   rowStatusFor: (i: number) => string;
+  started: boolean;
   onPressLesson: (i: number) => void;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -123,7 +144,15 @@ function LessonSectionBlock({
         <Txt style={styles.sectionLabel}>{label}</Txt>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Txt style={styles.sectionMeta}>{done}/{lessons.length} done</Txt>
-          <Txt style={styles.sectionChevron}>{open ? '▾' : '▸'}</Txt>
+          {/* Feather, not the ▾/▸ glyph pair — see the same change on the module rows in
+              app/(tabs)/modules.tsx: the two characters aren't the same width, so the
+              control resized every time you opened a section. */}
+          <Feather
+            name="chevron-down"
+            size={15}
+            color={colors.pinkDark}
+            style={{ transform: [{ rotate: open ? '0deg' : '-90deg' }] }}
+          />
         </View>
       </Pressable>
       {open ? (
@@ -136,6 +165,7 @@ function LessonSectionBlock({
                 lesson={lesson}
                 index={idx}
                 status={rowStatusFor(idx)}
+                started={started}
                 onPress={() => onPressLesson(idx)}
               />
             );
@@ -146,15 +176,25 @@ function LessonSectionBlock({
   );
 }
 
+/** One lesson. The next-up lesson gets the green outline, a caption and its own button;
+ * everything else is a plain row.
+ *
+ * The caption and button wording depend on `started`, and deliberately never say "in
+ * progress". Nothing in the app tracks a partly-finished lesson — the store records a
+ * lesson index only once the whole thing is completed — so "next up" was being rendered as
+ * "In progress" with a "Resume" button on modules the player had never once opened. The app
+ * was describing history the player didn't have. */
 function LessonRow({
   lesson,
   index,
   status,
+  started,
   onPress,
 }: {
   lesson: LessonSummary;
   index: number;
   status: string;
+  started: boolean;
   onPress: () => void;
 }) {
   const node = QNODE[status];
@@ -170,10 +210,12 @@ function LessonRow({
       </View>
       <View style={{ flex: 1 }}>
         <Txt style={styles.qTitle}>{lesson.title}</Txt>
-        {isActive ? <Txt style={[styles.qNote, { color: colors.green }]}>In progress</Txt> : null}
+        {isActive ? (
+          <Txt style={[styles.qNote, { color: colors.green }]}>{started ? 'Next up' : 'Start here'}</Txt>
+        ) : null}
       </View>
       {isActive ? (
-        <Button label="Resume" variant="pink" size="sm" style={{ paddingHorizontal: 16 }} onPress={onPress} />
+        <Button label={started ? 'Continue' : 'Start'} variant="pink" size="sm" style={{ paddingHorizontal: 16 }} onPress={onPress} />
       ) : null}
     </ListRow>
   );
@@ -189,18 +231,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5,
     borderBottomColor: '#EFEFE7',
   },
-  sectionLabel: { fontFamily: font.extra, fontSize: 10.5, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.pinkDark },
-  sectionMeta: { fontFamily: font.extra, fontSize: 10.5, letterSpacing: 0.5, color: colors.pinkDark },
-  sectionChevron: { fontFamily: font.bold, fontSize: 13, color: colors.pinkDark },
+  // 11.5, up from 10.5: these headings are the module's structure and they're what you scan
+  // to find a section, which is more work than 10.5px uppercase with letter-spacing wants to
+  // do. The meta stays a step smaller, so the two stop competing.
+  sectionLabel: { fontFamily: font.extra, fontSize: 11.5, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.pinkDark },
+  sectionMeta: { fontFamily: font.extra, fontSize: 10.5, letterSpacing: 0.3, color: colors.pinkDark },
   qnode: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   qnodeTxt: { fontFamily: font.display, fontSize: 15, color: colors.white },
   qTitle: { fontFamily: font.extra, fontSize: 14, color: colors.ink },
   qNote: { fontFamily: font.bold, fontSize: 12, color: colors.muted5, marginTop: 1 },
   subQuest: {
-    marginTop: 10, paddingVertical: 10, paddingHorizontal: 12,
-    borderRadius: 12, borderWidth: 1.5, borderColor: colors.pinkBorder, backgroundColor: colors.pinkBg2,
+    flexDirection: 'row', alignItems: 'center', gap: 13,
+    marginTop: 10, paddingVertical: 13, paddingHorizontal: 15,
+    borderRadius: radius.lg, borderWidth: 1.5, borderColor: colors.pinkBorder, backgroundColor: colors.pinkBg2,
   },
   subQuestDone: { borderColor: colors.greenSoft, backgroundColor: colors.tagGreenBg },
-  subQuestTxt: { fontFamily: font.bold, fontSize: 12.5, color: colors.pinkDark },
+  // Same 40px circle as a lesson row's number node, so this row lines up with the eight
+  // above it instead of sitting at its own indent.
+  subQuestNode: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.pinkBright },
+  subQuestNodeDone: { backgroundColor: colors.green },
+  subQuestNodeTxt: { fontSize: 17 },
+  subQuestKicker: { fontFamily: font.extra, fontSize: 9.5, letterSpacing: 0.5, color: colors.pinkDark },
+  subQuestTitle: { fontFamily: font.extra, fontSize: 14, color: colors.ink, marginTop: 2 },
   subQuestTxtDone: { color: colors.greenDark },
 });

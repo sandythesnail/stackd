@@ -285,6 +285,12 @@ function QuestReportCard({
   equipped: Parameters<typeof Hammy>[0]['equipped'];
 }) {
   const [expanded, setExpanded] = useState(false);
+  const statTiles = [
+    report.kcTotal > 0 ? { num: `${report.kcRightCount}/${report.kcTotal}`, label: 'Quick Check' } : null,
+    report.mythTotal > 0 ? { num: `${report.mythRightCount}/${report.mythTotal}`, label: 'True/False' } : null,
+    report.matchingMistakes > 0 ? { num: String(report.matchingMistakes), label: 'Match Misses' } : null,
+    report.hintsUsed > 0 ? { num: String(report.hintsUsed), label: 'Hints' } : null,
+  ].filter((s): s is { num: string; label: string } => s !== null);
   return (
     <Card style={styles.reportCard}>
       <View style={styles.reportMastery}>
@@ -308,12 +314,15 @@ function QuestReportCard({
         </View>
       ) : null}
 
-      <View style={styles.reportStatRow}>
-        <ReportStat num={`${report.kcRightCount}/${report.kcTotal}`} label="Quick Check" />
-        <ReportStat num={`${report.mythRightCount}/${report.mythTotal}`} label="True/False" />
-        <ReportStat num={String(report.matchingMistakes)} label="Match Misses" />
-        <ReportStat num={String(report.hintsUsed)} label="Hints" />
-      </View>
+      {/* Only the tiles this lesson actually earned. Lessons draw on different chapter types,
+          so most have no Match It or no True/False at all — and a tile reading "0/0" doesn't
+          say "there weren't any", it looks like a score of nothing. Hints shows whenever one
+          was used; a spotless 0 there isn't a stat worth a tile either. */}
+      {statTiles.length ? (
+        <View style={styles.reportStatRow}>
+          {statTiles.map((s) => <ReportStat key={s.label} num={s.num} label={s.label} />)}
+        </View>
+      ) : null}
 
       {report.explainback ? (
         <Txt style={styles.reportBody}>

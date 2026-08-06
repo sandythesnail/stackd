@@ -162,6 +162,12 @@ export type AppState = {
   /** toDateString() of the last day a lesson was finished — Home's mascot shows a "happy
    * today" face once this is today instead of the deterministic daily mood. */
   lastModuleActivityDate: string | null;
+  /** Module whose lesson was finished most recently. moduleStatus only knows 'done' vs
+   * 'active' (nothing is gated, so every unfinished module is equally 'active'), which left
+   * the Modules tab with no way to tell which module the player is actually working through
+   * — it opened whichever unfinished module came first in the list. Null until the first
+   * lesson is finished, and on states saved before this field existed. */
+  lastModuleId: string | null;
   /** Module ids whose real-life "step-by-step guide" quest (see LessonSummary.isLifeTask)
    * has been completed — tracked separately from moduleProgress/mastery, see
    * RealLifeSubQuestRow and completeLifeTask below. */
@@ -207,6 +213,7 @@ const DEFAULT_STATE: AppState = {
   questHintsUsed: {},
   termsLearned: [],
   lastModuleActivityDate: null,
+  lastModuleId: null,
   completedLifeTaskIds: [],
   hasSeenOnboardingTour: false,
   // Matches app.js's own default state literal exactly — the income/fixed-expense starter
@@ -812,6 +819,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               ? accumulateModuleStats(s.moduleStats, moduleId, xpEarned, correctCount, gradedTotal)
               : s.moduleStats,
             lastModuleActivityDate: new Date().toDateString(),
+            lastModuleId: moduleId,
             questBossesWon: bossWon && !s.questBossesWon.includes(moduleId)
               ? [...s.questBossesWon, moduleId] : s.questBossesWon,
             questHintsUsed: advanced && questId && hintsUsed !== undefined
@@ -878,6 +886,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               : s.moduleStats,
             completedLifeTaskIds: firstTime ? [...s.completedLifeTaskIds, moduleId] : s.completedLifeTaskIds,
             lastModuleActivityDate: new Date().toDateString(),
+            lastModuleId: moduleId,
             questHintsUsed: firstTime && questId && hintsUsed !== undefined
               ? { ...s.questHintsUsed, [`${moduleId}::${questId}`]: hintsUsed } : s.questHintsUsed,
             termsLearned: newTerms?.length
