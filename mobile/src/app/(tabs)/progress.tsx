@@ -3,7 +3,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { Screen, Header, Txt, Card, Stat, ProgressBar, MIcon } from '@/components';
 import { colors, font } from '@/theme';
 import { modules } from '@/data';
-import { useStore, xpForLevel, MAX_LEVEL } from '@/store';
+import { useStore, xpForLevel, xpProgressPct, MAX_LEVEL } from '@/store';
 
 /** Screen 8 — Progress. Ported from the website's renderProgressPage: 4 stat cards, a
  * "Modules Done" donut with legend, a Module Progress chart, an "XP Earned by
@@ -27,8 +27,15 @@ export default function Progress() {
 
   const base = xpForLevel(level - 1);
   const ceil = xpForLevel(level);
-  const levelPct = ceil === base ? 100 : Math.min(100, ((state.xp - base) / (ceil - base)) * 100);
+  // The store's own function rather than a second copy of the formula — it clamps at BOTH
+  // ends (this one only capped the top) and it's what the results screen's level bar uses,
+  // so the two can't drift apart.
+  const levelPct = xpProgressPct(state.xp, level);
   const xpToNext = Math.max(0, ceil - state.xp);
+  // At the top level there is no next threshold: xpForLevel clamps to the last entry, so
+  // `ceil` collapses onto `base` (both 2200) while xp keeps climbing past it. Every readout
+  // below has to branch on this rather than print `ceil`.
+  const atMaxLevel = level >= MAX_LEVEL;
 
   const xpVals = modules.map((m) => state.moduleStats[m.id]?.xp ?? 0);
   const maxXp = Math.max(...xpVals, 1);
@@ -108,13 +115,26 @@ export default function Progress() {
               <Txt style={styles.levelBigTxt}>Lv {level}</Txt>
             </View>
             <View style={{ flex: 1, gap: 8 }}>
+              {/* These two numbers flank the bar, so they have to be the BAR's endpoints.
+                  They used to be total XP on the left and the next level's cumulative
+                  threshold on the right ("2,413 XP earned … 2,200 XP needed") while the bar
+                  between them measured progress within the current level only — so at Level 5
+                  with 500 XP the labels read 500-of-660 while the bar sat at 11%, and at the
+                  top level they read "2,413 earned / 2,200 needed", asking for less XP than
+                  the player already had, under a full bar and the words "Max level reached".
+                  Per-level figures describe what's actually drawn. Total XP hasn't been lost:
+                  it's the first stat tile at the top of this same screen. */}
               <View style={styles.levelXpRow}>
-                <Txt style={styles.levelXpTxt}>{state.xp.toLocaleString()} XP earned</Txt>
-                <Txt style={styles.levelXpTxt}>{ceil.toLocaleString()} XP needed</Txt>
+                <Txt style={styles.levelXpTxt}>
+                  {atMaxLevel
+                    ? `${state.xp.toLocaleString()} XP earned`
+                    : `${(state.xp - base).toLocaleString()} / ${(ceil - base).toLocaleString()} XP this level`}
+                </Txt>
+                <Txt style={styles.levelXpTxt}>{atMaxLevel ? 'Max level' : `Level ${level + 1}`}</Txt>
               </View>
               <ProgressBar value={levelPct / 100} height={10} />
               <Txt style={styles.levelSub}>
-                {level >= MAX_LEVEL ? `Max level reached · ${tierName}` : `${xpToNext.toLocaleString()} XP to Level ${level + 1} · ${tierName}`}
+                {atMaxLevel ? `Max level reached · ${tierName}` : `${xpToNext.toLocaleString()} XP to Level ${level + 1} · ${tierName}`}
               </Txt>
             </View>
           </View>

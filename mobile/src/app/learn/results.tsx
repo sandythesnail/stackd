@@ -12,7 +12,7 @@ import { Txt, Button, Tag, Card, Hammy, Coin } from '@/components';
 import { colors, font } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
-import { useStore, xpProgressPct } from '@/store';
+import { useStore, xpProgressPct, MAX_LEVEL } from '@/store';
 import { buildQuestReport, takePendingQuestAnalytics } from '@/questReport';
 import { REACTION_FACES } from '@/hammyFaces';
 
@@ -148,7 +148,13 @@ export default function Results() {
           <Reanimated.View style={styles.levelWrap} entering={FadeInDown.delay(420).duration(380).springify()}>
             <View style={styles.levelRow}>
               <Txt style={styles.levelTiny}>LEVEL {level}</Txt>
-              <Txt style={styles.levelTiny}>{Math.round(pct)}% to Level {level + 1}</Txt>
+              {/* xpProgressPct returns a flat 100 at the top level (its ceiling collapses onto
+                  its floor), so this read "100% to Level 12" — a level that doesn't exist and
+                  can never be reached — on the results screen after every lesson once a player
+                  passed 2,200 XP. Same fix as the Progress tab's level card. */}
+              <Txt style={styles.levelTiny}>
+                {level >= MAX_LEVEL ? 'Max level reached' : `${Math.round(pct)}% to Level ${level + 1}`}
+              </Txt>
             </View>
             <View style={styles.levelTrack}>
               {/* Grows from empty to the real percentage, so you see the progress you just
