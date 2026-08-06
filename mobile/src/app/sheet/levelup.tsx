@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Txt, Button, Tag, Hammy } from '@/components';
 import { colors, font } from '@/theme';
 import { useStore } from '@/store';
+import { RequireAuth } from '@/lib/RequireAuth';
 
 const SPOTS = [
   { size: 12, bg: '#FF96B8', top: 120, left: 50 },
@@ -19,6 +20,16 @@ const SPOTS = [
  * the website's maybeShowPostCompletionOverlays — tier tracks modules mastered, not raw
  * level, so this is reserved for "Broke Freshman -> Budget Apprentice" moments). */
 export default function LevelUp() {
+  // Root-Stack screen, so it has no protected layout above it — gate it directly, or
+  // /sheet/levelup stays reachable by deep link with no session (lib/RequireAuth.tsx).
+  return (
+    <RequireAuth>
+      <LevelUpSheet />
+    </RequireAuth>
+  );
+}
+
+function LevelUpSheet() {
   const router = useRouter();
   const { state, level, tierName, equippedMascotItems } = useStore();
   // /sheet/life-event is a same-navigator sibling (both are root-Stack screens, see

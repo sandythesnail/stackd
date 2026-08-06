@@ -310,16 +310,16 @@ function ClerkAccountRow() {
 
 /** Real Clerk sign-out (only rendered when auth is on). */
 function ClerkSignOutRow() {
-  const router = useRouter();
   const { signOut } = useClerk();
   const onSignOut = () => {
     confirmDestructive('Sign out?', 'Your progress is saved to your account.', 'Sign out', async () => {
+      // No navigation here on purpose. This used to push('/(onboarding)/signin'), which
+      // put the sign-in screen ON TOP of a fully mounted, signed-in tab stack — one back
+      // gesture (or browser Back) landed you inside the app with no session. The (tabs)
+      // layout is now wrapped in RequireAuth, so dropping the session is itself what moves
+      // you: the guard sees `isSignedIn` go false and REPLACES this route with sign-in,
+      // tearing the signed-in tree down instead of leaving it in history behind us.
       await signOut();
-      // push, not replace — this screen lives in the (tabs) nested navigator, and
-      // replace() doesn't reliably cross into a different top-level branch like
-      // (onboarding) (see results.tsx's continuePress for the full story of the "route
-      // doesn't exist"/blank-screen crash this causes).
-      router.push('/(onboarding)/signin');
     });
   };
   return <Row icon="log-out" title="Sign out" last onPress={onSignOut} />;

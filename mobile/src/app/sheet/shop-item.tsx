@@ -9,6 +9,7 @@ import { colors, font } from '@/theme';
 import { shopItemById, shopItemsReal } from '@/content';
 import type { ShopItemReal } from '@/content';
 import { useStore, mysteryDropChance, itemRarity, MAX_EQUIPPED_ITEMS, type MysteryResult } from '@/store';
+import { RequireAuth } from '@/lib/RequireAuth';
 
 const CATEGORY_LABEL: Record<string, string> = {
   hat: 'Hats', accessory: 'Accessories', room: 'Room', exclusive: 'Exclusive', reward: 'Rewards',
@@ -46,6 +47,16 @@ function GiftIcon({ size, tone = 'pink' }: { size: number; tone?: 'pink' | 'purp
  * with the real purchase/equip economy and (for mystery boxes) the odds-weighted open
  * + spin/reveal flow, all ported from the website's app.js. */
 export default function ShopItemModal() {
+  // Root-Stack screen with no protected layout above it — gate it directly, or
+  // /sheet/shop-item stays reachable by deep link with no session (lib/RequireAuth.tsx).
+  return (
+    <RequireAuth>
+      <ShopItemSheet />
+    </RequireAuth>
+  );
+}
+
+function ShopItemSheet() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = shopItemById(id ?? '');

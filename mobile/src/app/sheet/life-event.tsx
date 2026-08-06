@@ -7,12 +7,23 @@ import { Txt, Button, LifeEventCard } from '@/components';
 import { colors } from '@/theme';
 import { useStore } from '@/store';
 import { LIFE_EVENT_SHEET_MAX_HEIGHT_PCT } from '@/lifeEventLayout';
+import { RequireAuth } from '@/lib/RequireAuth';
 
 /** Screen 21 — "Life happens…" life-event card. Real scenarios ported from the website's
  * LIFE_EVENTS/LIFE_EVENT_UNLOCKS, triggered by the store after a lesson completes. Presented
  * as a bottom sheet; the card body itself (LifeEventCard) is shared with the ambient
  * mid-lesson popup in learn/quest.tsx so the two always look identical. */
 export default function LifeEvent() {
+  // Root-Stack screen with no protected layout above it — gate it directly, or
+  // /sheet/life-event stays reachable by deep link with no session (lib/RequireAuth.tsx).
+  return (
+    <RequireAuth>
+      <LifeEventSheet />
+    </RequireAuth>
+  );
+}
+
+function LifeEventSheet() {
   const router = useRouter();
   const { pendingLifeEvent, resolveLifeEvent } = useStore();
   const [event] = useState(() => pendingLifeEvent());
