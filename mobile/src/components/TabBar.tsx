@@ -66,7 +66,10 @@ function TabButton({
             highlights came out a couple of pixels taller than the other four, which is
             visible when the boxes are filled in and sitting side by side. */}
         <View style={styles.iconBox}>{meta.render(color)}</View>
-        <Txt style={[styles.label, { color }]}>{meta.label}</Txt>
+        {/* numberOfLines so a label can never wrap onto a second line and make one pill
+            taller than the other five — the bar gets tight on small phones and "Progress"
+            is the widest label by some margin. */}
+        <Txt numberOfLines={1} style={[styles.label, { color }]}>{meta.label}</Txt>
       </View>
     </Pressable>
   );
@@ -85,14 +88,17 @@ export function TabBar({ state, navigation }: TabBarProps) {
         // The Shop, Modules, and Tools tabs are the ones spotlighted by the onboarding tour
         // (see OnboardingTour.tsx) — wrapped only for those routes so every other tab stays a
         // plain Pressable.
+        // The wrapper takes `tabSlot`, NOT `tab`: `tab` centres its children, which stopped
+        // the TabButton inside from filling the slot, so these three pills shrank to their own
+        // label width while the four unwrapped tabs stretched to a full sixth of the bar.
         if (route.name === 'shop') {
-          return <TourTarget key={route.key} id="tour-shop-tab" style={styles.tab}>{tab}</TourTarget>;
+          return <TourTarget key={route.key} id="tour-shop-tab" style={styles.tabSlot}>{tab}</TourTarget>;
         }
         if (route.name === 'modules') {
-          return <TourTarget key={route.key} id="tour-modules-tab" style={styles.tab}>{tab}</TourTarget>;
+          return <TourTarget key={route.key} id="tour-modules-tab" style={styles.tabSlot}>{tab}</TourTarget>;
         }
         if (route.name === 'tools') {
-          return <TourTarget key={route.key} id="tour-tools-tab" style={styles.tab}>{tab}</TourTarget>;
+          return <TourTarget key={route.key} id="tour-tools-tab" style={styles.tabSlot}>{tab}</TourTarget>;
         }
         return tab;
       })}
@@ -109,12 +115,18 @@ const styles = StyleSheet.create({
     paddingTop: 9,
     paddingHorizontal: 4,
   },
+  // One slot per tab, all six an equal sixth of the bar. `tabSlot` is the width alone, for the
+  // tour wrappers to sit in without imposing any alignment on what they hold.
+  tabSlot: { flex: 1 },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   // Always rendered, transparent until focused — so the highlight appearing is purely a color
-  // change and can never resize the bar or nudge a neighbouring tab.
+  // change and can never resize the bar or nudge a neighbouring tab. Stretching to the slot is
+  // what makes all six identical: the pill's size comes from the bar's own even division,
+  // never from how long its label happens to be.
   pill: {
     alignItems: 'center', justifyContent: 'center', gap: 4,
-    alignSelf: 'stretch', paddingVertical: 6, borderRadius: 14,
+    alignSelf: 'stretch', marginHorizontal: 3,
+    paddingVertical: 7, paddingHorizontal: 2, borderRadius: 14,
     backgroundColor: 'transparent',
   },
   pillOn: { backgroundColor: colors.greenPale },

@@ -43,7 +43,11 @@ export default function Badges() {
           {shown.map((b) => (
             <Pressable key={b.id} style={styles.cell} onPress={() => setSelected(b)}>
               <BadgeMedal icon={b.icon} color={b.color} tier={b.tier} size={64} locked={!b.earned} />
-              <Txt style={[styles.lbl, !b.earned && { color: '#A8A296' }]}>{b.label}</Txt>
+              {/* Two lines' worth of height always, whether the label needs them or not — the
+                  long ones ("Future Millionaire", "No Hints Needed") wrap and the short ones
+                  don't, and a row is as tall as its tallest cell, so letting each label size
+                  itself left uneven vertical gaps between rows. */}
+              <Txt numberOfLines={2} style={[styles.lbl, !b.earned && { color: '#A8A296' }]}>{b.label}</Txt>
             </Pressable>
           ))}
         </View>
@@ -67,7 +71,12 @@ const styles = StyleSheet.create({
   },
   fchipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   fchipTxt: { fontFamily: font.extra, fontSize: 12.5, color: colors.muted3 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 18 },
-  cell: { width: '31%', alignItems: 'center', gap: 7 },
-  lbl: { fontFamily: font.extra, fontSize: 10.5, color: colors.muted1, textAlign: 'center' },
+  // A plain three-column grid: every cell is exactly a third wide and rows pack from the left.
+  // This used to be `justify-content: space-between` over 31%-wide cells, which is only even
+  // while a row is full — the last row of a filtered tier is usually short (Bronze has 11
+  // badges, so it ends on a row of 2) and its badges were pushed out to the far edges with a
+  // badge-sized hole between them.
+  grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 18 },
+  cell: { width: '33.333%', paddingHorizontal: 4, alignItems: 'center', gap: 7 },
+  lbl: { fontFamily: font.extra, fontSize: 10.5, lineHeight: 13, height: 26, color: colors.muted1, textAlign: 'center' },
 });
