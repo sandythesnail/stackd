@@ -2047,7 +2047,7 @@ function KnowledgecheckView({
         // answer is worth anything. It gets to be legible in full; if that means the card
         // runs past the fold, the scroller follows it down (see followContentGrowth).
         <AnswerFeedback>
-          <Card style={styles.kcAnswerCard}><Txt variant="lead" style={{ fontSize: 13, lineHeight: 18 }} color={right ? colors.greenDark : colors.pinkDark}>{question.exp}</Txt></Card>
+          <Card style={styles.kcAnswerCard}><Txt variant="lead" style={styles.kcAnswerTxt} color={right ? colors.greenDark : colors.pinkDark}>{question.exp}</Txt></Card>
         </AnswerFeedback>
       ) : null}
     </Reanimated.View>
@@ -3097,7 +3097,21 @@ const styles = StyleSheet.create({
   simCard: { gap: 3, padding: 14 },
   simPrompt: { fontSize: 13.5, lineHeight: 19 },
   simRowTxt: { fontSize: 12.5, lineHeight: 18 },
-  kcAnswerCard: { padding: 14 },
+  // The explanation card is now the tallest thing on a Quick Check — it holds the question's
+  // whole `exp`, which runs to 454 characters, where it used to hold 85. So it gets the same
+  // treatment conceptCard already gets for being the one block that regularly runs long:
+  // padding pulled in, leading pulled in, and NOTHING taken off the type size.
+  //
+  // 11, not 14: this card holds a single paragraph with no internal structure to space out,
+  // so its padding is pure margin around text that already sits inside the screen's own 18px
+  // gutter. The horizontal side also buys back a little line length, which is the cheapest
+  // height there is — wider lines mean fewer of them.
+  kcAnswerCard: { padding: 11 },
+  // 17, down from 18 (a 1.31 ratio at 13px). Deliberately the smallest lever pulled here and
+  // the last one: font size stays at 13. The entire point of this card is that the student
+  // can read the explanation they just earned, so shrinking the glyphs to make it fit would
+  // undo the change it exists to serve — leading can give a little, legibility can't.
+  kcAnswerTxt: { fontSize: 13, lineHeight: 17 },
   spotcheckIntro: { fontSize: 13.5, lineHeight: 19 },
   spotcheckCard: { gap: 6, padding: 15 },
   segment: { borderRadius: 12, padding: 8, borderWidth: 1.5, borderColor: colors.borderOpt },
