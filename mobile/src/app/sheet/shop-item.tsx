@@ -127,19 +127,19 @@ function ShopItemSheet() {
     buttonLabel = `🎁 Only from the ${mysteryBoxNameFor(item.mysteryPool!)}`;
     buttonDisabled = true;
   } else if (equipped) {
-    // Two verbs, split on the only distinction the player actually makes: things that go in
-    // the room are Placed/Unplaced, things Hammy puts on are Worn/Unworn.
+    // Three verbs, one per kind of thing: wallpaper is Applied, the rest of the furniture is
+    // Placed, and anything Hammy puts on is Worn. Kept in step with this item's status chip
+    // in the Shop grid and with the Room tab.
     //
-    // Wallpaper used to be a third case, Apply/Unapply, on the grounds that it's what you do
-    // to wallpaper. But it sits in the room category next to the rugs, beds and lamps, and it
-    // is the only one of the 34 room items that said anything different — so the furniture
-    // list had one button reading "Apply" among a column of "Place", which reads as a
-    // different KIND of action rather than the same action on a different object.
-    buttonLabel = item.slot ? 'Unplace' : 'Unwear';
+    // Wallpaper keeping its own verb is deliberate and has been decided twice — it is the one
+    // room item you don't put somewhere, you cover a wall with it, and "Place wallpaper" reads
+    // wrong for that even though it makes the furniture list uniform. Don't collapse it into
+    // 'Place' for consistency's sake; the inconsistency is the point.
+    buttonLabel = item.slot === 'wallpaper' ? 'Unapply' : item.slot ? 'Unplace' : 'Unwear';
     buttonDisabled = false;
   } else if (owned) {
     const noFreeSlot = !item.slot && state.equippedItems.length >= MAX_EQUIPPED_ITEMS;
-    const equipVerb = item.slot ? 'Place' : 'Wear';
+    const equipVerb = item.slot === 'wallpaper' ? 'Apply' : item.slot ? 'Place' : 'Wear';
     buttonLabel = noFreeSlot ? `${equipVerb} (take something off first)` : equipVerb;
     buttonDisabled = noFreeSlot;
   } else {
