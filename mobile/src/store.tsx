@@ -59,7 +59,11 @@ export function xpProgressPct(xp: number, level: number) {
   const base = xpForLevel(level - 1);
   const ceil = xpForLevel(level);
   if (ceil === base) return 100;
-  return Math.min(100, ((xp - base) / (ceil - base)) * 100);
+  // Clamped at both ends. The level is derived from xp, so xp should never sit below its own
+  // level's floor — but a remote sync that lowers xp before the level recomputes would make
+  // this negative, and it is fed straight into a `width: ${pct}%` on the results screen's
+  // level bar, which is not a value a width can take.
+  return Math.max(0, Math.min(100, ((xp - base) / (ceil - base)) * 100));
 }
 
 /** TIERS ported verbatim from app.js — keyed by count of MASTERED modules (0-11), not level. */

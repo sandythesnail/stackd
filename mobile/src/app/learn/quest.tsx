@@ -982,6 +982,17 @@ function AmbientLifeEventModal({
   const [event] = useState(() => pendingLifeEvent());
   const { height: winH } = useWindowDimensions();
 
+  // Rendering nothing here used to strand the lesson for good. The chapter transition is
+  // already paused waiting on this overlay (pendingAdvanceRef holds it), the action button
+  // that started it has been spent (fireAction won't run the same action twice), and this
+  // Modal deliberately ignores the Android back button — so an event id that doesn't resolve
+  // to a real event meant no popup, no way to advance and no way to retry: the lesson simply
+  // stopped. Releasing the paused transition turns that into a skipped popup instead.
+  useEffect(() => {
+    if (!event) onDone();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (!event) return null;
 
   return (

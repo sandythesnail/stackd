@@ -236,7 +236,7 @@ function Reward({ value, label, big }: { value: React.ReactNode; label: string; 
 
 /** Circular mastery ring — same SVG-stroke technique as the Progress tab's Ring, ported
  * from the website's conic-gradient .report-mastery-ring at the same 84/64px proportions. */
-function MasteryRing({ pct }: { pct: number }) {
+function MasteryRing({ pct, graded = true }: { pct: number; graded?: boolean }) {
   const size = 76;
   const stroke = 9;
   const r = (size - stroke) / 2;
@@ -246,8 +246,9 @@ function MasteryRing({ pct }: { pct: number }) {
   // strokeDashoffset is an SVG prop, not a style, so it can't ride a transform.
   const offset = useSharedValue(c);
   useEffect(() => {
+    if (!graded) return;
     offset.value = withDelay(640, withTiming(c * (1 - pct / 100), { duration: 950, easing: Easing.out(Easing.cubic) }));
-  }, [pct, c, offset]);
+  }, [pct, c, offset, graded]);
   const animatedProps = useAnimatedProps(() => ({ strokeDashoffset: offset.value }));
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
@@ -262,7 +263,7 @@ function MasteryRing({ pct }: { pct: number }) {
         />
       </Svg>
       <View style={styles.ringInner}>
-        <Txt style={styles.ringPct}>{pct}%</Txt>
+        <Txt style={styles.ringPct}>{graded ? `${pct}%` : '—'}</Txt>
       </View>
     </View>
   );
@@ -294,7 +295,11 @@ function QuestReportCard({
   return (
     <Card style={styles.reportCard}>
       <View style={styles.reportMastery}>
-        <MasteryRing pct={report.masteryPct} />
+        {/* buildQuestReport reports 100% when nothing was answered — mathematically the only
+            sensible default, but as a full green ring it claimed a perfect score for a lesson
+            that never asked anything. An em dash on an empty track says the same thing the
+            line beside it does. */}
+        <MasteryRing pct={report.masteryPct} graded={report.totalAnswered > 0} />
         <View style={{ flex: 1 }}>
           <Txt style={styles.reportMasteryLabel}>Mastery this lesson</Txt>
           <Txt style={styles.reportMasterySub}>
@@ -345,9 +350,13 @@ function QuestReportCard({
             </Pressable>
           ) : null}
         </View>
-      ) : (
+      ) : report.totalAnswered > 0 ? (
+        // Only when there were questions to get right. "No weak spots" and "no questions"
+        // are the same empty list, so a lesson built entirely from story/teach/simulator
+        // chapters was congratulated for a clean sweep of nothing — directly under the line
+        // that says "Nothing graded this lesson" on the same card.
         <Txt style={styles.reportPerfect}>Every question right this time. 🎉</Txt>
-      )}
+      ) : null}
 
       <View style={styles.reportAdvice}>
         <Hammy size={92} bob={false} equipped={equipped} />
