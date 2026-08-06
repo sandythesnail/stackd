@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
@@ -50,32 +50,17 @@ export default function Modules() {
     return new Set(open ? [open] : []);
   });
 
-  // Expanding a row near the bottom of an 11-module list used to drop its lesson list
-  // entirely below the fold — you tapped something and appeared to get nothing back. The
-  // row's own offset is captured on layout and the list scrolls its header to the top, so
-  // the body that just opened is the thing you're looking at.
-  const scrollRef = useRef<ScrollView>(null);
-  const listY = useRef(0);
-  const rowY = useRef<Record<string, number>>({});
-  // Stable callback so the rows' onLayout closures never touch rowY.current inside the map
-  // itself — reading a ref from anywhere in the render pass is what react-hooks/refs objects
-  // to, and it's right to: a value read there isn't guaranteed to be the current one.
-  const captureRowY = useCallback((id: string, y: number) => { rowY.current[id] = y; }, []);
-  const toggle = (id: string) => {
-    const opening = !expanded.has(id);
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-    // One frame later, so the body has been laid out and the scroller knows its new height.
-    if (opening) {
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo({ y: Math.max(listY.current + (rowY.current[id] ?? 0) - 12, 0), animated: true });
-      });
-    }
-  };
+  // Opening a row does not scroll the list. An auto-scroll that put the tapped row's header
+  // at the top was tried and removed: it fires a frame after the tap, so the list jumps
+  // under your finger just as the body appears, and the two movements read as one glitch.
+  // A row you open near the bottom may open partly below the fold — that's a scroll the
+  // reader is already making, and it beats the screen moving on its own.
+  const toggle = (id: string) => setExpanded((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    return next;
+  });
 
   // Captured once at mount, before the effect below marks the cascade as played.
   const [animateRows] = useState(() => !listAnim.played);
@@ -84,13 +69,13 @@ export default function Modules() {
   return (
     <Screen edges={['top']}>
       <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} />
-      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.head}>
           <Txt variant="disp" style={{ fontSize: 23 }}>All modules</Txt>
           <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.green }}>{doneCount} / {modules.length} done</Txt>
         </View>
 
-        <View style={{ gap: 12 }} onLayout={(e) => { listY.current = e.nativeEvent.layout.y; }}>
+        <View style={{ gap: 12 }}>
           {modules.map((m, rowIdx) => {
             const content = moduleContentById(m.id);
             // The real-life step-by-step guide lesson is surfaced separately, right below
@@ -116,7 +101,6 @@ export default function Modules() {
               <Reanimated.View
                 key={m.id}
                 entering={animateRows ? FadeInDown.delay(Math.min(rowIdx, 10) * 45).duration(320).springify().damping(18) : undefined}
-                onLayout={(e) => captureRowY(m.id, e.nativeEvent.layout.y)}
                 style={[styles.row, status === 'done' && styles.rowDone, recommended && styles.rowRecommended]}
               >
                 <Pressable onPress={() => toggle(m.id)} style={[styles.rowHead, recommended && styles.rowHeadRecommended]} accessibilityRole="button" accessibilityLabel={m.name} accessibilityState={{ expanded: isOpen }}>
