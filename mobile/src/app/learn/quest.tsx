@@ -962,11 +962,15 @@ function LookBackButton({ terms }: { terms: LearnedTerm[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [terms.length]);
 
-  const closeAll = () => { setOpenTerm(null); setOpen(false); };
+  // Closing only hides the modal; which screen it was showing is reset on the way IN, not on
+  // the way out. Clearing openTerm here as well would swap the card back to the full word grid
+  // while the fade-out is still playing, so dismissing a definition flashed the list on the
+  // way past and read as an extra screen.
+  const closeAll = () => setOpen(false);
 
   return (
     <>
-      <Pressable onPress={() => setOpen(true)} style={styles.lookBackBtn} hitSlop={10}>
+      <Pressable onPress={() => { setOpenTerm(null); setOpen(true); }} style={styles.lookBackBtn} hitSlop={10}>
         <Txt style={styles.lookBackIcon}>📖</Txt>
         <Txt style={styles.lookBackCount}>{terms.length}</Txt>
       </Pressable>
