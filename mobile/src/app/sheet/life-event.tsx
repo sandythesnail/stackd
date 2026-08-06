@@ -20,9 +20,11 @@ export default function LifeEvent() {
   // Return to the Modules tab (where the lesson was launched from). That tab lives in a
   // different nested navigator than this root-Stack screen — replace() across that boundary
   // is unreliable (see results.tsx's continuePress for the full story of the "broken route"
-  // this caused); push() instead.
+  // this caused). navigate goes back to the (tabs) entry already on the root Stack, taking
+  // this sheet and the finished lesson off with it; push left them stacked underneath, two
+  // entries deeper for every lesson played.
   const done = () => {
-    router.push('/(tabs)/modules');
+    router.navigate('/(tabs)/modules');
   };
 
   const { height: winH } = useWindowDimensions();

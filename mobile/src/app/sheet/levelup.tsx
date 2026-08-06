@@ -24,11 +24,15 @@ export default function LevelUp() {
   // /sheet/life-event is a same-navigator sibling (both are root-Stack screens, see
   // _layout.tsx), so replace() is fine there. The route lives under /sheet rather than
   // /modal because baseUrl "/m" would otherwise eat the "m" of "modal" in the production
-  // web build — see results.tsx's continuePress for the full story. The Modules tab lives in
-  // a different nested navigator, where replace() across that boundary is unreliable; push().
+  // web build — see results.tsx's continuePress for the full story.
+  //
+  // Leaving for the Modules tab navigates rather than pushing, so this overlay and the
+  // finished lesson under it come off the stack instead of being buried beneath a second
+  // copy of the tabs — see the same change in results.tsx for why replace() is not the
+  // answer across that navigator boundary.
   const done = () => {
     if (state.pendingLifeEventId) { router.replace({ pathname: '/sheet/life-event' }); return; }
-    router.push('/(tabs)/modules');
+    router.navigate('/(tabs)/modules');
   };
   return (
     <LinearGradient colors={[colors.green, colors.greenDark]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1 }}>

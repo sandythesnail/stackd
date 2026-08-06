@@ -92,12 +92,24 @@ export default function Results() {
   // This is form-independent: object-form { pathname } with no params resolves to the same
   // bare string as a plain push, so it does NOT dodge the collision. The only robust fix is
   // to keep the segment off the letter "m"; `npm run check:routes` guards against /m* routes.
-  // (push() is still required for the cross-navigator hops below: replace() doesn't reliably
-  // cross from this nested "learn" stack into the root Stack.)
+  //
+  // The two sheets are pushed — they're transparentModal overlays and belong ON TOP of what
+  // is already there. Leaving for the Modules tab navigates instead.
+  //
+  // navigate, not push, and not replace. push stacked a SECOND (tabs) entry on top of the
+  // one the lesson was launched from, leaving the whole finished lesson underneath it: two
+  // stack entries per lesson, forever. Four lessons in a sitting and the Android back button
+  // walked back through four old results screens, each still showing its confetti. replace()
+  // is the fix that doesn't work here — it's unreliable crossing from this nested "learn"
+  // stack into the root Stack, which is the "unmatched route"/blank-screen crash the comment
+  // above is about. navigate resolves up the navigator tree to the root Stack, finds the
+  // (tabs) entry already sitting below "learn", and returns to it, dropping the lesson
+  // screens on the way. If it ever failed to find one it would push, i.e. degrade to exactly
+  // the old behaviour rather than to a broken route.
   const continuePress = () => {
     if (tieredUp) { router.push({ pathname: '/sheet/levelup' }); return; }
     if (state.pendingLifeEventId) { router.push({ pathname: '/sheet/life-event' }); return; }
-    router.push('/(tabs)/modules');
+    router.navigate('/(tabs)/modules');
   };
 
   return (
