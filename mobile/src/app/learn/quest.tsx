@@ -75,6 +75,11 @@ type LearnedTerm = { term: string; plain: string; section: string };
 // explainback anyway — so he loses least by stepping aside here.
 const TALL_CHAPTER_TYPES = new Set(['microsim', 'simulator', 'spotcheck', 'bossbattle', 'knowledgecheck', 'priceisright', 'explainback']);
 
+/** Ceiling on the boss-battle verdict sheet, as a fraction of screen height — the same shape
+ * of cap LIFE_EVENT_SHEET_MAX_HEIGHT_PCT puts on the life-event sheet, so the two overlays
+ * behave identically on a short screen. */
+const BOSS_SHEET_MAX_HEIGHT_PCT = 0.8;
+
 /* There used to be a second, MEASURED way to lose the companion: an allow-list of dense
  * chapter types (knowledgecheck, decision, bossbattle, mythcards, explainback, urlinspect,
  * priceisright) that started Hammy invisible-but-spaced, measured whether the laid-out
@@ -331,6 +336,29 @@ export default function QuestPlayer() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [chapterIdx, kcQuestionIdx]);
+  // ...and follows the content back DOWN when a chapter grows under you.
+  //
+  // Nearly every chapter answers you by appending: the Quick Check puts its explanation card
+  // below four options, the poll below its buttons, microsim below the sliders. That's
+  // deliberate — this file has repeatedly rejected layouts where answering moves what you
+  // were reading. But the content it appends to is often taller than the screen: quiz options
+  // run to 223 characters and question stems to 231, so a Quick Check with four long options
+  // puts its explanation somewhere below the fold. The student taps an answer, sees nothing
+  // happen, and the always-visible Next button in the bottom bar invites them straight past
+  // the explanation they just earned.
+  //
+  // So: growth within the step you're on scrolls to show it; a new chapter or a new question
+  // re-baselines instead (that's the reset above, not a reveal). Keyed on the step rather
+  // than measured against a stored height alone, so it doesn't matter whether this native
+  // callback or the effect above lands first.
+  const stepKey = `${chapterIdx}:${kcQuestionIdx}`;
+  const followRef = useRef<{ key: string; height: number }>({ key: '', height: 0 });
+  const followContentGrowth = (h: number) => {
+    const prev = followRef.current;
+    followRef.current = { key: stepKey, height: h };
+    if (prev.key !== stepKey) return;
+    if (h > prev.height + 8) scrollRef.current?.scrollToEnd({ animated: true });
+  };
   const [terms, setTerms] = useState<LearnedTerm[]>([]);
   // Mirrors `terms` synchronously. The final chapter's onComplete builds the results payload
   // in the same handler that can add the last word, and a setState isn't visible yet at that
@@ -709,14 +737,11 @@ export default function QuestPlayer() {
           raised && { paddingTop: 0, paddingBottom: matchLift },
         ]}
         showsVerticalScrollIndicator={false}
-        // The story's dialogue log is the one chapter that GROWS as you press the action
-        // button: each Next appends a beat below the last. Past three or four beats the new
-        // line landed below the fold, so tapping Next appeared to do nothing at all — the
-        // reply was on screen, just not on the part of the screen you could see. Following
-        // the content down is the whole point of a running log.
-        onContentSizeChange={() => {
-          if (chapter.type === 'story' && layoutMode === 'normal') scrollRef.current?.scrollToEnd({ animated: true });
-        }}
+        // See followContentGrowth. Covers the story's dialogue log (each Next appends a beat,
+        // which past three or four landed below the fold, so pressing Next appeared to do
+        // nothing) and every chapter that appends its answer feedback under content taller
+        // than the screen.
+        onContentSizeChange={(_w, h) => followContentGrowth(h)}
         // A student typing their answer on the explainback chapter has the keyboard up over
         // half the screen. Dragging the content now dismisses it, and taps land on what they
         // hit rather than being swallowed as "dismiss the keyboard" — on iOS a multiline box
@@ -1052,8 +1077,16 @@ function LookBackButton({ terms }: { terms: LearnedTerm[] }) {
                 <Pressable onPress={() => setOpenTerm(null)} hitSlop={8}>
                   <Txt style={styles.glossaryBackLink}>← Back to all words</Txt>
                 </Pressable>
-                <Txt style={styles.glossaryPopupTerm}>{openTerm.term}</Txt>
-                <Txt style={styles.glossaryPopupDef}>{openTerm.plain}</Txt>
+                {/* Scrollable, exactly like the word list on the other branch. The card is
+                    capped at 75% of the screen and the longest definition in the content runs
+                    626 characters — around fourteen lines here — so on a short screen the
+                    definition ran past the bottom of the card with nothing to scroll and the
+                    "Got it" button, the last thing in the column, was what got cut off. The
+                    button stays outside the scroller so it's always reachable. */}
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <Txt style={styles.glossaryPopupTerm}>{openTerm.term}</Txt>
+                  <Txt style={styles.glossaryPopupDef}>{openTerm.plain}</Txt>
+                </ScrollView>
                 <Button label="Got it" onPress={closeAll} style={{ marginTop: 16 }} />
               </>
             ) : (
@@ -2203,6 +2236,7 @@ function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: Si
 function BossbattleView({
   chapter, moduleXpReward, onComplete, onAction, reactTo, reportDecision,
 }: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete } & ActionProps & ReactProps & Pick<ReportProps, 'reportDecision'>) {
+  const { height: winH } = useWindowDimensions();
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const picked = chapter.choices.find((c) => c.id === pickedId);
@@ -2280,23 +2314,32 @@ function BossbattleView({
       <Modal visible={checked} transparent animationType="fade" onRequestClose={finish}>
         <View style={styles.bossSheetRoot}>
           <View style={[StyleSheet.absoluteFill, styles.ambientLifeScrim]} />
-          <Reanimated.View entering={SlideInDown.duration(300)} style={styles.bossVerdictSheet}>
-            {/* The mark comes first and is the biggest thing in the sheet — the whole point of
-                this popup is that the grade should not have to be inferred from the prose
-                under it. */}
-            <View style={[styles.bossVerdictMark, isRight ? styles.bossVerdictMarkOk : styles.bossVerdictMarkBad]}>
-              <Txt style={styles.bossVerdictGlyph}>{isRight ? '✓' : '✕'}</Txt>
-            </View>
-            <Txt style={[styles.bossVerdictTitle, { color: isRight ? colors.greenDark : colors.pinkDark }]}>
-              {isRight ? 'Correct!' : 'Not quite'}
-            </Txt>
-            <Txt variant="lead" style={styles.bossVerdictBody}>{picked?.consequence.text}</Txt>
-            {!isRight ? (
-              <View style={styles.bossBetterMove}>
-                <Txt style={styles.bossBetterMoveLabel}>THE STRONGER MOVE</Txt>
-                <Txt variant="lead" style={styles.bossBetterMoveTxt}>{best.label}</Txt>
+          {/* Capped and scrollable, the same shape the ambient life-event sheet uses. This
+              sheet is now the ONLY way to finish the quest — the bottom bar's action is
+              cleared while it's open, so its button can't be allowed to sit below the bottom
+              of the screen on any device. The verdict prose runs to 190 characters and gains
+              a "stronger move" block on a wrong answer, which fits today; the cap means it
+              still can't strand anyone if a longer one is ever authored. The button is
+              outside the scroller, so it's on screen whatever the text does. */}
+          <Reanimated.View entering={SlideInDown.duration(300)} style={[styles.bossVerdictSheet, { maxHeight: winH * BOSS_SHEET_MAX_HEIGHT_PCT }]}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.bossVerdictScroll}>
+              {/* The mark comes first and is the biggest thing in the sheet — the whole point
+                  of this popup is that the grade should not have to be inferred from the
+                  prose under it. */}
+              <View style={[styles.bossVerdictMark, isRight ? styles.bossVerdictMarkOk : styles.bossVerdictMarkBad]}>
+                <Txt style={styles.bossVerdictGlyph}>{isRight ? '✓' : '✕'}</Txt>
               </View>
-            ) : null}
+              <Txt style={[styles.bossVerdictTitle, { color: isRight ? colors.greenDark : colors.pinkDark }]}>
+                {isRight ? 'Correct!' : 'Not quite'}
+              </Txt>
+              <Txt variant="lead" style={styles.bossVerdictBody}>{picked?.consequence.text}</Txt>
+              {!isRight ? (
+                <View style={styles.bossBetterMove}>
+                  <Txt style={styles.bossBetterMoveLabel}>THE STRONGER MOVE</Txt>
+                  <Txt variant="lead" style={styles.bossBetterMoveTxt}>{best.label}</Txt>
+                </View>
+              ) : null}
+            </ScrollView>
             <Button label="Finish quest →" onPress={finish} style={{ marginTop: 16, width: '100%' }} />
           </Reanimated.View>
         </View>
@@ -2601,7 +2644,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 9,
   },
-  step: { fontFamily: font.bold, fontSize: 12, color: colors.green },
+  // Fixed width, because the label changes LENGTH as you move through the lesson: "9/15" is
+  // four characters and "10/15" is five. The progress bar beside it is flex:1, so without a
+  // fixed slot the bar shrank by a character's width on the way past chapter 10 — the one
+  // advance in the lesson where the bar visibly jumped instead of just growing.
+  step: { fontFamily: font.bold, fontSize: 12, color: colors.green, width: 38, textAlign: 'center' },
   // Persistent bottom bar holding "Look back" (left) and the chapter's primary action
   // (centered). minHeight, not height, so it can't squeeze the 48px button; the two
   // bottomSlots are equal widths flanking a flex:1 middle, which is what keeps the action
@@ -2634,11 +2681,15 @@ const styles = StyleSheet.create({
   lookBackIcon: { fontSize: 15 },
   lookBackCount: { fontFamily: font.bold, fontSize: 12, color: colors.muted3 },
   // Holds the hint button's footprint whether or not this chapter has a hint, so the
-  // progress bar and % beside it don't jump between chapters that have one and chapters
-  // that don't. Sized for the widest state, "💡 HINT 3", with room to spare — at 74 the
-  // label had nowhere to go but onto a second line, which left the button looking broken
-  // rather than like a hint.
-  hintSlot: { width: 96, alignItems: 'flex-end', justifyContent: 'center' },
+  // progress bar and counter beside it don't jump between chapters that have one and
+  // chapters that don't.
+  //
+  // 96 was sized for "💡 HINT 3" — the per-lesson hint budget, which no longer exists (see
+  // the note at the top of this file). The label has been a flat "💡 HINT" since, so a third
+  // of this slot was reserved for a character that is never drawn, taken permanently out of
+  // the progress bar's width on every chapter of every lesson. 70 fits the real label with
+  // the same room to spare the old value had for its own.
+  hintSlot: { width: 70, alignItems: 'flex-end', justifyContent: 'center' },
   hintFab: {
     minWidth: 34, height: 30, paddingHorizontal: 9, borderRadius: 15,
     backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.borderCool,
@@ -2667,8 +2718,12 @@ const styles = StyleSheet.create({
   bossSheetRoot: { flex: 1, justifyContent: 'flex-end' },
   bossVerdictSheet: {
     backgroundColor: colors.white, borderTopLeftRadius: 28, borderTopRightRadius: 28,
-    paddingTop: 22, paddingHorizontal: 22, paddingBottom: 30, alignItems: 'center',
+    paddingTop: 22, paddingHorizontal: 22, paddingBottom: 30, alignItems: 'stretch',
   },
+  // alignItems moved off the sheet and onto the scroller's content: the sheet now holds a
+  // ScrollView, and a ScrollView centred by its parent's alignItems collapses to its content's
+  // width instead of filling the sheet.
+  bossVerdictScroll: { alignItems: 'center' },
   bossVerdictMark: { width: 62, height: 62, borderRadius: 31, alignItems: 'center', justifyContent: 'center' },
   bossVerdictMarkOk: { backgroundColor: colors.green },
   bossVerdictMarkBad: { backgroundColor: colors.pink },
