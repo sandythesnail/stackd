@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Alert, Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent } from 'react-native';
+import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent, KeyboardAvoidingView, Platform } from 'react-native';
 import Reanimated, {
   SlideInDown, FadeInDown, FadeIn, FadeInRight, FadeInUp, ZoomIn,
   useSharedValue, useAnimatedStyle, withTiming, withSpring, withSequence,
@@ -12,6 +12,7 @@ import { colors, font, selectableInput } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
+import { confirmDestructive } from '@/lib/confirm';
 import { LIFE_EVENT_SHEET_MAX_HEIGHT_PCT } from '@/lifeEventLayout';
 import type { LifeEvent } from '@/lifeEvents';
 import { REACTION_FACES } from '@/hammyFaces';
@@ -319,6 +320,17 @@ export default function QuestPlayer() {
   const [kcQuestion, setKcQuestion] = useState<{ chapterIdx: number; idx: number } | null>(null);
   const kcQuestionIdx = kcQuestion?.chapterIdx === chapterIdx ? kcQuestion.idx : 0;
   const setKcQuestionIdx = (idx: number) => setKcQuestion({ chapterIdx, idx });
+  // ONE ScrollView serves every chapter of the lesson — only the content inside it is keyed
+  // and remounted — so the scroll offset carried straight over from one chapter to the next.
+  // Finish a long chapter scrolled to the bottom, tap Next, and the next chapter opened
+  // already scrolled: its title and question above the fold, the reader dropped into the
+  // middle of something they hadn't started. Same on every step WITHIN the two multi-step
+  // types (teach's concepts, the Quick Check's questions), which advance without remounting
+  // the scroller either. Back to the top on every one of those.
+  const scrollRef = useRef<ScrollView>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [chapterIdx, kcQuestionIdx]);
   const [terms, setTerms] = useState<LearnedTerm[]>([]);
   // Mirrors `terms` synchronously. The final chapter's onComplete builds the results payload
   // in the same handler that can add the last word, and a setState isn't visible yet at that
@@ -437,15 +449,16 @@ export default function QuestPlayer() {
   // ten minutes of work and restarts from the beginning. The X sits in the corner nearest
   // the thumb on the most-tapped screen in the app, and it used to do that silently on the
   // first tap. Chapter 1 leaves without ceremony; there's nothing to lose yet.
+  // confirmDestructive, NOT Alert.alert directly: react-native-web's Alert is an empty
+  // function, so a bare Alert.alert here would have made the X do nothing at all on the web
+  // build — which is the build /m actually serves to phones. See @/lib/confirm.
   const confirmQuit = () => {
     if (chapterIdx === 0) { goBack(); return; }
-    Alert.alert(
+    confirmDestructive(
       'Leave this lesson?',
       "You're partway through. Your progress in this lesson isn't saved, so you'd start it again from the beginning.",
-      [
-        { text: 'Keep going', style: 'cancel' },
-        { text: 'Leave', style: 'destructive', onPress: goBack },
-      ],
+      'Leave',
+      goBack,
     );
   };
 
@@ -688,6 +701,7 @@ export default function QuestPlayer() {
           scaling the screen is exactly what read as "the question minimizes" the moment an
           answer's explanation appeared — content that doesn't fit simply scrolls now. */}
       <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
         contentContainerStyle={[
           styles.content,
@@ -695,6 +709,20 @@ export default function QuestPlayer() {
           raised && { paddingTop: 0, paddingBottom: matchLift },
         ]}
         showsVerticalScrollIndicator={false}
+        // The story's dialogue log is the one chapter that GROWS as you press the action
+        // button: each Next appends a beat below the last. Past three or four beats the new
+        // line landed below the fold, so tapping Next appeared to do nothing at all — the
+        // reply was on screen, just not on the part of the screen you could see. Following
+        // the content down is the whole point of a running log.
+        onContentSizeChange={() => {
+          if (chapter.type === 'story' && layoutMode === 'normal') scrollRef.current?.scrollToEnd({ animated: true });
+        }}
+        // A student typing their answer on the explainback chapter has the keyboard up over
+        // half the screen. Dragging the content now dismisses it, and taps land on what they
+        // hit rather than being swallowed as "dismiss the keyboard" — on iOS a multiline box
+        // has no return key to close with, so without these there was no way back out.
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
       >
         {/* flexGrow so the chapter actually fills the scroller's height rather than
             shrink-wrapping inside it — that's what lets a chapter whose own root asks to
@@ -735,24 +763,33 @@ export default function QuestPlayer() {
           the risky parts" is the worst case). Fixed height whether or not either control is
           showing, so the content above never shifts when a chapter's action appears or the
           quest's first vocab word gets taught. */}
-      <View style={styles.bottomBar}>
-        <View style={styles.bottomSlot}>
-          {terms.length > 0 ? <LookBackButton terms={terms} /> : null}
+      {/* Lifted clear of the keyboard. The bar lives OUTSIDE the scroller, pinned to the
+          bottom of the screen, so on the explainback chapter — a multiline text box the
+          student types a paragraph into — the keyboard came up directly over the "Check my
+          answer" button they needed next. iOS doesn't move a fixed-position view on its own,
+          and a multiline field has no return key to close the keyboard with, so the chapter
+          could be finished only by guessing that a drag dismisses it. Android's own resize
+          handling already does this, hence iOS only. */}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={styles.bottomBar}>
+          <View style={styles.bottomSlot}>
+            {terms.length > 0 ? <LookBackButton terms={terms} /> : null}
+          </View>
+          <View style={styles.bottomCenter}>
+            {action ? (
+              <Button
+                label={action.label}
+                onPress={fireAction}
+                variant={action.variant ?? 'green'}
+                disabled={action.disabled}
+                size="sm"
+                style={styles.bottomAction}
+              />
+            ) : null}
+          </View>
+          <View style={styles.bottomSlot} />
         </View>
-        <View style={styles.bottomCenter}>
-          {action ? (
-            <Button
-              label={action.label}
-              onPress={fireAction}
-              variant={action.variant ?? 'green'}
-              disabled={action.disabled}
-              size="sm"
-              style={styles.bottomAction}
-            />
-          ) : null}
-        </View>
-        <View style={styles.bottomSlot} />
-      </View>
+      </KeyboardAvoidingView>
       {ambientEventActive ? (
         <AmbientLifeEventModal
           pendingLifeEvent={pendingLifeEvent}
@@ -1781,10 +1818,14 @@ function MythcardsView({
     : colors.white;
 
   return (
-    // flex + centered: the swipe card is a fixed-height thing in a tall scroller, so left
-    // top-anchored it sat high with a large dead band beneath it. Centering spreads that
-    // space above and below, putting the card under the thumb rather than up by the header.
-    <View style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
+    // Top-anchored with a fixed offset, the same shape PollView uses and for the same reason.
+    // This was centred, to sit the card under the thumb rather than up by the header — but
+    // the card is only fixed-height while it's unanswered. Resolving it swaps the myth for a
+    // verdict line plus a full explanation, so the card grows, and a centred column re-centres
+    // around the taller card: the title and the instructions you were reading slid up the
+    // screen at the exact moment you were looking for the answer. The offset buys the same
+    // lower placement without anything above the card ever moving.
+    <View style={{ gap: 10, flexGrow: 1, paddingTop: 14 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 13.5 }}>
         Read the card, then swipe right if you think it&apos;s <Txt style={{ fontFamily: font.extra }}>true</Txt>, left if you think
@@ -2169,7 +2210,10 @@ function BossbattleView({
   }, [checked, pickedId]);
 
   return (
-    <View style={{ gap: 10, flex: 1, justifyContent: 'center' }}>
+    // flexGrow rather than flex, for the reason spelled out on matchWrap: flexBasis 0 would
+    // let a long scenario plus four choices overflow this box silently instead of extending
+    // the scroller. The boss battle carries the longest scenario text in the app.
+    <View style={{ gap: 10, flexGrow: 1, justifyContent: 'center' }}>
       <Tag tone="warm">⚔ BOSS CHALLENGE</Tag>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.scenario}</Txt>
@@ -2786,7 +2830,14 @@ const styles = StyleSheet.create({
   storyBubbleNarratorTxt: { fontFamily: font.medium, fontStyle: 'italic', color: colors.muted2 },
   // Matching grid — centered as a block with one shared gap between every chip, so the two
   // columns read as evenly-spaced rows down the middle rather than two ragged lists.
-  matchWrap: { gap: 10, flex: 1, justifyContent: 'center' },
+  //
+  // flexGrow, NOT flex. `flex: 1` is flexBasis 0, which tells the layout this box's own
+  // content has no height — it takes exactly the free space it's given and anything longer
+  // than that hangs outside it, where the scroller can't see it to scroll to. A six-pair grid
+  // of long definitions is exactly that case. flexGrow keeps the "fill the screen so
+  // justifyContent has something to centre within" behaviour, but the box still grows to fit
+  // its content when the content is the bigger of the two.
+  matchWrap: { gap: 10, flexGrow: 1, justifyContent: 'center' },
   matchTitle: { textAlign: 'center' },
   matchGrid: { flexDirection: 'row', gap: 10 },
   matchCol: { flex: 1, gap: 8 },
