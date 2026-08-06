@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, Easing } from 'react-native';
 import Reanimated, {
-  FadeIn, FadeInDown, FadeOut, LinearTransition, useSharedValue, useAnimatedStyle, withTiming,
+  FadeIn, FadeInDown, useSharedValue, useAnimatedStyle, withTiming,
 } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -25,13 +25,13 @@ import { SURVEY_TRACKS } from '@/survey';
  * the render pass entirely. */
 const listAnim = { played: false };
 
-/** The row's disclosure chevron, turning between its two positions instead of cutting. Same
- * duration and curve as the card's height transition, so the arrow and the body it controls
- * read as one movement rather than two things that happen to both be animating. */
+/** The row's disclosure chevron, turning between its two positions instead of cutting. A
+ * rotation on the UI thread — the one piece of motion in this screen that is guaranteed not
+ * to interact with the list's layout, which is why it's the piece that survived. */
 function Chevron({ open }: { open: boolean }) {
   const t = useSharedValue(open ? 1 : 0);
   useEffect(() => {
-    t.value = withTiming(open ? 1 : 0, { duration: 170, easing: Easing.out(Easing.quad) });
+    t.value = withTiming(open ? 1 : 0, { duration: 160, easing: Easing.out(Easing.quad) });
   }, [open, t]);
   const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${-90 + t.value * 90}deg` }] }));
   return (
@@ -119,13 +119,13 @@ export default function Modules() {
               <Reanimated.View
                 key={m.id}
                 entering={animateRows ? FadeInDown.delay(Math.min(rowIdx, 10) * 45).duration(320).springify().damping(18) : undefined}
-                // Carries the card's height change when its body opens or closes, and slides
-                // the rows below it along with it, so the list reflows as one motion instead
-                // of jumping to the new arrangement. This is the ONLY movement in the
-                // interaction now, and it's kept short: a plain eased duration, never a
-                // spring, because eleven cards overshooting their resting height at once is
-                // the sort of thing that gets tiring on a tab you live in.
-                layout={LinearTransition.duration(170).easing(Easing.out(Easing.quad))}
+                // Deliberately NO `layout` transition. A LinearTransition here animates the
+                // frame of all ELEVEN rows every time one of them opens — inside a
+                // ScrollView, which is where Reanimated's layout animations are least
+                // reliable — and no duration made that look right. The card resizes
+                // instantly now; the only things that animate are the body's opacity and the
+                // chevron, both of which are pure UI-thread properties that cannot fight the
+                // list's layout.
                 style={[styles.row, status === 'done' && styles.rowDone, recommended && styles.rowRecommended]}
               >
                 <Pressable
@@ -170,18 +170,13 @@ export default function Modules() {
                   </View>
                 </Pressable>
                 {isOpen ? (
-                  // Opacity ONLY — no travel. This was a FadeInDown, which slides the body
-                  // ~25px vertically inside a card that has overflow:hidden and is growing at
-                  // the same time: the list slid out from under a moving clip edge, two
-                  // motions in different directions, which is what read as exaggerated. The
-                  // card's own height transition is the movement; the body just needs to not
-                  // pop. Closing is quicker than opening — you've decided, and there's
-                  // nothing left to read.
-                  <Reanimated.View
-                    entering={FadeIn.duration(120)}
-                    exiting={FadeOut.duration(80)}
-                    style={styles.rowBody}
-                  >
+                  // A short fade on the way in, and nothing at all on the way out. No
+                  // travel: a FadeInDown slid the body inside a card that clips its overflow,
+                  // so the list appeared from under a moving edge. No `exiting` either — an
+                  // exit animation keeps this mounted while the card is already collapsing
+                  // around it, which is the half of this that looked worst. Closing is now
+                  // simply instant, which is what closing should be.
+                  <Reanimated.View entering={FadeIn.duration(140)} style={styles.rowBody}>
                     <ProgressBar value={pct} tone={status === 'done' ? 'green' : 'pink'} height={7} style={{ marginBottom: 12 }} />
                     <ModuleLessonList
                       moduleId={m.id}
