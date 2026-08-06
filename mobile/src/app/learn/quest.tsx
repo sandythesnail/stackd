@@ -1772,6 +1772,9 @@ function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollCha
  * it does NOT auto-advance, the player reads at their own pace and taps "Next card." */
 const MYTH_SWIPE_COMMIT = 90;
 const MYTH_SWIPE_TINT = 30;
+/** Under this much travel a release counts as a tap rather than a short drag, and the card
+ * demonstrates the swipe instead of just settling back. See onPanResponderRelease. */
+const MYTH_TAP_SLOP = 4;
 
 function MythcardsView({
   chapter, onComplete, onAction, reactTo, clearReaction, reportMythCard,
@@ -1812,10 +1815,24 @@ function MythcardsView({
     onPanResponderRelease: (_, g) => {
       if (Math.abs(g.dx) > MYTH_SWIPE_COMMIT) {
         commit(g.dx > 0);
-      } else {
-        setDragDir(null);
-        Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 6, useNativeDriver: true }).start();
+        return;
       }
+      setDragDir(null);
+      // A tap, not a short drag. The swipe is the only interaction in the player with no
+      // button behind it, which is the point of this chapter — but it does mean a student
+      // who taps the card the way they tap everything else gets nothing back, with no way to
+      // find out why. So the card demonstrates itself: a tap rocks it right then left, the
+      // two directions it wants, and settles. It answers nothing — this is the gesture being
+      // taught, not performed.
+      if (Math.abs(g.dx) < MYTH_TAP_SLOP) {
+        Animated.sequence([
+          Animated.timing(pan.x, { toValue: 18, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(pan.x, { toValue: -18, duration: 200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.spring(pan.x, { toValue: 0, friction: 6, useNativeDriver: true }),
+        ]).start();
+        return;
+      }
+      Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 6, useNativeDriver: true }).start();
     },
     // If something else steals the gesture mid-drag (e.g. the page's own scroll) instead
     // of a clean release, snap back immediately rather than leaving the card wherever the
@@ -1912,18 +1929,6 @@ function MythcardsView({
           )}
         </Animated.View>
       </View>
-      {/* Buttons as well as the swipe, not instead of it. A swipe is the only gesture in the
-          whole lesson player that has no visible control behind it — if it doesn't register,
-          or the student never thinks to try it, this chapter had no way forward at all and
-          nothing on screen to suggest one. The same two buttons every other true/false
-          chapter uses, so answering here matches answering anywhere else; they're gone once
-          the card is resolved, since the answer is on the card by then. */}
-      {!resolved ? (
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <TrueFalseButton label="False" state="default" onPress={() => commit(false)} />
-          <TrueFalseButton label="True" state="default" onPress={() => commit(true)} />
-        </View>
-      ) : null}
     </View>
   );
 }
