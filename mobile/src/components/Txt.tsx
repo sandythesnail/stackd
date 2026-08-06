@@ -11,6 +11,7 @@ export function Txt({
   color,
   style,
   balance,
+  maxFontSizeMultiplier = 1.3,
   ...rest
 }: TextProps & {
   variant?: Variant;
@@ -29,6 +30,22 @@ export function Txt({
    * app-wide by `text-wrap: pretty` in that same stylesheet, so this is the stronger
    * treatment for headings, not the only line of defence. */
   balance?: boolean;
+  /** Ceiling on the OS text-size setting's effect (iOS Dynamic Type, Android font size),
+   * defaulting to 1.3 for every piece of text in the app.
+   *
+   * Not `allowFontScaling={false}` — that would pin the app at one size and ignore the
+   * setting entirely, which is the actual accessibility failure. A cap keeps the first
+   * several Dynamic Type steps working and only refuses the extremes.
+   *
+   * It's needed because the app has controls whose box is a fixed number of pixels while
+   * their label is text, and text that outgrows those boxes is clipped rather than scrolled:
+   * `Button`'s face is a hard 48/56px tall (Button.tsx) and every CTA in the app is one, the
+   * quest player's chapter counter sits in a 38px-wide slot and its hint pill in a 30px-tall
+   * one with numberOfLines={1}. Chapter CONTENT is free to grow — it all scrolls now (see
+   * chapterFill in learn/quest.tsx) — so this cap exists for the chrome, not the prose.
+   *
+   * Override per call site where a box really can grow with its text. */
+  maxFontSizeMultiplier?: number;
 }) {
   const shouldBalance = balance ?? HEADING_VARIANTS.has(variant);
   const webProps = Platform.OS === 'web' && shouldBalance ? { dataSet: { balance: 'true' } } : null;
@@ -36,6 +53,7 @@ export function Txt({
     <Text
       {...rest}
       {...webProps}
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
       style={[styles[variant], color ? { color } : null, styles.noSelect, style]}
     />
   );
@@ -44,7 +62,11 @@ export function Txt({
 const styles = StyleSheet.create({
   disp: { fontFamily: font.display, fontSize: 30, lineHeight: 33, color: colors.ink },
   h1: { fontFamily: font.display, fontSize: 25, lineHeight: 29, color: colors.ink },
-  h2: { fontFamily: font.display, fontSize: 19, color: colors.ink },
+  // lineHeight set explicitly, like disp/h1/lead. Without one, a wrapped h2 fell back to the
+  // font's own default leading, which Fredoka and react-native-web resolve differently — so a
+  // two-line chapter title (every chapter in the quest player is an h2) sat at a different
+  // height on the /m web build than in the native app. 25 is the same ~1.32 ratio h1 uses.
+  h2: { fontFamily: font.display, fontSize: 19, lineHeight: 25, color: colors.ink },
   h3: { fontFamily: font.displayMed, fontSize: 16, color: colors.ink },
   lead: { fontFamily: font.semi, fontSize: 15, lineHeight: 22, color: colors.muted2 },
   tiny: { fontFamily: font.bold, fontSize: 12, color: colors.muted5 },

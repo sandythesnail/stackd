@@ -984,7 +984,17 @@ function HintCorner({ hintText, onUseHint }: { hintText?: string } & HintProps) 
           <Pressable style={styles.hintModalHalo} onPress={(e) => e.stopPropagation()}>
             <View style={styles.hintModalCard}>
               <Tag tone="gold">HAMMY'S HINT</Tag>
-              <Txt variant="lead" style={{ fontSize: 14, marginTop: 8 }}>{hintText}</Txt>
+              {/* Capped and scrollable, the same shape the Look-back popup and the boss
+                  verdict sheet already use. The card had neither, so its height was purely
+                  the hint's length: the longest authored hint runs 310 characters, and the
+                  teach chapters generate theirs from the concept's own definition (see
+                  teachHint), where `plain` reaches 626. Past the screen's height the card
+                  overflowed a centred scrim in BOTH directions at once, taking the "Got it"
+                  button off the bottom and the tag off the top with nothing to scroll. The
+                  button stays outside the scroller, so it is always reachable. */}
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <Txt variant="lead" style={{ fontSize: 14, marginTop: 8 }}>{hintText}</Txt>
+              </ScrollView>
               <Button label="Got it" onPress={() => setOpen(false)} style={{ marginTop: 16 }} />
             </View>
           </Pressable>
@@ -1184,7 +1194,7 @@ function StoryView({
     // The dialogue log is centered as a column (each beat sized to its own text and
     // centered on screen, under the centered companion Hammy) rather than a stack of
     // full-width rows pinned to the left edge.
-    <View style={[{ gap: 10, flex: 1 }, !showIntro && styles.storyLog]}>
+    <View style={[{ gap: 10, flexGrow: 1 }, !showIntro && styles.storyLog]}>
       {/* The title sits centered directly above Hammy on the intro screen — it's the whole
           headline of that screen, so it belongs with him rather than pinned off in the
           top-left corner while he's centered further down. On the dialogue log after it the
@@ -1293,7 +1303,7 @@ function TeachView({
     // characters), and put back by product decision — reading the definition and answering
     // its check belong together. The cost is that the densest vocab chapters scroll again;
     // the tightened card metrics below claw back some of it but not all.
-    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flex: 1 }}>
+    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 10, flexGrow: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Card style={styles.conceptCard}>
         <Txt style={styles.term}>{concept.term}</Txt>
@@ -1558,7 +1568,7 @@ function DecisionView({
     // the question you'd just read jumped up the screen. Pinning it to the top means only
     // the part that actually changes moves. The slack that centring used to absorb is
     // handled by dropping the companion instead (companionWrapDeep).
-    <View style={{ gap: 10, flex: 1 }}>
+    <View style={{ gap: 10, flexGrow: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       {/* Tighter leading than the shared `lead` variant: the longest scenario in the content
           runs 310 characters, which is seven lines here, and at 22 those seven lines plus the
@@ -1686,7 +1696,7 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
     // so every card's padding is paid five times over and the budget it left for the sliders
     // themselves was what pushed the longest ones (eight fixed costs, three sliders) past the
     // bottom of the screen.
-    <View style={{ gap: 8, flex: 1 }}>
+    <View style={{ gap: 8, flexGrow: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={styles.simPrompt}>{chapter.prompt}</Txt>
       <Card style={styles.simCard}>
@@ -1743,7 +1753,7 @@ function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollCha
     //
     // paddingTop rather than centring is how this sits lower down the screen: it's a fixed
     // offset, so it uses the spare room without reintroducing the shift-on-answer.
-    <View style={{ gap: 9, flex: 1, paddingTop: 22 }}>
+    <View style={{ gap: 9, flexGrow: 1, paddingTop: 22 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 13.5, lineHeight: 19 }}>{chapter.intro}</Txt>
       <Card style={{ padding: 15 }}><Txt style={{ fontFamily: font.displayMed, fontSize: 14.5, color: colors.ink }}>{chapter.statement}</Txt></Card>
@@ -1996,7 +2006,7 @@ function KnowledgecheckView({
     // tapped (the column re-centred around the newly added explanation card) — with the fade
     // on top of the shift, the question read as blinking out and coming back. The `key` still
     // scopes the fade to a real question CHANGE, so answering re-renders in place.
-    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 9, flex: 1 }}>
+    <Reanimated.View key={i} entering={FadeIn.duration(220)} style={{ gap: 9, flexGrow: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={styles.kcQuestion}>{question.q}</Txt>
       {/* The options deal in one at a time rather than landing as a block. It's ~50ms apart,
@@ -2022,13 +2032,22 @@ function KnowledgecheckView({
         })}
       </View>
       {answered ? (
-        // Shortened (not the raw question.exp) so the answer card stays compact enough that
-        // the options above it and the Next button below stay on screen together. 85 chars,
-        // not shortFeedback's default 60 (tuned for the narrow companion bubble) — this is a
-        // full-width card with more room, but at the old 110 the longest questions spilled
-        // this card onto a fourth line and took the whole screen over budget.
+        // The WHOLE explanation, not a shortened one.
+        //
+        // This used to render shortFeedback(question.exp, 85), to keep the card short enough
+        // that the options above it and the Next button below stayed on screen together. The
+        // cost of that was total: of the 196 Quick Check questions in the content, zero were
+        // shown in full — 91 were cut off mid-sentence and the other 105 lost every sentence
+        // after the first. And shortFeedback deliberately appends no ellipsis (see its
+        // comment), so there was no sign anything was missing: gnp_kc1 ended on a dangling
+        // "…and 1.45% for Medicare -", which reads as a rendering fault rather than as an
+        // explanation. The longest one lost 373 of its 454 characters.
+        //
+        // This is the text the student just earned by answering, and the reason a wrong
+        // answer is worth anything. It gets to be legible in full; if that means the card
+        // runs past the fold, the scroller follows it down (see followContentGrowth).
         <AnswerFeedback>
-          <Card style={styles.kcAnswerCard}><Txt variant="lead" style={{ fontSize: 13, lineHeight: 18 }} color={right ? colors.greenDark : colors.pinkDark}>{shortFeedback(question.exp, 85)}</Txt></Card>
+          <Card style={styles.kcAnswerCard}><Txt variant="lead" style={{ fontSize: 13, lineHeight: 18 }} color={right ? colors.greenDark : colors.pinkDark}>{question.exp}</Txt></Card>
         </AnswerFeedback>
       ) : null}
     </Reanimated.View>
@@ -2107,14 +2126,23 @@ function CountUpNumber({ value, style }: { value: number; style?: object }) {
  * on the row that earned it. (Hammy still narrates it too, but his bubble is gone in a couple
  * of seconds and takes the reasoning with it — which meant that on a four-habit chapter you
  * could finish having read every note and be able to see none of them.) */
-/** The decision's `note` is deliberately NOT rendered here. It used to unfold underneath the
- * label on reveal, but Hammy already speaks that same sentence in his bubble the moment you
- * tap (see SimulatorView's apply → reactTo), so the tile was repeating word for word what he
- * was saying — a wall of text on a screen that's meant to read as a quick tap-and-see-the-
- * needle-move. The tile keeps the two things only it can show: the habit and its score. */
+/** The decision's `note` IS rendered here, under the label, once the habit is revealed.
+ *
+ * It was removed on the grounds that Hammy speaks the same sentence in his bubble the moment
+ * you tap, so the tile was repeating him word for word. He doesn't, on either count. What he
+ * speaks is shortFeedback(note) — first sentence, hard-capped at 60 characters, no ellipsis —
+ * and 76 of the 88 habit notes in the content are longer than that, so what he actually says
+ * is a fragment ("Payroll errors happen, catching them early makes them easy"). With the tile
+ * silent, that fragment was the only form of the note that existed anywhere in the app.
+ *
+ * His bubble is also transient: the next habit you tap replaces it. The comment this replaces
+ * described precisely that failure ("on a four-habit chapter you could finish having read
+ * every note and be able to see none of them") and then removed the durable copy rather than
+ * the transient one. The tile is the copy that stays, so the reasoning stays with the habit
+ * that earned it. */
 function HabitChoice({
-  label, delta, revealed, index, onPress,
-}: { label: string; delta: number; revealed: boolean; index: number; onPress: () => void }) {
+  label, note, delta, revealed, index, onPress,
+}: { label: string; note?: string; delta: number; revealed: boolean; index: number; onPress: () => void }) {
   const press = useSharedValue(0);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 - press.value * 0.02 }] }));
   const good = delta >= 0;
@@ -2142,6 +2170,15 @@ function HabitChoice({
               </Txt>
             </Reanimated.View>
           </View>
+          {/* Unfolds under the label on reveal, in the row's own verdict colour. Its own fade
+              rather than AnswerFeedback's: several tiles can be open at once on a four-habit
+              chapter, and AnswerFeedback's horizontal settle would have each one twitch
+              independently as it opened. */}
+          {revealed && note ? (
+            <Reanimated.View entering={FadeIn.duration(220)}>
+              <Txt style={[styles.habitNote, { color: good ? colors.greenDark : colors.pinkDark }]}>{note}</Txt>
+            </Reanimated.View>
+          ) : null}
         </Reanimated.View>
       </Pressable>
     </Reanimated.View>
@@ -2181,7 +2218,7 @@ function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: Si
   }, [used.size]);
 
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    <View style={{ gap: 10, flexGrow: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
       <Card style={{ gap: 4 }}>
@@ -2209,6 +2246,7 @@ function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: Si
           <HabitChoice
             key={d.id}
             label={d.label}
+            note={d.note}
             delta={d.scoreDelta}
             revealed={used.has(d.id)}
             index={i}
@@ -2406,7 +2444,7 @@ function SpotcheckView({ chapter, onComplete, onAction, reactTo }: { chapter: Sp
   // where the chapter answered a question by appearing to ignore it.
   if (revealed && !review.length) {
     return (
-      <View style={{ gap: 10, flex: 1 }}>
+      <View style={{ gap: 10, flexGrow: 1 }}>
         <Txt variant="h2">{chapter.title}</Txt>
         <Reanimated.View entering={FadeIn.duration(220)}>
           <Card style={{ gap: 8 }}>
@@ -2429,7 +2467,7 @@ function SpotcheckView({ chapter, onComplete, onAction, reactTo }: { chapter: Sp
       ? (wasFlagged ? { tone: 'green' as const, label: '✓ YOU CAUGHT THIS' } : { tone: 'pink' as const, label: '✕ YOU MISSED THIS' })
       : { tone: 'lock' as const, label: '— ACTUALLY FINE' };
     return (
-      <View style={{ gap: 10, flex: 1 }}>
+      <View style={{ gap: 10, flexGrow: 1 }}>
         <Txt variant="h2">{chapter.title}</Txt>
         <Txt style={styles.reviewProgress}>
           You caught {caught.length} of {flags.length} · reviewing {reviewIdx + 1} of {review.length}
@@ -2446,7 +2484,7 @@ function SpotcheckView({ chapter, onComplete, onAction, reactTo }: { chapter: Sp
   }
 
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    <View style={{ gap: 10, flexGrow: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={styles.spotcheckIntro}>{chapter.intro}</Txt>
       <Card style={styles.spotcheckCard}>
@@ -2488,7 +2526,7 @@ function PriceisrightView({
   }, [submitted, guess]);
 
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    <View style={{ gap: 10, flexGrow: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       <Card style={{ gap: 8, alignItems: 'center' }}>
@@ -2544,7 +2582,7 @@ function ExplainbackView({
   }, [submitted, text]);
 
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    <View style={{ gap: 10, flexGrow: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.prompt}</Txt>
       <TextInput
@@ -2594,7 +2632,7 @@ function UrlinspectView({ chapter, onComplete, onAction, reactTo }: { chapter: U
   }, [revealed, flagged]);
 
   return (
-    <View style={{ gap: 10, flex: 1 }}>
+    <View style={{ gap: 10, flexGrow: 1 }}>
       <Txt variant="h2">{chapter.title}</Txt>
       <Txt variant="lead" style={{ fontSize: 14 }}>{chapter.intro}</Txt>
       <Card style={{ gap: 4 }}>
@@ -2710,11 +2748,18 @@ const styles = StyleSheet.create({
   // thick on all four sides. The radii are kept in step deliberately: 20 inside + 5 of padding
   // = 25 outside, which is what keeps the ring an even width around the corners too instead of
   // pinching at them.
+  // maxHeight resolves against hintScrim, which is flex:1 and so has a definite height (the
+  // same thing that makes glossaryPopupCard's '75%' work). Without it a long hint pushed the
+  // card past both ends of the centred scrim at once.
   hintModalHalo: {
-    width: '100%', maxWidth: 350, backgroundColor: 'rgba(240,194,46,0.30)',
+    width: '100%', maxWidth: 350, maxHeight: '100%', backgroundColor: 'rgba(240,194,46,0.30)',
     borderRadius: 25, padding: 5,
   },
+  // flexShrink so the card actually takes the cap above rather than keeping its content
+  // height and overflowing the halo it's meant to be bounded by. That shrink is also what
+  // gives the ScrollView inside it a definite height to scroll within.
   hintModalCard: {
+    flexShrink: 1,
     backgroundColor: colors.white, borderWidth: 2,
     borderColor: colors.reward, borderRadius: 20, padding: 20,
   },
@@ -2881,7 +2926,7 @@ const styles = StyleSheet.create({
   // space-evenly rather than center: it spreads the title, Hammy and the caption across the
   // stage at equal intervals, which lifts the title clear of Hammy instead of leaving the
   // three of them clustered in the middle with even gaps only between neighbours.
-  storyIntroStage: { flex: 1, alignItems: 'center', justifyContent: 'space-evenly', paddingVertical: 24 },
+  storyIntroStage: { flexGrow: 1, alignItems: 'center', justifyContent: 'space-evenly', paddingVertical: 24 },
   storyIntroCaption: {
     fontFamily: font.semi, fontSize: 17.5, lineHeight: 24, color: colors.ink,
     textAlign: 'center', maxWidth: 320,
@@ -2889,7 +2934,7 @@ const styles = StyleSheet.create({
   // Hammy's Tip (funfact) — bottom-packed so Hammy sits low on the stage and the tip bubble
   // above him grows up into the empty space rather than pushing him down or spilling off
   // the top. See HintView's own comment.
-  hintStage: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4, paddingTop: 12, paddingBottom: 16 },
+  hintStage: { flexGrow: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4, paddingTop: 12, paddingBottom: 16 },
   tipCaption: {
     fontFamily: font.bold, fontSize: 17.5, lineHeight: 24, color: colors.ink,
     textAlign: 'center', maxWidth: 320,
@@ -2919,6 +2964,23 @@ const styles = StyleSheet.create({
   },
   ambientLifeSheetContent: { paddingHorizontal: 22, paddingBottom: 34 },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 20, gap: 12, flexGrow: 1 },
+  // flexGrow, never `flex`, from here all the way down to each chapter view's own root —
+  // this box and every descendant that wants to fill the scroller.
+  //
+  // `flex: 1` is flexBasis 0, i.e. "my content has no height of its own": the box takes
+  // exactly the free space it is given and anything taller hangs outside it, where the
+  // scroller has no height to scroll to and the overflow simply can't be reached. flexGrow
+  // keeps the "fill the column so justifyContent has something to centre within" behaviour
+  // that the story intro stage, Hammy's Tip and Match It all rely on, but lets the box grow
+  // past the column when its content is the bigger of the two.
+  //
+  // This was found and fixed three times independently (matchWrap, mythcards, bossbattle)
+  // while twelve other chapter roots kept the wrong one, which was survivable only because
+  // the player used to fit the screen. It doesn't any more: the Quick Check now shows whole
+  // explanations rather than 85 characters of one, and the simulator shows each habit's
+  // reasoning, so chapters routinely run past the fold on the /m web build (where the
+  // browser's toolbars take ~180px that the native app keeps). Every one of them is now
+  // flexGrow, so "taller than the screen" means "scrolls" and never "cut off".
   chapterFill: { flexGrow: 1 },
   // Only for chapters whose content is fixed and doesn't grow as you interact with it (Match
   // It). Centering anything that GROWS — the dialogue log — would push everything already
@@ -3009,6 +3071,10 @@ const styles = StyleSheet.create({
   habitBad: { borderColor: '#D98A9E', backgroundColor: colors.pinkBg2 },
   habitHead: { flexDirection: 'row', alignItems: 'center', gap: 11 },
   habitLabel: { flex: 1, fontFamily: font.bold, fontSize: 14.5, lineHeight: 19, color: colors.ink },
+  // The revealed habit's authored reasoning. A notch under the label and lighter-weight, so
+  // the row still reads label-first with the explanation as its consequence; full text, never
+  // truncated (that's the whole point of it being here — see HabitChoice).
+  habitNote: { fontFamily: font.semi, fontSize: 12.5, lineHeight: 17, marginTop: 7 },
   // Fixed width whether it holds "?" or "−12", so revealing a habit never re-wraps the label
   // beside it — the row's height is settled before the tap and the note is the only thing
   // that moves.

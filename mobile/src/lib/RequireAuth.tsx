@@ -12,7 +12,7 @@ import { authEnabled } from './env';
  * it's a default landing choice, and it only runs when the app happens to start at "/".
  * Anything that entered the app another way skipped it entirely:
  *   - Opening/refreshing a deep link (on the web build, any /m/... URL — /m/home,
- *     /m/learn/lesson, a bookmark, the browser's restored tabs) mounts that route
+ *     /m/learn/quest, a bookmark, the browser's restored tabs) mounts that route
  *     directly. The splash never renders, so nothing ever asks whether you're signed in.
  *   - Signing out from Settings left the whole signed-in stack mounted underneath the
  *     sign-in screen, so one back gesture / browser Back put you straight back into the
