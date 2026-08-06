@@ -241,11 +241,12 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
           )
         ) : equipped ? (
           <View style={[styles.statusRow, styles.statusOwned]}>
-            {/* Wallpaper is "Applied", genuine room furniture is "Placed" — both already
-                match the Room tab. Wearables (hats/accessories, isRoom false) previously
-                said "Placed" too, contradicting the Wardrobe tab's "✓ Worn" for the exact
-                same items one tap away. Now matches Wardrobe's terminology. */}
-            <Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ {isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Worn'}</Txt>
+            {/* Everything in the room is "Placed", wallpaper included — it used to read
+                "Applied", the only one of the 34 room items with its own verb, which made it
+                look like a different kind of thing rather than one more piece of furniture.
+                Wearables (hats/accessories, isRoom false) stay "Worn", matching the Wardrobe
+                tab one tap away. Kept in step with the detail sheet's button (sheet/shop-item). */}
+            <Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ {isRoom ? 'Placed' : 'Worn'}</Txt>
           </View>
         ) : owned ? (
           <View style={[styles.statusRow, styles.statusOwned]}><Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>Owned</Txt></View>

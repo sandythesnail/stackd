@@ -127,15 +127,19 @@ function ShopItemSheet() {
     buttonLabel = `🎁 Only from the ${mysteryBoxNameFor(item.mysteryPool!)}`;
     buttonDisabled = true;
   } else if (equipped) {
-    // Wallpaper is "Unapply", genuine room furniture is "Unplace" — both match this same
-    // item's status label above and the Room tab. Wearables (hats/accessories, no slot)
-    // previously said "Unplace" too, contradicting the Shop grid/Wardrobe tab's
-    // "Worn"/"Wear" for the exact same items.
-    buttonLabel = item.slot === 'wallpaper' ? 'Unapply' : item.slot ? 'Unplace' : 'Unwear';
+    // Two verbs, split on the only distinction the player actually makes: things that go in
+    // the room are Placed/Unplaced, things Hammy puts on are Worn/Unworn.
+    //
+    // Wallpaper used to be a third case, Apply/Unapply, on the grounds that it's what you do
+    // to wallpaper. But it sits in the room category next to the rugs, beds and lamps, and it
+    // is the only one of the 34 room items that said anything different — so the furniture
+    // list had one button reading "Apply" among a column of "Place", which reads as a
+    // different KIND of action rather than the same action on a different object.
+    buttonLabel = item.slot ? 'Unplace' : 'Unwear';
     buttonDisabled = false;
   } else if (owned) {
     const noFreeSlot = !item.slot && state.equippedItems.length >= MAX_EQUIPPED_ITEMS;
-    const equipVerb = item.slot === 'wallpaper' ? 'Apply' : item.slot ? 'Place' : 'Wear';
+    const equipVerb = item.slot ? 'Place' : 'Wear';
     buttonLabel = noFreeSlot ? `${equipVerb} (take something off first)` : equipVerb;
     buttonDisabled = noFreeSlot;
   } else {
