@@ -164,7 +164,7 @@ export function LessonPath({ width }: { width: number }) {
     setPickedModule(sections[next].module.id);
   };
 
-  const openLesson = (n: PathNodeData) => {
+  const openLesson = (n: PathNodeData, restart = false) => {
     router.push({
       pathname: '/learn/quest',
       params: {
@@ -172,6 +172,8 @@ export function LessonPath({ width }: { width: number }) {
         lessonIndex: String(n.lessonIndex),
         // Keyed off the node's identity, not its state — see PathNodeData.isLifeTask.
         ...(n.isLifeTask ? { isLifeTask: '1' } : {}),
+        // Opt out of the saved resume point for this launch only (the sheet's "Start over").
+        ...(restart ? { restart: '1' } : {}),
       },
     });
   };
@@ -210,6 +212,11 @@ export function LessonPath({ width }: { width: number }) {
           const n = preview;
           setPreview(null);
           if (n) openLesson(n);
+        }}
+        onRestart={() => {
+          const n = preview;
+          setPreview(null);
+          if (n) openLesson(n, true);
         }}
       />
     </>
@@ -483,7 +490,7 @@ function TrailComet({ samples, reducedMotion }: { samples: { x: number; y: numbe
  * action is worded from the node's state, because "Start lesson" is wrong in three of the
  * four cases. */
 function PreviewSheet({
-  node, moduleName, total, reducedMotion, onClose, onStart,
+  node, moduleName, total, reducedMotion, onClose, onStart, onRestart,
 }: {
   node: PathNodeData | null;
   moduleName: string;
@@ -491,12 +498,22 @@ function PreviewSheet({
   reducedMotion: boolean;
   onClose: () => void;
   onStart: () => void;
+  onRestart: () => void;
 }) {
   const { activeTargetId, advanceIfWaitingOn } = useOnboardingTour();
+  const { lessonProgressFor } = useStore();
   if (!node) return null;
   const done = node.state === 'completed';
-  const cta = done ? 'Do it again' : node.state === 'current' ? 'Continue lesson' : 'Start lesson';
-  const tone = node.state === 'current' ? colors.green : done ? colors.greenDark : colors.pink;
+  /* Saving a part-finished lesson is worth nothing if the player can't see that it happened.
+   * A student who has been burned once won't risk a long lesson again no matter what the code
+   * does, so the resume point is stated here in words — which chapter, out of how many — and
+   * the button says Resume rather than Continue. Only for a lesson that genuinely has one:
+   * lessonProgressFor validates against the current content and returns null otherwise. */
+  const saved = node.isLifeTask ? null : lessonProgressFor(node.moduleId, node.lessonIndex);
+  const cta = saved
+    ? 'Resume lesson'
+    : done ? 'Do it again' : node.state === 'current' ? 'Continue lesson' : 'Start lesson';
+  const tone = node.state === 'current' || saved ? colors.green : done ? colors.greenDark : colors.pink;
   // The tour's final step follows the user in here and points at this button (see
   // OnboardingTour.tsx). Only ever the recommended node's sheet: that's the one the previous
   // step sent them to, and the only one whose CTA reads "Continue lesson".
@@ -532,6 +549,12 @@ function PreviewSheet({
             </T>
           ) : null}
 
+          {saved ? (
+            <T weight="bold" size={11.5} color={colors.greenDark} style={{ marginTop: 10 }}>
+              ⏸ Paused at chapter {saved.chapterIdx + 1} of {saved.chapterCount}. You&apos;ll pick up right there.
+            </T>
+          ) : null}
+
           <TourCallout forTarget="tour-lesson-start" style={{ marginTop: 16 }} />
 
           {/* No TourTarget wrapper: an inSheet step is never measured for a spotlight (the
@@ -548,6 +571,13 @@ function PreviewSheet({
           >
             <T weight="extra" size={14.5} color={colors.white}>{cta}</T>
           </Pressable>
+          {/* Offered, never forced: resuming is what almost everyone wants, so starting over
+              is a quiet second option rather than a choice the sheet makes you make. */}
+          {saved ? (
+            <Pressable onPress={onRestart} accessibilityRole="button" style={styles.previewClose}>
+              <T weight="extra" size={13} color={colors.muted2}>Start over from the beginning</T>
+            </Pressable>
+          ) : null}
           <Pressable onPress={onClose} accessibilityRole="button" style={styles.previewClose}>
             <T weight="extra" size={13} color={colors.muted2}>Not now</T>
           </Pressable>

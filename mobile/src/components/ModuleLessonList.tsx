@@ -6,7 +6,7 @@ import { Txt } from './Txt';
 import { ListRow } from './ModuleBits';
 import { Button } from './Button';
 import type { LessonSummary } from '@/content';
-import { moduleContentById } from '@/content';
+import { moduleContentById, mainLessonAbsoluteIndices } from '@/content';
 import { resolveLessonSections } from '@/lessonSections';
 import { useStore } from '@/store';
 
@@ -36,6 +36,7 @@ export function ModuleLessonList({
   status: 'done' | 'active';
   onPressLesson: (i: number) => void;
 }) {
+  const { lessonProgressFor } = useStore();
   const doneSet = new Set(doneIndices);
   // "Next up" = the first not-yet-completed lesson, wherever it is in the list.
   const nextIdx = lessons.findIndex((_, i) => !doneSet.has(i));
@@ -48,6 +49,13 @@ export function ModuleLessonList({
   // off. See LessonRow.
   const started = doneIndices.length > 0;
   const sections = resolveLessonSections(moduleId, lessons.length);
+  // A row's position in this filtered list is NOT the index the quest player (and therefore
+  // the saved-progress key) uses — the real-life sub-quest is filtered out of `lessons` but
+  // still occupies a slot in `quests`. Both call sites already translate with exactly this
+  // helper before navigating; the lookup has to use the same index or it would read another
+  // lesson's save. See mainLessonAbsoluteIndices.
+  const mainIndices = mainLessonAbsoluteIndices(moduleContentById(moduleId));
+  const savedFor = (i: number) => lessonProgressFor(moduleId, mainIndices[i] ?? i);
 
   if (sections) {
     return (
@@ -62,6 +70,7 @@ export function ModuleLessonList({
             defaultOpen={nextIdx >= sec.start && nextIdx < sec.end}
             rowStatusFor={rowStatusFor}
             started={started}
+            savedFor={savedFor}
             onPressLesson={onPressLesson}
           />
         ))}
@@ -77,6 +86,7 @@ export function ModuleLessonList({
           index={i}
           status={rowStatusFor(i)}
           started={started}
+          saved={savedFor(i)}
           onPress={() => onPressLesson(i)}
         />
       ))}
@@ -126,6 +136,7 @@ function LessonSectionBlock({
   defaultOpen,
   rowStatusFor,
   started,
+  savedFor,
   onPressLesson,
 }: {
   label: string;
@@ -135,6 +146,7 @@ function LessonSectionBlock({
   defaultOpen: boolean;
   rowStatusFor: (i: number) => string;
   started: boolean;
+  savedFor: (i: number) => { chapterIdx: number; chapterCount: number } | null;
   onPressLesson: (i: number) => void;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -166,6 +178,7 @@ function LessonSectionBlock({
                 index={idx}
                 status={rowStatusFor(idx)}
                 started={started}
+                saved={savedFor(idx)}
                 onPress={() => onPressLesson(idx)}
               />
             );
@@ -179,43 +192,62 @@ function LessonSectionBlock({
 /** One lesson. The next-up lesson gets the green outline, a caption and its own button;
  * everything else is a plain row.
  *
- * The caption and button wording depend on `started`, and deliberately never say "in
- * progress". Nothing in the app tracks a partly-finished lesson — the store records a
- * lesson index only once the whole thing is completed — so "next up" was being rendered as
- * "In progress" with a "Resume" button on modules the player had never once opened. The app
- * was describing history the player didn't have. */
+ * "In progress"/"Resume" is now a real state rather than a guess. It used to be rendered off
+ * `started` alone, which meant the next-up row claimed to be in progress on modules the player
+ * had never opened — the app describing history they didn't have — so it was reworded to
+ * "Next up"/"Continue" with a comment saying nothing tracked a part-finished lesson. Something
+ * does now (AppState.lessonProgress), so a row with a genuine saved chapter says so, names the
+ * chapter, and offers Resume. Everything else keeps the honest "Next up"/"Start here" wording.
+ *
+ * A paused lesson isn't necessarily the next-up one — pause lesson 5 with lesson 3 still
+ * unfinished and next-up is 3 — so the paused caption and its button render independently of
+ * `isActive`. */
 function LessonRow({
   lesson,
   index,
   status,
   started,
+  saved,
   onPress,
 }: {
   lesson: LessonSummary;
   index: number;
   status: string;
   started: boolean;
+  /** Where this lesson was left, if it was left partway. */
+  saved: { chapterIdx: number; chapterCount: number } | null;
   onPress: () => void;
 }) {
   const node = QNODE[status];
   const isActive = status === 'active';
+  const showCta = isActive || !!saved;
 
   return (
     <ListRow
       onPress={onPress}
-      style={isActive && { borderWidth: 2, borderColor: colors.green, backgroundColor: colors.tagGreenBg }}
+      style={(isActive || !!saved) && { borderWidth: 2, borderColor: colors.green, backgroundColor: colors.tagGreenBg }}
     >
       <View style={[styles.qnode, { backgroundColor: node.bg }]}>
         <Txt style={styles.qnodeTxt}>{status === 'done' ? '✓' : String(index + 1)}</Txt>
       </View>
       <View style={{ flex: 1 }}>
         <Txt style={styles.qTitle}>{lesson.title}</Txt>
-        {isActive ? (
+        {saved ? (
+          <Txt style={[styles.qNote, { color: colors.green }]}>
+            Paused · chapter {saved.chapterIdx + 1} of {saved.chapterCount}
+          </Txt>
+        ) : isActive ? (
           <Txt style={[styles.qNote, { color: colors.green }]}>{started ? 'Next up' : 'Start here'}</Txt>
         ) : null}
       </View>
-      {isActive ? (
-        <Button label={started ? 'Continue' : 'Start'} variant="pink" size="sm" style={{ paddingHorizontal: 16 }} onPress={onPress} />
+      {showCta ? (
+        <Button
+          label={saved ? 'Resume' : started ? 'Continue' : 'Start'}
+          variant="pink"
+          size="sm"
+          style={{ paddingHorizontal: 16 }}
+          onPress={onPress}
+        />
       ) : null}
     </ListRow>
   );

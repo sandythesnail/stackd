@@ -12,7 +12,6 @@ import { colors, font, selectableInput } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
-import { confirmDestructive } from '@/lib/confirm';
 import { LIFE_EVENT_SHEET_MAX_HEIGHT_PCT } from '@/lifeEventLayout';
 import type { LifeEvent } from '@/lifeEvents';
 import { REACTION_FACES } from '@/hammyFaces';
@@ -296,20 +295,64 @@ function ReactionBubble({
  * the flat single-quiz flow, one chapter at a time. Hammy lives in a fixed side column
  * (matching the website's two-column .quest-layout) so the content column beside him stays
  * put — dialogue, questions and choices don't have to share scroll space with him. */
+/** Holds the player back until the store has finished loading from AsyncStorage.
+ *
+ * QuestPlayerInner reads its saved resume point ONCE, in a lazy initialiser, which is the only
+ * way to have every piece of its state seed from the same snapshot. That read is worthless
+ * before hydration: `state` is still DEFAULT_STATE, so lessonProgress is empty, so a resumable
+ * lesson would silently start from chapter 1 — and then the first advance would overwrite the
+ * real save with that. Losing the save is exactly what this feature exists to prevent, so the
+ * read has to wait rather than guess.
+ *
+ * Only matters when this route is the app's entry point — a reload or a deep link straight
+ * into /learn/quest on the web build. Arriving from Home the store is long since hydrated and
+ * this renders nothing at all. Keyed so the inner component mounts fresh once ready.
+ */
 export default function QuestPlayer() {
+  const { hydrated } = useStore();
+  if (!hydrated) return <Screen edges={['top', 'bottom']} />;
+  return <QuestPlayerInner />;
+}
+
+function QuestPlayerInner() {
   const router = useRouter();
-  const { equippedMascotItems, rollAmbientLifeEvent, pendingLifeEvent, resolveLifeEvent } = useStore();
-  const { moduleId, lessonIndex, isLifeTask } = useLocalSearchParams<{ moduleId: string; lessonIndex: string; isLifeTask?: string }>();
+  const {
+    equippedMascotItems, rollAmbientLifeEvent, pendingLifeEvent, resolveLifeEvent,
+    lessonProgressFor, saveLessonProgress, clearLessonProgress,
+  } = useStore();
+  const { moduleId, lessonIndex, isLifeTask, restart } = useLocalSearchParams<{
+    moduleId: string; lessonIndex: string; isLifeTask?: string; restart?: string;
+  }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
   const li = Number(lessonIndex ?? 0);
   const quest = content?.quests[li];
 
-  const [chapterIdx, setChapterIdx] = useState(0);
-  const [xpEarned, setXpEarned] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [gradedTotal, setGradedTotal] = useState(0);
-  const [hintsUsed, setHintsUsed] = useState(0);
+  /* Resume where the player left off.
+   *
+   * Read ONCE, into a lazy useState initialiser, rather than during render or in an effect.
+   * Every piece of state below seeds from it, so it has to be the same object for the life of
+   * this mount: reading it later would see the save this very screen is writing as it plays,
+   * and an effect would run after the first chapter had already rendered — you'd watch chapter
+   * 1 appear and then jump. `restart` is the preview sheet's "start over", which deliberately
+   * ignores the save (it's cleared below rather than here, so this stays free of side effects).
+   *
+   * lessonProgressFor validates the save against the current content and returns null if the
+   * quest has been re-authored since — see its comment in store.tsx. */
+  const [resumed] = useState(() => (restart ? null : lessonProgressFor(mod.id, li)));
+  // "Start over" drops the old save now rather than letting the first chapter advance
+  // overwrite it — otherwise backing out again before answering anything would resume the
+  // player at the chapter they had just asked to abandon.
+  useEffect(() => {
+    if (restart) clearLessonProgress(mod.id, li);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [chapterIdx, setChapterIdx] = useState(resumed?.chapterIdx ?? 0);
+  const [xpEarned, setXpEarned] = useState(resumed?.xpEarned ?? 0);
+  const [correctCount, setCorrectCount] = useState(resumed?.correctCount ?? 0);
+  const [gradedTotal, setGradedTotal] = useState(resumed?.gradedTotal ?? 0);
+  const [hintsUsed, setHintsUsed] = useState(resumed?.hintsUsed ?? 0);
   // Which question a knowledgecheck chapter is currently showing — kept in sync via
   // KnowledgecheckView's onQuestionIndexChange, so the header's hint button can look up
   // that specific question's hintTexts entry (see hintText's computation below).
@@ -359,11 +402,11 @@ export default function QuestPlayer() {
     if (prev.key !== stepKey) return;
     if (h > prev.height + 8) scrollRef.current?.scrollToEnd({ animated: true });
   };
-  const [terms, setTerms] = useState<LearnedTerm[]>([]);
+  const [terms, setTerms] = useState<LearnedTerm[]>(resumed?.terms ?? []);
   // Mirrors `terms` synchronously. The final chapter's onComplete builds the results payload
   // in the same handler that can add the last word, and a setState isn't visible yet at that
   // point — same staleness dodge analyticsRef makes just below, for the same reason.
-  const termsRef = useRef<LearnedTerm[]>([]);
+  const termsRef = useRef<LearnedTerm[]>(resumed?.terms ?? []);
   /** Puts a word in the Look-back book the moment it's actually taught.
    *
    * This used to happen in onComplete, i.e. only once the whole vocab/Match It chapter was
@@ -377,7 +420,7 @@ export default function QuestPlayer() {
     termsRef.current = [...termsRef.current, t];
     setTerms(termsRef.current);
   };
-  const [bossWon, setBossWon] = useState(false);
+  const [bossWon, setBossWon] = useState(resumed?.bossWon ?? false);
   // Tagged with the chapter it belongs to. It used to be three loose values cleared by an
   // effect on chapterIdx, and an effect runs AFTER the new chapter has already rendered — so
   // the first frame of the next chapter still carried the last one's mood. On a chapter where
@@ -438,14 +481,16 @@ export default function QuestPlayer() {
   // 2-transition cooldown and roll a second popup in the same lesson. This ref caps it at
   // one fire per QuestPlayer mount, i.e. one per lesson, regardless of how many chapters
   // remain after that.
-  const hasFiredAmbientRef = useRef(false);
+  // Seeded from the save, not from `false`: this is a per-MOUNT ref, so a resumed lesson used
+  // to arrive with a fresh roll available and a lesson resumed twice could fire three popups.
+  const hasFiredAmbientRef = useRef(resumed?.ambientFired ?? false);
   // A ref, not state — analytics never drives a render in this screen, it's only read once
   // at the final chapter's onComplete to build the results-screen params. A question's
   // "report" and the quest's final onComplete can fire in the very same handler (the last
   // knowledgecheck question's "next" click both reports and completes), and React state
   // updates from the same handler wouldn't be visible yet when onComplete reads them — a
   // ref sidesteps that staleness entirely by updating synchronously.
-  const analyticsRef = useRef<QuestAnalytics>(EMPTY_ANALYTICS);
+  const analyticsRef = useRef<QuestAnalytics>(resumed?.analytics ?? EMPTY_ANALYTICS);
   const reportProps: ReportProps = {
     reportKnowledgeCheck: (question, isCorrect) => {
       analyticsRef.current = { ...analyticsRef.current, knowledgeCheck: [...analyticsRef.current.knowledgeCheck, { question, isCorrect }] };
@@ -472,23 +517,16 @@ export default function QuestPlayer() {
     else router.replace(`/learn/module/${mod.id}`);
   };
 
-  // Nothing about a part-finished lesson is saved — the store records a lesson only once its
-  // final chapter completes (see completeLesson) — so leaving chapter 12 of 15 throws away
-  // ten minutes of work and restarts from the beginning. The X sits in the corner nearest
-  // the thumb on the most-tapped screen in the app, and it used to do that silently on the
-  // first tap. Chapter 1 leaves without ceremony; there's nothing to lose yet.
-  // confirmDestructive, NOT Alert.alert directly: react-native-web's Alert is an empty
-  // function, so a bare Alert.alert here would have made the X do nothing at all on the web
-  // build — which is the build /m actually serves to phones. See @/lib/confirm.
-  const confirmQuit = () => {
-    if (chapterIdx === 0) { goBack(); return; }
-    confirmDestructive(
-      'Leave this lesson?',
-      "You're partway through. Your progress in this lesson isn't saved, so you'd start it again from the beginning.",
-      'Leave',
-      goBack,
-    );
-  };
+  // The X just leaves. No confirmation, because there is nothing left to confirm.
+  //
+  // It used to warn that "your progress in this lesson isn't saved, so you'd start it again
+  // from the beginning", which was true and was the real problem: a student twelve minutes
+  // into a fifteen-chapter lesson had to choose between losing the lot and not leaving. The
+  // dialog didn't soften that, it just made the loss explicit first. Now that every chapter
+  // advance writes a resume point (see onComplete's advance), leaving costs nothing — and a
+  // prompt asking "are you sure?" about something harmless is pure friction on the
+  // most-tapped control in the player, and teaches people to dismiss dialogs unread.
+  const confirmQuit = goBack;
 
   if (!quest || !content) {
     return (
@@ -566,6 +604,10 @@ export default function QuestPlayer() {
 
     const advance = () => {
       if (isFinalChapter) {
+        // The lesson is over, so the resume point goes with it — otherwise finishing would
+        // leave a save behind claiming the player is still partway through, and the module
+        // list would offer to resume a lesson they'd just completed.
+        clearLessonProgress(mod.id, li);
         setPendingQuestAnalytics({ ...analyticsRef.current, learnedTerms: termsRef.current });
         router.replace({
           pathname: '/learn/results',
@@ -583,6 +625,32 @@ export default function QuestPlayer() {
       setGradedTotal(nextGraded);
       setBossWon(nextBossWon);
       setChapterIdx(chapterIdx + 1);
+      // Write the resume point on every chapter advance — this is the whole feature.
+      //
+      // Built from the `next*` locals rather than from state, for the same staleness reason
+      // analyticsRef exists: this runs in the same handler that just called setXpEarned and
+      // friends, and those values aren't readable back yet. termsRef/analyticsRef are already
+      // synchronous mirrors, so they can be read directly.
+      //
+      // Deliberately NOT saved for a real-life sub-quest: isLifeTask lessons are launched with
+      // a lessonIndex that indexes `lessons`, not `quests`, so the key would collide with the
+      // main quest at that same index and resume one into the other.
+      if (!isLifeTask) {
+        saveLessonProgress(mod.id, li, {
+          questId: quest.id,
+          chapterCount: quest.chapters.length,
+          chapterIdx: chapterIdx + 1,
+          xpEarned: nextXp,
+          correctCount: nextCorrect,
+          gradedTotal: nextGraded,
+          hintsUsed,
+          bossWon: nextBossWon,
+          terms: termsRef.current,
+          analytics: analyticsRef.current,
+          ambientFired: hasFiredAmbientRef.current,
+          savedAt: Date.now(),
+        });
+      }
     };
 
     // Ambient random life events (ported from the website's maybeTriggerAmbientLifeEvent)

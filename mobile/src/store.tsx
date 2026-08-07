@@ -4,6 +4,7 @@ import { shopItemsReal, moduleContentById } from '@/content';
 import type { RoomSlot, ShopItemReal } from '@/content';
 import { ACHIEVEMENTS, BADGE_TIER_REWARD, MODULE_MASTERY_ACHIEVEMENT, type Achievement } from '@/achievements';
 import { LIFE_EVENTS, LIFE_EVENT_UNLOCKS, LIFE_EVENT_CHANCE, LIFE_EVENT_COOLDOWN_SESSIONS, pickAmbientLifeEvent, type LifeEvent } from '@/lifeEvents';
+import type { QuestAnalytics } from '@/questReport';
 
 const STORAGE_KEY = 'stackd_state_v1';
 
@@ -187,6 +188,46 @@ export type AppState = {
    * apart from an ordinary stale/racy remote read, which otherwise look identical (remote's
    * numbers are lower than local's either way). See hydrateFromRemote below. */
   resetToken: number;
+  /** Lessons the player is partway through, keyed `${moduleId}:${lessonIndex}`.
+   *
+   * Nothing about an unfinished lesson used to be kept — the store only ever recorded one on
+   * completion — so leaving chapter 12 of 15 threw away ten minutes and restarted from the
+   * beginning. That is a punishment for being interrupted, and it lands hardest on exactly
+   * the students this is for, doing a lesson between classes.
+   *
+   * Saved at CHAPTER granularity: resuming reopens the chapter you were on, from its start.
+   * Each chapter view owns its own internal state (which concept a vocab chapter is showing,
+   * which question of a Quick Check, which cards are resolved) and none of it is lifted into
+   * the player, so mid-chapter resume would mean threading save/restore through all fifteen
+   * chapter types. Replaying one chapter's opening beat is re-entry context, not lost work. */
+  lessonProgress: Record<string, SavedLessonProgress>;
+};
+
+/** One in-flight lesson. Everything here is state the quest player accumulates ACROSS
+ * chapters and would otherwise lose — per-chapter internal state is deliberately not
+ * included (see AppState.lessonProgress). */
+export type SavedLessonProgress = {
+  /** Guards against resuming into content that has changed underneath the save. Both are
+   * checked on read: a quest whose chapters were edited since would otherwise drop the player
+   * into a different chapter than the one they left, with a score tallied from chapters that
+   * no longer exist. A mismatch discards the save rather than trying to migrate it. */
+  questId: string;
+  chapterCount: number;
+  /** The chapter to reopen — the one that was on screen, not the one after it. */
+  chapterIdx: number;
+  xpEarned: number;
+  correctCount: number;
+  gradedTotal: number;
+  hintsUsed: number;
+  bossWon: boolean;
+  terms: { term: string; plain: string; section: string }[];
+  analytics: QuestAnalytics;
+  /** Whether this lesson already spent its one ambient life-event roll. Held here rather than
+   * in the player's own ref, which is per-MOUNT: without it, every resume would hand the same
+   * lesson a fresh roll and a long lesson resumed twice could fire three popups. */
+  ambientFired: boolean;
+  /** Epoch ms, for "paused 2 days ago" style copy and for pruning if that's ever wanted. */
+  savedAt: number;
 };
 
 const DEFAULT_STATE: AppState = {
@@ -219,6 +260,7 @@ const DEFAULT_STATE: AppState = {
   lastModuleActivityDate: null,
   lastModuleId: null,
   completedLifeTaskIds: [],
+  lessonProgress: {},
   hasSeenOnboardingTour: false,
   // Matches app.js's own default state literal exactly — the income/fixed-expense starter
   // rows ("Part-time job"/"Rent") are lazily seeded by the Tools screen itself whenever
@@ -279,6 +321,13 @@ const ALL_MODULE_IDS = Object.keys(MODULE_MASTERY_ACHIEVEMENT);
  * moduleProgress indices, which only ever record main-quest completions. The sub-quest's
  * own completion lives separately, in completedLifeTaskIds (see moduleDoneCount) — it's
  * always the module's last lesson (guaranteed by content, see LessonSummary.isLifeTask). */
+/** Key for AppState.lessonProgress. A module can have more than one lesson part-finished at
+ * once (start one, get pulled away, start another), so this is keyed per lesson rather than
+ * keeping a single "the" in-progress lesson. */
+function lessonProgressKey(moduleId: string, lessonIndex: number) {
+  return `${moduleId}:${lessonIndex}`;
+}
+
 function mainLessonCount(moduleId: string) {
   return moduleContentById(moduleId)?.lessons.filter((l) => !l.isLifeTask).length ?? 0;
 }
@@ -439,6 +488,17 @@ type Ctx = {
   completeLifeTask: (moduleId: string, xpEarned: number, opts?: {
     correctCount?: number; gradedTotal?: number; questId?: string; hintsUsed?: number; newTerms?: string[];
   }) => { xpAwarded: number; coinsAwarded: number };
+  /** The saved mid-lesson state for this lesson, or null if there isn't a usable one.
+   *
+   * Validated on read, not on write: a save is discarded if the quest it belongs to has since
+   * been edited (different id, or a different number of chapters), because resuming then would
+   * drop the player into a chapter that isn't the one they left, carrying a score tallied from
+   * chapters that may no longer exist. Returning null just means the lesson starts fresh. */
+  lessonProgressFor: (moduleId: string, lessonIndex: number) => SavedLessonProgress | null;
+  /** Writes (or overwrites) the save for one lesson. Called on every chapter advance. */
+  saveLessonProgress: (moduleId: string, lessonIndex: number, progress: SavedLessonProgress) => void;
+  /** Drops the save — on finishing the lesson, and on an explicit "start over". */
+  clearLessonProgress: (moduleId: string, lessonIndex: number) => void;
   pendingLifeEvent: () => LifeEvent | null;
   /** Applies a choice's coinDelta (if any), records the event as shown, and clears pending. */
   resolveLifeEvent: (choiceId: string) => void;
@@ -930,6 +990,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       pendingLifeEvent: () => findLifeEvent(state.pendingLifeEventId),
 
+      lessonProgressFor: (moduleId, lessonIndex) => {
+        const saved = state.lessonProgress[lessonProgressKey(moduleId, lessonIndex)];
+        if (!saved) return null;
+        const quest = moduleContentById(moduleId)?.quests[lessonIndex];
+        // The quest this save belongs to is gone, or has been re-authored since. Either way
+        // its chapter index no longer means what it meant when it was written.
+        if (!quest || quest.id !== saved.questId || quest.chapters.length !== saved.chapterCount) return null;
+        // Belt and braces on the index itself, so a save can never point past the end.
+        if (saved.chapterIdx < 0 || saved.chapterIdx >= quest.chapters.length) return null;
+        return saved;
+      },
+
+      saveLessonProgress: (moduleId, lessonIndex, progress) => {
+        setState((s) => ({
+          ...s,
+          lessonProgress: { ...s.lessonProgress, [lessonProgressKey(moduleId, lessonIndex)]: progress },
+        }));
+      },
+
+      clearLessonProgress: (moduleId, lessonIndex) => {
+        setState((s) => {
+          const key = lessonProgressKey(moduleId, lessonIndex);
+          if (!s.lessonProgress[key]) return s;
+          // Rebuilt without the key rather than set to undefined — an undefined value would
+          // survive into AsyncStorage as a real key and keep reading as "there's a save here".
+          const { [key]: _dropped, ...rest } = s.lessonProgress;
+          return { ...s, lessonProgress: rest };
+        });
+      },
+
       resolveLifeEvent: (choiceId) => {
         const event = findLifeEvent(state.pendingLifeEventId);
         const choice = event?.choices.find((c) => c.id === choiceId);
@@ -1125,6 +1215,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           // above landed last, so a later hydrate can still tell a genuine reset apart from
           // an ordinary stale read (see the resetToken check at the top of this function).
           resetToken: Math.max(state.resetToken, partial.resetToken ?? 0),
+          // Local wins outright. An in-flight lesson is the one thing here that belongs to the
+          // device it's being played on: this hydrate runs once at sign-in, and taking a
+          // remote copy would either resurrect a lesson already finished elsewhere or — worse
+          // — replace the save for the lesson being played right now with an older chapter
+          // index. Merging per key wouldn't help either, since both sides claim the same key
+          // with different chapter numbers and neither is "newer" in a way this can tell.
+          lessonProgress: state.lessonProgress,
         };
         const { next, streakDiamondsEarned } = runDailyCheck(merged);
         setState(next);

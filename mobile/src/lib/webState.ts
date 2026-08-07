@@ -109,10 +109,15 @@ const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is str
 // `_mobile`, which the web ignores, is why finishing a lesson on one device left Hammy
 // "happy" there and still on the day's grumpy/sleepy/etc. mood on the other. It's a shared
 // top-level field in both directions now.
+// lessonProgress is here because the website has no concept of a part-finished lesson at all
+// — there is nothing on that side to map it onto. Stashing it means a mobile→mobile round trip
+// through Supabase preserves it, while the web simply ignores it. Note that resuming still
+// doesn't cross devices: hydrateFromRemote deliberately keeps the LOCAL copy (see its comment),
+// because the device you're playing on is the only one that knows which chapter you're on.
 const MOBILE_ONLY_KEYS = [
   'shownLifeEventIds', 'pendingLifeEventId', 'lifeEventCooldown', 'onboardingTrackId',
   'questHintsUsed', 'termsLearned', 'completedLifeTaskIds',
-  'hasSeenOnboardingTour',
+  'hasSeenOnboardingTour', 'lessonProgress',
 ] as const;
 
 /** `Date.toDateString()` values ("Wed Jul 29 2026") don't order lexicographically, so compare
