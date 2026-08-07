@@ -24,7 +24,7 @@ import { MODULE_SOURCES } from '@/references';
  * copy-to-clipboard. */
 export default function Settings() {
   const router = useRouter();
-  const { state, level, tierName, resetProgress, debugSimulateNewDay, devOwnEverything, devAddCoins } = useStore();
+  const { state, level, tierName, resetProgress, debugSimulateNewDay } = useStore();
   const { startTour } = useOnboardingTour();
 
   const replayTour = () => {
@@ -57,6 +57,18 @@ export default function Settings() {
           <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.push('/(onboarding)/survey')} />
           <Row icon="compass" title="Replay welcome tour" sub="XP, the Shop & modules, quick refresher" onPress={replayTour} />
           <Row icon="trash-2" title="Reset all progress" sub="Clears all XP, modules, badges, coins, diamonds, shop items, room decor, and your budget plan — permanently." danger onPress={confirmReset} />
+          {/* Debug helpers live behind __DEV__ and MUST stay there.
+           *
+           * Two grant-style cheats ("Own everything", "Add 1,000 coins") used to sit here
+           * ungated, on the reasoning that __DEV__ "wasn't reliably true in local web
+           * testing". It is: __DEV__ is compiled out by `expo export`, and the row below is
+           * genuinely absent from the exported bundle — what that note was really describing
+           * is that the gate hides these under `expo start --web` too, which is a dev server
+           * and not the build students get. The cost of the workaround was that every student
+           * on /m/ could grant themselves the entire shop catalog and unlimited coins, which
+           * is the whole economy: lesson rewards, streak diamonds, mystery boxes, the shop.
+           * They're gone rather than gated — nothing outside a debug session wants them, and
+           * store.devOwnEverything/devAddCoins went with them. */}
           {__DEV__ ? (
             <Row
               icon="fast-forward"
@@ -65,20 +77,6 @@ export default function Settings() {
               onPress={debugSimulateNewDay}
             />
           ) : null}
-          {/* Not gated behind __DEV__ like the row above — that gate wasn't reliably true in
-              local web testing, so this stays always-visible instead of silently vanishing. */}
-          <Row
-            icon="shopping-bag"
-            title="Own everything (dev)"
-            sub="Grants every Furniture Farm & Porky's Boutique item — doesn't auto-equip any of it"
-            onPress={devOwnEverything}
-          />
-          <Row
-            icon="plus-circle"
-            title="Add 1,000 coins (dev)"
-            sub={`Balance: ${state.coins}`}
-            onPress={() => devAddCoins(1000)}
-          />
           {authEnabled ? (
             <ClerkSignOutRow />
           ) : (

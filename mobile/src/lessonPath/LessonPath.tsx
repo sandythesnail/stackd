@@ -9,7 +9,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { colors } from '@/theme';
 import { modules, type Module } from '@/data';
-import { moduleContentById } from '@/content';
+import { moduleContentById, mainLessonAbsoluteIndices } from '@/content';
 import { SURVEY_TRACKS } from '@/survey';
 import { useStore } from '@/store';
 import { MIcon, Hammy, MaybeTourTarget, TourCallout, useOnboardingTour } from '@/components';
@@ -107,35 +107,48 @@ export function LessonPath({ width }: { width: number }) {
   const sections: Section[] = useMemo(() => modules.map((m) => {
     const content = moduleContentById(m.id);
     const lessons = content?.lessons ?? [];
-    const mainLessons = lessons.filter((l) => !l.isLifeTask);
+    // Absolute positions in `lessons`, not 0..n-1. `done` and `recommended.lessonIndex` are
+    // both absolute (they come from the store, which navigates with them), so comparing them
+    // against a filtered counter only worked while the sub-quest sat last in every module.
+    const mainIndices = mainLessonAbsoluteIndices(content);
     const done = new Set(moduleDoneIndices(m.id));
     const lifeDone = state.completedLifeTaskIds.includes(m.id);
+    const isRecommended = (absIdx: number) =>
+      recommended?.moduleId === m.id && recommended.lessonIndex === absIdx;
 
-    const nodes: PathNodeData[] = mainLessons.map((l, i) => ({
-      key: `${m.id}-${i}`,
+    const nodes: PathNodeData[] = mainIndices.map((absIdx, i) => ({
+      key: `${m.id}-${absIdx}`,
       moduleId: m.id,
-      lessonIndex: i,
-      title: l.title,
-      hook: l.hook,
-      state: done.has(i)
-        ? 'completed'
-        : recommended?.moduleId === m.id && recommended.lessonIndex === i
-          ? 'current'
-          : 'available',
+      lessonIndex: absIdx,
+      title: lessons[absIdx].title,
+      hook: lessons[absIdx].hook,
+      state: done.has(absIdx) ? 'completed' : isRecommended(absIdx) ? 'current' : 'available',
     }));
 
-    const life = lessons.find((l) => l.isLifeTask);
-    if (life) {
+    const lifeIdx = lessons.findIndex((l) => l.isLifeTask);
+    if (lifeIdx >= 0) {
       nodes.push({
         key: `${m.id}-life`,
         moduleId: m.id,
-        lessonIndex: lessons.indexOf(life),
-        title: life.title,
-        hook: life.hook,
+        lessonIndex: lifeIdx,
+        title: lessons[lifeIdx].title,
+        hook: lessons[lifeIdx].hook,
         isLifeTask: true,
         // The real-life step-by-step guide is the one genuinely aside lesson in the content
-        // (isLifeTask) — it carries the optional state rather than one being invented.
-        state: lifeDone ? 'completed' : 'optional',
+        // (isLifeTask), so it carries the optional state rather than one being invented —
+        // but it can also BE the recommended next lesson, and that has to win.
+        //
+        // Once every main quest is done, nextLessonIndex points here. This node was hardcoded
+        // 'optional' regardless, so no node on the path carried 'current': the recommended
+        // halo, the label and the comet all vanished for the whole last lesson of a module,
+        // while Home's continue card directly above the path went on saying "Continue lesson
+        // · Real-life sub-quest". The two surfaces are supposed to be incapable of pointing
+        // at different lessons (that's why they share an ordering) and here they diverged.
+        //
+        // It keeps reading as "elsewhere" either way — it's `isLifeTask` (not its state) that
+        // puts it out on the dashed spur, further off the centre line than the wave would
+        // take it, and that styling is untouched by this.
+        state: lifeDone ? 'completed' : isRecommended(lifeIdx) ? 'current' : 'optional',
       });
     }
 

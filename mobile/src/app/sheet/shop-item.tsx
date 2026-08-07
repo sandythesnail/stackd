@@ -8,7 +8,10 @@ import { Txt, Button, Tag, Card, IconButton, CurrencyChip, Coin, Diamond, ItemAr
 import { colors, font } from '@/theme';
 import { shopItemById, shopItemsReal } from '@/content';
 import type { ShopItemReal } from '@/content';
-import { useStore, mysteryDropChance, itemRarity, MAX_EQUIPPED_ITEMS, type MysteryResult } from '@/store';
+import {
+  useStore, mysteryDropChance, mysteryPoolUnowned, itemRarity, MAX_EQUIPPED_ITEMS,
+  type MysteryResult,
+} from '@/store';
 import { RequireAuth } from '@/lib/RequireAuth';
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -87,6 +90,14 @@ function ShopItemSheet() {
   const canAfford = balance >= item.price;
   const owned = isOwned(item.id);
   const equipped = isEquipped(item.id);
+  // How many prizes this box can still hand out. openMysteryBox refuses to open (returns
+  // null) once its pool is fully owned — but this sheet only ever checked affordability, so
+  // an exhausted box kept offering an enabled "Open for N coins" that did precisely nothing
+  // when tapped, with no explanation. The Shop grid card behind this sheet already got this
+  // right ("✓ All collected!"), which made the sheet the one place a dead button survived.
+  const boxRemaining = item.isMysteryBox && item.mysteryPool
+    ? mysteryPoolUnowned(item.mysteryPool, state.ownedItems).length
+    : 0;
 
   const startMysteryOpen = () => {
     const result = openMysteryBox(item.id);
@@ -118,8 +129,15 @@ function ShopItemSheet() {
   let buttonLabel = '';
   let buttonDisabled = false;
   if (item.isMysteryBox) {
-    buttonLabel = `Open for ${item.price} ${currency}${item.price === 1 ? '' : 's'}`;
-    buttonDisabled = !canAfford;
+    // Nothing left to win reads as its own state, not as "can't afford it" — the player owns
+    // every prize in this pool, which is worth saying out loud rather than dimming a price.
+    if (!boxRemaining) {
+      buttonLabel = '✓ You’ve collected them all';
+      buttonDisabled = true;
+    } else {
+      buttonLabel = `Open for ${item.price} ${currency}${item.price === 1 ? '' : 's'}`;
+      buttonDisabled = !canAfford;
+    }
   } else if (item.reward) {
     buttonLabel = `🎓 ${item.rewardHint ?? 'Complete all 11 modules to earn this'}`;
     buttonDisabled = true;
@@ -232,7 +250,10 @@ function ShopItemSheet() {
 
               <Button
                 label={buttonLabel}
-                left={!owned && !item.reward && !item.mysteryOnly && (currency === 'diamond' ? <Diamond size={20} /> : <Coin size={20} />)}
+                // No currency icon once the label has stopped quoting a price — an exhausted
+                // mystery box says "collected them all", which a coin beside it contradicts.
+                left={!owned && !item.reward && !item.mysteryOnly && !(item.isMysteryBox && !boxRemaining)
+                  && (currency === 'diamond' ? <Diamond size={20} /> : <Coin size={20} />)}
                 disabled={buttonDisabled}
                 variant={equipped ? 'dark' : 'green'}
                 onPress={handlePrimaryAction}

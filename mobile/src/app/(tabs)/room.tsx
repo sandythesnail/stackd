@@ -3,7 +3,7 @@ import { View, ScrollView, Pressable, StyleSheet, ViewStyle, useWindowDimensions
 import { useRouter } from 'expo-router';
 import { Screen, Txt, Hammy, ItemArt, Wallpaper, ListRow } from '@/components';
 import { colors, font } from '@/theme';
-import { useStore } from '@/store';
+import { useStore, MAX_EQUIPPED_ITEMS } from '@/store';
 import { shopItemsReal } from '@/content';
 import type { RoomSlot, ShopItemReal } from '@/content';
 
@@ -146,6 +146,13 @@ export default function Room() {
   const wardrobeItems = shopItemsReal.filter(
     (i) => i.category === wardrobeCat && !i.isMysteryBox && state.ownedItems.includes(i.id),
   );
+  // Hammy wears at most MAX_EQUIPPED_ITEMS things at once, and buyOrEquipItem simply returns
+  // false past that. This screen dropped that return value on the floor, so once three items
+  // were on, tapping "Wear" on a fourth did nothing at all — no change, no message, a row
+  // that looked broken. The shop's own detail sheet has always explained this ("Wear (take
+  // something off first)"); the Wardrobe tab, which is where you'd actually go to swap an
+  // outfit, never did. Say it on the row itself, and don't invite a tap that can't work.
+  const wardrobeFull = state.equippedItems.length >= MAX_EQUIPPED_ITEMS;
 
   // No Header here on purpose — the level/coins/diamonds bar just ate space from an already
   // small room scene for no real benefit on this screen; the bottom tab bar and this
@@ -229,10 +236,22 @@ export default function Room() {
             </Txt>
           ) : (
             <View style={{ gap: 10, marginTop: 16 }}>
+              {wardrobeFull ? (
+                <Txt variant="lead" style={styles.wardrobeFullNote}>
+                  Hammy&apos;s wearing {MAX_EQUIPPED_ITEMS} things — take one off to put something else on.
+                </Txt>
+              ) : null}
               {wardrobeItems.map((item) => {
                 const worn = isEquipped(item.id);
+                // Taking something OFF is always allowed; it's only putting a fourth thing on
+                // that can't work. Both go through the same call, so the block is per-row.
+                const blocked = !worn && wardrobeFull;
                 return (
-                  <ListRow key={item.id} onPress={() => buyOrEquipItem(item.id)}>
+                  <ListRow
+                    key={item.id}
+                    onPress={blocked ? undefined : () => buyOrEquipItem(item.id)}
+                    style={blocked ? styles.rowBlocked : undefined}
+                  >
                     <ItemArt item={item} size={40} />
                     <Txt style={styles.itemName} numberOfLines={1}>{item.name}</Txt>
                     <View style={[styles.wornTag, worn && styles.wornTagOn]}>
@@ -384,6 +403,10 @@ const styles = StyleSheet.create({
   fchipOn: { backgroundColor: colors.green, borderColor: colors.green },
   fchipTxt: { fontFamily: font.extra, fontSize: 12, color: colors.muted3 },
   itemName: { flex: 1, fontFamily: font.extra, fontSize: 13.5, color: colors.ink },
+  wardrobeFullNote: { fontSize: 12.5, marginBottom: 2 },
+  // Dimmed, not hidden: the item is still owned and still worth seeing in the list — it just
+  // can't go on until something comes off. Pairs with the note above, which says why.
+  rowBlocked: { opacity: 0.5 },
   wornTag: {
     backgroundColor: colors.tagGreenBg,
     borderRadius: 13,

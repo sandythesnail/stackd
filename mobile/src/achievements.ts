@@ -66,6 +66,19 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: '<path d="M2 18h20L19 8l-5 4-2-6-2 6-5-4z"/>' },
 ];
 
+/** The badges this build can actually award — the full catalog minus anything whose unlock
+ * condition mobile has no way to evaluate (see `available` above).
+ *
+ * This is the list the app should use for everything user-facing and everything derived:
+ * the Badges grid, every "X / Y earned" count, and — critically — the `grandmaster` check.
+ * That check used to read the FULL catalog ("unlock every other badge"), which silently
+ * included `iron_will` and `excellent_credit`; nothing anywhere can add those two to the met
+ * set, so the hardest diamond badge in the app was mathematically unreachable, and the badge
+ * counters advertised a total (22) that capped out at 19. Deriving both from this list makes
+ * the ceiling real, and flipping an `available` flag to true is all it takes to bring a badge
+ * back into play once the tracking behind it exists — no second place to remember to update. */
+export const EARNABLE_ACHIEVEMENTS: Achievement[] = ACHIEVEMENTS.filter((a) => a.available);
+
 /** BADGE_TIER_REWARD, ported verbatim. */
 export const BADGE_TIER_REWARD: Record<Achievement['tier'], { type: 'coins' | 'diamonds'; amount: number }> = {
   bronze: { type: 'coins', amount: 5 },

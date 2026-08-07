@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { shopItemsReal, moduleContentById } from '@/content';
+import { shopItemsReal, moduleContentById, mainLessonAbsoluteIndices } from '@/content';
 import type { RoomSlot, ShopItemReal } from '@/content';
-import { ACHIEVEMENTS, BADGE_TIER_REWARD, MODULE_MASTERY_ACHIEVEMENT, type Achievement } from '@/achievements';
+import { ACHIEVEMENTS, EARNABLE_ACHIEVEMENTS, BADGE_TIER_REWARD, MODULE_MASTERY_ACHIEVEMENT, type Achievement } from '@/achievements';
 import { LIFE_EVENTS, LIFE_EVENT_UNLOCKS, LIFE_EVENT_CHANCE, LIFE_EVENT_COOLDOWN_SESSIONS, pickAmbientLifeEvent, type LifeEvent } from '@/lifeEvents';
 import type { QuestAnalytics } from '@/questReport';
 
@@ -328,8 +328,24 @@ function lessonProgressKey(moduleId: string, lessonIndex: number) {
   return `${moduleId}:${lessonIndex}`;
 }
 
-function mainLessonCount(moduleId: string) {
-  return moduleContentById(moduleId)?.lessons.filter((l) => !l.isLifeTask).length ?? 0;
+/** The main quests' real positions in `lessons`/`quests` — NOT 0..count-1.
+ *
+ * Everything that stores or navigates to a lesson (moduleProgress, quest.tsx's lessonIndex
+ * param, lessonProgress keys) speaks absolute indices, so anything comparing against them has
+ * to as well. This used to be a plain COUNT, and the comparisons were `i < mainLessonCount`,
+ * which is only equivalent while the real-life sub-quest happens to be a module's last lesson.
+ * That's true of all 11 modules today and nothing enforces it (see mainLessonAbsoluteIndices'
+ * own note in content/index.ts) — the moment a sub-quest were authored anywhere but last, a
+ * count-based check would mark the wrong lesson done and hand back the wrong "next" index. */
+function mainIndicesFor(moduleId: string) {
+  return mainLessonAbsoluteIndices(moduleContentById(moduleId));
+}
+
+/** Where this module's real-life sub-quest sits in `lessons`, or -1 if it has none. Its own
+ * completion lives in completedLifeTaskIds, but callers still need the index to open it. */
+function lifeTaskIndexFor(moduleId: string) {
+  const idx = moduleContentById(moduleId)?.lessons.findIndex((l) => l.isLifeTask) ?? -1;
+  return idx;
 }
 
 /** Every real lesson in a module: 8 main quests + the real-life sub-quest = 9. The
@@ -353,7 +369,8 @@ function accumulateModuleStats(
 /** How many of this module's 9 real lessons are done — the 8 main quests (distinct valid
  * indices in moduleProgress) plus the real-life sub-quest (completedLifeTaskIds). */
 function moduleDoneCount(moduleProgress: Record<string, number[]>, completedLifeTaskIds: string[], moduleId: string) {
-  const mainDone = new Set((moduleProgress[moduleId] ?? []).filter((i) => i >= 0 && i < mainLessonCount(moduleId))).size;
+  const main = new Set(mainIndicesFor(moduleId));
+  const mainDone = new Set((moduleProgress[moduleId] ?? []).filter((i) => main.has(i))).size;
   return mainDone + (completedLifeTaskIds.includes(moduleId) ? 1 : 0);
 }
 
@@ -428,7 +445,11 @@ function computeMetAchievementIds(s: AppState): string[] {
   if (s.questBossesWon.includes('scams')) met.add('fraud_fighter');
   if (s.questHintsUsed['credit::maya'] === 0) met.add('no_hints');
   if (s.termsLearned.length >= 15) met.add('word_nerd');
-  const otherIds = ACHIEVEMENTS.filter((a) => a.id !== 'grandmaster').map((a) => a.id);
+  // EARNABLE_ACHIEVEMENTS, not ACHIEVEMENTS: the full catalog still carries `iron_will` and
+  // `excellent_credit`, which are marked available:false because nothing in this file can
+  // evaluate them. Requiring them here made "unlock every other badge" impossible to satisfy
+  // — grandmaster could never fire, however complete the player's collection was.
+  const otherIds = EARNABLE_ACHIEVEMENTS.filter((a) => a.id !== 'grandmaster').map((a) => a.id);
   if (otherIds.every((id) => met.has(id))) met.add('grandmaster');
   return [...met];
 }
@@ -541,19 +562,16 @@ type Ctx = {
   /** Merge a remote (cloud-synced) snapshot into local state — used by SupabaseSync after
    * translating the web's user_progress blob into mobile's AppState. */
   hydrateFromRemote: (partial: Partial<AppState>) => void;
-  /** Dev-only: backdates lastPlayedDate by one day and re-runs the daily check, so the
-   * streak/daily-login flow can be verified without waiting for a real day boundary. */
+  /** Dev-only, and gated behind __DEV__ at its only call site (Settings): backdates
+   * lastPlayedDate by one day and re-runs the daily check, so the streak/daily-login flow
+   * can be verified without waiting for a real day boundary. Grants nothing — it moves a
+   * date, which is why this one survived the cull described below.
+   *
+   * Two sibling helpers (devOwnEverything, devAddCoins) were removed outright: their Settings
+   * rows had been left ungated and shipped to students, handing out the whole shop catalog
+   * and unlimited coins. Don't reintroduce a grant-style debug action here; if one is ever
+   * genuinely needed, gate it AND keep it out of any exported build. */
   debugSimulateNewDay: () => void;
-  /** Dev-only: grants ownership (not equip — room slots/MAX_EQUIPPED_ITEMS still cap what's
-   * actually worn/placed at once) of every real, buyable Furniture Farm and Porky's Boutique
-   * item, so the full catalog can be browsed/equipped without grinding coins. Skips mystery
-   * BOX items themselves (buying one is a currency sink, not something to "own") and the
-   * 'reward' category (achievement-earned, not part of either shop tab, and not wired to
-   * ownedItems by any real code path today). */
-  devOwnEverything: () => void;
-  /** Dev-only: credits `amount` coins, for testing purchases (the Grandfather Clock alone
-   * is 320) without grinding lessons for XP-driven coin rewards. */
-  devAddCoins: (amount: number) => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
@@ -639,6 +657,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     livePendingDiamonds.current += n;
     setPendingStreakDiamonds((p) => p + n);
   };
+  /** Drops any un-shown streak reward, ref and state together. For the two places that throw
+   * the whole player away (a progress reset, an account switch): the diamonds those rewards
+   * refer to were credited into a balance that no longer exists, so leaving the marker behind
+   * left the streak card glowing "come collect" and a banner announcing bonus diamonds the
+   * reset had already wiped. */
+  const clearStreakDiamonds = () => {
+    livePendingDiamonds.current = 0;
+    setPendingStreakDiamonds(0);
+  };
   const loaded = useRef(false);
   const [hydrated, setHydrated] = useState(false);
   /** Mirrors `state`, but buyOrEquipItem/toggleRoomSlot/openMysteryBox update it
@@ -710,21 +737,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       moduleDone: (moduleId) => moduleDoneCount(state.moduleProgress, state.completedLifeTaskIds, moduleId),
       // Indices only ever cover the 8 main quests — the sub-quest's own completion lives in
       // completedLifeTaskIds, not as an index here (see moduleDoneCount).
-      moduleDoneIndices: (moduleId) => (state.moduleProgress[moduleId] ?? []).filter((i) => i >= 0 && i < mainLessonCount(moduleId)),
+      moduleDoneIndices: (moduleId) => {
+        const main = new Set(mainIndicesFor(moduleId));
+        return (state.moduleProgress[moduleId] ?? []).filter((i) => main.has(i));
+      },
       nextLessonIndex: (moduleId) => {
         const done = new Set(state.moduleProgress[moduleId] ?? []);
-        const mainCount = mainLessonCount(moduleId);
-        for (let i = 0; i < mainCount; i++) if (!done.has(i)) return i;
-        // Every main quest is done — the real-life sub-quest (always the module's last
-        // lesson) is next, unless it's already finished too, in which case nothing's left.
-        return state.completedLifeTaskIds.includes(moduleId) ? -1 : mainCount;
+        for (const idx of mainIndicesFor(moduleId)) if (!done.has(idx)) return idx;
+        // Every main quest is done — the real-life sub-quest is next, unless it's already
+        // finished too, in which case nothing's left. Its REAL index, not the main-quest
+        // count: those coincide only while the sub-quest is the module's last lesson, and
+        // this value is handed straight to quest.tsx as a lessonIndex param.
+        const lifeIdx = lifeTaskIndexFor(moduleId);
+        return lifeIdx >= 0 && !state.completedLifeTaskIds.includes(moduleId) ? lifeIdx : -1;
       },
       moduleTotal,
       moduleMastered: (moduleId) => isModuleMastered(state.moduleProgress, state.completedLifeTaskIds, moduleId),
       moduleStatus: (moduleId) => (isModuleMastered(state.moduleProgress, state.completedLifeTaskIds, moduleId) ? 'done' : 'active'),
+      // Only badges this build can award. The two it can't were still being listed and
+      // counted, so the Badges grid held two cells that could never light up and every
+      // "X / Y earned" readout (Badges header, the Progress tab's stat tile) quoted a total
+      // the player could not reach — 22, with a real ceiling of 19. See EARNABLE_ACHIEVEMENTS.
       achievements: () => {
         const met = new Set(computeMetAchievementIds(state));
-        return ACHIEVEMENTS.map((a) => ({ ...a, earned: met.has(a.id) }));
+        return EARNABLE_ACHIEVEMENTS.map((a) => ({ ...a, earned: met.has(a.id) }));
       },
 
       buyOrEquipItem: (itemId) => {
@@ -861,7 +897,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // lesson finish (results.tsx guards it with a `recorded` ref), so there's no race
         // between this read and the updater's own use of the same value.
         const alreadyDone = (liveState.current.moduleProgress[moduleId] ?? []).includes(lessonIndex);
-        const advanced = lessonIndex >= 0 && lessonIndex < mainLessonCount(moduleId) && !alreadyDone;
+        // Must be a real main-quest position, not merely "below the main-quest count" — the
+        // sub-quest's own index would satisfy a count check the moment it wasn't last, and
+        // its completion belongs in completedLifeTaskIds (completeLifeTask), never here.
+        const advanced = mainIndicesFor(moduleId).includes(lessonIndex) && !alreadyDone;
 
         setState((s) => {
           const wasMastered = isModuleMastered(s.moduleProgress, s.completedLifeTaskIds, moduleId);
@@ -1102,6 +1141,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setState({ ...DEFAULT_STATE, resetToken: Date.now() });
         setDailyLoginBanner(null);
         setNewAchievementIds([]);
+        clearStreakDiamonds();
       },
       resetForAccountSwitch: () => {
         // Same daily bookkeeping the initial load runs, but against pristine defaults —
@@ -1110,7 +1150,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setState(next);
         setDailyLoginBanner(null);
         setNewAchievementIds([]);
-        setPendingStreakDiamonds(streakDiamondsEarned);
+        // Zero first, then bank through the ref-aware helper. This used to call
+        // setPendingStreakDiamonds directly, which breaks the invariant livePendingDiamonds
+        // is documented to hold ("every write goes through this ref as well"): the ref kept
+        // the OUTGOING account's figure, so the first claim on the new account showed that
+        // stale number in its banner instead of what this day actually earned.
+        clearStreakDiamonds();
+        if (streakDiamondsEarned > 0) bankStreakDiamonds(streakDiamondsEarned);
         return next;
       },
       // Merge the remote snapshot, then re-run the once-per-day check against the merged
@@ -1232,21 +1278,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const { next, streakDiamondsEarned } = runDailyCheck({ ...state, lastPlayedDate: yesterday });
         setState(next);
         if (streakDiamondsEarned > 0) bankStreakDiamonds(streakDiamondsEarned);
-      },
-      devOwnEverything: () => {
-        const wearableIds = shopItemsReal
-          .filter((i) => (i.category === 'hat' || i.category === 'accessory' || i.category === 'exclusive') && !i.isMysteryBox)
-          .map((i) => i.id);
-        const roomIds = shopItemsReal.filter((i) => i.category === 'room' && i.slot).map((i) => i.id);
-        setState((s) => ({
-          ...s,
-          ownedItems: Array.from(new Set([...s.ownedItems, ...wearableIds])),
-          ownedRoomItems: Array.from(new Set([...s.ownedRoomItems, ...roomIds])),
-        }));
-      },
-
-      devAddCoins: (amount) => {
-        setState((s) => ({ ...s, coins: s.coins + amount }));
       },
     };
   }, [state, hydrated, dailyLoginBanner, newAchievementIds, pendingStreakDiamonds]);

@@ -47,9 +47,18 @@ export function SupabaseSync() {
   const push = useMemo(
     () => async (uid: string, s: AppState) => {
       const blob = mobileToWeb(s, lastRemote.current);
-      lastRemote.current = blob;
       const { error } = await supabase.from('user_progress').upsert({ clerk_user_id: uid, state: blob });
-      if (error) console.warn('[sync] upload failed:', error.message);
+      if (error) {
+        // Leave lastRemote alone on failure. It's the base every later push MERGES onto (to
+        // preserve web-only fields it doesn't understand), so recording a blob the server
+        // never accepted makes the next push merge onto a fiction: any web-only field that
+        // changed remotely in the meantime would be overwritten from a snapshot that was
+        // never real. Keeping the last CONFIRMED remote means a retry re-merges from the
+        // last thing actually known to be in the row.
+        console.warn('[sync] upload failed:', error.message);
+        return;
+      }
+      lastRemote.current = blob;
     },
     [supabase],
   );

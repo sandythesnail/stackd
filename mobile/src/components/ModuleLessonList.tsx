@@ -37,11 +37,19 @@ export function ModuleLessonList({
   onPressLesson: (i: number) => void;
 }) {
   const { lessonProgressFor } = useStore();
+  // A row's position in this filtered list is NOT the index the store records progress
+  // against — the real-life sub-quest is filtered out of `lessons` but still occupies a slot
+  // in `lessons`/`quests`, so `doneIndices` is in the absolute space and every row position
+  // has to be translated before it's compared. `savedFor` below already did this; the
+  // done/next-up marks did not, and were only correct while the sub-quest sat last.
+  // See mainLessonAbsoluteIndices.
+  const mainIndices = mainLessonAbsoluteIndices(moduleContentById(moduleId));
+  const absOf = (i: number) => mainIndices[i] ?? i;
   const doneSet = new Set(doneIndices);
   // "Next up" = the first not-yet-completed lesson, wherever it is in the list.
-  const nextIdx = lessons.findIndex((_, i) => !doneSet.has(i));
+  const nextIdx = lessons.findIndex((_, i) => !doneSet.has(absOf(i)));
   const rowStatusFor = (i: number) =>
-    status === 'done' || doneSet.has(i) ? 'done' : i === nextIdx ? 'active' : 'upcoming';
+    status === 'done' || doneSet.has(absOf(i)) ? 'done' : i === nextIdx ? 'active' : 'upcoming';
   // Whether the player has finished anything in this module decides what the next-up row is
   // allowed to CALL itself. Nothing here tracks part-finished lessons — a lesson is done or
   // it isn't — so the next-up row cannot honestly claim to be in progress. On an untouched
@@ -49,13 +57,7 @@ export function ModuleLessonList({
   // off. See LessonRow.
   const started = doneIndices.length > 0;
   const sections = resolveLessonSections(moduleId, lessons.length);
-  // A row's position in this filtered list is NOT the index the quest player (and therefore
-  // the saved-progress key) uses — the real-life sub-quest is filtered out of `lessons` but
-  // still occupies a slot in `quests`. Both call sites already translate with exactly this
-  // helper before navigating; the lookup has to use the same index or it would read another
-  // lesson's save. See mainLessonAbsoluteIndices.
-  const mainIndices = mainLessonAbsoluteIndices(moduleContentById(moduleId));
-  const savedFor = (i: number) => lessonProgressFor(moduleId, mainIndices[i] ?? i);
+  const savedFor = (i: number) => lessonProgressFor(moduleId, absOf(i));
 
   if (sections) {
     return (
@@ -66,7 +68,11 @@ export function ModuleLessonList({
             label={sec.label}
             lessons={lessons.slice(sec.start, sec.end)}
             startIndex={sec.start}
-            done={doneIndices.filter((i) => i >= sec.start && i < sec.end).length}
+            // Section bounds are positions in the FILTERED list, so walk those positions and
+            // ask whether each one's absolute index is done — rather than filtering the
+            // absolute doneIndices by filtered bounds, which mixes the two index spaces and
+            // miscounts "3/4 done" on any module whose sub-quest isn't last.
+            done={lessons.slice(sec.start, sec.end).filter((_, i) => doneSet.has(absOf(sec.start + i))).length}
             defaultOpen={nextIdx >= sec.start && nextIdx < sec.end}
             rowStatusFor={rowStatusFor}
             started={started}

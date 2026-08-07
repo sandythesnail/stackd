@@ -12,6 +12,7 @@ import {
 import { useUser } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
 import { user, modules, type Module } from '@/data';
+import { moduleContentById } from '@/content';
 import { useStore, type AchievementView } from '@/store';
 import { LessonPath } from '@/lessonPath/LessonPath';
 import { authEnabled } from '@/lib/env';
@@ -156,10 +157,11 @@ export default function Home() {
   // First lesson not yet completed — progress is per-lesson now, so this can differ from
   // the done COUNT whenever lessons were finished out of order.
   const nextLesson = nextModule ? Math.max(0, nextLessonIndex(nextModule.id)) : 0;
-  // The real-life sub-quest is always a module's LAST lesson (see mainLessonCount in
-  // store.tsx) — its own route param quest.tsx needs, same as modules.tsx/module/[id].tsx's
-  // "Real-life guide" row already passes.
-  const nextIsLifeTask = nextModule ? nextLesson === nextTotal - 1 : false;
+  // Ask the content whether this lesson IS the sub-quest, rather than inferring it from
+  // "it's the last one" — that arithmetic only held while the sub-quest was authored last in
+  // every module, which nothing enforces, and getting it wrong sends quest.tsx the wrong
+  // isLifeTask flag (wrong reward path, wrong resume behaviour) for an ordinary lesson.
+  const nextIsLifeTask = !!(nextModule && moduleContentById(nextModule.id)?.lessons[nextLesson]?.isLifeTask);
 
   // One mood per calendar day (todaysHammyMood), unless a lesson's already been finished
   // today — then Hammy's just happy (satisfied) about that instead. The copy here is
@@ -222,9 +224,13 @@ export default function Home() {
         {nextModule ? (
           <Card style={styles.questCard}>
             <View style={styles.questTop}>
-              <Pressable onPress={() => router.push({ pathname: '/sheet/life-event' })}>
-                <Hammy size={76} bob equipped={equippedMascotItems()} face={moodFace} />
-              </Pressable>
+              {/* Not pressable. Tapping Hammy used to push /sheet/life-event unconditionally,
+                  which is only ever a real screen when the store has queued an event — every
+                  other time (i.e. almost always) it opened a sheet reading "All quiet for now"
+                  with a Close button. A mascot that responds to a tap with an empty modal
+                  reads as a bug, and real life events reach the player on their own (after a
+                  lesson, or mid-quest) without needing a door on the dashboard. */}
+              <Hammy size={76} bob equipped={equippedMascotItems()} face={moodFace} />
               <Speech>{speechMsg}</Speech>
             </View>
             <View style={{ marginTop: 14 }}>
