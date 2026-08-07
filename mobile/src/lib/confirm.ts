@@ -8,34 +8,19 @@ import { Alert, Platform } from 'react-native';
  * real window.confirm there so the action still actually asks before firing on web; native
  * keeps the richer Alert.alert (title + message + styled Cancel/destructive buttons).
  *
- * An in-app dialog was tried in place of both (a ConfirmHost component mounted at the root,
- * with this function publishing to it) and reverted: it broke the confirm on the web build,
- * which is the build students actually use, on the most-tapped exit in the app. The cosmetic
- * win — an app-styled card, and buttons carrying `confirmLabel` instead of OK/Cancel — is not
- * worth risking this path. If it's tried again, it needs testing on the real /m build before
- * it goes anywhere near master. */
-function ask(title: string, message: string, confirmLabel: string, onConfirm: () => void, destructive: boolean) {
+ * This is for the genuinely destructive actions in Settings — reset progress, sign out. The
+ * quest player's "leave this lesson?" does NOT come through here: it needs to look like the
+ * app rather than like the browser, so it draws its own in-screen dialog (see quest.tsx's
+ * LeaveLessonDialog). A global in-app host was tried for BOTH and reverted — it broke the
+ * confirm on the web build. Doing it per-screen, with the same local <Modal> pattern that
+ * screen already uses for its hint and boss-verdict popups, keeps it on a path that works. */
+export function confirmDestructive(title: string, message: string, confirmLabel: string, onConfirm: () => void) {
   if (Platform.OS === 'web') {
     if (window.confirm(`${title}\n\n${message}`)) onConfirm();
     return;
   }
   Alert.alert(title, message, [
     { text: 'Cancel', style: 'cancel' },
-    // Red, system-destructive styling only when the action really does destroy something.
-    { text: confirmLabel, style: destructive ? 'destructive' : 'default', onPress: onConfirm },
+    { text: confirmLabel, style: 'destructive', onPress: onConfirm },
   ]);
-}
-
-/** For actions that genuinely lose something: resetting progress, signing out. */
-export function confirmDestructive(title: string, message: string, confirmLabel: string, onConfirm: () => void) {
-  ask(title, message, confirmLabel, onConfirm, true);
-}
-
-/** For a confirmation that is a checkpoint rather than a warning — "are you sure?" about
- * something the app is going to handle for you. Leaving a lesson is the case this exists for:
- * it used to warn that progress would be lost (true at the time), now it reassures that
- * progress is kept. Same dialog mechanics, but not styled as a destructive action, because
- * nothing is being destroyed. */
-export function confirmAction(title: string, message: string, confirmLabel: string, onConfirm: () => void) {
-  ask(title, message, confirmLabel, onConfirm, false);
 }

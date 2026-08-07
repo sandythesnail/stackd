@@ -12,7 +12,6 @@ import { colors, font, selectableInput } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
-import { confirmAction } from '@/lib/confirm';
 import { LIFE_EVENT_SHEET_MAX_HEIGHT_PCT } from '@/lifeEventLayout';
 import type { LifeEvent } from '@/lifeEvents';
 import { REACTION_FACES } from '@/hammyFaces';
@@ -530,22 +529,21 @@ function QuestPlayerInner() {
   // actually tell the player their place is kept, so it says so, and names the chapter they
   // will come back to.
   //
-  // confirmAction, not confirmDestructive: nothing is being destroyed, so it shouldn't wear
-  // the red destructive styling on native.
+  // Drawn in the screen (LeaveLessonDialog below), not handed to window.confirm. The browser's
+  // own dialog is OS chrome prefixed "trystacked.app says:" — it looks nothing like the app,
+  // at the most-tapped exit in the player. A global in-app dialog host was tried for every
+  // confirm in the app and broke on web; this one is local to this screen and uses the same
+  // <Modal> the hint popup and boss verdict already use here, which works on /m today.
   //
   // Chapter 1 still leaves without ceremony — no advance has happened, so there is no resume
   // point yet and nothing to reassure anyone about.
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const confirmQuit = () => {
     // `quest` in the guard as well as chapterIdx: this is declared above the "no quest found"
     // early return below, so it has to hold up on a lesson that doesn't resolve — there's
     // nothing to leave, and nothing to promise about, so just go.
     if (chapterIdx === 0 || !quest) { goBack(); return; }
-    confirmAction(
-      'Leave this lesson?',
-      `Your progress is saved — you'll pick up right where you left off, at chapter ${chapterIdx + 1} of ${quest.chapters.length}.`,
-      'Leave',
-      goBack,
-    );
+    setLeaveOpen(true);
   };
 
   if (!quest || !content) {
@@ -903,6 +901,11 @@ function QuestPlayerInner() {
           <View style={styles.bottomSlot} />
         </View>
       </KeyboardAvoidingView>
+      <LeaveLessonDialog
+        visible={leaveOpen}
+        onCancel={() => setLeaveOpen(false)}
+        onLeave={() => { setLeaveOpen(false); goBack(); }}
+      />
       {ambientEventActive ? (
         <AmbientLifeEventModal
           pendingLifeEvent={pendingLifeEvent}
@@ -1089,6 +1092,41 @@ function HintCorner({ hintText, onUseHint }: { hintText?: string } & HintProps) 
         </Pressable>
       </Modal>
     </>
+  );
+}
+
+/** "Leave this lesson?" — the app's own dialog, drawn in this screen.
+ *
+ * Deliberately local to the quest player rather than a shared, globally-mounted host. That was
+ * built once, for every confirm in the app at once, and broke the confirm on the web build —
+ * the build /m actually serves. This uses the same <Modal transparent> the hint popup and the
+ * boss verdict already use a few hundred lines up, on this same screen, which works there
+ * today; the scrim/card arrangement is the preview sheet's (a full-bleed Pressable to dismiss,
+ * with the card as its SIBLING rather than its child) so there's no nested-Pressable
+ * stopPropagation to get wrong.
+ *
+ * The copy is the whole point of it existing. It used to warn that progress WASN'T saved,
+ * which was true then and was the reason leaving was painful. Now it says the opposite, and
+ * saying it is the job — with nothing on screen at all, tapping X and watching the lesson
+ * vanish feels exactly like losing the work, whatever the store did. */
+function LeaveLessonDialog({
+  visible, onCancel, onLeave,
+}: { visible: boolean; onCancel: () => void; onLeave: () => void }) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+      <View style={styles.leaveRoot}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel="Keep going" />
+        <View style={styles.leaveCard}>
+          <Txt style={styles.leaveTitle}>Leave this lesson?</Txt>
+          <Txt style={styles.leaveBody}>Your progress will be saved.</Txt>
+          {/* Leaving is what they asked for by tapping the X, so it leads. Staying is the
+              quiet option rather than the defended one — there's nothing to defend against
+              any more. */}
+          <Button label="Leave" variant="pink" onPress={onLeave} style={{ marginTop: 18 }} />
+          <Button label="Keep going" variant="ghost" onPress={onCancel} style={{ marginTop: 10 }} />
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -2814,6 +2852,19 @@ const styles = StyleSheet.create({
   },
   hintFabTxt: { fontFamily: font.bold, fontSize: 12, color: colors.ink },
   hintScrim: { flex: 1, backgroundColor: 'rgba(22,32,23,0.55)', alignItems: 'center', justifyContent: 'center', padding: 26 },
+  // "Leave this lesson?" — same scrim weight as the hint popup so the two read as one kind of
+  // overlay, but centred as a plain card rather than a bottom sheet: this is a question you
+  // answer, not content you read.
+  leaveRoot: {
+    flex: 1, backgroundColor: 'rgba(22,32,23,0.55)',
+    alignItems: 'center', justifyContent: 'center', padding: 26,
+  },
+  leaveCard: {
+    width: '100%', maxWidth: 340, backgroundColor: colors.white,
+    borderWidth: 1.5, borderColor: colors.border, borderRadius: 22, padding: 22,
+  },
+  leaveTitle: { fontFamily: font.display, fontSize: 20, lineHeight: 25, color: colors.ink },
+  leaveBody: { fontFamily: font.semi, fontSize: 14, lineHeight: 20, color: colors.muted2, marginTop: 8 },
   // White card with the yellow "come collect" outline, matching a recommended module tile
   // (mtileRecommended in ModuleBits) — a hint is an offer, so it gets the same reward glow
   // rather than the pink tint it used to share with Hammy's other speech.
