@@ -2126,23 +2126,19 @@ function CountUpNumber({ value, style }: { value: number; style?: object }) {
  * on the row that earned it. (Hammy still narrates it too, but his bubble is gone in a couple
  * of seconds and takes the reasoning with it — which meant that on a four-habit chapter you
  * could finish having read every note and be able to see none of them.) */
-/** The decision's `note` IS rendered here, under the label, once the habit is revealed.
+/** The decision's `note` is deliberately NOT rendered here, and that is a product decision,
+ * not an oversight — see e8a9ff4, "Climb tiles lose the wall of text". This screen is meant to
+ * read as a quick tap-and-watch-the-needle-move, and unfolding a sentence under every tile
+ * turns a four-habit chapter into a wall of text. The tile keeps the two things only it can
+ * show: the habit and its score.
  *
- * It was removed on the grounds that Hammy speaks the same sentence in his bubble the moment
- * you tap, so the tile was repeating him word for word. He doesn't, on either count. What he
- * speaks is shortFeedback(note) — first sentence, hard-capped at 60 characters, no ellipsis —
- * and 76 of the 88 habit notes in the content are longer than that, so what he actually says
- * is a fragment ("Payroll errors happen, catching them early makes them easy"). With the tile
- * silent, that fragment was the only form of the note that existed anywhere in the app.
- *
- * His bubble is also transient: the next habit you tap replaces it. The comment this replaces
- * described precisely that failure ("on a four-habit chapter you could finish having read
- * every note and be able to see none of them") and then removed the durable copy rather than
- * the transient one. The tile is the copy that stays, so the reasoning stays with the habit
- * that earned it. */
+ * It was re-added once, on the argument that Hammy's spoken copy is truncated and transient so
+ * the note is otherwise unreadable. That observation is true (see SimulatorView's apply) but it
+ * is not a reason to put the paragraph back — if the truncation matters, fix the truncation.
+ * Don't restore this. */
 function HabitChoice({
-  label, note, delta, revealed, index, onPress,
-}: { label: string; note?: string; delta: number; revealed: boolean; index: number; onPress: () => void }) {
+  label, delta, revealed, index, onPress,
+}: { label: string; delta: number; revealed: boolean; index: number; onPress: () => void }) {
   const press = useSharedValue(0);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 - press.value * 0.02 }] }));
   const good = delta >= 0;
@@ -2170,15 +2166,6 @@ function HabitChoice({
               </Txt>
             </Reanimated.View>
           </View>
-          {/* Unfolds under the label on reveal, in the row's own verdict colour. Its own fade
-              rather than AnswerFeedback's: several tiles can be open at once on a four-habit
-              chapter, and AnswerFeedback's horizontal settle would have each one twitch
-              independently as it opened. */}
-          {revealed && note ? (
-            <Reanimated.View entering={FadeIn.duration(220)}>
-              <Txt style={[styles.habitNote, { color: good ? colors.greenDark : colors.pinkDark }]}>{note}</Txt>
-            </Reanimated.View>
-          ) : null}
         </Reanimated.View>
       </Pressable>
     </Reanimated.View>
@@ -2246,7 +2233,6 @@ function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: Si
           <HabitChoice
             key={d.id}
             label={d.label}
-            note={d.note}
             delta={d.scoreDelta}
             revealed={used.has(d.id)}
             index={i}
@@ -3071,10 +3057,6 @@ const styles = StyleSheet.create({
   habitBad: { borderColor: '#D98A9E', backgroundColor: colors.pinkBg2 },
   habitHead: { flexDirection: 'row', alignItems: 'center', gap: 11 },
   habitLabel: { flex: 1, fontFamily: font.bold, fontSize: 14.5, lineHeight: 19, color: colors.ink },
-  // The revealed habit's authored reasoning. A notch under the label and lighter-weight, so
-  // the row still reads label-first with the explanation as its consequence; full text, never
-  // truncated (that's the whole point of it being here — see HabitChoice).
-  habitNote: { fontFamily: font.semi, fontSize: 12.5, lineHeight: 17, marginTop: 7 },
   // Fixed width whether it holds "?" or "−12", so revealing a habit never re-wraps the label
   // beside it — the row's height is settled before the tap and the note is the only thing
   // that moves.

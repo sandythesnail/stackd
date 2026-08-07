@@ -23,7 +23,7 @@ import {
 import { ClerkProvider } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
 import { StoreProvider } from '@/store';
-import { AchievementToast, ConfirmHost, OnboardingTourProvider, Txt, Button } from '@/components';
+import { AchievementToast, OnboardingTourProvider, Txt, Button } from '@/components';
 import { authEnabled, env } from '@/lib/env';
 import { tokenCache } from '@/lib/tokenCache';
 import { SupabaseSync } from '@/lib/SupabaseSync';
@@ -229,11 +229,6 @@ export default function RootLayout() {
               />
             </Stack>
             <AchievementToast />
-            {/* Hosts confirmDestructive's dialog (see lib/confirm.ts). Mounted once, here, so
-                the "leave this lesson?" / "sign out?" / "reset progress?" prompts are the
-                app's own card rather than the browser's OS-chrome window.confirm — which is
-                what the /m web build every student uses was showing. */}
-            <ConfirmHost />
           </OnboardingTourProvider>
         </StoreProvider>
         </AuthGate>
