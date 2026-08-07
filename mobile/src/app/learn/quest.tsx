@@ -15,7 +15,7 @@ import { useStore } from '@/store';
 import { LIFE_EVENT_SHEET_MAX_HEIGHT_PCT } from '@/lifeEventLayout';
 import type { LifeEvent } from '@/lifeEvents';
 import { REACTION_FACES } from '@/hammyFaces';
-import { EMPTY_ANALYTICS, setPendingQuestAnalytics, type QuestAnalytics } from '@/questReport';
+import { normalizeAnalytics, setPendingQuestAnalytics, type QuestAnalytics } from '@/questReport';
 import type {
   Chapter, Question, StoryChapter, TeachChapter, MatchingChapter, HintChapter, DecisionChapter,
   MicrosimChapter, PollChapter, MythcardsChapter, KnowledgecheckChapter, SimulatorChapter,
@@ -183,6 +183,12 @@ type ReportProps = {
   reportMatchingMistake: () => void;
   reportDecision: (title: string, choice: string) => void;
   reportExplainback: (term: string, tier: 'great' | 'ok' | 'retry') => void;
+  /** Every other graded moment — the poll's true/false, a vocab concept's inline check, the
+   * price guess, the spot-the-red-flag chapters. Call it wherever the chapter tells the
+   * student they were right or wrong, so the results screen's score covers what they were
+   * actually asked. `label` is what appears under "Worth another look", so pass the thing
+   * they were judged on (the statement, the term) rather than the chapter's title. */
+  reportCheck: (label: string, isCorrect: boolean) => void;
 };
 
 /** Banks a word in the Look-back book the instant it's taught — see quest.tsx's learnTerm.
@@ -490,7 +496,10 @@ function QuestPlayerInner() {
   // knowledgecheck question's "next" click both reports and completes), and React state
   // updates from the same handler wouldn't be visible yet when onComplete reads them — a
   // ref sidesteps that staleness entirely by updating synchronously.
-  const analyticsRef = useRef<QuestAnalytics>(resumed?.analytics ?? EMPTY_ANALYTICS);
+  // normalizeAnalytics, not `?? EMPTY_ANALYTICS`: a save written by an older build really
+  // does come back missing newer fields (see its comment), and every reporter below appends
+  // to one of those arrays.
+  const analyticsRef = useRef<QuestAnalytics>(normalizeAnalytics(resumed?.analytics));
   const reportProps: ReportProps = {
     reportKnowledgeCheck: (question, isCorrect) => {
       analyticsRef.current = { ...analyticsRef.current, knowledgeCheck: [...analyticsRef.current.knowledgeCheck, { question, isCorrect }] };
@@ -506,6 +515,9 @@ function QuestPlayerInner() {
     },
     reportExplainback: (term, tier) => {
       analyticsRef.current = { ...analyticsRef.current, explainback: { term, tier } };
+    },
+    reportCheck: (label, isCorrect) => {
+      analyticsRef.current = { ...analyticsRef.current, checks: [...analyticsRef.current.checks, { label, isCorrect }] };
     },
   };
 
@@ -925,7 +937,7 @@ function QuestPlayerInner() {
 function ChapterView({
   chapter, questions, moduleXpReward, charName, onComplete, reactTo, clearReaction, onAction, onLayoutMode,
   onQuestionIndexChange, reportKnowledgeCheck, reportMythCard, reportMatchingMistake, reportDecision, reportExplainback,
-  learnTerm,
+  reportCheck, learnTerm,
 }: {
   chapter: Chapter; questions: Question[]; moduleXpReward: number; charName: string; onComplete: Complete;
   /** knowledgecheck-only: reports which question (position within its own qIndices) is
@@ -936,20 +948,20 @@ function ChapterView({
   const reactProps: ReactProps = { reactTo, clearReaction };
   switch (chapter.type) {
     case 'story': return <StoryView chapter={chapter} charName={charName} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
-    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} {...reactProps} onQuestionIndexChange={onQuestionIndexChange} learnTerm={learnTerm} />;
+    case 'teach': return <TeachView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} {...reactProps} onQuestionIndexChange={onQuestionIndexChange} learnTerm={learnTerm} reportCheck={reportCheck} />;
     case 'matching': return <MatchingView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMatchingMistake={reportMatchingMistake} learnTerm={learnTerm} />;
     case 'hint': return <HintView chapter={chapter} onComplete={onComplete} onAction={onAction} onLayoutMode={onLayoutMode} />;
     case 'decision': return <DecisionView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
     case 'microsim': return <MicrosimView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
-    case 'poll': return <PollView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
+    case 'poll': return <PollView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportCheck={reportCheck} />;
     case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMythCard={reportMythCard} />;
     case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} onAction={onAction} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} onQuestionIndexChange={onQuestionIndexChange} />;
     case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
     case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
-    case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
-    case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
+    case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportCheck={reportCheck} />;
+    case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportCheck={reportCheck} />;
     case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportExplainback={reportExplainback} />;
-    case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
+    case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportCheck={reportCheck} />;
     default: return null;
   }
 }
@@ -1360,13 +1372,13 @@ function StoryView({
 
 /* ───────────────────────── teach ───────────────────────── */
 function TeachView({
-  chapter, onComplete, onAction, onLayoutMode, reactTo, clearReaction, onQuestionIndexChange, learnTerm,
+  chapter, onComplete, onAction, onLayoutMode, reactTo, clearReaction, onQuestionIndexChange, learnTerm, reportCheck,
 }: {
   chapter: TeachChapter; onComplete: Complete;
   /** Reports which concept is showing, so the header's hint button can offer THAT concept's
    * definition (see teachHint) rather than the first one's. */
   onQuestionIndexChange?: (i: number) => void;
-} & ReactProps & ActionProps & LayoutModeProps & LearnTermProps) {
+} & ReactProps & ActionProps & LayoutModeProps & LearnTermProps & Pick<ReportProps, 'reportCheck'>) {
   const router = useRouter();
   const [i, setI] = useState(0);
   useEffect(() => {
@@ -1400,6 +1412,10 @@ function TeachView({
   const pick = (guess: boolean) => {
     setAnswered(guess);
     reactTo(guess === concept.check?.isTrue);
+    // 358 of these across the content — the single largest source of graded moments, and
+    // previously counted by nothing at all. The statement is the label, since that's the
+    // claim they judged; the term itself is already in the Look-back book.
+    if (concept.check?.statement) reportCheck(concept.check.statement, guess === concept.check.isTrue);
   };
   const next = () => {
     if (last) { onComplete(chapter.xpOnComplete ?? 0); return; }
@@ -1863,9 +1879,17 @@ function MicrosimView({ chapter, onComplete, onAction, reactTo }: { chapter: Mic
 }
 
 /* ───────────────────────── poll ───────────────────────── */
-function PollView({ chapter, onComplete, onAction, reactTo }: { chapter: PollChapter; onComplete: Complete } & ReactProps & ActionProps) {
+function PollView({ chapter, onComplete, onAction, reactTo, reportCheck }: {
+  chapter: PollChapter; onComplete: Complete;
+} & ReactProps & ActionProps & Pick<ReportProps, 'reportCheck'>) {
   const [answered, setAnswered] = useState<boolean | null>(null);
-  const pick = (guess: boolean) => { setAnswered(guess); reactTo(guess === chapter.isTrue); };
+  const pick = (guess: boolean) => {
+    setAnswered(guess);
+    reactTo(guess === chapter.isTrue);
+    // The statement, not the chapter title — it's what the student judged, and what
+    // "Worth another look" needs to name back to them.
+    reportCheck(chapter.statement, guess === chapter.isTrue);
+  };
   useEffect(() => {
     onAction(answered !== null ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0, answered === chapter.isTrue) } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2519,7 +2543,9 @@ function BossbattleView({
  * explanation is worth reading ("this math checks out, but still worth a quick multiply"), and
  * dropping it would silently skip feedback on the mistake they actually made. Lines that are
  * fine and weren't flagged have nothing to say and are left out. */
-function SpotcheckView({ chapter, onComplete, onAction, reactTo }: { chapter: SpotcheckChapter; onComplete: Complete } & ActionProps & ReactProps) {
+function SpotcheckView({ chapter, onComplete, onAction, reactTo, reportCheck }: {
+  chapter: SpotcheckChapter; onComplete: Complete;
+} & ActionProps & ReactProps & Pick<ReportProps, 'reportCheck'>) {
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [revealed, setRevealed] = useState(false);
   const [reviewIdx, setReviewIdx] = useState(0);
@@ -2531,7 +2557,12 @@ function SpotcheckView({ chapter, onComplete, onAction, reactTo }: { chapter: Sp
   const review = chapter.segments.filter((s) => s.isRedFlag || flagged.has(s.id));
   const reveal = () => {
     setRevealed(true);
-    reactTo(caught.length === flags.length);
+    // All-or-nothing, matching what Hammy reacts to on the line above: catching 2 of 3 red
+    // flags is not "spotted the problem". One judgement per chapter, so the chapter title is
+    // the right label here (unlike the poll, where each statement is its own question).
+    const allCaught = caught.length === flags.length;
+    reactTo(allCaught);
+    reportCheck(chapter.title, allCaught);
   };
 
   // `flagged` has to be in the deps, not just `revealed`. The action object holds a closure,
@@ -2615,8 +2646,8 @@ function SpotcheckView({ chapter, onComplete, onAction, reactTo }: { chapter: Sp
 
 /* ───────────────────────── priceisright ───────────────────────── */
 function PriceisrightView({
-  chapter, onComplete, onAction, reactTo,
-}: { chapter: PriceisrightChapter; onComplete: Complete } & ReactProps & ActionProps) {
+  chapter, onComplete, onAction, reactTo, reportCheck,
+}: { chapter: PriceisrightChapter; onComplete: Complete } & ReactProps & ActionProps & Pick<ReportProps, 'reportCheck'>) {
   const { min, max, step } = chapter.guessRange;
   const [guess, setGuess] = useState(Math.round((min + max) / 2 / step) * step);
   const [submitted, setSubmitted] = useState(false);
@@ -2628,7 +2659,11 @@ function PriceisrightView({
 
   // chapter.explanation as the spoken message, same reasoning as Microsim's tier.text —
   // Hammy actually explains the real number instead of a generic "Nice!"/"Not quite!".
-  const submit = () => { setSubmitted(true); reactTo(close, shortFeedback(chapter.explanation)); };
+  const submit = () => {
+    setSubmitted(true);
+    reactTo(close, shortFeedback(chapter.explanation));
+    reportCheck(chapter.prompt || chapter.title, close);
+  };
 
   useEffect(() => {
     onAction(submitted
@@ -2722,7 +2757,9 @@ function ExplainbackView({
 }
 
 /* ───────────────────────── urlinspect ───────────────────────── */
-function UrlinspectView({ chapter, onComplete, onAction, reactTo }: { chapter: UrlinspectChapter; onComplete: Complete } & ActionProps & ReactProps) {
+function UrlinspectView({ chapter, onComplete, onAction, reactTo, reportCheck }: {
+  chapter: UrlinspectChapter; onComplete: Complete;
+} & ActionProps & ReactProps & Pick<ReportProps, 'reportCheck'>) {
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [revealed, setRevealed] = useState(false);
   const toggle = (id: string) => setFlagged((prev) => {
@@ -2732,7 +2769,10 @@ function UrlinspectView({ chapter, onComplete, onAction, reactTo }: { chapter: U
     setRevealed(true);
     const suspicious = chapter.parts.filter((p) => p.isSuspicious);
     const caughtCount = suspicious.filter((p) => flagged.has(p.id)).length;
-    reactTo(caughtCount === suspicious.length);
+    // Same all-or-nothing basis as SpotcheckView above, and reported for the same reason.
+    const allCaught = caughtCount === suspicious.length;
+    reactTo(allCaught);
+    reportCheck(chapter.title, allCaught);
   };
 
   // `flagged` in the deps for the same reason as SpotcheckView's: without it the button keeps

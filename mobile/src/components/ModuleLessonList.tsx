@@ -51,10 +51,11 @@ export function ModuleLessonList({
   const rowStatusFor = (i: number) =>
     status === 'done' || doneSet.has(absOf(i)) ? 'done' : i === nextIdx ? 'active' : 'upcoming';
   // Whether the player has finished anything in this module decides what the next-up row is
-  // allowed to CALL itself. Nothing here tracks part-finished lessons — a lesson is done or
-  // it isn't — so the next-up row cannot honestly claim to be in progress. On an untouched
-  // module it's the starting point; on one you've been working through it's where you left
-  // off. See LessonRow.
+  // allowed to CALL itself: on an untouched module it's the starting point, on one you've
+  // been working through it's where you left off. Being part-way through a specific lesson is
+  // a separate question, answered by `savedFor` below (AppState.lessonProgress) — a row with
+  // a real saved chapter says "Paused" and offers Resume regardless of this flag. See
+  // LessonRow, whose doc comment covers how the two interact.
   const started = doneIndices.length > 0;
   const sections = resolveLessonSections(moduleId, lessons.length);
   const savedFor = (i: number) => lessonProgressFor(moduleId, absOf(i));

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useId } from 'react';
 import { View, Animated, Easing, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Rect, Ellipse, Circle, Polygon, Defs, ClipPath, G, RadialGradient, Stop } from 'react-native-svg';
 import { Txt, Hammy, Coin, Diamond } from '@/components';
@@ -204,8 +204,23 @@ export default function HammyIntro() {
     finished.current = true;
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    router.push('/(tabs)/home');
+    // replace, not push. This is the end of onboarding, so the flow behind it should not
+    // stay in history — and it doesn't merely clutter the stack, it strands the user. push
+    // left this screen mounted under Home with `finished.current` already true and every
+    // timer cleared, so backing into it (browser Back on /m/, Android back, iOS swipe)
+    // landed on a screen that could not advance: the intro was over, Skip was spent, and
+    // nothing was left to fire. One more Back reached the survey, dead the same way (see
+    // survey.tsx's own finishing guard). Three Backs to escape, two of them through screens
+    // that did nothing.
+    router.replace('/(tabs)/home');
   };
+
+  // Belt and braces for the above. `replace` should mean this screen is gone rather than
+  // backgrounded, but that behaviour crossing from this nested (onboarding) stack into the
+  // root (tabs) branch is exactly the kind of thing this codebase has been bitten by before
+  // — so if it IS ever reached again, un-spend the guard rather than leaving a dead screen.
+  // Skip then works and takes the user forward, which is the only thing left to want here.
+  useFocusEffect(() => { finished.current = false; });
 
   const playWave = () => {
     waveRot.setValue(0);
@@ -380,11 +395,14 @@ export default function HammyIntro() {
       </Animated.View>
 
       <SafeAreaView style={styles.chrome} pointerEvents="box-none">
-        {!finished.current ? (
-          <Pressable onPress={finish} hitSlop={10} style={styles.skip}>
-            <Txt style={styles.skipTxt}>Skip →</Txt>
-          </Pressable>
-        ) : null}
+        {/* Always rendered. This was gated on `!finished.current`, which a ref read during
+            render cannot actually deliver — nothing sets state after finish(), so no re-render
+            ever came and the button stayed on screen regardless. The gate's only real effect
+            was to make the button look available while being inert. finish() is idempotent on
+            its own, so the guard belongs there and not here. */}
+        <Pressable onPress={finish} hitSlop={10} style={styles.skip}>
+          <Txt style={styles.skipTxt}>Skip →</Txt>
+        </Pressable>
         {reply !== null ? (
           <Pressable onPress={onReplyPress} style={({ pressed }) => [styles.choice, pressed && { transform: [{ translateY: 2 }] }]}>
             <Txt style={styles.choiceTxt}>{reply}</Txt>

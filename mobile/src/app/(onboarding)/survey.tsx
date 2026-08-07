@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Spacer, Txt, Button, Option, ProgressBar, IconButton, MIcon } from '@/components';
 import { colors, font, radius } from '@/theme';
 import { modules } from '@/data';
@@ -17,6 +17,9 @@ type Step = 0 | 1 | 2;
  * the recommended-track results — instead of the website's 12-step wizard. */
 export default function Survey() {
   const router = useRouter();
+  // Set by Settings' "Retake onboarding survey" row — see finish() below for what changes.
+  const { retake } = useLocalSearchParams<{ retake?: string }>();
+  const isRetake = retake === '1';
   const { setOnboardingTrack } = useStore();
   const [step, setStep] = useState<Step>(0);
   const [familiarity, setFamiliarity] = useState<Record<string, number>>(
@@ -41,12 +44,27 @@ export default function Survey() {
   // (correctly ref-guarded) finish handler then pushes Home separately, leaving a
   // duplicate Home entry and a stray hammy-intro replay reachable via back-navigation.
   const finishing = useRef(false);
+  // Un-spend the guard whenever this screen is on top again. It's a one-shot latch and it was
+  // never reset, so backing into this screen after finishing (from hammy-intro, which sat in
+  // history until it started using replace) left "Start learning" permanently inert — the
+  // double-tap guard doing its job forever instead of for one tap.
+  useFocusEffect(() => { finishing.current = false; });
   const finish = () => {
     if (finishing.current) return;
     finishing.current = true;
     setOnboardingTrack(activeTrack.id);
-    // The animated hammy-intro now plays right after the survey (on "Start learning"),
-    // before landing on Home — see hammy-intro.tsx's own finish handler for the Home push.
+    // A retake from Settings just saves the new track and goes back where it came from.
+    // It used to fall through to the same branch as first-run onboarding, which replayed the
+    // whole animated piggy-born intro at someone who has been using the app for weeks — and
+    // then pushed a SECOND (tabs) entry on top of the one they started from, the same
+    // duplicate-stack problem results.tsx documents at length.
+    if (isRetake) {
+      if (router.canGoBack()) router.back();
+      else router.replace('/(tabs)/settings');
+      return;
+    }
+    // First run: the animated hammy-intro plays here, on "Start learning", before landing on
+    // Home — see hammy-intro.tsx's own finish handler.
     router.push('/(onboarding)/hammy-intro');
   };
 
@@ -184,7 +202,7 @@ export default function Survey() {
       <View style={styles.actions}>
         <Button label="Back" variant="ghost" onPress={back} style={{ paddingHorizontal: 22 }} />
         <Button
-          label={step === 0 ? 'Next →' : step === 1 ? 'See my starting track →' : 'Start learning'}
+          label={step === 0 ? 'Next →' : step === 1 ? 'See my starting track →' : isRetake ? 'Save my track' : 'Start learning'}
           onPress={next}
           style={{ flex: 1 }}
         />

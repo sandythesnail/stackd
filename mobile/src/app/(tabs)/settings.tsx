@@ -54,7 +54,10 @@ export default function Settings() {
 
         <View style={{ marginTop: 2 }}>
           {authEnabled ? <ClerkAccountRow /> : <Row icon="user" title="Account" sub={user.email} />}
-          <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.push('/(onboarding)/survey')} />
+          {/* retake=1 so the survey saves the new track and comes straight back here, rather
+              than treating this like a first run — replaying the animated piggy-born intro and
+              landing on a second copy of the tabs. See survey.tsx's finish(). */}
+          <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.push('/(onboarding)/survey?retake=1')} />
           <Row icon="compass" title="Replay welcome tour" sub="XP, the Shop & modules, quick refresher" onPress={replayTour} />
           <Row icon="trash-2" title="Reset all progress" sub="Clears all XP, modules, badges, coins, diamonds, shop items, room decor, and your budget plan — permanently." danger onPress={confirmReset} />
           {/* Debug helpers live behind __DEV__ and MUST stay there.

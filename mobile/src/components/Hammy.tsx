@@ -329,7 +329,20 @@ export function Hammy({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bob]);
 
+  // Idle life — blink, ears, tail — gated on `bob`, which is what every call site already
+  // means by it.
+  //
+  // These three ran on EVERY mounted Hammy regardless, and they can't use the native driver
+  // (they animate react-native-svg props, which the native driver can't touch), so each one
+  // is a permanent JS-thread timer. The Shop's Boutique tab draws a full Hammy wearing each
+  // item — 24 cards plus the storefront — so opening it started 75 of these at once, on the
+  // one screen in the app that exists to be scrolled. Every one of those cards passes
+  // bob={false} precisely to say "this one is a static preview"; it just wasn't wired to
+  // anything but the float.
+  //
+  // The tail additionally has nothing to do in headOnly mode, where the body isn't drawn.
   useEffect(() => {
+    if (!bob) return;
     // @keyframes pigBlink on a 5s clock: eyes open through 92% (4.6s), closed to scaleY(0.1)
     // at 96% (200ms closing), reopen by 100% (200ms), each segment on CSS ease-in-out.
     const blinkLoop = Animated.loop(
@@ -349,16 +362,18 @@ export function Hammy({
       ])
     );
     earLoop.start();
-    // tailWag: 2.6s, rotate -5deg → 8deg.
-    const tailLoop = Animated.loop(
+    // tailWag: 2.6s, rotate -5deg → 8deg. Skipped in headOnly mode — the tail isn't rendered
+    // there at all (see the `!headOnly` body branch below), so this would be animating a
+    // value nothing reads.
+    const tailLoop = headOnly ? null : Animated.loop(
       Animated.sequence([
         Animated.timing(tail, { toValue: 1, duration: 1300, easing: CSS_EASE, useNativeDriver: false }),
         Animated.timing(tail, { toValue: 0, duration: 1300, easing: CSS_EASE, useNativeDriver: false }),
       ])
     );
-    tailLoop.start();
-    return () => { blinkLoop.stop(); earLoop.stop(); tailLoop.stop(); };
-  }, [blink, earL, tail]);
+    tailLoop?.start();
+    return () => { blinkLoop.stop(); earLoop.stop(); tailLoop?.stop(); };
+  }, [bob, headOnly, blink, earL, tail]);
 
   // Swap between the default eyes/cheeks/snout and an illustrated face overlay. This used
   // to crossfade via an Animated-driven opacity + a `displayFace` staging value, but that

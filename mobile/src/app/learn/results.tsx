@@ -30,9 +30,12 @@ export default function Results() {
   const content = moduleContentById(mod.id);
   const li = Number(lessonIndex ?? 0);
   const lesson = content?.lessons[li];
+  // The REWARD basis, not the score. completeLesson pays coins off these (correct * 8, see
+  // QUEST_COIN_PER_CORRECT), and they count only the chapter types that have always fed the
+  // payout — deliberately left alone, since widening them would inflate every lesson's coins
+  // by about 68% and rebalance the shop as a side effect of a display fix.
   const correct = Number(correctCount ?? 0);
   const totalQ = Number(total ?? 0);
-  const allCorrect = totalQ > 0 && correct === totalQ;
   // The quest player (learn/quest.tsx) accumulates real XP across its chapters; the flat
   // quiz path falls back to the module's flat per-lesson reward.
   const xpForLesson = xpEarned !== undefined ? Number(xpEarned) : (content?.xpReward ?? 0);
@@ -45,6 +48,17 @@ export default function Results() {
   const learnedTerms = analytics.learnedTerms;
   const learnedTermNames = useMemo(() => learnedTerms.map((t) => t.term), [learnedTerms]);
   const report = useMemo(() => buildQuestReport(mod.name, analytics, Number(hintsUsed ?? 0)), [mod.name, analytics, hintsUsed]);
+  // ONE score on this screen, and the report owns it.
+  //
+  // The headline count used to come from the `correctCount`/`total` params above while the
+  // mastery ring twelve lines down came from the report, and the two count different things
+  // — so the same lesson was scored twice, differently, on one screen: "3/4 correct" at the
+  // top over a 100% ring captioned "Every question right this time". Both now read the
+  // report, which since QuestAnalytics.checks covers every graded moment the lesson actually
+  // showed. The params still drive the coin payout; they just don't get to state a score.
+  const scored = report.totalAnswered;
+  const scoredRight = report.totalRight;
+  const allCorrect = scored > 0 && scoredRight === scored;
 
   const { state, level, tierName, completeLesson, completeLifeTask, equippedMascotItems, newAchievements } = useStore();
   // Reserves room at the top of this screen for the global achievement toast.
@@ -155,7 +169,7 @@ export default function Results() {
           </Reanimated.View>
           <Reanimated.View entering={FadeInDown.delay(180).duration(360).springify()}>
             <Txt style={styles.title}>{titleWithDash(lesson?.title ?? mod.name)}{"\n"}{allCorrect ? "nailed it!" : "done!"}</Txt>
-            {totalQ > 0 ? <Txt style={styles.scoreLine}>{correct}/{totalQ} correct</Txt> : null}
+            {scored > 0 ? <Txt style={styles.scoreLine}>{scoredRight}/{scored} correct</Txt> : null}
           </Reanimated.View>
 
           <Reanimated.View style={styles.rewards} entering={FadeInDown.delay(300).duration(380).springify()}>
