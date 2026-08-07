@@ -12,6 +12,7 @@ import { colors, font, selectableInput } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
+import { confirmAction } from '@/lib/confirm';
 import { LIFE_EVENT_SHEET_MAX_HEIGHT_PCT } from '@/lifeEventLayout';
 import type { LifeEvent } from '@/lifeEvents';
 import { REACTION_FACES } from '@/hammyFaces';
@@ -517,16 +518,35 @@ function QuestPlayerInner() {
     else router.replace(`/learn/module/${mod.id}`);
   };
 
-  // The X just leaves. No confirmation, because there is nothing left to confirm.
+  // Asks before leaving, and the answer is now reassurance rather than a warning.
   //
-  // It used to warn that "your progress in this lesson isn't saved, so you'd start it again
-  // from the beginning", which was true and was the real problem: a student twelve minutes
-  // into a fifteen-chapter lesson had to choose between losing the lot and not leaving. The
-  // dialog didn't soften that, it just made the loss explicit first. Now that every chapter
-  // advance writes a resume point (see onComplete's advance), leaving costs nothing — and a
-  // prompt asking "are you sure?" about something harmless is pure friction on the
-  // most-tapped control in the player, and teaches people to dismiss dialogs unread.
-  const confirmQuit = goBack;
+  // The old copy said "your progress in this lesson isn't saved, so you'd start it again from
+  // the beginning" — true at the time, and the actual problem: twelve minutes in, the choice
+  // was lose the lot or don't leave. Once every chapter advance started writing a resume point
+  // (see onComplete's advance) the prompt was removed altogether as friction over a harmless
+  // action. That was wrong in practice: with nothing said at all, tapping X and having the
+  // lesson vanish feels exactly like losing your work, and the "Paused" label that proves
+  // otherwise is on a screen you haven't reached yet. The dialog is the one moment we can
+  // actually tell the player their place is kept, so it says so, and names the chapter they
+  // will come back to.
+  //
+  // confirmAction, not confirmDestructive: nothing is being destroyed, so it shouldn't wear
+  // the red destructive styling on native.
+  //
+  // Chapter 1 still leaves without ceremony — no advance has happened, so there is no resume
+  // point yet and nothing to reassure anyone about.
+  const confirmQuit = () => {
+    // `quest` in the guard as well as chapterIdx: this is declared above the "no quest found"
+    // early return below, so it has to hold up on a lesson that doesn't resolve — there's
+    // nothing to leave, and nothing to promise about, so just go.
+    if (chapterIdx === 0 || !quest) { goBack(); return; }
+    confirmAction(
+      'Leave this lesson?',
+      `Your progress is saved — you'll pick up right where you left off, at chapter ${chapterIdx + 1} of ${quest.chapters.length}.`,
+      'Leave',
+      goBack,
+    );
+  };
 
   if (!quest || !content) {
     return (

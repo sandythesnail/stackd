@@ -14,13 +14,28 @@ import { Alert, Platform } from 'react-native';
  * win — an app-styled card, and buttons carrying `confirmLabel` instead of OK/Cancel — is not
  * worth risking this path. If it's tried again, it needs testing on the real /m build before
  * it goes anywhere near master. */
-export function confirmDestructive(title: string, message: string, confirmLabel: string, onConfirm: () => void) {
+function ask(title: string, message: string, confirmLabel: string, onConfirm: () => void, destructive: boolean) {
   if (Platform.OS === 'web') {
     if (window.confirm(`${title}\n\n${message}`)) onConfirm();
     return;
   }
   Alert.alert(title, message, [
     { text: 'Cancel', style: 'cancel' },
-    { text: confirmLabel, style: 'destructive', onPress: onConfirm },
+    // Red, system-destructive styling only when the action really does destroy something.
+    { text: confirmLabel, style: destructive ? 'destructive' : 'default', onPress: onConfirm },
   ]);
+}
+
+/** For actions that genuinely lose something: resetting progress, signing out. */
+export function confirmDestructive(title: string, message: string, confirmLabel: string, onConfirm: () => void) {
+  ask(title, message, confirmLabel, onConfirm, true);
+}
+
+/** For a confirmation that is a checkpoint rather than a warning — "are you sure?" about
+ * something the app is going to handle for you. Leaving a lesson is the case this exists for:
+ * it used to warn that progress would be lost (true at the time), now it reassures that
+ * progress is kept. Same dialog mechanics, but not styled as a destructive action, because
+ * nothing is being destroyed. */
+export function confirmAction(title: string, message: string, confirmLabel: string, onConfirm: () => void) {
+  ask(title, message, confirmLabel, onConfirm, false);
 }
