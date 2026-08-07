@@ -1,4 +1,7 @@
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import {
+  View, ScrollView, Pressable, StyleSheet, useWindowDimensions,
+  type NativeSyntheticEvent, type NativeScrollEvent,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -47,9 +50,13 @@ export default function Home() {
   } = useStore();
   const [selectedBadge, setSelectedBadge] = useState<AchievementView | null>(null);
   const [pathWidth, setPathWidth] = useState(0);
-  const [pathY, setPathY] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
-  const { startTour, activeTargetId, remeasureActive } = useOnboardingTour();
+  const { startTour, activeTargetId, remeasureActive, activeRect } = useOnboardingTour();
+  const { height: winH } = useWindowDimensions();
+  // Live scroll offset, so the tour step below can convert the node's window position into an
+  // absolute scroll target. A ref, not state — it changes on every scroll frame and nothing
+  // renders from it.
+  const scrollYRef = useRef(0);
 
   // First-login spotlight tour (XP, then Shop) — gated on the persisted flag, right after a
   // new user lands here from the onboarding survey. The delay gives the survey->home screen
@@ -72,24 +79,54 @@ export default function Home() {
   // The tour's lesson-path step spotlights a node that sits well below the fold on this
   // screen — nothing else in the tour needs scrolling, since every other target is either the
   // stat row at the top or a tab-bar icon. Scroll it into view when that step opens.
+  //
+  // This scrolled to `pathY`, the top of the whole lesson path, which is NOT where the node
+  // is. The path is a nine-node winding column, and the step points at the recommended
+  // lesson — node 1 for a brand-new account, but anywhere down the column for anyone with
+  // progress. So the scroll landed the top of the path at the top of the screen and left the
+  // actual node below the fold: highlighted, spotlit, and completely off screen, with the
+  // tour's own BlockRects swallowing every tap around it.
+  //
+  // Scroll by the measured DELTA instead: activeRect is the node's real position in window
+  // coordinates, so `scrollY + rect.y - target` puts it exactly where we want it regardless
+  // of how far down the path it sits. Aimed a bit above centre, leaving the lower half of the
+  // screen for the tour card that has to appear beneath it.
   const tourNeedsPath = activeTargetId === 'tour-lesson-node';
+  // One scroll per visit to the step. Without the latch this re-fires on its own result:
+  // scrolling moves the node, onTourScroll remeasures, activeRect changes, and the effect
+  // runs again — a feedback loop that fights the animation it just started.
+  const didScrollToNode = useRef(false);
+  useEffect(() => { if (!tourNeedsPath) didScrollToNode.current = false; }, [tourNeedsPath]);
   useEffect(() => {
-    if (!tourNeedsPath) return;
-    // A little headroom, so the spotlight cutout isn't flush against the top of the viewport.
-    scrollRef.current?.scrollTo({ y: Math.max(0, pathY - 24), animated: true });
+    if (!tourNeedsPath || didScrollToNode.current) return;
+    // Nothing measured yet — the node hasn't mounted or laid out. The provider re-measures on
+    // mount (registerTarget) and again at 200ms, so this effect will run again with a rect.
+    if (!activeRect) return;
+    didScrollToNode.current = true;
+    const aimFor = winH * 0.38;
+    const delta = activeRect.y - aimFor;
+    // Already comfortably placed (a fresh account's node 1 usually is) — don't jolt the page
+    // for a few pixels.
+    if (Math.abs(delta) < 24) return;
+    scrollRef.current?.scrollTo({ y: Math.max(0, scrollYRef.current + delta), animated: true });
     // Backstop for the onScroll tracking below: momentum/animated scrolls don't always emit
     // a final event exactly at rest, and if the path was already in view the scroll is a
     // no-op that emits nothing at all.
     const t = setTimeout(remeasureActive, 420);
     return () => clearTimeout(t);
-  }, [tourNeedsPath, pathY, remeasureActive]);
+  }, [tourNeedsPath, activeRect, winH, remeasureActive]);
 
   // Re-measure on every scroll frame while that step is live, so the spotlight hole travels
   // WITH the node instead of staying where the node was when the step opened. Without this
   // the cutout sat over whatever content happened to slide under it for the length of the
   // scroll, which was the most obvious glitch in this step. Attached only during that step,
-  // so ordinary scrolling costs nothing.
-  const onTourScroll = tourNeedsPath ? remeasureActive : undefined;
+  // so ordinary scrolling costs nothing. The offset itself is recorded on every scroll,
+  // tour or not, because the scroll-to-node effect above needs to know where the scroller
+  // already is before it can scroll to an absolute position.
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    scrollYRef.current = e.nativeEvent.contentOffset.y;
+    if (tourNeedsPath) remeasureActive();
+  };
 
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);
   const trackModuleIds = activeTrack?.moduleIds ?? [];
@@ -157,7 +194,7 @@ export default function Home() {
         ref={scrollRef}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        onScroll={onTourScroll}
+        onScroll={onScroll}
         scrollEventThrottle={16}
       >
         <Greeting />
@@ -239,14 +276,11 @@ export default function Home() {
          *
          * `width` is measured rather than assumed — the path positions its nodes at absolute
          * offsets computed from the column's centre, so it needs a real number, and the 22px
-         * horizontal padding on this scroller means the screen width would be wrong. `y` is
-         * captured off the same layout pass, for the tour scroll above. */}
-        <View
-          onLayout={(e) => {
-            setPathWidth(e.nativeEvent.layout.width);
-            setPathY(e.nativeEvent.layout.y);
-          }}
-        >
+         * horizontal padding on this scroller means the screen width would be wrong. The
+         * section's `y` used to be captured here too, for the tour's scroll-into-view — it
+         * isn't any more, because the top of this section is not where the spotlighted node
+         * is. See the scroll effect above. */}
+        <View onLayout={(e) => setPathWidth(e.nativeEvent.layout.width)}>
           {pathWidth > 0 ? <LessonPath width={pathWidth} /> : null}
         </View>
 

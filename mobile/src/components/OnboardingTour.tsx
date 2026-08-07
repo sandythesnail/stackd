@@ -129,6 +129,13 @@ type TourCtx = {
    * step) — the tour's own measurement fires immediately and again 200ms later, both of which
    * can be too early for an animated scroll. No-op when no tour is running. */
   remeasureActive: () => void;
+  /** Where the current step's target actually is, in WINDOW coordinates, or null before it's
+   * been measured. Published so a host screen can scroll its own scroller by the difference
+   * between where the target is and where it wants it — which is the only way to get this
+   * right, since the target's offset inside that scroller isn't something the screen knows.
+   * Home used to scroll to the top of the whole lesson path instead, which only brought the
+   * node into view when the node happened to be the first one. */
+  activeRect: MeasuredRect | null;
   /** Everything <TourCallout> needs to draw the step card itself, for an in-sheet step the
    * provider deliberately doesn't overlay. Null when no tour is running. */
   activeCallout: { targetId: string; stepNum: number; totalSteps: number; title: string; body: string } | null;
@@ -349,10 +356,11 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
       registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, endIfWaitingOn,
       remeasureActive, activeCallout, skipTour: finish,
       activeTargetId: activeStep?.targetId ?? null,
+      activeRect: rect,
     }),
     [
       registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, endIfWaitingOn,
-      remeasureActive, activeCallout, finish, activeStep,
+      remeasureActive, activeCallout, finish, activeStep, rect,
     ],
   );
 
@@ -425,6 +433,19 @@ function TourOverlay({
     tooltipTop = winH / 2 - measuredTooltipH / 2;
     tooltipLeft = (winW - tooltipW) / 2;
   }
+
+  // Whatever the spotlight is doing, the CARD stays on screen.
+  //
+  // Both branches above position it relative to the spotlight, and neither had any idea where
+  // the viewport ended. A target sitting below the fold — the lesson-path node, when the
+  // host screen's scroll-into-view doesn't reach it — put `belowTop` past the bottom, which
+  // took the "above" branch, which then resolved to a position that was ALSO past the bottom.
+  // The card rendered somewhere off-screen while the four BlockRects went on swallowing every
+  // tap, so the tour was invisible and the screen was frozen: no card, no Skip, nothing to
+  // press. Clamping it into the viewport means the worst case is a card pointing at something
+  // you can't see, which you can still read and still dismiss.
+  const maxTooltipTop = Math.max(margin, winH - measuredTooltipH - margin);
+  tooltipTop = Math.min(Math.max(margin, tooltipTop), maxTooltipTop);
 
   // Held back until there's a real position to show it in. Without this the card appeared
   // dead-centre the instant a step opened and then slid to the target a frame or two later —
