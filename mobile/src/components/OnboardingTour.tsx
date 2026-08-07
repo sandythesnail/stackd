@@ -260,8 +260,26 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
   const advance = useCallback(() => {
     const idx = stepIdxRef.current;
     if (idx === null) return;
-    if (idx + 1 >= TOUR_STEPS.length) { finish(); return; }
-    goToStep(idx + 1);
+    const next = idx + 1;
+    // Finishing at the end of the list — and ALSO when the next step is an inSheet one.
+    //
+    // An inSheet step draws no overlay of its own (see the render below): its card, its Skip
+    // link and both of its exits (advanceIfWaitingOn / endIfWaitingOn) live inside the lesson
+    // preview sheet. Arriving there with that sheet closed leaves the tour running with
+    // literally nothing on screen and no way to end it — finish() never fires, so
+    // markOnboardingTourSeen() never fires either, and activeTargetId stays pinned to
+    // 'tour-lesson-start'. The next time the user opens a lesson preview for any reason,
+    // <TourCallout> sees itself as live and a "STEP 6 OF 6" card appears inside the sheet out
+    // of nowhere, with a highlight ring round its button.
+    //
+    // This button is exactly how you got there. It only renders on a requiresRealClick step
+    // when the step's target couldn't be measured (see TourOverlay) — i.e. when the lesson
+    // node isn't on screen to be tapped, which is the case when the tour is replayed from
+    // Settings, or for a player who has mastered every module and so has no path node at all.
+    // A press here cannot open the sheet, so the step after it can never become reachable:
+    // ending the tour is the only honest outcome.
+    if (next >= TOUR_STEPS.length || TOUR_STEPS[next].inSheet) { finish(); return; }
+    goToStep(next);
   }, [finish, goToStep]);
 
   // Reads the live step from the ref rather than the closure, so this stays referentially
@@ -274,6 +292,11 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
     return step.requiresRealClick && step.targetId === targetId ? idx : null;
   };
 
+  // Deliberately WITHOUT advance()'s "don't enter an inSheet step" guard. This is the
+  // legitimate way into one: tapping the lesson node both advances the tour and opens the
+  // sheet, in that order, within a single handler — so the sheet is one render away from
+  // existing, not absent. Refusing to enter here would break the only path the step was
+  // built for.
   const advanceIfWaitingOn = useCallback((targetId: string) => {
     const idx = waitingOn(targetId);
     if (idx === null) return;
