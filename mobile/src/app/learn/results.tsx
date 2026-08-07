@@ -46,7 +46,24 @@ export default function Results() {
   const learnedTermNames = useMemo(() => learnedTerms.map((t) => t.term), [learnedTerms]);
   const report = useMemo(() => buildQuestReport(mod.name, analytics, Number(hintsUsed ?? 0)), [mod.name, analytics, hintsUsed]);
 
-  const { state, level, tierName, completeLesson, completeLifeTask, equippedMascotItems } = useStore();
+  const { state, level, tierName, completeLesson, completeLifeTask, equippedMascotItems, newAchievements } = useStore();
+  // Reserves room at the top of this screen for the global achievement toast.
+  //
+  // The toast (components/AchievementToast) is absolutely positioned at the top of whatever
+  // screen is showing, and achievements are unlocked by completeLesson — which runs right
+  // here, in this screen's mount effect. So the one screen the toast reliably fires over is
+  // this one, and the first thing this screen puts at the top is a 157px-tall celebrating
+  // Hammy: the toast landed squarely across his face for its full 3.5 seconds.
+  //
+  // Latched on rather than tracking the toast: it flips true when a badge is unlocked and
+  // stays true until this screen is left. Following the toast back down would yank the whole
+  // cascade upward the moment it auto-dismisses, which is a worse jump than the one-time
+  // shift as it slides in — and while it slides in, the content moving down reads as making
+  // room for it.
+  const [reserveForToast, setReserveForToast] = useState(false);
+  useEffect(() => {
+    if (newAchievements().length > 0) setReserveForToast(true);
+  }, [newAchievements]);
   const tierBefore = useRef(tierName).current;
   const recorded = useRef(false);
   const [coinsEarned, setCoinsEarned] = useState(0);
@@ -116,7 +133,11 @@ export default function Results() {
     <LinearGradient colors={[colors.green, colors.greenDark]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1 }}>
       <StatusBar style="light" />
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={[styles.content, reserveForToast && styles.contentToastRoom]}
+          showsVerticalScrollIndicator={false}
+        >
           {/* The 3-in-a-row streak face (not a generic 'happy' one) — this screen is
               already a celebration moment, so Hammy gets the same excited expression as an
               in-quest streak callout, not the default neutral face.
@@ -395,6 +416,10 @@ function ReportStat({ num, label }: { num: string; label: string }) {
 
 const styles = StyleSheet.create({
   content: { alignItems: 'center', paddingHorizontal: 22, paddingTop: 8, paddingBottom: 12 },
+  // Clears the achievement toast: its own 6px top margin plus a ~64px card (44px medal inside
+  // 10px padding either side) plus a little breathing room. Only applied when a badge actually
+  // unlocked — see reserveForToast — so an ordinary lesson keeps the tighter top.
+  contentToastRoom: { paddingTop: 78 },
   tag: { backgroundColor: 'rgba(255,255,255,0.9)', marginTop: 16 },
   title: { fontFamily: font.display, fontSize: 32, color: colors.white, textAlign: 'center', marginTop: 10, lineHeight: 35 },
   scoreLine: { fontFamily: font.bold, fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 6 },
