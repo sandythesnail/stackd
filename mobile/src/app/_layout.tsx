@@ -23,7 +23,7 @@ import {
 import { ClerkProvider } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
 import { StoreProvider } from '@/store';
-import { AchievementToast, OnboardingTourProvider, Txt, Button } from '@/components';
+import { AchievementToast, ConfirmHost, OnboardingTourProvider, Txt, Button } from '@/components';
 import { authEnabled, env } from '@/lib/env';
 import { tokenCache } from '@/lib/tokenCache';
 import { SupabaseSync } from '@/lib/SupabaseSync';
@@ -102,7 +102,16 @@ SplashScreen.preventAutoHideAsync();
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
   const goHome = () => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      window.location.href = '/';
+      // The app is served under a baseUrl ("/m", see app.json's experiments.baseUrl), so a
+      // bare "/" is not this app's home — it's the vanilla marketing site at the domain root.
+      // "Go home" from a crashed screen therefore dropped the student out of the app
+      // entirely: on a phone m-redirect.js bounces them back through a second full page load
+      // to /m/, and on a desktop-width window they simply stay on the landing page.
+      //
+      // EXPO_BASE_URL is inlined by the web export (it's what expo-router's own stripBaseUrl
+      // reads), so this is "/m" + "/" in production and "" + "/" under `expo start --web`,
+      // where the baseUrl isn't applied — correct in both without hardcoding it here.
+      window.location.href = `${process.env.EXPO_BASE_URL ?? ''}/`;
     } else {
       retry();
     }
@@ -220,6 +229,11 @@ export default function RootLayout() {
               />
             </Stack>
             <AchievementToast />
+            {/* Hosts confirmDestructive's dialog (see lib/confirm.ts). Mounted once, here, so
+                the "leave this lesson?" / "sign out?" / "reset progress?" prompts are the
+                app's own card rather than the browser's OS-chrome window.confirm — which is
+                what the /m web build every student uses was showing. */}
+            <ConfirmHost />
           </OnboardingTourProvider>
         </StoreProvider>
         </AuthGate>

@@ -13,6 +13,7 @@ export { Hammy, Slot, ReactionFacePreloader } from './Hammy';
 export { ItemArt } from './ItemArt';
 export { Wallpaper } from './Wallpaper';
 export { AchievementToast } from './AchievementToast';
+export { ConfirmHost } from './ConfirmHost';
 export { TabBar } from './TabBar';
 export { OnboardingTourProvider, TourTarget, MaybeTourTarget, TourCallout, useOnboardingTour } from './OnboardingTour';
 export { Stat, SectionHead, Speech, Callout, Segmented, Dots, Divider } from './bits';
