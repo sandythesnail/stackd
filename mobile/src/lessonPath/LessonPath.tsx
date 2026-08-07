@@ -79,7 +79,7 @@ type Section = {
 export function LessonPath({ width }: { width: number }) {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
-  const { endIfWaitingOn } = useOnboardingTour();
+  const { endIfWaitingOn, activeTargetId } = useOnboardingTour();
   const { state, moduleDoneIndices, moduleStatus, moduleTotal, nextLessonIndex } = useStore();
 
   const [pickedModule, setPickedModule] = useState<string | null>(null);
@@ -144,6 +144,17 @@ export function LessonPath({ width }: { width: number }) {
     return { module: m, nodes, done: doneCount, total, mastered: total > 0 && doneCount >= total };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [state.moduleProgress, state.completedLifeTaskIds, recommended?.moduleId, recommended?.lessonIndex]);
+
+  // The tour's "Pick your first lesson" step points at the recommended lesson, which only
+  // exists in the recommended module's section — but `pickedModule` is sticky, so once the
+  // user has paged the carousel the path stays on whatever they last looked at. Replaying the
+  // tour after browsing therefore opened that step on the wrong module, with the node it
+  // wanted not rendered at all. Dropping the manual pick when the step opens brings the right
+  // module back; registerTarget measures the node as soon as it mounts (OnboardingTour.tsx),
+  // so the spotlight lands without waiting for the next remeasure.
+  useEffect(() => {
+    if (activeTargetId === 'tour-lesson-node') setPickedModule(null);
+  }, [activeTargetId]);
 
   const shownId = pickedModule ?? recommended?.moduleId ?? modules[0].id;
   const shownIdx = Math.max(0, sections.findIndex((s) => s.module.id === shownId));
@@ -247,6 +258,31 @@ function SectionView({
   const currentIdx = nodes.findIndex((n) => n.state === 'current');
   const cometSamples = currentIdx > 0 ? segmentSamples(pts, currentIdx - 1) : [];
 
+  /** Which node the onboarding tour's "Pick your first lesson" step spotlights.
+   *
+   * This used to be `state === 'current'` directly, which meant the step had no target at all
+   * whenever no node carried that state — and a tour step whose id nothing registers fails
+   * SILENTLY (see OnboardingTour.tsx's targets Map): no spotlight, no highlight ring, just the
+   * card floating in the middle of the screen pointing at nothing. Three ordinary situations
+   * produced it:
+   *
+   *  - The path was showing a different module. Only the recommended module has a 'current'
+   *    node, and `pickedModule` is sticky once the user pages the carousel — so replaying the
+   *    tour after browsing left the step targeting a node on a section that wasn't rendered.
+   *  - nextLessonIndex returned mainCount, i.e. every main quest done and only the real-life
+   *    sub-quest left. That index is past the end of mainLessons, so no main node matches it
+   *    and the sub-quest node is 'optional', never 'current'.
+   *  - No active module at all (everything mastered), so `recommended` is null.
+   *
+   * Falling back to the first unfinished node, then to the first node, means the step always
+   * has something real to point at as long as the module has any lessons — the copy ("Tap this
+   * one to see what it covers") stays true of any of them. LessonPath separately puts the
+   * recommended module back on screen while the step is live, so this is the backstop rather
+   * than the usual case. */
+  const tourNodeIdx = currentIdx >= 0
+    ? currentIdx
+    : firstUndone >= 0 ? firstUndone : 0;
+
   const pct = section.total ? section.done / section.total : 0;
   const face = MODULE_FACE[mod.id];
 
@@ -314,11 +350,10 @@ function SectionView({
         {cometSamples.length ? <TrailComet samples={cometSamples} reducedMotion={reducedMotion} /> : null}
 
         {nodes.map((n, i) => {
-          // The recommended node is the onboarding tour's "Start a lesson" stop (see
-          // OnboardingTour.tsx). Exactly one node per path can be `current`, and the path
-          // opens on the module holding it, so this is the single element the tour needs —
-          // every other node renders unwrapped via MaybeTourTarget.
-          const isTourTarget = n.state === 'current';
+          // The onboarding tour's "Pick your first lesson" stop (see OnboardingTour.tsx).
+          // One node per path carries it — see tourNodeIdx for why it isn't simply the
+          // `current` one. Every other node renders unwrapped via MaybeTourTarget.
+          const isTourTarget = i === tourNodeIdx;
           return (
             <Reanimated.View
               key={n.key}
@@ -335,9 +370,15 @@ function SectionView({
                   reducedMotion={reducedMotion}
                   tourHighlighted={isTourTarget && activeTargetId === 'tour-lesson-node'}
                   onPress={() => {
-                    // Safe to call unconditionally — a no-op unless the tour is genuinely
-                    // waiting on this exact node right now.
-                    if (isTourTarget) advanceIfWaitingOn('tour-lesson-node');
+                    // Called from EVERY node, not just the spotlighted one. It's already a
+                    // no-op unless the tour is waiting on this step, and gating it on
+                    // isTourTarget meant tapping any OTHER node opened the preview sheet with
+                    // the tour still sitting on this step underneath it — pointing at a node
+                    // the sheet now covers, with no Next button to escape by (the step is
+                    // requiresRealClick) until the sheet was dismissed again. Any lesson tap
+                    // satisfies "tap this one to see what it covers", so any of them may
+                    // advance it.
+                    advanceIfWaitingOn('tour-lesson-node');
                     onPressNode(n);
                   }}
                   onHoverIn={() => setHovered(i)}
