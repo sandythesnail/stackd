@@ -3,3 +3,10 @@
 # endings -- it fails at the shebang. These must stay LF on every platform.
 *.sh text eol=lf
 scripts/hooks/* text eol=lf
+
+# Vendored third-party bundles are byte-for-byte copies of a published package, and
+# vendor/README.md records their size and SHA-384 as the provenance record that replaces
+# SRI for same-origin scripts. Line-ending conversion would rewrite those bytes on a
+# Windows checkout and make every recorded hash wrong -- and silently, since the JS still
+# runs either way. -text keeps them exactly as committed on every platform.
+vendor/*.js -text
