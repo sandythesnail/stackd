@@ -96,11 +96,29 @@ export function Option({
     ],
   }));
 
+  // Announced as the control it actually is. This is the most-tapped thing in the app — every
+  // Quick Check answer, every survey goal, every narrative choice — and it declared no role
+  // and no state at all, so a screen reader read out the label as plain text with no hint that
+  // it could be activated, and no way to tell a selected option from an unselected one. Button
+  // and ProgressBar have always done this; the quiz answer never did.
+  //
+  // A `check` row is a real multi-select toggle, so it takes checkbox + checked. Quiz options
+  // and narrative choices are single-select, hence radio + selected — which also carries the
+  // correct/wrong verdict, since those states are exactly "this is the one that was right".
+  const isCheckbox = control === 'check';
+  const chosen = state !== 'default';
+
   return (
     <AnimatedPressable
       onPress={onPress}
       onPressIn={() => { press.value = withTiming(1, { duration: 70 }); }}
       onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 400 }); }}
+      accessibilityRole={isCheckbox ? 'checkbox' : 'radio'}
+      accessibilityLabel={label}
+      accessibilityState={isCheckbox ? { checked: chosen } : { selected: chosen }}
+      // Says WHY a row turned green or pink, which colour alone can't do for anyone using a
+      // screen reader (or unable to distinguish the two).
+      accessibilityHint={state === 'correct' ? 'Correct answer' : state === 'wrong' ? 'Incorrect answer' : undefined}
       style={[styles.opt, { borderColor: s.border, backgroundColor: s.bg }, style, animStyle]}
     >
       {control === 'letter' && letter ? <LetterBadge letter={letter} state={state} /> : null}

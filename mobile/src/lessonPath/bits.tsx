@@ -5,8 +5,16 @@
  * exist only to keep the path's own markup short. Anything that needs to look like the rest
  * of the app — cards, buttons, headers, badges — uses the real components instead.
  *
- * This began life in src/experiments/path/, which still holds its own copy so the sandbox
- * route can be changed without touching what Home renders.
+ * This began life in src/experiments/path/, which still holds its own near-identical copy.
+ * That prototype no longer has a route: src/app/experiments/ was removed once it had served
+ * its purpose, because every file under src/app/ becomes a real screen in the production web
+ * export — so the finished feature and the sandbox it came from were both being shipped to
+ * students (37KB of bundle) and the sandbox was reachable by anyone who typed
+ * /m/experiments/path. The source is kept for reference and still typechecks; restoring the
+ * route is `git checkout 0fb0a16 -- mobile/src/app/experiments`.
+ *
+ * If you change the path's look, change it HERE. src/experiments/path/ is frozen reference,
+ * not a second copy to keep in sync — the two have already drifted.
  */
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Text, View, StyleSheet, type TextStyle, type ViewStyle } from 'react-native';

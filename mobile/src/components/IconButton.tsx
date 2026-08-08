@@ -11,6 +11,7 @@ export function IconButton({
   iconSize,
   style,
   bare,
+  label,
 }: {
   name: keyof typeof Feather.glyphMap;
   onPress?: () => void;
@@ -19,11 +20,21 @@ export function IconButton({
   iconSize?: number;
   style?: ViewStyle;
   bare?: boolean; // no white bg/border (for dark overlays where caller styles it)
+  /** Spoken name for the control. Defaults from the icon, which covers the two this is
+   * actually used for (x = Close, chevron-left = Back); pass one for anything else. */
+  label?: string;
 }) {
+  // An icon-only control announces nothing on its own — the glyph is a font character, not
+  // text — so this was previously an unlabelled, role-less tap target. That includes the X
+  // that leaves a lesson and the chevron that backs out of a module, i.e. the two ways out of
+  // the app's deepest screens.
+  const fallback = name === 'x' ? 'Close' : name === 'chevron-left' ? 'Back' : name;
   return (
     <Pressable
       onPress={onPress}
       hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={label ?? fallback}
       style={[
         styles.btn,
         { width: size, height: size, borderRadius: size / 2 },

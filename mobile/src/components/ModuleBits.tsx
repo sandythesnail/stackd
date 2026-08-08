@@ -77,6 +77,11 @@ export function ListRow({
       onPress={onPress}
       onPressIn={() => { scale.value = withSpring(0.98, ROW_PRESS_SPRING); }}
       onPressOut={() => { scale.value = withSpring(1, ROW_PRESS_SPRING); }}
+      // Only a button when it actually does something — a row rendered without onPress (a
+      // wardrobe item that can't be worn right now, say) shouldn't announce itself as one.
+      // The label comes from the children, which are already real Text nodes.
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityState={onPress ? { disabled: false } : undefined}
       style={[styles.lrow, locked && styles.lrowLock, style, animatedStyle]}
     >
       {children}
