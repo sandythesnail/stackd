@@ -5,7 +5,22 @@ const path = require('path');
 // SecurityAgent itself is excluded by default: its own source necessarily contains the exact
 // pattern strings/regex literals ("process.on('unhandledRejection'", "req.body", "password", ...)
 // that the checkers search for, so scanning it would self-contaminate every module's findings.
-const DEFAULT_EXCLUDE_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'reports', '.next', 'coverage', '.vercel', 'SecurityAgent']);
+//
+// `vendor` is excluded for a different reason: it holds byte-for-byte copies of published
+// third-party bundles (see vendor/README.md), minified onto a handful of enormous lines. They
+// are not our code, editing them would break the provenance hashes that stand in for SRI, and
+// a minified bundle trips every heuristic here — supabase-js alone reported two CRITICAL
+// "sensitive value in a log statement" findings for the library's own internal debug output.
+// Their integrity is guaranteed by the recorded hash, not by scanning their source.
+//
+// `.claude` / `.agents` are editor/agent tooling state, not source. `.claude/worktrees/`
+// in particular holds whole checkouts of this repo, so scanning it reported every finding a
+// second time against a stale copy — at paths nobody can act on, since fixing the real file
+// changes nothing there.
+const DEFAULT_EXCLUDE_DIRS = new Set([
+  'node_modules', '.git', 'dist', 'build', 'reports', '.next', 'coverage', '.vercel',
+  'SecurityAgent', 'vendor', '.claude', '.agents',
+]);
 
 // Recursively lists files under root, skipping excluded directories. Returns absolute paths.
 function walkFiles(root, { excludeDirs = DEFAULT_EXCLUDE_DIRS, extensions = null } = {}) {

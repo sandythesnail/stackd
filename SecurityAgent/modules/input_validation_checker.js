@@ -68,7 +68,80 @@ function checkXss(root, file, content, findings) {
       }
     }
   }
-  return { sawInnerHtmlWithTemplate, flaggedAny };
+  const attr = checkUnescapedAttributeInterpolation(root, file, content, findings);
+  return { sawInnerHtmlWithTemplate, flaggedAny: flaggedAny || attr };
+}
+
+/** Identifiers that receive a DOM input's `.value` — i.e. free text the user typed. */
+function tainted(scope) {
+  const roots = new Set();
+  for (const m of scope.matchAll(/\b([A-Za-z_$][\w$]*)\s*(?:\.[\w$]+|\[[^\]]{1,60}\])?\s*=\s*[^;\n]{0,140}?\.value\b/g)) {
+    roots.add(m[1]);
+  }
+  return roots;
+}
+
+/** Splits a file into top-level `function name(...) { … }` bodies, so taint can be matched
+ * within the scope that actually shares state rather than across the whole file. */
+function topLevelFunctions(content) {
+  const out = [];
+  for (const m of content.matchAll(/^(?:async\s+)?function\s+([\w$]+)\s*\([^)]*\)\s*\{/gm)) {
+    let depth = 0, end = -1;
+    for (let i = content.indexOf('{', m.index); i < content.length; i++) {
+      if (content[i] === '{') depth++;
+      else if (content[i] === '}') { depth--; if (!depth) { end = i + 1; break; } }
+    }
+    if (end > 0) out.push({ name: m[1], start: m.index, body: content.slice(m.index, end) });
+  }
+  return out;
+}
+
+/**
+ * Flags a value the user typed being interpolated into a quoted HTML attribute without
+ * escaping — the shape of a stored XSS, and the one this module used to miss entirely.
+ *
+ * The old check only matched `x.innerHTML = ` + "`…${…}`" inline. This codebase builds its
+ * markup in helper functions that RETURN a template literal, which the assignment pattern
+ * never sees: the Budget Calculator's row builder interpolated a free-text label straight
+ * into value="…", was stored and re-rendered from state on every visit, and the report said
+ * "none reference an obvious user-input source" on every run.
+ *
+ * Two deliberate narrowings keep this useful rather than noisy. Taint is scoped to the
+ * enclosing top-level function, because names like `item` are reused everywhere and
+ * whole-file matching turned 4 real hits into 30. And only ATTRIBUTE positions are
+ * considered — interpolating into element text is a real concern too, but attributes are
+ * where a single unescaped quote turns into an event handler, and the codebase has ~160
+ * attribute interpolations of authored data (`m.id`, class-name ternaries) that would drown
+ * the signal if all of them were reported.
+ */
+function checkUnescapedAttributeInterpolation(root, file, content, findings) {
+  // Only meaningful where an escaping helper exists to point at.
+  const escaper = (content.match(/function\s+(escapeHtml|escapeHTML|esc)\s*\(/) || [])[1];
+  let flagged = false;
+
+  for (const fn of topLevelFunctions(content)) {
+    const taintRoots = tainted(fn.body);
+    if (!taintRoots.size) continue;
+    for (const m of fn.body.matchAll(/[a-zA-Z-]+="[^"`]{0,40}\$\{([^}]{1,120})\}/g)) {
+      const expr = m[1].trim();
+      if (escaper && new RegExp(`^${escaper}\\s*\\(`).test(expr)) continue;
+      if (/^['"`]/.test(expr)) continue; // a literal, not a value
+      const exprRoot = (expr.match(/^([A-Za-z_$][\w$]*)/) || [])[1];
+      if (!exprRoot || !taintRoots.has(exprRoot)) continue;
+      flagged = true;
+      findings.push(makeFinding({
+        id: nextId(), module: MODULE, severity: 'HIGH',
+        title: 'User-typed value interpolated into an HTML attribute without escaping',
+        location: `${relPath(root, file)}:${lineOf(content, fn.start + m.index)}`,
+        detail: `In ${fn.name}(), \`${expr}\` is written into a quoted HTML attribute, and "${exprRoot}" receives a DOM input's .value in the same function. A value containing a double quote closes the attribute early — breaking the markup on ordinary input like O'Brien or 5" and allowing an event handler to be injected on hostile input. If the value is persisted, this is stored rather than reflected.`,
+        remediation: escaper
+          ? `Wrap it: ${escaper}(${expr}). Escape at every interpolation of this value, including duplicates in aria-label/title on the same element.`
+          : 'Escape &, <, >, " and \' before interpolating into an attribute, or set the property via the DOM (el.value = …) instead of building HTML.',
+        cwe: 'CWE-79', auto_fixable: false,
+      }));
+    }
+  }
+  return flagged;
 }
 
 function checkPathTraversal(root, file, content, findings) {

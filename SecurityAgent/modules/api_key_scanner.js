@@ -12,7 +12,12 @@ const PATTERNS = [
   ['generic_secret_assignment', /(api_key|apikey|api_secret|secret_key|access_token|auth_token|private_key)\s*[:=]\s*["'][A-Za-z0-9+/]{20,}["']/gi, 'HIGH', 'CWE-798', 'Generic secret-looking assignment'],
   ['anthropic_key', /sk-ant-[a-zA-Z0-9\-_]{40,}/g, 'CRITICAL', 'CWE-798', 'Live Anthropic API key'],
   ['stripe_live_secret', /sk_live_[a-zA-Z0-9]{24,}/g, 'CRITICAL', 'CWE-798', 'Live Stripe secret key'],
-  ['stripe_live_public', /pk_live_[a-zA-Z0-9]{24,}/g, 'HIGH', 'CWE-798', 'Live Stripe publishable key'],
+  // PUBLISHABLE keys are not secrets. Both Stripe and Clerk mint `pk_live_…` for the browser
+  // and document it as safe to ship — this repo puts one in app.html as
+  // data-clerk-publishable-key on purpose. Reported at INFO so it stays visible (worth a
+  // glance that it really is the publishable one and not its secret sibling) without sitting
+  // at HIGH forever, which is what taught people to skim past this report.
+  ['publishable_key', /pk_(live|test)_[a-zA-Z0-9]{24,}/g, 'INFO', null, 'Publishable (public) API key present — expected, not a secret'],
   ['stripe_test_secret', /sk_test_[a-zA-Z0-9]{24,}/g, 'MEDIUM', 'CWE-798', 'Stripe test secret key hardcoded'],
   ['aws_access_key_id', /AKIA[0-9A-Z]{16}/g, 'CRITICAL', 'CWE-798', 'AWS access key ID'],
   ['aws_secret_access_key', /aws_secret_access_key\s*=\s*[A-Za-z0-9/+]{40}/gi, 'CRITICAL', 'CWE-798', 'AWS secret access key'],
@@ -33,6 +38,38 @@ const EXTRA_FILES = ['Dockerfile', 'docker-compose.yml', 'docker-compose.yaml'];
 let findingSeq = 0;
 function nextId() { findingSeq += 1; return `AK-${String(findingSeq).padStart(3, '0')}`; }
 
+/** Obvious fill-in-the-blank values, which `.env.example` exists to hold.
+ *
+ * `.env.example` is tracked on purpose so contributors have a template, and its values are
+ * things like `pk_live_xxxxxxxxxxxxxxxxxxxxxxxx` — 24 x's, which satisfies `[a-zA-Z0-9]{24,}`
+ * and matched as a live credential. A template reported as a leak is the most reliable way to
+ * teach someone that this report is safe to ignore. */
+function isPlaceholder(value) {
+  const v = String(value);
+  return /^(x{4,}|y{4,}|0{4,}|1{4,}|\.{3,})$/i.test(v)
+    || /(x{6,}|\by(our)?[-_]?(key|secret|token|api)|replace[-_]?me|changeme|example|placeholder|dummy|<[^>]+>|\bTODO\b|\bREDACTED\b)/i.test(v);
+}
+
+/** The scanner's own source. It necessarily contains every pattern it hunts for — both the
+ * regex table above and the git-history prefix list below — so without this it reports itself,
+ * once per pattern, at CRITICAL, forever. */
+function isOwnSource(relFile) {
+  return relFile.replace(/\\/g, '/').startsWith('SecurityAgent/');
+}
+
+/** Files git is not tracking AND is told to ignore. An untracked, ignored `.env` is exactly
+ * where credentials are supposed to live; flagging its contents is flagging the correct
+ * behaviour. The genuinely dangerous case — `.env` having ever been committed — is a separate
+ * check below (scanGitHistory), which is where that belongs. */
+function untrackedIgnoredFiles(root) {
+  const out = new Set();
+  try {
+    const ignored = execFileSync('git', ['ls-files', '--others', '--ignored', '--exclude-standard'], { cwd: root, encoding: 'utf8' });
+    for (const line of ignored.split(/\r?\n/)) if (line.trim()) out.add(line.trim());
+  } catch { /* not a git repo, or git unavailable — treat nothing as ignored */ }
+  return out;
+}
+
 function loadAllowlist(envConfig) {
   const list = (envConfig && envConfig.securityConfig && envConfig.securityConfig.allowlist) || [];
   return list.map(a => ({ file: a.file, line: a.line, reason: a.reason || 'allowlisted' }));
@@ -42,11 +79,15 @@ function isAllowlisted(allowlist, relFile, line) {
   return allowlist.find(a => a.file === relFile && (a.line === line || a.line === undefined));
 }
 
-function scanFileContent(root, filePath, allowlist) {
+function scanFileContent(root, filePath, allowlist, ignoredFiles) {
   const findings = [];
   const content = readFileSafe(filePath);
   if (content == null) return findings;
   const rel = relPath(root, filePath);
+  // See isOwnSource — the scanner cannot meaningfully scan itself.
+  if (isOwnSource(rel)) return findings;
+  const relPosix = rel.replace(/\\/g, '/');
+  const isIgnored = ignoredFiles.has(relPosix);
   const lines = content.split(/\r?\n/);
 
   for (const [name, regex, severity, cwe, desc] of PATTERNS) {
@@ -61,24 +102,40 @@ function scanFileContent(root, filePath, allowlist) {
       const location = `${rel}:${lineNo}`;
       const snippet = lineText.trim().slice(0, 140);
 
+      // A template's fill-me-in value is not a credential. Checked against the matched text
+      // itself and against the whole line, since the give-away ("REPLACE_ME", "<your-key>")
+      // is sometimes the value and sometimes the surrounding comment.
+      const matchedValue = (match[0] || '').replace(/^[A-Za-z_]+[-_]/, '');
+      if (isPlaceholder(matchedValue) || isPlaceholder(lineText)) continue;
+
+      // An untracked, gitignored file is where secrets belong. Downgrade rather than skip, so
+      // the report still shows what is there without calling correct practice a leak.
+      const severityForFile = isIgnored && severity !== 'INFO' ? 'INFO' : severity;
+
       let remediation = 'Remove this credential from source, rotate it immediately if it is live, and load it via process.env.VARIABLE_NAME from a git-ignored .env file.';
       if (name === 'db_connection_string') remediation = 'Move the connection string to an environment variable (e.g. DATABASE_URL) and never commit credentials in the URL. Rotate the DB password immediately.';
       if (name === 'private_key_block') remediation = 'Remove the private key from source control entirely, rotate the key pair, and load the key from a secrets manager or an untracked file at runtime.';
       if (name === 'jwt_token') remediation = 'Hardcoded JWTs can be replayed by anyone with repo access. Remove it, and if it was ever a real session/auth token, treat it as compromised and invalidate it server-side.';
       if (name === 'stripe_test_secret') remediation = 'Even test keys should not be hardcoded. Move to process.env.STRIPE_TEST_SECRET_KEY and add a placeholder to .env.example.';
 
+      if (name === 'publishable_key') {
+        remediation = 'No action needed if this is the publishable/public key — both Stripe and Clerk intend these for the browser. Confirm it is not the matching SECRET key (sk_live_…), which must never be committed.';
+      } else if (isIgnored) {
+        remediation = `"${rel}" is untracked and gitignored, which is the right place for this. No action needed unless it is ever committed — keep it out of git and rotate if it leaks.`;
+      }
+
       findings.push(makeFinding({
         id: nextId(),
         module: MODULE,
-        severity: allow ? 'INFO' : severity,
+        severity: allow ? 'INFO' : severityForFile,
         title: allow ? `[Allowlisted] ${desc}` : desc,
         location,
         detail: allow
           ? `Matched pattern "${name}" but is allowlisted (${allow.reason}). Original severity would have been ${severity}. Matched text: ${redact(snippet)}`
-          : `Matched pattern "${name}" in ${location}. Line content: ${redact(snippet)}`,
+          : `Matched pattern "${name}" in ${location}.${isIgnored ? ' File is untracked and gitignored.' : ''} Line content: ${redact(snippet)}`,
         remediation: allow ? 'No action required unless the allowlist entry is stale — re-review periodically.' : remediation,
         cwe,
-        auto_fixable: !allow && (name === 'generic_secret_assignment' || name === 'password_literal'),
+        auto_fixable: !allow && !isIgnored && (name === 'generic_secret_assignment' || name === 'password_literal'),
       }));
     }
   }
@@ -117,23 +174,43 @@ function scanGitHistory(root) {
     }
   } catch { /* git log failed — skip silently, this check is best-effort */ }
 
-  // git grep across all commits for the same secret patterns (cheap, high-signal patterns only).
-  const grepPatterns = ['sk-ant-', 'sk_live_', 'AKIA', 'ghp_', 'github_pat_', '-----BEGIN'];
+  // git grep across recent commits for the same secret patterns.
+  //
+  // These are FULL patterns, not the bare prefixes this used to grep for. Searching for
+  // "sk-ant-" or "AKIA" on its own matches any prose that mentions the prefix — most
+  // reliably this scanner's own pattern table and the list right here, so every run reported
+  // five CRITICAL "secrets in git history" findings that were the scanner detecting itself.
+  // Requiring the key BODY (`sk-ant-` plus 40+ chars, `AKIA` plus 16) means a mention can't
+  // match and a real key still does. Written as POSIX ERE for `git grep -E`.
+  const grepPatterns = [
+    ['sk-ant-[a-zA-Z0-9_-]{40,}', 'Anthropic API key'],
+    ['sk_live_[a-zA-Z0-9]{24,}', 'Stripe live secret key'],
+    ['AKIA[0-9A-Z]{16}', 'AWS access key ID'],
+    ['ghp_[a-zA-Z0-9]{36}', 'GitHub personal access token'],
+    ['github_pat_[a-zA-Z0-9_]{82}', 'GitHub fine-grained token'],
+    ['-----BEGIN( (RSA|EC|OPENSSH))? PRIVATE KEY-----', 'private key block'],
+  ];
   try {
     const allCommits = execFileSync('git', ['rev-list', '--all'], { cwd: root, encoding: 'utf8' }).trim().split(/\r?\n/).filter(Boolean);
     // Cap how many commits we grep to keep this well under the 60s budget on large histories.
     const commitsToCheck = allCommits.slice(0, 200);
-    for (const pattern of grepPatterns) {
+    for (const [pattern, what] of grepPatterns) {
       try {
-        const hits = execFileSync('git', ['grep', '-l', pattern, ...commitsToCheck.slice(0, 50)], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+        // `-e` so a pattern starting with "-" isn't parsed as a flag, and a pathspec that
+        // excludes this scanner's own directory for the same reason as isOwnSource.
+        const hits = execFileSync(
+          'git',
+          ['grep', '-l', '-E', '-e', pattern, ...commitsToCheck.slice(0, 50), '--', ':(exclude)SecurityAgent/'],
+          { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }
+        );
         if (hits.trim()) {
           findings.push(makeFinding({
             id: nextId(),
             module: MODULE,
             severity: 'CRITICAL',
-            title: `Secret pattern "${pattern}" found in git history`,
+            title: `${what} found in git history`,
             location: 'git history (see git grep output)',
-            detail: `git grep found "${pattern}" in one or more historical commits: ${hits.trim().split(/\r?\n/).slice(0, 5).join(', ')}`,
+            detail: `git grep matched /${pattern}/ in one or more historical commits: ${hits.trim().split(/\r?\n/).slice(0, 5).join(', ')}`,
             remediation: 'Treat any matching credential as compromised, rotate it, and scrub it from history with git filter-repo or BFG Repo-Cleaner.',
             cwe: 'CWE-798',
             auto_fixable: false,
@@ -186,9 +263,11 @@ async function runCheck(codebaseRoot, envConfig) {
     return SCAN_EXTENSIONS.some(ext => base.endsWith(ext));
   });
 
+  const ignoredFiles = untrackedIgnoredFiles(codebaseRoot);
+
   let findings = [];
   for (const file of targetFiles) {
-    findings = findings.concat(scanFileContent(codebaseRoot, file, allowlist));
+    findings = findings.concat(scanFileContent(codebaseRoot, file, allowlist, ignoredFiles));
   }
 
   findings = findings.concat(scanGitHistory(codebaseRoot));

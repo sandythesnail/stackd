@@ -19474,7 +19474,7 @@ function renderBudgetCalculatorPanel() {
           <div class="budget-card-title">Savings Goal</div>
           <div class="budget-row">
             <span class="budget-row-label">I want to save</span>
-            <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" id="savings-goal-input" class="budget-input" min="0" step="5" value="${plan.savingsGoal || ''}" placeholder="0" aria-label="Savings goal per month"></div>
+            <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" id="savings-goal-input" class="budget-input" min="0" step="5" value="${escapeHtml(plan.savingsGoal || '')}" placeholder="0" aria-label="Savings goal per month"></div>
             <span class="budget-row-label">per month</span>
           </div>
         </div>
@@ -19779,15 +19779,15 @@ function renderCompoundInterestPanel() {
           <div class="budget-card-title">Your Numbers</div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Starting amount</span><span class="microsim-slider-val" id="ci-start-val">$${sim.startingAmount}</span></div>
-            <input type="range" class="microsim-range" id="ci-start" min="0" max="5000" step="50" value="${sim.startingAmount}" aria-label="Starting amount">
+            <input type="range" class="microsim-range" id="ci-start" min="0" max="5000" step="50" value="${escapeHtml(sim.startingAmount)}" aria-label="Starting amount">
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Monthly contribution</span><span class="microsim-slider-val" id="ci-contrib-val">$${sim.monthlyContribution}</span></div>
-            <input type="range" class="microsim-range" id="ci-contrib" min="0" max="1000" step="10" value="${sim.monthlyContribution}" aria-label="Monthly contribution">
+            <input type="range" class="microsim-range" id="ci-contrib" min="0" max="1000" step="10" value="${escapeHtml(sim.monthlyContribution)}" aria-label="Monthly contribution">
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Years</span><span class="microsim-slider-val" id="ci-years-val">${sim.years}</span></div>
-            <input type="range" class="microsim-range" id="ci-years" min="1" max="47" step="1" value="${sim.years}" aria-label="Years">
+            <input type="range" class="microsim-range" id="ci-years" min="1" max="47" step="1" value="${escapeHtml(sim.years)}" aria-label="Years">
           </div>
           <div class="ci-rate-presets" id="ci-rate-presets">
             <button class="ci-preset-btn" data-mode="hysa" type="button">HYSA<span>4–5%</span></button>
@@ -19796,7 +19796,7 @@ function renderCompoundInterestPanel() {
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Annual interest rate</span><span class="microsim-slider-val" id="ci-rate-val">${sim.annualRatePct}%</span></div>
-            <input type="range" class="microsim-range" id="ci-rate" min="1" max="12" step="0.5" value="${sim.annualRatePct}" aria-label="Annual interest rate">
+            <input type="range" class="microsim-range" id="ci-rate" min="1" max="12" step="0.5" value="${escapeHtml(sim.annualRatePct)}" aria-label="Annual interest rate">
           </div>
           <button class="budget-add-btn" id="ci-compare-toggle" type="button">Compare: start at 18 vs. start at 28 →</button>
         </div>
@@ -19943,7 +19943,7 @@ function renderLoanPayoffPanel() {
           <div class="budget-card-title">Your Loan</div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Loan balance</span><span class="microsim-slider-val" id="lp-balance-val">$${sim.loanBalance.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-balance" min="1000" max="100000" step="500" value="${sim.loanBalance}" aria-label="Loan balance">
+            <input type="range" class="microsim-range" id="lp-balance" min="1000" max="100000" step="500" value="${escapeHtml(sim.loanBalance)}" aria-label="Loan balance">
           </div>
           <div class="ci-rate-presets" id="lp-rate-presets">
             <button class="ci-preset-btn active" data-mode="subsidized" type="button">Fed. Subsidized<span>~5.5%</span></button>
@@ -19952,7 +19952,7 @@ function renderLoanPayoffPanel() {
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Interest rate</span><span class="microsim-slider-val" id="lp-rate-val">${sim.annualRatePct}%</span></div>
-            <input type="range" class="microsim-range" id="lp-rate" min="1" max="14" step="0.25" value="${sim.annualRatePct}" aria-label="Interest rate">
+            <input type="range" class="microsim-range" id="lp-rate" min="1" max="14" step="0.25" value="${escapeHtml(sim.annualRatePct)}" aria-label="Interest rate">
           </div>
           <div class="ci-rate-presets">
             <button class="ci-preset-btn active" data-term="10" type="button">Standard<span>10yr</span></button>
@@ -19965,19 +19965,19 @@ function renderLoanPayoffPanel() {
           <div class="budget-note">Uses take-home (net) pay, not gross salary. See the Earning module for the difference.</div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Monthly take-home pay</span><span class="microsim-slider-val" id="lp-income-val">$${sim.monthlyIncome.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-income" min="1500" max="7000" step="50" value="${sim.monthlyIncome}" aria-label="Monthly take-home pay">
+            <input type="range" class="microsim-range" id="lp-income" min="1500" max="7000" step="50" value="${escapeHtml(sim.monthlyIncome)}" aria-label="Monthly take-home pay">
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Rent</span><span class="microsim-slider-val" id="lp-rent-val">$${sim.rent.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-rent" min="0" max="3000" step="25" value="${sim.rent}" aria-label="Rent">
+            <input type="range" class="microsim-range" id="lp-rent" min="0" max="3000" step="25" value="${escapeHtml(sim.rent)}" aria-label="Rent">
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Food</span><span class="microsim-slider-val" id="lp-food-val">$${sim.food.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-food" min="0" max="1000" step="10" value="${sim.food}" aria-label="Food">
+            <input type="range" class="microsim-range" id="lp-food" min="0" max="1000" step="10" value="${escapeHtml(sim.food)}" aria-label="Food">
           </div>
           <div class="microsim-slider-row">
             <div class="microsim-slider-label"><span>Other (utilities, transport, etc.)</span><span class="microsim-slider-val" id="lp-other-val">$${sim.otherExpenses.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-other" min="0" max="1500" step="10" value="${sim.otherExpenses}" aria-label="Other expenses (utilities, transport, etc.)">
+            <input type="range" class="microsim-range" id="lp-other" min="0" max="1500" step="10" value="${escapeHtml(sim.otherExpenses)}" aria-label="Other expenses (utilities, transport, etc.)">
           </div>
         </div>
       </div>
@@ -20031,7 +20031,7 @@ function renderLoanPayoffPanel() {
       <div class="budget-card-title">Pay Extra With What's Left Over</div>
       <div class="microsim-slider-row">
         <div class="microsim-slider-label"><span>Extra toward the loan</span><span class="microsim-slider-val" id="lp-extra-val">$${sim.extraPayment}</span></div>
-        <input type="range" class="microsim-range" id="lp-extra" min="0" max="${maxExtra}" step="5" value="${sim.extraPayment}" aria-label="Extra toward the loan">
+        <input type="range" class="microsim-range" id="lp-extra" min="0" max="${maxExtra}" step="5" value="${escapeHtml(sim.extraPayment)}" aria-label="Extra toward the loan">
       </div>
       <div id="lp-compare"></div>`;
     document.getElementById('lp-extra').addEventListener('input', (e) => {
@@ -22237,7 +22237,7 @@ function renderPriceIsRightChapter(chapter, mod, onDone) {
   main.innerHTML = `
     <p class="quest-prompt">${chapter.prompt}</p>
     <div class="price-guess-display" id="price-guess-display">$${guess}</div>
-    <input type="range" class="microsim-range" id="price-slider" min="${range.min}" max="${range.max}" step="${range.step}" value="${guess}" aria-label="Your guess">
+    <input type="range" class="microsim-range" id="price-slider" min="${range.min}" max="${range.max}" step="${range.step}" value="${escapeHtml(guess)}" aria-label="Your guess">
     <div class="price-marker-rail" id="price-marker-rail" hidden>
       <div class="price-marker price-marker-guess" id="price-marker-guess">
         <span class="price-marker-pin"></span>
