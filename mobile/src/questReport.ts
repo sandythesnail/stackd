@@ -95,6 +95,23 @@ export type QuestReportData = {
 
 /** Ported verbatim from app.js's buildQuestReport — same mastery %, same "what you got
  * right" / "worth another look" split, same two-sentence-max advice-building logic. */
+/** Right-out-of-total over every graded moment the lesson showed.
+ *
+ * The single definition of "how did I do", used for the score on the results screen AND for
+ * the coin payout. The player used to carry its own parallel correct/graded counters, fed by
+ * an optional second argument to onComplete that only four chapter types passed — so the
+ * reward was computed from a different, smaller set than the score, and adding a chapter type
+ * to one didn't add it to the other. There is nothing to keep in sync now: both read this. */
+export function gradedTally(raw: QuestAnalytics): { correct: number; total: number } {
+  const a = normalizeAnalytics(raw);
+  return {
+    correct: a.knowledgeCheck.filter((x) => x.isCorrect).length
+      + a.mythCards.filter((x) => x.guessedRight).length
+      + a.checks.filter((x) => x.isCorrect).length,
+    total: a.knowledgeCheck.length + a.mythCards.length + a.checks.length,
+  };
+}
+
 export function buildQuestReport(moduleName: string, raw: QuestAnalytics, hintsUsed: number): QuestReportData {
   // Tolerates a save written before `checks` existed — see normalizeAnalytics.
   const analytics = normalizeAnalytics(raw);
@@ -106,8 +123,7 @@ export function buildQuestReport(moduleName: string, raw: QuestAnalytics, hintsU
   const checkWrong = analytics.checks.filter((x) => !x.isCorrect);
   // Every graded moment, not just the two chapter types that happened to have their own
   // analytics bucket — see QuestAnalytics.checks for what this was getting wrong.
-  const totalAnswered = analytics.knowledgeCheck.length + analytics.mythCards.length + analytics.checks.length;
-  const totalRight = kcRight.length + mythRight.length + checkRight.length;
+  const { correct: totalRight, total: totalAnswered } = gradedTally(analytics);
   const masteryPct = totalAnswered ? Math.round((totalRight / totalAnswered) * 100) : 100;
 
   const strengths = [...kcRight.map((x) => x.question), ...mythRight.map((x) => x.myth), ...checkRight.map((x) => x.label)];

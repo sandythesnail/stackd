@@ -30,7 +30,15 @@ import type {
  * (knowledgecheck's several questions, mythcards' several cards) reports the
  * `{correct, total}` form instead of just the last item's result, so the headline score
  * this feeds into can't disagree with the per-item detail shown on the results screen. */
-type Complete = (xpDelta: number, graded?: boolean | { correct: number; total: number }) => void;
+/** Finish this chapter, awarding `xpDelta`.
+ *
+ * There is no longer a second "and here's how they scored" argument. Only four chapter types
+ * ever passed one, so the correct/graded counters it fed — the basis for the coin payout —
+ * covered a different, smaller set of chapters than the results screen's own score. Both are
+ * derived from the reported analytics now (see gradedTally), which is the same place the
+ * mastery ring reads from, so a chapter type cannot be counted by one and not the other.
+ * Grading is reported as it happens, via ReportProps; this just ends the chapter. */
+type Complete = (xpDelta: number) => void;
 
 /** A vocab term the player has been taught so far this quest — ported from the website's
  * qp.learnedTerms (same {term, plain, section} shape end to end: pushLearnedTerm, the
@@ -370,8 +378,8 @@ function QuestPlayerInner() {
 
   const [chapterIdx, setChapterIdx] = useState(resumed?.chapterIdx ?? 0);
   const [xpEarned, setXpEarned] = useState(resumed?.xpEarned ?? 0);
-  const [correctCount, setCorrectCount] = useState(resumed?.correctCount ?? 0);
-  const [gradedTotal, setGradedTotal] = useState(resumed?.gradedTotal ?? 0);
+  // No correctCount/gradedTotal state any more — the tally comes from analyticsRef via
+  // gradedTally at finish time. See the Complete type.
   const [hintsUsed, setHintsUsed] = useState(resumed?.hintsUsed ?? 0);
   // Which question a knowledgecheck chapter is currently showing — kept in sync via
   // KnowledgecheckView's onQuestionIndexChange, so the header's hint button can look up
@@ -631,15 +639,8 @@ function QuestPlayerInner() {
   };
   const clearReaction = () => setReaction(null);
 
-  const onComplete: Complete = (xpDelta, graded) => {
+  const onComplete: Complete = (xpDelta) => {
     const nextXp = xpEarned + xpDelta;
-    // See Complete's definition above: a multi-item chapter (knowledgecheck, mythcards)
-    // reports its own {correct, total} instead of one flat point, so a chapter with (say)
-    // 1 right out of 2 questions counts as 1/2 here too, not a full point for whichever
-    // question happened to be graded last.
-    const isTally = typeof graded === 'object' && graded !== null;
-    const nextCorrect = correctCount + (isTally ? graded.correct : graded ? 1 : 0);
-    const nextGraded = gradedTotal + (isTally ? graded.total : graded !== undefined ? 1 : 0);
     // Words are banked by learnTerm as they're taught, not swept up here on the way out —
     // see its comment. termsRef is read rather than `terms` so a word learned in this very
     // handler still makes the results payload.
@@ -652,12 +653,17 @@ function QuestPlayerInner() {
         // leave a save behind claiming the player is still partway through, and the module
         // list would offer to resume a lesson they'd just completed.
         clearLessonProgress(mod.id, li);
+        // The whole lesson's grading travels in here, and the results screen derives both the
+        // score it shows and the coins it pays from it (gradedTally). correctCount/total used
+        // to ride along as route params from the player's own separate counters — that is the
+        // duplicate this change removes, not just a tidy-up: those counters were fed by four
+        // chapter types while the report read nine, so the payout and the score were computed
+        // off different sets and drifted apart the moment either list changed.
         setPendingQuestAnalytics({ ...analyticsRef.current, learnedTerms: termsRef.current });
         router.replace({
           pathname: '/learn/results',
           params: {
-            moduleId: mod.id, lessonIndex: String(li),
-            correctCount: String(nextCorrect), total: String(nextGraded), xpEarned: String(nextXp),
+            moduleId: mod.id, lessonIndex: String(li), xpEarned: String(nextXp),
             questId: quest.id, hintsUsed: String(hintsUsed), bossWon: nextBossWon ? '1' : '0',
             ...(isLifeTask ? { isLifeTask } : {}),
           },
@@ -665,8 +671,6 @@ function QuestPlayerInner() {
         return;
       }
       setXpEarned(nextXp);
-      setCorrectCount(nextCorrect);
-      setGradedTotal(nextGraded);
       setBossWon(nextBossWon);
       setChapterIdx(chapterIdx + 1);
       // Write the resume point on every chapter advance — this is the whole feature.
@@ -685,8 +689,6 @@ function QuestPlayerInner() {
           chapterCount: quest.chapters.length,
           chapterIdx: chapterIdx + 1,
           xpEarned: nextXp,
-          correctCount: nextCorrect,
-          gradedTotal: nextGraded,
           hintsUsed,
           bossWon: nextBossWon,
           terms: termsRef.current,
@@ -1905,7 +1907,7 @@ function PollView({ chapter, onComplete, onAction, reactTo, reportCheck }: {
     reportCheck(chapter.statement, guess === chapter.isTrue);
   };
   useEffect(() => {
-    onAction(answered !== null ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0, answered === chapter.isTrue) } : null);
+    onAction(answered !== null ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0) } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answered]);
   return (
@@ -2023,7 +2025,9 @@ function MythcardsView({
     // count a mythcards chapter as fully correct toward the headline lesson score no
     // matter how many cards were actually gotten right (even 0-for-N), same class of bug
     // as knowledgecheck's onComplete above. See Complete's definition.
-    if (last) { onComplete((chapter.xpPerCorrect ?? 0) * correctSoFar, { correct: correctSoFar, total: chapter.cards.length }); return; }
+    // correctSoFar still drives the XP (xpPerCorrect is per card), but the right/total tally
+    // now comes from the per-card reportMythCard calls above — see the Complete type.
+    if (last) { onComplete((chapter.xpPerCorrect ?? 0) * correctSoFar); return; }
     // Cuts a still-showing reaction bubble/face short instead of letting it linger over the
     // next, unresolved card until its own timer happens to fire — see ReactProps.
     clearReaction();
@@ -2118,12 +2122,9 @@ function KnowledgecheckView({
 } & ReactProps & ActionProps & Pick<ReportProps, 'reportKnowledgeCheck'>) {
   const [i, setI] = useState(0);
   const [sel, setSel] = useState<number | null>(null);
-  // Tallies every question answered in this chapter (not just the last one), so the
-  // headline lesson score reflects the whole knowledge check — see onComplete's
-  // {correct, total} form. Previously only the LAST question's correctness was reported,
-  // so e.g. missing question 1 but getting question 2 (the last) right scored the whole
-  // chapter as fully correct even though the per-question results screen showed 1/2.
-  const [correctSoFar, setCorrectSoFar] = useState(0);
+  // No local tally. Every question reports itself through reportKnowledgeCheck as it's
+  // answered, and the lesson's right/total is derived from those reports (see gradedTally),
+  // so a per-chapter counter would only be a second copy of the same information.
   const question = questions[chapter.qIndices[i]];
   const answered = sel !== null;
   const right = question ? sel === question.correct : false;
@@ -2141,7 +2142,6 @@ function KnowledgecheckView({
   const pick = (idx: number) => {
     setSel(idx);
     const isCorrect = question ? idx === question.correct : false;
-    if (isCorrect) setCorrectSoFar((c) => c + 1);
     // A wrong answer speaks the actual explanation (also shown in the card below) instead
     // of a generic "Not quite! Here's why:" — a right answer keeps the plain celebratory
     // pool, since "Nice! 🎉" doesn't need anything more said about it.
@@ -2149,7 +2149,7 @@ function KnowledgecheckView({
     if (question) reportKnowledgeCheck(question.q, isCorrect);
   };
   const next = () => {
-    if (last) { onComplete(0, { correct: correctSoFar, total: chapter.qIndices.length }); return; }
+    if (last) { onComplete(0); return; }
     // Cuts a still-showing reaction bubble/face short instead of letting it linger over the
     // next, not-yet-answered question until its own timer happens to fire — see ReactProps.
     clearReaction();
@@ -2687,7 +2687,7 @@ function PriceisrightView({
 
   useEffect(() => {
     onAction(submitted
-      ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0, close) }
+      ? { label: 'Next', onPress: () => onComplete(chapter.xpOnComplete ?? 0) }
       : { label: 'Lock in my guess', onPress: submit });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted, guess]);

@@ -16,7 +16,20 @@ const MYSTERY_OWNED_WEIGHT_FACTOR = 0.35;
 const MYSTERY_DUPLICATE_REFUND_RATE = 0.5;
 /** Ported verbatim from finishQuest (app.js): coinsEarned = chapterScore*8 if the quest had
  * any graded chapters, else a flat 8 — and diamondsEarned is always 0 (diamonds only come
- * from streaks/daily-login/achievements, never a quest finish). */
+ * from streaks/daily-login/achievements, never a quest finish).
+ *
+ * THE RATE IS THE WEBSITE'S; THE BASIS IS NO LONGER. The website counts a narrower set of
+ * chapters than mobile now scores. Mobile pays per correct answer over every graded moment
+ * the lesson showed (see questReport.gradedTally) — the same number the results screen puts
+ * on screen — because paying on a different basis than the one displayed is what produced a
+ * lesson scored "8/10" and paid as though it were 4/5.
+ *
+ * That widening roughly doubles lesson income: an average lesson goes from ~5.6 graded
+ * moments to ~10.5, so at 75% accuracy it pays ~63 coins instead of ~34, and the median
+ * 70-coin shop item drops from about two lessons of saving to one. That was a deliberate
+ * call (keep score and reward honest, accept the softer grind), not an accident — if the
+ * pacing needs winding back, this constant is the single knob: 4 restores roughly the old
+ * coins-per-lesson while keeping the payout and the score in agreement. */
 export const QUEST_COIN_PER_CORRECT = 8;
 export const QUEST_COIN_FLAT_FALLBACK = 8;
 
@@ -216,8 +229,11 @@ export type SavedLessonProgress = {
   /** The chapter to reopen — the one that was on screen, not the one after it. */
   chapterIdx: number;
   xpEarned: number;
-  correctCount: number;
-  gradedTotal: number;
+  // correctCount/gradedTotal used to live here too. They were the player's own parallel
+  // scoring counters, and `analytics` below already holds every graded moment they were
+  // counting — the tally is derived from it now (gradedTally), so storing it as well was
+  // storing the same answer twice and letting the two disagree. Saves written before this
+  // still carry the two fields; they're simply ignored.
   hintsUsed: number;
   bossWon: boolean;
   terms: { term: string; plain: string; section: string }[];
@@ -943,8 +959,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       completeLesson: (moduleId, lessonIndex, xpEarned, opts) => {
         const { correctCount = 0, gradedTotal = 0, questId, bossWon, hintsUsed, newTerms } = opts ?? {};
-        // Ported verbatim from finishQuest: coins = correct answers * 8 (or a flat 8 if
-        // nothing in the quest was gradeable) — diamonds never come from a lesson finish.
+        // coins = correct answers * 8 (or a flat 8 if nothing in the lesson was gradeable) —
+        // diamonds never come from a lesson finish. correctCount/gradedTotal arrive from the
+        // results screen's own tally, which is the same one it displays; see
+        // QUEST_COIN_PER_CORRECT for what changed about the basis and how to tune it.
         const coinsEarned = gradedTotal > 0 ? correctCount * QUEST_COIN_PER_CORRECT : QUEST_COIN_FLAT_FALLBACK;
         // Computed once here (against liveState.current, not just inside the setState
         // updater below) so the return value can tell results.tsx the REAL amount just

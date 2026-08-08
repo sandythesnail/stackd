@@ -21,21 +21,15 @@ import { REACTION_FACES } from '@/hammyFaces';
 export default function Results() {
   const router = useRouter();
   const {
-    moduleId, lessonIndex, correctCount, total, xpEarned, questId, hintsUsed, bossWon, isLifeTask,
+    moduleId, lessonIndex, xpEarned, questId, hintsUsed, bossWon, isLifeTask,
   } = useLocalSearchParams<{
-    moduleId: string; lessonIndex: string; correctCount: string; total: string; xpEarned?: string;
+    moduleId: string; lessonIndex: string; xpEarned?: string;
     questId?: string; hintsUsed?: string; bossWon?: string; isLifeTask?: string;
   }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
   const li = Number(lessonIndex ?? 0);
   const lesson = content?.lessons[li];
-  // The REWARD basis, not the score. completeLesson pays coins off these (correct * 8, see
-  // QUEST_COIN_PER_CORRECT), and they count only the chapter types that have always fed the
-  // payout — deliberately left alone, since widening them would inflate every lesson's coins
-  // by about 68% and rebalance the shop as a side effect of a display fix.
-  const correct = Number(correctCount ?? 0);
-  const totalQ = Number(total ?? 0);
   // The quest player (learn/quest.tsx) accumulates real XP across its chapters; the flat
   // quiz path falls back to the module's flat per-lesson reward.
   const xpForLesson = xpEarned !== undefined ? Number(xpEarned) : (content?.xpReward ?? 0);
@@ -48,14 +42,15 @@ export default function Results() {
   const learnedTerms = analytics.learnedTerms;
   const learnedTermNames = useMemo(() => learnedTerms.map((t) => t.term), [learnedTerms]);
   const report = useMemo(() => buildQuestReport(mod.name, analytics, Number(hintsUsed ?? 0)), [mod.name, analytics, hintsUsed]);
-  // ONE score on this screen, and the report owns it.
+  // ONE tally, and it drives everything: the headline count, the mastery ring, and the coins.
   //
-  // The headline count used to come from the `correctCount`/`total` params above while the
-  // mastery ring twelve lines down came from the report, and the two count different things
-  // — so the same lesson was scored twice, differently, on one screen: "3/4 correct" at the
-  // top over a 100% ring captioned "Every question right this time". Both now read the
-  // report, which since QuestAnalytics.checks covers every graded moment the lesson actually
-  // showed. The params still drive the coin payout; they just don't get to state a score.
+  // There were three readings of "how did I do" here. The headline came from correctCount/
+  // total route params (the player's own counters, fed by four chapter types), the ring came
+  // from the report (nine chapter types), and the payout came from the params again — so one
+  // lesson could read "3/4 correct" above a 100% ring captioned "Every question right this
+  // time", and be paid on a third basis that matched neither. All of it now derives from the
+  // reported analytics, so a chapter type cannot count toward the score and not the reward,
+  // or the other way round. See gradedTally.
   const scored = report.totalAnswered;
   const scoredRight = report.totalRight;
   const allCorrect = scored > 0 && scoredRight === scored;
@@ -91,15 +86,15 @@ export default function Results() {
     recorded.current = true;
     const { xpAwarded: xp, coinsAwarded: coins } = isLifeTask
       ? completeLifeTask(mod.id, xpForLesson, {
-        correctCount: correct,
-        gradedTotal: totalQ,
+        correctCount: scoredRight,
+        gradedTotal: scored,
         questId,
         hintsUsed: hintsUsed !== undefined ? Number(hintsUsed) : undefined,
         newTerms: learnedTermNames.length ? learnedTermNames : undefined,
       })
       : completeLesson(mod.id, li, xpForLesson, {
-        correctCount: correct,
-        gradedTotal: totalQ,
+        correctCount: scoredRight,
+        gradedTotal: scored,
         questId,
         bossWon: bossWon === '1',
         hintsUsed: hintsUsed !== undefined ? Number(hintsUsed) : undefined,
