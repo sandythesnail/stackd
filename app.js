@@ -16099,6 +16099,31 @@ const SHOP_ITEMS = [
   },
 ];
 
+// ── HTML escaping ─────────────────────────────
+/**
+ * Escapes a value for interpolation into innerHTML — text content OR a quoted attribute.
+ *
+ * This file builds most of its UI with template literals and innerHTML, which is fine for
+ * the authored content in MODULES/SHOP_ITEMS (we wrote it, it never changes). It is NOT fine
+ * for anything the user typed, and there is exactly one such thing: the Budget Calculator's
+ * income/expense labels, which are free-text inputs whose value is written into state, saved
+ * to localStorage, synced to Supabase, and re-rendered from state on every visit to Tools.
+ *
+ * Unescaped, a label was interpolated raw into value="…". That broke on input a student
+ * would type by accident — `Mom's "help"` closed the attribute early and mangled the row —
+ * and it accepted a deliberate `" autofocus onfocus="…` as live markup, stored and replayed
+ * on every later render. Both quote styles and & < > are covered so the same helper is safe
+ * in a single-quoted attribute or in text.
+ */
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── Achievements ──────────────────────────────
 // Every achievement below requires real mastery, not just showing up — "mastered" for a
 // quiz-based module means every lesson in it has been answered perfectly at least once
@@ -16146,6 +16171,10 @@ function bossChallengeOptimal(s, modId) {
   if (idx === -1) return false;
   const rec = s.completedLessons[`${modId}_${idx}`];
   if (!rec) return false;
+  // The explicit flag first (see finishBonusActivity, which never clears it once set), then
+  // the original inference for records written before the flag existed: the optimal bonus is
+  // added on top of the normal reward, so beating xpOnComplete could only mean it was earned.
+  if (rec.optimal) return true;
   return rec.xpEarned > mod.lessons[idx].activity.xpOnComplete;
 }
 
@@ -16457,6 +16486,17 @@ function loadState() {
   } catch (_) {}
 }
 
+/** Logs the "local storage isn't writable" case once rather than on every one of the 57
+ * saveState calls, so a browser with site data blocked produces one line in the console
+ * instead of a flood that buries everything else. */
+let warnedLocalStorageUnavailable = false;
+function warnLocalStorageUnavailable(e) {
+  if (warnedLocalStorageUnavailable) return;
+  warnedLocalStorageUnavailable = true;
+  console.error('Local progress could not be saved (site data blocked or storage full). '
+    + 'Cloud sync is unaffected for signed-in users.', e);
+}
+
 function saveState() {
   // lastModuleActivityDate is in here deliberately: it was missing, so Home's "Hammy's mood
   // is lifted" state was never written to localStorage OR synced, and reverted to the daily
@@ -16464,9 +16504,19 @@ function saveState() {
   // field to hand it to (see mobile/src/lib/webState.ts).
   const { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, lastModuleActivityDate, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
   const snapshot = { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, lastModuleActivityDate, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
-  localStorage.setItem('stackd_v2', JSON.stringify(snapshot));
-  // Stamp which account this cached snapshot belongs to (see ensureLocalStateOwner).
-  if (window.Clerk?.user) localStorage.setItem('stackd_v2_owner', Clerk.user.id);
+  // Guarded, like loadState's read already was. setItem throws when site data is blocked by
+  // browser policy or an extension, and on a full quota — and this is called from 57 places,
+  // several of them mid-lesson-completion, so an uncaught throw here doesn't just skip a save,
+  // it aborts whatever flow was running (the results screen never renders, the reward never
+  // shows). The cloud push below is deliberately still attempted: for a signed-in student
+  // Supabase is the real store, and losing the local cache shouldn't also lose the sync.
+  try {
+    localStorage.setItem('stackd_v2', JSON.stringify(snapshot));
+    // Stamp which account this cached snapshot belongs to (see ensureLocalStateOwner).
+    if (window.Clerk?.user) localStorage.setItem('stackd_v2_owner', Clerk.user.id);
+  } catch (e) {
+    warnLocalStorageUnavailable(e);
+  }
   scheduleSupabaseSync(snapshot);
 }
 
@@ -16638,10 +16688,21 @@ function applyRemoteState(remote) {
 // session), discard it and restart this session from a clean slate — the account's
 // real progress, if it has any, is hydrated right after from its own Supabase row.
 function ensureLocalStateOwner(userId) {
-  const owner = localStorage.getItem('stackd_v2_owner');
-  if (owner === userId) return;
-  localStorage.removeItem('stackd_v2');
-  localStorage.setItem('stackd_v2_owner', userId);
+  // Guarded for the same reason as saveState: every localStorage call here throws outright
+  // when site data is blocked, and this one runs during boot (from app-auth.js), so an
+  // uncaught throw would take the rest of the sign-in sequence with it. If storage isn't
+  // readable there is no cached snapshot to belong to anyone, so there is nothing to clear
+  // and returning early is the correct outcome rather than a degraded one.
+  let owner;
+  try {
+    owner = localStorage.getItem('stackd_v2_owner');
+    if (owner === userId) return;
+    localStorage.removeItem('stackd_v2');
+    localStorage.setItem('stackd_v2_owner', userId);
+  } catch (e) {
+    warnLocalStorageUnavailable(e);
+    return;
+  }
   Object.assign(state, JSON.parse(DEFAULT_STATE_JSON));
   // Redo the boot-time session/streak bookkeeping (see the DOMContentLoaded init) that
   // already ran against the discarded snapshot before auth resolved.
@@ -17044,7 +17105,14 @@ function showPage(id) {
   if (subnav) subnav.classList.toggle('mobile-open', id === 'shop');
   if (id === 'shop') updateShopNavHighlight();
   document.title = `Stacked | ${PAGE_TITLES[id] || 'Dashboard'}`;
-  localStorage.setItem(LAST_PAGE_KEY, id);
+  // Remembering the last page is a convenience; navigating is not. Unguarded, a browser with
+  // site data blocked threw here on EVERY nav click, so the scroll reset below never ran and
+  // the click appeared to half-work.
+  try {
+    localStorage.setItem(LAST_PAGE_KEY, id);
+  } catch (e) {
+    warnLocalStorageUnavailable(e);
+  }
   window.scrollTo(0, 0);
 }
 
@@ -19424,11 +19492,18 @@ function renderBudgetCalculatorPanel() {
       </div>
     </div>`;
 
+  // Every interpolated value is escaped — see escapeHtml. `label` is the one the user types,
+  // and it lands in two separate quoted attributes here (value= and aria-label=), so both
+  // have to be escaped, not just the visible one. `id` and `amount` are generated/numeric
+  // today, but they sit in attributes too and come back from synced state, so they go
+  // through the same helper rather than relying on that staying true.
   function rowHtml(item, kind) {
-    return `<div class="budget-row" data-id="${item.id}" data-kind="${kind}">
-      <input type="text" class="budget-input budget-input-label" value="${item.label}" placeholder="Label" data-field="label" aria-label="${kind === 'income' ? 'Income source' : 'Expense'} label">
-      <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" class="budget-input" min="0" step="5" value="${item.amount}" placeholder="0" data-field="amount" aria-label="Amount for ${item.label || (kind === 'income' ? 'this income source' : 'this expense')}"></div>
-      <button class="budget-row-remove" data-remove="${item.id}" type="button" aria-label="Remove">×</button>
+    const label = escapeHtml(item.label);
+    const fallbackName = kind === 'income' ? 'this income source' : 'this expense';
+    return `<div class="budget-row" data-id="${escapeHtml(item.id)}" data-kind="${kind}">
+      <input type="text" class="budget-input budget-input-label" value="${label}" placeholder="Label" data-field="label" aria-label="${kind === 'income' ? 'Income source' : 'Expense'} label">
+      <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" class="budget-input" min="0" step="5" value="${escapeHtml(item.amount)}" placeholder="0" data-field="amount" aria-label="Amount for ${label || fallbackName}"></div>
+      <button class="budget-row-remove" data-remove="${escapeHtml(item.id)}" type="button" aria-label="Remove">×</button>
     </div>`;
   }
 
@@ -19437,9 +19512,11 @@ function renderBudgetCalculatorPanel() {
     document.getElementById('fixed-rows').innerHTML = plan.fixedExpenses.map(x => rowHtml(x, 'fixed')).join('');
     document.getElementById('variable-rows').innerHTML = BUDGET_CATEGORY_ORDER.map(key => {
       const isCallout = key === 'foodDelivery' || key === 'beauty';
+      // The labels here are ours (BUDGET_CATEGORY_LABELS), but the VALUE is a stored number
+      // that arrives back from localStorage/Supabase, so it gets escaped like the rows above.
       return `<div class="budget-row${isCallout ? ' budget-row-callout' : ''}" data-key="${key}">
         <span class="budget-row-label">${BUDGET_CATEGORY_LABELS[key]}</span>
-        <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" class="budget-input" min="0" step="5" value="${plan.variableExpenses[key] || ''}" placeholder="0" data-varkey="${key}" aria-label="${BUDGET_CATEGORY_LABELS[key]} amount"></div>
+        <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" class="budget-input" min="0" step="5" value="${escapeHtml(plan.variableExpenses[key] || '')}" placeholder="0" data-varkey="${key}" aria-label="${BUDGET_CATEGORY_LABELS[key]} amount"></div>
       </div>`;
     }).join('');
 
@@ -20169,11 +20246,28 @@ function startBonusActivity(moduleId, lessonIdx) {
 function finishBonusActivity(mod, lesson, lessonIdx, bonusXp = 0) {
   state.inBonusActivity = false;
   const activity = lesson.activity;
-  const wasDone = !!state.completedLessons[`${mod.id}_${lessonIdx}`];
+  const lessonKey = `${mod.id}_${lessonIdx}`;
+  const prevRec = state.completedLessons[lessonKey];
+  const wasDone = !!prevRec;
   const xpEarned = (wasDone ? Math.round(activity.xpOnComplete * 0.5) : activity.xpOnComplete) + bonusXp;
   const coinsEarned = wasDone ? 6 : 16;
   state.coins = (state.coins || 0) + coinsEarned;
-  state.completedLessons[`${mod.id}_${lessonIdx}`] = { score: 1, total: 1, xpEarned };
+  // `optimal` is sticky: once you have taken the best path through a boss challenge, you have
+  // done it, and replaying can only ever add to that record.
+  //
+  // bossChallengeOptimal used to infer this from xpEarned alone (`rec.xpEarned > xpOnComplete`,
+  // true only because the optimal bonus is added on top) — and this line overwrites the record
+  // wholesale on every run. So acing Spending's boss and then replaying it and misclicking
+  // stored a lower xpEarned and erased the only evidence it had ever gone perfectly. The badge
+  // that needs BOTH bosses optimal (Iron Will, and Grandmaster behind it) could then never
+  // fire, with nothing telling the player why. Reading the flag first, falling back to the old
+  // XP comparison, means saves written before this still count.
+  state.completedLessons[lessonKey] = {
+    score: 1,
+    total: 1,
+    xpEarned,
+    optimal: !!(prevRec && prevRec.optimal) || bonusXp > 0,
+  };
   const prev = state.completedModules[mod.id];
   if (!prev) state.completedModules[mod.id] = { score: 1, total: 1, xpEarned };
   markModuleActivityToday();
