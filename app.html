@@ -26,7 +26,13 @@
     src="https://clerk.trystacked.app/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
     type="text/javascript">
   </script>
-  <script defer crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Served from our own origin, not cdn.jsdelivr.net. It was the only third-party script
+       on the site (Clerk above already comes from clerk.trystacked.app) and it was an
+       unpinned range with no integrity attribute, so whatever the CDN returned ran with full
+       access to the Clerk session and the Supabase token — and a network that blocks jsDelivr
+       (campus filtering, ad blockers) killed cloud sync entirely. Byte-identical to what the
+       CDN was serving; see vendor/README.md for provenance, hashes and how to update. -->
+  <script defer src="/vendor/supabase-js-2.110.6.js"></script>
   <script defer src="app-auth.js"></script>
 </head>
 <body>
