@@ -187,7 +187,21 @@ type ReportProps = {
    * price guess, the spot-the-red-flag chapters. Call it wherever the chapter tells the
    * student they were right or wrong, so the results screen's score covers what they were
    * actually asked. `label` is what appears under "Worth another look", so pass the thing
-   * they were judged on (the statement, the term) rather than the chapter's title. */
+   * they were judged on (the statement, the term) rather than the chapter's title.
+   *
+   * The test for whether a chapter belongs here is `reactTo` — if it tells the student they
+   * were right or wrong and moves Hammy's answer streak, it is graded and has to be counted.
+   * Going by "does it already call a report* function" is what previously left the boss
+   * battle out: 88 chapters, the climax of 88 of the 99 quests, grading the optimal path
+   * (the very thing the iron_will badge is defined on) and contributing nothing to the score
+   * shown on the next screen.
+   *
+   * Deliberately NOT here: decision, microsim and simulator. Those call reactTo on
+   * `deltaSum >= 0` / `scoreDelta >= 0` — how well the outcome went, not whether an answer
+   * was right. They have no correct choice to get wrong, so counting them would score a
+   * student on a scenario that was never a question. (Their reactions do still move the
+   * answer streak, which is arguably its own inconsistency, but a streak is encouragement
+   * rather than a score and it isn't reported anywhere.) */
   reportCheck: (label: string, isCorrect: boolean) => void;
 };
 
@@ -957,10 +971,10 @@ function ChapterView({
     case 'mythcards': return <MythcardsView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportMythCard={reportMythCard} />;
     case 'knowledgecheck': return <KnowledgecheckView chapter={chapter} questions={questions} onComplete={onComplete} onAction={onAction} {...reactProps} reportKnowledgeCheck={reportKnowledgeCheck} onQuestionIndexChange={onQuestionIndexChange} />;
     case 'simulator': return <SimulatorView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} />;
-    case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} />;
+    case 'bossbattle': return <BossbattleView chapter={chapter} moduleXpReward={moduleXpReward} onComplete={onComplete} onAction={onAction} {...reactProps} reportDecision={reportDecision} reportCheck={reportCheck} />;
     case 'spotcheck': return <SpotcheckView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportCheck={reportCheck} />;
     case 'priceisright': return <PriceisrightView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportCheck={reportCheck} />;
-    case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportExplainback={reportExplainback} />;
+    case 'explainback': return <ExplainbackView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportExplainback={reportExplainback} reportCheck={reportCheck} />;
     case 'urlinspect': return <UrlinspectView chapter={chapter} onComplete={onComplete} onAction={onAction} {...reactProps} reportCheck={reportCheck} />;
     default: return null;
   }
@@ -2413,8 +2427,9 @@ function SimulatorView({ chapter, onComplete, onAction, reactTo }: { chapter: Si
  * a 0.4–1.25 scale with exactly one top option per chapter, so the best move is already
  * unambiguous in the data — nothing new had to be authored for this. */
 function BossbattleView({
-  chapter, moduleXpReward, onComplete, onAction, reactTo, reportDecision,
-}: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete } & ActionProps & ReactProps & Pick<ReportProps, 'reportDecision'>) {
+  chapter, moduleXpReward, onComplete, onAction, reactTo, reportDecision, reportCheck,
+}: { chapter: BossbattleChapter; moduleXpReward: number; onComplete: Complete }
+  & ActionProps & ReactProps & Pick<ReportProps, 'reportDecision' | 'reportCheck'>) {
   const { height: winH } = useWindowDimensions();
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
@@ -2430,6 +2445,11 @@ function BossbattleView({
     // as a decision they made.
     reportDecision('Boss battle', picked.label);
     reactTo(isRight);
+    // Counted, not just logged. reportDecision records WHICH choice was made (for the report's
+    // decision list); this records whether it was the right one, which is what the score is
+    // made of. Without it the last chapter of 88 of the 99 quests graded the student on screen
+    // and then contributed nothing to the number they saw on the very next screen.
+    reportCheck(chapter.title, isRight);
   };
   // Ported verbatim from finishQuest: bossXP = Math.round(module.xpReward * xpMultiplier).
   //
@@ -2701,8 +2721,9 @@ function PriceisrightView({
 
 /* ───────────────────────── explainback ───────────────────────── */
 function ExplainbackView({
-  chapter, onComplete, onAction, reactTo, reportExplainback,
-}: { chapter: ExplainbackChapter; onComplete: Complete } & ActionProps & ReactProps & Pick<ReportProps, 'reportExplainback'>) {
+  chapter, onComplete, onAction, reactTo, reportExplainback, reportCheck,
+}: { chapter: ExplainbackChapter; onComplete: Complete }
+  & ActionProps & ReactProps & Pick<ReportProps, 'reportExplainback' | 'reportCheck'>) {
   const [text, setText] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const inputRef = useRef<TextInput>(null);
@@ -2717,8 +2738,14 @@ function ExplainbackView({
     inputRef.current?.blur();
     setSubmitted(true);
     const tier = hitKeywords.length >= 2 ? 'great' : hitKeywords.length === 1 ? 'ok' : 'retry';
-    reportExplainback(chapter.title || 'In Your Own Words', tier);
+    const label = chapter.title || 'In Your Own Words';
+    reportExplainback(label, tier);
+    // Same threshold Hammy reacts to on the line below, so the score agrees with what the
+    // student was just told: landing at least one keyword counts, 'retry' does not.
+    // reportExplainback only feeds the advice line and the tier sentence on the report card;
+    // it never contributed to the score.
     reactTo(hitKeywords.length >= 1);
+    reportCheck(label, hitKeywords.length >= 1);
   };
 
   useEffect(() => {

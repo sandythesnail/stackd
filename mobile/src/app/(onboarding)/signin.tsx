@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth, useSignIn } from '@clerk/clerk-expo';
@@ -25,13 +25,18 @@ function ClerkSignIn() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // A signed-in user can still land here via back-navigation — the terminal hop into
-  // (tabs)/home below deliberately uses push, not replace (see its comment), so this
-  // screen is never actually removed from history. Bounce forward immediately instead of
-  // leaving a live, resubmittable Clerk sign-in form on screen for someone already
-  // authenticated.
+  // True from just before setActive until this screen has navigated itself — see the guard.
+  const completing = useRef(false);
+
+  // Bounces a signed-in user off a live, resubmittable sign-in form if they reach it by
+  // back-navigation. Skipped while this screen is completing its own sign-in: setActive()
+  // is what flips isSignedIn, so without the flag this fired at the same moment onSignIn
+  // was already navigating and BOTH ran — two pushes of (tabs)/home, i.e. a duplicate tab
+  // stack per sign-in, which is the same problem results.tsx's continuePress documents.
+  //
+  // replace, not push: a sign-in form is not somewhere to come back to.
   useEffect(() => {
-    if (isSignedIn) router.push('/(tabs)/home');
+    if (isSignedIn && !completing.current) router.replace('/(tabs)/home');
   }, [isSignedIn, router]);
 
   const onSignIn = async () => {
@@ -41,16 +46,16 @@ function ClerkSignIn() {
     try {
       const res = await signIn.create({ identifier: email.trim(), password });
       if (res.status === 'complete') {
+        // Claim the navigation before setActive flips isSignedIn — see the guard above.
+        completing.current = true;
         await setActive({ session: res.createdSessionId });
-        // push, not replace — this screen lives in the (onboarding) nested navigator, and
-        // replace() doesn't reliably cross into a different top-level branch like (tabs)
-        // (see results.tsx's continuePress for the full story of the "route doesn't
-        // exist"/blank-screen crash this causes).
-        router.push('/(tabs)/home');
+        router.replace('/(tabs)/home');
       } else {
         setError('Additional verification needed. Try again or reset your password.');
       }
     } catch (e: unknown) {
+      // Nothing navigated — re-arm the guard.
+      completing.current = false;
       setError(clerkError(e));
     } finally {
       setBusy(false);

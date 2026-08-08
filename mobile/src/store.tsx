@@ -328,6 +328,48 @@ function lessonProgressKey(moduleId: string, lessonIndex: number) {
   return `${moduleId}:${lessonIndex}`;
 }
 
+/** How many part-finished lessons to keep. Generous — nobody has more than a couple genuinely
+ * in flight — but bounded, which is the point. */
+const MAX_SAVED_LESSONS = 12;
+
+/** Splits a lessonProgress key back apart. Module ids contain no colon, and the index is
+ * always the last segment, so the last separator is the real one. */
+function parseLessonProgressKey(key: string): { moduleId: string; lessonIndex: number } | null {
+  const at = key.lastIndexOf(':');
+  if (at < 1) return null;
+  const lessonIndex = Number(key.slice(at + 1));
+  if (!Number.isInteger(lessonIndex) || lessonIndex < 0) return null;
+  return { moduleId: key.slice(0, at), lessonIndex };
+}
+
+/** Drops saves that can never be used again, then caps what's left to the most recent.
+ *
+ * Nothing collected these. A save is written on every chapter advance and cleared only when
+ * the lesson is FINISHED, so every lesson a student starts and wanders away from kept its
+ * save forever — and lessonProgressFor merely ignores a save whose quest has been re-authored
+ * since, it never removes it, so those became permanently unreachable and permanently stored.
+ * Each save carries the lesson's full analytics (every question and check label it recorded):
+ * about 3.4KB on average against real content, 5.2KB at worst, and sampling all 99 lessons
+ * would bank roughly 330KB. That is written to AsyncStorage on every single state change and
+ * uploaded inside `_mobile.lessonProgress` on every debounced Supabase push.
+ *
+ * Validity first, recency second — an unusable save is dropped however new it is, so a stale
+ * entry can never occupy one of the retained slots. */
+function pruneLessonProgress(saves: Record<string, SavedLessonProgress>): Record<string, SavedLessonProgress> {
+  const usable = Object.entries(saves).filter(([key, save]) => {
+    const parsed = parseLessonProgressKey(key);
+    if (!parsed) return false;
+    // The same validity test lessonProgressFor applies on read — applied here so the answer
+    // is acted on rather than just returned.
+    const quest = moduleContentById(parsed.moduleId)?.quests[parsed.lessonIndex];
+    if (!quest || quest.id !== save.questId || quest.chapters.length !== save.chapterCount) return false;
+    return save.chapterIdx >= 0 && save.chapterIdx < quest.chapters.length;
+  });
+  if (usable.length <= MAX_SAVED_LESSONS) return Object.fromEntries(usable);
+  usable.sort((a, b) => (b[1].savedAt ?? 0) - (a[1].savedAt ?? 0));
+  return Object.fromEntries(usable.slice(0, MAX_SAVED_LESSONS));
+}
+
 /** The main quests' real positions in `lessons`/`quests` — NOT 0..count-1.
  *
  * Everything that stores or navigates to a lesson (moduleProgress, quest.tsx's lessonIndex
@@ -549,9 +591,18 @@ type Ctx = {
   /** Persists a Budget Calculator edit, same as the website calling saveState() after every
    * input change (see Tools.tsx). Accepts either a full replacement plan or an updater. */
   setBudgetPlan: (next: BudgetPlan | ((prev: BudgetPlan) => BudgetPlan)) => void;
-  /** Achievements newly unlocked since the last dismissal — drives the global unlock toast. */
+  /** Achievements newly unlocked since the last dismissal — drives the global unlock toast.
+   * Can genuinely hold several at once (see dismissNewAchievement). */
   newAchievements: () => AchievementView[];
-  dismissNewAchievements: () => void;
+  /** Drops ONE badge from the queue, so the toast can show them in turn.
+   *
+   * The toast only ever rendered queue[0] and then cleared the entire array, which silently
+   * swallowed every other badge unlocked in the same pass — and simultaneous unlocks aren't
+   * an edge case here, they're guaranteed at the biggest moments: `grandmaster` requires all
+   * 19 other earnable badges, so it can only ever fire alongside the last of them, and
+   * mastering the 11th module unlocks that module's badge and `stackd_star` together. The
+   * rewards were paid either way; the player just never heard about them. */
+  dismissNewAchievement: (id: string) => void;
   /** Ported from the website's Settings reset button: wipes local state back to defaults. */
   resetProgress: () => void;
   /** A different account signed in on this device than the one whose snapshot is cached
@@ -694,6 +745,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             // Migrates legacy numeric counts (and strips the old fake demo seeds) into
             // per-lesson index arrays — see normalizeModuleProgress/LEGACY_DEMO_SEEDS.
             moduleProgress: normalizeModuleProgress(parsed.moduleProgress),
+            // Collects whatever the un-pruned versions left behind — a device that has been
+            // in use since before pruning existed can be carrying saves for lessons finished
+            // long ago or for quests that have since been re-authored. See pruneLessonProgress.
+            lessonProgress: pruneLessonProgress(parsed.lessonProgress ?? {}),
           };
         } catch {
           // corrupt/incompatible saved state — fall back to defaults already set
@@ -1044,7 +1099,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       saveLessonProgress: (moduleId, lessonIndex, progress) => {
         setState((s) => ({
           ...s,
-          lessonProgress: { ...s.lessonProgress, [lessonProgressKey(moduleId, lessonIndex)]: progress },
+          // Pruned on write rather than on a timer or at boot: this is the only place the map
+          // grows, so it's the one place that can keep it bounded. The lesson being saved
+          // right now carries the newest savedAt, so it always survives the cap.
+          lessonProgress: pruneLessonProgress({
+            ...s.lessonProgress,
+            [lessonProgressKey(moduleId, lessonIndex)]: progress,
+          }),
         }));
       },
 
@@ -1129,8 +1190,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setBudgetPlan: (next) => setState((s) => ({
         ...s, budgetPlan: typeof next === 'function' ? next(s.budgetPlan) : next,
       })),
-      newAchievements: () => ACHIEVEMENTS.filter((a) => newAchievementIds.includes(a.id)).map((a) => ({ ...a, earned: true })),
-      dismissNewAchievements: () => setNewAchievementIds([]),
+      // Ordered by newAchievementIds, not by catalog position, so badges are announced in the
+      // order they were actually unlocked — grandmaster last, after the badge that earned it.
+      newAchievements: () => newAchievementIds
+        .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
+        .filter((a): a is Achievement => !!a)
+        .map((a) => ({ ...a, earned: true })),
+      dismissNewAchievement: (id) => setNewAchievementIds((ids) => ids.filter((x) => x !== id)),
       resetProgress: () => {
         AsyncStorage.removeItem(STORAGE_KEY);
         // Stamped fresh so the ordinary debounced SupabaseSync push that follows this
