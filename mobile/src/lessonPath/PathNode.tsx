@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, View, StyleSheet } from 'react-native';
 import Reanimated, {
   useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSpring, cancelAnimation, Easing,
@@ -55,6 +55,11 @@ export function PathNode({
 }) {
   const [focused, setFocused] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [pressing, setPressing] = useState(false);
+  /** True while THIS node's preview is open because of a touch-and-hold, so press-out knows
+   * whether it has a card of its own to close. Without it, releasing an ordinary tap would
+   * clear a card that a mouse hovering the same node is still entitled to. */
+  const heldPeek = useRef(false);
   const press = useSharedValue(0);
   const pulse = useSharedValue(0);
   const ripple = useSharedValue(0);
@@ -98,7 +103,10 @@ export function PathNode({
   // of the path is that nothing here is dimmed or locked, so "the cursor is on this one" has
   // to be sayable about a completed node and a far-ahead one just as much as the recommended
   // one. Short and eased-out: a hover cue that takes its time reads as lag, not as feedback.
-  const lit = hovered || focused;
+  // Touch counts. A finger can't hover, so without pressing in here a phone got no feedback
+  // from a node at all until the sheet opened — which is exactly what "I don't see the
+  // hovering" looks like on a device that has no cursor to hover with.
+  const lit = hovered || focused || pressing;
   useEffect(() => {
     lift.value = withTiming(lit ? 1 : 0, {
       duration: reducedMotion ? 0 : 150,
@@ -128,6 +136,12 @@ export function PathNode({
     setHovered(on);
     if (on) onHoverIn?.(); else onHoverOut?.();
   };
+  // Unmounting mid-peek (paging the carousel while holding a node) would otherwise leave the
+  // section pointing at a card whose node is gone.
+  useEffect(() => () => { if (heldPeek.current) { heldPeek.current = false; onHoverOut?.(); } },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []);
+
   const byPointer = (on: boolean) => (e: { nativeEvent: { pointerType?: string } }) => {
     // A touch "enter" fires on finger-down and would flash the card open under the thumb for
     // the length of a tap, on the way to the preview sheet that tap is already opening.
@@ -184,8 +198,18 @@ export function PathNode({
 
       <Pressable
         onPress={onPress}
-        onPressIn={() => { press.value = withTiming(1, { duration: 80 }); }}
-        onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 400 }); }}
+        onPressIn={() => { press.value = withTiming(1, { duration: 80 }); setPressing(true); }}
+        onPressOut={() => {
+          press.value = withSpring(0, { damping: 18, stiffness: 400 });
+          setPressing(false);
+          if (heldPeek.current) { heldPeek.current = false; onHoverOut?.(); }
+        }}
+        // The touch equivalent of hovering: hold a diamond to peek at what it is, release to
+        // put it away. react-native-web sets _longPressDispatched when this fires and skips
+        // onPress on release (PressResponder.js), so a peek doesn't also open the sheet —
+        // which is what makes it a peek rather than a slower tap.
+        onLongPress={() => { heldPeek.current = true; onHoverIn?.(); }}
+        delayLongPress={350}
         onFocus={() => { setFocused(true); onHoverIn?.(); }}
         onBlur={() => { setFocused(false); onHoverOut?.(); }}
         onHoverIn={() => setHover(true)}
@@ -196,7 +220,7 @@ export function PathNode({
         accessibilityRole="button"
         // Announces title AND state, so the path is navigable without seeing it.
         accessibilityLabel={`${title}. ${STATE_WORDS[state]}.`}
-        accessibilityHint="Opens this lesson"
+        accessibilityHint="Opens this lesson. Press and hold to preview what it covers."
         accessibilityState={{ selected: isCurrent }}
         style={styles.hit}
       >
