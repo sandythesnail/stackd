@@ -107,6 +107,34 @@ export function PathNode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lit, reducedMotion]);
 
+  /* Two independent routes into the same hover state, because one of them can't be relied on
+   * alone.
+   *
+   * onHoverIn/onHoverOut go through react-native-web's useHover, which binds enter/leave and
+   * then discards any event it classifies as touch:
+   *
+   *     if (target != null && getPointerType(e) !== 'touch') { ... }   // useHover/index.js
+   *
+   * On a hybrid machine — a touch-screen laptop, a Surface, a tablet with a trackpad — one
+   * touch anywhere can leave that classification stuck, and every subsequent real mouse
+   * movement over a node is dropped along with it. The W3C pointer events fire independently
+   * of that module and carry the pointer type on the event itself, so the guard below is read
+   * from the actual pointer rather than inherited from whatever touched the screen last.
+   *
+   * Both may fire for the same mouse; every path is idempotent (setHovered to a fixed value,
+   * and SectionView's onHoverOut only clears the index if it's still its own), so a doubled
+   * call costs a no-op re-render and nothing else. */
+  const setHover = (on: boolean) => {
+    setHovered(on);
+    if (on) onHoverIn?.(); else onHoverOut?.();
+  };
+  const byPointer = (on: boolean) => (e: { nativeEvent: { pointerType?: string } }) => {
+    // A touch "enter" fires on finger-down and would flash the card open under the thumb for
+    // the length of a tap, on the way to the preview sheet that tap is already opening.
+    if (e.nativeEvent.pointerType === 'touch') return;
+    setHover(on);
+  };
+
   const bodyStyle = useAnimatedStyle(() => ({
     transform: [
       { rotate: '45deg' },
@@ -160,8 +188,10 @@ export function PathNode({
         onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 400 }); }}
         onFocus={() => { setFocused(true); onHoverIn?.(); }}
         onBlur={() => { setFocused(false); onHoverOut?.(); }}
-        onHoverIn={() => { setHovered(true); onHoverIn?.(); }}
-        onHoverOut={() => { setHovered(false); onHoverOut?.(); }}
+        onHoverIn={() => setHover(true)}
+        onHoverOut={() => setHover(false)}
+        onPointerEnter={byPointer(true)}
+        onPointerLeave={byPointer(false)}
         focusable
         accessibilityRole="button"
         // Announces title AND state, so the path is navigable without seeing it.

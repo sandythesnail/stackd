@@ -23,6 +23,26 @@
   function isMobileUA() {
     return /Mobi|Android|iPhone|iPod|iPad|Windows Phone|BlackBerry/i.test(navigator.userAgent || '');
   }
+  // Deliberate desktop visit to the app: `/m/?desktop=1` pins you there for the rest of the
+  // browser tab, and `?desktop=0` releases it.
+  //
+  // The viewport rule below sends any genuine wide desktop back to the vanilla site, which
+  // means the parts of the app only a mouse can reach — the lesson path's hover preview and
+  // its lit-up node — cannot be seen or tested without dragging the window under 768px, and
+  // phone emulation is no substitute because an emulated touch pointer produces no hover
+  // events at all. This is the opt-out. Nothing changes for anyone who doesn't ask for it:
+  // no param, no flag, same redirect as before.
+  var PIN_KEY = 'stackd:pin-app';
+  function pinned() {
+    try {
+      if (/[?&]desktop=1(&|$)/.test(location.search)) sessionStorage.setItem(PIN_KEY, '1');
+      else if (/[?&]desktop=0(&|$)/.test(location.search)) sessionStorage.removeItem(PIN_KEY);
+      return sessionStorage.getItem(PIN_KEY) === '1';
+    } catch (e) {
+      // Private-mode / blocked storage — fall back to the plain viewport rule.
+      return false;
+    }
+  }
   // Don't yank the user out of an active lesson attempt via a resize-triggered redirect —
   // mid-quest session state (the current question, chosen answers, etc.) is intentionally
   // NOT persisted (see app.js's saveState — only questProgress, keyed by chapter, survives
@@ -38,13 +58,18 @@
 
   function apply() {
     try {
+      // Read first, and on every call: the redirect to /m/ below drops the query string, so
+      // the flag has to be recorded before we can be sent somewhere that no longer carries it.
+      var isPinned = pinned();
       if (isAuthPage()) return;
       if (midQuest()) return;
       if (!underApp()) {
         // On the vanilla site: a phone or a narrow viewport belongs in the app.
         if (isNarrow() || isMobileUA()) location.replace('/m/');
       } else {
-        // In the app: only a genuine wide desktop (not a phone in landscape) goes back.
+        // In the app: only a genuine wide desktop (not a phone in landscape) goes back —
+        // and not even then if this tab asked to stay.
+        if (isPinned) return;
         if (!isNarrow() && !isMobileUA()) location.replace('/');
       }
     } catch (e) {
