@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, View, StyleSheet } from 'react-native';
+import { Pressable, View, StyleSheet, type PressableProps } from 'react-native';
 import Reanimated, {
   useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSpring, cancelAnimation, Easing,
 } from 'react-native-reanimated';
@@ -142,12 +142,29 @@ export function PathNode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []);
 
-  const byPointer = (on: boolean) => (e: { nativeEvent: { pointerType?: string } }) => {
-    // A touch "enter" fires on finger-down and would flash the card open under the thumb for
-    // the length of a tap, on the way to the preview sheet that tap is already opening.
-    if (e.nativeEvent.pointerType === 'touch') return;
-    setHover(on);
-  };
+  /* Deliberately does NOT filter on pointerType.
+   *
+   * It used to drop anything typed 'touch', on the reasoning that a finger can't hover and a
+   * touch "enter" would only flash the card open on the way to the sheet. That reasoning
+   * throws away the one case this whole affordance exists for: a real cursor whose events are
+   * being reported as touch. Chrome's device toolbar does this (it's what
+   * Emulation.setEmitTouchEventsForMouse means), and so does every touchscreen laptop whose
+   * pointer classification has latched. In those environments the user has a cursor, is
+   * hovering with it, and got nothing — which is precisely the bug this is here to fix.
+   *
+   * The cost of letting touch through is that a finger-down on a phone shows the card a beat
+   * before the sheet covers it. That is a far smaller problem than a cursor that does nothing,
+   * and the long-press peek below still exists for reading the card without opening anything. */
+  const byPointer = (on: boolean) => () => setHover(on);
+
+  /** react-native-web forwards these straight to the DOM node (see its forwardedProps list),
+   * but they aren't in React Native's own PressableProps because they mean nothing on iOS or
+   * Android, where they're simply dropped. Hence the cast: the web build gets real
+   * mouseenter/mouseleave listeners, native builds get two ignored props. */
+  const legacyMouseProps = {
+    onMouseEnter: byPointer(true),
+    onMouseLeave: byPointer(false),
+  } as unknown as Partial<PressableProps>;
 
   const bodyStyle = useAnimatedStyle(() => ({
     transform: [
@@ -216,6 +233,10 @@ export function PathNode({
         onHoverOut={() => setHover(false)}
         onPointerEnter={byPointer(true)}
         onPointerLeave={byPointer(false)}
+        // Third route, for a browser that fires the legacy mouse events but not the pointer
+        // ones. Costs nothing where pointer events work (both land on the same idempotent
+        // setter) and is the only thing that fires where they don't.
+        {...legacyMouseProps}
         focusable
         accessibilityRole="button"
         // Announces title AND state, so the path is navigable without seeing it.
