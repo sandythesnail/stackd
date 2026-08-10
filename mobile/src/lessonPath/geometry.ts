@@ -83,11 +83,19 @@ export function segmentSamples(pts: Pt[], i: number, samples = 24): Pt[] {
 
 /** An SVG `d` that runs smoothly through every point (Catmull-Rom converted to cubic
  * béziers). Drawing straight line segments between the nodes would defeat the sine —
- * the trail has to curve as much as the nodes do or the whole thing reads as a zigzag. */
-export function smoothPath(pts: Pt[]): string {
-  if (pts.length < 2) return '';
+ * the trail has to curve as much as the nodes do or the whole thing reads as a zigzag.
+ *
+ * `through` stops the pen after that many points while still computing every control point
+ * from the FULL array — which is the only way to draw a shorter stroke that lies exactly on
+ * top of a longer one. Slicing the array first doesn't work: a Catmull-Rom tangent depends on
+ * the point AFTER the segment's end, so a slice makes the last segment fall back to `p2` and
+ * bend differently from the same segment in the full path. That was visible on this screen as
+ * the green walked-so-far stroke peeling off the grey trail as it approached its head. */
+export function smoothPath(pts: Pt[], through = pts.length): string {
+  const end = Math.min(through, pts.length);
+  if (pts.length < 2 || end < 2) return '';
   let d = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
-  for (let i = 0; i < pts.length - 1; i++) {
+  for (let i = 0; i < end - 1; i++) {
     const p0 = pts[i - 1] ?? pts[i];
     const p1 = pts[i];
     const p2 = pts[i + 1];

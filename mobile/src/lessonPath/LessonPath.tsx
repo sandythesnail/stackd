@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { View, Pressable, Modal, StyleSheet } from 'react-native';
 import Svg, { Path as SvgPath, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import Reanimated, {
-  useSharedValue, useAnimatedStyle, withRepeat, withTiming, cancelAnimation, interpolate,
+  useSharedValue, useAnimatedStyle, withRepeat, withTiming, cancelAnimation, interpolate, Easing,
   FadeInDown, SlideInDown, ZoomIn,
 } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
@@ -47,6 +47,22 @@ const STATE_LABEL: Record<NodeState, string> = {
   available: 'NOT STARTED',
   optional: 'OPTIONAL EXTRA',
 };
+
+/** The hover card's much shorter wording, and the dot colour that carries it.
+ *
+ * Deliberately not STATE_LABEL: that set is written for the preview sheet's pill, where a
+ * four-syllable all-caps phrase has a whole sheet to sit in. On a card that floats over the
+ * path while the cursor is moving, the same words read as a paragraph. Two or three quiet
+ * words plus a coloured dot say the same thing at a glance. */
+const STATE_TIP: Record<NodeState, { label: string; tone: string }> = {
+  completed: { label: 'Completed', tone: colors.greenSoft },
+  current: { label: 'Up next', tone: colors.green },
+  available: { label: 'Not started', tone: colors.muted5 },
+  optional: { label: 'Optional', tone: colors.reward },
+};
+
+/** Hover-card width. Its height is measured rather than assumed — see HoverTip. */
+const TIP_W = 194;
 
 type PathNodeData = {
   key: string; moduleId: string; lessonIndex: number; title: string; state: NodeState;
@@ -266,17 +282,33 @@ function SectionView({
   const pts = snakePositions(nodes.length, centerX, (i) => (nodes[i]?.isLifeTask ? 1.5 : 1));
   const h = pathHeight(nodes.length);
   const hasSpur = !!nodes[lastIdx]?.isLifeTask && pts.length >= 2;
-  const mainD = smoothPath(hasSpur ? pts.slice(0, -1) : pts);
-  const spurD = hasSpur ? smoothPath(pts.slice(-2)) : '';
+  // Two separate strokes, so two separate point sets — and everything drawn ON either stroke
+  // (the walked-so-far overlay, the travelling dots) is derived from the SAME set as the
+  // stroke it has to lie on. Mixing them is what used to put the dots beside the trail rather
+  // than on it: a Catmull-Rom control point depends on its neighbours, so the identical pair
+  // of nodes bends differently depending on which array it was taken from.
+  const mainPts = hasSpur ? pts.slice(0, -1) : pts;
+  const spurPts = hasSpur ? pts.slice(-2) : [];
+  const mainD = smoothPath(mainPts);
+  const spurD = hasSpur ? smoothPath(spurPts) : '';
 
   // The stretch already walked, drawn in green over the grey — progress becomes the shape of
   // the path rather than a number in the header, which is the reason to draw a path at all.
   const firstUndone = nodes.findIndex((n) => n.state !== 'completed');
   const walked = firstUndone === -1 ? nodes.length : firstUndone;
-  const walkedD = walked >= 2 ? smoothPath(pts.slice(0, walked)) : '';
+  const walkedD = smoothPath(mainPts, walked);
+  // The spur is its own stroke and so needs its own "done" version — the main overlay stops
+  // at the last main node by construction now.
+  const spurWalked = hasSpur && nodes[lastIdx].state === 'completed';
 
   const currentIdx = nodes.findIndex((n) => n.state === 'current');
-  const cometSamples = currentIdx > 0 ? segmentSamples(pts, currentIdx - 1) : [];
+  // The dots run the last stretch of trail into the recommended node, so they follow whichever
+  // stroke that stretch actually is — the dashed spur when the sub-quest is what's recommended.
+  const cometSamples = currentIdx <= 0
+    ? []
+    : hasSpur && currentIdx === lastIdx
+      ? segmentSamples(spurPts, 0)
+      : segmentSamples(mainPts, currentIdx - 1);
 
   /** Which node the onboarding tour's "Pick your first lesson" step spotlights.
    *
@@ -363,7 +395,11 @@ function SectionView({
             <SvgPath d={walkedD} stroke={`url(#walked-${mod.id})`} strokeWidth={9} strokeLinecap="round" fill="none" />
           ) : null}
           {spurD ? (
-            <SvgPath d={spurD} stroke={colors.borderOpt} strokeWidth={6} strokeLinecap="round" strokeDasharray="2 12" fill="none" />
+            <SvgPath
+              d={spurD}
+              stroke={spurWalked ? colors.greenSoft : colors.borderOpt}
+              strokeWidth={6} strokeLinecap="round" strokeDasharray="2 12" fill="none"
+            />
           ) : null}
         </Svg>
 
@@ -409,27 +445,9 @@ function SectionView({
           );
         })}
 
-        {/* Hover/focus card. Clamped to the column and non-interactive, so it can never eat
-            the tap it is describing. Rendered last so it draws over its neighbours. */}
+        {/* Hover/focus card. Rendered last so it draws over its neighbours. */}
         {hovered !== null && nodes[hovered] ? (
-          <View
-            pointerEvents="none"
-            style={[
-              styles.tip,
-              {
-                top: Math.max(0, pts[hovered].y - NODE_BOX / 2 - 62),
-                left: Math.min(Math.max(6, pts[hovered].x - 110), width - 226),
-              },
-            ]}
-          >
-            <T weight="extra" size={9} color={colors.muted5} style={{ letterSpacing: 0.7 }}>
-              {STATE_LABEL[nodes[hovered].state]}
-            </T>
-            <T weight="displayMed" size={13} color={colors.ink} numberOfLines={2}>{nodes[hovered].title}</T>
-            <T weight="body" size={11} color={colors.muted2} numberOfLines={3} style={{ marginTop: 2 }}>
-              {nodes[hovered].hook}
-            </T>
-          </View>
+          <HoverTip node={nodes[hovered]} at={pts[hovered]} columnWidth={width} columnHeight={h} />
         ) : null}
       </View>
     </View>
@@ -448,6 +466,57 @@ function PagerButton({ dir, label, onPress }: { dir: 'left' | 'right'; label: st
     >
       <Feather name={dir === 'left' ? 'chevron-left' : 'chevron-right'} size={20} color={colors.muted2} />
     </Pressable>
+  );
+}
+
+/** What a diamond is, while the cursor is on it.
+ *
+ * A desktop affordance only (react-native-web maps onHoverIn onto real mouse events; touch
+ * never fires them), so it is allowed to be small and quiet — the tap route into the same
+ * lesson opens the full preview sheet with the whole scenario in it. This card answers one
+ * question, "what is this one?", in one line plus a state word, and that's the entire brief:
+ * a three-line paragraph chasing the pointer around the path is noise, not a preview.
+ *
+ * Non-interactive, so it can never eat the tap it is describing. It sits above the node when
+ * there's room and flips below when there isn't (the top row of every path), measuring its
+ * own height rather than assuming one — the card is one or two title lines depending on the
+ * lesson, and a fixed offset put the two-line version over the node it belonged to. */
+function HoverTip({
+  node, at, columnWidth, columnHeight,
+}: {
+  node: PathNodeData;
+  at: { x: number; y: number };
+  columnWidth: number;
+  columnHeight: number;
+}) {
+  const [h, setH] = useState(48);
+  const tip = STATE_TIP[node.state];
+  const above = at.y - NODE_BOX / 2 - h - 9;
+  const below = at.y + NODE_BOX / 2 + 9;
+  // Prefer above; drop below only when that would clip off the top of the column. The final
+  // clamp keeps the flipped card inside the column too, for a path short enough that neither
+  // side fits outright.
+  const top = above >= 0 ? above : Math.min(below, Math.max(0, columnHeight - h));
+
+  return (
+    <View
+      pointerEvents="none"
+      onLayout={(e) => setH(e.nativeEvent.layout.height)}
+      style={[
+        styles.tip,
+        { top, left: Math.max(6, Math.min(at.x - TIP_W / 2, columnWidth - TIP_W - 6)) },
+      ]}
+    >
+      <View style={styles.tipState}>
+        <View style={[styles.tipDot, { backgroundColor: tip.tone }]} />
+        <T weight="extra" size={9.5} color={colors.muted4} style={{ letterSpacing: 0.6 }}>
+          {tip.label.toUpperCase()}
+        </T>
+      </View>
+      <T weight="displayMed" size={13} color={colors.ink} numberOfLines={2} style={{ lineHeight: 17 }}>
+        {node.title}
+      </T>
+    </View>
   );
 }
 
@@ -515,6 +584,31 @@ function PreviewSheet({
 }) {
   const { activeTargetId, advanceIfWaitingOn } = useOnboardingTour();
   const { lessonProgressFor } = useStore();
+
+  // Computed up here, above the early return, because the pulse below is a hook. The tour's
+  // final step only ever lands on the recommended node's sheet — that's the node the previous
+  // step had the user tap, and the only one whose CTA reads "Continue lesson".
+  const locked = node?.state === 'current' && activeTargetId === 'tour-lesson-start';
+
+  // A slow breath on the button the step is telling them to press. The yellow ring says which
+  // one; the movement is what makes the eye go there first, which is the whole job on a sheet
+  // where the other two options have just been greyed out.
+  const pulse = useSharedValue(0);
+  useEffect(() => {
+    if (!locked || reducedMotion) {
+      cancelAnimation(pulse);
+      pulse.value = 0;
+      return;
+    }
+    pulse.value = 0;
+    pulse.value = withRepeat(
+      withTiming(1, { duration: 950, easing: Easing.inOut(Easing.quad) }), -1, true,
+    );
+    return () => cancelAnimation(pulse);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locked, reducedMotion]);
+  const ctaPulse = useAnimatedStyle(() => ({ transform: [{ scale: 1 + pulse.value * 0.028 }] }));
+
   if (!node) return null;
   const done = node.state === 'completed';
   /* Saving a part-finished lesson is worth nothing if the player can't see that it happened.
@@ -527,16 +621,24 @@ function PreviewSheet({
     ? 'Resume lesson'
     : done ? 'Do it again' : node.state === 'current' ? 'Continue lesson' : 'Start lesson';
   const tone = node.state === 'current' || saved ? colors.green : done ? colors.greenDark : colors.pink;
-  // The tour's final step follows the user in here and points at this button (see
-  // OnboardingTour.tsx). Only ever the recommended node's sheet: that's the one the previous
-  // step sent them to, and the only one whose CTA reads "Continue lesson".
-  const isTourTarget = node.state === 'current';
-  const tourHighlighted = isTourTarget && activeTargetId === 'tour-lesson-start';
+  // While the tour is pointing at the CTA (`locked`, above), that button is the only way out
+  // of this sheet. The step is requiresRealClick and draws no Next of its own, so every other
+  // exit — the scrim, Android back, "Not now", "Start over" — was a way to leave the one
+  // instruction on screen unperformed, and "Tap Continue lesson and you're in" is a poor thing
+  // to say next to three ways of not doing that. The tour's own "Skip tour" link, right above
+  // the button in <TourCallout>, is the deliberate escape hatch: this locks the step, it
+  // doesn't trap the user, and everything goes back to normal the moment the tour ends.
+  const closeIfAllowed = () => { if (!locked) onClose(); };
 
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible transparent animationType="fade" onRequestClose={closeIfAllowed}>
       <View style={styles.sheetRoot}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close preview" />
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={closeIfAllowed}
+          accessibilityElementsHidden={locked}
+          accessibilityLabel="Close preview"
+        />
         <Reanimated.View
           entering={reducedMotion ? undefined : SlideInDown.duration(280)}
           style={styles.previewSheet}
@@ -573,25 +675,42 @@ function PreviewSheet({
           {/* No TourTarget wrapper: an inSheet step is never measured for a spotlight (the
               sheet draws its own scrim and callout), so the button just needs the ring and
               the advance call. */}
-          <Pressable
-            onPress={() => {
-              // Safe unconditionally — a no-op unless the tour is waiting on this button.
-              advanceIfWaitingOn('tour-lesson-start');
-              onStart();
-            }}
-            accessibilityRole="button"
-            style={[styles.previewCta, { backgroundColor: tone }, tourHighlighted && styles.previewCtaTour]}
-          >
-            <T weight="extra" size={14.5} color={colors.white}>{cta}</T>
-          </Pressable>
+          <Reanimated.View style={ctaPulse}>
+            <Pressable
+              onPress={() => {
+                // Safe unconditionally — a no-op unless the tour is waiting on this button.
+                advanceIfWaitingOn('tour-lesson-start');
+                onStart();
+              }}
+              accessibilityRole="button"
+              style={[styles.previewCta, { backgroundColor: tone }, locked && styles.previewCtaTour]}
+            >
+              <T weight="extra" size={14.5} color={colors.white}>{cta}</T>
+            </Pressable>
+          </Reanimated.View>
           {/* Offered, never forced: resuming is what almost everyone wants, so starting over
               is a quiet second option rather than a choice the sheet makes you make. */}
           {saved ? (
-            <Pressable onPress={onRestart} accessibilityRole="button" style={styles.previewClose}>
+            <Pressable
+              onPress={onRestart}
+              disabled={locked}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: locked }}
+              style={[styles.previewClose, locked && styles.previewCloseLocked]}
+            >
               <T weight="extra" size={13} color={colors.muted2}>Start over from the beginning</T>
             </Pressable>
           ) : null}
-          <Pressable onPress={onClose} accessibilityRole="button" style={styles.previewClose}>
+          {/* Left visible rather than removed while locked. A button that vanishes mid-tour
+              reads as the sheet changing shape under you; one that's plainly greyed out reads
+              as "not this one, the green one". */}
+          <Pressable
+            onPress={onClose}
+            disabled={locked}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: locked }}
+            style={[styles.previewClose, locked && styles.previewCloseLocked]}
+          >
             <T weight="extra" size={13} color={colors.muted2}>Not now</T>
           </Pressable>
         </Reanimated.View>
@@ -626,13 +745,17 @@ const styles = StyleSheet.create({
   pager: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   position: { textAlign: 'center', letterSpacing: 1, marginBottom: 6 },
 
+  // A lighter border and a softer, shorter shadow than the old card: at this size the heavy
+  // treatment read as a second card on the page rather than a label on a node.
   tip: {
-    position: 'absolute', width: 220, backgroundColor: colors.white,
-    borderWidth: 1.5, borderColor: colors.borderOpt, borderRadius: 14,
-    paddingVertical: 9, paddingHorizontal: 12, gap: 1,
-    shadowColor: '#2C3E2D', shadowOpacity: 0.16, shadowRadius: 12,
-    shadowOffset: { width: 0, height: 5 }, elevation: 6,
+    position: 'absolute', width: TIP_W, backgroundColor: colors.white,
+    borderWidth: 1, borderColor: colors.border, borderRadius: 12,
+    paddingVertical: 8, paddingHorizontal: 11, gap: 3,
+    shadowColor: '#2C3E2D', shadowOpacity: 0.12, shadowRadius: 9,
+    shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
+  tipState: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  tipDot: { width: 6, height: 6, borderRadius: 3 },
 
   comet: {
     position: 'absolute', top: 0, left: 0, width: 10, height: 10, borderRadius: 5,
@@ -661,4 +784,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 }, elevation: 6,
   },
   previewClose: { marginTop: 4, paddingVertical: 11, alignItems: 'center' },
+  previewCloseLocked: { opacity: 0.32 },
 });

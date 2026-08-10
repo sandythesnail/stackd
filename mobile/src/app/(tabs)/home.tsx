@@ -20,6 +20,14 @@ import { SURVEY_TRACKS } from '@/survey';
 import { todaysHammyMood, hasModuleActivityToday } from '@/hammyMood';
 import { MOOD_FACES } from '@/hammyFaces';
 
+/** How long to let the tour's scroll-into-view animation run before declaring it landed and
+ * telling the tour to place its spotlight. Native's animated scrollTo is ~300ms and web's
+ * smooth scroll is in the same range; anything still moving after this is picked up by the
+ * per-frame remeasure, which resumes at the same moment. Must stay under the tour's own
+ * SETTLE_GRACE_MS (see OnboardingTour.tsx) — that's the "target never appeared" fallback, and
+ * this should always get there first. */
+const SCROLL_LAND_MS = 420;
+
 /** Morning/afternoon/evening by local device time — this used to always say "Good
  * afternoon" regardless of when the user actually opened the app. */
 function timeOfDayGreeting() {
@@ -97,7 +105,24 @@ export default function Home() {
   // scrolling moves the node, onTourScroll remeasures, activeRect changes, and the effect
   // runs again — a feedback loop that fights the animation it just started.
   const didScrollToNode = useRef(false);
-  useEffect(() => { if (!tourNeedsPath) didScrollToNode.current = false; }, [tourNeedsPath]);
+  // True for the length of the programmatic scroll only. See onScroll.
+  const scrollingToNode = useRef(false);
+  // Held in a ref rather than returned from the effect below as a cleanup. The effect's deps
+  // include activeRect, which changes while the scroll is in flight (the provider measures
+  // again at 200ms), so a cleanup-owned timer was cancelled by the very re-run that the latch
+  // then made a no-op — the "scroll has landed" callback simply never fired, and the step only
+  // appeared when the provider's 600ms grace period gave up on it.
+  const landTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearLandTimer = () => {
+    if (landTimer.current) { clearTimeout(landTimer.current); landTimer.current = null; }
+  };
+  useEffect(() => clearLandTimer, []);
+  useEffect(() => {
+    if (tourNeedsPath) return;
+    didScrollToNode.current = false;
+    scrollingToNode.current = false;
+    clearLandTimer();
+  }, [tourNeedsPath]);
   useEffect(() => {
     if (!tourNeedsPath || didScrollToNode.current) return;
     // Nothing measured yet — the node hasn't mounted or laid out. The provider re-measures on
@@ -107,26 +132,36 @@ export default function Home() {
     const aimFor = winH * 0.38;
     const delta = activeRect.y - aimFor;
     // Already comfortably placed (a fresh account's node 1 usually is) — don't jolt the page
-    // for a few pixels.
-    if (Math.abs(delta) < 24) return;
+    // for a few pixels. Still has to report in: the tour is holding its spotlight back until
+    // it hears that this screen has finished moving, and "it didn't need to move" is that.
+    if (Math.abs(delta) < 24) { remeasureActive(); return; }
+    scrollingToNode.current = true;
     scrollRef.current?.scrollTo({ y: Math.max(0, scrollYRef.current + delta), animated: true });
     // Backstop for the onScroll tracking below: momentum/animated scrolls don't always emit
     // a final event exactly at rest, and if the path was already in view the scroll is a
-    // no-op that emits nothing at all.
-    const t = setTimeout(remeasureActive, 420);
-    return () => clearTimeout(t);
+    // no-op that emits nothing at all. Comfortably inside the provider's own grace period, so
+    // this is what reveals the step rather than the timeout that exists for a missing target.
+    landTimer.current = setTimeout(() => {
+      landTimer.current = null;
+      scrollingToNode.current = false;
+      remeasureActive();
+    }, SCROLL_LAND_MS);
   }, [tourNeedsPath, activeRect, winH, remeasureActive]);
 
   // Re-measure on every scroll frame while that step is live, so the spotlight hole travels
-  // WITH the node instead of staying where the node was when the step opened. Without this
-  // the cutout sat over whatever content happened to slide under it for the length of the
-  // scroll, which was the most obvious glitch in this step. Attached only during that step,
-  // so ordinary scrolling costs nothing. The offset itself is recorded on every scroll,
-  // tour or not, because the scroll-to-node effect above needs to know where the scroller
-  // already is before it can scroll to an absolute position.
+  // WITH the node when the USER scrolls — otherwise the cutout sits over whatever content
+  // happens to slide under it. Attached only during that step, so ordinary scrolling costs
+  // nothing.
+  //
+  // Deliberately NOT during our own scroll-into-view above. A remeasure sets state on the
+  // tour provider, whose context value every consumer re-renders from — the whole lesson path
+  // and its nine animated nodes included — so doing it sixty times a second was making the
+  // animation it was trying to follow stutter. Nothing needs following there anyway: the
+  // provider holds the spotlight back for the length of that scroll and lands it once, at the
+  // end, from the landTimer above.
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     scrollYRef.current = e.nativeEvent.contentOffset.y;
-    if (tourNeedsPath) remeasureActive();
+    if (tourNeedsPath && !scrollingToNode.current) remeasureActive();
   };
 
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);

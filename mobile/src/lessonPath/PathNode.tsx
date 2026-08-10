@@ -54,9 +54,11 @@ export function PathNode({
   onHoverOut?: () => void;
 }) {
   const [focused, setFocused] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const press = useSharedValue(0);
   const pulse = useSharedValue(0);
   const ripple = useSharedValue(0);
+  const lift = useSharedValue(0);
 
   useEffect(() => {
     if (state !== 'current' || reducedMotion) {
@@ -92,12 +94,29 @@ export function PathNode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, reducedMotion]);
 
+  // Pointer-over (and keyboard-focus) lift. Every node gets it, in its own colour — the point
+  // of the path is that nothing here is dimmed or locked, so "the cursor is on this one" has
+  // to be sayable about a completed node and a far-ahead one just as much as the recommended
+  // one. Short and eased-out: a hover cue that takes its time reads as lag, not as feedback.
+  const lit = hovered || focused;
+  useEffect(() => {
+    lift.value = withTiming(lit ? 1 : 0, {
+      duration: reducedMotion ? 0 : 150,
+      easing: Easing.out(Easing.quad),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lit, reducedMotion]);
+
   const bodyStyle = useAnimatedStyle(() => ({
     transform: [
       { rotate: '45deg' },
       // Breathes with the halo so the node itself is alive, not just its glow.
-      { scale: (1 + pulse.value * 0.045) * (1 - press.value * 0.06) },
+      { scale: (1 + pulse.value * 0.045 + lift.value * 0.075) * (1 - press.value * 0.06) },
     ],
+  }));
+  const liftStyle = useAnimatedStyle(() => ({
+    opacity: lift.value * 0.4,
+    transform: [{ rotate: '45deg' }, { scale: 1.04 + lift.value * 0.16 }],
   }));
   const haloStyle = useAnimatedStyle(() => ({
     opacity: 0.13 + pulse.value * 0.2,
@@ -118,9 +137,16 @@ export function PathNode({
   const fill = isCurrent ? colors.green : isDone ? colors.greenPale : colors.white;
   const border = isCurrent ? colors.greenDark : isDone ? colors.greenSoft : isOptional ? colors.muted5 : accentFg;
   const glyphColor = isCurrent ? colors.white : isDone ? colors.greenDark : isOptional ? colors.muted2 : accentFg;
+  // The node's own accent, so the glow belongs to the diamond it's under rather than tinting
+  // every node on the path the same green.
+  const glow = isCurrent ? colors.green : isDone ? colors.greenSoft : isOptional ? colors.muted5 : accentFg;
 
   return (
     <View style={styles.slot}>
+      <Reanimated.View
+        pointerEvents="none"
+        style={[styles.lift, { backgroundColor: glow }, liftStyle]}
+      />
       {isCurrent ? (
         <>
           <Reanimated.View pointerEvents="none" style={[styles.ripple, rippleStyle]} />
@@ -134,8 +160,8 @@ export function PathNode({
         onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 400 }); }}
         onFocus={() => { setFocused(true); onHoverIn?.(); }}
         onBlur={() => { setFocused(false); onHoverOut?.(); }}
-        onHoverIn={onHoverIn}
-        onHoverOut={onHoverOut}
+        onHoverIn={() => { setHovered(true); onHoverIn?.(); }}
+        onHoverOut={() => { setHovered(false); onHoverOut?.(); }}
         focusable
         accessibilityRole="button"
         // Announces title AND state, so the path is navigable without seeing it.
@@ -158,6 +184,9 @@ export function PathNode({
               borderStyle: isOptional ? 'dashed' : 'solid',
               borderWidth: isCurrent ? 3 : 2.25,
             },
+            // A cast shadow in the node's own colour on top of the glow behind it — the glow
+            // alone reads as a flat ring, the two together read as the diamond coming forward.
+            lit && { shadowColor: glow, shadowOpacity: 0.45, shadowRadius: 10, shadowOffset: { width: 0, height: 0 }, elevation: 8 },
             bodyStyle,
           ]}
         >
@@ -178,7 +207,7 @@ export function PathNode({
 
       {isCurrent ? (
         <View pointerEvents="none" style={styles.nextTag}>
-          <T weight="extra" size={9.5} color={colors.white} style={{ letterSpacing: 0.7 }}>START HERE</T>
+          <T weight="extra" size={9.5} color={colors.white} style={{ letterSpacing: 0.7 }}>START</T>
         </View>
       ) : null}
     </View>
@@ -199,6 +228,11 @@ const styles = StyleSheet.create({
   halo: {
     position: 'absolute', width: NODE_SIZE, height: NODE_SIZE,
     borderRadius: 18, backgroundColor: colors.green,
+  },
+  // Sits behind everything else in the slot, including the recommended node's halo and
+  // ripple, so hovering the recommended one adds to its treatment rather than covering it.
+  lift: {
+    position: 'absolute', width: NODE_SIZE, height: NODE_SIZE, borderRadius: 20,
   },
   ripple: {
     position: 'absolute', width: NODE_SIZE, height: NODE_SIZE,

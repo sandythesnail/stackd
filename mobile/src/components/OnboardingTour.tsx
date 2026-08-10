@@ -205,7 +205,18 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
     setSettling(false);
   }, []);
 
-  const measure = useCallback((idx: number) => {
+  /** Measures a step's target. `settle` says whether landing a rect should also END the
+   * settling state, i.e. reveal the spotlight and the card.
+   *
+   * For most steps those are the same event and it defaults to true. For a `scrollsIntoView`
+   * step they are NOT: the host screen needs the rect immediately (it can only work out how
+   * far to scroll by knowing where the target currently is), but that early rect describes
+   * where the target sits BEFORE the scroll. Revealing on it put the cutout and the card at
+   * the pre-scroll position, from which they then chased the target down the screen for the
+   * length of the animation — the jank on the "Pick your first lesson" step. So those steps
+   * measure silently, and only the host's own remeasureActive() — its "I've finished
+   * scrolling" signal — reveals anything. SETTLE_GRACE_MS bounds the wait either way. */
+  const measure = useCallback((idx: number, settle = !TOUR_STEPS[idx].scrollsIntoView) => {
     const ref = targets.get(TOUR_STEPS[idx].targetId);
     if (!ref?.current) { setRect(null); return; }
     ref.current.measureInWindow((x, y, width, height) => {
@@ -213,7 +224,7 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
       if (stepIdxRef.current !== idx) return;
       if (width > 0 || height > 0) {
         setRect({ x, y, width, height });
-        endSettling();
+        if (settle) endSettling();
       } else {
         setRect(null);
       }
@@ -331,9 +342,11 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
   }, [targets, measure]);
   const unregisterTarget = useCallback((id: string) => { targets.delete(id); }, [targets]);
 
+  // Always settles: this is the host screen telling us its target has stopped moving, which
+  // is the one moment a scrollsIntoView step is allowed to reveal itself. See measure().
   const remeasureActive = useCallback(() => {
     const idx = stepIdxRef.current;
-    if (idx !== null) measure(idx);
+    if (idx !== null) measure(idx, true);
   }, [measure]);
 
   const activeStep = stepIdx !== null ? TOUR_STEPS[stepIdx] : null;
@@ -400,7 +413,14 @@ function TourOverlay({
 }) {
   const { width: winW, height: winH } = useWindowDimensions();
   const pad = 8;
-  const spotlight = rect ? {
+  // `settling` suppresses the cutout as well as the card, not just the card. A rect can exist
+  // while still settling — a scrollsIntoView step measures its target early so the host can
+  // work out how far to scroll (see the provider's measure()) — and that rect is the target's
+  // position BEFORE the scroll. Punching a hole there showed a lit-up patch of unrelated
+  // content that then travelled down the screen behind the moving page. Nothing but the plain
+  // scrim shows until the target has stopped moving; then the hole and the card arrive
+  // together, already in the right place.
+  const spotlight = rect && !settling ? {
     x: rect.x - pad, y: rect.y - pad, width: rect.width + pad * 2, height: rect.height + pad * 2,
   } : null;
 
@@ -451,7 +471,7 @@ function TourOverlay({
   // dead-centre the instant a step opened and then slid to the target a frame or two later —
   // on the lesson-path step, which can't be measured until Home has scrolled it into view,
   // that slide was long and unmistakably janky.
-  const hideCard = settling && !spotlight;
+  const hideCard = settling;
 
   // Animates the tooltip smoothly between positions instead of snapping — matches the
   // website's `transition: top/left 0.25s ease` on .tour-tooltip. Lazily initialized from
@@ -480,6 +500,21 @@ function TourOverlay({
     Animated.parallel([timing(animTooltipTop, tooltipTop), timing(animTooltipLeft, tooltipLeft)]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tooltipTop, tooltipLeft, hideCard]);
+
+  // The card fades rather than blinks. It arrives snapped into position (wasHidden above), so
+  // without this it appeared as a hard pop the moment the scroll finished — the opposite end
+  // of the same problem the snap exists to solve. `useNativeDriver: false` is not a choice
+  // here: top/left on this same view are JS-driven, and one view can't mix the two drivers.
+  const animOpacity = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(animOpacity, {
+      toValue: hideCard ? 0 : 1,
+      duration: hideCard ? 110 : 200,
+      easing: TOUR_EASING,
+      useNativeDriver: false,
+    }).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hideCard]);
 
   // Any spotlighted element needs to stay genuinely tappable, not just visually
   // not-covered — a single full-screen Pressable (the fallback below) would swallow a tap
@@ -540,10 +575,9 @@ function TourOverlay({
         pointerEvents={hideCard ? 'none' : 'auto'}
         style={[
           styles.tooltip,
-          { top: animTooltipTop, left: animTooltipLeft, width: tooltipW },
-          // Kept mounted while hidden rather than unmounted, so its onLayout height is
+          // Kept mounted while hidden (opacity, not unmounted), so its onLayout height is
           // already known by the time it appears and it doesn't reposition on arrival.
-          hideCard && styles.tooltipHidden,
+          { top: animTooltipTop, left: animTooltipLeft, width: tooltipW, opacity: animOpacity },
         ]}
       >
         <Txt style={styles.stepLabel}>{`STEP ${stepNum} OF ${totalSteps}`}</Txt>
@@ -603,7 +637,6 @@ const styles = StyleSheet.create({
     shadowColor: '#2C3E2D', shadowOpacity: 0.16, shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 }, elevation: 6,
   },
-  tooltipHidden: { opacity: 0 },
   // Reward-yellow rather than the plain white of the floating tooltip: inside the sheet this
   // sits among the sheet's own chrome, and needs to read as the tour talking, not as more
   // sheet. Same yellow as the highlight ring it's pointing at.
