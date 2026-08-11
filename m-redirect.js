@@ -56,21 +56,39 @@
     return !!(el && el.classList.contains('active'));
   }
 
+  // Carries the query string across a viewport redirect.
+  //
+  // These two redirects used to hand over a bare path, which quietly destroyed every referral
+  // link that landed on the wrong side of the viewport rule. An invite is `/m/?ref=<id>`; open
+  // one on a laptop and this bounced you to `/` with the ref gone, so the signup that followed
+  // credited nobody and neither friend was ever paid. The reverse direction had the same hole
+  // for a `/?ref=` link opened on a phone.
+  //
+  // The hash goes too: it costs nothing and a deep link is no more worth discarding than a
+  // referral code was.
+  function withQuery(path) {
+    try {
+      return path + (location.search || '') + (location.hash || '');
+    } catch (e) {
+      return path;
+    }
+  }
+
   function apply() {
     try {
-      // Read first, and on every call: the redirect to /m/ below drops the query string, so
-      // the flag has to be recorded before we can be sent somewhere that no longer carries it.
+      // Read first, and on every call: `pinned()` consumes ?desktop=1 into sessionStorage, and
+      // the flag has to be recorded before this tab can be sent anywhere.
       var isPinned = pinned();
       if (isAuthPage()) return;
       if (midQuest()) return;
       if (!underApp()) {
         // On the vanilla site: a phone or a narrow viewport belongs in the app.
-        if (isNarrow() || isMobileUA()) location.replace('/m/');
+        if (isNarrow() || isMobileUA()) location.replace(withQuery('/m/'));
       } else {
         // In the app: only a genuine wide desktop (not a phone in landscape) goes back —
         // and not even then if this tab asked to stay.
         if (isPinned) return;
-        if (!isNarrow() && !isMobileUA()) location.replace('/');
+        if (!isNarrow() && !isMobileUA()) location.replace(withQuery('/'));
       }
     } catch (e) {
       /* on any error, stay put */

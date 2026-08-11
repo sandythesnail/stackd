@@ -17,6 +17,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { useStore, type AppState } from '@/store';
 import { makeSupabase } from './supabase';
 import { notify } from './confirm';
+import { recordPendingReferral } from './referral';
 import { mobileToWeb, webToMobile, type WebState } from './webState';
 
 const DEBOUNCE_MS = 1500;
@@ -49,6 +50,10 @@ export function SupabaseSync() {
   resetRef.current = resetForAccountSwitch;
   const creditRef = useRef(creditReferralReward);
   creditRef.current = creditReferralReward;
+  // Read inside claimReferralRewards, which is memoised on [supabase] alone so that the
+  // post-upload trigger below always calls the same instance.
+  const userIdRef = useRef(userId);
+  userIdRef.current = userId;
 
   const supabase = useMemo(() => makeSupabase(() => getTokenRef.current()), []);
 
@@ -111,8 +116,17 @@ export function SupabaseSync() {
   const claimReferralRewards = useMemo(
     () => async () => {
       if (claimingReferral.current) return;
+      const uid = userIdRef.current;
+      if (!uid) return;
       claimingReferral.current = true;
       try {
+        // Record before claiming, every time. This browser may have arrived through an invite
+        // link and only just signed up, in which case there is no referral row yet for
+        // claim_referral_activation to find — and until this ran anywhere in the /m/ build,
+        // there never would be one. Cheap when there's nothing pending: it reads a single
+        // localStorage key and returns.
+        await recordPendingReferral(supabase, uid);
+
         const { data, error } = await supabase.rpc('claim_referral_activation');
         if (error) {
           console.warn('[referral] activation check failed:', error.message);

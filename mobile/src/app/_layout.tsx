@@ -28,6 +28,13 @@ import { authEnabled, env } from '@/lib/env';
 import { tokenCache } from '@/lib/tokenCache';
 import { SupabaseSync } from '@/lib/SupabaseSync';
 import { MOOD_FACES, REACTION_FACES } from '@/hammyFaces';
+import { captureReferralFromUrl } from '@/lib/referral';
+
+// Before anything renders, and deliberately at module scope rather than in an effect: this
+// reads `?ref=` off the URL the visitor actually opened, and Expo Router rewrites the address
+// bar the moment it resolves the first route. An effect — even one in the root layout — can
+// already be too late. See lib/referral.ts.
+captureReferralFromUrl();
 
 // All of Hammy's illustrated face overlays, deduped by image module — a bundled `require()`
 // asset still isn't decoded into the image cache until something actually draws it, and

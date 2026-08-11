@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { colors } from '@/theme';
+import { pendingReferralCode } from './referral';
 
 /**
  * On the WEB build (the /m responsive site), the app reuses trystacked.app's real Clerk
@@ -14,11 +15,14 @@ import { colors } from '@/theme';
 export function WebAuthRedirect({ page }: { page: 'login' | 'signup' }) {
   useEffect(() => {
     const back = encodeURIComponent('/m/');
-    let ref = '';
-    try {
-      const r = new URLSearchParams(window.location.search).get('ref');
-      if (r && page === 'signup') ref = `&ref=${encodeURIComponent(r)}`;
-    } catch {}
+    // The stored code, not `window.location.search`. By the time this screen mounts the
+    // router has rewritten the address bar to this route, so the `?ref=` the friend actually
+    // opened is long gone from it — reading it here only ever worked if sign-up happened to
+    // be the very first route resolved. It's captured at boot instead (see lib/referral.ts),
+    // and forwarding it on is now belt-and-braces: signup.html stashes it under the same key
+    // in the same origin's localStorage, so it survives this hop either way.
+    const stored = page === 'signup' ? pendingReferralCode() : null;
+    const ref = stored ? `&ref=${encodeURIComponent(stored)}` : '';
     window.location.assign(`/${page}.html?redirect_url=${back}${ref}`);
   }, [page]);
 
