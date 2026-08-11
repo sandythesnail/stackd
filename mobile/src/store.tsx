@@ -5,6 +5,7 @@ import type { RoomSlot, ShopItemReal } from '@/content';
 import { ACHIEVEMENTS, EARNABLE_ACHIEVEMENTS, BADGE_TIER_REWARD, MODULE_MASTERY_ACHIEVEMENT, type Achievement } from '@/achievements';
 import { LIFE_EVENTS, LIFE_EVENT_UNLOCKS, LIFE_EVENT_CHANCE, LIFE_EVENT_COOLDOWN_SESSIONS, pickAmbientLifeEvent, type LifeEvent } from '@/lifeEvents';
 import type { QuestAnalytics } from '@/questReport';
+import { dailyRewardCoins, dailyRewardCycleFor, type DailyRewardCycle } from '@/dailyRewards';
 
 const STORAGE_KEY = 'stackd_state_v1';
 
@@ -34,17 +35,14 @@ export const QUEST_COIN_PER_CORRECT = 8;
 export const QUEST_COIN_FLAT_FALLBACK = 8;
 
 /** STREAK_DIAMOND_INTERVAL/REWARD ported verbatim from app.js (updateStreak) — a
- * once-per-calendar-day streak bonus, auto-credited at boot. DAILY_LOGIN_BASE/STEP/CAP_COINS
- * are also ported verbatim from app.js (claimDailyLoginBonus) — the click-to-collect coin
- * drip scales up 2 coins per consecutive login day (10, 12, 14, ...), capped at 20, not a
- * flat amount. A previous version of this file paid a flat 15 regardless of day number,
- * which happened to sit close to the middle of the real curve but was wrong at both ends
- * (day 1 paid too much, day 5+ paid too little). */
+ * once-per-calendar-day streak bonus, auto-credited at boot.
+ *
+ * The click-to-collect COIN drip is no longer app.js's `10 + 2*(n-1)` capped at 20. That
+ * formula counted lifetime claimed days and flattened out permanently on the sixth one, so
+ * every day after that paid an identical 20 — see @/dailyRewards, which replaces it with a
+ * seven-day ladder positioned by `streak` and a small per-week bonus. */
 const STREAK_DIAMOND_INTERVAL = 3;
 const STREAK_DIAMOND_REWARD = 5;
-const DAILY_LOGIN_BASE_COINS = 10;
-const DAILY_LOGIN_STEP_COINS = 2;
-const DAILY_LOGIN_CAP_COINS = 20;
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
 const RARITY_WEIGHT: Record<string, number> = { common: 8, rare: 4, epic: 2, legendary: 1 };
 
@@ -596,6 +594,11 @@ type Ctx = {
    * true if today's login coin drip hasn't been claimed yet, or a streak-diamond milestone
    * was just auto-credited and hasn't been shown to the player yet. */
   loginBonusPending: boolean;
+  /** This week of the seven-day reward ladder — which slot today is, what each slot pays,
+   * and which of the past ones were actually collected. Drives DailyRewardsModal; computed
+   * here rather than in the component so the number the modal shows and the number
+   * claimDailyLoginBonus pays can't drift apart. See @/dailyRewards. */
+  dailyRewardCycle: DailyRewardCycle;
   /** Claims today's login coin drip (if not already claimed) plus any pending streak-diamond
    * reward, adds them to the player's balance, and pops dailyLoginBanner. Ported from the
    * website's click-to-collect streak card (see hs-streak-card in app.js). */
@@ -797,6 +800,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       level,
       tierName,
       loginBonusPending,
+      dailyRewardCycle: dailyRewardCycleFor(state.streak, state.dailyLoginLog),
       isOwned,
       isEquipped,
       equippedRoomItems: () =>
@@ -1182,11 +1186,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const s = liveState.current;
         const today = new Date().toDateString();
         const alreadyClaimed = hasClaimedToday(s);
-        const dayNumber = Object.keys(s.dailyLoginLog).length + 1;
-        const coins = alreadyClaimed ? 0 : Math.min(
-          DAILY_LOGIN_BASE_COINS + DAILY_LOGIN_STEP_COINS * (dayNumber - 1),
-          DAILY_LOGIN_CAP_COINS,
-        );
+        // Positional, from the streak — NOT `Object.keys(s.dailyLoginLog).length + 1` the way
+        // this used to be. That counted every day ever collected, so a player who missed a
+        // week came back to a bigger reward than they'd left with, and the seven-tile modal
+        // this now feeds could never have shown a coherent week: the number it paid had no
+        // relationship to the "Day N of 7" the player was looking at. See @/dailyRewards.
+        const coins = alreadyClaimed ? 0 : dailyRewardCoins(s.streak);
         // Same race on the diamond half: read and zeroed through livePendingDiamonds, so the
         // second of two calls in a tick sees 0 rather than the pre-claim value and can't
         // bank the same milestone reward twice.

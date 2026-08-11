@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Screen, Header, Txt, Card, Button, ProgressBar, Stat, Speech, Hammy,
-  SectionHead, BadgeMedal, AchievementDetailModal, Flame, Coin, Diamond, CurrencyChip,
+  SectionHead, BadgeMedal, AchievementDetailModal, DailyRewardsModal, Flame, Coin, Diamond,
   TourTarget, useOnboardingTour,
 } from '@/components';
 import { useUser } from '@clerk/clerk-expo';
@@ -54,10 +54,10 @@ export default function Home() {
   const router = useRouter();
   const {
     state, level, tierName, moduleDone, moduleTotal, moduleStatus, nextLessonIndex, achievements,
-    equippedMascotItems, dailyLoginBanner, dismissDailyLoginBanner,
-    loginBonusPending, claimDailyLoginBonus,
+    equippedMascotItems, loginBonusPending, hydrated,
   } = useStore();
   const [selectedBadge, setSelectedBadge] = useState<AchievementView | null>(null);
+  const [dailyRewardsOpen, setDailyRewardsOpen] = useState(false);
   const [pathWidth, setPathWidth] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const { startTour, activeTargetId, remeasureActive, activeRect } = useOnboardingTour();
@@ -84,6 +84,32 @@ export default function Home() {
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.hasSeenOnboardingTour]);
+
+  // The daily-reward calendar opens itself, once per visit to Home, when today's coins are
+  // still uncollected. That's what a daily reward is for — the old behaviour was a yellow
+  // outline on the Streak stat tile waiting to be noticed and tapped, and a player who never
+  // worked out that the tile was a button never collected anything at all.
+  //
+  // Held back until the onboarding tour is out of the way. The tour auto-starts 450ms after
+  // this screen mounts and owns the screen until it's finished; a modal on top of it would
+  // cover the very elements it spends six steps pointing at.
+  //
+  // The "has the tour been seen" answer is latched on the first HYDRATED render, not read
+  // live and not read on mount. Not live, because the flag flips the moment the tour ends —
+  // which is the moment the final step has sent the player into a lesson, and popping a
+  // reward modal over a quest they just started is worse than waiting for their next visit.
+  // Not on mount, because the store is still loading from AsyncStorage then and every flag
+  // reads as its DEFAULT_STATE value, so latching there would answer "false" for everyone,
+  // forever.
+  const tourSeenAtMount = useRef<boolean | null>(null);
+  const didAutoOpenRewards = useRef(false);
+  useEffect(() => {
+    if (!hydrated || didAutoOpenRewards.current) return;
+    if (tourSeenAtMount.current === null) tourSeenAtMount.current = state.hasSeenOnboardingTour;
+    if (!tourSeenAtMount.current || !loginBonusPending) return;
+    didAutoOpenRewards.current = true;
+    setDailyRewardsOpen(true);
+  }, [hydrated, loginBonusPending, state.hasSeenOnboardingTour]);
 
   // The tour's lesson-path step spotlights a node that sits well below the fold on this
   // screen — nothing else in the tour needs scrolling, since every other target is either the
@@ -240,17 +266,17 @@ export default function Home() {
           <TourTarget id="tour-xp" style={{ flex: 1 }}>
             <Stat value={state.xp.toLocaleString()} label="XP" />
           </TourTarget>
-          {loginBonusPending ? (
-            <Pressable style={{ flex: 1 }} onPress={claimDailyLoginBonus}>
-              <Stat
-                value={<Row><Flame size={13} /><Num>{state.streak}</Num></Row>}
-                label="Streak"
-                reward
-              />
-            </Pressable>
-          ) : (
-            <Stat value={<Row><Flame size={13} /><Num>{state.streak}</Num></Row>} label="Streak" />
-          )}
+          {/* Always a button now, not only while something is pending — it opens the reward
+              calendar rather than silently banking coins, and "see where I am in the week" is
+              worth a tap on a day you've already collected. The yellow `reward` treatment
+              still marks the days you haven't. */}
+          <Pressable style={{ flex: 1 }} onPress={() => setDailyRewardsOpen(true)}>
+            <Stat
+              value={<Row><Flame size={13} /><Num>{state.streak}</Num></Row>}
+              label="Streak"
+              reward={loginBonusPending}
+            />
+          </Pressable>
           <Stat value={<Row><Coin /><Num>{state.coins}</Num></Row>} label="Coins" />
           <Stat value={<Row><Diamond /><Num>{state.diamonds}</Num></Row>} label="Diamonds" />
         </View>
@@ -338,23 +364,12 @@ export default function Home() {
         </View>
       </ScrollView>
 
-      {dailyLoginBanner ? (
-        <View style={styles.bannerRoot}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={dismissDailyLoginBanner} />
-          <View style={styles.bannerCard}>
-            <Txt style={{ fontSize: 32 }}>👋</Txt>
-            <Txt variant="disp" style={{ fontSize: 19, marginTop: 6 }}>Welcome back!</Txt>
-            <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center', marginTop: 2 }}>
-              {dailyLoginBanner.streak}-day streak{dailyLoginBanner.streakDiamonds ? ' — bonus diamonds earned!' : '!'}
-            </Txt>
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
-              <CurrencyChip kind="coin" value={dailyLoginBanner.loginCoins} />
-              {dailyLoginBanner.streakDiamonds ? <CurrencyChip kind="diamond" value={dailyLoginBanner.streakDiamonds} /> : null}
-            </View>
-            <Button label="Nice!" onPress={dismissDailyLoginBanner} style={{ marginTop: 16, width: '100%' }} />
-          </View>
-        </View>
-      ) : null}
+      {/* Mounted only while open, so each visit gets a fresh snapshot of the week and a
+          fresh face-down tile to uncover — see DailyRewardsModal's frozen `cycle`. This
+          replaces the "Welcome back! N-day streak" card that used to appear AFTER a silent
+          claim: same information, arriving before the reward instead of after it, with the
+          week it belongs to around it. */}
+      {dailyRewardsOpen ? <DailyRewardsModal onClose={() => setDailyRewardsOpen(false)} /> : null}
       <AchievementDetailModal achievement={selectedBadge} onClose={() => setSelectedBadge(null)} />
     </Screen>
   );
@@ -377,20 +392,4 @@ const styles = StyleSheet.create({
   badgeRow: { flexDirection: 'row', gap: 12, paddingBottom: 6 },
   badgeCell: { flex: 1, alignItems: 'center', gap: 8 },
   badgeLbl: { fontFamily: font.extra, fontSize: 10.5, color: colors.muted1, textAlign: 'center' },
-  bannerRoot: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(22,32,23,0.5)',
-  },
-  bannerCard: {
-    width: '80%',
-    backgroundColor: colors.white,
-    borderRadius: 24,
-    padding: 22,
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
 });

@@ -20,4 +20,5 @@ export { MIcon, ModuleTile, ListRow, BadgeMedal, BadgeIcon } from './ModuleBits'
 export { ModuleLessonList, RealLifeSubQuestRow } from './ModuleLessonList';
 export { LifeEventCard } from './LifeEventCard';
 export { AchievementDetailModal } from './AchievementDetailModal';
+export { DailyRewardsModal } from './DailyRewardsModal';
 export { StackedAreaChart } from './Chart';
