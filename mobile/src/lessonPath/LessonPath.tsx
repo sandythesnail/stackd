@@ -193,7 +193,7 @@ export function LessonPath({ width }: { width: number }) {
     setPickedModule(sections[next].module.id);
   };
 
-  const openLesson = (n: PathNodeData, restart = false) => {
+  const openLesson = (n: PathNodeData) => {
     router.push({
       pathname: '/learn/quest',
       params: {
@@ -201,8 +201,6 @@ export function LessonPath({ width }: { width: number }) {
         lessonIndex: String(n.lessonIndex),
         // Keyed off the node's identity, not its state — see PathNodeData.isLifeTask.
         ...(n.isLifeTask ? { isLifeTask: '1' } : {}),
-        // Opt out of the saved resume point for this launch only (the sheet's "Start over").
-        ...(restart ? { restart: '1' } : {}),
       },
     });
   };
@@ -241,11 +239,6 @@ export function LessonPath({ width }: { width: number }) {
           const n = preview;
           setPreview(null);
           if (n) openLesson(n);
-        }}
-        onRestart={() => {
-          const n = preview;
-          setPreview(null);
-          if (n) openLesson(n, true);
         }}
       />
     </>
@@ -572,7 +565,7 @@ function TrailComet({ samples, reducedMotion }: { samples: { x: number; y: numbe
  * action is worded from the node's state, because "Start lesson" is wrong in three of the
  * four cases. */
 function PreviewSheet({
-  node, moduleName, total, reducedMotion, onClose, onStart, onRestart,
+  node, moduleName, total, reducedMotion, onClose, onStart,
 }: {
   node: PathNodeData | null;
   moduleName: string;
@@ -580,7 +573,6 @@ function PreviewSheet({
   reducedMotion: boolean;
   onClose: () => void;
   onStart: () => void;
-  onRestart: () => void;
 }) {
   const { activeTargetId, advanceIfWaitingOn } = useOnboardingTour();
   const { lessonProgressFor } = useStore();
@@ -621,7 +613,12 @@ function PreviewSheet({
    * A student who has been burned once won't risk a long lesson again no matter what the code
    * does, so the resume point is stated here in words — which chapter, out of how many — and
    * the button says Resume rather than Continue. Only for a lesson that genuinely has one:
-   * lessonProgressFor validates against the current content and returns null otherwise. */
+   * lessonProgressFor validates against the current content and returns null otherwise.
+   *
+   * There is no "start over" here any more. It sat directly under Resume as a second, quieter
+   * button, which made a sheet with one obvious action look like a sheet with a choice to
+   * make — and it was the wrong choice to offer, since replaying a lesson from the top is
+   * what the node's own "Do it again" already does once the lesson is finished. */
   const saved = node.isLifeTask ? null : lessonProgressFor(node.moduleId, node.lessonIndex);
   const cta = saved
     ? 'Resume lesson'
@@ -629,11 +626,11 @@ function PreviewSheet({
   const tone = node.state === 'current' || saved ? colors.green : done ? colors.greenDark : colors.pink;
   // While the tour is pointing at the CTA (`locked`, above), that button is the only way out
   // of this sheet. The step is requiresRealClick and draws no Next of its own, so every other
-  // exit — the scrim, Android back, "Not now", "Start over" — was a way to leave the one
-  // instruction on screen unperformed, and "Tap Continue lesson and you're in" is a poor thing
-  // to say next to three ways of not doing that. The tour's own "Skip tour" link, right above
-  // the button in <TourCallout>, is the deliberate escape hatch: this locks the step, it
-  // doesn't trap the user, and everything goes back to normal the moment the tour ends.
+  // exit — the scrim, Android back, "Not now" — was a way to leave the one instruction on
+  // screen unperformed, and "tap the highlighted button" is a poor thing to say next to
+  // several ways of not doing that. The tour's own "Skip tour" link, right above the button
+  // in <TourCallout>, is the deliberate escape hatch: this locks the step, it doesn't trap
+  // the user, and everything goes back to normal the moment the tour ends.
   const closeIfAllowed = () => { if (!locked) onClose(); };
 
   return (
@@ -672,7 +669,7 @@ function PreviewSheet({
 
           {saved ? (
             <T weight="bold" size={11.5} color={colors.greenDark} style={{ marginTop: 10 }}>
-              ⏸ Paused at chapter {saved.chapterIdx + 1} of {saved.chapterCount}. You&apos;ll pick up right there.
+              ⏸ Paused at chapter {saved.chapterIdx + 1} of {saved.chapterCount}
             </T>
           ) : null}
 
@@ -701,19 +698,6 @@ function PreviewSheet({
               <T weight="extra" size={14.5} color={colors.white}>{cta}</T>
             </Pressable>
           </Reanimated.View>
-          {/* Offered, never forced: resuming is what almost everyone wants, so starting over
-              is a quiet second option rather than a choice the sheet makes you make. */}
-          {saved ? (
-            <Pressable
-              onPress={onRestart}
-              disabled={locked}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: locked }}
-              style={[styles.previewClose, locked && styles.previewCloseLocked]}
-            >
-              <T weight="extra" size={13} color={colors.muted2}>Start over from the beginning</T>
-            </Pressable>
-          ) : null}
           {/* Left visible rather than removed while locked. A button that vanishes mid-tour
               reads as the sheet changing shape under you; one that's plainly greyed out reads
               as "not this one, the green one". */}

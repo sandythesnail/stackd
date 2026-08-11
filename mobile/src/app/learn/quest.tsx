@@ -348,8 +348,8 @@ function QuestPlayerInner() {
     equippedMascotItems, rollAmbientLifeEvent, pendingLifeEvent, resolveLifeEvent,
     lessonProgressFor, saveLessonProgress, clearLessonProgress,
   } = useStore();
-  const { moduleId, lessonIndex, isLifeTask, restart } = useLocalSearchParams<{
-    moduleId: string; lessonIndex: string; isLifeTask?: string; restart?: string;
+  const { moduleId, lessonIndex, isLifeTask } = useLocalSearchParams<{
+    moduleId: string; lessonIndex: string; isLifeTask?: string;
   }>();
   const mod = moduleById(moduleId ?? 'saving') ?? moduleById('saving')!;
   const content = moduleContentById(mod.id);
@@ -362,19 +362,16 @@ function QuestPlayerInner() {
    * Every piece of state below seeds from it, so it has to be the same object for the life of
    * this mount: reading it later would see the save this very screen is writing as it plays,
    * and an effect would run after the first chapter had already rendered — you'd watch chapter
-   * 1 appear and then jump. `restart` is the preview sheet's "start over", which deliberately
-   * ignores the save (it's cleared below rather than here, so this stays free of side effects).
+   * 1 appear and then jump.
+   *
+   * This used to honour a `restart` route param, set by a "Start over from the beginning"
+   * button under the preview sheet's Resume. That button is gone (see LessonPath's
+   * PreviewSheet), and with it the only caller that ever passed the param — so the branch that
+   * ignored the save, and the effect that cleared it on entry, were both unreachable.
    *
    * lessonProgressFor validates the save against the current content and returns null if the
    * quest has been re-authored since — see its comment in store.tsx. */
-  const [resumed] = useState(() => (restart ? null : lessonProgressFor(mod.id, li)));
-  // "Start over" drops the old save now rather than letting the first chapter advance
-  // overwrite it — otherwise backing out again before answering anything would resume the
-  // player at the chapter they had just asked to abandon.
-  useEffect(() => {
-    if (restart) clearLessonProgress(mod.id, li);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [resumed] = useState(() => lessonProgressFor(mod.id, li));
 
   const [chapterIdx, setChapterIdx] = useState(resumed?.chapterIdx ?? 0);
   const [xpEarned, setXpEarned] = useState(resumed?.xpEarned ?? 0);
