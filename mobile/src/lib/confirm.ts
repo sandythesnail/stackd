@@ -24,3 +24,21 @@ export function confirmDestructive(title: string, message: string, confirmLabel:
     { text: confirmLabel, style: 'destructive', onPress: onConfirm },
   ]);
 }
+
+/** One-button "here's what just happened" notice, with the same web/native split and for the
+ * same reason as confirmDestructive above: a single-button Alert.alert is just as much of a
+ * no-op under react-native-web as a multi-button one, and /m/ IS the web build for every
+ * phone that visits the site.
+ *
+ * Used for rewards that arrive from the SERVER rather than from something the player just
+ * did — today that's referral payouts, which can land at sign-in or minutes after a friend
+ * finishes their first lesson. Everything a player earns through their own actions is
+ * announced in the screen that caused it (results, the reward calendar, the achievement
+ * toast); this is for the ones with no such screen to land in. */
+export function notify(title: string, message: string) {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+    return;
+  }
+  Alert.alert(title, message);
+}

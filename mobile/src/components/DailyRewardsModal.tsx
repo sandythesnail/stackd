@@ -149,7 +149,7 @@ export function DailyRewardsModal({ onClose }: { onClose: () => void }) {
               {collected
                 ? `All collected for today. Come back tomorrow for day ${nextDay}.`
                 : cycle.todayIndex + 1 === DAILY_REWARD_CYCLE_DAYS
-                  ? 'Last day of the week — the big one. Collect it and the cycle starts over at day 1.'
+                  ? 'Last day of the week, and the biggest. Collect it and the cycle starts over at day 1.'
                   : `Come back tomorrow for day ${nextDay}. Day ${DAILY_REWARD_CYCLE_DAYS} pays the most.`}
             </Txt>
           )}

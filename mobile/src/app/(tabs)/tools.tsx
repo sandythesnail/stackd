@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, TextInput } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Screen, Header, Txt, Card, Tag, Segmented, StackedAreaChart } from '@/components';
+import { Screen, Header, Txt, Card, Tag, Segmented, StackedAreaChart, Select, type SelectOption } from '@/components';
 import { colors, font, selectableInput } from '@/theme';
 import { useStore, type BudgetLineItem } from '@/store';
 import { computeCompoundGrowth, computeLoanMinPayment, computeLoanPayoff, SeriesPoint } from '@/simulators';
@@ -142,9 +142,16 @@ export default function Tools() {
   );
 }
 
-const CI_RATE_PRESETS = [
-  { mode: 'hysa' as const, label: 'HYSA', sub: '4–5%', rate: 4.5 },
-  { mode: 'index' as const, label: 'Index Fund', sub: '7–10%', rate: 8.5 },
+/** Named places to put money, each with the rate it historically returns. A pick-list of real
+ * options rather than the old two chips plus a "Custom" chip that revealed a 1–12% slider:
+ * a student who doesn't already know what rate to expect can't answer a bare percentage
+ * slider, but they can answer "where would the money sit". */
+const CI_RATE_OPTIONS: SelectOption<number>[] = [
+  { value: 0.5, label: 'Regular savings account', sub: 'about 0.5% a year' },
+  { value: 4.5, label: 'High-yield savings (HYSA)', sub: 'about 4.5% a year' },
+  { value: 6, label: 'Bonds', sub: 'about 6% a year' },
+  { value: 8.5, label: 'Index fund', sub: 'about 8.5% a year' },
+  { value: 10, label: 'All-stock portfolio', sub: 'about 10% a year, bumpier' },
 ];
 
 function CompoundInterestPanel() {
@@ -152,16 +159,10 @@ function CompoundInterestPanel() {
   const [monthlyContribution, setMonthlyContribution] = useState(100);
   const [years, setYears] = useState(10);
   const [annualRatePct, setAnnualRatePct] = useState(8.5);
-  const [rateMode, setRateMode] = useState<'hysa' | 'index' | 'custom'>('index');
   const [showCompare, setShowCompare] = useState(false);
 
   const points = computeCompoundGrowth({ startingAmount, monthlyContribution, annualRatePct, years });
   const final = points[points.length - 1];
-
-  const doublingYears = annualRatePct > 0 ? 72 / annualRatePct : null;
-  const milestoneTargets = [10000, 50000, 100000, 500000, 1000000];
-  const milestone = milestoneTargets.filter((m) => m > startingAmount).find((m) => points.some((p) => p.balance >= m));
-  const milestonePoint = milestone ? points.find((p) => p.balance >= milestone) : null;
 
   const gap = 65 - 18;
   const early = computeCompoundGrowth({ startingAmount: 0, monthlyContribution, annualRatePct, years: gap });
@@ -179,39 +180,28 @@ function CompoundInterestPanel() {
       </Card>
 
       <Card style={{ gap: 12 }}>
-        <Txt style={styles.cardTitle}>Growth Rate</Txt>
-        <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
-          {CI_RATE_PRESETS.map((p) => (
-            <Pressable key={p.mode} onPress={() => { setRateMode(p.mode); setAnnualRatePct(p.rate); }}>
-              <Tag tone={rateMode === p.mode ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>{p.label} {p.sub}</Tag>
-            </Pressable>
-          ))}
-          <Pressable onPress={() => setRateMode('custom')}>
-            <Tag tone={rateMode === 'custom' ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>Custom</Tag>
-          </Pressable>
-        </View>
-        {rateMode === 'custom' ? (
-          <SliderRow
-            label="Annual interest rate" value={annualRatePct}
-            onChange={setAnnualRatePct}
-            min={1} max={12} step={0.5} format={(v) => `${v}%`}
-          />
-        ) : (
-          <Txt variant="lead" style={{ fontSize: 12.5 }}>Using {annualRatePct}% per year</Txt>
-        )}
+        <Select
+          label="Where the money sits"
+          value={annualRatePct}
+          options={CI_RATE_OPTIONS}
+          onChange={setAnnualRatePct}
+        />
       </Card>
 
-      <Pressable onPress={() => setShowCompare((s) => !s)} style={{ alignSelf: 'center' }}>
-        <Tag tone="lock" style={{ paddingVertical: 8 }}>
-          {showCompare ? 'Hide ▴' : 'Compare: 18 vs. 28 →'}
-        </Tag>
+      {/* The single most persuasive thing this calculator can show a 19-year-old, so it stops
+          looking like a muted grey tag among other muted grey tags. Red, full width, and
+          phrased as the question it answers. */}
+      <Pressable onPress={() => setShowCompare((s) => !s)} style={styles.compareToggle}>
+        <Txt style={styles.compareToggleTxt}>
+          {showCompare ? 'Hide the cost of waiting' : 'What does waiting 10 years cost?'}
+        </Txt>
       </Pressable>
 
       {showCompare ? (
-        <Card style={{ gap: 8 }}>
-          <Txt style={styles.cardTitle}>Start at 18 vs. 28</Txt>
-          <Txt variant="lead" style={{ fontSize: 12.5 }}>
-            Same {money(monthlyContribution)}/mo, same {annualRatePct}%, both stop at 65:
+        <Card style={styles.compareCard}>
+          <Txt style={styles.compareTitle}>Starting at 18 vs. starting at 28</Txt>
+          <Txt variant="lead" style={{ fontSize: 12.5, color: colors.dangerDeep }}>
+            Same {money(monthlyContribution)} a month, same {annualRatePct}%, both stop at 65.
           </Txt>
           <View style={styles.compareRow}>
             <Txt style={styles.compareLabel}>Start at 18</Txt>
@@ -221,8 +211,8 @@ function CompoundInterestPanel() {
             <Txt style={styles.compareLabel}>Start at 28</Txt>
             <Txt style={styles.compareVal}>{money(lateFinal)}</Txt>
           </View>
-          <Txt variant="lead" style={{ fontSize: 12.5, marginTop: 4 }}>
-            Worth {money(earlyFinal - lateFinal)} more by 65 — same monthly amount.
+          <Txt style={styles.comparePunch}>
+            Waiting costs {money(earlyFinal - lateFinal)}, for the exact same monthly amount.
           </Txt>
         </Card>
       ) : null}
@@ -244,39 +234,34 @@ function CompoundInterestPanel() {
             <Txt style={styles.legendTxt}>Interest</Txt>
           </View>
         </View>
-        {doublingYears ? (
-          <Txt variant="lead" style={styles.milestone}>
-            📈 Doubles every {doublingYears.toFixed(1)} yrs at {annualRatePct}% (Rule of 72)
-          </Txt>
-        ) : null}
-        {milestone && milestonePoint ? (
-          <Txt variant="lead" style={styles.milestone}>
-            🎯 Crosses {money(milestone)} around year {(milestonePoint.month / 12).toFixed(1)}
-          </Txt>
-        ) : null}
+        {/* The "📈 Doubles every N yrs (Rule of 72)" and "🎯 Crosses $50,000 around year 12"
+            lines that used to sit here are gone. Two emoji-led footnotes under a chart that
+            already states the balance, the amount put in and the interest earned were a third
+            and fourth number competing with the one the card exists to deliver. */}
       </Card>
     </>
   );
 }
 
-const RATE_PRESETS = [
-  { mode: 'subsidized', label: 'Fed. Subsidized', rate: 5.5 },
-  { mode: 'unsubsidized', label: 'Fed. Unsubsidized', rate: 7 },
-  { mode: 'private', label: 'Private', rate: 9 },
-] as const;
+/** Loan types with the rate each one typically carries. Same idea as CI_RATE_OPTIONS: name
+ * the thing the student actually has, not the number they'd have to already know. */
+const LOAN_RATE_OPTIONS: SelectOption<number>[] = [
+  { value: 5.5, label: 'Federal subsidized', sub: 'about 5.5%' },
+  { value: 7, label: 'Federal unsubsidized', sub: 'about 7%' },
+  { value: 9, label: 'Private loan', sub: 'about 9%' },
+  { value: 12, label: 'High-rate private loan', sub: 'about 12%' },
+];
 
-// Named terms, ported exactly from the website's 3 loan-term presets — not a plain 5/10/15/
-// 20/25yr picker like this screen used to have.
-const TERM_PRESETS = [
-  { years: 10, label: 'Standard' },
-  { years: 20, label: 'Extended' },
-  { years: 25, label: 'Income-Driven' },
-] as const;
+// The three real federal repayment plans, named as the student's paperwork names them.
+const TERM_OPTIONS: SelectOption<number>[] = [
+  { value: 10, label: 'Standard', sub: '10 years' },
+  { value: 20, label: 'Extended', sub: '20 years' },
+  { value: 25, label: 'Income-driven', sub: '25 years' },
+];
 
 function LoanPayoffPanel() {
   const [loanBalance, setLoanBalance] = useState(27000);
   const [annualRatePct, setAnnualRatePct] = useState(5.5);
-  const [rateMode, setRateMode] = useState<'subsidized' | 'unsubsidized' | 'private' | 'custom'>('subsidized');
   const [termYears, setTermYears] = useState(10);
   const [monthlyIncome, setMonthlyIncome] = useState(3200);
   const [rent, setRent] = useState(1100);
@@ -308,43 +293,14 @@ function LoanPayoffPanel() {
         <Txt style={styles.cardTitle}>Your Loan</Txt>
         <SliderRow label="Loan balance" value={loanBalance} onChange={setLoanBalance} min={1000} max={100000} step={500} format={money} />
 
-        <View style={{ gap: 8 }}>
-          <Txt style={styles.sliderLabel}>Interest rate</Txt>
-          <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
-            {RATE_PRESETS.map((p) => (
-              <Pressable key={p.mode} onPress={() => { setRateMode(p.mode); setAnnualRatePct(p.rate); }}>
-                <Tag tone={rateMode === p.mode ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>
-                  {p.label} ~{p.rate}%
-                </Tag>
-              </Pressable>
-            ))}
-            <Pressable onPress={() => setRateMode('custom')}>
-              <Tag tone={rateMode === 'custom' ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>Custom</Tag>
-            </Pressable>
-          </View>
-          {rateMode === 'custom' ? (
-            <SliderRow label="Annual rate" value={annualRatePct} onChange={setAnnualRatePct} min={1} max={14} step={0.25} format={(v) => `${v}%`} />
-          ) : (
-            <Txt variant="lead" style={{ fontSize: 12.5 }}>Using {annualRatePct}% per year</Txt>
-          )}
-        </View>
-
-        <View style={{ gap: 8 }}>
-          <Txt style={styles.sliderLabel}>Term</Txt>
-          <View style={{ flexDirection: 'row', gap: 7, flexWrap: 'wrap' }}>
-            {TERM_PRESETS.map((p) => (
-              <Pressable key={p.years} onPress={() => setTermYears(p.years)}>
-                <Tag tone={termYears === p.years ? 'green' : 'lock'} style={{ paddingVertical: 6 }}>{p.label} {p.years}yr</Tag>
-              </Pressable>
-            ))}
-          </View>
-        </View>
+        <Select label="Loan type" value={annualRatePct} options={LOAN_RATE_OPTIONS} onChange={setAnnualRatePct} />
+        <Select label="Repayment plan" value={termYears} options={TERM_OPTIONS} onChange={setTermYears} />
       </Card>
 
       <Card style={{ gap: 15 }}>
         <Txt style={styles.cardTitle}>Take-Home Pay & Living Costs</Txt>
         <Txt variant="lead" style={{ fontSize: 12, marginTop: -6 }}>
-          Uses take-home (net) pay, not gross salary — see the Earning module for the difference.
+          Uses take-home (net) pay, not gross salary. The Earning module covers the difference.
         </Txt>
         <SliderRow label="Monthly take-home pay" value={monthlyIncome} onChange={setMonthlyIncome} min={1500} max={7000} step={50} format={money} />
         <SliderRow label="Rent" value={rent} onChange={setRent} min={0} max={3000} step={25} format={money} />
@@ -361,19 +317,21 @@ function LoanPayoffPanel() {
               {money(payoffFinal.totalInterest)} interest, {money(loanBalance + payoffFinal.totalInterest)} total paid
             </Txt>
             <StackedAreaChart points={withZero(payoffPoints)} baseKey="zero" totalKey="balance" tone="debt" />
-            <Txt variant="lead" style={styles.milestone}>
-              💳 {money(totalPayment)}/mo clears {money(loanBalance)} at {annualRatePct}% in {payoffYears.toFixed(1)} yrs
+            {/* Italic, no card emoji. This is the one sentence that states the whole result in
+                plain words, so it's set apart by the type rather than by a 💳 glyph. */}
+            <Txt variant="lead" style={styles.payoffSentence}>
+              {money(totalPayment)} a month clears {money(loanBalance)} at {annualRatePct}% in {payoffYears.toFixed(1)} years.
             </Txt>
           </>
         ) : (
           <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center' }}>
-            {money(totalPayment)}/mo doesn&apos;t cover the interest — balance would grow. Raise the payment.
+            {money(totalPayment)} a month doesn&apos;t even cover the interest, so the balance would grow. Raise the payment.
           </Txt>
         )}
       </Card>
 
       <Card style={!canAffordMinimum ? [styles.resultCard, styles.warningCard] : styles.resultCard}>
-        <Txt style={styles.resultCap}>{canAffordMinimum ? 'MINIMUM PAYMENT' : '⚠ BUDGET REALITY CHECK'}</Txt>
+        <Txt style={styles.resultCap}>{canAffordMinimum ? 'MINIMUM PAYMENT' : 'BUDGET REALITY CHECK'}</Txt>
         <Txt style={styles.resultBig}>{money(minPayment)}/mo</Txt>
         {canAffordMinimum ? (
           <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center' }}>
@@ -381,7 +339,7 @@ function LoanPayoffPanel() {
           </Txt>
         ) : (
           <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center' }}>
-            {money(Math.max(0, availableForLoan))}/mo left after expenses, but minimum is {money(minPayment)} — {money(shortfall)} short
+            {money(Math.max(0, availableForLoan))} left after expenses, but the minimum is {money(minPayment)}. You&apos;re {money(shortfall)} short.
           </Txt>
         )}
       </Card>
@@ -423,6 +381,17 @@ const BUDGET_CATEGORY_LABELS: Record<string, string> = {
   transportation: 'Transportation', entertainment: 'Entertainment', textbooks: 'Textbooks', gym: 'Gym',
 };
 const BUDGET_CATEGORY_ORDER = ['groceries', 'diningOut', 'foodDelivery', 'coffee', 'clothing', 'beauty', 'transportation', 'entertainment', 'textbooks', 'gym'];
+
+/** The five most students actually spend on every month, shown by default. The other five are
+ * behind "More categories".
+ *
+ * Ten money fields in a row was most of what made this screen a chore: a first-time visitor
+ * met a wall of inputs with no indication that leaving one blank was fine, so filling in a
+ * budget felt like a form to complete rather than a question to answer. The stored shape is
+ * untouched — all ten still exist, still sync with the web (see webState.ts), and still count
+ * toward every total. This is only what's on screen before you ask for more. */
+const BUDGET_CATEGORIES_COMMON = ['groceries', 'diningOut', 'foodDelivery', 'coffee', 'transportation'];
+const BUDGET_CATEGORIES_MORE = BUDGET_CATEGORY_ORDER.filter((k) => !BUDGET_CATEGORIES_COMMON.includes(k));
 
 function BarRow({ label, val, max, tone }: { label: string; val: number; max: number; tone: 'pink' | 'green' }) {
   const pct = max > 0 ? Math.min(100, (val / max) * 100) : 0;
@@ -538,19 +507,32 @@ function BudgetPanel() {
       </Card>
 
       <Card style={{ gap: 10 }}>
-        <Txt style={styles.cardTitle}>Variable Expenses</Txt>
+        <Txt style={styles.cardTitle}>Spending</Txt>
         <Txt variant="lead" style={{ fontSize: 12 }}>
-          Food delivery and beauty services add up faster than most students expect — see your monthly total below.
+          Roughly, per month. Leave anything you don&apos;t spend on blank.
         </Txt>
-        {BUDGET_CATEGORY_ORDER.map((key) => (
+        {BUDGET_CATEGORIES_COMMON.map((key) => (
           <CategoryRow
             key={key}
             label={BUDGET_CATEGORY_LABELS[key]}
             value={plan.variableExpenses[key] ?? ''}
             onChangeText={(v) => setVariable(key, v)}
-            callout={calloutOn && (key === 'foodDelivery' || key === 'beauty')}
+            callout={calloutOn && key === 'foodDelivery'}
           />
         ))}
+        {/* Opens itself when the delivery/beauty callout is live, since beauty is one of the
+            five hidden here and the callout is about that pair specifically. */}
+        <Collapsible title={`More categories (${BUDGET_CATEGORIES_MORE.length})`} defaultOpen={calloutOn}>
+          {BUDGET_CATEGORIES_MORE.map((key) => (
+            <CategoryRow
+              key={key}
+              label={BUDGET_CATEGORY_LABELS[key]}
+              value={plan.variableExpenses[key] ?? ''}
+              onChangeText={(v) => setVariable(key, v)}
+              callout={calloutOn && key === 'beauty'}
+            />
+          ))}
+        </Collapsible>
       </Card>
 
       <Card style={{ gap: 10 }}>
@@ -576,18 +558,25 @@ function BudgetPanel() {
         {goalGap !== null ? (
           <Txt variant="lead" style={[{ fontSize: 12.5, textAlign: 'center' }, goalGap < 0 && styles.overThresholdTxt]}>
             {goalGap >= 0
-              ? `On track — ${money(goalGap)}/mo beyond your ${money(savingsGoal)} goal`
-              : `Cut about ${money(Math.abs(goalGap))}/mo to hit your ${money(savingsGoal)} goal`}
+              ? `On track, with ${money(goalGap)} a month to spare beyond your ${money(savingsGoal)} goal.`
+              : `Cut about ${money(Math.abs(goalGap))} a month to hit your ${money(savingsGoal)} goal.`}
           </Txt>
         ) : null}
       </Card>
 
+      {/* Both of these are now closed by default. Between them they were eleven chart bars,
+          ten filter chips and a slider sitting open under the summary, which is a lot of
+          screen for two things you look at after you've finished entering the numbers, not
+          while you're entering them. */}
       <Card style={{ gap: 12 }}>
-        <Txt style={styles.cardTitle}>Spending by Category</Txt>
-        <BarRow label="Fixed Expenses" val={totalFixed} max={maxBar} tone="pink" />
-        {BUDGET_CATEGORY_ORDER.map((key) => (
-          <BarRow key={key} label={shortLabel(BUDGET_CATEGORY_LABELS[key])} val={Number(plan.variableExpenses[key]) || 0} max={maxBar} tone="green" />
-        ))}
+        <Collapsible title="Spending by Category">
+          <View style={{ gap: 12, marginTop: 10 }}>
+            <BarRow label="Fixed Expenses" val={totalFixed} max={maxBar} tone="pink" />
+            {BUDGET_CATEGORY_ORDER.map((key) => (
+              <BarRow key={key} label={shortLabel(BUDGET_CATEGORY_LABELS[key])} val={Number(plan.variableExpenses[key]) || 0} max={maxBar} tone="green" />
+            ))}
+          </View>
+        </Collapsible>
       </Card>
 
       <Card style={{ gap: 10 }}>
@@ -605,10 +594,10 @@ function BudgetPanel() {
             <>
               <SliderRow label={`Cut ${shortLabel(BUDGET_CATEGORY_LABELS[whatIfCategory])} by`} value={cut} onChange={setWhatIfCut} min={0} max={maxCut} step={1} format={money} />
               <Txt variant="lead" style={{ fontSize: 12.5 }}>
-                Cut {money(cut)} → {money(newRemaining)} remaining
+                Cutting {money(cut)} leaves {money(newRemaining)}
                 {savingsGoal > 0
-                  ? (newRemaining >= savingsGoal ? ' — hits your goal' : `, ${money(Math.max(0, savingsGoal - newRemaining))} short of goal`)
-                  : ''}
+                  ? (newRemaining >= savingsGoal ? ', which hits your goal.' : `, still ${money(Math.max(0, savingsGoal - newRemaining))} short of your goal.`)
+                  : '.'}
               </Txt>
             </>
           ) : (
@@ -632,9 +621,18 @@ const styles = StyleSheet.create({
   warningCard: { backgroundColor: colors.dangerBg, borderColor: '#F2CDCD' },
   resultCap: { fontFamily: font.bold, fontSize: 12, color: colors.muted5, letterSpacing: 0.3 },
   resultBig: { fontFamily: font.display, fontSize: 32, color: colors.greenDark },
-  compareRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colors.screen, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12 },
+  compareRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colors.white, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12 },
   compareLabel: { fontFamily: font.semi, fontSize: 12.5, color: colors.ink },
   compareVal: { fontFamily: font.extra, fontSize: 12.5, color: colors.ink },
+  compareToggle: {
+    backgroundColor: colors.danger, borderRadius: 16,
+    paddingVertical: 13, paddingHorizontal: 18, alignItems: 'center',
+  },
+  compareToggleTxt: { fontFamily: font.extra, fontSize: 14, color: colors.white },
+  compareCard: { gap: 8, backgroundColor: colors.dangerBg, borderColor: colors.dangerSoft },
+  compareTitle: { fontFamily: font.displayMed, fontSize: 14, color: colors.dangerDeep },
+  comparePunch: { fontFamily: font.extra, fontSize: 13.5, color: colors.dangerDeep, marginTop: 4 },
+  payoffSentence: { fontSize: 12.5, textAlign: 'center', fontStyle: 'italic' },
   legendRow: { flexDirection: 'row', gap: 16, justifyContent: 'center' },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   swatch: { width: 10, height: 10, borderRadius: 3 },

@@ -21,4 +21,5 @@ export { ModuleLessonList, RealLifeSubQuestRow } from './ModuleLessonList';
 export { LifeEventCard } from './LifeEventCard';
 export { AchievementDetailModal } from './AchievementDetailModal';
 export { DailyRewardsModal } from './DailyRewardsModal';
+export { Select, type SelectOption } from './Select';
 export { StackedAreaChart } from './Chart';

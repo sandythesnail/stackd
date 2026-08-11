@@ -240,7 +240,7 @@ export default function Home() {
   // "quest" is otherwise purely an internal/code term (Results and Modules consistently
   // say "lesson" throughout), so this one spot read as if quest and lesson were two
   // different things.
-  const ctaLabel = activeToday ? 'Keep Hammy happy — do another module' : 'Continue lesson';
+  const ctaLabel = activeToday ? 'Keep Hammy happy, do another module' : 'Continue lesson';
 
   return (
     <Screen edges={['top']}>
@@ -262,21 +262,25 @@ export default function Home() {
       >
         <Greeting />
 
+        {/* Three tiles, not four. The raw lifetime XP total used to lead this row, and it was
+            the one number here nobody could act on: coins and diamonds are spendable, the
+            streak is collectable, XP is a score that only matters through the level it feeds
+            — and the level is already in the header two lines above, with the full breakdown
+            on Progress. */}
         <View style={styles.statRow}>
-          <TourTarget id="tour-xp" style={{ flex: 1 }}>
-            <Stat value={state.xp.toLocaleString()} label="XP" />
-          </TourTarget>
           {/* Always a button now, not only while something is pending — it opens the reward
               calendar rather than silently banking coins, and "see where I am in the week" is
               worth a tap on a day you've already collected. The yellow `reward` treatment
               still marks the days you haven't. */}
-          <Pressable style={{ flex: 1 }} onPress={() => setDailyRewardsOpen(true)}>
-            <Stat
-              value={<Row><Flame size={13} /><Num>{state.streak}</Num></Row>}
-              label="Streak"
-              reward={loginBonusPending}
-            />
-          </Pressable>
+          <TourTarget id="tour-streak" style={{ flex: 1 }}>
+            <Pressable onPress={() => setDailyRewardsOpen(true)}>
+              <Stat
+                value={<Row><Flame size={13} /><Num>{state.streak}</Num></Row>}
+                label="Streak"
+                reward={loginBonusPending}
+              />
+            </Pressable>
+          </TourTarget>
           <Stat value={<Row><Coin /><Num>{state.coins}</Num></Row>} label="Coins" />
           <Stat value={<Row><Diamond /><Num>{state.diamonds}</Num></Row>} label="Diamonds" />
         </View>
@@ -323,7 +327,7 @@ export default function Home() {
             />
             {activeToday ? (
               <Txt variant="lead" style={styles.ambientNudge}>
-                🔥 {state.streak}-day streak — Hammy will be even happier tomorrow
+                🔥 {state.streak}-day streak. Hammy will be even happier tomorrow
               </Txt>
             ) : null}
           </Card>
@@ -359,7 +363,7 @@ export default function Home() {
               <Txt style={styles.badgeLbl}>{b.label}</Txt>
             </Pressable>
           )) : (
-            <Txt variant="lead" style={{ fontSize: 13 }}>No badges yet — finish a lesson to earn your first one!</Txt>
+            <Txt variant="lead" style={{ fontSize: 13 }}>No badges yet. Finish a lesson to earn your first one!</Txt>
           )}
         </View>
       </ScrollView>

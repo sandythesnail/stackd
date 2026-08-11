@@ -168,7 +168,7 @@ type LayoutModeProps = { onLayoutMode: (mode: LayoutMode) => void };
 function teachHint(chapter: TeachChapter, conceptIdx: number): string | undefined {
   const concept = chapter.concepts[conceptIdx];
   if (!concept?.check?.statement || !concept.plain) return undefined;
-  return `Remember what ${concept.term} means — ${concept.plain}`;
+  return `Remember what ${concept.term} means: ${concept.plain}`;
 }
 
 function initialLayoutMode(chapter: Chapter): LayoutMode {
@@ -1478,7 +1478,7 @@ function TeachView({
           {answered !== null ? (
             <AnswerFeedback>
               <Txt style={{ fontFamily: font.bold, fontSize: 13, color: answered === concept.check?.isTrue ? colors.greenDark : colors.pinkDark }}>
-                {answered === concept.check?.isTrue ? 'Correct!' : `Not quite — that's ${concept.check?.isTrue ? 'true' : 'false'}.`}
+                {answered === concept.check?.isTrue ? 'Correct!' : `Not quite. That's ${concept.check?.isTrue ? 'true' : 'false'}.`}
               </Txt>
             </AnswerFeedback>
           ) : null}
@@ -2097,7 +2097,7 @@ function MythcardsView({
                 {resolved.guessedRight ? '✓ CORRECT' : '✕ NOT QUITE'}
               </Tag>
               <Txt style={[styles.mythGuessLine, { color: resolved.guessedRight ? colors.greenDark : colors.pinkDark }]}>
-                You said {resolved.guessedTrue ? 'True' : 'False'} — it&apos;s {card.isTrue ? 'True' : 'False'}.
+                You said {resolved.guessedTrue ? 'True' : 'False'}, and it&apos;s {card.isTrue ? 'True' : 'False'}.
               </Txt>
               <Txt variant="lead" style={{ fontSize: 13, color: resolved.guessedRight ? colors.greenDark : colors.pinkDark }}>{card.explanation}</Txt>
             </>
@@ -2610,7 +2610,7 @@ function SpotcheckView({ chapter, onComplete, onAction, reactTo, reportCheck }: 
           <Card style={{ gap: 8 }}>
             <Tag tone="green">✓ NOTHING TO FLAG</Tag>
             <Txt variant="lead" style={{ fontSize: 13 }}>
-              Right call — there was nothing wrong with this one, and you didn&apos;t flag anything that was fine.
+              Right call. There was nothing wrong with this one, and you didn&apos;t flag anything that was fine.
             </Txt>
           </Card>
         </Reanimated.View>
@@ -2625,7 +2625,7 @@ function SpotcheckView({ chapter, onComplete, onAction, reactTo, reportCheck }: 
     // questions and the student needs both answered.
     const verdict = s.isRedFlag
       ? (wasFlagged ? { tone: 'green' as const, label: '✓ YOU CAUGHT THIS' } : { tone: 'pink' as const, label: '✕ YOU MISSED THIS' })
-      : { tone: 'lock' as const, label: '— ACTUALLY FINE' };
+      : { tone: 'lock' as const, label: 'ACTUALLY FINE' };
     return (
       <View style={{ gap: 10, flexGrow: 1 }}>
         <Txt variant="h2">{chapter.title}</Txt>
@@ -2770,7 +2770,7 @@ function ExplainbackView({
         <AnswerFeedback>
           <Card style={{ gap: 6 }}>
             <Txt style={{ fontFamily: font.bold, fontSize: 13, color: hitKeywords.length ? colors.greenDark : colors.pinkDark }}>
-              {hitKeywords.length ? `Nice — you covered: ${hitKeywords.join(', ')}` : "Here's the full picture:"}
+              {hitKeywords.length ? `Nice, you covered: ${hitKeywords.join(', ')}` : "Here's the full picture:"}
             </Txt>
             <Txt variant="lead" style={{ fontSize: 13 }}>{chapter.fullDefinition}</Txt>
           </Card>
@@ -2844,7 +2844,7 @@ function UrlinspectView({ chapter, onComplete, onAction, reactTo, reportCheck }:
                   {p.isSuspicious ? '⚑' : '✓'}
                 </Txt>
                 <Txt variant="lead" style={{ flex: 1, fontSize: 12.5 }}>
-                  {!p.isSuspicious ? <Txt style={{ fontFamily: font.extra }}>You flagged this, but it&apos;s fine — </Txt> : null}
+                  {!p.isSuspicious ? <Txt style={{ fontFamily: font.extra }}>You flagged this, but it&apos;s fine: </Txt> : null}
                   {p.note}
                 </Txt>
               </View>

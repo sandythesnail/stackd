@@ -16,15 +16,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@clerk/clerk-expo';
 import { useStore, type AppState } from '@/store';
 import { makeSupabase } from './supabase';
+import { notify } from './confirm';
 import { mobileToWeb, webToMobile, type WebState } from './webState';
 
 const DEBOUNCE_MS = 1500;
 /** Which account wrote the device-global AsyncStorage snapshot — see the owner check. */
 const OWNER_KEY = 'stackd_state_owner_v1';
 
+/** Paid to a player who signed up through someone's referral link, once they finish a lesson.
+ * Must match referrals.sql's own +15 — the function credits the coins into user_progress
+ * server-side and returns `claimed: true`; this constant is only the local mirror of that. */
+const REFERRAL_ACTIVATION_COINS = 15;
+
+/** What the two referral RPCs return (jsonb). Both are idempotent and authoritative: once a
+ * referral is marked paid, later calls report nothing to claim. */
+type ActivationResult = { claimed?: boolean; reason?: string } | null;
+type ReferrerResult = { diamonds?: number } | null;
+
 export function SupabaseSync() {
   const { isSignedIn, userId, getToken } = useAuth();
-  const { state, hydrated, hydrateFromRemote, resetForAccountSwitch } = useStore();
+  const { state, hydrated, hydrateFromRemote, resetForAccountSwitch, creditReferralReward } = useStore();
 
   // Keep latest getToken/state/hydrate in refs so the Supabase client and callbacks are
   // stable (created once) yet always act on current values.
@@ -36,6 +47,8 @@ export function SupabaseSync() {
   hydrateRef.current = hydrateFromRemote;
   const resetRef = useRef(resetForAccountSwitch);
   resetRef.current = resetForAccountSwitch;
+  const creditRef = useRef(creditReferralReward);
+  creditRef.current = creditReferralReward;
 
   const supabase = useMemo(() => makeSupabase(() => getTokenRef.current()), []);
 
@@ -43,6 +56,14 @@ export function SupabaseSync() {
   const ready = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pending = useRef<AppState | null>(null);
+  /** Set when a lesson has just been finished locally, cleared once the upload that carries
+   * it has actually landed — see the referral check below for why the ordering matters. */
+  const referralCheckAfterPush = useRef(false);
+  const claimingReferral = useRef(false);
+  /** Holds claimReferralRewards, which is defined below `push` but has to be callable from
+   * inside it. A ref rather than a reorder because push is what proves the server can see the
+   * lesson the claim depends on. */
+  const claimRef = useRef<(() => Promise<void>) | null>(null);
 
   const push = useMemo(
     () => async (uid: string, s: AppState) => {
@@ -59,9 +80,68 @@ export function SupabaseSync() {
         return;
       }
       lastRemote.current = blob;
+      // Only NOW is it worth asking the server to activate a referral. claim_referral_
+      // activation refuses to pay until it can see a finished lesson in this account's
+      // user_progress.questProgress, and that row is exactly what the upsert above just
+      // wrote. Asking any earlier — straight from the "lesson finished" handler, before the
+      // debounce fires — reliably returns 'no_lesson_completed', which would then be the
+      // last word until the player happened to relaunch the app.
+      if (referralCheckAfterPush.current) {
+        referralCheckAfterPush.current = false;
+        void claimRef.current?.();
+      }
     },
     [supabase],
   );
+
+  /** Referral payouts, both directions.
+   *
+   * These two RPCs are the ONLY way a referral ever pays out — both are SECURITY DEFINER and
+   * decide the amounts themselves, so a client can't credit itself or anyone else. Until now
+   * only app.js called them, which made the whole feature a no-op for anyone using the app:
+   * a mobile referral link points at `/m/?ref=<id>` (see Settings' referralLinkFor), the
+   * signup page creates the pending referral row, and then nobody ever asked the server to
+   * activate it. The Settings card promised the referrer 25 diamonds and the friend 15 coins,
+   * and neither arrived unless one of them happened to open the desktop site afterwards.
+   *
+   * Both calls are idempotent — an activated referral reports 'no_pending_referral' forever
+   * after, and claim_referrer_rewards only returns diamonds for activated-but-unpaid rows —
+   * so there's no local "already tried" flag to keep in sync. The in-flight guard is just to
+   * stop the load/foreground/post-upload triggers overlapping each other. */
+  const claimReferralRewards = useMemo(
+    () => async () => {
+      if (claimingReferral.current) return;
+      claimingReferral.current = true;
+      try {
+        const { data, error } = await supabase.rpc('claim_referral_activation');
+        if (error) {
+          console.warn('[referral] activation check failed:', error.message);
+        } else if ((data as ActivationResult)?.claimed) {
+          creditRef.current(REFERRAL_ACTIVATION_COINS, 0);
+          notify('Welcome aboard!', `+${REFERRAL_ACTIVATION_COINS} coins for joining through a friend's link.`);
+        }
+
+        const { data: owed, error: owedErr } = await supabase.rpc('claim_referrer_rewards');
+        if (owedErr) {
+          console.warn('[referral] referrer check failed:', owedErr.message);
+        } else {
+          const diamonds = (owed as ReferrerResult)?.diamonds ?? 0;
+          if (diamonds > 0) {
+            creditRef.current(0, diamonds);
+            notify('A friend joined!', `+${diamonds} diamonds from your referral link.`);
+          }
+        }
+      } catch (e) {
+        // Offline, DNS, or the SQL migration not run yet. Nothing is lost: the server still
+        // holds the unpaid row, and the next sign-in or foreground asks again.
+        console.warn('[referral] check failed:', e);
+      } finally {
+        claimingReferral.current = false;
+      }
+    },
+    [supabase],
+  );
+  claimRef.current = claimReferralRewards;
 
   const flush = useMemo(
     () => async () => {
@@ -115,9 +195,25 @@ export function SupabaseSync() {
         ready.current = true;
         await push(userId, localState); // seed a fresh cloud row from local state
       }
+      // Catches the referred player who finished their first lesson in an earlier session,
+      // and — the case nothing else covers — the REFERRER, whose diamonds depend on what a
+      // friend did on a different device entirely.
+      if (!cancelled) await claimReferralRewards();
     })();
     return () => { cancelled = true; };
-  }, [hydrated, isSignedIn, userId, supabase, push]);
+  }, [hydrated, isSignedIn, userId, supabase, push, claimReferralRewards]);
+
+  // A finished lesson is the event claim_referral_activation is waiting for, so note it and
+  // let the next successful upload trigger the check (see push). Counts real completions
+  // rather than watching the whole state object, which changes on every coin.
+  const lessonsDone =
+    Object.values(state.moduleProgress).reduce((n, done) => n + done.length, 0)
+    + state.completedLifeTaskIds.length;
+  const lastLessonsDone = useRef(lessonsDone);
+  useEffect(() => {
+    if (lessonsDone > lastLessonsDone.current) referralCheckAfterPush.current = true;
+    lastLessonsDone.current = lessonsDone;
+  }, [lessonsDone]);
 
   // Debounced upload whenever local state changes (after the initial load).
   useEffect(() => {
@@ -128,13 +224,16 @@ export function SupabaseSync() {
     return () => { if (timer.current) clearTimeout(timer.current); };
   }, [state, isSignedIn, userId, flush]);
 
-  // Flush immediately when the app is backgrounded.
+  // Flush immediately when the app is backgrounded, and re-check referrals on the way back
+  // in. Coming back to the foreground is the one moment a long-running session gets to learn
+  // that a friend finished their first lesson while it was sitting idle.
   useEffect(() => {
     const sub = RNAppState.addEventListener('change', (s) => {
       if (s === 'background' || s === 'inactive') flush();
+      else if (s === 'active' && ready.current) void claimReferralRewards();
     });
     return () => sub.remove();
-  }, [flush]);
+  }, [flush, claimReferralRewards]);
 
   return null;
 }

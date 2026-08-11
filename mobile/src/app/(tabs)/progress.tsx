@@ -3,7 +3,22 @@ import Svg, { Circle } from 'react-native-svg';
 import { Screen, Header, Txt, Card, Stat, ProgressBar, MIcon } from '@/components';
 import { colors, font } from '@/theme';
 import { modules } from '@/data';
-import { useStore, xpForLevel, xpProgressPct, MAX_LEVEL } from '@/store';
+import { useStore, xpForLevel, xpProgressPct, MAX_LEVEL, TIERS } from '@/store';
+
+/** Rounds the XP chart's ceiling up to a clean number STRICTLY above the biggest bar.
+ *
+ * The chart used to scale every bar against `Math.max(...xpVals, 1)`, i.e. against its own
+ * tallest value — so the leading module was pinned to full height permanently, from the very
+ * first lesson finished. A bar chart whose tallest bar is always exactly full tells you
+ * nothing and looks broken, which is precisely how it read: "already full but odd".
+ *
+ * Scaling to a labelled ceiling instead means the bars have somewhere to grow into, and the
+ * axis figure printed beside the chart says what full height would actually mean. */
+function niceAxisMax(peak: number): number {
+  if (peak <= 0) return 100;
+  const step = peak <= 100 ? 25 : peak <= 500 ? 50 : peak <= 2000 ? 250 : 500;
+  return Math.ceil((peak + 1) / step) * step;
+}
 
 /** Screen 8 — Progress. Ported from the website's renderProgressPage: 4 stat cards, a
  * "Modules Done" donut with legend, a Module Progress chart, an "XP Earned by
@@ -15,10 +30,18 @@ export default function Progress() {
     state, level, tierName, achievements, moduleDone, moduleTotal, moduleStatus,
   } = useStore();
 
-  const totalDone = modules.reduce((sum, m) => sum + moduleDone(m.id), 0);
-  const totalQuests = modules.reduce((sum, m) => sum + moduleTotal(m.id), 0);
   const masteredCount = modules.filter((m) => moduleStatus(m.id) === 'done').length;
-  const overallPct = totalQuests ? totalDone / totalQuests : 0;
+  // The ring measures the same thing its own centre number and legend describe: modules
+  // FINISHED, out of eleven.
+  //
+  // It used to be filled from `totalDone / totalQuests` — the fraction of individual lessons
+  // done across the whole curriculum — while the number inside it read `masteredCount` and
+  // the legend underneath read "Completed (0) / Remaining (11)". So a player part-way through
+  // their first module saw a ring with a visible green arc wrapped around a big "0 / 11",
+  // captioned "Completed (0)". Three readouts, two different questions. Per-lesson progress
+  // hasn't been lost; it's the Module Progress card immediately below, which shows it per
+  // module rather than as one blended average.
+  const overallPct = modules.length ? masteredCount / modules.length : 0;
   // Reused instead of calling achievements() twice — each call re-runs the full
   // computeMetAchievementIds scan, so this was doubling that work on every render.
   const allAchievements = achievements();
@@ -38,7 +61,7 @@ export default function Progress() {
   const atMaxLevel = level >= MAX_LEVEL;
 
   const xpVals = modules.map((m) => state.moduleStats[m.id]?.xp ?? 0);
-  const maxXp = Math.max(...xpVals, 1);
+  const xpAxisMax = niceAxisMax(Math.max(...xpVals, 0));
 
   return (
     <Screen edges={['top']}>
@@ -46,9 +69,11 @@ export default function Progress() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Txt variant="disp" style={{ fontSize: 23 }}>Your progress</Txt>
 
+        {/* Total XP used to lead this row. It's gone from the page entirely: the level below
+            is what XP is actually for, and the raw running total was a number with nothing to
+            compare it against and nothing to do about it. */}
         <View style={styles.statGrid}>
-          <Stat value={state.xp.toLocaleString()} label="Total XP" style={styles.statCell} />
-          <Stat value={level} label="Level" style={styles.statCell} />
+          <Stat value={`${level}/${MAX_LEVEL}`} label="Level" style={styles.statCell} />
           <Stat value={state.streak} label="Day streak" style={styles.statCell} />
           <Stat value={`${unlockedBadges}/${totalBadges}`} label="Badges" style={styles.statCell} />
         </View>
@@ -90,11 +115,17 @@ export default function Progress() {
         </Card>
 
         <Card style={{ gap: 12 }}>
-          <Txt variant="h2">XP Earned by Module</Txt>
+          <View style={styles.chartHead}>
+            <Txt variant="h2">XP Earned by Module</Txt>
+            <Txt style={styles.axisLabel}>full bar = {xpAxisMax} XP</Txt>
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.colScroll}>
             {modules.map((m, i) => {
               const xp = xpVals[i];
-              const hPct = Math.max(2, Math.round((xp / maxXp) * 100));
+              // A 6% floor so a module worth a handful of XP still shows something, but only
+              // once it has any: a module you've never opened draws no bar at all rather than
+              // the 2% stub every one of them used to get.
+              const hPct = xp > 0 ? Math.max(6, Math.round((xp / xpAxisMax) * 100)) : 0;
               return (
                 <View key={m.id} style={styles.col}>
                   <Txt style={styles.colVal}>{xp > 0 ? xp : ''}</Txt>
@@ -112,32 +143,59 @@ export default function Progress() {
           <Txt variant="h2">Level Progress</Txt>
           <View style={styles.levelRow}>
             <View style={styles.levelBig}>
-              <Txt style={styles.levelBigTxt}>Lv {level}</Txt>
+              {/* "Lv 11" alone read as an arbitrary number that couldn't be checked against
+                  anything — and in Fredoka, "Lv 11" is an easy thing to misread. Stacking the
+                  word over "11 of 11" says both what it is and where it ends. */}
+              <Txt style={styles.levelBigCap}>LEVEL</Txt>
+              <Txt style={styles.levelBigTxt}>{level}</Txt>
+              <Txt style={styles.levelBigCap}>of {MAX_LEVEL}</Txt>
             </View>
             <View style={{ flex: 1, gap: 8 }}>
-              {/* These two numbers flank the bar, so they have to be the BAR's endpoints.
-                  They used to be total XP on the left and the next level's cumulative
-                  threshold on the right ("2,413 XP earned … 2,200 XP needed") while the bar
-                  between them measured progress within the current level only — so at Level 5
-                  with 500 XP the labels read 500-of-660 while the bar sat at 11%, and at the
-                  top level they read "2,413 earned / 2,200 needed", asking for less XP than
-                  the player already had, under a full bar and the words "Max level reached".
-                  Per-level figures describe what's actually drawn. Total XP hasn't been lost:
-                  it's the first stat tile at the top of this same screen. */}
+              {/* These two numbers flank the bar, so they have to be the BAR's endpoints —
+                  the bar measures progress within the CURRENT level, so the labels are
+                  per-level figures, not cumulative totals. */}
               <View style={styles.levelXpRow}>
                 <Txt style={styles.levelXpTxt}>
                   {atMaxLevel
-                    ? `${state.xp.toLocaleString()} XP earned`
+                    ? 'Highest level reached'
                     : `${(state.xp - base).toLocaleString()} / ${(ceil - base).toLocaleString()} XP this level`}
                 </Txt>
-                <Txt style={styles.levelXpTxt}>{atMaxLevel ? 'Max level' : `Level ${level + 1}`}</Txt>
+                <Txt style={styles.levelXpTxt}>{atMaxLevel ? '' : `Level ${level + 1} next`}</Txt>
               </View>
               <ProgressBar value={levelPct / 100} height={10} />
               <Txt style={styles.levelSub}>
-                {atMaxLevel ? `Max level reached · ${tierName}` : `${xpToNext.toLocaleString()} XP to Level ${level + 1} · ${tierName}`}
+                {atMaxLevel
+                  ? `Level ${MAX_LEVEL} is the last one. There's nothing above it.`
+                  : `${xpToNext.toLocaleString()} more XP to reach Level ${level + 1}`}
               </Txt>
             </View>
           </View>
+        </Card>
+
+        {/* The rank ladder, stated outright.
+            The header shows a tier name sitting directly under a level number, which reads as
+            "my level earned me this rank". It doesn't: rank comes from how many modules are
+            finished and has nothing to do with level or XP at all. Nowhere in the app said so,
+            and nowhere listed what any tier costs — so a player could see "Money-Aware
+            Sophomore" with no idea what it meant or how the next one arrives. */}
+        <Card style={{ gap: 10 }}>
+          <Txt variant="h2">Ranks</Txt>
+          <Txt variant="lead" style={{ fontSize: 12.5, marginTop: -4 }}>
+            Your rank comes from how many modules you finish, not from your level.
+            You&apos;ve finished {masteredCount} of {modules.length}.
+          </Txt>
+          {TIERS.map((t) => {
+            const current = t.name === tierName;
+            const need = t.min === t.max ? `all ${t.max}` : `${t.min}`;
+            return (
+              <View key={t.name} style={[styles.tierRow, current && styles.tierRowOn]}>
+                <Txt style={[styles.tierName, current && styles.tierNameOn]} numberOfLines={1}>{t.name}</Txt>
+                <Txt style={[styles.tierNeed, current && styles.tierNeedOn]}>
+                  {t.min === 0 ? 'from the start' : `${need} modules`}
+                </Txt>
+              </View>
+            );
+          })}
         </Card>
       </ScrollView>
     </Screen>
@@ -213,8 +271,22 @@ const styles = StyleSheet.create({
     width: 62, height: 62, borderRadius: 20, backgroundColor: colors.tagGreenBg,
     alignItems: 'center', justifyContent: 'center',
   },
-  levelBigTxt: { fontFamily: font.display, fontSize: 16, color: colors.greenDark },
+  levelBigTxt: { fontFamily: font.display, fontSize: 24, lineHeight: 27, color: colors.greenDark },
+  levelBigCap: { fontFamily: font.extra, fontSize: 8.5, letterSpacing: 0.5, color: colors.muted3 },
   levelXpRow: { flexDirection: 'row', justifyContent: 'space-between' },
   levelXpTxt: { fontFamily: font.bold, fontSize: 11.5, color: colors.muted3 },
   levelSub: { fontFamily: font.bold, fontSize: 11.5, color: colors.muted4 },
+
+  chartHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
+  axisLabel: { fontFamily: font.bold, fontSize: 10.5, color: colors.muted5 },
+
+  tierRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+    paddingVertical: 8, paddingHorizontal: 11, borderRadius: 12, backgroundColor: colors.screen,
+  },
+  tierRowOn: { backgroundColor: colors.tagGreenBg, borderWidth: 1.5, borderColor: colors.greenSoft },
+  tierName: { fontFamily: font.bold, fontSize: 12.5, color: colors.muted2, flexShrink: 1 },
+  tierNameOn: { fontFamily: font.extra, color: colors.greenDark },
+  tierNeed: { fontFamily: font.bold, fontSize: 11.5, color: colors.muted5 },
+  tierNeedOn: { color: colors.greenDark },
 });

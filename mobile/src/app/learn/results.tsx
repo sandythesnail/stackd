@@ -311,7 +311,7 @@ function MasteryRing({ pct, graded = true }: { pct: number; graded?: boolean }) 
         />
       </Svg>
       <View style={styles.ringInner}>
-        <Txt style={styles.ringPct}>{graded ? `${pct}%` : '—'}</Txt>
+        <Txt style={styles.ringPct}>{graded ? `${pct}%` : 'N/A'}</Txt>
       </View>
     </View>
   );
@@ -382,7 +382,7 @@ function QuestReportCard({
           <Txt style={{ fontFamily: font.extra }}>&quot;{report.explainback.term}&quot;: </Txt>
           {report.explainback.tier === 'great' ? 'you got the key idea on your own.'
             : report.explainback.tier === 'ok' ? 'you were on the right track.'
-              : "worth rereading — didn't quite click yet."}
+              : "worth rereading, it didn't quite click yet."}
         </Txt>
       ) : null}
 

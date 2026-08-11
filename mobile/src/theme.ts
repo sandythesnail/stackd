@@ -96,6 +96,9 @@ export const colors = {
   danger: '#C25A5A',
   dangerBg: '#FBEDED',
   dangerSoft: '#D08A8A',
+  // Dark enough to read as body text on dangerBg — `danger` itself is a fill/border weight
+  // and goes muddy at 12px on a pale pink card (Tools' "cost of waiting" comparison).
+  dangerDeep: '#8A2F2F',
 
   // reward / "come collect" highlight (streak claim, recommended module) — ported from
   // the website's #F0C22E yellow (hs-card-reward / module-row.recommended in app.css).
@@ -113,40 +116,50 @@ export const colors = {
   cream: '#FAF6ED',
 } as const;
 
-/** Module accent colors keyed by module id — ported from the website's `.mod-icon.<color>`
- * pastel pairs (app.css) so module icon badges match exactly: a pale background with a
- * darker, same-hue foreground for the icon glyph/text (see `moduleColorText` below).
- * `scams` has no source value — the website's own `iconColor: 'rust'` has no matching
- * `.mod-icon.rust` CSS rule anywhere in app.css, a real bug on the site itself, so this is
- * a filled-in rust/terracotta pastel consistent with the rest of the palette. */
+/** Module accent colors keyed by module id: a light chip background with a darker, same-hue
+ * foreground for the icon glyph/text (see `moduleColorText` below). Used on module icons,
+ * the lesson path, and the Progress page's per-module chart, so these eleven values are what
+ * "a module has a color" means anywhere in the app.
+ *
+ * These were ported from the website's `.mod-icon.<color>` pairs, which were pale and
+ * desaturated, and three of the eleven weren't really colors at all: taxes was a blue-grey
+ * (#E3E7F0), career a grey-lavender (#DCE0FA), and scams a tan-brown (#F5D9C8) invented to
+ * fill in for `iconColor: 'rust'`, which has no matching CSS rule on the site itself. Lined
+ * up next to each other on the Modules tab, a third of the curriculum looked switched off.
+ *
+ * They're saturated pastels now, spread around the hue wheel so no two modules read as the
+ * same color: green, pink, teal, violet, sky, coral, yellow, periwinkle, magenta, lime,
+ * salmon. Still light enough to carry dark text at the contrast the pairs below give them —
+ * "vibrant" here means saturated, not dark. */
 export const moduleColor: Record<string, string> = {
-  earning: '#B2C9AE',
-  spending: '#F2CDD7',
-  saving: '#C8F5F0',
-  investing: '#E8D6FF',
-  credit: '#D6EEFF',
-  risk: '#FFE5D0',
-  loans: '#FFEDB0',
-  taxes: '#E3E7F0',
-  psychology: '#F5D9E8',
-  career: '#DCE0FA',
-  scams: '#F5D9C8',
+  earning: '#7FE3A0',
+  spending: '#FFAECB',
+  saving: '#6FE0D4',
+  investing: '#C3A5FF',
+  credit: '#85D0FF',
+  risk: '#FFB080',
+  loans: '#FFDD6B',
+  taxes: '#9DB2FF',
+  psychology: '#FF9AD5',
+  career: '#C9EC6E',
+  scams: '#FF9B9B',
 };
 
-/** Darker foreground paired with each `moduleColor` background — the module icon's text
- * color on the website (never plain white on the pale chip). */
+/** Darker foreground paired with each `moduleColor` background — the module icon's glyph
+ * color, never plain white on a light chip. Each one is its own hue taken down in lightness
+ * rather than a shared grey, so the pair reads as one color at two weights. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#4A6844',
-  spending: '#B5607A',
-  saving: '#1A6B64',
-  investing: '#6B35B8',
-  credit: '#1A5E8A',
-  risk: '#8A3E1A',
-  loans: '#8A6800',
-  taxes: '#3C4A63',
-  psychology: '#8F2D5E',
-  career: '#38408A',
-  scams: '#8A4A1A',
+  earning: '#17683B',
+  spending: '#A32E5A',
+  saving: '#0F655D',
+  investing: '#5B2CA8',
+  credit: '#0F5480',
+  risk: '#8F4212',
+  loans: '#7A5A00',
+  taxes: '#2E3E8F',
+  psychology: '#A32178',
+  career: '#4A6B0F',
+  scams: '#A32B2B',
 };
 
 export const font = {

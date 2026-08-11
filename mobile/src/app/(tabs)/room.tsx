@@ -238,7 +238,7 @@ export default function Room() {
             <View style={{ gap: 10, marginTop: 16 }}>
               {wardrobeFull ? (
                 <Txt variant="lead" style={styles.wardrobeFullNote}>
-                  Hammy&apos;s wearing {MAX_EQUIPPED_ITEMS} things — take one off to put something else on.
+                  Hammy&apos;s wearing {MAX_EQUIPPED_ITEMS} things. Take one off to put something else on.
                 </Txt>
               ) : null}
               {wardrobeItems.map((item) => {

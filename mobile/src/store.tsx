@@ -78,8 +78,13 @@ export function xpProgressPct(xp: number, level: number) {
   return Math.max(0, Math.min(100, ((xp - base) / (ceil - base)) * 100));
 }
 
-/** TIERS ported verbatim from app.js — keyed by count of MASTERED modules (0-11), not level. */
-const TIERS = [
+/** TIERS ported verbatim from app.js — keyed by count of MASTERED modules (0-11), not level.
+ *
+ * Exported because that distinction is invisible in the UI otherwise. The header shows a tier
+ * name directly under a level number, which reads as "the level earned me this rank" — it
+ * didn't, and no screen said what did. Progress now prints this table with its real
+ * requirements. */
+export const TIERS = [
   { min: 0, max: 2, name: 'Frugal Freshman' },
   { min: 3, max: 4, name: 'Budget Apprentice' },
   { min: 5, max: 7, name: 'Money-Aware Sophomore' },
@@ -603,6 +608,11 @@ type Ctx = {
    * reward, adds them to the player's balance, and pops dailyLoginBanner. Ported from the
    * website's click-to-collect streak card (see hs-streak-card in app.js). */
   claimDailyLoginBonus: () => void;
+  /** Credits a referral payout that the SERVER has already authorised and recorded as paid
+   * (claim_referral_activation / claim_referrer_rewards — see lib/SupabaseSync.tsx). Purely
+   * the local mirror of a decision made in Postgres, so the player's balance reflects it now
+   * instead of on the next full reload; it never decides an amount for itself. */
+  creditReferralReward: (coins: number, diamonds: number) => void;
   setOnboardingTrack: (trackId: string) => void;
   /** Marks the first-login spotlight tour as seen, whether it finished or was skipped —
    * see components/OnboardingTour.tsx. */
@@ -1207,6 +1217,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         liveState.current = next;
         setState(next);
         setDailyLoginBanner({ streak: s.streak, loginCoins: coins, streakDiamonds: diamonds });
+      },
+      creditReferralReward: (coins, diamonds) => {
+        if (coins <= 0 && diamonds <= 0) return;
+        // Through liveState for the same reason claimDailyLoginBonus is: the two RPC results
+        // are credited back-to-back within one async function, and reading the `state`
+        // closure would make the second write land on a snapshot taken before the first.
+        const s = liveState.current;
+        const next = applyAchievementUnlocks({
+          ...s, coins: s.coins + coins, diamonds: s.diamonds + diamonds,
+        });
+        liveState.current = next;
+        setState(next);
       },
       setOnboardingTrack: (trackId) => setState((s) => ({ ...s, onboardingTrackId: trackId })),
       markOnboardingTourSeen: () => setState((s) => (s.hasSeenOnboardingTour ? s : { ...s, hasSeenOnboardingTour: true })),

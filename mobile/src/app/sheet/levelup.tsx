@@ -59,7 +59,7 @@ function LevelUpSheet() {
           <Tag tone="pink" textColor={colors.white} style={{ backgroundColor: '#FF96B8' }}>⬆ LEVEL UP</Tag>
           <Hammy size={184} bob equipped={equippedMascotItems()} style={styles.hammy} />
           <Txt style={styles.big}>Level {level}!</Txt>
-          <Txt style={styles.body}>Hammy grew up — and so did you. You&apos;re now a</Txt>
+          <Txt style={styles.body}>Hammy grew up, and so did you. You&apos;re now a</Txt>
 
           <View style={styles.tierChip}>
             <LinearGradient colors={[colors.pinkBorder, colors.pink]} start={{ x: 0.2, y: 0.1 }} end={{ x: 0.9, y: 1 }} style={styles.tierIc}>

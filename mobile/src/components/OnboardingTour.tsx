@@ -53,9 +53,13 @@ type TourStep = {
 
 const TOUR_STEPS: TourStep[] = [
   {
-    targetId: 'tour-xp',
-    title: 'Earn XP as you go',
-    body: 'Finish lessons and quests to earn XP and level up through the tiers.',
+    // Was 'tour-xp', the lifetime-XP tile that used to lead Home's stat row. That tile is
+    // gone (see home.tsx), so this stop points at the tile that replaced it at the front of
+    // the row — and at a better first thing to teach, since the streak is something the
+    // player does rather than a number that accumulates at them.
+    targetId: 'tour-streak',
+    title: 'Come back every day',
+    body: 'Your streak counts the days in a row you show up. Tap it to open the reward calendar and collect the day you\'re on.',
   },
   {
     targetId: 'tour-shop-tab',
@@ -68,7 +72,7 @@ const TOUR_STEPS: TourStep[] = [
     // equivalent step does for its collapsible mobile sidebar.
     targetId: 'tour-tools-tab',
     title: 'Do the math in Tools',
-    body: 'Budget, loan payoff, and compound interest calculators — real numbers, not just lessons. Handy any time, not just while you\'re learning.',
+    body: 'Budget, loan payoff, and compound interest calculators with real numbers, not just lessons. Handy any time, not just while you\'re learning.',
   },
   {
     targetId: 'tour-modules-tab',
@@ -88,7 +92,7 @@ const TOUR_STEPS: TourStep[] = [
     // opens and calls remeasureActive once that's settled — see (tabs)/home.tsx.
     targetId: 'tour-lesson-node',
     title: 'Pick your first lesson',
-    body: 'Tap this one to see what it covers — finish them in order to complete the module.',
+    body: 'Tap this one to see what it covers. Finish them in order to complete the module.',
     requiresRealClick: true,
     scrollsIntoView: true,
   },

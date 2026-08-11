@@ -90,7 +90,7 @@ export default function Survey() {
           <View style={{ gap: 6, marginTop: 8 }}>
             <Txt style={styles.eyebrow}>GET TO KNOW YOU</Txt>
             <Txt variant="h1">How familiar are you with each topic?</Txt>
-            <Txt variant="lead">Drag each slider — there are no wrong answers, we just meet you where you are.</Txt>
+            <Txt variant="lead">Drag each slider. There are no wrong answers, we just meet you where you are.</Txt>
           </View>
 
           <View style={{ gap: 18, marginTop: 14 }}>
@@ -129,7 +129,7 @@ export default function Survey() {
           <View style={{ gap: 6, marginTop: 8 }}>
             <Txt style={styles.eyebrow}>YOUR FINANCIAL TOOLKIT</Txt>
             <Txt variant="h1">What are you hoping to get out of Stacked?</Txt>
-            <Txt variant="lead">Select all that apply — this helps us recommend where to start.</Txt>
+            <Txt variant="lead">Select all that apply. This helps us recommend where to start.</Txt>
           </View>
 
           <View style={{ gap: 10, marginTop: 14 }}>
@@ -160,7 +160,7 @@ export default function Survey() {
 
           <View style={{ marginTop: 22 }}>
             <Txt style={styles.pathLabel}>YOUR PATH</Txt>
-            <Txt style={styles.pathCaption}>These {activeTrack.moduleIds.length} modules, in order — you can always explore the rest later.</Txt>
+            <Txt style={styles.pathCaption}>These {activeTrack.moduleIds.length} modules, in order. You can always explore the rest later.</Txt>
             <View style={{ marginTop: 12 }}>
               {activeTrack.moduleIds.map((id, i) => {
                 const m = modules.find((x) => x.id === id);

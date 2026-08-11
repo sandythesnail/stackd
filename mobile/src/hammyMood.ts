@@ -6,15 +6,15 @@
 export type HammyMood = { id: string; label: string; msg: string };
 
 export const HAMMY_MOODS: HammyMood[] = [
-  { id: 'star', label: 'starstruck', msg: "Hammy's feeling starstruck today. Give them something to be proud of — finish a module!" },
+  { id: 'star', label: 'starstruck', msg: "Hammy's feeling starstruck today. Give them something to be proud of by finishing a module!" },
   { id: 'sleepy', label: 'sleepy', msg: "Hammy's a little sleepy today. Wake them up with a quick module!" },
-  { id: 'curious', label: 'curious', msg: "Hammy's feeling curious today. Satisfy their curiosity — start a module!" },
+  { id: 'curious', label: 'curious', msg: "Hammy's feeling curious today. Satisfy their curiosity and start a module!" },
   { id: 'angry', label: 'grumpy', msg: "Hammy woke up grumpy today. Turn their mood around with a module!" },
-  { id: 'love', label: 'smitten', msg: "Hammy's feeling the love today! Show them some back — finish a module." },
-  { id: 'nervy', label: 'nervous', msg: "Hammy's a bit nervous today. Ease their nerves — complete a module." },
-  { id: 'sad', label: 'a little blue', msg: "Hammy's feeling a little blue today. Cheer them up — finish a module!" },
-  { id: 'surprise', label: 'surprised', msg: "Hammy's totally surprised today. See what's in store — start a module!" },
-  { id: 'wink', label: 'playful', msg: "Hammy's feeling playful today. Play along — finish a module!" },
+  { id: 'love', label: 'smitten', msg: "Hammy's feeling the love today! Show them some back and finish a module." },
+  { id: 'nervy', label: 'nervous', msg: "Hammy's a bit nervous today. Ease their nerves by completing a module." },
+  { id: 'sad', label: 'a little blue', msg: "Hammy's feeling a little blue today. Cheer them up and finish a module!" },
+  { id: 'surprise', label: 'surprised', msg: "Hammy's totally surprised today. See what's in store and start a module!" },
+  { id: 'wink', label: 'playful', msg: "Hammy's feeling playful today. Play along and finish a module!" },
 ];
 
 function moodIndexForDate(date: Date): number {

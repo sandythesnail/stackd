@@ -1,11 +1,11 @@
-import { ReactNode, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, Linking, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useUser, useClerk, useAuth } from '@clerk/clerk-expo';
-import { Screen, Header, Txt, Button, Card, Coin, Diamond, useOnboardingTour } from '@/components';
+import { Screen, Header, Txt, Button, Card, Coin, Diamond } from '@/components';
 import { colors, font, selectableInput } from '@/theme';
 import { user, modules } from '@/data';
 import { useStore } from '@/store';
@@ -25,15 +25,6 @@ import { MODULE_SOURCES } from '@/references';
 export default function Settings() {
   const router = useRouter();
   const { state, level, tierName, resetProgress, debugSimulateNewDay } = useStore();
-  const { startTour } = useOnboardingTour();
-
-  const replayTour = () => {
-    // Doesn't touch hasSeenOnboardingTour — a manual replay shouldn't reset the "seen it"
-    // flag, or the tour would just auto-play again on the very next app open too. Switches
-    // to Home first since that's where both spotlighted elements actually live/are visible.
-    router.push('/(tabs)/home');
-    setTimeout(startTour, 300);
-  };
 
   const confirmReset = () => {
     confirmDestructive('Reset all progress?', 'This wipes your XP, modules, badges, coins, diamonds, shop items, room decor, and budget plan. This cannot be undone.', 'Reset', () => {
@@ -58,8 +49,10 @@ export default function Settings() {
               than treating this like a first run — replaying the animated piggy-born intro and
               landing on a second copy of the tabs. See survey.tsx's finish(). */}
           <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.push('/(onboarding)/survey?retake=1')} />
-          <Row icon="compass" title="Replay welcome tour" sub="XP, the Shop & modules, quick refresher" onPress={replayTour} />
-          <Row icon="trash-2" title="Reset all progress" sub="Clears all XP, modules, badges, coins, diamonds, shop items, room decor, and your budget plan — permanently." danger onPress={confirmReset} />
+          {/* The "Replay welcome tour" row is gone. The tour is still replayable from the
+              help icon in Home's header (Header's onReplayTour), which is where it belongs —
+              on the screen the tour actually walks through. */}
+          <Row icon="trash-2" title="Reset all progress" sub="Erases everything. Can't be undone." danger onPress={confirmReset} />
           {/* Debug helpers live behind __DEV__ and MUST stay there.
            *
            * Two grant-style cheats ("Own everything", "Add 1,000 coins") used to sit here
@@ -127,14 +120,27 @@ function ReferralCardBody({ link }: { link: string | null }) {
   return (
     <LinearGradient colors={[colors.pinkBg, colors.pinkBorder]} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={styles.invite}>
       <Txt style={styles.inviteH}>Invite a friend</Txt>
-      <View style={styles.inviteCopyRow}>
-        <Txt variant="lead" style={styles.inviteCopyTxt}>Earn 25</Txt>
-        <Diamond size={14} />
-        <Txt variant="lead" style={styles.inviteCopyTxt}>
-          when a friend joins with your link and finishes their first lesson. They get 15
-        </Txt>
-        <Coin size={14} />
-        <Txt variant="lead" style={styles.inviteCopyTxt}>too.</Txt>
+      {/* The sentence is one Text and the amounts are chips beneath it.
+          This used to be a wrapping flex row of five items — three text fragments with a
+          Diamond and a Coin between them — because an SVG icon can't sit inside a <Text> and
+          flow with the words. Wrapping happened between the items rather than inside them, so
+          the row broke wherever the long middle fragment ended and left the coin stranded at
+          the start of the last line with "too." after it. Splitting the icons out of the
+          sentence entirely removes the failure mode instead of tuning around it. */}
+      <Txt variant="lead" style={styles.inviteCopyTxt}>
+        When a friend joins with your link and finishes their first lesson, you both get paid.
+      </Txt>
+      <View style={styles.inviteRewards}>
+        <View style={styles.inviteReward}>
+          <Diamond size={14} />
+          <Txt style={styles.inviteRewardVal}>25</Txt>
+          <Txt style={styles.inviteRewardWho}>for you</Txt>
+        </View>
+        <View style={styles.inviteReward}>
+          <Coin size={14} />
+          <Txt style={styles.inviteRewardVal}>15</Txt>
+          <Txt style={styles.inviteRewardWho}>for them</Txt>
+        </View>
       </View>
       {link ? (
         <View style={{ flexDirection: 'row', gap: 8, alignItems: 'stretch', marginTop: 11 }}>
@@ -215,14 +221,14 @@ function FeedbackCardBody({
     <Card style={{ gap: 4, marginTop: 6 }}>
       <Txt style={styles.feedbackH}>Feedback & bug reports</Txt>
       <Txt variant="lead" style={{ fontSize: 12.5 }}>
-        Run into something broken, or just have a thought? Tell us — it goes straight to the people building this.
+        Run into something broken, or just have a thought? It goes straight to the people building this.
       </Txt>
       <View style={styles.feedbackChips}>
         {(['feedback', 'bug'] as const).map((c) => {
           const on = c === category;
           return (
             <Pressable key={c} onPress={() => setCategory(c)} style={[styles.fbChip, on && styles.fbChipOn]}>
-              <Txt style={[styles.fbChipTxt, on && { color: colors.white }]}>{c === 'bug' ? '🐛 Bug' : '💬 Feedback'}</Txt>
+              <Txt style={[styles.fbChipTxt, on && { color: colors.white }]}>{c === 'bug' ? 'Bug' : 'Feedback'}</Txt>
             </Pressable>
           );
         })}
@@ -240,7 +246,7 @@ function FeedbackCardBody({
             textAlignVertical="top"
           />
           <Button
-            label={status === 'sending' ? 'Sending…' : status === 'sent' ? 'Sent — thank you!' : 'Send'}
+            label={status === 'sending' ? 'Sending…' : status === 'sent' ? 'Sent, thank you!' : 'Send'}
             variant={status === 'sent' ? 'ghost' : 'green'}
             size="sm"
             disabled={!message.trim() || status === 'sending'}
@@ -249,7 +255,7 @@ function FeedbackCardBody({
           />
           {status === 'error' ? (
             <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.danger, marginTop: 2 }}>
-              Couldn&apos;t send that — check your connection and try again.
+              Couldn&apos;t send that. Check your connection and try again.
             </Txt>
           ) : null}
         </>
@@ -265,13 +271,25 @@ function FeedbackCardBody({
  * generic hardcoded line ("CFPB · Investor.gov · UConn Financial Wellness · IRS.gov") that
  * didn't actually correspond to what any given module cites. */
 function SourcesSection() {
+  // Closed by default, and it's the whole section that opens now rather than eleven separate
+  // module accordions. Each one was already collapsed, but eleven collapsed headers plus a
+  // caption is still eleven rows of chrome sitting under the feedback box on every visit to
+  // Settings, for something almost nobody opens on any given visit. One row until asked.
+  const [open, setOpen] = useState(false);
   return (
     <View style={{ gap: 3, marginTop: 6 }}>
-      <Txt style={styles.srcHead}>SOURCES & REFERENCES</Txt>
-      <Txt variant="lead" style={{ fontSize: 12, marginBottom: 4 }}>
-        Specific facts, rates, and figures used across the modules, and where they come from.
-      </Txt>
-      {modules.map((m) => <SourceModuleAccordion key={m.id} moduleId={m.id} title={m.name} />)}
+      <Pressable onPress={() => setOpen((o) => !o)} style={styles.srcSectionHead}>
+        <Txt style={styles.srcHead}>SOURCES & REFERENCES</Txt>
+        <Feather name={open ? 'chevron-up' : 'chevron-down'} size={18} color={colors.muted5} />
+      </Pressable>
+      {open ? (
+        <>
+          <Txt variant="lead" style={{ fontSize: 12, marginBottom: 4 }}>
+            Specific facts, rates, and figures used across the modules, and where they come from.
+          </Txt>
+          {modules.map((m) => <SourceModuleAccordion key={m.id} moduleId={m.id} title={m.name} />)}
+        </>
+      ) : null}
     </View>
   );
 }
@@ -351,7 +369,11 @@ function Row({
         <Txt style={[styles.srowT, danger && { color: colors.danger }]}>{title}</Txt>
         {sub ? <Txt style={[styles.srowSub, danger && { color: colors.dangerSoft }]}>{sub}</Txt> : null}
       </View>
-      {!last && <Feather name="chevron-right" size={18} color={colors.muted5} />}
+      {/* Keyed off `onPress`, not off `last` as it used to be. A chevron is a promise that
+          tapping goes somewhere, and the Account row has nowhere to go — it's a read-only
+          display of the signed-in email, so it was pointing at a destination that doesn't
+          exist. Rows that really do navigate still get one. */}
+      {onPress ? <Feather name="chevron-right" size={18} color={colors.muted5} /> : null}
     </Pressable>
   );
 }
@@ -373,8 +395,16 @@ const styles = StyleSheet.create({
   },
   invite: { borderRadius: 24, borderWidth: 1.5, borderColor: colors.pinkBorder2, padding: 18 },
   inviteH: { fontFamily: font.displayMed, fontSize: 16, color: colors.pinkDark },
-  inviteCopyRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 5, marginTop: 5 },
-  inviteCopyTxt: { fontSize: 13 },
+  inviteCopyTxt: { fontSize: 13, marginTop: 5, lineHeight: 18 },
+  inviteRewards: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  inviteReward: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: colors.white, borderRadius: 999,
+    borderWidth: 1.5, borderColor: colors.pinkBorder,
+    paddingVertical: 5, paddingHorizontal: 11,
+  },
+  inviteRewardVal: { fontFamily: font.display, fontSize: 14, color: colors.ink },
+  inviteRewardWho: { fontFamily: font.bold, fontSize: 11.5, color: colors.pinkText },
   codeField: {
     flex: 1,
     backgroundColor: colors.white,
@@ -398,7 +428,8 @@ const styles = StyleSheet.create({
   srowIc: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   srowT: { fontFamily: font.extra, fontSize: 14, color: colors.ink },
   srowSub: { fontFamily: font.bold, fontSize: 12, color: colors.muted5, marginTop: 1 },
-  srcHead: { fontFamily: font.extra, fontSize: 12, color: colors.muted5, letterSpacing: 0.6, marginTop: 4, textTransform: 'uppercase' },
+  srcSectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6 },
+  srcHead: { fontFamily: font.extra, fontSize: 12, color: colors.muted5, letterSpacing: 0.6, textTransform: 'uppercase' },
   srcModule: { borderTopWidth: 1.5, borderTopColor: '#EFEFE7', paddingVertical: 11 },
   srcModuleHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   srcModuleTitle: { fontFamily: font.bold, fontSize: 13.5, color: colors.ink },

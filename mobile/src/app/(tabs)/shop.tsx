@@ -109,7 +109,7 @@ export default function Shop() {
               <Txt style={styles.storefrontSign}>{tab === 'room' ? 'The Furniture Farm' : "Porky's Boutique"}</Txt>
               <Txt style={styles.storefrontSub}>
                 {tab === 'room'
-                  ? (filledRoomSlots ? `${filledRoomSlots} piece${filledRoomSlots === 1 ? '' : 's'} furnished so far` : "Furnish Hammy's room — every cozy upgrade compounds!")
+                  ? (filledRoomSlots ? `${filledRoomSlots} piece${filledRoomSlots === 1 ? '' : 's'} furnished so far` : "Furnish Hammy's room. Every cozy upgrade compounds!")
                   : (wornItems.length ? `Currently wearing: ${wornItems.map((i) => i.name).join(', ')}` : 'Pick something cute for your pig!')}
               </Txt>
             </View>
@@ -143,7 +143,7 @@ export default function Shop() {
                 </View>
               ) : null}
               {items.length === 0 ? (
-                <Txt variant="lead" style={{ fontSize: 13 }}>Nothing here yet — check back soon!</Txt>
+                <Txt variant="lead" style={{ fontSize: 13 }}>Nothing here yet. Check back soon!</Txt>
               ) : (
                 <View style={styles.grid}>
                   {items.map((item) => (
