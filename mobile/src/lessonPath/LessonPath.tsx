@@ -585,10 +585,16 @@ function PreviewSheet({
   const { activeTargetId, advanceIfWaitingOn } = useOnboardingTour();
   const { lessonProgressFor } = useStore();
 
-  // Computed up here, above the early return, because the pulse below is a hook. The tour's
-  // final step only ever lands on the recommended node's sheet — that's the node the previous
-  // step had the user tap, and the only one whose CTA reads "Continue lesson".
-  const locked = node?.state === 'current' && activeTargetId === 'tour-lesson-start';
+  // Computed up here, above the early return, because the pulse below is a hook.
+  //
+  // Deliberately NOT narrowed to `node.state === 'current'` the way it used to be. The step
+  // before this one is advanced by a tap on ANY node, not just the recommended one (see the
+  // unconditional advanceIfWaitingOn on every PathNode above and the comment there) — so a
+  // user who picked a lesson further along the path arrived here with the final step live but
+  // nothing locked, nothing ringed and every exit open. The one step in the tour that exists
+  // to insist on a real tap was quietly asking for nothing. Whichever sheet the tour lands
+  // in is the sheet it holds.
+  const locked = activeTargetId === 'tour-lesson-start';
 
   // A slow breath on the button the step is telling them to press. The yellow ring says which
   // one; the movement is what makes the eye go there first, which is the whole job on a sheet
@@ -674,8 +680,15 @@ function PreviewSheet({
 
           {/* No TourTarget wrapper: an inSheet step is never measured for a spotlight (the
               sheet draws its own scrim and callout), so the button just needs the ring and
-              the advance call. */}
-          <Reanimated.View style={ctaPulse}>
+              the advance call.
+              The ring lives on this WRAPPER rather than on the Pressable itself. React
+              Native draws a border inside the view's own box, so putting it on the button
+              ate 3.5px off the button's fill on all four sides — the button changed shape
+              when the tour arrived, and the yellow read as part of the button rather than as
+              something drawn around it. On the wrapper, with a few pixels of padding, it's a
+              real ring with a visible gap: the button is untouched and the highlight is
+              unmistakably pointing AT it. The pulse scales both together. */}
+          <Reanimated.View style={[styles.ctaWrap, locked && styles.ctaWrapTour, ctaPulse]}>
             <Pressable
               onPress={() => {
                 // Safe unconditionally — a no-op unless the tour is waiting on this button.
@@ -683,7 +696,7 @@ function PreviewSheet({
                 onStart();
               }}
               accessibilityRole="button"
-              style={[styles.previewCta, { backgroundColor: tone }, locked && styles.previewCtaTour]}
+              style={[styles.previewCta, { backgroundColor: tone }]}
             >
               <T weight="extra" size={14.5} color={colors.white}>{cta}</T>
             </Pressable>
@@ -775,14 +788,24 @@ const styles = StyleSheet.create({
   },
   previewHead: { flexDirection: 'row', alignItems: 'center', gap: 9, flexWrap: 'wrap' },
   previewHook: { marginTop: 8, lineHeight: 19 },
-  previewCta: { marginTop: 18, borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
+  ctaWrap: { marginTop: 18 },
   // Same reward yellow as the path node's tour ring, so "the thing the tour wants tapped"
-  // looks identical in both places.
-  previewCtaTour: {
-    borderWidth: 3.5, borderColor: colors.reward,
+  // looks identical in both places. The 4px padding is the gap between ring and button —
+  // what makes this read as a highlight around the button rather than a border on it.
+  //
+  // marginTop drops from 18 to 11 to pay for the 7px the ring itself adds (4 padding +
+  // 3 border), so the button stays exactly where it was and the sheet doesn't shift when
+  // the tour reaches this step.
+  //
+  // backgroundColor isn't cosmetic: Android's elevation shadow is derived from the view's
+  // own background, and a transparent wrapper gets no glow at all.
+  ctaWrapTour: {
+    marginTop: 11, padding: 4, borderRadius: 20,
+    borderWidth: 3, borderColor: colors.reward, backgroundColor: colors.white,
     shadowColor: colors.reward, shadowOpacity: 0.55, shadowRadius: 9,
     shadowOffset: { width: 0, height: 0 }, elevation: 6,
   },
+  previewCta: { borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
   previewClose: { marginTop: 4, paddingVertical: 11, alignItems: 'center' },
   previewCloseLocked: { opacity: 0.32 },
 });

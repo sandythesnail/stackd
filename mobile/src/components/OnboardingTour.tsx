@@ -31,8 +31,8 @@ const SETTLE_GRACE_MS = 600;
  *
  * Tapping a path node doesn't open the lesson directly, it opens the preview sheet — so the
  * tour would have ended on a screen the user hadn't finished acting on. The final step
- * follows them into that sheet and points at its "Continue lesson" button, which is the tap
- * that actually starts a lesson.
+ * follows them into that sheet and points at its start button, which is the tap that actually
+ * starts a lesson.
  */
 type TourStep = {
   targetId: string;
@@ -93,12 +93,16 @@ const TOUR_STEPS: TourStep[] = [
     scrollsIntoView: true,
   },
   {
-    // The preview sheet that a path node opens (see LessonPath's PreviewSheet). Its call to
-    // action reads "Continue lesson" for the recommended node, which is the one the previous
-    // step just had the user tap, so the copy here names that button directly.
+    // The preview sheet that a path node opens (see LessonPath's PreviewSheet). The copy
+    // points at the ring rather than quoting the button's words, because that button is
+    // labelled from the node's state — "Continue lesson" only for the recommended one, and
+    // "Start lesson", "Resume lesson" or "Do it again" for the rest. The previous step is
+    // satisfied by a tap on ANY node, so this step has to survive landing in any of those
+    // sheets; naming a label it might not be showing is how you get a tour that instructs
+    // the user to press a button that isn't there.
     targetId: 'tour-lesson-start',
     title: 'Now start it',
-    body: 'Tap Continue lesson and you\'re in. Everything you finish earns XP and coins.',
+    body: 'Tap the highlighted button and you\'re in. Everything you finish earns XP and coins.',
     requiresRealClick: true,
     inSheet: true,
   },
@@ -637,11 +641,16 @@ const styles = StyleSheet.create({
     shadowColor: '#2C3E2D', shadowOpacity: 0.16, shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 }, elevation: 6,
   },
-  // Reward-yellow rather than the plain white of the floating tooltip: inside the sheet this
-  // sits among the sheet's own chrome, and needs to read as the tour talking, not as more
-  // sheet. Same yellow as the highlight ring it's pointing at.
+  // Cream on the sheet's white, with a hairline border: enough to read as the tour talking
+  // rather than as more sheet, and no more than that.
+  //
+  // This used to be reward-yellow — the SAME yellow, on a bigger block, directly above the
+  // ring around the button it was telling the user to press. Two yellow things stacked on
+  // one small sheet is two highlights, and the larger one wins: the eye went to the card,
+  // which is the piece you're meant to read and then look past. The instruction stays here;
+  // the only reward-yellow left in the sheet is the ring around the thing to tap.
   callout: {
-    backgroundColor: colors.rewardBg, borderWidth: 1.5, borderColor: colors.reward,
+    backgroundColor: colors.cream, borderWidth: 1, borderColor: colors.border,
     borderRadius: radius.lg, padding: 14,
   },
   calloutSkip: { alignSelf: 'flex-start', marginTop: 10 },
