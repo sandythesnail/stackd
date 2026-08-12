@@ -6,7 +6,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Txt, Button, Tag, Card, IconButton, CurrencyChip, Coin, Diamond, ItemArt, Hammy, Wallpaper } from '@/components';
 import { colors, font } from '@/theme';
 import { shopItemById, shopItemsReal } from '@/content';
-import type { ShopItemReal } from '@/content';
 import {
   useStore, mysteryDropChance, mysteryPoolUnowned, itemRarity, MAX_EQUIPPED_ITEMS,
   type MysteryResult,
@@ -179,7 +178,7 @@ function ShopItemSheet() {
               previewed in this box — furniture, wallpaper, hats — and a pink wash tinted all
               of them, which both misrepresented the item's own colours and clashed with the
               wallpaper swatches, whose whole point is the colour they are. */}
-          <View style={[styles.preview, opening && styles.previewCentered]}>
+          <View style={styles.preview}>
             {opening ? (
               <Animated.View style={{ transform: [{ rotate }, { scale }] }}>
                 <GiftIcon size={72} tone={item.mysteryPool === 'accessory' ? 'purple' : 'pink'} />
@@ -290,17 +289,21 @@ const styles = StyleSheet.create({
   // Bottom-anchored, not centered — see shop.tsx's preview style for why (matches the
   // website's .shop-preview: centering left tall hats no headroom and they clipped at the top).
   preview: {
-    height: 210, borderRadius: 22, alignItems: 'center', justifyContent: 'flex-end',
+    height: 210, borderRadius: 22, alignItems: 'center',
+    // Centred for everything: furniture, wall posters, mystery boxes, gift icon and Hammy
+    // alike. This used to be flex-end, inherited from the grid card, where bottom-anchoring
+    // earns its keep — those tiles are only 92px tall and centring a tall hat clipped it off
+    // the top. At 210px with 150px art there is 30px of slack at each end, so nothing clips,
+    // and bottom-anchoring instead made every item hang off the bottom edge by a different
+    // amount depending on its own aspect ratio: a 220x70 rug letterboxes inside its 150 box
+    // and then sat low, while a 100x130 poster nearly filled its box and looked centred. The
+    // items were never aligned with each other, only with the bottom of their own art boxes.
+    justifyContent: 'center',
     overflow: 'hidden', backgroundColor: colors.white,
     // The pink gradient this replaces gave the box its own edge against the white sheet.
     // Plain white on white needs a border, or the preview area has no boundary at all.
     borderWidth: 1.5, borderColor: colors.border,
   },
-  // The spinning gift icon has no "base" the way item art does — flex-end left it sitting
-  // near the bottom edge instead of in the middle of the preview, unlike the website's
-  // .shop-modal-pig (a plain centered flexbox). Overrides justifyContent back to center only
-  // while opening.
-  previewCentered: { justifyContent: 'center' },
   head: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 10 },
   balance: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingVertical: 14, paddingHorizontal: 16 },
   oddsLine: { fontFamily: font.extra, fontSize: 15, marginTop: 6 },

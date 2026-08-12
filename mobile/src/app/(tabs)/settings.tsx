@@ -1,11 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, Linking, TextInput } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
 import { useUser, useClerk, useAuth } from '@clerk/clerk-expo';
-import { Screen, Header, Txt, Button, Card, Coin, Diamond } from '@/components';
+import { Screen, Header, Txt, Button, Card } from '@/components';
 import { colors, font, selectableInput } from '@/theme';
 import { user, modules } from '@/data';
 import { useStore } from '@/store';
@@ -14,14 +12,7 @@ import { makeSupabase } from '@/lib/supabase';
 import { confirmDestructive } from '@/lib/confirm';
 import { MODULE_SOURCES } from '@/references';
 
-/** Screen 14 — Settings (invite, account, sources).
- *
- * Referral REWARD payout (REFERRAL_ACTIVATION_COINS=15 for the new signup,
- * server-determined diamonds for the referrer) is intentionally not ported here: on the
- * website it's paid out entirely server-side via Supabase RPCs (claim_referral_activation /
- * claim_referrer_rewards) tied to real Clerk accounts, specifically so a client can never
- * credit itself. What IS real here: a working referral LINK (see ReferralCard below) and
- * copy-to-clipboard. */
+/** Screen 14 — Settings (account, feedback, sources). */
 export default function Settings() {
   const router = useRouter();
   const { state, level, tierName, resetProgress, debugSimulateNewDay } = useStore();
@@ -40,8 +31,6 @@ export default function Settings() {
       <Header level={level} name={tierName} coins={state.coins} diamonds={state.diamonds} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Txt variant="disp" style={{ fontSize: 23 }}>Settings</Txt>
-
-        <ReferralCard />
 
         <View style={{ marginTop: 2 }}>
           {authEnabled ? <ClerkAccountRow /> : <Row icon="user" title="Account" sub={user.email} />}
@@ -88,73 +77,14 @@ export default function Settings() {
   );
 }
 
-/** The real, working referral link — ported from the website's referral card
- * (`${origin}/signup.html?ref=${Clerk.user.id}`, see app.js's referral-link-input setup).
- * The mobile equivalent points into the /m/ web app itself (WebAuthRedirect already
- * forwards a `?ref=` param through to signup.html once the recipient reaches sign-up, see
- * @/lib/webAuth), so this link works whether the recipient opens it on their phone browser
- * (routed into /m/) or a desktop (routed to the marketing site). Previously this showed a
- * static, fake code ("stackd.app/r/MAYA-UC" — wrong domain, not tied to any real account),
- * which is why sharing it never actually worked. */
-const REFERRAL_ORIGIN = 'https://trystacked.app';
-const referralLinkFor = (clerkUserId: string) => `${REFERRAL_ORIGIN}/m/?ref=${clerkUserId}`;
-
-function ReferralCard() {
-  return authEnabled ? <ClerkReferralCard /> : <ReferralCardBody link={null} />;
-}
-
-/** Only rendered when auth is on — reads the real signed-in Clerk user id. */
-function ClerkReferralCard() {
-  const { user: clerkUser } = useUser();
-  return <ReferralCardBody link={clerkUser ? referralLinkFor(clerkUser.id) : null} />;
-}
-
-function ReferralCardBody({ link }: { link: string | null }) {
-  const [copied, setCopied] = useState(false);
-  const copyReferral = async () => {
-    if (!link) return;
-    await Clipboard.setStringAsync(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <LinearGradient colors={[colors.pinkBg, colors.pinkBorder]} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={styles.invite}>
-      <Txt style={styles.inviteH}>Invite a friend</Txt>
-      {/* The sentence is one Text and the amounts are chips beneath it.
-          This used to be a wrapping flex row of five items — three text fragments with a
-          Diamond and a Coin between them — because an SVG icon can't sit inside a <Text> and
-          flow with the words. Wrapping happened between the items rather than inside them, so
-          the row broke wherever the long middle fragment ended and left the coin stranded at
-          the start of the last line with "too." after it. Splitting the icons out of the
-          sentence entirely removes the failure mode instead of tuning around it. */}
-      <Txt variant="lead" style={styles.inviteCopyTxt}>
-        When a friend joins with your link and finishes their first lesson, you both get paid.
-      </Txt>
-      <View style={styles.inviteRewards}>
-        <View style={styles.inviteReward}>
-          <Diamond size={14} />
-          <Txt style={styles.inviteRewardVal}>25</Txt>
-          <Txt style={styles.inviteRewardWho}>for you</Txt>
-        </View>
-        <View style={styles.inviteReward}>
-          <Coin size={14} />
-          <Txt style={styles.inviteRewardVal}>15</Txt>
-          <Txt style={styles.inviteRewardWho}>for them</Txt>
-        </View>
-      </View>
-      {link ? (
-        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'stretch', marginTop: 11 }}>
-          <View style={styles.codeField}>
-            <Txt style={styles.code} numberOfLines={1} ellipsizeMode="middle">{link}</Txt>
-          </View>
-          <Button label={copied ? 'Copied!' : 'Copy'} variant="pink" size="sm" onPress={copyReferral} style={{ paddingHorizontal: 18 }} />
-        </View>
-      ) : (
-        <Txt variant="lead" style={{ fontSize: 12.5, marginTop: 11 }}>Sign in to get your link.</Txt>
-      )}
-    </LinearGradient>
-  );
-}
+// The "Invite a friend" card that used to live here — the referral link, its copy button and
+// the 25-diamond / 15-coin reward chips — has been removed at the product's request. Settings
+// no longer offers any way to obtain a referral link.
+//
+// The INBOUND half of referrals is deliberately left alone (lib/referral.ts, and the `?ref=`
+// capture in the root layout). Links already shared still credit correctly if someone opens
+// one; there is simply no longer a place in the app to mint a new one. Delete those too if
+// referrals are being retired outright rather than reworked.
 
 /** Feedback / bug-report box — writes straight to the shared `feedback` table (see
  * supabase/feedback.sql), same table the website's Settings page writes to. RLS only lets a
@@ -393,29 +323,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.screen, borderRadius: 14, borderWidth: 1.5, borderColor: colors.borderOpt,
     paddingVertical: 12, paddingHorizontal: 14, ...selectableInput,
   },
-  invite: { borderRadius: 24, borderWidth: 1.5, borderColor: colors.pinkBorder2, padding: 18 },
-  inviteH: { fontFamily: font.displayMed, fontSize: 16, color: colors.pinkDark },
-  inviteCopyTxt: { fontSize: 13, marginTop: 5, lineHeight: 18 },
-  inviteRewards: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  inviteReward: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: colors.white, borderRadius: 999,
-    borderWidth: 1.5, borderColor: colors.pinkBorder,
-    paddingVertical: 5, paddingHorizontal: 11,
-  },
-  inviteRewardVal: { fontFamily: font.display, fontSize: 14, color: colors.ink },
-  inviteRewardWho: { fontFamily: font.bold, fontSize: 11.5, color: colors.pinkText },
-  codeField: {
-    flex: 1,
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.borderField,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    justifyContent: 'center',
-  },
-  code: { fontFamily: font.extra, fontSize: 14, color: colors.ink },
   srow: {
     flexDirection: 'row',
     alignItems: 'center',
