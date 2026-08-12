@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, ViewStyle, useWindowDimensions } from 'react-native';
+import { View, Pressable, StyleSheet, ViewStyle, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Txt, Hammy, ItemArt, Wallpaper, ListRow, RoomFloor } from '@/components';
+import { Screen, Txt, Hammy, ItemArt, Wallpaper, RoomFloor } from '@/components';
 import { colors, font } from '@/theme';
 import { useStore, MAX_EQUIPPED_ITEMS } from '@/store';
 import { shopItemsReal } from '@/content';
@@ -148,6 +148,12 @@ export default function Room() {
   // outfit, never did. Say it on the row itself, and don't invite a tap that can't work.
   const wardrobeFull = state.equippedItems.length >= MAX_EQUIPPED_ITEMS;
 
+  // Hammy scales with the viewport rather than sitting at a fixed 190. The wardrobe has to
+  // fit without scrolling on every screen, and the mascot is the one element that can give
+  // ground — the grid below it can't shrink past legibility.
+  const { height: winH } = useWindowDimensions();
+  const hammyStageSize = Math.max(110, Math.min(190, winH * 0.22));
+
   // No Header here on purpose — the level/coins/diamonds bar just ate space from an already
   // small room scene for no real benefit on this screen; the bottom tab bar and this
   // Room/Wardrobe toggle are the only navigation this screen needs.
@@ -201,10 +207,17 @@ export default function Room() {
           </Pressable>
         </View>
       ) : (
-        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.wardrobeContent}>
+        // Deliberately NOT a ScrollView. Nothing on the Room tab scrolls, and the wardrobe
+        // is the one part that ever wanted to: full-width rows for up to nine items came to
+        // roughly 970px against a ~700px viewport. The item count is bounded and small (9
+        // hats, 8 accessories, 4 exclusives — every non-mystery item in shopItems.json), so
+        // a three-across grid is always at most three rows and always fits. The stage above
+        // it takes flex:1 and Hammy scales off the viewport, so the slack goes to the mascot
+        // rather than to overflow.
+        <View style={styles.wardrobeContent}>
           <View style={styles.wardrobeStage}>
             <RoomFloor style={styles.wardrobeStageStripes} pointerEvents="none" />
-            <Hammy size={190} equipped={equipped} />
+            <Hammy size={hammyStageSize} equipped={equipped} />
           </View>
 
           <View style={styles.filters}>
@@ -219,38 +232,40 @@ export default function Room() {
           </View>
 
           {wardrobeItems.length === 0 ? (
-            <Txt variant="lead" style={{ fontSize: 13, marginTop: 16 }}>
+            <Txt variant="lead" style={{ fontSize: 13, marginTop: 14 }}>
               No {wardrobeLabel.toLowerCase()} yet, visit the Shop to get some.
             </Txt>
           ) : (
-            <View style={{ gap: 10, marginTop: 16 }}>
+            <View style={{ marginTop: 12 }}>
               {wardrobeFull ? (
                 <Txt variant="lead" style={styles.wardrobeFullNote}>
                   Hammy&apos;s wearing {MAX_EQUIPPED_ITEMS} things. Take one off to put something else on.
                 </Txt>
               ) : null}
-              {wardrobeItems.map((item) => {
-                const worn = isEquipped(item.id);
-                // Taking something OFF is always allowed; it's only putting a fourth thing on
-                // that can't work. Both go through the same call, so the block is per-row.
-                const blocked = !worn && wardrobeFull;
-                return (
-                  <ListRow
-                    key={item.id}
-                    onPress={blocked ? undefined : () => buyOrEquipItem(item.id)}
-                    style={blocked ? styles.rowBlocked : undefined}
-                  >
-                    <ItemArt item={item} size={40} />
-                    <Txt style={styles.itemName} numberOfLines={1}>{item.name}</Txt>
-                    <View style={[styles.wornTag, worn && styles.wornTagOn]}>
-                      <Txt style={[styles.wornTagTxt, worn && { color: colors.white }]}>{worn ? '✓ Worn' : 'Wear'}</Txt>
-                    </View>
-                  </ListRow>
-                );
-              })}
+              <View style={styles.wardrobeGrid}>
+                {wardrobeItems.map((item) => {
+                  const worn = isEquipped(item.id);
+                  // Taking something OFF is always allowed; it's only putting a fourth thing
+                  // on that can't work. Both go through the same call, so it's per-tile.
+                  const blocked = !worn && wardrobeFull;
+                  return (
+                    <Pressable
+                      key={item.id}
+                      onPress={blocked ? undefined : () => buyOrEquipItem(item.id)}
+                      accessibilityRole={blocked ? undefined : 'button'}
+                      accessibilityLabel={`${item.name}${worn ? ', worn' : ''}`}
+                      style={[styles.wtile, worn && styles.wtileOn, blocked && styles.rowBlocked]}
+                    >
+                      <ItemArt item={item} size={38} />
+                      <Txt style={styles.wtileName} numberOfLines={1}>{item.name}</Txt>
+                      <Txt style={[styles.wtileTag, worn && styles.wtileTagOn]}>{worn ? '✓ Worn' : 'Wear'}</Txt>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
           )}
-        </ScrollView>
+        </View>
       )}
     </Screen>
   );
@@ -361,18 +376,22 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   furnitureCtaTxt: { fontFamily: font.extra, fontSize: 12.5, color: colors.white, textAlign: 'center' },
-  wardrobeContent: { paddingHorizontal: 16, paddingBottom: 8 },
-  // Same striped floor as the Room tab's floorZone, not its own pink — the wardrobe is
-  // still Hammy's room, just browsing outfits instead of furniture.
+  wardrobeContent: { flex: 1, paddingHorizontal: 16, paddingBottom: 8 },
+  // Same floor as the Room tab's floorZone, not its own pink — the wardrobe is still
+  // Hammy's room, just browsing outfits instead of furniture.
+  //
+  // flex:1 with a low minHeight, so the stage absorbs whatever the grid below doesn't use
+  // and gives it back on a short screen. A fixed 240 here is what made the tab overflow.
   wardrobeStage: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#B98650',
     borderRadius: 24,
     overflow: 'hidden',
-    paddingTop: 22,
-    paddingBottom: 22,
-    minHeight: 240,
+    paddingTop: 14,
+    paddingBottom: 14,
+    minHeight: 150,
   },
   wardrobeStageStripes: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'row' },
   filters: { flexDirection: 'row', gap: 7, marginTop: 14 },
@@ -389,16 +408,26 @@ const styles = StyleSheet.create({
   fchipOn: { backgroundColor: colors.green, borderColor: colors.green },
   fchipTxt: { fontFamily: font.extra, fontSize: 12, color: colors.muted3 },
   itemName: { flex: 1, fontFamily: font.extra, fontSize: 13.5, color: colors.ink },
-  wardrobeFullNote: { fontSize: 12.5, marginBottom: 2 },
-  // Dimmed, not hidden: the item is still owned and still worth seeing in the list — it just
-  // can't go on until something comes off. Pairs with the note above, which says why.
+  wardrobeFullNote: { fontSize: 12.5, marginBottom: 8 },
+  // Dimmed, not hidden: the item is still owned and still worth seeing — it just can't go on
+  // until something comes off. Pairs with the note above, which says why.
   rowBlocked: { opacity: 0.5 },
-  wornTag: {
-    backgroundColor: colors.tagGreenBg,
-    borderRadius: 13,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+
+  // Three across: 9 hats is the largest category, so the grid is never more than 3 rows.
+  wardrobeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  wtile: {
+    width: '31.5%',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 9,
+    paddingHorizontal: 6,
+    borderRadius: 16,
+    backgroundColor: colors.white,
+    borderWidth: 1.5,
+    borderColor: colors.border,
   },
-  wornTagOn: { backgroundColor: colors.green },
-  wornTagTxt: { fontFamily: font.extra, fontSize: 12, color: colors.tagGreenText },
+  wtileOn: { borderColor: colors.green, backgroundColor: colors.tagGreenBg },
+  wtileName: { fontFamily: font.extra, fontSize: 11, color: colors.ink, textAlign: 'center' },
+  wtileTag: { fontFamily: font.extra, fontSize: 10.5, color: colors.muted3 },
+  wtileTagOn: { color: colors.tagGreenText },
 });

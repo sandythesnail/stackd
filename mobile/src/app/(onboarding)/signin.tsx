@@ -113,16 +113,24 @@ function StubSignIn() {
         <Txt variant="disp" style={{ textAlign: 'center' }}>Welcome back!</Txt>
       </View>
 
-      <Button
-        label="Continue with UConn NetID"
-        variant="dark"
-        left={<MsLogo />}
-        onPress={() => router.push('/(tabs)/home')}
-        style={{ marginTop: 6 }}
-      />
+      {/* The Microsoft-branded "Continue with UConn NetID" button that used to sit here is
+          gone. It carried the Microsoft logo and its entire handler was
+          `router.push('/(tabs)/home')` — it authenticated nobody and just walked you into
+          the app. That is survivable in a local dev stub and is not survivable in
+          production, and this screen reaches production whenever the deployed build is
+          missing any of the three EXPO_PUBLIC_* keys (see authEnabled in lib/env.ts), since
+          the fallback is silent. Anyone who pressed it had every reason to report that
+          Microsoft sign-in was broken: it never signed anyone in.
+
+          Real SSO is not something this screen can offer. On web the app hands off to the
+          site's Clerk widget (WebAuthRedirect), and on native no social provider is wired up
+          at all. So the stub offers only what it can actually honour. */}
+      <Txt style={styles.stubNote}>
+        Running without a sign-in server, so this is a local demo account.
+      </Txt>
 
       <View style={{ marginVertical: 6 }}>
-        <Divider>or use email</Divider>
+        <Divider>demo sign-in</Divider>
       </View>
 
       <View style={{ gap: 12 }}>
@@ -150,22 +158,13 @@ export function clerkError(e: unknown): string {
   return err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Something went wrong. Please try again.';
 }
 
-function MsLogo() {
-  const sq = (bg: string) => <View style={[styles.sq, { backgroundColor: bg }]} />;
-  return (
-    <View style={styles.ms}>
-      <View style={styles.msRow}>{sq('#F35325')}{sq('#81BC06')}</View>
-      <View style={styles.msRow}>{sq('#05A6F0')}{sq('#FFBA08')}</View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   link: { fontFamily: font.extra, fontSize: 14, color: colors.green },
   error: { fontFamily: font.bold, fontSize: 13, color: colors.danger, marginTop: 12 },
   footer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 10 },
   footTxt: { fontFamily: font.bold, fontSize: 13.5, color: colors.muted3 },
-  ms: { gap: 2 },
-  msRow: { flexDirection: 'row', gap: 2 },
-  sq: { width: 9, height: 9 },
+  stubNote: {
+    fontFamily: font.bold, fontSize: 12.5, color: colors.muted3,
+    textAlign: 'center', marginTop: 10,
+  },
 });
