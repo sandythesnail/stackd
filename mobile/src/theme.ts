@@ -133,54 +133,67 @@ export const colors = {
  * was the worst of it at C 0.158 — the most saturated of the eleven, sitting at the yellow-
  * green hue where saturation goes bilious, which is what made it read as chartreuse.
  *
- * Both scales are generated now, not mixed: every background is OKLCH L 0.855 / C 0.072 and
- * every foreground L 0.45 / C 0.115, varying only in hue. Uniform lightness is the thing that
- * makes them look like one family — no module can out-shout another when they all carry the
- * same perceptual weight — and the low chroma is what makes them pastel. Career keeps its hue
- * slot (123, the widest-spaced place left on the wheel); at this chroma that hue is a soft
- * sage, not chartreuse. Psychology moved 345 -> 330 because it and spending (356) were 11
- * degrees apart, easily the closest pair in the set and the one place two modules genuinely
- * looked alike.
+ * Both scales are generated in OKLCH now rather than mixed by hand, which is what keeps them
+ * looking like one family and what keeps every pair legible (see `moduleColorText`). The set
+ * is deliberately cool-weighted: six of the eleven sit in the teal-to-violet arc, with a
+ * single true pink (spending) and two warm accents (risk, scams) so it doesn't go monochrome.
  *
- * Regenerating: hold the four L/C values fixed and change only a hue, or every module drifts
- * off the shared weight and the family breaks. Both scales must move together — the pairs are
- * built to clear 4.5:1 (see `moduleColorText`), and lightening a background alone would push
- * its chip toward invisible on the white cards these sit on. */
+ * Nothing sits in the yellow/yellow-green region any more. Loans was a wheat (hue 93) and
+ * career a sage (123); both are gone, to a steel blue and a slate teal. That vacates roughly
+ * a hundred degrees of the wheel, so what's left is packed tighter than hue alone can carry —
+ * hence two other axes doing real work:
+ *
+ *   - Chroma: career sits at C 0.045, a quarter of the others. Low chroma IS what makes it
+ *     read as slate rather than as another teal next to saving.
+ *   - Lightness: loans (L 0.775) against credit (L 0.850). They're 7 degrees apart in hue, so
+ *     depth is the whole distinction — which is also just true of steel versus sky.
+ *
+ * The eleven backgrounds are checked pairwise in OKLab; the closest pair is 0.044 apart
+ * (investing/taxes), up from 0.030 in the palette this replaces.
+ *
+ * Regenerating: this is no longer one L/C for everything, so changing a hue means re-checking
+ * the pairwise distances rather than trusting the hue number — the tight pairs above are held
+ * apart by lightness and chroma, and a hue nudge can quietly collapse one. Both scales must
+ * move together: foreground lightness is solved per module against its own background to clear
+ * 4.6:1, so a background edit silently invalidates its pair. */
 export const moduleColor: Record<string, string> = {
-  earning: '#ACDEB9',
-  spending: '#F7BCD1',
-  saving: '#98DFD6',
-  investing: '#D5C6F9',
-  credit: '#A3D7F9',
-  risk: '#F6C3A4',
-  loans: '#DFCF9A',
-  taxes: '#BFCDFF',
-  psychology: '#EBBFE6',
-  career: '#C6D8A4',
-  scams: '#FBBDBC',
+  earning: '#8DD39B',
+  spending: '#F6A8C8',
+  saving: '#6ED9C2',
+  investing: '#C3B2FD',
+  credit: '#A2D4FF',
+  risk: '#FEB290',
+  loans: '#88BDE0',
+  taxes: '#A7BDFF',
+  psychology: '#DDADE5',
+  career: '#A7D2D1',
+  scams: '#F6A39C',
 };
 
 /** Darker foreground paired with each `moduleColor` background — the module icon's glyph
  * color, never plain white on a light chip. Each one is its own hue taken down in lightness
  * rather than a shared grey, so the pair reads as one color at two weights.
  *
- * Generated at the same hue as its background (OKLCH L 0.45 / C 0.115), which is what keeps
- * every pair at 4.6:1 or better. The hand-mixed pairs these replace ranged from 3.54:1
- * (psychology, scams) to 4.80:1 — the low end failed AA for the chip's number, which is
- * 16px and so not large text. Softening the backgrounds raised the whole range rather than
- * lowering it: a paler chip gives a dark glyph more to push against, not less. */
+ * Generated at its background's own hue (OKLCH C 0.125, or 0.062 for career so the slate stays
+ * slate at both weights). Lightness is not fixed across the set: it's solved per module by
+ * walking L down from 0.46 until that specific pair clears 4.6:1. That's what lets the
+ * backgrounds vary in depth — loans is the deepest chip and so gets the deepest glyph, without
+ * eleven hand-tuned exceptions. Every pair now lands between 4.61:1 and 4.74:1.
+ *
+ * The hand-mixed pairs two revisions back ranged from 3.54:1 (psychology, scams) to 4.80:1 —
+ * the low end failed AA for the chip's number, which is 16px and so not large text. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#026735',
-  spending: '#853557',
-  saving: '#00635C',
-  investing: '#5F448B',
-  credit: '#015C84',
-  risk: '#853F01',
-  loans: '#675300',
-  taxes: '#404F94',
-  psychology: '#783A73',
-  career: '#4A5E01',
-  scams: '#8A363A',
+  earning: '#015C27',
+  spending: '#822D57',
+  saving: '#015C4E',
+  investing: '#523B89',
+  credit: '#015B91',
+  risk: '#883601',
+  loans: '#014A6D',
+  taxes: '#354792',
+  psychology: '#6E3478',
+  career: '#1E5C5C',
+  scams: '#822826',
 };
 
 export const font = {
