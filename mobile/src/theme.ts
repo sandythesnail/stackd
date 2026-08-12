@@ -127,39 +127,60 @@ export const colors = {
  * fill in for `iconColor: 'rust'`, which has no matching CSS rule on the site itself. Lined
  * up next to each other on the Modules tab, a third of the curriculum looked switched off.
  *
- * They're saturated pastels now, spread around the hue wheel so no two modules read as the
- * same color: green, pink, teal, violet, sky, coral, yellow, periwinkle, magenta, lime,
- * salmon. Still light enough to carry dark text at the contrast the pairs below give them —
- * "vibrant" here means saturated, not dark. */
+ * The replacements over-corrected: they were mixed by hand in HSL, which meant nothing held
+ * them to a common weight. Backgrounds landed anywhere from L 0.78 to L 0.90 with chroma from
+ * 0.10 to 0.16 (OKLCH), so some modules shouted and others whispered on the same row. Career
+ * was the worst of it at C 0.158 — the most saturated of the eleven, sitting at the yellow-
+ * green hue where saturation goes bilious, which is what made it read as chartreuse.
+ *
+ * Both scales are generated now, not mixed: every background is OKLCH L 0.855 / C 0.072 and
+ * every foreground L 0.45 / C 0.115, varying only in hue. Uniform lightness is the thing that
+ * makes them look like one family — no module can out-shout another when they all carry the
+ * same perceptual weight — and the low chroma is what makes them pastel. Career keeps its hue
+ * slot (123, the widest-spaced place left on the wheel); at this chroma that hue is a soft
+ * sage, not chartreuse. Psychology moved 345 -> 330 because it and spending (356) were 11
+ * degrees apart, easily the closest pair in the set and the one place two modules genuinely
+ * looked alike.
+ *
+ * Regenerating: hold the four L/C values fixed and change only a hue, or every module drifts
+ * off the shared weight and the family breaks. Both scales must move together — the pairs are
+ * built to clear 4.5:1 (see `moduleColorText`), and lightening a background alone would push
+ * its chip toward invisible on the white cards these sit on. */
 export const moduleColor: Record<string, string> = {
-  earning: '#7FE3A0',
-  spending: '#FFAECB',
-  saving: '#6FE0D4',
-  investing: '#C3A5FF',
-  credit: '#85D0FF',
-  risk: '#FFB080',
-  loans: '#FFDD6B',
-  taxes: '#9DB2FF',
-  psychology: '#FF9AD5',
-  career: '#C9EC6E',
-  scams: '#FF9B9B',
+  earning: '#ACDEB9',
+  spending: '#F7BCD1',
+  saving: '#98DFD6',
+  investing: '#D5C6F9',
+  credit: '#A3D7F9',
+  risk: '#F6C3A4',
+  loans: '#DFCF9A',
+  taxes: '#BFCDFF',
+  psychology: '#EBBFE6',
+  career: '#C6D8A4',
+  scams: '#FBBDBC',
 };
 
 /** Darker foreground paired with each `moduleColor` background — the module icon's glyph
  * color, never plain white on a light chip. Each one is its own hue taken down in lightness
- * rather than a shared grey, so the pair reads as one color at two weights. */
+ * rather than a shared grey, so the pair reads as one color at two weights.
+ *
+ * Generated at the same hue as its background (OKLCH L 0.45 / C 0.115), which is what keeps
+ * every pair at 4.6:1 or better. The hand-mixed pairs these replace ranged from 3.54:1
+ * (psychology, scams) to 4.80:1 — the low end failed AA for the chip's number, which is
+ * 16px and so not large text. Softening the backgrounds raised the whole range rather than
+ * lowering it: a paler chip gives a dark glyph more to push against, not less. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#17683B',
-  spending: '#A32E5A',
-  saving: '#0F655D',
-  investing: '#5B2CA8',
-  credit: '#0F5480',
-  risk: '#8F4212',
-  loans: '#7A5A00',
-  taxes: '#2E3E8F',
-  psychology: '#A32178',
-  career: '#4A6B0F',
-  scams: '#A32B2B',
+  earning: '#026735',
+  spending: '#853557',
+  saving: '#00635C',
+  investing: '#5F448B',
+  credit: '#015C84',
+  risk: '#853F01',
+  loans: '#675300',
+  taxes: '#404F94',
+  psychology: '#783A73',
+  career: '#4A5E01',
+  scams: '#8A363A',
 };
 
 export const font = {
