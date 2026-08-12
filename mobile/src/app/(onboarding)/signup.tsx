@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Pressable, StyleSheet, Platform } from 'react-native';
+import { View, Pressable, StyleSheet, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuth, useSignUp } from '@clerk/clerk-expo';
-import { Screen, Spacer, Txt, Button, Field, IconButton, CheckBox } from '@/components';
+import { Screen, Spacer, Txt, Button, Field, IconButton, CheckBox, Divider } from '@/components';
 import { colors, font } from '@/theme';
 import { authEnabled } from '@/lib/env';
-import { clerkError } from './signin';
+import { clerkError } from '@/lib/clerkErrors';
+import { fillMissingUsername, type ClerkSignUpResource } from '@/lib/clerkSignUp';
 import { WebAuthRedirect } from '@/lib/webAuth';
+import { SocialAuth } from '@/lib/socialAuth';
 
 /** Screen 3 — Sign up. On the web build we reuse the site's real Clerk sign-up (Google +
- * all methods) via WebAuthRedirect. On native it's the in-app Clerk flow (email + password
- * with email-code verification), or the local stub when auth isn't configured. */
+ * all methods) via WebAuthRedirect. On native it's Google/Microsoft SSO plus the in-app
+ * Clerk email + password flow, or the local stub when auth isn't configured. */
 export default function SignUp() {
   if (Platform.OS === 'web' && authEnabled) return <WebAuthRedirect page="signup" />;
   return authEnabled ? <ClerkSignUp /> : <StubSignUp />;
@@ -50,16 +52,55 @@ function ClerkSignUp() {
     if (isSignedIn && !completing.current) router.replace('/(tabs)/home');
   }, [isSignedIn, router]);
 
+  /** Everything after a successful create/verify/update, driven by what Clerk reports the
+   * sign-up still needs rather than by an assumption about the dashboard.
+   *
+   * This screen used to assume one shape: create, then unconditionally send an email code.
+   * The instance now has "verify at sign up" switched OFF (user_settings
+   * .attributes.email_address.verify_at_sign_up = false), so `create` returns a COMPLETE
+   * sign-up and the old code went on to prepare a verification the sign-up no longer wanted
+   * — which failed, so nobody could create an account from the app at all. Asking the
+   * resource what it's missing works whether that setting is on or off.
+   *
+   * Navigation goes to the survey: it leads off onboarding, and the animated hammy-intro
+   * plays after "Start learning" on its final (track recommendation) step. */
+  const finish = async (res: ClerkSignUpResource) => {
+    // Every caller already ran under `isLoaded` — repeated here because that narrowing is
+    // what makes `setActive` defined, and it doesn't cross a function boundary.
+    if (!isLoaded) return;
+    if (res.status === 'complete') {
+      // Claim the navigation BEFORE setActive, which is what makes isSignedIn true — see the
+      // guard above. Set only once we know we're completing, so a failure doesn't leave the
+      // guard disarmed on a screen that isn't going anywhere.
+      completing.current = true;
+      await setActive({ session: res.createdSessionId });
+      router.replace('/(onboarding)/survey');
+      return;
+    }
+    if (res.unverifiedFields.includes('email_address')) {
+      await res.prepareEmailAddressVerification({ strategy: 'email_code' });
+      setPendingCode(true);
+      return;
+    }
+    setError(
+      res.missingFields.length
+        ? `Your account still needs: ${res.missingFields.join(', ')}. Finish signing up at trystacked.app.`
+        : 'Couldn’t finish creating your account. Please try again.',
+    );
+  };
+
   const onCreate = async () => {
     if (!isLoaded || busy) return;
     if (!agreed) { setError('Please accept the Terms to continue.'); return; }
     setBusy(true);
     setError(null);
     try {
-      await signUp.create({ emailAddress: email.trim(), password });
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      setPendingCode(true);
+      const res = await signUp.create({ emailAddress: email.trim(), password });
+      // This instance requires a username, which this form doesn't collect — see
+      // lib/clerkSignUp.ts. No-op if Clerk isn't asking for one.
+      await finish(await fillMissingUsername(res, email.trim()));
     } catch (e: unknown) {
+      completing.current = false;
       setError(clerkError(e));
     } finally {
       setBusy(false);
@@ -72,18 +113,11 @@ function ClerkSignUp() {
     setError(null);
     try {
       const res = await signUp.attemptEmailAddressVerification({ code: code.trim() });
-      if (res.status === 'complete') {
-        // Claim the navigation BEFORE setActive, which is what makes isSignedIn true — see
-        // the guard above. Set after the verification succeeds, so a failed code doesn't
-        // leave the guard disarmed on a screen that isn't going anywhere.
-        completing.current = true;
-        await setActive({ session: res.createdSessionId });
-        // The survey leads off onboarding now; the animated hammy-intro plays after the
-        // user hits "Start learning" on the survey's final (track recommendation) step.
-        router.replace('/(onboarding)/survey');
-      } else {
+      if (res.status !== 'complete' && res.unverifiedFields.includes('email_address')) {
         setError('That code didn’t verify. Check your email and try again.');
+        return;
       }
+      await finish(await fillMissingUsername(res, email.trim()));
     } catch (e: unknown) {
       // Re-arm: nothing navigated, so a signed-in user landing here still needs bouncing.
       completing.current = false;
@@ -121,7 +155,16 @@ function ClerkSignUp() {
   }
 
   return (
-    <Screen style={{ paddingHorizontal: 22 }}>
+    <Screen>
+      {/* Scrollable for the same reason sign-in is: the two provider buttons and the divider
+          push this past the height of a small phone once the keyboard is up. `flexGrow: 1`
+          preserves <Spacer/>, so the CTA still sits at the bottom when everything fits. */}
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+      >
       <View style={{ paddingTop: 2 }}>
         <IconButton name="chevron-left" onPress={() => router.back()} />
       </View>
@@ -131,7 +174,24 @@ function ClerkSignUp() {
         <Txt variant="lead">Free while Stacked is piloting at UConn.</Txt>
       </View>
 
-      <View style={{ gap: 14, marginTop: 20 }}>
+      {/* One tap, no password to invent, and no email code to wait for — the same two
+          providers the website offers. A student's UConn NetID is a Microsoft account.
+          The email field below no longer autofocuses: raising the keyboard on arrival
+          buried the two fastest ways to sign up under it before they'd been seen. */}
+      <View style={{ marginTop: 18 }}>
+        <SocialAuth
+          completingRef={completing}
+          onSignedIn={({ isNewUser }) =>
+            router.replace(isNewUser ? '/(onboarding)/survey' : '/(tabs)/home')
+          }
+        />
+      </View>
+
+      <View style={{ marginVertical: 12 }}>
+        <Divider>or sign up with email</Divider>
+      </View>
+
+      <View style={{ gap: 14 }}>
         <Field
           label="EMAIL"
           value={email}
@@ -140,7 +200,6 @@ function ClerkSignUp() {
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
-          focus
         />
         {/* The same working Show/Hide control sign-in uses. This was a bare Feather "eye"
             with no handler — an icon that reads as "reveal my password" and did nothing,
@@ -170,6 +229,7 @@ function ClerkSignUp() {
         <Txt style={styles.footTxt}>Already have an account? </Txt>
         <Txt style={styles.link} onPress={() => router.push('/(onboarding)/signin')}>Sign in</Txt>
       </View>
+      </ScrollView>
     </Screen>
   );
 }
@@ -213,6 +273,7 @@ function StubSignUp() {
 }
 
 const styles = StyleSheet.create({
+  scroll: { flexGrow: 1, paddingHorizontal: 22 },
   terms: { flexDirection: 'row', gap: 11, marginTop: 16, alignItems: 'center' },
   termsTxt: { fontFamily: font.semi, fontSize: 12.5, color: colors.muted2, flexShrink: 1 },
   error: { fontFamily: font.bold, fontSize: 13, color: colors.danger, marginTop: 12 },

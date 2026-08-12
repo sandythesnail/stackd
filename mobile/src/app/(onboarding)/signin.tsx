@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth, useSignIn } from '@clerk/clerk-expo';
 import { Screen, Spacer, Txt, Button, Field, Hammy, Divider } from '@/components';
 import { colors, font } from '@/theme';
 import { authEnabled } from '@/lib/env';
+import { clerkError } from '@/lib/clerkErrors';
 import { WebAuthRedirect } from '@/lib/webAuth';
+import { SocialAuth } from '@/lib/socialAuth';
 
 /** Screen 4 — Sign in. On the web build we reuse the site's real Clerk sign-in (Google +
- * all methods) via WebAuthRedirect. On native it's the in-app Clerk email/password form
- * (or the local stub when auth isn't configured). */
+ * all methods) via WebAuthRedirect. On native it's Google/Microsoft SSO plus the in-app
+ * Clerk email/password form (or the local stub when auth isn't configured). */
 export default function SignIn() {
   if (Platform.OS === 'web' && authEnabled) return <WebAuthRedirect page="login" />;
   return authEnabled ? <ClerkSignIn /> : <StubSignIn />;
@@ -50,8 +52,15 @@ function ClerkSignIn() {
         completing.current = true;
         await setActive({ session: res.createdSessionId });
         router.replace('/(tabs)/home');
+      } else if (res.status === 'needs_second_factor') {
+        // The instance has no second factors configured (auth_config.second_factors is
+        // empty and MFA is not required), so reaching this is a dashboard change rather
+        // than something this screen can walk the user through.
+        setError('This account needs an extra verification step. Finish signing in at trystacked.app.');
       } else {
-        setError('Additional verification needed. Try again or reset your password.');
+        // A wrong password throws rather than landing here; this is the "Clerk wants
+        // something else first" case, and naming the status beats a vague apology.
+        setError(`Couldn’t complete sign-in (${res.status}). Try again or reset your password.`);
       }
     } catch (e: unknown) {
       // Nothing navigated — re-arm the guard.
@@ -63,13 +72,39 @@ function ClerkSignIn() {
   };
 
   return (
-    <Screen style={{ paddingHorizontal: 22 }}>
+    <Screen>
+      {/* Scrollable because this screen grew: Hammy, two provider buttons, the divider, two
+          fields and the CTA don't all fit above the keyboard on a small phone, and a fixed
+          Screen would simply clip the footer. `flexGrow: 1` keeps <Spacer/> working — the
+          content still fills the screen and pins the footer to the bottom when it fits. */}
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+      >
       <View style={{ alignItems: 'center', gap: 16, marginTop: 14 }}>
         <Hammy size={104} />
         <Txt variant="disp" style={{ textAlign: 'center' }}>Welcome back!</Txt>
       </View>
 
-      <View style={{ gap: 12, marginTop: 22 }}>
+      {/* Above the form, not below it: Google and Microsoft are the fastest way in for a
+          UConn student (the NetID account is Microsoft), and a returning user who created
+          their account that way has no password to type here at all. */}
+      <View style={{ marginTop: 20 }}>
+        <SocialAuth
+          completingRef={completing}
+          onSignedIn={({ isNewUser }) =>
+            router.replace(isNewUser ? '/(onboarding)/survey' : '/(tabs)/home')
+          }
+        />
+      </View>
+
+      <View style={{ marginVertical: 14 }}>
+        <Divider>or</Divider>
+      </View>
+
+      <View style={{ gap: 12 }}>
         <Field
           label="EMAIL"
           value={email}
@@ -100,6 +135,7 @@ function ClerkSignIn() {
         <Txt style={styles.footTxt}>New to Stacked? </Txt>
         <Txt style={styles.link} onPress={() => router.push('/(onboarding)/signup')}>Create account</Txt>
       </View>
+      </ScrollView>
     </Screen>
   );
 }
@@ -122,9 +158,10 @@ function StubSignIn() {
           the fallback is silent. Anyone who pressed it had every reason to report that
           Microsoft sign-in was broken: it never signed anyone in.
 
-          Real SSO is not something this screen can offer. On web the app hands off to the
-          site's Clerk widget (WebAuthRedirect), and on native no social provider is wired up
-          at all. So the stub offers only what it can actually honour. */}
+          Real SSO is not something THIS screen can offer, even though the app now has it:
+          Google and Microsoft go through Clerk (lib/socialAuth.tsx on native, the site's
+          hosted widget on web), and this stub renders precisely when Clerk isn't configured.
+          So it offers only what it can actually honour. */}
       <Txt style={styles.stubNote}>
         Running without a sign-in server, so this is a local demo account.
       </Txt>
@@ -153,12 +190,8 @@ function StubSignIn() {
   );
 }
 
-export function clerkError(e: unknown): string {
-  const err = e as { errors?: { message?: string; longMessage?: string }[] };
-  return err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Something went wrong. Please try again.';
-}
-
 const styles = StyleSheet.create({
+  scroll: { flexGrow: 1, paddingHorizontal: 22 },
   link: { fontFamily: font.extra, fontSize: 14, color: colors.green },
   error: { fontFamily: font.bold, fontSize: 13, color: colors.danger, marginTop: 12 },
   footer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 10 },
