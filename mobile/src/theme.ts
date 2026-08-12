@@ -134,66 +134,74 @@ export const colors = {
  * green hue where saturation goes bilious, which is what made it read as chartreuse.
  *
  * Both scales are generated in OKLCH now rather than mixed by hand, which is what keeps them
- * looking like one family and what keeps every pair legible (see `moduleColorText`). The set
- * is deliberately cool-weighted: six of the eleven sit in the teal-to-violet arc, with a
- * single true pink (spending) and two warm accents (risk, scams) so it doesn't go monochrome.
+ * looking like one family and what keeps every pair legible (see `moduleColorText`). Eleven
+ * distinct hues spread right around the wheel, weighted toward green (three of them) and
+ * deliberately light on blue (two), so the set reads as a full range of color rather than a
+ * ramp through one part of the spectrum.
  *
- * Nothing sits in the yellow/yellow-green region any more. Loans was a wheat (hue 93) and
- * career a sage (123); both are gone, to a steel blue and a slate teal. That vacates roughly
- * a hundred degrees of the wheel, so what's left is packed tighter than hue alone can carry —
- * hence two other axes doing real work:
+ * Two colors are ruled out, and both are failure modes of a hue rather than a hue itself:
  *
- *   - Chroma: career sits at C 0.045, a quarter of the others. Low chroma IS what makes it
- *     read as slate rather than as another teal next to saving.
- *   - Lightness: loans (L 0.775) against credit (L 0.850). They're 7 degrees apart in hue, so
- *     depth is the whole distinction — which is also just true of steel versus sky.
+ *   - Chartreuse is high chroma at 110-135, so that band is empty. Loans sits at pure yellow
+ *     (100) and is pinned light AND high-chroma (L 0.870 / C 0.145) — a yellow that gives up
+ *     either one is a wheat, which is where it landed on an earlier pass.
+ *   - Brown is simply orange at low lightness and low chroma, so risk and scams carry
+ *     lightness floors (L 0.830 / 0.800). They are never allowed to go deep and muted the
+ *     way a cooler hue safely can.
  *
- * The eleven backgrounds are checked pairwise in OKLab; the closest pair is 0.044 apart
- * (investing/taxes), up from 0.030 in the palette this replaces.
+ * The three greens — grass (148), jade (168), teal-green (190) — are only ~20 degrees apart,
+ * which hue alone cannot carry at chip size. They separate by depth instead: jade is the light
+ * one (L 0.858), grass sits mid (0.820), teal-green is the deep one (0.790).
  *
- * Regenerating: this is no longer one L/C for everything, so changing a hue means re-checking
- * the pairwise distances rather than trusting the hue number — the tight pairs above are held
- * apart by lightness and chroma, and a hue nudge can quietly collapse one. Both scales must
- * move together: foreground lightness is solved per module against its own background to clear
- * 4.6:1, so a background edit silently invalidates its pair. */
+ * The eleven backgrounds are checked pairwise in OKLab; the closest pair is 0.047 apart
+ * (spending/psychology), the widest separation of any revision of this palette so far.
+ *
+ * Regenerating: there is no single L/C to hold, so changing a hue means re-checking the
+ * pairwise distances rather than trusting the hue number — the three greens are held apart by
+ * lightness, and a nudge can quietly collapse one. Both scales must move together: foreground
+ * lightness is solved per module against its own background to clear 4.6:1, so editing a
+ * background silently invalidates its pair. And re-check the two exclusions above by their
+ * L/C, not by eye on one screen — wheat and brown creep in through lightness, not hue. */
 export const moduleColor: Record<string, string> = {
-  earning: '#8DD39B',
-  spending: '#F6A8C8',
-  saving: '#6ED9C2',
-  investing: '#C3B2FD',
-  credit: '#A2D4FF',
-  risk: '#FEB290',
-  loans: '#88BDE0',
-  taxes: '#A7BDFF',
-  psychology: '#DDADE5',
-  career: '#A7D2D1',
-  scams: '#F6A39C',
+  earning: '#8FD99A',
+  spending: '#FCA9C9',
+  saving: '#5CD0C9',
+  investing: '#D6B4FF',
+  credit: '#82D7FF',
+  risk: '#FFB480',
+  loans: '#EBD659',
+  taxes: '#AAB9FF',
+  psychology: '#E8A8E1',
+  career: '#8DE5C4',
+  scams: '#FFA098',
 };
 
 /** Darker foreground paired with each `moduleColor` background — the module icon's glyph
  * color, never plain white on a light chip. Each one is its own hue taken down in lightness
  * rather than a shared grey, so the pair reads as one color at two weights.
  *
- * Generated at its background's own hue (OKLCH C 0.125, or 0.062 for career so the slate stays
- * slate at both weights). Lightness is not fixed across the set: it's solved per module by
- * walking L down from 0.46 until that specific pair clears 4.6:1. That's what lets the
- * backgrounds vary in depth — loans is the deepest chip and so gets the deepest glyph, without
- * eleven hand-tuned exceptions. Every pair now lands between 4.61:1 and 4.74:1.
+ * Generated at its background's own hue (OKLCH C 0.125). Lightness is not fixed across the
+ * set: it's solved per module by walking L down from 0.48 until that specific pair clears
+ * 4.6:1. That's what lets the backgrounds vary in depth — the jade and yellow chips are much
+ * lighter than the teal-green one and get correspondingly lighter glyphs — without eleven
+ * hand-tuned exceptions. Every pair lands between 4.60:1 and 4.66:1.
  *
- * The hand-mixed pairs two revisions back ranged from 3.54:1 (psychology, scams) to 4.80:1 —
- * the low end failed AA for the chip's number, which is 16px and so not large text. */
+ * Solving rather than fixing this is what makes the backgrounds free to move. Pinning
+ * foreground lightness broke an earlier revision: one deeper chip came out at 4.17:1, below
+ * AA, and nothing flagged it. The hand-mixed pairs further back ranged from 3.54:1
+ * (psychology, scams) to 4.80:1 — the low end failing AA for the chip's number, which is 16px
+ * and so not large text. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#015C27',
-  spending: '#822D57',
-  saving: '#015C4E',
-  investing: '#523B89',
-  credit: '#015B91',
-  risk: '#883601',
-  loans: '#014A6D',
-  taxes: '#354792',
-  psychology: '#6E3478',
-  career: '#1E5C5C',
-  scams: '#822826',
+  earning: '#006022',
+  spending: '#842E56',
+  saving: '#025653',
+  investing: '#633D89',
+  credit: '#025C7B',
+  risk: '#7F3F00',
+  loans: '#685B02',
+  taxes: '#3B4390',
+  psychology: '#743170',
+  career: '#00674D',
+  scams: '#842928',
 };
 
 export const font = {
