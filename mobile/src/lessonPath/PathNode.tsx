@@ -31,14 +31,18 @@ const STATE_WORDS: Record<NodeState, string> = {
  * It is not weaker, it is elsewhere.
  */
 export function PathNode({
-  title, state, index, accentBg, accentFg, reducedMotion, tourHighlighted, onPress, onHoverIn, onHoverOut,
+  title, state, index, accentFg, reducedMotion, tourHighlighted, onPress, onHoverIn, onHoverOut,
 }: {
   title: string;
   state: NodeState;
   /** 1-based label shown on an unvisited main-line node. */
   index: number;
-  /** The owning module's pastel background and its darker paired foreground (@/theme). */
-  accentBg: string;
+  /** The owning module's darker paired foreground (@/theme's `moduleColorText`).
+   *
+   * Only the foreground. A node is a small solid shape on the cream path, so it is drawn in
+   * the accent's DARK tone throughout — border, glyph and glow all read `accentFg`. The pale
+   * `moduleColor` background has no role at this size and was previously accepted here as an
+   * `accentBg` prop that nothing ever read. */
   accentFg: string;
   reducedMotion: boolean;
   /** True while the onboarding tour's "Start a lesson" step is pointing at THIS node — draws

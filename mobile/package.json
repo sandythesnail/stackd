@@ -41,6 +41,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.1",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -50,7 +52,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "check:routes": "node ./scripts/check-modal-routes.js"
+    "check:routes": "node ./scripts/check-modal-routes.js",
+    "check:colors": "node ./scripts/solve-module-colors.js --check",
+    "check": "npm run check:routes && npm run check:colors"
   },
   "private": true
 }

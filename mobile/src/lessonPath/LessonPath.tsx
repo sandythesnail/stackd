@@ -414,7 +414,6 @@ function SectionView({
                   title={n.title}
                   state={n.state}
                   index={i + 1}
-                  accentBg={mod.color}
                   accentFg={mod.textColor}
                   reducedMotion={reducedMotion}
                   tourHighlighted={isTourTarget && activeTargetId === 'tour-lesson-node'}

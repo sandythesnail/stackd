@@ -123,85 +123,91 @@ export const colors = {
  *
  * These were ported from the website's `.mod-icon.<color>` pairs, which were pale and
  * desaturated, and three of the eleven weren't really colors at all: taxes was a blue-grey
- * (#E3E7F0), career a grey-lavender (#DCE0FA), and scams a tan-brown (#F5D9C8) invented to
- * fill in for `iconColor: 'rust'`, which has no matching CSS rule on the site itself. Lined
- * up next to each other on the Modules tab, a third of the curriculum looked switched off.
+ * (#E3E7F0), career a grey-lavender (#DCE0FA), and scams a tan-brown (#F5D9C8). Lined up next
+ * to each other on the Modules tab, a third of the curriculum looked switched off.
  *
  * The replacements over-corrected: they were mixed by hand in HSL, which meant nothing held
  * them to a common weight. Backgrounds landed anywhere from L 0.78 to L 0.90 with chroma from
- * 0.10 to 0.16 (OKLCH), so some modules shouted and others whispered on the same row. Career
- * was the worst of it at C 0.158 — the most saturated of the eleven, sitting at the yellow-
- * green hue where saturation goes bilious, which is what made it read as chartreuse.
+ * 0.10 to 0.16 (OKLCH), so some modules shouted and others whispered on the same row.
  *
- * Both scales are generated in OKLCH now rather than mixed by hand, which is what keeps them
- * looking like one family and what keeps every pair legible (see `moduleColorText`). Eleven
- * distinct hues spread right around the wheel, weighted toward green (three of them) and
- * deliberately light on blue (two), so the set reads as a full range of color rather than a
- * ramp through one part of the spectrum.
+ * Both scales are solved now rather than mixed, by `scripts/solve-module-colors.js`. Hues are
+ * chosen by hand; the solver anneals lightness and chroma to maximise the SMALLEST pairwise
+ * distance in the set, which is the number that decides whether two modules look alike. Run it
+ * to regenerate, and paste both scales — the values below are its output, not hand-edits.
  *
- * Two colors are ruled out, and both are failure modes of a hue rather than a hue itself:
+ * Four constraints it solves against, each of which was a real defect first:
  *
- *   - Chartreuse is high chroma at 110-135, so that band is empty. Loans sits at pure yellow
- *     (100) and is pinned light AND high-chroma (L 0.870 / C 0.145) — a yellow that gives up
- *     either one is a wheat, which is where it landed on an earlier pass.
- *   - Brown is simply orange at low lightness and low chroma, so risk and scams carry
- *     lightness floors (L 0.830 / 0.800). They are never allowed to go deep and muted the
- *     way a cooler hue safely can.
+ *   - Reserved tokens. `colors.reward` (#F0C22E) means "come collect / recommended" app-wide,
+ *     and the Modules tab draws the recommended row with a reward border, a rewardBg head and
+ *     a gold tag. A yellow Loans chip once sat 0.0485 from it — inside the set's own tolerance
+ *     — so a module mimicked the "start here" affordance. Nothing yellow can be safe here:
+ *     reward, coin (#F3B33C) and flameLight (#FFB03A) occupy hue 72-94, and chartreuse starts
+ *     at 110, leaving no window. So there is no yellow module, and the solver scores distance
+ *     to those tokens, not just module-to-module.
+ *   - Color blindness. Hues that separate cleanly for normal vision collapse under dichromacy:
+ *     an earlier revision put investing and taxes 0.0031 apart under protanopia — the same
+ *     color. Every pair is now scored under deuteranope and protanope simulation (Viénot 1999)
+ *     as well as normal vision, and lightness spread is what pulls them apart, since dichromacy
+ *     preserves lightness.
+ *   - Visibility as a bare shape. These are not always behind a glyph: `learn/module/[id].tsx`
+ *     uses `mod.color` as a hero border and a progress fill over `colors.track`, and the
+ *     Progress chart fills columns with it. So each is scored against white, cream AND track,
+ *     not just against its own foreground.
+ *   - Brown and chartreuse. Both are failure modes of a hue, not hues: brown is orange gone
+ *     dark and dull, chartreuse is yellow-green gone saturated. The 110-135 band is left empty
+ *     and the warm hues carry chroma floors.
  *
- * The three greens — grass (148), jade (168), teal-green (190) — are only ~20 degrees apart,
- * which hue alone cannot carry at chip size. They separate by depth instead: jade is the light
- * one (L 0.858), grass sits mid (0.820), teal-green is the deep one (0.790).
+ * Green-weighted by request — four of the eleven (145 grass, 168 jade, 178 sea-green, 192
+ * teal) against only two blues. Four greens inside 47 degrees is far tighter than hue alone can
+ * carry, so they separate by depth: 0.822 / 0.789 / 0.720 / 0.799.
  *
- * The eleven backgrounds are checked pairwise in OKLab; the closest pair is 0.047 apart
- * (spending/psychology), the widest separation of any revision of this palette so far.
- *
- * Regenerating: there is no single L/C to hold, so changing a hue means re-checking the
- * pairwise distances rather than trusting the hue number — the three greens are held apart by
- * lightness, and a nudge can quietly collapse one. Both scales must move together: foreground
- * lightness is solved per module against its own background to clear 4.6:1, so editing a
- * background silently invalidates its pair. And re-check the two exclusions above by their
- * L/C, not by eye on one screen — wheat and brown creep in through lightness, not hue. */
+ * Measured on this set: closest pair 0.0549 (career/saving) for normal vision, 0.0505 under
+ * deuteranopia, 0.0507 under protanopia, 0.1286 to the nearest reserved token, and every chip
+ * at 1.38:1 or better against the palest surface it is drawn on. */
 export const moduleColor: Record<string, string> = {
-  earning: '#8FD99A',
-  spending: '#FCA9C9',
-  saving: '#5CD0C9',
-  investing: '#D6B4FF',
-  credit: '#82D7FF',
-  risk: '#FFB480',
-  loans: '#EBD659',
-  taxes: '#AAB9FF',
-  psychology: '#E8A8E1',
-  career: '#8DE5C4',
-  scams: '#FFA098',
+  earning: '#8DDB90',
+  spending: '#FFAECD',
+  saving: '#2CD8D3',
+  investing: '#BC93EB',
+  credit: '#88D1F8',
+  risk: '#F09663',
+  loans: '#65B6A5',
+  taxes: '#A1B5FF',
+  psychology: '#D591CB',
+  career: '#69D2AC',
+  scams: '#E58D8D',
 };
 
 /** Darker foreground paired with each `moduleColor` background — the module icon's glyph
  * color, never plain white on a light chip. Each one is its own hue taken down in lightness
  * rather than a shared grey, so the pair reads as one color at two weights.
  *
- * Generated at its background's own hue (OKLCH C 0.125). Lightness is not fixed across the
- * set: it's solved per module by walking L down from 0.48 until that specific pair clears
- * 4.6:1. That's what lets the backgrounds vary in depth — the jade and yellow chips are much
- * lighter than the teal-green one and get correspondingly lighter glyphs — without eleven
- * hand-tuned exceptions. Every pair lands between 4.60:1 and 4.66:1.
+ * Generated at its background's own hue, targeting OKLCH C 0.125 — but that target is only
+ * advisory, because five of the eleven cannot reach it at the lightness they need and are
+ * clipped to the sRGB gamut boundary instead (loans tops out at 0.064, saving 0.072, career
+ * 0.082, credit 0.088, risk 0.100). Don't "restore" those to 0.125; it is not a color that
+ * exists at those coordinates, and forcing it costs the pair its contrast.
  *
- * Solving rather than fixing this is what makes the backgrounds free to move. Pinning
- * foreground lightness broke an earlier revision: one deeper chip came out at 4.17:1, below
- * AA, and nothing flagged it. The hand-mixed pairs further back ranged from 3.54:1
- * (psychology, scams) to 4.80:1 — the low end failing AA for the chip's number, which is 16px
- * and so not large text. */
+ * Lightness is not fixed across the set. It's solved per module by walking L down until that
+ * specific pair clears 4.6:1, which is what lets the backgrounds vary in depth — they span
+ * L 0.720 to 0.837 — without eleven hand-tuned exceptions. Every pair lands between 4.60:1
+ * and 4.70:1.
+ *
+ * Solving rather than pinning is what makes the backgrounds free to move at all. An earlier
+ * revision fixed one foreground lightness for the whole set; the single chip that had been
+ * deepened came out at 4.17:1, below AA, and nothing flagged it. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#006022',
-  spending: '#842E56',
-  saving: '#025653',
-  investing: '#633D89',
-  credit: '#025C7B',
-  risk: '#7F3F00',
-  loans: '#685B02',
-  taxes: '#3B4390',
-  psychology: '#743170',
-  career: '#00674D',
-  scams: '#842928',
+  earning: '#11601D',
+  spending: '#883159',
+  saving: '#005957',
+  investing: '#4D2670',
+  credit: '#025979',
+  risk: '#692D00',
+  loans: '#014439',
+  taxes: '#33408B',
+  psychology: '#631F5C',
+  career: '#005842',
+  scams: '#721621',
 };
 
 export const font = {
