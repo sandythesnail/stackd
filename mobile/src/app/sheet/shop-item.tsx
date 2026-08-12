@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { View, Pressable, StyleSheet, Animated, Easing } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Txt, Button, Tag, Card, IconButton, CurrencyChip, Coin, Diamond, ItemArt, Hammy, Wallpaper } from '@/components';
@@ -176,7 +175,11 @@ function ShopItemSheet() {
             <IconButton name="x" size={34} iconSize={16} onPress={() => router.back()} />
           </View>
 
-          <LinearGradient colors={['#FFF3F7', '#FBE0EA']} style={[styles.preview, opening && styles.previewCentered]}>
+          {/* Plain white, not the pink gradient this used to be. Every item in the shop is
+              previewed in this box — furniture, wallpaper, hats — and a pink wash tinted all
+              of them, which both misrepresented the item's own colours and clashed with the
+              wallpaper swatches, whose whole point is the colour they are. */}
+          <View style={[styles.preview, opening && styles.previewCentered]}>
             {opening ? (
               <Animated.View style={{ transform: [{ rotate }, { scale }] }}>
                 <GiftIcon size={72} tone={item.mysteryPool === 'accessory' ? 'purple' : 'pink'} />
@@ -199,7 +202,7 @@ function ShopItemSheet() {
             ) : (
               <Hammy size={150} bob={false} equipped={[item]} />
             )}
-          </LinearGradient>
+          </View>
 
           {opening ? (
             <View style={styles.head}>
@@ -286,7 +289,13 @@ const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 6 },
   // Bottom-anchored, not centered — see shop.tsx's preview style for why (matches the
   // website's .shop-preview: centering left tall hats no headroom and they clipped at the top).
-  preview: { height: 210, borderRadius: 22, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },
+  preview: {
+    height: 210, borderRadius: 22, alignItems: 'center', justifyContent: 'flex-end',
+    overflow: 'hidden', backgroundColor: colors.white,
+    // The pink gradient this replaces gave the box its own edge against the white sheet.
+    // Plain white on white needs a border, or the preview area has no boundary at all.
+    borderWidth: 1.5, borderColor: colors.border,
+  },
   // The spinning gift icon has no "base" the way item art does — flex-end left it sitting
   // near the bottom edge instead of in the middle of the preview, unlike the website's
   // .shop-modal-pig (a plain centered flexbox). Overrides justifyContent back to center only

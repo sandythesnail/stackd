@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, ViewStyle, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Txt, Hammy, ItemArt, Wallpaper, ListRow } from '@/components';
+import { Screen, Txt, Hammy, ItemArt, Wallpaper, ListRow, RoomFloor } from '@/components';
 import { colors, font } from '@/theme';
 import { useStore, MAX_EQUIPPED_ITEMS } from '@/store';
 import { shopItemsReal } from '@/content';
@@ -112,12 +112,6 @@ function SquareWindowSlot({ item, onPress }: { item: ShopItemReal; onPress: () =
 // rug (normal), and Hammy standing on it (the whole point of the rug reaching up that far).
 const FURNITURE_SLOTS: FurnitureSlot[] = ['window', 'wall', 'rug', 'lamp', 'garland', 'bed', 'plant', 'desk'];
 
-// Fixed-width vertical stripes, ported pixel-for-pixel from the website's .room-floor
-// (repeating-linear-gradient(90deg, #C6935B 0 58px, #B98650 58px 62px)) — a plain two-tone
-// gradient here used to have no stripes at all. More entries than any real screen is wide
-// enough to need; the floor's own overflow:hidden clips the rest.
-const FLOOR_STRIPES = Array.from({ length: 24 }, (_, i) => i);
-
 /** Ported from the website's wardrobeTabLabels (app.js) — the wardrobe only manages
  * equippable cosmetics, not room decor or auto-awarded "reward" items. */
 const WARDROBE_CATEGORIES: { key: WardrobeCategory; label: string }[] = [
@@ -177,11 +171,7 @@ export default function Room() {
           <View style={styles.wallZone}>
             <Wallpaper item={wallpaperItem} style={StyleSheet.absoluteFill} />
           </View>
-          <View style={styles.floorZone}>
-            <View style={styles.floorStripes}>
-              {FLOOR_STRIPES.map((i) => <View key={i} style={styles.floorStripe} />)}
-            </View>
-          </View>
+          <RoomFloor style={styles.floorZone} />
 
           {FURNITURE_SLOTS.map((slot) => {
             const item = bySlot(slot);
@@ -213,9 +203,7 @@ export default function Room() {
       ) : (
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.wardrobeContent}>
           <View style={styles.wardrobeStage}>
-            <View style={styles.wardrobeStageStripes} pointerEvents="none">
-              {FLOOR_STRIPES.map((i) => <View key={i} style={styles.floorStripe} />)}
-            </View>
+            <RoomFloor style={styles.wardrobeStageStripes} pointerEvents="none" />
             <Hammy size={190} equipped={equipped} />
           </View>
 
@@ -351,8 +339,6 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 0, left: 0, right: 0, height: '52%',
     backgroundColor: '#B98650', overflow: 'hidden',
   },
-  floorStripes: { flex: 1, flexDirection: 'row' },
-  floorStripe: { width: 58, height: '100%', backgroundColor: '#C6935B', marginRight: 4 },
   slot: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   slotFilled: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   // Right under the furnitureCta pill (top: 14, roughly 40-ish tall) and spanning the full
