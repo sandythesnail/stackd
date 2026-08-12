@@ -3,7 +3,11 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/m", "destination": "/m/index.html" },
-    { "source": "/m/(.*)", "destination": "/m/index.html" }
+    { "source": "/m/(.*)", "destination": "/m/index.html" },
+    { "source": "/login.html/(.*)", "destination": "/login.html" },
+    { "source": "/signup.html/(.*)", "destination": "/signup.html" },
+    { "source": "/sso-callback", "destination": "/login.html" },
+    { "source": "/sso-callback/(.*)", "destination": "/login.html" }
   ],
   "headers": [
     {
