@@ -9,7 +9,6 @@ import { user, modules } from '@/data';
 import { useStore } from '@/store';
 import { authEnabled } from '@/lib/env';
 import { makeSupabase } from '@/lib/supabase';
-import { confirmDestructive } from '@/lib/confirm';
 import { MODULE_SOURCES } from '@/references';
 
 /** Screen 14 — Settings (account, feedback, sources). */
@@ -17,14 +16,15 @@ export default function Settings() {
   const router = useRouter();
   const { state, level, tierName, resetProgress, debugSimulateNewDay } = useStore();
 
-  const confirmReset = () => {
-    confirmDestructive('Reset all progress?', 'This wipes your XP, modules, badges, coins, diamonds, shop items, room decor, and budget plan. This cannot be undone.', 'Reset', () => {
-      resetProgress();
-      // Straight back to Home, not onboarding — the user is still signed in, and
-      // resetProgress() already zeroed local state, so Home immediately reflects the
-      // reset instead of showing a signup form to an already-authenticated account.
-      router.push('/(tabs)/home');
-    });
+  const [askingReset, setAskingReset] = useState(false);
+
+  const doReset = () => {
+    setAskingReset(false);
+    resetProgress();
+    // Straight back to Home, not onboarding — the user is still signed in, and
+    // resetProgress() already zeroed local state, so Home immediately reflects the
+    // reset instead of showing a signup form to an already-authenticated account.
+    router.push('/(tabs)/home');
   };
   return (
     <Screen edges={['top']}>
@@ -41,7 +41,7 @@ export default function Settings() {
           {/* The "Replay welcome tour" row is gone. The tour is still replayable from the
               help icon in Home's header (Header's onReplayTour), which is where it belongs —
               on the screen the tour actually walks through. */}
-          <Row icon="trash-2" title="Reset all progress" sub="Erases everything. Can't be undone." danger onPress={confirmReset} />
+          <Row icon="trash-2" title="Reset all progress" sub="Erases everything. Can't be undone." danger onPress={() => setAskingReset(true)} />
           {/* Debug helpers live behind __DEV__ and MUST stay there.
            *
            * Two grant-style cheats ("Own everything", "Add 1,000 coins") used to sit here
@@ -73,6 +73,19 @@ export default function Settings() {
 
         <SourcesSection />
       </ScrollView>
+
+      {/* Outside the ScrollView: a Modal is a portal either way, but there's no reason for a
+          dialog to sit in scrolling content. */}
+      <ConfirmDialog
+        visible={askingReset}
+        title="Reset all progress?"
+        body="This wipes your XP, modules, badges, coins, diamonds, shop items, room decor, and budget plan. This cannot be undone."
+        cancelLabel="Keep my progress"
+        confirmLabel="Reset everything"
+        confirmVariant="pink"
+        onCancel={() => setAskingReset(false)}
+        onConfirm={doReset}
+      />
     </Screen>
   );
 }
@@ -258,38 +271,67 @@ function ClerkAccountRow() {
 }
 
 /**
- * "Are you sure?" for signing out, drawn in the app rather than handed to the platform.
+ * "Are you sure?", drawn in the app rather than handed to the platform.
  *
- * Sign-out did already confirm, through confirmDestructive — but what that shows is the
- * browser's own grey confirm box on web (which /m/ is, for every phone that visits the site)
- * and the OS alert on native. Neither looks like Stacked, and the browser one is easy to
- * dismiss without reading. This is the same local <Modal> pattern the quest player uses for
- * "Leave this lesson?" (LeaveLessonDialog), which is the approach that works on both
- * platforms — note the warning in lib/confirm.ts about a GLOBAL dialog host, which is a
- * different thing and was reverted for breaking the web build.
+ * Both of this screen's serious actions used to confirm through confirmDestructive, which
+ * shows the browser's own grey confirm box on web (which /m/ IS, for every phone that visits
+ * the site) and the OS alert on native. Neither looks like Stacked, and the browser one is
+ * easy to dismiss without reading. This is the same local <Modal> pattern the quest player
+ * uses for "Leave this lesson?" (LeaveLessonDialog) — note that the warning in lib/confirm.ts
+ * is about a GLOBAL dialog host, which is a different thing and was reverted for breaking the
+ * web build. Per-screen, this is the approach that works on both platforms.
  *
- * Cancel leads. Signing out is not what a mis-tap should accomplish, and unlike the quest
- * player's dialog — where leaving is what the X you just pressed means — this one exists
- * precisely because the tap may not have been meant.
+ * Cancel leads, in both dialogs. Neither of these is what a mis-tap should accomplish, which
+ * is the opposite of the quest player's dialog, where leaving is exactly what the X you just
+ * pressed meant.
  */
+function ConfirmDialog({
+  visible, title, body, confirmLabel, cancelLabel, confirmVariant = 'ghost', onCancel, onConfirm,
+}: {
+  visible: boolean;
+  title: string;
+  body: string;
+  confirmLabel: string;
+  cancelLabel: string;
+  /** ghost for signing out (recoverable — sign back in), pink for wiping progress, which
+   * carries the weight of the thing it does. */
+  confirmVariant?: 'ghost' | 'pink';
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+      <View style={styles.dialogRoot}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel={cancelLabel} />
+        <View style={styles.dialogCard}>
+          <Txt style={styles.dialogTitle}>{title}</Txt>
+          <Txt style={styles.dialogBody}>{body}</Txt>
+          <Button label={cancelLabel} onPress={onCancel} style={{ marginTop: 18 }} />
+          <Button label={confirmLabel} variant={confirmVariant} onPress={onConfirm} style={{ marginTop: 10 }} />
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const SIGN_OUT_BODY =
+  'Your progress is saved to your account, so you can pick up where you left off when you '
+  + 'sign back in.';
+
+/** The sign-out question, which both the real and the stub row ask. */
 function SignOutDialog({
   visible, onCancel, onSignOut,
 }: { visible: boolean; onCancel: () => void; onSignOut: () => void }) {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={styles.dialogRoot}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel="Cancel" />
-        <View style={styles.dialogCard}>
-          <Txt style={styles.dialogTitle}>Sign out?</Txt>
-          <Txt style={styles.dialogBody}>
-            Your progress is saved to your account, so you can pick up where you left off when
-            you sign back in.
-          </Txt>
-          <Button label="Stay signed in" onPress={onCancel} style={{ marginTop: 18 }} />
-          <Button label="Sign out" variant="ghost" onPress={onSignOut} style={{ marginTop: 10 }} />
-        </View>
-      </View>
-    </Modal>
+    <ConfirmDialog
+      visible={visible}
+      title="Sign out?"
+      body={SIGN_OUT_BODY}
+      cancelLabel="Stay signed in"
+      confirmLabel="Sign out"
+      onCancel={onCancel}
+      onConfirm={onSignOut}
+    />
   );
 }
 

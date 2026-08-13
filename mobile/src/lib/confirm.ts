@@ -1,34 +1,28 @@
 import { Alert, Platform } from 'react-native';
 
-/** Alert.alert's multi-button confirm dialog is a total no-op on web — react-native-web's
- * implementation (node_modules/react-native-web/dist/exports/Alert/index.js) is a literal
- * empty function, so tapping a destructive action there silently did nothing at all (no
- * dialog, no callback, nothing) instead of failing loudly. This is exactly the bug reported
- * as "the reset progress button doesn't work" while testing in a browser. Falls back to a
- * real window.confirm there so the action still actually asks before firing on web; native
- * keeps the richer Alert.alert (title + message + styled Cancel/destructive buttons).
+/* READ THIS BEFORE REACHING FOR Alert.alert.
  *
- * This is for the genuinely destructive actions in Settings — reset progress, sign out. The
- * quest player's "leave this lesson?" does NOT come through here: it needs to look like the
- * app rather than like the browser, so it draws its own in-screen dialog (see quest.tsx's
- * LeaveLessonDialog). A global in-app host was tried for BOTH and reverted — it broke the
- * confirm on the web build. Doing it per-screen, with the same local <Modal> pattern that
- * screen already uses for its hint and boss-verdict popups, keeps it on a path that works. */
-export function confirmDestructive(title: string, message: string, confirmLabel: string, onConfirm: () => void) {
-  if (Platform.OS === 'web') {
-    if (window.confirm(`${title}\n\n${message}`)) onConfirm();
-    return;
-  }
-  Alert.alert(title, message, [
-    { text: 'Cancel', style: 'cancel' },
-    { text: confirmLabel, style: 'destructive', onPress: onConfirm },
-  ]);
-}
+ * Alert.alert is a total no-op on web — react-native-web's implementation
+ * (node_modules/react-native-web/dist/exports/Alert/index.js) is a literal empty function, so
+ * an action gated behind one silently does nothing at all (no dialog, no callback, nothing)
+ * instead of failing loudly. That is not a corner case here: /m/ IS the web build, for every
+ * phone that visits the site. It's the bug that was reported as "the reset progress button
+ * doesn't work" in a browser. Whatever you write must have a web path.
+ *
+ * The CONFIRM half of this file is gone. It used to be `confirmDestructive`, which fell back
+ * to window.confirm on web — correct in that it always asked, but what the student saw was
+ * the browser's grey system box, which looks nothing like Stacked and is easy to dismiss
+ * unread. Settings now draws its own dialog for both of its serious actions (ConfirmDialog in
+ * (tabs)/settings.tsx), the same per-screen <Modal> pattern the quest player uses for "Leave
+ * this lesson?". Note that a GLOBAL dialog host was tried for both and reverted — it broke
+ * the confirm on the web build. Per-screen is the shape that works; copy that, not this.
+ */
 
-/** One-button "here's what just happened" notice, with the same web/native split and for the
- * same reason as confirmDestructive above: a single-button Alert.alert is just as much of a
- * no-op under react-native-web as a multi-button one, and /m/ IS the web build for every
- * phone that visits the site.
+/** One-button "here's what just happened" notice. Kept on the platform alert because it only
+ * announces — there is nothing to get wrong by tapping the one button — and because it can
+ * fire when no particular screen is mounted to draw it. Same web/native split as above: a
+ * single-button Alert.alert is just as much of a no-op under react-native-web as a
+ * multi-button one, hence the window.alert path.
  *
  * Used for rewards that arrive from the SERVER rather than from something the player just
  * did — today that's referral payouts, which can land at sign-in or minutes after a friend
