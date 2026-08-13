@@ -51,7 +51,12 @@ function ClerkSignIn() {
         // Claim the navigation before setActive flips isSignedIn — see the guard above.
         completing.current = true;
         await setActive({ session: res.createdSessionId });
-        router.replace('/(tabs)/home');
+        // To the splash, not straight to Home. This account may never have finished the
+        // mobile onboarding survey — someone who signed up on the website has a perfectly
+        // good account with no track recorded — and the splash is what knows how to tell,
+        // because it waits for the cloud read before deciding (see index.tsx). Sending
+        // people to Home from here is what left them without a track.
+        router.replace('/');
       } else if (res.status === 'needs_second_factor') {
         // The instance has no second factors configured (auth_config.second_factors is
         // empty and MFA is not required), so reaching this is a dashboard change rather
@@ -94,8 +99,11 @@ function ClerkSignIn() {
       <View style={{ marginTop: 20 }}>
         <SocialAuth
           completingRef={completing}
+          // A brand-new account definitionally owes the survey, so go straight there.
+          // Anyone else goes via the splash, which decides once their cloud progress has
+          // landed — "not new" does NOT mean "has done the mobile onboarding".
           onSignedIn={({ isNewUser }) =>
-            router.replace(isNewUser ? '/(onboarding)/survey' : '/(tabs)/home')
+            router.replace(isNewUser ? '/(onboarding)/survey' : '/')
           }
         />
       </View>

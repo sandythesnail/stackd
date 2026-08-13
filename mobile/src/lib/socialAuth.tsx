@@ -181,7 +181,10 @@ export function SocialAuth({
           variant="ghost"
           label={busy === strategy ? `Opening ${name}…` : `Continue with ${name}`}
           left={<Logo />}
-          disabled={busy !== null}
+          // Also disabled until Clerk has loaded. `start` returns early in that window, so
+          // without this the button looked live and a tap did nothing at all — the exact
+          // "I pressed it and nothing happened" report that is impossible to diagnose.
+          disabled={busy !== null || !signInReady || !signUpReady}
           onPress={() => { void start(strategy, name); }}
         />
       ))}

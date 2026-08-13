@@ -181,8 +181,10 @@ function ClerkSignUp() {
       <View style={{ marginTop: 18 }}>
         <SocialAuth
           completingRef={completing}
+          // Same split as sign-in: new accounts owe the survey outright, returning ones go
+          // through the splash so their cloud progress decides. See index.tsx.
           onSignedIn={({ isNewUser }) =>
-            router.replace(isNewUser ? '/(onboarding)/survey' : '/(tabs)/home')
+            router.replace(isNewUser ? '/(onboarding)/survey' : '/')
           }
         />
       </View>
