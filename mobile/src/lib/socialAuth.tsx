@@ -9,10 +9,9 @@
  * widget by redirecting to /login.html (see webAuth.tsx). This is the same two providers,
  * done the way a native app has to do them.
  *
- * Clerk's SSO on native is a browser round-trip: `startSSOFlow` creates the sign-in, opens
- * the provider in an auth session (SFAuthenticationSession / Custom Tab, NOT a webview — the
- * providers block those), and comes back to `redirectUrl` with a nonce that Clerk exchanges
- * for a session.
+ * Clerk's SSO on native is a browser round-trip: create the sign-in, open the provider in an
+ * auth session (SFAuthenticationSession / Custom Tab, NOT a webview — the providers block
+ * those), and come back to `redirectUrl` with a nonce that Clerk exchanges for a session.
  *
  * One thing outside this file has to be right, and it is not right by default: the redirect
  * URL has to be authorized on the Clerk instance, which rejects anything else with
@@ -26,7 +25,7 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import Svg, { Path, Rect } from 'react-native-svg';
-import { useSSO } from '@clerk/clerk-expo';
+import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { Button, Txt } from '@/components';
 import { colors, font } from '@/theme';
 import { clerkError } from './clerkErrors';
@@ -38,6 +37,16 @@ import { fillMissingUsername } from './clerkSignUp';
 WebBrowser.maybeCompleteAuthSession();
 
 type Strategy = 'oauth_google' | 'oauth_microsoft';
+
+/**
+ * Makes the provider show its account chooser instead of silently reusing whoever the device
+ * is already signed in as. Clerk sends no `prompt` at all by default, which is why Google
+ * appears to skip its account page entirely and Microsoft goes straight into the UConn
+ * account a student is already signed into — with no way to pick a personal one. The website
+ * needs the same thing and gets it a different way, since Clerk's hosted widget makes the
+ * call there; see clerk-account-picker.js in the repo root.
+ */
+const PROMPT = 'select_account';
 
 /**
  * Where the provider sends the browser back to, and it has to be a string Clerk recognises
@@ -83,7 +92,12 @@ export function SocialAuth({
    * path), which is the one case that still owes us the onboarding survey. */
   onSignedIn: (result: { isNewUser: boolean }) => void;
 }) {
-  const { startSSOFlow } = useSSO();
+  // Deliberately NOT clerk-expo's useSSO(). Its startSSOFlow runs exactly the sequence below
+  // but calls signIn.create({ strategy, redirectUrl }) with no way to add anything, and the
+  // one thing that has to be added is oidcPrompt — without it neither provider shows its
+  // account chooser (see PROMPT below). Everything else here matches what useSSO does.
+  const { signIn, setActive, isLoaded: signInReady } = useSignIn();
+  const { signUp, isLoaded: signUpReady } = useSignUp();
   const [busy, setBusy] = useState<Strategy | null>(null);
   const [error, setError] = useState<string | null>(null);
   // The screen can unmount the moment we navigate; don't setState into the void afterwards.
@@ -99,34 +113,55 @@ export function SocialAuth({
   }, []);
 
   const start = async (strategy: Strategy, name: string) => {
-    if (busy) return;
+    if (busy || !signInReady || !signUpReady) return;
     setBusy(strategy);
     setError(null);
     try {
-      const { createdSessionId, setActive, signUp, authSessionResult } = await startSSOFlow({
-        strategy,
-        redirectUrl: ssoRedirectUrl(),
-      });
+      const redirectUrl = ssoRedirectUrl();
 
-      let sessionId = createdSessionId;
-
-      // No session yet, but a sign-up exists: Clerk transferred the OAuth identity into a
-      // new account and is holding it for a required field. On this instance that field is
-      // `username` (see clerkSignUp.ts), which we can supply without asking.
-      if (!sessionId && signUp && signUp.status === 'missing_requirements') {
-        const filled = await fillMissingUsername(signUp);
-        sessionId = filled.createdSessionId;
+      // Ask Clerk for the provider's authorization URL. oidcPrompt is the whole reason this
+      // isn't useSSO(): it becomes `prompt=select_account` on the provider URL, which is what
+      // makes Google and Microsoft ASK which account instead of silently reusing the one the
+      // device is already signed into.
+      await signIn.create({ strategy, redirectUrl, oidcPrompt: PROMPT });
+      const providerUrl = signIn.firstFactorVerification.externalVerificationRedirectURL;
+      if (!providerUrl) {
+        setError(`Couldn't reach ${name}. Please try again.`);
+        return;
       }
 
-      if (!sessionId || !setActive) {
+      const result = await WebBrowser.openAuthSessionAsync(providerUrl.toString(), redirectUrl);
+      if (result.type !== 'success' || !result.url) {
         // Backing out of the provider screen is a decision, not a failure — say nothing.
-        const type = authSessionResult?.type;
-        if (type === 'cancel' || type === 'dismiss' || type === 'locked') return;
+        if (result.type === 'cancel' || result.type === 'dismiss' || result.type === 'locked') return;
         setError(`Couldn't finish signing in with ${name}. Please try again.`);
         return;
       }
 
-      const isNewUser = Boolean(signUp?.createdSessionId);
+      // Clerk hands the session back as a nonce on the redirect, which the reload exchanges.
+      const nonce = new URL(result.url).searchParams.get('rotating_token_nonce') ?? '';
+      await signIn.reload({ rotatingTokenNonce: nonce });
+
+      // "transferable" means the provider authenticated someone with no account here yet, so
+      // the OAuth identity gets transferred into a new sign-up.
+      if (signIn.firstFactorVerification.status === 'transferable') {
+        await signUp.create({ transfer: true });
+      }
+
+      let sessionId = signUp.createdSessionId ?? signIn.createdSessionId;
+
+      // A brand-new account can be held back for a required field. On this instance that's
+      // `username` (see clerkSignUp.ts), which we can supply without asking.
+      if (!sessionId && signUp.status === 'missing_requirements') {
+        sessionId = (await fillMissingUsername(signUp)).createdSessionId;
+      }
+
+      if (!sessionId) {
+        setError(`Couldn't finish signing in with ${name}. Please try again.`);
+        return;
+      }
+
+      const isNewUser = Boolean(signUp.createdSessionId);
       completingRef.current = true;
       await setActive({ session: sessionId });
       onSignedIn({ isNewUser });

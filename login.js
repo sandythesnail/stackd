@@ -24,6 +24,10 @@ window.addEventListener('load', async function () {
     return;
   }
 
+  // Google and Microsoft otherwise sign the user straight back in as whoever the browser is
+  // already signed in as, with no chooser — see clerk-account-picker.js.
+  forceAccountPicker(Clerk);
+
   // Where to send the user after auth. Normally /app.html, but the mobile app (/m) links
   // here with ?redirect_url=/m/ so it can reuse this real Clerk sign-in (Google + all
   // methods) and land back in the app. Persisted in sessionStorage so it survives the

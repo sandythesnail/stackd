@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet, Linking, TextInput } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, Linking, TextInput, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useUser, useClerk, useAuth } from '@clerk/clerk-expo';
@@ -65,7 +65,7 @@ export default function Settings() {
           {authEnabled ? (
             <ClerkSignOutRow />
           ) : (
-            <Row icon="log-out" title="Sign out" last onPress={() => router.push('/(onboarding)/signin')} />
+            <StubSignOutRow onSignOut={() => router.push('/(onboarding)/signin')} />
           )}
         </View>
 
@@ -257,21 +257,84 @@ function ClerkAccountRow() {
   return <Row icon="user" title="Account" sub={email} />;
 }
 
+/**
+ * "Are you sure?" for signing out, drawn in the app rather than handed to the platform.
+ *
+ * Sign-out did already confirm, through confirmDestructive — but what that shows is the
+ * browser's own grey confirm box on web (which /m/ is, for every phone that visits the site)
+ * and the OS alert on native. Neither looks like Stacked, and the browser one is easy to
+ * dismiss without reading. This is the same local <Modal> pattern the quest player uses for
+ * "Leave this lesson?" (LeaveLessonDialog), which is the approach that works on both
+ * platforms — note the warning in lib/confirm.ts about a GLOBAL dialog host, which is a
+ * different thing and was reverted for breaking the web build.
+ *
+ * Cancel leads. Signing out is not what a mis-tap should accomplish, and unlike the quest
+ * player's dialog — where leaving is what the X you just pressed means — this one exists
+ * precisely because the tap may not have been meant.
+ */
+function SignOutDialog({
+  visible, onCancel, onSignOut,
+}: { visible: boolean; onCancel: () => void; onSignOut: () => void }) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+      <View style={styles.dialogRoot}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel="Cancel" />
+        <View style={styles.dialogCard}>
+          <Txt style={styles.dialogTitle}>Sign out?</Txt>
+          <Txt style={styles.dialogBody}>
+            Your progress is saved to your account, so you can pick up where you left off when
+            you sign back in.
+          </Txt>
+          <Button label="Stay signed in" onPress={onCancel} style={{ marginTop: 18 }} />
+          <Button label="Sign out" variant="ghost" onPress={onSignOut} style={{ marginTop: 10 }} />
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+/** The no-Clerk stub's sign-out. It signs nobody out (there's no session), but it leaves the
+ * app, so it asks the same question rather than being the one row that acts on a mis-tap. */
+function StubSignOutRow({ onSignOut }: { onSignOut: () => void }) {
+  const [asking, setAsking] = useState(false);
+  return (
+    <>
+      <Row icon="log-out" title="Sign out" last onPress={() => setAsking(true)} />
+      <SignOutDialog
+        visible={asking}
+        onCancel={() => setAsking(false)}
+        onSignOut={() => { setAsking(false); onSignOut(); }}
+      />
+    </>
+  );
+}
+
 /** Real Clerk sign-out (only rendered when auth is on). */
 function ClerkSignOutRow() {
   const { signOut } = useClerk();
-  const onSignOut = () => {
-    confirmDestructive('Sign out?', 'Your progress is saved to your account.', 'Sign out', async () => {
-      // No navigation here on purpose. This used to push('/(onboarding)/signin'), which
-      // put the sign-in screen ON TOP of a fully mounted, signed-in tab stack — one back
-      // gesture (or browser Back) landed you inside the app with no session. The (tabs)
-      // layout is now wrapped in RequireAuth, so dropping the session is itself what moves
-      // you: the guard sees `isSignedIn` go false and REPLACES this route with sign-in,
-      // tearing the signed-in tree down instead of leaving it in history behind us.
-      await signOut();
-    });
+  const [asking, setAsking] = useState(false);
+
+  const doSignOut = async () => {
+    setAsking(false);
+    // No navigation here on purpose. This used to push('/(onboarding)/signin'), which
+    // put the sign-in screen ON TOP of a fully mounted, signed-in tab stack — one back
+    // gesture (or browser Back) landed you inside the app with no session. The (tabs)
+    // layout is now wrapped in RequireAuth, so dropping the session is itself what moves
+    // you: the guard sees `isSignedIn` go false and REPLACES this route with sign-in,
+    // tearing the signed-in tree down instead of leaving it in history behind us.
+    await signOut();
   };
-  return <Row icon="log-out" title="Sign out" last onPress={onSignOut} />;
+
+  return (
+    <>
+      <Row icon="log-out" title="Sign out" last onPress={() => setAsking(true)} />
+      <SignOutDialog
+        visible={asking}
+        onCancel={() => setAsking(false)}
+        onSignOut={() => { void doSignOut(); }}
+      />
+    </>
+  );
 }
 
 function Row({
@@ -310,6 +373,17 @@ function Row({
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 22, paddingBottom: 28, gap: 12 },
+  // Matched to the quest player's leave-lesson dialog, so the app has one confirm look.
+  dialogRoot: {
+    flex: 1, backgroundColor: 'rgba(22,32,23,0.55)',
+    alignItems: 'center', justifyContent: 'center', padding: 26,
+  },
+  dialogCard: {
+    width: '100%', maxWidth: 340, backgroundColor: colors.white,
+    borderWidth: 1.5, borderColor: colors.border, borderRadius: 22, padding: 22,
+  },
+  dialogTitle: { fontFamily: font.display, fontSize: 20, lineHeight: 25, color: colors.ink },
+  dialogBody: { fontFamily: font.semi, fontSize: 14, lineHeight: 20, color: colors.muted2, marginTop: 8 },
   feedbackH: { fontFamily: font.displayMed, fontSize: 16, color: colors.ink },
   feedbackChips: { flexDirection: 'row', gap: 8, marginTop: 8 },
   fbChip: {

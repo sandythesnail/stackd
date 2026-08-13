@@ -22,6 +22,10 @@ window.addEventListener('load', async function () {
     return;
   }
 
+  // Same as login.js: without this, the providers reuse the browser's existing account and
+  // never ask which one to use. See clerk-account-picker.js.
+  forceAccountPicker(Clerk);
+
   // Where to send the user after sign-up. Normally /app.html, but the mobile app (/m) links
   // here with ?redirect_url=/m/ to reuse this real Clerk sign-up and land back in the app.
   // Persisted across the OAuth round-trip and validated as a same-origin path.
