@@ -527,6 +527,9 @@ type Ctx = {
   /** True once the on-device AsyncStorage snapshot has been loaded into `state` — gates
    * anything (like SupabaseSync's account-owner check) that must not race that load. */
   hydrated: boolean;
+  /** True once the cloud read for the signed-in account has finished — see setRemoteSettled.
+   * Always false when auth is off, since there is no cloud to consult. */
+  remoteSettled: boolean;
   level: number;
   tierName: string;
   isOwned: (id: string) => boolean;
@@ -642,6 +645,13 @@ type Ctx = {
   /** Merge a remote (cloud-synced) snapshot into local state — used by SupabaseSync after
    * translating the web's user_progress blob into mobile's AppState. */
   hydrateFromRemote: (partial: Partial<AppState>) => void;
+  /** Set by SupabaseSync once it has FINISHED consulting the cloud for the signed-in account
+   * — row loaded, or no row to load, or the read failed. It says "this state is now as good
+   * as it's going to get", which is different from `hydrated` (the local AsyncStorage
+   * snapshot) and is what the splash waits on before deciding whether onboarding is owed.
+   * Without it, a returning user whose progress lives in the cloud looks, for the moment
+   * before the read lands, exactly like a brand-new one. */
+  setRemoteSettled: (settled: boolean) => void;
   /** Dev-only, and gated behind __DEV__ at its only call site (Settings): backdates
    * lastPlayedDate by one day and re-runs the daily check, so the streak/daily-login flow
    * can be verified without waiting for a real day boundary. Grants nothing — it moves a
@@ -748,6 +758,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
   const loaded = useRef(false);
   const [hydrated, setHydrated] = useState(false);
+  const [remoteSettled, setRemoteSettled] = useState(false);
   /** Mirrors `state`, but buyOrEquipItem/toggleRoomSlot/openMysteryBox update it
    * synchronously themselves (not just via the render-cycle sync below) whenever THEY
    * mutate state. Without that, two rapid invocations of the same action before React
@@ -807,6 +818,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return {
       state,
       hydrated,
+      remoteSettled,
+      setRemoteSettled,
       level,
       tierName,
       loginBonusPending,
@@ -1391,7 +1404,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (streakDiamondsEarned > 0) bankStreakDiamonds(streakDiamondsEarned);
       },
     };
-  }, [state, hydrated, dailyLoginBanner, newAchievementIds, pendingStreakDiamonds]);
+    // remoteSettled belongs here: it is READ by the value above, so leaving it out would
+    // freeze consumers on `false` — the splash would wait for a flag that never appears to
+    // change and fall through on its timeout every single launch.
+  }, [state, hydrated, remoteSettled, dailyLoginBanner, newAchievementIds, pendingStreakDiamonds]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

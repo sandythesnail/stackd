@@ -36,7 +36,9 @@ type ReferrerResult = { diamonds?: number } | null;
 
 export function SupabaseSync() {
   const { isSignedIn, userId, getToken } = useAuth();
-  const { state, hydrated, hydrateFromRemote, resetForAccountSwitch, creditReferralReward } = useStore();
+  const {
+    state, hydrated, hydrateFromRemote, resetForAccountSwitch, creditReferralReward, setRemoteSettled,
+  } = useStore();
 
   // Keep latest getToken/state/hydrate in refs so the Supabase client and callbacks are
   // stable (created once) yet always act on current values.
@@ -48,6 +50,8 @@ export function SupabaseSync() {
   hydrateRef.current = hydrateFromRemote;
   const resetRef = useRef(resetForAccountSwitch);
   resetRef.current = resetForAccountSwitch;
+  // setRemoteSettled needs no ref of its own: it's a useState setter, so React guarantees a
+  // stable identity and it can sit in the effect's dependencies without re-triggering it.
   const creditRef = useRef(creditReferralReward);
   creditRef.current = creditReferralReward;
   // Read inside claimReferralRewards, which is memoised on [supabase] alone so that the
@@ -173,6 +177,9 @@ export function SupabaseSync() {
   useEffect(() => {
     ready.current = false;
     lastRemote.current = null;
+    // Nothing is known about this account's cloud progress until the read below finishes.
+    // The splash waits on this to tell a returning user from a brand-new one.
+    setRemoteSettled(false);
     if (!hydrated || !isSignedIn || !userId) return;
     let cancelled = false;
     (async () => {
@@ -199,7 +206,12 @@ export function SupabaseSync() {
       if (cancelled) return;
       if (error) {
         console.warn('[sync] load failed:', error.message);
-        return; // leave ready=false so we don't overwrite the cloud with local defaults
+        // Settled, not successful: we asked and got nothing. Uploads stay disabled
+        // (ready=false) so local defaults can't overwrite the cloud, but the splash must
+        // still be released — waiting forever on a read that already failed would strand a
+        // user on the launch screen every time the network is down.
+        setRemoteSettled(true);
+        return;
       }
       if (data?.state) {
         lastRemote.current = data.state as WebState;
@@ -209,13 +221,14 @@ export function SupabaseSync() {
         ready.current = true;
         await push(userId, localState); // seed a fresh cloud row from local state
       }
+      setRemoteSettled(true);
       // Catches the referred player who finished their first lesson in an earlier session,
       // and — the case nothing else covers — the REFERRER, whose diamonds depend on what a
       // friend did on a different device entirely.
       if (!cancelled) await claimReferralRewards();
     })();
     return () => { cancelled = true; };
-  }, [hydrated, isSignedIn, userId, supabase, push, claimReferralRewards]);
+  }, [hydrated, isSignedIn, userId, supabase, push, claimReferralRewards, setRemoteSettled]);
 
   // A finished lesson is the event claim_referral_activation is waiting for, so note it and
   // let the next successful upload trigger the check (see push). Counts real completions

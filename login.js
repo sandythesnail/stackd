@@ -26,7 +26,13 @@ window.addEventListener('load', async function () {
 
   // Google and Microsoft otherwise sign the user straight back in as whoever the browser is
   // already signed in as, with no chooser — see clerk-account-picker.js.
-  forceAccountPicker(Clerk);
+  //
+  // Guarded because a bare call is a ReferenceError if that file didn't load (blocked, cached
+  // HTML pointing at a script a deploy hasn't published yet, an extension), and an exception
+  // thrown HERE would abort the rest of this handler — including mountSignIn below. That
+  // turns "no account chooser" into "no sign-in form at all", which is not a trade worth
+  // making for a nicety.
+  if (typeof forceAccountPicker === 'function') forceAccountPicker(Clerk);
 
   // Where to send the user after auth. Normally /app.html, but the mobile app (/m) links
   // here with ?redirect_url=/m/ so it can reuse this real Clerk sign-in (Google + all

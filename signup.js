@@ -23,8 +23,9 @@ window.addEventListener('load', async function () {
   }
 
   // Same as login.js: without this, the providers reuse the browser's existing account and
-  // never ask which one to use. See clerk-account-picker.js.
-  forceAccountPicker(Clerk);
+  // never ask which one to use, and the same guard for the same reason — a ReferenceError
+  // here would take mountSignUp down with it. See clerk-account-picker.js.
+  if (typeof forceAccountPicker === 'function') forceAccountPicker(Clerk);
 
   // Where to send the user after sign-up. Normally /app.html, but the mobile app (/m) links
   // here with ?redirect_url=/m/ to reuse this real Clerk sign-up and land back in the app.
