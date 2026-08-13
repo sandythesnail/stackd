@@ -15,15 +15,14 @@
  * for a session.
  *
  * One thing outside this file has to be right, and it is not right by default: the redirect
- * URL below has to be authorized on the Clerk instance. `Linking.createURL('/sso-callback')`
- * resolves to `stackd://sso-callback` in a build (app.json's `scheme`) and to an `exp://…`
- * URL under Expo Go, and Clerk rejects BOTH until they're added to the instance's allowed
- * redirect URLs — verified against production, which answers a native sign-in with
- * `resource_missmatch`, "Redirect url mismatch", no matter which provider is asked for.
- * `npm run check:sso` asks Clerk directly and prints what it accepts.
+ * URL has to be authorized on the Clerk instance, which rejects anything else with
+ * `resource_missmatch` ("Redirect url mismatch") for every provider alike. See
+ * ssoRedirectUrl() below for exactly what gets sent and what Clerk accepts, and run
+ * `npm run check:sso` to ask Clerk directly rather than assuming.
  */
 import { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import Svg, { Path, Rect } from 'react-native-svg';
@@ -39,6 +38,31 @@ import { fillMissingUsername } from './clerkSignUp';
 WebBrowser.maybeCompleteAuthSession();
 
 type Strategy = 'oauth_google' | 'oauth_microsoft';
+
+/**
+ * Where the provider sends the browser back to, and it has to be a string Clerk recognises
+ * EXACTLY. Probed against the production instance with one entry, `stackd://`, allowlisted:
+ *
+ *     stackd://              ✓ authorized
+ *     stackd://sso-callback  ✗ "Redirect url mismatch"
+ *     stackd://callback      ✗ "Redirect url mismatch"
+ *
+ * So the scheme is not a prefix that covers paths under it — an allowlisted `stackd://`
+ * authorizes `stackd://` and nothing else. Sending the bare scheme is also what iOS wants:
+ * ASWebAuthenticationSession is given a callback SCHEME, not a URL.
+ *
+ * Expo Go is the exception, because it can't own the app's scheme — it hands back an
+ * `exp://<lan-ip>:8081/--/…` URL, which has to be allowlisted separately (and re-added
+ * whenever the LAN address changes). A development or production build has no such problem.
+ */
+function ssoRedirectUrl(): string {
+  if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) {
+    return Linking.createURL('/sso-callback');
+  }
+  const scheme = Constants.expoConfig?.scheme;
+  const name = Array.isArray(scheme) ? scheme[0] : scheme;
+  return name ? `${name}://` : Linking.createURL('/sso-callback');
+}
 
 const PROVIDERS: { strategy: Strategy; name: string; Logo: () => React.JSX.Element }[] = [
   { strategy: 'oauth_google', name: 'Google', Logo: GoogleLogo },
@@ -81,7 +105,7 @@ export function SocialAuth({
     try {
       const { createdSessionId, setActive, signUp, authSessionResult } = await startSSOFlow({
         strategy,
-        redirectUrl: Linking.createURL('/sso-callback'),
+        redirectUrl: ssoRedirectUrl(),
       });
 
       let sessionId = createdSessionId;

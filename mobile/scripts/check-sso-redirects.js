@@ -67,8 +67,18 @@ async function probe(host, token, strategy, redirectUrl) {
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ strategy, redirect_url: redirectUrl }),
   });
+  // Clerk rate-limits these attempts. That is NOT the redirect being refused, and reporting
+  // it as one would send you back to the dashboard to fix something that isn't broken.
+  if (res.status === 429) return { unknown: true, reason: 'rate limited by Clerk — wait a minute and re-run' };
   const body = await res.json();
-  if (body.errors) return { ok: false, reason: body.errors[0].long_message || body.errors[0].message };
+  if (body.errors) {
+    const err = body.errors[0];
+    const reason = err.long_message || err.message;
+    if (err.code === 'rate_limit_exceeded' || /too many requests/i.test(reason)) {
+      return { unknown: true, reason: `${reason} (not a redirect problem)` };
+    }
+    return { ok: false, reason };
+  }
   const url = body.response?.first_factor_verification?.external_verification_redirect_url;
   return url ? { ok: true } : { ok: false, reason: 'no provider redirect returned' };
 }
@@ -81,10 +91,16 @@ async function main() {
   }
   const host = frontendApi(key);
   const targets = process.argv.slice(2);
-  const redirects = targets.length ? targets : [`${scheme()}://sso-callback`, 'exp://127.0.0.1:8081/--/sso-callback'];
+  // The bare scheme is what a real build sends (see ssoRedirectUrl in lib/socialAuth.tsx);
+  // Clerk matches it exactly, so `stackd://` does NOT authorize `stackd://anything`. An
+  // Expo Go run sends an exp:// URL carrying your LAN address instead — pass it as an
+  // argument, since this script can't know which network you're on.
+  const redirects = targets.length ? targets : [`${scheme()}://`];
 
   console.log(`check:sso — ${host}\n`);
   let failed = 0;
+
+  let unknown = 0;
 
   for (const redirect of redirects) {
     for (const strategy of ['oauth_google', 'oauth_microsoft']) {
@@ -92,11 +108,21 @@ async function main() {
       const result = await probe(host, await nativeClientToken(host), strategy, redirect);
       if (result.ok) {
         console.log(`  ✓ ${strategy.padEnd(17)} ${redirect}`);
+      } else if (result.unknown) {
+        unknown++;
+        console.log(`  ? ${strategy.padEnd(17)} ${redirect}\n      ${result.reason}`);
       } else {
         failed++;
         console.log(`  ✗ ${strategy.padEnd(17)} ${redirect}\n      ${result.reason}`);
       }
+      // Space the attempts out; a tight loop is what trips Clerk's rate limit.
+      await new Promise((r) => setTimeout(r, 1200));
     }
+  }
+
+  if (unknown && !failed) {
+    console.log('\n? Inconclusive — Clerk rate-limited the check. Wait a minute and re-run.');
+    process.exit(2);
   }
 
   if (failed) {
