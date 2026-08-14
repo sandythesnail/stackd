@@ -30,25 +30,29 @@ export const SURVEY_GOALS: SurveyGoal[] = [
 
 export type SurveyTrack = { id: string; title: string; blurb: string; moduleIds: string[] };
 
+/** Blurbs are kept to roughly one line on a phone. They read in two places at once — the
+ * track list on the survey's last step, and the hero card when a track has no matching goal
+ * (see trackReason) — and the longest of them used to run past three lines in a 200px card
+ * and get clipped mid-sentence. Short enough to survive the narrow one is the constraint. */
 export const SURVEY_TRACKS: SurveyTrack[] = [
   {
     id: 'starting_fresh', title: 'Starting Fresh',
-    blurb: "You're just getting going, so let's cover the everyday basics first: where money comes from and where it goes.",
+    blurb: 'The everyday basics: where money comes from, and where it goes.',
     moduleIds: ['earning', 'spending', 'saving'],
   },
   {
     id: 'debt_freedom', title: 'Debt Freedom',
-    blurb: 'Get a handle on loans, credit, and your paycheck so debt stops being scary.',
+    blurb: 'Loans, credit and your paycheck, so debt stops being scary.',
     moduleIds: ['loans', 'credit', 'taxes'],
   },
   {
     id: 'building_wealth', title: 'Building Wealth',
-    blurb: "You've got the basics covered, now let's grow what you have and earn more of it.",
+    blurb: 'Grow what you have, and earn more of it.',
     moduleIds: ['saving', 'investing', 'career'],
   },
   {
     id: 'stay_protected', title: 'Stay Protected',
-    blurb: 'Sharpen your radar for scams, marketing tricks, and risk before they cost you.',
+    blurb: 'Spot scams, marketing tricks and risk before they cost you.',
     moduleIds: ['risk', 'psychology', 'scams'],
   },
 ];
