@@ -164,25 +164,41 @@ export const colors = {
  *     dark and dull, chartreuse is yellow-green gone saturated. The 110-135 band is left empty
  *     and the warm hues carry chroma floors.
  *
- * Green-weighted by request — four of the eleven (145 grass, 168 jade, 178 sea-green, 192
- * teal) against only two blues. Four greens inside 47 degrees is far tighter than hue alone can
- * carry, so they separate by depth: 0.822 / 0.789 / 0.720 / 0.799.
+ * PASTEL, by request, and getting there took changing the hues rather than the palette.
  *
- * Measured on this set: closest pair 0.0549 (career/saving) for normal vision, 0.0505 under
- * deuteranopia, 0.0507 under protanopia, 0.1286 to the nearest reserved token, and every chip
- * at 1.38:1 or better against the palest surface it is drawn on. */
+ * The previous set crowded the green end (career 168, loans 178, saving 192 — ten degrees
+ * between two of them) and paid for it out of lightness, because the only way to separate
+ * near-identical hues, especially under dichromacy, is to make one deep and one pale. That
+ * spend is exactly the budget pastel needs. Asking the old hues to go pale failed every time:
+ * bounded to a genuinely pastel band, the best solution put loans and saving 0.0243 apart
+ * under protanopia — the same colour for a red-blind student — against a 0.045 floor.
+ *
+ * Two other approaches failed less obviously, which is worth recording so they aren't retried:
+ * tightening the solver's L/C bounds to a pastel band changed the set's mean lightness by
+ * +0.004 (the old objective maximised separation, so it ran to the edges of any band it was
+ * given), and making "lighter and softer" a direction rather than a target produced dusty
+ * greys — psychology came out #B293AC. Cute pastels are light AND still coloured, which is a
+ * point in the space, not a corner.
+ *
+ * So the hues are respaced about 25-30 degrees apart around the whole wheel, separation comes
+ * from hue, and lightness is free. Mean chroma 0.112 -> 0.094, mean lightness 0.777 -> 0.787.
+ * The cost: saving moved teal -> sky and career jade -> sage.
+ *
+ * Measured on this set: closest pair 0.0536 (investing/psychology) for normal vision, 0.0482
+ * under deuteranopia, 0.0480 under protanopia, and every chip clears 1.35:1 against the palest
+ * surface it is drawn on and 4.6:1 against its own glyph. */
 export const moduleColor: Record<string, string> = {
-  earning: '#8DDB90',
-  spending: '#FFAECD',
-  saving: '#2CD8D3',
-  investing: '#BC93EB',
-  credit: '#88D1F8',
-  risk: '#F09663',
-  loans: '#65B6A5',
-  taxes: '#A1B5FF',
-  psychology: '#D591CB',
-  career: '#69D2AC',
-  scams: '#E58D8D',
+  earning: '#9CD88F',
+  spending: '#E3A0BD',
+  saving: '#7AC8DB',
+  investing: '#B597E9',
+  credit: '#98D0FF',
+  risk: '#EA9F79',
+  loans: '#87D9D3',
+  taxes: '#A3B6F9',
+  psychology: '#C793C8',
+  career: '#7ABA9E',
+  scams: '#FFB7B8',
 };
 
 /** Darker foreground paired with each `moduleColor` background — the module icon's glyph
@@ -204,17 +220,17 @@ export const moduleColor: Record<string, string> = {
  * revision fixed one foreground lightness for the whole set; the single chip that had been
  * deepened came out at 4.17:1, below AA, and nothing flagged it. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#11601D',
-  spending: '#883159',
-  saving: '#005957',
-  investing: '#4D2670',
-  credit: '#025979',
-  risk: '#692D00',
-  loans: '#014439',
+  earning: '#225F12',
+  spending: '#782450',
+  saving: '#025261',
+  investing: '#482873',
+  credit: '#00588D',
+  risk: '#702F00',
+  loans: '#005E5A',
   taxes: '#33408B',
-  psychology: '#631F5C',
-  career: '#005842',
-  scams: '#721621',
+  psychology: '#5C1E5F',
+  career: '#014933',
+  scams: '#91343D',
 };
 
 export const font = {

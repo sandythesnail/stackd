@@ -85,13 +85,32 @@ function sim(hex, type) {
     toSrgb(clamp(-0.000365294 * L2 - 0.00412163 * M2 + 0.693513 * S)));
 }
 
-// ---------------------------------------------------------------- palette definition
-// Hues are chosen by hand (identity: spending is pink, saving is teal, ...). Only lightness
-// and chroma are solved. Green-weighted by request: four greens, two blues. There is no
-// yellow module and there cannot be one - see `reserved` above.
+/* ---------------------------------------------------------------- palette definition
+ * Hues are chosen by hand (identity: spending is pink, credit is blue, ...). Only lightness
+ * and chroma are solved. There is no yellow module and there cannot be one - see `reserved`.
+ *
+ * These are RESPACED from the previous set, and that respacing is what made a pastel palette
+ * possible at all. The old hues crowded the green end - career 168, loans 178, saving 192, so
+ * ten degrees between two of them - and paid for it out of LIGHTNESS, since the only way to
+ * tell near-identical hues apart (especially under dichromacy, which preserves lightness and
+ * discards hue) is to make one deep and one pale. That spend is exactly the budget pastel
+ * needs, so with those hues, every pale solution failed MIN_PAIR: bounded to a genuinely
+ * pastel band the best result put loans and saving 0.0243 apart under protanopia, the same
+ * colour for a red-blind student.
+ *
+ * Now the eleven sit about 25-30 degrees apart around the whole wheel (minus the forbidden
+ * yellow band), so separation comes from hue and lightness is free to go pale. Mean chroma
+ * drops 0.112 -> 0.094 and mean lightness rises 0.777 -> 0.787, with the closest pair
+ * comfortably clear at 0.048.
+ *
+ * The cost is real and worth stating: saving moves from teal toward sky, and career from jade
+ * toward sage. The family identities survive (the green/teal end is still green/teal, spending
+ * is still pink, credit still blue) but "four greens" is now three greens and a blue-teal. If
+ * that identity matters more than the pastels, put the old hues back - and expect the palette
+ * to go vivid again, because it must. */
 const HUE = {
-  scams: 20, risk: 50, earning: 145, career: 168, loans: 178, saving: 192,
-  credit: 232, taxes: 272, investing: 305, psychology: 332, spending: 355,
+  scams: 18, risk: 48, earning: 140, career: 165, loans: 190, saving: 215,
+  credit: 245, taxes: 272, investing: 300, psychology: 326, spending: 352,
 };
 const KEYS = Object.keys(HUE);
 const ORDER = ['earning', 'spending', 'saving', 'investing', 'credit', 'risk',
@@ -105,7 +124,33 @@ const MIN_CONTRAST = 4.6;     // chip glyph, 16px so not large text
 const MIN_SURFACE = 1.35;     // chip legible as a bare shape
 const MIN_RESERVED = 0.09;    // never confusable with the reward tokens
 const MIN_PAIR = 0.045;       // worst module pair, in ANY of the three views
-const L_RANGE = [0.700, 0.880], C_RANGE = [0.080, 0.130];
+/* The search space, which is now deliberately WIDER than the palette should be. The ceiling
+ * is the only aesthetic-looking number here and it isn't one: MIN_SURFACE against white runs
+ * out at about OKLCH L 0.895, because a chip has to stay visible as a bare shape (it is a hero
+ * border and a progress fill, not only a backdrop for a glyph).
+ *
+ * Tightening these bounds is NOT how to make the palette paler — that was tried and it does
+ * nothing. The old objective maximised the smallest pairwise distance, so the solver always
+ * ran to the EDGES of whatever band it was given; handing it a pastel band just produced a
+ * pastel-bounded set with the same spread, and handing it [0.740,0.890] x [0.060,0.118] moved
+ * the set's mean lightness by +0.004 and its mean chroma by -0.005. Invisible. Pastel is a
+ * property of where the set SITS, so it has to be in the objective — see PASTEL_W. */
+const L_RANGE = [0.700, 0.895], C_RANGE = [0.050, 0.130];
+
+/* How hard to pull the whole set toward pale-and-soft, against the separation it costs.
+ *
+ * There is a real ceiling on this and it is worth knowing before turning the number up: a
+ * genuinely pale set cannot satisfy MIN_PAIR at all. Bounded to [0.815,0.885] x [0.048,0.098]
+ * — which is what "pastel" looks like if you simply ask for it — the best solution puts loans
+ * and saving 0.0243 apart under protanopia, i.e. the same colour for a red-blind student.
+ * Four of the eleven hues are greens inside 47 degrees (see HUE) and they separate by DEPTH,
+ * so taking lightness away takes away the only axis they have.
+ *
+ * So separation is a hard floor with a small margin, and pastelness is what the solver spends
+ * everything above that floor on. Raising PASTEL_W past the point where the floor binds just
+ * makes the search fail the check rather than producing a paler palette. */
+const PASTEL_W = 3.0;
+const PAIR_MARGIN = 0.003;
 
 // ---------------------------------------------------------------- scoring
 function backgrounds(spec) { return Object.fromEntries(KEYS.map(k => [k, fit(spec[k].L, spec[k].C, HUE[k])])); }
@@ -128,14 +173,42 @@ function solveFg(bgHex, H) {
   }
   return fit(0.20, 0.125, H);
 }
+/** Distance from the pastel target, averaged over the set — the thing to MINIMISE.
+ *
+ * A target rather than a direction ("lighter, softer") on purpose. Pushed as a direction, the
+ * solver trades all of one for all of the other and lands on dusty: mean chroma 0.078 with
+ * psychology at #B293AC, a grey-mauve. That is muted, not cute. Candy pastels are light AND
+ * still obviously coloured, which is a POINT in the space, not a corner of it.
+ *
+ * Squared, so a chip that has to wander to stay distinguishable pays for the distance but
+ * isn't forbidden from going — the greens do have to spread out, and this lets them while
+ * keeping everything that doesn't need to move near the target. */
+const TARGET_L = 0.860, TARGET_C = 0.088;
+function pastelMiss(spec) {
+  let miss = 0;
+  for (const k of KEYS) {
+    miss += (spec[k].L - TARGET_L) ** 2 + 1.5 * (spec[k].C - TARGET_C) ** 2;
+  }
+  return miss / KEYS.length;
+}
+
 function score(spec) {
   const bg = backgrounds(spec);
-  let s = worstPair(bg).worst, pen = 0;
+  // Separation is a FLOOR, not the objective. Credit stops accruing a hair above MIN_PAIR, so
+  // everything the solver has left goes into pastelness instead of into pushing two already
+  // distinguishable modules further apart. Below the floor the penalty dwarfs everything.
+  const { worst } = worstPair(bg);
+  const floor = MIN_PAIR + PAIR_MARGIN;
+  let s = Math.min(worst, floor) - PASTEL_W * pastelMiss(spec);
+  let pen = worst < floor ? (floor - worst) * 40 : 0;
   for (const k of KEYS) {
     for (const t of Object.values(RESERVED)) { const d = dE(bg[k], t); if (d < MIN_RESERVED) pen += (MIN_RESERVED - d) * 3; }
     const surf = Math.min(...Object.values(SURFACES).map(v => cr(bg[k], v)));
     if (surf < MIN_SURFACE) pen += (MIN_SURFACE - surf) * 3;
-    if (WARM.has(k) && spec[k].C < 0.10) pen += (0.10 - spec[k].C) * 10;
+    // Warm chroma floor, lowered from 0.10 with the pastel band. Its job is to stop scams and
+    // risk sliding into brown, and brown is a DARK dull orange — at L 0.82+ a low-chroma warm
+    // hue reads as peach, not mud, so the old floor now only forces those two to shout.
+    if (WARM.has(k) && spec[k].C < 0.072) pen += (0.072 - spec[k].C) * 10;
   }
   return s - pen;
 }
@@ -205,14 +278,14 @@ if (process.argv.includes('--check')) {
 // solve
 const clamp = (v, [lo, hi]) => Math.max(lo, Math.min(hi, v));
 let bestSpec = null, bestScore = -Infinity;
-for (let restart = 0; restart < 14; restart++) {
+for (let restart = 0; restart < 18; restart++) {
   let spec = Object.fromEntries(KEYS.map(k => [k, {
     L: L_RANGE[0] + Math.random() * (L_RANGE[1] - L_RANGE[0]),
     C: C_RANGE[0] + Math.random() * (C_RANGE[1] - C_RANGE[0]),
   }]));
   let cur = score(spec);
-  for (let it = 0; it < 14000; it++) {
-    const T = 0.010 * (1 - it / 14000);
+  for (let it = 0; it < 18000; it++) {
+    const T = 0.010 * (1 - it / 18000);
     const k = KEYS[(Math.random() * KEYS.length) | 0];
     const axis = Math.random() < 0.65 ? 'L' : 'C';
     const trial = { ...spec, [k]: { ...spec[k] } };
