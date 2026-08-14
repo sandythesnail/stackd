@@ -15,6 +15,13 @@ export const colors = {
 
   // greens
   green: '#4F9D52',
+  /** The website's own brand green — the exact `--green` in styles.css, the one the landing
+   * page uses throughout. `green` above is the app's brighter UI green (buttons, links) and
+   * stays as it is; this is for the surfaces that sit next to the site's identity rather than
+   * inside the app's chrome: the launch screen and the progress ring. Those two read as
+   * "Stacked" rather than "a screen in Stacked", and the brighter green looked like a
+   * different product's. */
+  greenBrand: '#6B8F65',
   greenDark: '#4A6844',
   greenDeep: '#2C3E2D',
   greenBright: '#84AB7B',

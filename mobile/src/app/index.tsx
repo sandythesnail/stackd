@@ -87,13 +87,16 @@ function AuthRedirect() {
 
 function SplashView({ children }: { children: React.ReactNode }) {
   return (
-    <LinearGradient colors={[colors.green, colors.greenDark]} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={{ flex: 1 }}>
+    // greenBrand, not green: the site's own brand green, because this is the first thing
+    // anyone sees and it should match the landing page they came from.
+    <LinearGradient colors={[colors.greenBrand, colors.greenDark]} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={{ flex: 1 }}>
       <StatusBar style="light" />
       <View style={{ flex: 1 }}>
         <SafeAreaView style={styles.wrap}>
           <Hammy size={190} />
           <View style={{ alignItems: 'center', gap: 8 }}>
-            <Txt style={styles.logo}>Stacked</Txt>
+            {/* "Stacked." with the period — the wordmark as the site writes it. */}
+            <Txt style={styles.logo}>Stacked.</Txt>
             <Txt style={styles.tagline}>Grow your money smarts.</Txt>
           </View>
           <LoadingDots />

@@ -83,7 +83,8 @@ export default function Progress() {
           <Ring pct={overallPct} done={masteredCount} of={modules.length} />
           <View style={styles.legendRow}>
             <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.green }]} />
+              {/* Matches the ring it labels — the site's brand green, not the button green. */}
+              <View style={[styles.legendDot, { backgroundColor: colors.greenBrand }]} />
               <Txt style={styles.legendTxt}>Completed ({masteredCount})</Txt>
             </View>
             <View style={styles.legendItem}>
@@ -215,7 +216,7 @@ function Ring({ pct, done, of }: { pct: number; done: number; of: number }) {
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke={colors.green}
+          stroke={colors.greenBrand}
           strokeWidth={stroke}
           fill="none"
           strokeLinecap="round"

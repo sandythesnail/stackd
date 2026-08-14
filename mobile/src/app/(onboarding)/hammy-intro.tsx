@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState, useId } from 'react';
 import { View, Animated, Easing, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
+import Reanimated, {
+  FadeInDown, ZoomIn, useAnimatedStyle, useSharedValue, withSpring, withTiming,
+} from 'react-native-reanimated';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAudioPlayer } from 'expo-audio';
 import Svg, { Path, Rect, Ellipse, Circle, Polygon, Defs, ClipPath, G, RadialGradient, Stop } from 'react-native-svg';
 import { Txt, Hammy, Coin, Diamond } from '@/components';
 import { colors, font } from '@/theme';
@@ -15,13 +19,24 @@ import { REACTION_FACES, MOOD_FACES, type FaceOverlay } from '@/hammyFaces';
  * tour auto-starts for first-time users (see home.tsx). Ported from the
  * website's hammy-intro.js.
  *
- * No jingle SFX here yet: the repo has no audio library (expo-av/expo-audio)
- * and adding a native module is a build-affecting decision — the web version
- * has a placeholder WebAudio jingle; wire a real asset through expo-audio when
- * one is commissioned. */
+ * The coin spill IS wired up now (it wasn't — this comment used to say so): expo-audio plays
+ * assets/sfx/coins.wav on the pop, synthesised by scripts/make-coin-sfx.js rather than
+ * licensed, so it can be re-tuned and re-generated. See COIN_SFX below for what happens when
+ * it can't play, which is "nothing, silently" — the intro is not allowed to depend on it. */
 
 const GREEN_DARK = '#4A6844';
 const GREEN = '#6B8F65';
+
+/** Coins spilling out of the bank, played on the pop. Deliberately quiet-ish: it lands under
+ * a full-screen flash and a particle burst, and the point is to make the break feel physical,
+ * not to be the loudest thing that has happened since the app opened.
+ *
+ * Silence is an acceptable outcome everywhere. On iOS the hardware mute switch stops it (we
+ * don't override the audio session to talk over a silenced phone for a decoration), a browser
+ * may refuse to play without a gesture, and every call below is wrapped so a failure can
+ * never take the animation down with it. */
+const COIN_SFX = require('../../../assets/sfx/coins.wav');
+const COIN_VOLUME = 0.55;
 
 /* Face per dialogue line — same entries the rest of the app uses (hammyFaces). */
 const SCRIPT: { text: string; face: FaceOverlay; reply: string | null }[] = [
@@ -191,6 +206,8 @@ export default function HammyIntro() {
   const hopX = useRef(new Animated.Value(0)).current;
   const hopY = useRef(new Animated.Value(0)).current;
 
+  const coins = useAudioPlayer(COIN_SFX);
+
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const finished = useRef(false);
   const at = (ms: number, fn: () => void) => { timers.current.push(setTimeout(fn, ms)); };
@@ -274,6 +291,13 @@ export default function HammyIntro() {
 
     // 1.35 POP — halves fly apart, flash, ring, shake, burst
     at(1350, () => {
+      // Coins, on the same frame the bank gives way. try/catch and not `await`: a refused
+      // autoplay or a missing audio session must not stop the animation that follows it.
+      try {
+        coins.volume = COIN_VOLUME;
+        coins.seekTo(0).catch(() => {});
+        coins.play();
+      } catch { /* silence is fine — see COIN_SFX */ }
       crackOp.setValue(0);
       Animated.timing(popP, { toValue: 1, duration: 600, easing: Easing.bezier(0.3, 0.6, 0.6, 1), useNativeDriver: true }).start();
       Animated.timing(ringP, { toValue: 1, duration: 650, easing: Easing.bezier(0.1, 0.7, 0.3, 1), useNativeDriver: true }).start();
@@ -372,10 +396,18 @@ export default function HammyIntro() {
             <Hammy size={200} face={SCRIPT[lineIdx].face} />
           </Animated.View>
           {bubbleText !== null ? (
-            <View pointerEvents="none" style={[styles.bubble, { bottom: hammyBottom + 210 }]}>
+            // Keyed on the line, so each new thing Hammy says pops in rather than the text
+            // silently swapping inside a bubble that's already sitting there. Springy and
+            // small — it should read as him saying it, not as a UI transition.
+            <Reanimated.View
+              key={bubbleText}
+              entering={ZoomIn.springify().damping(13).stiffness(180)}
+              pointerEvents="none"
+              style={[styles.bubble, { bottom: hammyBottom + 210 }]}
+            >
               <Txt style={styles.bubbleTxt}>{bubbleText}</Txt>
               <View style={styles.bubbleTail} />
-            </View>
+            </Reanimated.View>
           ) : null}
         </>
       ) : null}
@@ -403,13 +435,56 @@ export default function HammyIntro() {
         <Pressable onPress={finish} hitSlop={10} style={styles.skip}>
           <Txt style={styles.skipTxt}>Skip →</Txt>
         </Pressable>
-        {reply !== null ? (
-          <Pressable onPress={onReplyPress} style={({ pressed }) => [styles.choice, pressed && { transform: [{ translateY: 2 }] }]}>
-            <Txt style={styles.choiceTxt}>{reply}</Txt>
-          </Pressable>
-        ) : null}
+        {reply !== null ? <ReplyChip key={reply} label={reply} onPress={onReplyPress} /> : null}
       </SafeAreaView>
     </View>
+  );
+}
+
+const AnimatedPressable = Reanimated.createAnimatedComponent(Pressable);
+
+/**
+ * The reply chip — the only thing on this screen anyone touches, so it's the only thing that
+ * has to feel alive. It used to jump 2px down on press and do nothing else, which on a screen
+ * this animated read as the one dead element.
+ *
+ * Press drives it down INTO the page and shrinks the shadow with it, so the chip reads as
+ * being pushed rather than nudged. Hover lifts it slightly and deepens the shadow — web-only
+ * by nature (onHoverIn never fires on a touch device), which is exactly right, because /m/ is
+ * the build most people meet Hammy on and a pointer there has no other feedback. It floats in
+ * on arrival rather than appearing mid-sentence.
+ *
+ * Transform and shadow only, so all of it runs on the UI thread and nothing relayouts.
+ */
+function ReplyChip({ label, onPress }: { label: string; onPress: () => void }) {
+  const press = useSharedValue(0);
+  const hover = useSharedValue(0);
+
+  const animated = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: press.value * 3 - hover.value * 3 },
+      { scale: 1 - press.value * 0.05 + hover.value * 0.03 },
+    ],
+    shadowOpacity: 0.18 + hover.value * 0.14 - press.value * 0.13,
+    shadowRadius: 8 + hover.value * 4,
+  }));
+
+  return (
+    <AnimatedPressable
+      onPress={onPress}
+      entering={FadeInDown.duration(300).springify().damping(15)}
+      onPressIn={() => { press.value = withTiming(1, { duration: 80 }); }}
+      // overshootClamping: without it the spring sails past 0 and the chip pops UP off the
+      // page on release, which reads as a bounce rather than a return. Same reasoning as
+      // Button's PRESS_SPRING.
+      onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 420, overshootClamping: true }); }}
+      onHoverIn={() => { hover.value = withTiming(1, { duration: 140 }); }}
+      onHoverOut={() => { hover.value = withTiming(0, { duration: 180 }); }}
+      accessibilityRole="button"
+      style={[styles.choice, animated]}
+    >
+      <Txt style={styles.choiceTxt}>{label}</Txt>
+    </AnimatedPressable>
   );
 }
 
@@ -459,7 +534,10 @@ const styles = StyleSheet.create({
     borderTopColor: GREEN,
   },
   chrome: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center' },
-  skip: { position: 'absolute', top: 54, right: 18, padding: 8, opacity: 0.6 },
+  // Top-LEFT. On the right it sat where nothing else on this screen lives, and the eye had
+  // to hunt for it; top-left is where a way out belongs, and it matches the back chevron
+  // every other onboarding screen puts in that corner.
+  skip: { position: 'absolute', top: 54, left: 18, padding: 8, opacity: 0.6 },
   skipTxt: { fontFamily: font.bold, fontSize: 14, color: GREEN_DARK },
   choice: {
     position: 'absolute',
