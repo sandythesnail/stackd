@@ -4,11 +4,12 @@ import Reanimated, { FadeIn, FadeInDown, FadeInRight, ZoomIn } from 'react-nativ
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen, Txt, Button, Option, ProgressBar, IconButton, MIcon } from '@/components';
+import { Screen, Txt, Button, Option, ProgressBar, IconButton, MIcon, Hammy } from '@/components';
 import { colors, font, radius } from '@/theme';
 import { modules } from '@/data';
 import { SURVEY_GOALS, SURVEY_TRACKS, getRecommendedTrack, trackReason, type SurveyAnswers } from '@/survey';
 import { useStore } from '@/store';
+import { MOOD_FACES, REACTION_FACES, type FaceOverlay } from '@/hammyFaces';
 
 /**
  * Screen 6 — onboarding survey.
@@ -34,14 +35,23 @@ import { useStore } from '@/store';
 
 type Familiarity = Record<string, number>;
 
-/** The five answers, same 1-5 scale the scoring expects (see computeModulePriority). */
-const SCALE: { value: number; label: string }[] = [
-  { value: 1, label: 'Never heard of it' },
-  { value: 2, label: 'I’ve heard of it' },
-  { value: 3, label: 'I kind of get it' },
-  { value: 4, label: 'Pretty comfortable' },
-  { value: 5, label: 'I could explain it' },
+/** The five answers, same 1-5 scale the scoring expects (see computeModulePriority).
+ *
+ * Each carries a face, so Hammy reacts to the answer as it's given. The run climbs the way
+ * the scale does: sad at "never heard of it", nervy, then the same confused-mouth face the
+ * quest player uses for a near miss, then the happy mouth it uses for a correct answer, and
+ * the star face at the top. Nothing here judges the student — 1 is a perfectly good answer to
+ * give — but a face that doesn't move is worse than no face, so it moves. */
+const SCALE: { value: number; label: string; face: FaceOverlay }[] = [
+  { value: 1, label: 'Never heard of it', face: MOOD_FACES.sad },
+  { value: 2, label: 'I’ve heard of it', face: MOOD_FACES.nervy },
+  { value: 3, label: 'I kind of get it', face: REACTION_FACES.gentle },
+  { value: 4, label: 'Pretty comfortable', face: REACTION_FACES.happy },
+  { value: 5, label: 'I could explain it', face: MOOD_FACES.star },
 ];
+
+/** Before anything is picked. Curious reads as "well?", which is the question being asked. */
+const UNANSWERED_FACE = MOOD_FACES.curious;
 
 const GOALS_STEP = modules.length;
 const RESULT_STEP = modules.length + 1;
@@ -137,18 +147,34 @@ export default function Survey() {
           // No ScrollView: with the anchor quotes gone this fits any phone, and a flex column
           // lets the topic card and the scale share the height instead of huddling at the top.
           <View style={styles.qBody}>
-            <View style={[styles.qCard, { backgroundColor: module.color, borderColor: module.textColor }]}>
-              <MIcon abbr={module.icon} color={colors.white} textColor={module.textColor} size={54} r={16} fontSize={20} />
-              <View style={{ flex: 1, gap: 3 }}>
-                <Txt style={[styles.qTopic, { color: module.textColor }]}>
-                  {`TOPIC ${step + 1} OF ${modules.length}`}
-                </Txt>
-                <Txt style={[styles.qModule, { color: module.textColor }]}>{module.name}</Txt>
+            {/* The topic sits below the question rather than at the very top of the screen —
+                it was tucked under the progress bar where the eye passes over it on the way
+                down, and it is the one thing that changes between these eleven screens. */}
+            <View style={{ flex: 1, justifyContent: 'center', gap: 14 }}>
+              <View style={styles.qAsk}>
+                {/* Hammy reacts to the answer as it is given. He is the only thing on this
+                    screen that responds to a tap besides the number itself, which is what
+                    turns eleven identical questions into something with a face on it. */}
+                <View style={styles.qHammy}>
+                  <Hammy
+                    size={92}
+                    bob={false}
+                    face={SCALE.find((s) => s.value === familiarity[module.id])?.face ?? UNANSWERED_FACE}
+                  />
+                </View>
+                <Txt variant="h1" style={{ flex: 1 }}>How much do you know about this?</Txt>
               </View>
-            </View>
 
-            <View style={{ flex: 1, justifyContent: 'center' }}>
-              <Txt variant="h1" style={{ textAlign: 'center' }}>How much do you know about this?</Txt>
+              <View style={[styles.qCard, { backgroundColor: module.color, borderColor: module.textColor }]}>
+                <MIcon abbr={module.icon} color={colors.white} textColor={module.textColor} size={54} r={16} fontSize={20} />
+                <View style={{ flex: 1, gap: 3 }}>
+                  <Txt style={[styles.qTopic, { color: module.textColor }]}>
+                    {`TOPIC ${step + 1} OF ${modules.length}`}
+                  </Txt>
+                  <Txt style={[styles.qModule, { color: module.textColor }]}>{module.name}</Txt>
+                </View>
+              </View>
+
               <ScalePicker value={familiarity[module.id]} onPick={(v) => answer(module.id, v)} />
             </View>
           </View>
@@ -368,7 +394,9 @@ const styles = StyleSheet.create({
   // A column rather than a scroll: the topic card sits at the top and the scale takes the
   // whole rest of the screen, which is space the anchor quotes used to spend saying in two
   // long sentences what the numbers already say.
-  qBody: { flex: 1, paddingTop: 14, paddingBottom: 8 },
+  qBody: { flex: 1, paddingTop: 8, paddingBottom: 8 },
+  qAsk: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  qHammy: { width: 92, height: 92, alignItems: 'center', justifyContent: 'center' },
   qCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     borderRadius: radius.card, borderWidth: 2, padding: 14,

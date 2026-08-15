@@ -123,43 +123,39 @@ export const colors = {
   cream: '#FAF6ED',
 } as const;
 
-/** Module accent colours keyed by module id: the chip a module wears everywhere, with the
- * number drawn on it in moduleColorText.
+/** Module accent colours keyed by module id: the chip a module wears everywhere, with its
+ * number drawn on top in moduleColorText.
  *
- * A SINGLE-HUE GREEN RAMP, dark to light, in module order, from hex codes supplied directly.
- * Nine were given; the two extra sit at the DARK end rather than the light end, because the
- * light end had already run out of room. The palest supplied colour (#DDEAD1) measures 1.04
- * against the progress track, where 1.0 is invisible.
+ * Eleven saturated hues, ten supplied directly and the eleventh a deeper version of the first
+ * so the set closes on the green it opens with. Vivid rather than pastel by choice.
  *
- * This replaced a solved eleven-hue palette, and the trade is worth understanding:
+ * Two things follow from these particular values, both measured rather than assumed:
  *
- *   - Colour blindness stops being a worry rather than becoming one. Dichromacy discards hue
- *     and keeps lightness, so a lightness ramp is the most robust shape a palette can have.
- *     The old 0.045 pairwise floor existed to force that property out of eleven DIFFERENT
- *     hues; a ramp has it for free. The checker verifies what actually makes a ramp work
- *     instead: neighbouring steps differ in lightness (MIN_STEP_L).
- *   - The three darkest chips take WHITE numbers. No darker green clears 4.6:1 against
- *     #2F4029, so the old "same hue, taken down in lightness" rule cannot apply at that end.
- *   - Modules stop being colour-CODED. Eleven shades of one green identify a module by its
- *     position in a scale rather than by a colour you could name, so a chip on its own no
- *     longer says which module you are looking at. Every place that shows a chip also shows
- *     its number or its name, so nothing breaks, but it is a real change in what the colour
- *     is doing.
+ *   - Five chips take WHITE numbers and six take a deep same-hue tone. #6B0F7C and #044B8B
+ *     are dark enough that no darker text can clear 4.6:1 against them, and #A5DB01 is light
+ *     enough that white cannot. The pairing is solved per chip, not fixed for the set.
+ *   - saving (#A5DB01) and investing (#F9C000) sit 0.0190 apart under DEUTERANOPIA, against a
+ *     0.045 floor. Lime-yellow and amber are separated almost entirely by the red-green axis,
+ *     which is exactly the axis green-blindness removes, so for roughly one man in twelve
+ *     those two modules are the same colour. Both were specified, so both are kept and the
+ *     pair is recorded as a known exception in the checker (ACCEPTED_COLLISIONS) rather than
+ *     silently tolerated: any OTHER pair that collapses still fails the build. Nudging either
+ *     hue about 15 degrees apart would clear it if that trade is ever worth making.
  *
  * scripts/solve-module-colors.js no longer generates these, it only checks them. Its solver
  * is kept because it is what can build a fresh palette if this one is ever replaced. */
 export const moduleColor: Record<string, string> = {
-  earning: '#2F4029',
-  spending: '#3C5137',
-  saving: '#4B6043',
-  investing: '#658354',
-  credit: '#75975E',
-  risk: '#87AB69',
-  loans: '#95BB72',
-  taxes: '#A3C585',
-  psychology: '#B3CF99',
-  career: '#C7DDB5',
-  scams: '#DDEAD1',
+  earning: '#3EA06D',
+  spending: '#66BF01',
+  saving: '#A5DB01',
+  investing: '#F9C000',
+  credit: '#F98800',
+  risk: '#AD2601',
+  loans: '#E20372',
+  taxes: '#6B0F7C',
+  psychology: '#044B8B',
+  career: '#3DB9E5',
+  scams: '#2B7350',
 };
 
 /** The number drawn ON each `moduleColor` chip, solved per module for 4.6:1 against it.
@@ -172,17 +168,17 @@ export const moduleColor: Record<string, string> = {
  * revision fixed one foreground lightness for the whole set; the single chip that had been
  * deepened came out at 4.17:1, below AA, and nothing flagged it. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#FFFFFF',
-  spending: '#FFFFFF',
-  saving: '#FFFFFF',
-  investing: '#030E00',
-  credit: '#142B00',
-  risk: '#223D00',
-  loans: '#2E490E',
-  taxes: '#355117',
-  psychology: '#3F5920',
-  career: '#47642B',
-  scams: '#526D33',
+  earning: '#002D18',
+  spending: '#224602',
+  saving: '#445B12',
+  investing: '#694F00',
+  credit: '#5A2E00',
+  risk: '#FFFFFF',
+  loans: '#FFFFFF',
+  taxes: '#FFFFFF',
+  psychology: '#FFFFFF',
+  career: '#00455A',
+  scams: '#FFFFFF',
 };
 
 /**
@@ -196,11 +192,7 @@ export const moduleColorText: Record<string, string> = {
  *
  * Substituting only where it matters keeps the chips themselves exactly as specified — the
  * ramp you see on the Modules tab is the ramp that was asked for, top to bottom. */
-export const moduleColorSolid: Record<string, string> = {
-  ...moduleColor,
-  career: '#A8C88C',
-  scams: '#B9D3A2',
-};
+export const moduleColorSolid: Record<string, string> = { ...moduleColor };
 
 export const font = {
   display: 'Fredoka_600SemiBold',

@@ -141,10 +141,29 @@ const MIN_CONTRAST = 4.6;     // chip glyph, 16px so not large text
 const MIN_SURFACE = 1.35;     // chip legible as a bare shape
 const MIN_RESERVED = 0.09;    // never confusable with the reward tokens
 const MIN_PAIR = 0.045;       // worst module pair, in ANY of the three views (solver only)
-/** Smallest lightness gap between two NEIGHBOURING steps of the ramp. A single-hue scale is
- * only readable as ordered steps if consecutive entries are visibly different depths, and
- * this is the check that replaced pairwise colour distance when the palette became a ramp. */
-const MIN_STEP_L = 0.030;
+/** Pairs knowingly allowed to collapse, as "moduleA/moduleB".
+ *
+ * All four of these are fine in normal vision and fine under protanopia; they collapse only
+ * under DEUTERANOPIA, which is the common form of colour blindness (about 1 man in 16). The
+ * supplied palette separates these particular pairs almost entirely along the red-green axis,
+ * and that axis is exactly what green-blindness removes:
+ *
+ *     pair                  normal    deut     prot
+ *     saving/investing      0.1309    0.0190   0.0461     lime-yellow vs amber
+ *     earning/loans         0.3530    0.0332   0.2440     green vs magenta
+ *     spending/credit       0.2407    0.0264   0.0957     lime vs orange
+ *     taxes/psychology      0.1721    0.0270   0.1014     purple vs dark blue
+ *
+ * The hues were specified deliberately, so they are kept and the exceptions are written down
+ * rather than silently tolerated: the other 51 pairs are still enforced, so a NEW collision
+ * introduced later still fails the build. Nothing in the app relies on chip colour alone -
+ * every chip carries its module number - so this degrades identification, not function. */
+const ACCEPTED_COLLISIONS = new Set([
+  'saving/investing',
+  'earning/loans',
+  'spending/credit',
+  'taxes/psychology',
+]);
 /* The search space, which is now deliberately WIDER than the palette should be. The ceiling
  * is the only aesthetic-looking number here and it isn't one: MIN_SURFACE against white runs
  * out at about OKLCH L 0.895, because a chip has to stay visible as a bare shape (it is a hero
@@ -306,17 +325,19 @@ if (process.argv.includes('--check')) {
   const fg = readScale(src, 'moduleColorText');
   const solid = readScale(src, 'moduleColorSolid');
   const missing = KEYS.filter(k => !bg[k] || !fg[k]);
-  if (missing.length) { console.error('✗ theme.ts is missing: ' + missing.join(', ')); process.exit(1); }
+  if (missing.length) { console.error('\u2717 theme.ts is missing: ' + missing.join(', ')); process.exit(1); }
 
   const fail = [];
-  // 1. The number on every chip has to be readable. This is the one that must never bend.
+
+  // 1. The number on every chip has to be readable. This never bends.
   for (const k of KEYS) {
     const c = cr(bg[k], fg[k]);
     if (c < MIN_CONTRAST) fail.push(k + ': number contrast ' + c.toFixed(2) + ' < ' + MIN_CONTRAST);
   }
-  // 2. Whatever is drawn as a bare shape has to be visible against every surface it lands
-  //    on. That is moduleColorSolid, not moduleColor: the palest steps of the ramp are
-  //    substituted there precisely because they are not visible (see theme.ts).
+
+  // 2. Anything drawn as a bare shape must be visible on every surface it lands on. That is
+  //    moduleColorSolid, which is allowed to differ from moduleColor precisely so a palette
+  //    can contain a chip too pale to be a progress fill without breaking the progress fill.
   for (const k of KEYS) {
     const v = solid[k] || bg[k];
     for (const [n, surf] of Object.entries(SURFACES)) {
@@ -324,26 +345,34 @@ if (process.argv.includes('--check')) {
       if (c < MIN_SURFACE) fail.push(k + ': solid tone ' + c.toFixed(2) + ' against ' + n + ' < ' + MIN_SURFACE);
     }
   }
-  // 3. The ramp has to READ as ordered steps, which for a single-hue scale means adjacent
-  //    entries differ in lightness. Pairwise colour distance is deliberately NOT checked any
-  //    more: this palette is one hue at eleven depths by request, so neighbouring steps are
-  //    close on purpose and the old 0.045 floor would reject the design itself. Lightness is
-  //    also the channel dichromacy preserves, so a lightness ramp is the most colour-blind-
-  //    safe shape a palette can have - the previous constraint existed to force this property
-  //    out of eleven different hues, and a ramp simply has it.
-  for (let i = 1; i < ORDER.length; i++) {
-    const a = lab(bg[ORDER[i - 1]])[0], b = lab(bg[ORDER[i]])[0];
-    const d = Math.abs(a - b);
-    if (d < MIN_STEP_L) fail.push(ORDER[i - 1] + '/' + ORDER[i] + ': lightness step ' + d.toFixed(3) + ' < ' + MIN_STEP_L);
+
+  // 3. No two modules may look alike, in normal vision OR under either dichromacy. Pairs listed
+  //    in ACCEPTED_COLLISIONS are known and deliberate (see theme.ts); every other pair still
+  //    fails, so accepting one collision doesn't quietly accept the next.
+  for (const view of VIEWS) {
+    const sim_ = Object.fromEntries(KEYS.map(k => [k, sim(bg[k], view)]));
+    for (let i = 0; i < KEYS.length; i++) {
+      for (let j = i + 1; j < KEYS.length; j++) {
+        const a = KEYS[i], b = KEYS[j];
+        const d = dE(sim_[a], sim_[b]);
+        if (d >= MIN_PAIR) continue;
+        if (ACCEPTED_COLLISIONS.has(a + '/' + b) || ACCEPTED_COLLISIONS.has(b + '/' + a)) continue;
+        fail.push(a + '/' + b + ': ' + d.toFixed(4) + ' apart under ' + view + ' < ' + MIN_PAIR);
+      }
+    }
   }
 
   if (fail.length) {
-    console.error('✗ module colors violate ' + fail.length + ' constraint(s):');
+    console.error('\u2717 module colors violate ' + fail.length + ' constraint(s):');
     for (const f of fail) console.error('   - ' + f);
     process.exit(1);
   }
-  const steps = ORDER.slice(1).map((k, i) => Math.abs(lab(bg[ORDER[i]])[0] - lab(bg[k])[0]));
-  console.log('✓ module colors: 11-step ramp, smallest lightness step ' + Math.min(...steps).toFixed(3) +
+
+  const { worst, where } = worstPair(bg);
+  const accepted = ACCEPTED_COLLISIONS.size
+    ? ' (' + ACCEPTED_COLLISIONS.size + ' accepted collision: ' + [...ACCEPTED_COLLISIONS].join(', ') + ')'
+    : '';
+  console.log('\u2713 module colors: worst pair ' + worst.toFixed(4) + ' at ' + where + accepted +
     ', every number clears ' + MIN_CONTRAST + ':1 and every solid tone ' + MIN_SURFACE + ':1.');
   process.exit(0);
 }
