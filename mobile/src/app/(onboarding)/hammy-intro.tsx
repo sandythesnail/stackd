@@ -38,6 +38,11 @@ const GREEN = '#6B8F65';
 const COIN_SFX = require('../../../assets/sfx/coins.wav');
 const COIN_VOLUME = 0.55;
 
+/** Hammy, once per line he says. Quieter than the coins — it punctuates a line rather than
+ * announcing one, and three of them in a row at full volume would wear out fast. */
+const OINK_SFX = require('../../../assets/sfx/oink.wav');
+const OINK_VOLUME = 0.4;
+
 /* Face per dialogue line — same entries the rest of the app uses (hammyFaces). */
 const SCRIPT: { text: string; face: FaceOverlay; reply: string | null }[] = [
   { text: 'Hi, I’m Hammy!', face: REACTION_FACES.streak, reply: 'Hi Hammy! Who are you?' },
@@ -207,6 +212,17 @@ export default function HammyIntro() {
   const hopY = useRef(new Animated.Value(0)).current;
 
   const coins = useAudioPlayer(COIN_SFX);
+  const oink = useAudioPlayer(OINK_SFX);
+
+  /** Fire-and-forget. Every path is wrapped because audio is decoration here: a refused
+   * autoplay, a silenced phone or a missing session must never interrupt the animation. */
+  const playSfx = (player: typeof coins, volume: number) => {
+    try {
+      player.volume = volume;
+      player.seekTo(0).catch(() => {});
+      player.play();
+    } catch { /* silence is fine */ }
+  };
 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const finished = useRef(false);
@@ -251,6 +267,9 @@ export default function HammyIntro() {
     setBubbleText(SCRIPT[idx].text);
     setReply(null);
     playWave();
+    // Hammy says something, Hammy oinks. Fires with the bubble and the wave, so the sound,
+    // the speech and the movement all land on the same beat.
+    playSfx(oink, OINK_VOLUME);
     if (SCRIPT[idx].reply !== null) {
       at(1300, () => setReply(SCRIPT[idx].reply));
     } else {
@@ -291,13 +310,7 @@ export default function HammyIntro() {
 
     // 1.35 POP — halves fly apart, flash, ring, shake, burst
     at(1350, () => {
-      // Coins, on the same frame the bank gives way. try/catch and not `await`: a refused
-      // autoplay or a missing audio session must not stop the animation that follows it.
-      try {
-        coins.volume = COIN_VOLUME;
-        coins.seekTo(0).catch(() => {});
-        coins.play();
-      } catch { /* silence is fine — see COIN_SFX */ }
+      playSfx(coins, COIN_VOLUME);   // on the same frame the bank gives way
       crackOp.setValue(0);
       Animated.timing(popP, { toValue: 1, duration: 600, easing: Easing.bezier(0.3, 0.6, 0.6, 1), useNativeDriver: true }).start();
       Animated.timing(ringP, { toValue: 1, duration: 650, easing: Easing.bezier(0.1, 0.7, 0.3, 1), useNativeDriver: true }).start();

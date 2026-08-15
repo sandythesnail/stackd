@@ -139,7 +139,9 @@ export default function Results() {
   };
 
   return (
-    <LinearGradient colors={[colors.green, colors.greenDark]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1 }}>
+    // greenBrand, matching the launch screen: these are the app's two full-bleed green
+    // surfaces and they should be the same green, which is the website's own.
+    <LinearGradient colors={[colors.greenBrand, colors.greenDark]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ flex: 1 }}>
       <StatusBar style="light" />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView

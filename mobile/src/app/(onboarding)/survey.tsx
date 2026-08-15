@@ -4,7 +4,7 @@ import Reanimated, { FadeIn, FadeInDown, FadeInRight, ZoomIn } from 'react-nativ
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen, Spacer, Txt, Button, Option, ProgressBar, IconButton, MIcon } from '@/components';
+import { Screen, Txt, Button, Option, ProgressBar, IconButton, MIcon } from '@/components';
 import { colors, font, radius } from '@/theme';
 import { modules } from '@/data';
 import { SURVEY_GOALS, SURVEY_FAMILIARITY_LABELS, SURVEY_TRACKS, getRecommendedTrack, trackReason, type SurveyAnswers } from '@/survey';
@@ -159,23 +159,13 @@ export default function Survey() {
             </View>
 
             <Txt variant="h1" style={{ marginTop: 14 }}>How much do you know about this?</Txt>
+            <Txt variant="lead" style={{ marginTop: 4 }}>Rate yourself from 1 to 5.</Txt>
+
+            <ScalePicker value={familiarity[module.id]} onPick={(v) => answer(module.id, v)} />
 
             <View style={styles.anchors}>
               <Anchor n="1" text={SURVEY_FAMILIARITY_LABELS[module.id]?.[0] ?? ''} />
               <Anchor n="5" text={SURVEY_FAMILIARITY_LABELS[module.id]?.[1] ?? ''} />
-            </View>
-
-            <View style={{ gap: 9, marginTop: 16 }}>
-              {SCALE.map((s) => (
-                <Option
-                  key={s.value}
-                  label={s.label}
-                  control="letter"
-                  letter={String(s.value)}
-                  state={familiarity[module.id] === s.value ? 'on' : 'default'}
-                  onPress={() => answer(module.id, s.value)}
-                />
-              ))}
             </View>
           </ScrollView>
         ) : step === GOALS_STEP ? (
@@ -300,7 +290,10 @@ export default function Survey() {
         )}
       </Reanimated.View>
 
-      <Spacer />
+      {/* No <Spacer/> here. The animated wrapper above is already flex:1, so a second flex:1
+          sibling split the screen 50/50 with it: the questions were crushed into the top half
+          and the bottom half was a blank cream slab, with the whole recommended-track step
+          scrolling inside a viewport half the height it should have been. */}
       <View style={styles.actions}>
         {module ? (
           // No "Next" on a question screen — answering IS next. This is the deliberate way
@@ -318,6 +311,64 @@ export default function Survey() {
         )}
       </View>
     </Screen>
+  );
+}
+
+/**
+ * The 1-5 scale as an actual scale: five numbered points on one line, low on the left and
+ * high on the right, rather than five stacked rows of prose.
+ *
+ * The number is the answer — it's what gets stored and what the track scoring reads
+ * (computeModulePriority maps 1-5 onto a 0-30 point priority), so it should be the thing the
+ * eye lands on and the thing the finger hits. Stacked rows made the WORDS the answer and hid
+ * the number in a badge, which left no sense of where an answer sat on a range: whether "I
+ * kind of get it" was the middle or the fourth of five was something you had to work out.
+ * A line of numbers with the two extremes labelled at its ends says it without being read.
+ */
+function ScalePicker({ value, onPick }: { value?: number; onPick: (n: number) => void }) {
+  const picked = SCALE.find((s) => s.value === value);
+  return (
+    <View style={{ marginTop: 18 }}>
+      <View style={styles.scaleRow}>
+        {/* The rail the points sit on. Behind them, inset so it doesn't poke out either end. */}
+        <View style={styles.scaleRail} pointerEvents="none" />
+        {SCALE.map((s) => {
+          const on = value === s.value;
+          return (
+            <Pressable
+              key={s.value}
+              onPress={() => onPick(s.value)}
+              accessibilityRole="button"
+              accessibilityLabel={`${s.value} — ${s.label}`}
+              accessibilityState={{ selected: on }}
+              hitSlop={6}
+              style={({ pressed }) => [pressed && { transform: [{ scale: 0.92 }] }]}
+            >
+              <View style={[styles.scaleDot, on && styles.scaleDotOn]}>
+                <Txt style={[styles.scaleNum, on && styles.scaleNumOn]}>{s.value}</Txt>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={styles.scaleEnds}>
+        <Txt style={styles.scaleEnd}>Nothing yet</Txt>
+        <Txt style={[styles.scaleEnd, { textAlign: 'right' }]}>I could explain it</Txt>
+      </View>
+
+      {/* Reads back what the number means, keyed so it re-animates as you move along the
+          scale — the words are confirmation here, not the control. */}
+      <View style={styles.scalePickWrap}>
+        {picked ? (
+          <Reanimated.View key={picked.value} entering={FadeIn.duration(180)}>
+            <Txt style={styles.scalePick}>{picked.label}</Txt>
+          </Reanimated.View>
+        ) : (
+          <Txt style={styles.scaleHint}>Tap a number</Txt>
+        )}
+      </View>
+    </View>
   );
 }
 
@@ -342,6 +393,32 @@ const styles = StyleSheet.create({
 
   qHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   qModule: { fontFamily: font.display, fontSize: 20, color: colors.ink },
+
+  scaleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  scaleRail: {
+    position: 'absolute', left: 26, right: 26, height: 3, top: 25,
+    backgroundColor: colors.track, borderRadius: 2,
+  },
+  scaleDot: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: colors.white,
+    borderWidth: 2, borderColor: colors.borderOpt,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  scaleDotOn: {
+    backgroundColor: colors.green, borderColor: colors.green,
+    shadowColor: colors.greenDark, shadowOpacity: 0.3, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 }, elevation: 3,
+  },
+  scaleNum: { fontFamily: font.display, fontSize: 20, color: colors.muted3 },
+  scaleNumOn: { color: colors.white },
+  scaleEnds: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginTop: 8 },
+  scaleEnd: { flex: 1, fontFamily: font.bold, fontSize: 11, color: colors.muted4 },
+  // Fixed height so the line appearing doesn't shove the anchors down under the finger.
+  scalePickWrap: { height: 26, justifyContent: 'center', alignItems: 'center', marginTop: 10 },
+  scalePick: { fontFamily: font.extra, fontSize: 15, color: colors.greenDark },
+  scaleHint: { fontFamily: font.semi, fontSize: 13, color: colors.muted5 },
+
   anchors: { gap: 5, marginTop: 12 },
   anchorRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   anchorNum: {
