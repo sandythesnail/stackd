@@ -115,7 +115,7 @@ const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is str
 // doesn't cross devices: hydrateFromRemote deliberately keeps the LOCAL copy (see its comment),
 // because the device you're playing on is the only one that knows which chapter you're on.
 const MOBILE_ONLY_KEYS = [
-  'shownLifeEventIds', 'pendingLifeEventId', 'lifeEventCooldown', 'onboardingTrackId',
+  'shownLifeEventIds', 'pendingLifeEventId', 'lifeEventCooldown', 'onboardingTrackId', 'postTest',
   'questHintsUsed', 'termsLearned', 'completedLifeTaskIds',
   'hasSeenOnboardingTour', 'lessonProgress',
 ] as const;

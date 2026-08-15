@@ -172,6 +172,15 @@ export type AppState = {
   /** Track chosen at the end of the onboarding survey (getRecommendedTrack, or a manual
    * switch) — see @/survey. */
   onboardingTrackId: string | null;
+  /** The final assessment, once it has been sat: score out of total, and when.
+   *
+   * Null until every module is mastered AND the student takes it — the two are separate, so
+   * finishing the curriculum doesn't silently count as passing an exam nobody answered. Kept
+   * as a single result rather than a history because a post-test is a one-time measure of
+   * "what did the whole course leave you with"; retaking is allowed and overwrites, which is
+   * the honest thing to record when the questions are drawn from a pool the student has now
+   * seen. */
+  postTest: { score: number; total: number; takenAt: string } | null;
   /** Module ids where a bossbattle-ending quest has been finished at least once — powers
    * the crisis_averted/fraud_fighter achievements. */
   questBossesWon: string[];
@@ -273,6 +282,7 @@ const DEFAULT_STATE: AppState = {
   lastPlayedDate: null,
   dailyLoginLog: {},
   onboardingTrackId: null,
+  postTest: null,
   questBossesWon: [],
   questHintsUsed: {},
   termsLearned: [],
@@ -617,6 +627,8 @@ type Ctx = {
    * instead of on the next full reload; it never decides an amount for itself. */
   creditReferralReward: (coins: number, diamonds: number) => void;
   setOnboardingTrack: (trackId: string) => void;
+  /** Record a finished final assessment. Overwrites any previous sitting - see AppState. */
+  recordPostTest: (score: number, total: number) => void;
   /** Marks the first-login spotlight tour as seen, whether it finished or was skipped —
    * see components/OnboardingTour.tsx. */
   markOnboardingTourSeen: () => void;
@@ -1244,6 +1256,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setState(next);
       },
       setOnboardingTrack: (trackId) => setState((s) => ({ ...s, onboardingTrackId: trackId })),
+      recordPostTest: (score, total) => setState((s) => ({
+        ...s, postTest: { score, total, takenAt: new Date().toISOString() },
+      })),
       markOnboardingTourSeen: () => setState((s) => (s.hasSeenOnboardingTour ? s : { ...s, hasSeenOnboardingTour: true })),
       setBudgetPlan: (next) => setState((s) => ({
         ...s, budgetPlan: typeof next === 'function' ? next(s.budgetPlan) : next,

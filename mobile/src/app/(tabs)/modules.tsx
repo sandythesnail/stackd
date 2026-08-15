@@ -93,6 +93,34 @@ export default function Modules() {
           <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.green }}>{doneCount} / {modules.length} done</Txt>
         </View>
 
+        {/* Only once every module is finished. It sits at the TOP of the list rather than
+            after eleven rows, because by the time it exists the list behind it is entirely
+            ticked off and this is the only thing left to do on the screen. */}
+        {doneCount === modules.length ? (
+          <Pressable
+            onPress={() => router.push('/learn/post-test')}
+            style={styles.finalCard}
+            accessibilityRole="button"
+          >
+            <View style={{ flex: 1, gap: 3 }}>
+              <Txt style={styles.finalEyebrow}>
+                {state.postTest ? 'FINAL ASSESSMENT' : 'ALL ELEVEN COMPLETE'}
+              </Txt>
+              <Txt style={styles.finalTitle}>
+                {state.postTest
+                  ? `You scored ${state.postTest.score} / ${state.postTest.total}`
+                  : 'Take the final assessment'}
+              </Txt>
+              <Txt style={styles.finalSub}>
+                {state.postTest
+                  ? 'Take it again, or send more feedback.'
+                  : 'Two questions from every module, and a chance to tell us how it went.'}
+              </Txt>
+            </View>
+            <Feather name="chevron-right" size={20} color={colors.white} />
+          </Pressable>
+        ) : null}
+
         <View style={{ gap: 12 }}>
           {modules.map((m, rowIdx) => {
             const content = moduleContentById(m.id);
@@ -208,6 +236,14 @@ export default function Modules() {
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 18, paddingBottom: 22, gap: 11 },
+  finalCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: colors.greenBrand, borderRadius: 20,
+    paddingVertical: 16, paddingHorizontal: 18, marginBottom: 14,
+  },
+  finalEyebrow: { fontFamily: font.extra, fontSize: 10.5, letterSpacing: 0.9, color: 'rgba(255,255,255,0.82)' },
+  finalTitle: { fontFamily: font.display, fontSize: 18, color: colors.white },
+  finalSub: { fontFamily: font.semi, fontSize: 12.5, lineHeight: 17, color: 'rgba(255,255,255,0.9)' },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   row: {
     backgroundColor: colors.white,
