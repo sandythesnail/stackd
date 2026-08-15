@@ -180,25 +180,33 @@ export const colors = {
  * greys — psychology came out #B293AC. Cute pastels are light AND still coloured, which is a
  * point in the space, not a corner.
  *
- * So the hues are respaced about 25-30 degrees apart around the whole wheel, separation comes
- * from hue, and lightness is free. Mean chroma 0.112 -> 0.094, mean lightness 0.777 -> 0.787.
- * The cost: saving moved teal -> sky and career jade -> sage.
+ * So the hues are respaced about 25-30 degrees apart around the whole wheel, and separation
+ * comes from hue rather than being paid for entirely out of lightness. The cost: saving moved
+ * teal -> sky and career jade -> sage.
  *
- * Measured on this set: closest pair 0.0536 (investing/psychology) for normal vision, 0.0482
- * under deuteranopia, 0.0480 under protanopia, and every chip clears 1.35:1 against the palest
- * surface it is drawn on and 4.6:1 against its own glyph. */
+ * The last piece was the TERRACOTTA, which a flat pastel target kept producing (risk came out
+ * #EA9F79, a burnt orange). Not every chip can be pale — the set still has to spread over
+ * lightness — so the question is what a chip should look like once it has been pushed down,
+ * and "mid lightness, mid chroma" is the exact recipe for mud. Warm hues suffer worst, because
+ * dulled orange IS brown. Chroma is therefore targeted as a function of lightness (see
+ * C_SLOPE in the solver): a chip that gives up lightness gets chroma back, so the light ones
+ * are soft pastels and the few forced deeper land as jewel tones. Nothing sits in the middle.
+ * risk is #F6BDA0 now, a light peach.
+ *
+ * Measured on this set: closest pair 0.0482 (loans/psychology, deuteranopia), every chip
+ * clears 1.35:1 against the palest surface it is drawn on and 4.6:1 against its own glyph. */
 export const moduleColor: Record<string, string> = {
-  earning: '#9CD88F',
-  spending: '#E3A0BD',
-  saving: '#7AC8DB',
-  investing: '#B597E9',
-  credit: '#98D0FF',
-  risk: '#EA9F79',
-  loans: '#87D9D3',
-  taxes: '#A3B6F9',
-  psychology: '#C793C8',
-  career: '#7ABA9E',
-  scams: '#FFB7B8',
+  earning: '#80C272',
+  spending: '#EC8AB6',
+  saving: '#4DDBF9',
+  investing: '#BCAAE0',
+  credit: '#71BFFF',
+  risk: '#F6BDA0',
+  loans: '#68D3CD',
+  taxes: '#8CA2FA',
+  psychology: '#E7BCE7',
+  career: '#86DCB7',
+  scams: '#FF979A',
 };
 
 /** Darker foreground paired with each `moduleColor` background — the module icon's glyph
@@ -220,17 +228,17 @@ export const moduleColor: Record<string, string> = {
  * revision fixed one foreground lightness for the whole set; the single chip that had been
  * deepened came out at 4.17:1, below AA, and nothing flagged it. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#225F12',
-  spending: '#782450',
-  saving: '#025261',
-  investing: '#482873',
-  credit: '#00588D',
-  risk: '#702F00',
-  loans: '#005E5A',
-  taxes: '#33408B',
-  psychology: '#5C1E5F',
-  career: '#014933',
-  scams: '#91343D',
+  earning: '#134F00',
+  spending: '#6F1B48',
+  saving: '#005B6B',
+  investing: '#533380',
+  credit: '#014B79',
+  risk: '#8B3C00',
+  loans: '#025854',
+  taxes: '#28337D',
+  psychology: '#7A3B7D',
+  career: '#016044',
+  scams: '#7F232E',
 };
 
 export const font = {

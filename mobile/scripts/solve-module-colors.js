@@ -149,7 +149,7 @@ const L_RANGE = [0.700, 0.895], C_RANGE = [0.050, 0.130];
  * So separation is a hard floor with a small margin, and pastelness is what the solver spends
  * everything above that floor on. Raising PASTEL_W past the point where the floor binds just
  * makes the search fail the check rather than producing a paler palette. */
-const PASTEL_W = 3.0;
+const PASTEL_W = 9.0;
 const PAIR_MARGIN = 0.003;
 
 // ---------------------------------------------------------------- scoring
@@ -183,11 +183,33 @@ function solveFg(bgHex, H) {
  * Squared, so a chip that has to wander to stay distinguishable pays for the distance but
  * isn't forbidden from going — the greens do have to spread out, and this lets them while
  * keeping everything that doesn't need to move near the target. */
-const TARGET_L = 0.860, TARGET_C = 0.088;
+const TARGET_L = 0.875;
+const C_AT_TARGET = 0.064;
+/* Chroma is targeted as a FUNCTION of lightness, not a constant, and this slope is the thing
+ * that killed the terracotta.
+ *
+ * Not every chip can be pale — the set has to spread over lightness or near hues collapse
+ * under dichromacy (see HUE). The question is what a chip should look like once it has been
+ * forced down, and a flat chroma target answers it wrong: mid lightness with mid chroma is the
+ * precise recipe for mud. That is where #EA9F79 came from, a burnt terracotta nobody asked
+ * for. Warm hues are worst hit, because dulled orange IS brown.
+ *
+ * So a chip that gives up lightness gets chroma back. Light ones sit soft and pastel; the few
+ * that must go deeper land as saturated jewel tones, which read as rich rather than dirty.
+ * Nothing is left in the middle. Slope 0.55: at L 0.875 the target is 0.064, at L 0.75 it is
+ * 0.133. */
+const C_SLOPE = 0.55;
+function chromaTargetFor(L) {
+  return Math.min(0.155, C_AT_TARGET + Math.max(0, TARGET_L - L) * C_SLOPE);
+}
 function pastelMiss(spec) {
   let miss = 0;
   for (const k of KEYS) {
-    miss += (spec[k].L - TARGET_L) ** 2 + 1.5 * (spec[k].C - TARGET_C) ** 2;
+    const dL = spec[k].L - TARGET_L;
+    const dC = spec[k].C - chromaTargetFor(spec[k].L);
+    // Lightness is weighted below chroma on purpose: a chip is allowed to move down the
+    // lightness axis when separation needs it, but it is not allowed to go muddy on the way.
+    miss += 0.7 * dL * dL + 2.4 * dC * dC;
   }
   return miss / KEYS.length;
 }
@@ -208,7 +230,7 @@ function score(spec) {
     // Warm chroma floor, lowered from 0.10 with the pastel band. Its job is to stop scams and
     // risk sliding into brown, and brown is a DARK dull orange — at L 0.82+ a low-chroma warm
     // hue reads as peach, not mud, so the old floor now only forces those two to shout.
-    if (WARM.has(k) && spec[k].C < 0.072) pen += (0.072 - spec[k].C) * 10;
+    if (WARM.has(k) && spec[k].C < 0.055) pen += (0.055 - spec[k].C) * 10;
   }
   return s - pen;
 }
