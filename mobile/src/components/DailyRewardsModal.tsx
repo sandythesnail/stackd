@@ -10,7 +10,7 @@ import { DAILY_REWARD_CYCLE_DAYS, type DailyRewardDay } from '@/dailyRewards';
 import { useReducedMotion } from '@/lessonPath/bits';
 import { Txt } from './Txt';
 import { Button } from './Button';
-import { Coin, Diamond, Gift } from './Currency';
+import { Coin, Diamond, Gift, GIFT_COLORS, GIFT_MISSED } from './Currency';
 
 const REVEAL_MS = 420;
 
@@ -217,7 +217,8 @@ function DayTile({
         // coin-plus-number are not the same width.
         <View style={styles.tileFace}>
           <Reanimated.View style={[styles.tileLayer, coverStyle]}>
-            <Gift size={22} />
+            {/* Today's present is the one that opens, in its own day's colour. */}
+            <Gift size={22} {...GIFT_COLORS[(day.day - 1) % GIFT_COLORS.length]} />
           </Reanimated.View>
           <Reanimated.View style={[styles.tileLayer, prizeStyle]}>
             <Coin size={16} />
@@ -227,11 +228,10 @@ function DayTile({
       ) : (
         <View style={styles.tileFace}>
           <View style={styles.tileLayer}>
-            {state === 'missed' ? (
-              <Feather name="x" size={15} color={colors.lockText} />
-            ) : (
-              <Coin size={state === 'claimed' ? 14 : 15} />
-            )}
+            {/* A present, not a coin. The number beside it already says how many coins, so a
+                coin glyph on all seven tiles was saying it twice and telling you nothing about
+                WHICH day you were looking at. One colour per day does. */}
+            <Gift size={17} {...(state === 'missed' ? GIFT_MISSED : GIFT_COLORS[(day.day - 1) % GIFT_COLORS.length])} />
             <Txt style={[styles.tileCoins, state === 'missed' && styles.tileCoinsMissed]}>{day.coins}</Txt>
           </View>
         </View>

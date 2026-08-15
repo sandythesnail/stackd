@@ -20,7 +20,8 @@ import Svg, { Defs, LinearGradient, Stop, Rect, Path, Line, G } from 'react-nati
  * bounded trapezoid between the front edge and the wall seam:
  *
  *   - `k` is the width of a board at the back wall as a fraction of its width at your feet.
- *     0.52 is a small room. Lower looks like a corridor, 1.0 is flat stripes again.
+ *     0.74 is a small room. Lower looks like a corridor and then like a runway, 1.0 is flat
+ *     stripes again.
  *   - The front edge is drawn `1/k` times wider than the floor, so that after converging it
  *     lands exactly on the full width at the back. The floor fills its rectangle at both ends
  *     rather than tapering away from the back corners.
@@ -32,13 +33,21 @@ import Svg, { Defs, LinearGradient, Stop, Rect, Path, Line, G } from 'react-nati
  * gradient shows through all of them and one wood colour stays in charge.
  */
 
-/** Board width at the back wall / board width at the front edge. Lower = deeper room. */
-const BACK_SCALE = 0.52;
+/** Board width at the back wall / board width at the front edge. Lower = deeper room.
+ *
+ * 0.52 was still reading as endless. Convergence is what the eye uses to judge depth, and at
+ * roughly half-width the boards are heading somewhere far enough away that a small bedroom
+ * looks like a hall. 0.74 is a room you could touch the far wall of, which is what this is
+ * meant to be, and the boards still visibly narrow so it doesn't fall back to flat stripes. */
+const BACK_SCALE = 0.74;
 const BOARD_FRONT_W = 74;   // board width at the front edge
-const SEAM_ROWS = 6;        // cross seams between the front edge and the wall
+const SEAM_ROWS = 5;        // cross seams between the front edge and the wall
 
+/* Board-to-board tone. Halved: at the old alphas every fourth board was a visibly different
+ * plank and the floor read as stripes competing with everything standing on it. A wooden
+ * floor has variation you notice when you look for it, not from across the room. */
 const BOARD_TINT = ['#FFFFFF', '#000000', '#FFFFFF', '#000000'];
-const BOARD_ALPHA = [0.05, 0.045, 0.025, 0.02];
+const BOARD_ALPHA = [0.025, 0.022, 0.013, 0.010];
 
 export function RoomFloor({
   style,
@@ -87,7 +96,7 @@ function FloorSvg({ w, h }: { w: number; h: number }) {
     );
     edges.push(
       <Line key={`e${i}`} x1={x0} y1={h} x2={toBack(x0)} y2={0}
-        stroke="#7C5430" strokeOpacity={0.28} strokeWidth={1.1} />,
+        stroke="#8A6038" strokeOpacity={0.16} strokeWidth={1} />,
     );
   }
 
@@ -103,30 +112,34 @@ function FloorSvg({ w, h }: { w: number; h: number }) {
     const t = y / h;                      // 1 at the front, 0 at the wall
     seams.push(
       <Line key={`s${i}`} x1={0} y1={y} x2={w} y2={y}
-        stroke="#6E4A2A" strokeOpacity={0.10 + 0.15 * t} strokeWidth={0.5 + 1.2 * t} />,
+        stroke="#7A5330" strokeOpacity={0.06 + 0.08 * t} strokeWidth={0.5 + 0.8 * t} />,
     );
   }
 
   return (
     <Svg width={w} height={h}>
       <Defs>
-        {/* Light comes from the front of the room: dark at the wall, warm at the feet. */}
+        {/* Light comes from the front of the room: a little darker at the wall, warm at the
+            feet. The range used to run #94683D → #D3A26D, which is most of a wood palette's
+            worth of contrast inside one small floor and made the back half look like it was
+            in shadow rather than simply further away. */}
         <LinearGradient id="floorDepth" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#94683D" />
-          <Stop offset="0.5" stopColor="#B8834D" />
-          <Stop offset="1" stopColor="#D3A26D" />
+          <Stop offset="0" stopColor="#BC8B57" />
+          <Stop offset="0.5" stopColor="#C89A66" />
+          <Stop offset="1" stopColor="#D5A873" />
         </LinearGradient>
-        {/* Contact shading in the wall/floor seam — the darkest part of any room. */}
+        {/* Contact shading in the wall/floor seam. Kept, because a floor with no seam shadow
+            floats, but at 0.42 it was a black band across the top of the room. */}
         <LinearGradient id="floorSeam" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#3E2713" stopOpacity="0.42" />
-          <Stop offset="1" stopColor="#3E2713" stopOpacity="0" />
+          <Stop offset="0" stopColor="#4A3018" stopOpacity="0.20" />
+          <Stop offset="1" stopColor="#4A3018" stopOpacity="0" />
         </LinearGradient>
         <LinearGradient id="floorEdgeL" x1="0" y1="0" x2="1" y2="0">
-          <Stop offset="0" stopColor="#000000" stopOpacity="0.14" />
+          <Stop offset="0" stopColor="#000000" stopOpacity="0.06" />
           <Stop offset="1" stopColor="#000000" stopOpacity="0" />
         </LinearGradient>
         <LinearGradient id="floorEdgeR" x1="1" y1="0" x2="0" y2="0">
-          <Stop offset="0" stopColor="#000000" stopOpacity="0.14" />
+          <Stop offset="0" stopColor="#000000" stopOpacity="0.06" />
           <Stop offset="1" stopColor="#000000" stopOpacity="0" />
         </LinearGradient>
       </Defs>
@@ -137,8 +150,8 @@ function FloorSvg({ w, h }: { w: number; h: number }) {
       <G>{seams}</G>
       {/* The far edge itself. Without a hard line here the floor still reads as running on
           past the wall, which was the whole complaint about the previous version. */}
-      <Line x1={0} y1={0.5} x2={w} y2={0.5} stroke="#4A2F17" strokeOpacity={0.55} strokeWidth={2} />
-      <Rect x={0} y={0} width={w} height={Math.max(10, h * 0.14)} fill="url(#floorSeam)" />
+      <Line x1={0} y1={0.5} x2={w} y2={0.5} stroke="#5A3B1F" strokeOpacity={0.42} strokeWidth={2} />
+      <Rect x={0} y={0} width={w} height={Math.max(8, h * 0.10)} fill="url(#floorSeam)" />
       <Rect x={0} y={0} width={w * 0.2} height={h} fill="url(#floorEdgeL)" />
       <Rect x={w * 0.8} y={0} width={w * 0.2} height={h} fill="url(#floorEdgeR)" />
     </Svg>
