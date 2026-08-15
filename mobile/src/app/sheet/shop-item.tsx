@@ -148,10 +148,13 @@ function ShopItemSheet() {
     const equipVerb = item.slot === 'wallpaper' ? 'Apply' : item.slot ? 'Place' : 'Wear';
     buttonLabel = noFreeSlot ? `${equipVerb} (take something off first)` : equipVerb;
     buttonDisabled = noFreeSlot;
+  } else if (item.mysteryOnly) {
+    // Locked, and not for sale. Making these directly buyable was tried and reverted: it made
+    // the boxes pointless, since every prize could be bought outright for less than a spin.
+    // Same word the milestone rewards use, and it turns into "Unlocked" in green once won.
+    buttonLabel = 'Locked';
+    buttonDisabled = true;
   } else {
-    // Mystery-pool items land here too now. They used to read "Only from the Hat Mystery
-    // Box" on a dead button, which named a thing to go and do while refusing to let you do
-    // anything; they carry a real price of their own, so they can simply be bought.
     buttonLabel = 'Buy';
     buttonDisabled = false;
   }
@@ -249,15 +252,22 @@ function ShopItemSheet() {
               {/* Says what you're short of and by how much, which is the only thing worth
                   knowing at this point. Drawn in the sheet rather than through a platform
                   alert: Alert.alert is a no-op under react-native-web, and /m is the build
-                  most people are shopping in (see lib/confirm.ts). */}
-              {notEnough ? (
-                <Pressable onPress={() => setNotEnough(false)} style={styles.shortRow}>
-                  {currency === 'diamond' ? <Diamond size={17} /> : <Coin size={17} />}
-                  <Txt style={styles.shortTxt}>
-                    {`Not enough ${currency}s. You need ${item.price - (currency === 'diamond' ? state.diamonds : state.coins)} more.`}
-                  </Txt>
-                </Pressable>
-              ) : null}
+                  most people are shopping in (see lib/confirm.ts).
+
+                  The slot is ALWAYS in the layout and only its contents appear, so pressing
+                  Buy can't push the button, the balance card and everything else down the
+                  sheet by the height of a message. Nothing on this sheet moves when you tap
+                  anything. */}
+              <View style={styles.shortSlot} pointerEvents={notEnough ? 'auto' : 'none'}>
+                {notEnough ? (
+                  <Pressable onPress={() => setNotEnough(false)} style={styles.shortRow}>
+                    {currency === 'diamond' ? <Diamond size={17} /> : <Coin size={17} />}
+                    <Txt style={styles.shortTxt}>
+                      {`Not enough ${currency}s. You need ${item.price - (currency === 'diamond' ? state.diamonds : state.coins)} more.`}
+                    </Txt>
+                  </Pressable>
+                ) : null}
+              </View>
 
               <Button
                 label={buttonLabel}
@@ -315,9 +325,11 @@ const styles = StyleSheet.create({
   },
   head: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 10 },
   balance: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingVertical: 14, paddingHorizontal: 16 },
+  // Reserved height, always present. See the note at its call site.
+  shortSlot: { height: 54, justifyContent: 'center', marginTop: 8 },
   shortRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    marginTop: 12, paddingVertical: 11, paddingHorizontal: 14,
+    paddingVertical: 11, paddingHorizontal: 14,
     backgroundColor: colors.dangerBg, borderRadius: 14,
     borderWidth: 1.5, borderColor: '#F3D4D4',
   },

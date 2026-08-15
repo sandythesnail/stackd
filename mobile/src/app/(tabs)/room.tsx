@@ -151,10 +151,13 @@ export default function Room() {
   // Hammy scales with the viewport rather than sitting at a fixed 190. The wardrobe has to
   // fit without scrolling on every screen, and the mascot is the one element that can give
   // ground — the grid below it can't shrink past legibility.
-  const { height: winH } = useWindowDimensions();
-  // Capped lower than it was (190): the stage no longer stretches to fill the tab, so a
-  // mascot sized for that stretched panel now overfills the panel it actually gets.
-  const hammyStageSize = Math.max(104, Math.min(150, winH * 0.18));
+  const { height: winH, width: winW } = useWindowDimensions();
+  // A square stage, bounded by BOTH axes: wide enough to look deliberate on a narrow phone,
+  // never so tall that the filters and grid below it get squeezed off a short one.
+  const stageSize = Math.max(150, Math.min(winW - 36, winH * 0.32));
+  // Sized off the stage rather than the viewport, so the mascot and the panel it stands in
+  // can't disagree about how big the scene is.
+  const hammyStageSize = Math.round(stageSize * 0.62);
 
   // No Header here on purpose — the level/coins/diamonds bar just ate space from an already
   // small room scene for no real benefit on this screen; the bottom tab bar and this
@@ -202,6 +205,12 @@ export default function Room() {
             );
           })}
 
+          {/* Hammy always stands on something. Without it he reads as pasted onto the floor
+              rather than standing on it, and the room's own rug is a purchasable item that
+              most players don't own yet. */}
+          <View style={styles.hammyRug} pointerEvents="none">
+            <WhiteRug width={230} />
+          </View>
           <Hammy size={218} equipped={equipped} style={styles.hammy} />
 
           <Pressable style={styles.furnitureCta} onPress={goToRoomShop}>
@@ -217,8 +226,13 @@ export default function Room() {
         // it takes flex:1 and Hammy scales off the viewport, so the slack goes to the mascot
         // rather than to overflow.
         <View style={styles.wardrobeContent}>
-          <View style={styles.wardrobeStage}>
+          {/* Square, and sized from the screen's WIDTH so it is actually square rather than
+              approximately so — a width % and a height % are measured against two different
+              axes and can't agree on a square without knowing the real pixel size of both
+              (the same reasoning as SquareWindowSlot above). */}
+          <View style={[styles.wardrobeStage, { width: stageSize, height: stageSize }]}>
             <RoomFloor style={styles.wardrobeStageStripes} pointerEvents="none" edge={false} />
+            <WhiteRug width={hammyStageSize * 1.5} />
             <Hammy size={hammyStageSize} equipped={equipped} />
           </View>
 
@@ -276,6 +290,27 @@ export default function Room() {
 // Renders nothing at all for an empty slot — no placeholder box, dashed or otherwise. The
 // furnitureCta banner is the one, single way into the shop from this screen now, so an
 // unfurnished room just reads as an empty room instead of a scene full of "+" outlines.
+/**
+ * The soft white mat Hammy stands on, everywhere he appears in his room.
+ *
+ * An ellipse rather than a rectangle because it's read as a floor plane in perspective, and
+ * it does two jobs at once: it plants him on the floor (a mascot with nothing under him reads
+ * as pasted onto the background) and it gives his outline a light surface to sit against, so
+ * he stays legible on every wallpaper and every wood tone underneath.
+ *
+ * Layered light-to-dark from the middle outward, so the edge fades rather than cutting.
+ */
+function WhiteRug({ width }: { width: number }) {
+  const height = width * 0.34;
+  return (
+    <View style={{ width, height, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={[styles.rugLayer, { width, height, backgroundColor: 'rgba(255,255,255,0.16)' }]} />
+      <View style={[styles.rugLayer, { width: width * 0.86, height: height * 0.86, backgroundColor: 'rgba(255,255,255,0.42)' }]} />
+      <View style={[styles.rugLayer, { width: width * 0.7, height: height * 0.7, backgroundColor: 'rgba(255,255,255,0.82)' }]} />
+    </View>
+  );
+}
+
 function RoomSlotBox({
   layout, item, onPress,
 }: { layout: SlotLayout; item?: ShopItemReal; onPress: () => void }) {
@@ -362,6 +397,10 @@ const styles = StyleSheet.create({
   // width of the scene. Nudged up slightly from 60.
   garlandBand: { top: 52, left: 0, right: 0 },
   hammy: { position: 'absolute', bottom: '12%', alignSelf: 'center' },
+  // Centred on Hammy's own feet: he sits at bottom 12% and his art has a little clearance
+  // below the body, so the mat sits a touch lower than his box's bottom edge.
+  hammyRug: { position: 'absolute', bottom: '10%', alignSelf: 'center' },
+  rugLayer: { position: 'absolute', borderRadius: 999 },
   furnitureCta: {
     position: 'absolute',
     top: 14,
@@ -388,14 +427,12 @@ const styles = StyleSheet.create({
   // number (a fixed 240 is what made the tab overflow in the first place), so it's a maximum
   // instead — it shrinks on a short screen and simply stops growing on a tall one.
   wardrobeStage: {
+    alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#B98650',
     borderRadius: 24,
     overflow: 'hidden',
-    paddingTop: 12,
-    paddingBottom: 12,
-    minHeight: 140,
   },
   wardrobeStageStripes: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'row' },
   filters: { flexDirection: 'row', gap: 7, marginTop: 14 },

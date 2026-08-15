@@ -3,7 +3,7 @@ import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen, Header, Txt, Coin, Diamond, Hammy, ItemArt, Wallpaper } from '@/components';
+import { Screen, Header, Txt, Coin, Diamond, Gift, MYSTERY_BOX_GIFT, Hammy, ItemArt, Wallpaper } from '@/components';
 import { colors, font, radius } from '@/theme';
 import { shopItemsReal } from '@/content';
 import type { ShopItemReal } from '@/content';
@@ -52,14 +52,6 @@ function sortItems(items: ShopItemReal[]) {
 const ITEMS_BY_CATEGORY: Record<string, ShopItemReal[]> = Object.fromEntries(
   SHOP_CATEGORIES.map((cat) => [cat.key, sortItems(shopItemsReal.filter((i) => i.category === cat.key))]),
 );
-
-function mysteryBoxFor(poolKey: string) {
-  return shopItemsReal.find((i) => i.isMysteryBox && i.mysteryPool === poolKey);
-}
-
-function mysteryBoxNameFor(poolKey: string) {
-  return mysteryBoxFor(poolKey)?.name ?? 'a Mystery Box';
-}
 
 function formatPct(pct: number) {
   return pct >= 10 ? Math.round(pct) : Math.round(pct * 10) / 10;
@@ -233,7 +225,12 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
       <View style={[styles.preview, rewardCard && styles.previewFaded]}>
         {isWallpaper ? (
           <Wallpaper item={item} style={StyleSheet.absoluteFill} />
-        ) : isRoom || isBox ? (
+        ) : isBox ? (
+          // The same present the daily-reward calendar draws, in this box's own colour. The
+          // catalog art was a different drawing of the same idea, so "a box with something in
+          // it" looked like two unrelated things depending on which screen you were on.
+          <Gift size={72} {...(MYSTERY_BOX_GIFT[item.mysteryPool ?? ''] ?? {})} />
+        ) : isRoom ? (
           <ItemArt item={item} fill />
         ) : (
           <Hammy size={68} bob={false} equipped={[item]} />
@@ -263,18 +260,21 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
             <Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>✓ {isWallpaper ? 'Applied' : isRoom ? 'Placed' : 'Worn'}</Txt>
           </View>
         ) : owned ? (
-          <View style={[styles.statusRow, styles.statusOwned]}><Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>Owned</Txt></View>
+          // "Unlocked" for something that was locked, "Owned" for something bought. The word
+          // that lands should answer the word that was there a moment ago.
+          <View style={[styles.statusRow, styles.statusOwned]}>
+            <Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>
+              {item.mysteryOnly ? '✓ Unlocked' : 'Owned'}
+            </Txt>
+          </View>
         ) : isLocked ? (
-          // The box's OWN art, not a generic gift glyph. A pink present sat next to the words
-          // "Diamond Mystery Box" and next to "Accessory Mystery Box", neither of which is
-          // pink — the three boxes are the same drawing in three colours (pink, purple, cyan,
-          // all with the gold ribbon), so pointing at the real one makes the small icon and
-          // the card it refers to identical by construction rather than by upkeep.
-          <View style={styles.statusRow}>
-            <View style={styles.statusBoxArt}>
-              <ItemArt item={mysteryBoxFor(item.mysteryPool!)!} fill />
-            </View>
-            <Txt style={styles.statusTxt} numberOfLines={2}>{mysteryBoxNameFor(item.mysteryPool!)}</Txt>
+          // Just "Locked", the same chip the milestone rewards use. This used to name the box
+          // it comes from ("Hat Mystery Box") beside a small picture of that box, which spent
+          // the widest line on the card repeating what the section header already says, and
+          // said it on every single locked item in the section.
+          <View style={[styles.statusRow, styles.statusLock]}>
+            <MaterialCommunityIcons name="lock-outline" size={13} color={colors.tagLockText} />
+            <Txt style={[styles.statusTxt, { color: colors.tagLockText }]}>Locked</Txt>
           </View>
         ) : isReward ? (
           <View style={[styles.statusRow, styles.statusLock]}>

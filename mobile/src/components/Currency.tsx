@@ -72,14 +72,24 @@ export function Gift({
  * going neon.
  */
 export const GIFT_COLORS = [
-  { box: '#FFB3B8', lid: '#FF8F98', line: '#8A2A38' }, // red
-  { box: '#A9DCF5', lid: '#7CC7EE', line: '#1B5877' }, // blue
-  { box: '#DCB6EE', lid: '#C48FE2', line: '#5C2A75' }, // purple
-  { box: '#B6E5AE', lid: '#8FD684', line: '#2E6B27' }, // green
-  { box: '#FFE7A0', lid: '#FFD764', line: '#8A6B12' }, // yellow
-  { box: '#FFCBA1', lid: '#FFAE74', line: '#8A4A1A' }, // orange
-  { box: '#FFC2DE', lid: '#FF9CC6', line: '#8A2A5C' }, // pink, and day 7 is the big one
+  { box: '#FFB3B8', lid: '#FF8F98', line: '#5E1622' }, // red
+  { box: '#A9DCF5', lid: '#7CC7EE', line: '#0D3B54' }, // blue
+  { box: '#DCB6EE', lid: '#C48FE2', line: '#3D1852' }, // purple
+  { box: '#B6E5AE', lid: '#8FD684', line: '#1C4A18' }, // green
+  { box: '#FFE7A0', lid: '#FFD764', line: '#5E4708' }, // yellow
+  { box: '#FFCBA1', lid: '#FFAE74', line: '#5E300E' }, // orange
+  { box: '#FFC2DE', lid: '#FF9CC6', line: '#5E1A3D' }, // pink, and day 7 is the big one
 ] as const;
+
+/** The three shop mystery boxes drawn as the SAME present as the daily-reward calendar, in
+ * their own colours: pink for hats, purple for accessories, cyan for diamonds — matching the
+ * gradients their catalog art already uses. One design for "a box with something in it",
+ * everywhere it appears, at every size. */
+export const MYSTERY_BOX_GIFT: Record<string, { box: string; lid: string; line: string }> = {
+  hat: { box: '#FF8FB8', lid: '#E0507F', line: '#5E1630' },
+  accessory: { box: '#C9A0FF', lid: '#8A3FE0', line: '#3A1264' },
+  exclusive: { box: '#8FE3F5', lid: '#2AA8C4', line: '#0C4652' },
+};
 
 /** The same present with the colour drained out, for a day that was missed. */
 export const GIFT_MISSED = { box: '#E4E0D6', lid: '#D5D0C4', line: '#A39D8F' } as const;

@@ -2,7 +2,7 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Txt, IconButton, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow } from '@/components';
-import { font, colors } from '@/theme';
+import { font, colors, moduleColorSolid } from '@/theme';
 import { moduleById } from '@/data';
 import { moduleContentById, mainLessonAbsoluteIndices, moduleMaxXp } from '@/content';
 import { useStore } from '@/store';
@@ -46,6 +46,10 @@ export default function ModuleDetail() {
     else router.push('/(tabs)/modules');
   };
 
+  // The hero's border and gradient are the module colour drawn as a bare shape, so they use
+  // the solid variant: the palest two steps of the ramp are invisible against white.
+  const heroTone = moduleColorSolid[mod.id] ?? mod.color;
+
   return (
     <Screen edges={['top']}>
       <View style={styles.stick}>
@@ -55,7 +59,7 @@ export default function ModuleDetail() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={[colors.white, mod.color]} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={[styles.hero, { borderColor: mod.color }]}>
+        <LinearGradient colors={[colors.white, heroTone]} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={[styles.hero, { borderColor: heroTone }]}>
           {/* color/textColor swapped here previously (only color was set, to mod.textColor
               — the DARK tone) — every other MIcon call site passes color={m.color}
               (the pale chip) with textColor={m.textColor} on top of it. With no textColor

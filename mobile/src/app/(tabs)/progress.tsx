@@ -1,7 +1,7 @@
 import { View, ScrollView, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Screen, Header, Txt, Card, Stat, ProgressBar, MIcon } from '@/components';
-import { colors, font } from '@/theme';
+import { colors, font, moduleColorSolid } from '@/theme';
 import { modules } from '@/data';
 import { useStore, xpForLevel, xpProgressPct, MAX_LEVEL, TIERS } from '@/store';
 
@@ -131,7 +131,7 @@ export default function Progress() {
                 <View key={m.id} style={styles.col}>
                   <Txt style={styles.colVal}>{xp > 0 ? xp : ''}</Txt>
                   <View style={styles.colBarWrap}>
-                    <View style={[styles.colBar, { height: `${hPct}%`, backgroundColor: m.color }]} />
+                    <View style={[styles.colBar, { height: `${hPct}%`, backgroundColor: moduleColorSolid[m.id] ?? m.color }]} />
                   </View>
                   <Txt style={styles.colLabel} numberOfLines={1}>{m.name.split(' ')[0]}</Txt>
                 </View>

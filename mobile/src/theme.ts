@@ -123,81 +123,83 @@ export const colors = {
   cream: '#FAF6ED',
 } as const;
 
-/** Module accent colours keyed by module id: a light chip background with a darker, same-hue
- * foreground for the number on it (see moduleColorText). Used on module icons, the lesson
- * path, and the Progress page's per-module chart, so these eleven values are what "a module
- * has a colour" means anywhere in the app.
+/** Module accent colours keyed by module id: the chip a module wears everywhere, with the
+ * number drawn on it in moduleColorText.
  *
- * A RAINBOW IN MODULE ORDER, by request: 01 red, 02 orange, 03 yellow, 04 green, 05 blue,
- * 06 indigo, 07 violet, and 08-11 repeating red/orange/green/blue at a different depth. The
- * hues are fixed by hand in scripts/solve-module-colors.js; only lightness and chroma are
- * solved. Re-run it and paste both scales rather than hand-editing a value.
+ * A SINGLE-HUE GREEN RAMP, dark to light, in module order, from hex codes supplied directly.
+ * Nine were given; the two extra sit at the DARK end rather than the light end, because the
+ * light end had already run out of room. The palest supplied colour (#DDEAD1) measures 1.04
+ * against the progress track, where 1.0 is invisible.
  *
- * Four constraints the solver holds, each of which was a real defect first:
+ * This replaced a solved eleven-hue palette, and the trade is worth understanding:
  *
- *   - Colour blindness. Every pair is scored under deuteranope and protanope simulation
- *     (Vienot 1999) as well as normal vision, and must stay 0.045 apart in all three. This is
- *     the constraint that keeps biting: dichromacy discards hue and keeps LIGHTNESS, so the
- *     first hand-built version of this rainbow, with the four repeats all set to "same hue,
- *     lighter", put taxes and career 0.0046 apart for a green-blind student. The repeats have
- *     to differ in depth from each other, not only from the hue they repeat.
- *   - Visibility as a bare shape. A module colour is a hero border and a progress fill over
- *     colors.track, not only a backdrop for a glyph, so each is measured against white, cream
- *     AND track at 1.35:1. This is what caps yellow and yellow-green, which carry more
- *     luminance than any other hue at the same perceptual lightness.
- *   - Glyph contrast at 4.6:1, since the number on the chip is 16px and so not large text.
- *   - Reserved tokens at 0.09, so a chip can't be mistaken for colors.reward, the app-wide
- *     "come collect" gold. Module 03 is EXEMPT from this one and is the only exception in the
- *     set: yellow was asked for explicitly and no yellow exists that clears both reward
- *     (#F0C22E) and rewardBadgeBg (#FFEDB0). See RESERVED_EXEMPT in the solver for what that
- *     costs and how to undo it.
+ *   - Colour blindness stops being a worry rather than becoming one. Dichromacy discards hue
+ *     and keeps lightness, so a lightness ramp is the most robust shape a palette can have.
+ *     The old 0.045 pairwise floor existed to force that property out of eleven DIFFERENT
+ *     hues; a ramp has it for free. The checker verifies what actually makes a ramp work
+ *     instead: neighbouring steps differ in lightness (MIN_STEP_L).
+ *   - The three darkest chips take WHITE numbers. No darker green clears 4.6:1 against
+ *     #2F4029, so the old "same hue, taken down in lightness" rule cannot apply at that end.
+ *   - Modules stop being colour-CODED. Eleven shades of one green identify a module by its
+ *     position in a scale rather than by a colour you could name, so a chip on its own no
+ *     longer says which module you are looking at. Every place that shows a chip also shows
+ *     its number or its name, so nothing breaks, but it is a real change in what the colour
+ *     is doing.
  *
- * Measured on this set: closest pair 0.0483 (risk/scams, deuteranopia), every chip clearing
- * 1.35:1 against the palest surface it is drawn on and 4.6:1 against its own number. */
+ * scripts/solve-module-colors.js no longer generates these, it only checks them. Its solver
+ * is kept because it is what can build a fresh palette if this one is ever replaced. */
 export const moduleColor: Record<string, string> = {
-  earning: '#F4BDB8',
-  spending: '#E99355',
-  saving: '#E5C95E',
-  investing: '#8BD98D',
-  credit: '#9AD1FF',
-  risk: '#B5B2FF',
-  loans: '#D9C0DE',
-  taxes: '#DDAEA9',
-  psychology: '#FAA468',
-  career: '#7FC881',
-  scams: '#8AB7DE',
+  earning: '#2F4029',
+  spending: '#3C5137',
+  saving: '#4B6043',
+  investing: '#658354',
+  credit: '#75975E',
+  risk: '#87AB69',
+  loans: '#95BB72',
+  taxes: '#A3C585',
+  psychology: '#B3CF99',
+  career: '#C7DDB5',
+  scams: '#DDEAD1',
 };
 
-/** Darker foreground paired with each `moduleColor` background — the module icon's glyph
- * color, never plain white on a light chip. Each one is its own hue taken down in lightness
- * rather than a shared grey, so the pair reads as one color at two weights.
+/** The number drawn ON each `moduleColor` chip, solved per module for 4.6:1 against it.
  *
- * Generated at its background's own hue, targeting OKLCH C 0.125 — but that target is only
- * advisory, because five of the eleven cannot reach it at the lightness they need and are
- * clipped to the sRGB gamut boundary instead (loans tops out at 0.064, saving 0.072, career
- * 0.082, credit 0.088, risk 0.100). Don't "restore" those to 0.125; it is not a color that
- * exists at those coordinates, and forcing it costs the pair its contrast.
- *
- * Lightness is not fixed across the set. It's solved per module by walking L down until that
- * specific pair clears 4.6:1, which is what lets the backgrounds vary in depth — they span
- * L 0.720 to 0.837 — without eleven hand-tuned exceptions. Every pair lands between 4.60:1
- * and 4.70:1.
+ * Not "a darker version of the background" any more, because the ramp's first three chips are
+ * genuinely dark (L 0.46 and below) and no darker green clears 4.6:1 against them — those get
+ * white. The rest keep a deep same-hue green. Every pair lands between 4.61:1 and 4.66:1.
  *
  * Solving rather than pinning is what makes the backgrounds free to move at all. An earlier
  * revision fixed one foreground lightness for the whole set; the single chip that had been
  * deepened came out at 4.17:1, below AA, and nothing flagged it. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#913532',
-  spending: '#5F2E00',
-  saving: '#645301',
-  investing: '#0F5F1C',
-  credit: '#00588D',
-  risk: '#473E8C',
-  loans: '#743C81',
-  taxes: '#822826',
-  psychology: '#733801',
-  career: '#005312',
-  scams: '#004773',
+  earning: '#FFFFFF',
+  spending: '#FFFFFF',
+  saving: '#FFFFFF',
+  investing: '#030E00',
+  credit: '#142B00',
+  risk: '#223D00',
+  loans: '#2E490E',
+  taxes: '#355117',
+  psychology: '#3F5920',
+  career: '#47642B',
+  scams: '#526D33',
+};
+
+/**
+ * The module's colour when it is drawn as a BARE SHAPE rather than behind its number: the
+ * Progress chart's columns, the module hero's border.
+ *
+ * Same value as `moduleColor` for nine of the eleven. The two palest steps of the ramp are
+ * substituted, because a shape only exists if it contrasts with what's under it: #C7DDB5 sits
+ * at 1.21 against the progress track and #DDEAD1 at 1.04, where 1.0 is literally invisible.
+ * A 4%-complete bar in the palest green would be a bar you cannot see at all.
+ *
+ * Substituting only where it matters keeps the chips themselves exactly as specified — the
+ * ramp you see on the Modules tab is the ramp that was asked for, top to bottom. */
+export const moduleColorSolid: Record<string, string> = {
+  ...moduleColor,
+  career: '#A8C88C',
+  scams: '#B9D3A2',
 };
 
 export const font = {

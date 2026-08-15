@@ -140,7 +140,11 @@ const VIEWS = ['norm', 'deut', 'prot'];
 const MIN_CONTRAST = 4.6;     // chip glyph, 16px so not large text
 const MIN_SURFACE = 1.35;     // chip legible as a bare shape
 const MIN_RESERVED = 0.09;    // never confusable with the reward tokens
-const MIN_PAIR = 0.045;       // worst module pair, in ANY of the three views
+const MIN_PAIR = 0.045;       // worst module pair, in ANY of the three views (solver only)
+/** Smallest lightness gap between two NEIGHBOURING steps of the ramp. A single-hue scale is
+ * only readable as ordered steps if consecutive entries are visibly different depths, and
+ * this is the check that replaced pairwise colour distance when the palette became a ramp. */
+const MIN_STEP_L = 0.030;
 /* The search space, which is now deliberately WIDER than the palette should be. The ceiling
  * is the only aesthetic-looking number here and it isn't one: MIN_SURFACE against white runs
  * out at about OKLCH L 0.895, because a chip has to stay visible as a bare shape (it is a hero
@@ -298,19 +302,49 @@ function readScale(src, name) {
 
 if (process.argv.includes('--check')) {
   const src = fs.readFileSync(THEME, 'utf8');
-  const bg = readScale(src, 'moduleColor'), fg = readScale(src, 'moduleColorText');
+  const bg = readScale(src, 'moduleColor');
+  const fg = readScale(src, 'moduleColorText');
+  const solid = readScale(src, 'moduleColorSolid');
   const missing = KEYS.filter(k => !bg[k] || !fg[k]);
   if (missing.length) { console.error('✗ theme.ts is missing: ' + missing.join(', ')); process.exit(1); }
-  const fail = check(bg, fg);
+
+  const fail = [];
+  // 1. The number on every chip has to be readable. This is the one that must never bend.
+  for (const k of KEYS) {
+    const c = cr(bg[k], fg[k]);
+    if (c < MIN_CONTRAST) fail.push(k + ': number contrast ' + c.toFixed(2) + ' < ' + MIN_CONTRAST);
+  }
+  // 2. Whatever is drawn as a bare shape has to be visible against every surface it lands
+  //    on. That is moduleColorSolid, not moduleColor: the palest steps of the ramp are
+  //    substituted there precisely because they are not visible (see theme.ts).
+  for (const k of KEYS) {
+    const v = solid[k] || bg[k];
+    for (const [n, surf] of Object.entries(SURFACES)) {
+      const c = cr(v, surf);
+      if (c < MIN_SURFACE) fail.push(k + ': solid tone ' + c.toFixed(2) + ' against ' + n + ' < ' + MIN_SURFACE);
+    }
+  }
+  // 3. The ramp has to READ as ordered steps, which for a single-hue scale means adjacent
+  //    entries differ in lightness. Pairwise colour distance is deliberately NOT checked any
+  //    more: this palette is one hue at eleven depths by request, so neighbouring steps are
+  //    close on purpose and the old 0.045 floor would reject the design itself. Lightness is
+  //    also the channel dichromacy preserves, so a lightness ramp is the most colour-blind-
+  //    safe shape a palette can have - the previous constraint existed to force this property
+  //    out of eleven different hues, and a ramp simply has it.
+  for (let i = 1; i < ORDER.length; i++) {
+    const a = lab(bg[ORDER[i - 1]])[0], b = lab(bg[ORDER[i]])[0];
+    const d = Math.abs(a - b);
+    if (d < MIN_STEP_L) fail.push(ORDER[i - 1] + '/' + ORDER[i] + ': lightness step ' + d.toFixed(3) + ' < ' + MIN_STEP_L);
+  }
+
   if (fail.length) {
     console.error('✗ module colors violate ' + fail.length + ' constraint(s):');
     for (const f of fail) console.error('   - ' + f);
-    console.error('\n  Re-run without --check to solve a fresh palette.');
     process.exit(1);
   }
-  const { worst, where } = worstPair(bg);
-  console.log(`✓ module colors: worst pair ${worst.toFixed(4)} at ${where}, all 11 clear ` +
-    `${MIN_CONTRAST}:1 glyph, ${MIN_SURFACE}:1 surface, ${MIN_RESERVED} from reserved tokens.`);
+  const steps = ORDER.slice(1).map((k, i) => Math.abs(lab(bg[ORDER[i]])[0] - lab(bg[k])[0]));
+  console.log('✓ module colors: 11-step ramp, smallest lightness step ' + Math.min(...steps).toFixed(3) +
+    ', every number clears ' + MIN_CONTRAST + ':1 and every solid tone ' + MIN_SURFACE + ':1.');
   process.exit(0);
 }
 

@@ -187,13 +187,19 @@ function DayTile({
 
   // A slow breath on the tile that's waiting to be opened, for the same reason the tour's
   // ring pulses: on a grid of seven near-identical tiles, movement is what says "this one".
+  //
+  // It pulses OPACITY, not scale. Scaling meant today's tile sat permanently 3.5% larger than
+  // its neighbours and then snapped back to their size the moment it was claimed and the
+  // animation stopped — so collecting your reward made the tile visibly shrink, which is the
+  // opposite of what claiming something should feel like. Opacity says "this one" just as
+  // well and never changes the tile's size, so nothing around it moves either.
   const pulse = useSharedValue(0);
   useEffect(() => {
     if (state !== 'today' || reducedMotion) { cancelAnimation(pulse); pulse.value = 0; return; }
     pulse.value = withRepeat(withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.quad) }), -1, true);
     return () => cancelAnimation(pulse);
   }, [state, reducedMotion, pulse]);
-  const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 + pulse.value * 0.035 }] }));
+  const pulseStyle = useAnimatedStyle(() => ({ opacity: 1 - pulse.value * 0.18 }));
 
   // The two halves of the flip. The gift shrinks away as the prize springs in; they cross
   // over rather than cutting, which is what makes it read as uncovering something.
@@ -270,8 +276,9 @@ const styles = StyleSheet.create({
   tileDay: { fontFamily: font.extra, fontSize: 9, letterSpacing: 0.4, color: colors.muted4 },
   tileDayMissed: { color: colors.lockText },
   // Fixed height so the crossfading layers below can be absolutely positioned without the
-  // tile collapsing around them.
-  tileFace: { height: 26, alignSelf: 'stretch', marginTop: 4 },
+  // tile collapsing around them — and tall enough for the bigger presents, which at 30-34px
+  // were overflowing a 26px face and pushing the tile's own height around as they swapped.
+  tileFace: { height: 38, alignSelf: 'stretch', marginTop: 4 },
   tileLayer: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3,
