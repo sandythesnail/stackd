@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import Reanimated, { FadeIn, FadeInDown, FadeInRight, ZoomIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,7 +7,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Txt, Button, Option, ProgressBar, IconButton, MIcon } from '@/components';
 import { colors, font, radius } from '@/theme';
 import { modules } from '@/data';
-import { SURVEY_GOALS, SURVEY_FAMILIARITY_LABELS, SURVEY_TRACKS, getRecommendedTrack, trackReason, type SurveyAnswers } from '@/survey';
+import { SURVEY_GOALS, SURVEY_TRACKS, getRecommendedTrack, trackReason, type SurveyAnswers } from '@/survey';
 import { useStore } from '@/store';
 
 /**
@@ -20,16 +20,16 @@ import { useStore } from '@/store';
  * it were an answer. A survey whose default output is a lie is worse than no survey: this is
  * what picks your starting track.
  *
- * So: one module per screen, five tappable answers, nothing pre-selected, and a tap advances
- * on its own. Eleven taps is about fifteen seconds and reads as a quiz rather than a form.
- * Skipping is still allowed, but it is now a deliberate act (the "Not sure yet" button) rather
- * than the path of least resistance, and a skipped module records nothing at all — which the
- * scoring already handles, since computeModulePriority ignores undefined familiarity.
+ * So: one module per screen, a five-point scale, nothing pre-selected. The button below the
+ * scale is white until a number is picked and green once one is, which is both the receipt for
+ * the tap and the way forward. A module you skip records nothing at all, which the scoring
+ * already handles, since computeModulePriority ignores an undefined familiarity.
  *
- * The familiarity SCALE is generic and uniform across modules; each module's own two end
- * labels (the website's, which are written in the student's voice) sit under the question as
- * anchors. Putting those two long lines in as options 1 and 5 and inventing short ones for
- * 2-4 made every screen a different shape.
+ * The scale is generic and uniform across modules. The website's two per-module end quotes
+ * ("I never spend a cent" / "After every paycheck, shopping time!") used to sit under the
+ * question as anchors and are gone: they said in two long, differently-shaped sentences what
+ * the five labelled points already say, and they were the only reason this screen ever needed
+ * to scroll.
  */
 
 type Familiarity = Record<string, number>;
@@ -46,10 +46,6 @@ const SCALE: { value: number; label: string }[] = [
 const GOALS_STEP = modules.length;
 const RESULT_STEP = modules.length + 1;
 const TOTAL_STEPS = modules.length + 2;
-
-/** Long enough to see the row you picked light up, short enough that eleven of them don't
- * add up to a wait. */
-const ADVANCE_MS = 260;
 
 export default function Survey() {
   const router = useRouter();
@@ -68,19 +64,11 @@ export default function Survey() {
   const recommended = getRecommendedTrack(answers);
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === trackId) ?? recommended;
 
-  // The auto-advance after an answer. Held in a ref so a second tap (or leaving the screen)
-  // cancels the pending one instead of racing it.
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const clearAdvance = () => {
-    if (advanceTimer.current) clearTimeout(advanceTimer.current);
-    advanceTimer.current = null;
-  };
-  useEffect(() => clearAdvance, []);
-
+  // Answering no longer advances on its own. The button below goes from white to green the
+  // moment a number is picked, which is both the confirmation that the tap registered and the
+  // invitation to move on, and it leaves the pace with the person answering.
   const answer = (moduleId: string, value: number) => {
     setFamiliarity((prev) => ({ ...prev, [moduleId]: value }));
-    clearAdvance();
-    advanceTimer.current = setTimeout(() => setStep((s) => Math.min(s + 1, RESULT_STEP)), ADVANCE_MS);
   };
 
   const toggleGoal = (id: string) =>
@@ -106,7 +94,6 @@ export default function Survey() {
   const finish = () => {
     if (finishing.current) return;
     finishing.current = true;
-    clearAdvance();
     setOnboardingTrack(activeTrack.id);
     // A retake from Settings just saves the new track and goes back where it came from.
     // It used to fall through to the same branch as first-run onboarding, which replayed the
@@ -124,12 +111,10 @@ export default function Survey() {
   };
 
   const back = () => {
-    clearAdvance();
     if (step === 0) { router.back(); return; }
     setStep(step - 1);
   };
   const next = () => {
-    clearAdvance();
     if (step === RESULT_STEP) { finish(); return; }
     setStep(step + 1);
   };
@@ -149,31 +134,30 @@ export default function Survey() {
           changed". */}
       <Reanimated.View key={step} entering={FadeInRight.duration(240)} style={{ flex: 1 }}>
         {module ? (
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
-            <View style={styles.qHead}>
-              <MIcon abbr={module.icon} color={module.color} textColor={module.textColor} size={46} r={14} fontSize={17} />
-              <View style={{ flex: 1, gap: 2 }}>
-                <Txt style={styles.eyebrow}>{`TOPIC ${step + 1} OF ${modules.length}`}</Txt>
-                <Txt style={styles.qModule}>{module.name}</Txt>
+          // No ScrollView: with the anchor quotes gone this fits any phone, and a flex column
+          // lets the topic card and the scale share the height instead of huddling at the top.
+          <View style={styles.qBody}>
+            <View style={[styles.qCard, { backgroundColor: module.color, borderColor: module.textColor }]}>
+              <MIcon abbr={module.icon} color={colors.white} textColor={module.textColor} size={54} r={16} fontSize={20} />
+              <View style={{ flex: 1, gap: 3 }}>
+                <Txt style={[styles.qTopic, { color: module.textColor }]}>
+                  {`TOPIC ${step + 1} OF ${modules.length}`}
+                </Txt>
+                <Txt style={[styles.qModule, { color: module.textColor }]}>{module.name}</Txt>
               </View>
             </View>
 
-            <Txt variant="h1" style={{ marginTop: 14 }}>How much do you know about this?</Txt>
-            <Txt variant="lead" style={{ marginTop: 4 }}>Rate yourself from 1 to 5.</Txt>
-
-            <ScalePicker value={familiarity[module.id]} onPick={(v) => answer(module.id, v)} />
-
-            <View style={styles.anchors}>
-              <Anchor n="1" text={SURVEY_FAMILIARITY_LABELS[module.id]?.[0] ?? ''} />
-              <Anchor n="5" text={SURVEY_FAMILIARITY_LABELS[module.id]?.[1] ?? ''} />
+            <View style={{ flex: 1, justifyContent: 'center' }}>
+              <Txt variant="h1" style={{ textAlign: 'center' }}>How much do you know about this?</Txt>
+              <ScalePicker value={familiarity[module.id]} onPick={(v) => answer(module.id, v)} />
             </View>
-          </ScrollView>
+          </View>
         ) : step === GOALS_STEP ? (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
             <View style={{ gap: 6 }}>
               <Txt style={styles.eyebrow}>ALMOST THERE</Txt>
               <Txt variant="h1">What are you hoping to get out of Stacked?</Txt>
-              <Txt variant="lead">Pick as many as you like — it helps us choose where to start.</Txt>
+              <Txt variant="lead">Pick as many as you like. It helps us choose where to start.</Txt>
             </View>
 
             <View style={{ gap: 10, marginTop: 18 }}>
@@ -200,7 +184,7 @@ export default function Survey() {
                 registered. */}
             <Reanimated.View key={activeTrack.id} entering={ZoomIn.springify().damping(15).stiffness(160)}>
               <LinearGradient
-                colors={[colors.pink, colors.pinkDark]}
+                colors={[colors.greenBrand, colors.greenDark]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.hero}
@@ -294,21 +278,22 @@ export default function Survey() {
           sibling split the screen 50/50 with it: the questions were crushed into the top half
           and the bottom half was a blank cream slab, with the whole recommended-track step
           scrolling inside a viewport half the height it should have been. */}
+      {/* One button, full width, on every step. The old Back sat next to it duplicating the
+          chevron already in the top bar, and spent a third of the row saying so. */}
       <View style={styles.actions}>
-        {module ? (
-          // No "Next" on a question screen — answering IS next. This is the deliberate way
-          // past a topic you can't place, and it records nothing rather than a middling guess.
-          <Button label="Not sure yet" variant="ghost" onPress={next} style={{ flex: 1 }} />
-        ) : (
-          <>
-            <Button label="Back" variant="ghost" onPress={back} style={{ paddingHorizontal: 22 }} />
-            <Button
-              label={step === GOALS_STEP ? 'See my starting track →' : isRetake ? 'Save my track' : 'Start learning'}
-              onPress={next}
-              style={{ flex: 1 }}
-            />
-          </>
-        )}
+        <Button
+          label={
+            module ? 'Next'
+              : step === GOALS_STEP ? 'See my starting track'
+                : isRetake ? 'Save my track' : 'Start learning'
+          }
+          // White until a number is picked, green once one is. The colour IS the receipt for
+          // the tap, which is what the auto-advance used to be; unanswered, the button simply
+          // doesn't go anywhere rather than looking broken.
+          variant={module && familiarity[module.id] === undefined ? 'ghost' : 'green'}
+          onPress={() => { if (!module || familiarity[module.id] !== undefined) next(); }}
+          style={{ flex: 1 }}
+        />
       </View>
     </Screen>
   );
@@ -339,7 +324,7 @@ function ScalePicker({ value, onPick }: { value?: number; onPick: (n: number) =>
               key={s.value}
               onPress={() => onPick(s.value)}
               accessibilityRole="button"
-              accessibilityLabel={`${s.value} — ${s.label}`}
+              accessibilityLabel={`${s.value}, ${s.label}`}
               accessibilityState={{ selected: on }}
               hitSlop={6}
               style={({ pressed }) => [pressed && { transform: [{ scale: 0.92 }] }]}
@@ -372,27 +357,24 @@ function ScalePicker({ value, onPick }: { value?: number; onPick: (n: number) =>
   );
 }
 
-/** One end of the 1-5 scale, in the module's own words. */
-function Anchor({ n, text }: { n: string; text: string }) {
-  if (!text) return null;
-  return (
-    <Reanimated.View entering={FadeIn.duration(300)} style={styles.anchorRow}>
-      <Txt style={styles.anchorNum}>{n}</Txt>
-      <Txt style={styles.anchorTxt}>{text}</Txt>
-    </Reanimated.View>
-  );
-}
-
 const styles = StyleSheet.create({
   topbar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 2 },
   step: { fontFamily: font.bold, fontSize: 12, color: colors.green },
   body: { paddingTop: 10, paddingBottom: 18 },
-  eyebrow: { fontFamily: font.extra, fontSize: 12, color: colors.pinkDark, letterSpacing: 0.9 },
+  eyebrow: { fontFamily: font.extra, fontSize: 12, color: colors.greenDark, letterSpacing: 0.9 },
   actions: { flexDirection: 'row', gap: 10, marginBottom: 12 },
   modName: { fontFamily: font.extra, fontSize: 13.5, color: colors.ink },
 
-  qHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  qModule: { fontFamily: font.display, fontSize: 20, color: colors.ink },
+  // A column rather than a scroll: the topic card sits at the top and the scale takes the
+  // whole rest of the screen, which is space the anchor quotes used to spend saying in two
+  // long sentences what the numbers already say.
+  qBody: { flex: 1, paddingTop: 14, paddingBottom: 8 },
+  qCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    borderRadius: radius.card, borderWidth: 2, padding: 14,
+  },
+  qTopic: { fontFamily: font.extra, fontSize: 11, letterSpacing: 0.9, opacity: 0.75 },
+  qModule: { fontFamily: font.display, fontSize: 22 },
 
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   scaleRail: {
@@ -432,7 +414,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     borderRadius: radius.card,
     padding: 20,
-    shadowColor: colors.pinkDark,
+    shadowColor: colors.greenDark,
     shadowOpacity: 0.28,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 8 },

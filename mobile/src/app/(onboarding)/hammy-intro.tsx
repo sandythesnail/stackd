@@ -19,29 +19,25 @@ import { REACTION_FACES, MOOD_FACES, type FaceOverlay } from '@/hammyFaces';
  * tour auto-starts for first-time users (see home.tsx). Ported from the
  * website's hammy-intro.js.
  *
- * The coin spill IS wired up now (it wasn't — this comment used to say so): expo-audio plays
- * assets/sfx/coins.wav on the pop, synthesised by scripts/make-coin-sfx.js rather than
- * licensed, so it can be re-tuned and re-generated. See COIN_SFX below for what happens when
- * it can't play, which is "nothing, silently" — the intro is not allowed to depend on it. */
+ * Sound: expo-audio plays assets/sfx/levelup.wav on the pop, synthesised by
+ * scripts/make-sfx.js rather than licensed, so it can be re-tuned and re-generated. See
+ * LEVEL_UP_SFX below for what happens when it can't play, which is "nothing, silently" — the
+ * intro is not allowed to depend on it. */
 
 const GREEN_DARK = '#4A6844';
 const GREEN = '#6B8F65';
 
-/** Coins spilling out of the bank, played on the pop. Deliberately quiet-ish: it lands under
- * a full-screen flash and a particle burst, and the point is to make the break feel physical,
- * not to be the loudest thing that has happened since the app opened.
+/** The bank bursting, played on the pop — an XP level-up jingle rather than a spill of loose
+ * change. The coin version was what physically happens and it sounded like dropped money,
+ * which is to say like LOSING money; a rising major arpeggio says the opposite about the same
+ * event. See scripts/make-sfx.js.
  *
  * Silence is an acceptable outcome everywhere. On iOS the hardware mute switch stops it (we
  * don't override the audio session to talk over a silenced phone for a decoration), a browser
  * may refuse to play without a gesture, and every call below is wrapped so a failure can
  * never take the animation down with it. */
-const COIN_SFX = require('../../../assets/sfx/coins.wav');
-const COIN_VOLUME = 0.55;
-
-/** Hammy, once per line he says. Quieter than the coins — it punctuates a line rather than
- * announcing one, and three of them in a row at full volume would wear out fast. */
-const OINK_SFX = require('../../../assets/sfx/oink.wav');
-const OINK_VOLUME = 0.4;
+const LEVEL_UP_SFX = require('../../../assets/sfx/levelup.wav');
+const LEVEL_UP_VOLUME = 0.55;
 
 /* Face per dialogue line — same entries the rest of the app uses (hammyFaces). */
 const SCRIPT: { text: string; face: FaceOverlay; reply: string | null }[] = [
@@ -211,12 +207,11 @@ export default function HammyIntro() {
   const hopX = useRef(new Animated.Value(0)).current;
   const hopY = useRef(new Animated.Value(0)).current;
 
-  const coins = useAudioPlayer(COIN_SFX);
-  const oink = useAudioPlayer(OINK_SFX);
+  const levelUp = useAudioPlayer(LEVEL_UP_SFX);
 
   /** Fire-and-forget. Every path is wrapped because audio is decoration here: a refused
    * autoplay, a silenced phone or a missing session must never interrupt the animation. */
-  const playSfx = (player: typeof coins, volume: number) => {
+  const playSfx = (player: typeof levelUp, volume: number) => {
     try {
       player.volume = volume;
       player.seekTo(0).catch(() => {});
@@ -267,9 +262,6 @@ export default function HammyIntro() {
     setBubbleText(SCRIPT[idx].text);
     setReply(null);
     playWave();
-    // Hammy says something, Hammy oinks. Fires with the bubble and the wave, so the sound,
-    // the speech and the movement all land on the same beat.
-    playSfx(oink, OINK_VOLUME);
     if (SCRIPT[idx].reply !== null) {
       at(1300, () => setReply(SCRIPT[idx].reply));
     } else {
@@ -310,7 +302,7 @@ export default function HammyIntro() {
 
     // 1.35 POP — halves fly apart, flash, ring, shake, burst
     at(1350, () => {
-      playSfx(coins, COIN_VOLUME);   // on the same frame the bank gives way
+      playSfx(levelUp, LEVEL_UP_VOLUME);   // on the same frame the bank gives way
       crackOp.setValue(0);
       Animated.timing(popP, { toValue: 1, duration: 600, easing: Easing.bezier(0.3, 0.6, 0.6, 1), useNativeDriver: true }).start();
       Animated.timing(ringP, { toValue: 1, duration: 650, easing: Easing.bezier(0.1, 0.7, 0.3, 1), useNativeDriver: true }).start();

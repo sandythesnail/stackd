@@ -193,20 +193,38 @@ export const colors = {
  * are soft pastels and the few forced deeper land as jewel tones. Nothing sits in the middle.
  * risk is #F6BDA0 now, a light peach.
  *
- * Measured on this set: closest pair 0.0482 (loans/psychology, deuteranopia), every chip
+ * ROYGBIV order, finally, with two things worth knowing about the ends of the rainbow.
+ *
+ * There is no Y and there cannot be one. rewardBadgeBg is #FFEDB0, a pale yellow that means
+ * "come collect" everywhere in the app; every pastel yellow measured lands 0.019-0.065 from
+ * it against the 0.09 floor, so a yellow module would impersonate the collect-me affordance
+ * on the Modules tab. Freeing the slot means recolouring the reward badge, not the palette.
+ *
+ * And earning, the yellow-GREEN at hue 120, is squeezed from both sides: dark it goes olive
+ * (#ADC268, the terracotta problem in another hue), pale it goes invisible, because yellow-
+ * green carries more luminance than any hue at the same perceptual lightness and hits the
+ * surface-contrast floor early. A first fix at L 0.845 produced a pretty sage that failed at
+ * 1.34 against colors.track — legible as a chip, useless as a progress fill. The window is
+ * about 0.80-0.83 and PALE_ONLY_MIN_L sits inside it.
+ *
+ * The blues went from four to three (loans is jade again). Cyan through indigo is where hue
+ * degrees buy the least perceived difference, so four chips there read as four blues however
+ * far apart the numbers say they are.
+ *
+ * Measured on this set: closest pair 0.0480 (credit/investing, deuteranopia), every chip
  * clears 1.35:1 against the palest surface it is drawn on and 4.6:1 against its own glyph. */
 export const moduleColor: Record<string, string> = {
-  earning: '#80C272',
-  spending: '#EC8AB6',
-  saving: '#4DDBF9',
-  investing: '#BCAAE0',
-  credit: '#71BFFF',
-  risk: '#F6BDA0',
-  loans: '#68D3CD',
-  taxes: '#8CA2FA',
-  psychology: '#E7BCE7',
-  career: '#86DCB7',
-  scams: '#FF979A',
+  earning: '#C0D28C',
+  spending: '#F09BC3',
+  saving: '#86D8DC',
+  investing: '#C7A9FF',
+  credit: '#96C1E0',
+  risk: '#F99F76',
+  loans: '#2FC6A7',
+  taxes: '#BDC9FF',
+  psychology: '#D48DD8',
+  career: '#ACD5B3',
+  scams: '#F89B9B',
 };
 
 /** Darker foreground paired with each `moduleColor` background — the module icon's glyph
@@ -228,17 +246,17 @@ export const moduleColor: Record<string, string> = {
  * revision fixed one foreground lightness for the whole set; the single chip that had been
  * deepened came out at 4.17:1, below AA, and nothing flagged it. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#134F00',
-  spending: '#6F1B48',
-  saving: '#005B6B',
-  investing: '#533380',
-  credit: '#014B79',
-  risk: '#8B3C00',
-  loans: '#025854',
-  taxes: '#28337D',
-  psychology: '#7A3B7D',
-  career: '#016044',
-  scams: '#7F232E',
+  earning: '#4C5A01',
+  spending: '#772552',
+  saving: '#035E63',
+  investing: '#573784',
+  credit: '#004E76',
+  risk: '#792F00',
+  loans: '#024B3E',
+  taxes: '#444D9B',
+  psychology: '#5D2062',
+  career: '#00622A',
+  scams: '#7F242B',
 };
 
 export const font = {

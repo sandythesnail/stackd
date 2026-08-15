@@ -218,21 +218,21 @@ function DayTile({
         <View style={styles.tileFace}>
           <Reanimated.View style={[styles.tileLayer, coverStyle]}>
             {/* Today's present is the one that opens, in its own day's colour. */}
-            <Gift size={22} {...GIFT_COLORS[(day.day - 1) % GIFT_COLORS.length]} />
+            <Gift size={34} {...GIFT_COLORS[(day.day - 1) % GIFT_COLORS.length]} />
           </Reanimated.View>
           <Reanimated.View style={[styles.tileLayer, prizeStyle]}>
-            <Coin size={16} />
+            {/* The only number on the calendar, and it arrives as the reward for claiming. */}
+            <Coin size={17} />
             <Txt style={styles.tileCoins}>{day.coins}</Txt>
           </Reanimated.View>
         </View>
       ) : (
         <View style={styles.tileFace}>
           <View style={styles.tileLayer}>
-            {/* A present, not a coin. The number beside it already says how many coins, so a
-                coin glyph on all seven tiles was saying it twice and telling you nothing about
-                WHICH day you were looking at. One colour per day does. */}
-            <Gift size={17} {...(state === 'missed' ? GIFT_MISSED : GIFT_COLORS[(day.day - 1) % GIFT_COLORS.length])} />
-            <Txt style={[styles.tileCoins, state === 'missed' && styles.tileCoinsMissed]}>{day.coins}</Txt>
+            {/* Present only, no amount. Printing every day's payout up front turned a week of
+                presents back into a price list, and it spoiled the one tile that is supposed
+                to be worth opening. What you get is revealed when you claim it. */}
+            <Gift size={30} {...(state === 'missed' ? GIFT_MISSED : GIFT_COLORS[(day.day - 1) % GIFT_COLORS.length])} />
           </View>
         </View>
       )}

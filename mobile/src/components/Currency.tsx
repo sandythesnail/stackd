@@ -56,25 +56,29 @@ export function Gift({
 }
 
 /**
- * One present per day of the reward week, in rainbow order.
+ * One present per day of the reward week.
  *
  * Every tile used to carry the same coin glyph next to its own number, which made the glyph
- * pure decoration — the number was already saying everything, seven times over, in identical
- * yellow. A different present per day gives the row something to read at a glance (where am I
- * in the week?) that the numbers alone don't, and makes the calendar look like a week of
- * presents rather than a receipt.
+ * pure decoration — the number said everything, seven times over, in identical yellow. Seven
+ * different presents give the row something to read at a glance (where am I in the week?) and
+ * make it look like a week of presents rather than a receipt.
  *
- * Pastel boxes with a deeper lid of the same hue, so they stay bright at 16px without going
- * neon next to the coin amount they sit beside.
+ * Deliberately NOT in rainbow order. Adjacent days want to look as unlike each other as
+ * possible, and a spectrum puts its most similar neighbours side by side — red beside orange,
+ * blue beside indigo — which is the opposite of what a row of seven small boxes needs. Hues
+ * jump instead: red, blue, purple, green, yellow, orange, pink.
+ *
+ * Pastel boxes with a deeper lid of the same hue, so they stay bright at small sizes without
+ * going neon.
  */
 export const GIFT_COLORS = [
   { box: '#FFB3B8', lid: '#FF8F98', line: '#8A2A38' }, // red
-  { box: '#FFCBA1', lid: '#FFAE74', line: '#8A4A1A' }, // orange
-  { box: '#FFE7A0', lid: '#FFD764', line: '#8A6B12' }, // yellow
-  { box: '#B6E5AE', lid: '#8FD684', line: '#2E6B27' }, // green
   { box: '#A9DCF5', lid: '#7CC7EE', line: '#1B5877' }, // blue
-  { box: '#B7BDF2', lid: '#949CE6', line: '#333A8A' }, // indigo
-  { box: '#DCB6EE', lid: '#C48FE2', line: '#5C2A75' }, // violet
+  { box: '#DCB6EE', lid: '#C48FE2', line: '#5C2A75' }, // purple
+  { box: '#B6E5AE', lid: '#8FD684', line: '#2E6B27' }, // green
+  { box: '#FFE7A0', lid: '#FFD764', line: '#8A6B12' }, // yellow
+  { box: '#FFCBA1', lid: '#FFAE74', line: '#8A4A1A' }, // orange
+  { box: '#FFC2DE', lid: '#FF9CC6', line: '#8A2A5C' }, // pink, and day 7 is the big one
 ] as const;
 
 /** The same present with the colour drained out, for a day that was missed. */
