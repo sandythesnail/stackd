@@ -62,6 +62,19 @@ export default function Settings() {
               onPress={debugSimulateNewDay}
             />
           ) : null}
+          {/* Navigation only — it opens the assessment without pretending the curriculum was
+              finished, so it grants nothing and can't touch the economy even if the __DEV__
+              gate ever failed. That distinction is why this one is here at all: see the note
+              above about the two GRANT-style debug rows that shipped ungated and had to go.
+              The real entry point is the card on the Modules tab, which needs all eleven. */}
+          {__DEV__ ? (
+            <Row
+              icon="check-square"
+              title="Open final assessment (dev)"
+              sub={state.postTest ? `Last score: ${state.postTest.score} / ${state.postTest.total}` : 'Not taken yet'}
+              onPress={() => router.push('/learn/post-test')}
+            />
+          ) : null}
           {authEnabled ? (
             <ClerkSignOutRow />
           ) : (
