@@ -1,56 +1,48 @@
 import { useMemo, useRef, useState } from 'react';
 import { View, ScrollView, StyleSheet, TextInput } from 'react-native';
-import Reanimated, { FadeIn, FadeInRight } from 'react-native-reanimated';
+import Reanimated, { FadeIn } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { Screen, Txt, Button, Option, ProgressBar, IconButton, Hammy, Card } from '@/components';
 import { colors, font, radius, selectableInput } from '@/theme';
 import { modules } from '@/data';
-import { moduleContentById } from '@/content';
+import { POST_TEST_QUESTIONS, type PostTestQuestion } from '@/postTest';
 import { useStore } from '@/store';
 import { RequireAuth } from '@/lib/RequireAuth';
 import { authEnabled } from '@/lib/env';
 import { makeSupabase } from '@/lib/supabase';
-import { MOOD_FACES, REACTION_FACES } from '@/hammyFaces';
+import { MOOD_FACES } from '@/hammyFaces';
 
 /**
  * The final assessment, unlocked once every module is mastered.
  *
- * WHY IT IS A SAMPLE, not the whole bank: there are 132 questions across the eleven modules,
- * and a 132-question exam is not a measure of what someone learned, it is a measure of who
- * will sit still for 132 questions. Two per module gives 22 — long enough to mean something,
- * short enough to finish — and every module is represented exactly equally, so the score says
- * something about the curriculum rather than about which modules happened to get sampled.
+ * TWENTY-TWO QUESTIONS, two per module, from the assessment's own bank (@/postTest) rather
+ * than sampled from the 132 lesson questions. Those are written to teach, which makes the
+ * correct option the longest one far too often — you can score well on that pattern without
+ * knowing the material, and four long options don't fit a phone without scrolling.
  *
- * The questions are the real ones from the lessons, which the student has seen before. That
- * is deliberate for a post-test: it measures retention of taught material, not the ability to
- * handle novel questions, and it is the same trade the pre-course survey makes at the other
- * end. The result overwrites on a retake (see AppState.postTest) precisely because a second
- * sitting of questions you have now seen twice is not comparable to the first.
+ * The material is all taught, which is the point of a post-test: it measures what the course
+ * left behind. The result overwrites on a retake (see AppState.postTest), because a second
+ * sitting of questions now seen twice is not comparable to the first.
  *
  * Feedback is collected on the same screen rather than as a separate prompt somewhere else:
- * the moment someone finishes the entire course is the one moment they have the whole thing
- * in mind, and it is the last moment the app can ask them anything at all.
+ * finishing the course is the one moment someone has all of it in mind, and the last moment
+ * the app can ask them anything at all.
  */
 
-const QUESTIONS_PER_MODULE = 2;
+type Drawn = PostTestQuestion & { moduleName: string };
 
-type Drawn = { moduleId: string; moduleName: string; q: string; opts: string[]; correct: number; exp: string };
-
-/** Two questions per module, evenly spaced through each module's own bank so the draw isn't
- * always the first two (which are the easiest, being the opening lesson's). */
+/** The assessment's own bank (see @/postTest), in module order, with each question's module
+ * name attached for the label above it.
+ *
+ * It no longer samples the lesson questions. Those are written to teach — the correct option
+ * carries the explanation, which routinely makes it the longest of the four — so a student
+ * could score well by picking the long one every time without knowing any of it. */
 function drawQuestions(): Drawn[] {
-  const out: Drawn[] = [];
-  for (const m of modules) {
-    const bank = moduleContentById(m.id)?.questions ?? [];
-    if (!bank.length) continue;
-    const stride = Math.max(1, Math.floor(bank.length / QUESTIONS_PER_MODULE));
-    for (let i = 0; i < QUESTIONS_PER_MODULE; i++) {
-      const q = bank[Math.min(bank.length - 1, i * stride)];
-      if (q) out.push({ moduleId: m.id, moduleName: m.name, q: q.q, opts: q.opts, correct: q.correct, exp: q.exp });
-    }
-  }
-  return out;
+  return POST_TEST_QUESTIONS.map((q) => ({
+    ...q,
+    moduleName: modules.find((m) => m.id === q.moduleId)?.name ?? '',
+  }));
 }
 
 export default function PostTestScreen() {
@@ -110,8 +102,18 @@ function PostTest() {
         <Txt style={styles.step}>{idx + 1} / {questions.length}</Txt>
       </View>
 
-      <Reanimated.View key={idx} entering={FadeInRight.duration(220)} style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
+      {/* The ScrollView is the outer element and it does NOT slide.
+          A Reanimated wrapper with FadeInRight used to sit here, holding the scroll view
+          inside it: the incoming question translated in from the right, so mid-animation the
+          content sat partly outside its own container and the question was clipped down one
+          side. Cross-fading in place has the same "this is a new question" effect and never
+          moves anything horizontally. */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.body}
+        style={{ flex: 1 }}
+      >
+        <Reanimated.View key={idx} entering={FadeIn.duration(200)}>
           <Txt style={styles.eyebrow}>{q.moduleName.toUpperCase()}</Txt>
           <Txt variant="h1" style={{ marginTop: 6 }}>{q.q}</Txt>
 
@@ -143,8 +145,8 @@ function PostTest() {
               <Txt style={styles.expTxt}>{q.exp}</Txt>
             </Reanimated.View>
           ) : null}
-        </ScrollView>
-      </Reanimated.View>
+        </Reanimated.View>
+      </ScrollView>
 
       <View style={styles.actions}>
         <Button
@@ -159,21 +161,20 @@ function PostTest() {
 }
 
 function PostTestResult({ score, total, onDone }: { score: number; total: number; onDone: () => void }) {
-  const pct = total ? Math.round((score / total) * 100) : 0;
-  // Three bands, and the lowest one is still encouraging: someone who finished every lesson
-  // in the app has already done the hard part, and the number is a measure of the course as
-  // much as of them.
-  const face = pct >= 80 ? MOOD_FACES.star : pct >= 55 ? REACTION_FACES.happy : REACTION_FACES.gentle;
-  const verdict = pct >= 80 ? 'You know this stuff.' : pct >= 55 ? 'Solid work.' : 'Worth another pass.';
-
+  // The same face and the same words at every score, on purpose. Banding the reaction meant
+  // the app's last word to someone who had just finished all eleven modules could be a
+  // consolation face and "worth another pass" — a verdict on them, delivered at the moment
+  // they finished. The score is still shown; it just isn't graded back at them.
   return (
     <Screen style={{ paddingHorizontal: 22 }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
         <View style={{ alignItems: 'center', gap: 12, marginTop: 10 }}>
-          <Hammy size={120} bob={false} face={face} />
+          <Hammy size={120} bob={false} face={MOOD_FACES.satisfied} />
           <Txt style={styles.eyebrow}>FINAL ASSESSMENT</Txt>
           <Txt variant="disp">{score} / {total}</Txt>
-          <Txt variant="lead" style={{ textAlign: 'center' }}>{verdict}</Txt>
+          <Txt variant="lead" style={{ textAlign: 'center' }}>
+            Thank you so much for completing Stacked!
+          </Txt>
         </View>
 
         <PostTestFeedback score={score} total={total} />
@@ -225,7 +226,7 @@ function ClerkPostTestFeedback({ score, total }: { score: number; total: number 
         You&apos;ve finished everything. Anything that confused you, dragged, or was worth the time?
       </Txt>
       {status === 'sent' ? (
-        <Txt style={styles.fbSent}>Sent. Thank you, this is genuinely read.</Txt>
+        <Txt style={styles.fbSent}>Sent. Thank you so much for your feedback!</Txt>
       ) : (
         <>
           <TextInput
