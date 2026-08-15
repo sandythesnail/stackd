@@ -15813,7 +15813,7 @@ const SHOP_ITEMS = [
   {
     id: 'clock_grandfather', name: 'Grandfather Clock', category: 'room', slot: 'lamp', price: 220,
     viewBox: '0 0 70 110',
-    desc: 'The priciest piece on the farm — time really is money.',
+    desc: 'The priciest piece on the farm, time really is money.',
     svg: `<rect x="10" y="98" width="50" height="8" rx="2" fill="#5A3D22"/>
           <rect x="14" y="24" width="42" height="76" rx="2" fill="#6B4A2E"/>
           <path d="M14,27 Q35,4 56,27 Z" fill="#6B4A2E"/>
@@ -19209,7 +19209,7 @@ function renderProgressPage() {
             <div class="pg-bar-track">
               <div class="pg-bar-fill${isPink ? ' pg-bar-pink' : ''}" style="width:${scorePct}%"></div>
             </div>
-            <span class="pg-bar-val">${comp ? `${comp.score}/${comp.total || 5}` : '—'}</span>
+            <span class="pg-bar-val">${comp ? `${comp.score}/${comp.total || 5}` : '-'}</span>
           </div>`;
         }).join('')}
       </div>
@@ -21286,8 +21286,8 @@ const HAMMY_CORRECT_MSGS = ['Nice one! 🎉'];
 // point to — it's just a retry — so it gets its own, context-appropriate phrasing.
 // Standardized alongside HAMMY_CORRECT_MSGS above. "Close!" in particular was being shown
 // on answers that weren't close at all — the copy claimed something the app hadn't measured.
-const HAMMY_GENTLE_MSGS = ["Not quite — here's why:"];
-const HAMMY_TRYAGAIN_MSGS = ["Not quite — check the definitions above if you're stuck."];
+const HAMMY_GENTLE_MSGS = ["Not quite, here's why:"];
+const HAMMY_TRYAGAIN_MSGS = ["Not quite, check the definitions above if you're stuck."];
 const HAMMY_OUTCOME_GENTLE_MSGS = ["Hmm, that one stings a bit.", "That'll cost her some points.", "Not the best move there."];
 
 // Shared emotional-feedback moment, used after EVERY activity across the whole quest (knowledge
@@ -21802,7 +21802,7 @@ function renderMicrosimChapter(chapter, mod, onDone) {
     const outcome = !tier.ok ? 'bad' : isBestTier ? 'ok' : 'partial';
     clearQuestContinue();
     if (outcome === 'partial') {
-      showHammyMessage("That works — here's how to make it work harder.", true);
+      showHammyMessage("That works, here's how to make it work harder.", true);
     } else {
       showHammyReaction(mod, tier.ok);
     }
@@ -21819,7 +21819,7 @@ function renderMicrosimChapter(chapter, mod, onDone) {
       </div>
       <div class="microsim-leftover-row"><span>Left over</span><span class="microsim-leftover ${leftover < 0 ? 'negative' : ''}">$${leftover}</span></div>
       <div class="microsim-result ${outcome}">
-        <p class="microsim-result-label">${outcome === 'ok' ? '✓ Nailed it' : outcome === 'partial' ? 'That works — but it can work harder' : 'That budget doesn\'t balance'}</p>
+        <p class="microsim-result-label">${outcome === 'ok' ? '✓ Nailed it' : outcome === 'partial' ? 'That works, but it can work harder' : 'That budget doesn\'t balance'}</p>
         <p>${tier.text}</p>
         ${outcome === 'bad' ? '<button class="btn-secondary" id="microsim-retry-btn">Try Again</button>' : ''}
       </div>`;

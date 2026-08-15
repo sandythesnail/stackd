@@ -374,7 +374,7 @@ function PathBody() {
               </View>
             )) : (
               <T weight="body" size={13} color={colors.muted2}>
-                No badges yet — finish a lesson to earn your first one!
+                No badges yet. Finish a lesson to earn your first one!
               </T>
             )}
           </View>

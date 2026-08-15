@@ -108,9 +108,23 @@ function sim(hex, type) {
  * is still pink, credit still blue) but "four greens" is now three greens and a blue-teal. If
  * that identity matters more than the pastels, put the old hues back - and expect the palette
  * to go vivid again, because it must. */
+/* ROYGBIV order, with the blue band deliberately thinned.
+ *
+ * The previous set put loans 190, saving 215, credit 245 and taxes 272 inside one 82-degree
+ * stretch, and cyan-through-indigo is the region where hue degrees buy the LEAST perceived
+ * difference — so four chips there read as "four blues" however far apart the numbers say
+ * they are. Three now (saving 200 cyan, credit 240 blue, taxes 275 indigo) with 40 and 35
+ * degrees between them, and loans moved back to 175 where it is a jade green.
+ *
+ * There is no Y in this ROYGBIV and there cannot be. Yellow belongs to the reward tokens:
+ * rewardBadgeBg is #FFEDB0, a pale yellow, and it means "come collect". Every pastel yellow
+ * tested lands 0.019-0.065 from it, against the 0.09 floor — a yellow module would look like
+ * the collect-me affordance on the Modules tab. The gap between risk (45) and earning (120)
+ * is that reservation. Freeing it up means giving the reward badge a different colour, which
+ * is a bigger change than a palette. */
 const HUE = {
-  scams: 18, risk: 48, earning: 140, career: 165, loans: 190, saving: 215,
-  credit: 245, taxes: 272, investing: 300, psychology: 326, spending: 352,
+  scams: 20, risk: 45, earning: 120, career: 150, loans: 175, saving: 200,
+  credit: 240, taxes: 275, investing: 300, psychology: 325, spending: 350,
 };
 const KEYS = Object.keys(HUE);
 const ORDER = ['earning', 'spending', 'saving', 'investing', 'credit', 'risk',
@@ -118,6 +132,22 @@ const ORDER = ['earning', 'spending', 'saving', 'investing', 'credit', 'risk',
 const RESERVED = { reward: '#F0C22E', rewardBg: '#FFF9E6', rewardBadgeBg: '#FFEDB0' };
 const SURFACES = { white: '#FFFFFF', cream: '#FAF6ED', track: '#E7ECE3' };
 const WARM = new Set(['scams', 'risk']);
+/* Hues whose failure mode is DARKNESS rather than dullness, so they need a lightness floor
+ * where the warm hues need a chroma floor.
+ *
+ * earning sits at 120, yellow-green, and yellow-green stops being lime and becomes OLIVE the
+ * moment it stops being pale — #ADC268, which is what the solver produced when nothing held
+ * it up, is the same complaint as the terracotta in a different hue. (There is no true yellow
+ * in the set — see HUE.)
+ *
+ * 0.818, and the exact number matters, because this hue is squeezed from BOTH sides. Yellow-
+ * green carries more luminance than any other hue at the same perceptual lightness, so it hits
+ * the MIN_SURFACE wall early: measured against colors.track (#E7ECE3, the progress-bar
+ * groove), L 0.830 gives 1.386, L 0.840 gives 1.332 and the floor is 1.35. A first attempt at
+ * 0.845 duly produced #C6D0AC, a pretty sage that was ILLEGIBLE as a progress fill. So the
+ * window between olive and invisible is roughly 0.80-0.83, and this sits inside it. */
+const PALE_ONLY = new Set(['earning']);
+const PALE_ONLY_MIN_L = 0.818;
 const VIEWS = ['norm', 'deut', 'prot'];
 
 const MIN_CONTRAST = 4.6;     // chip glyph, 16px so not large text
@@ -231,6 +261,7 @@ function score(spec) {
     // risk sliding into brown, and brown is a DARK dull orange — at L 0.82+ a low-chroma warm
     // hue reads as peach, not mud, so the old floor now only forces those two to shout.
     if (WARM.has(k) && spec[k].C < 0.055) pen += (0.055 - spec[k].C) * 10;
+    if (PALE_ONLY.has(k) && spec[k].L < PALE_ONLY_MIN_L) pen += (PALE_ONLY_MIN_L - spec[k].L) * 12;
   }
   return s - pen;
 }
