@@ -158,27 +158,34 @@ export const moduleColor: Record<string, string> = {
   scams: '#2B7350',
 };
 
-/** The number drawn ON each `moduleColor` chip, solved per module for 4.6:1 against it.
+/** The number drawn ON each chip: a tint of that chip's OWN hue, light where the chip is dark
+ * enough to allow it and deep where it isn't.
  *
- * Not "a darker version of the background" any more, because the ramp's first three chips are
- * genuinely dark (L 0.46 and below) and no darker green clears 4.6:1 against them — those get
- * white. The rest keep a deep same-hue green. Every pair lands between 4.61:1 and 4.66:1.
+ * The split is forced, not stylistic. Five of the eleven chips are too light for ANY lighter
+ * colour to be legible on them — white itself reaches only 1.65:1 on #A5DB01 and 1.67:1 on
+ * #F9C000, against the 4.5:1 that text needs — so those five take a deep tint of their hue and
+ * the six darker chips take a pale one. Making every number light would mean darkening those
+ * five chips into olive and brown, which was measured and rejected.
  *
- * Solving rather than pinning is what makes the backgrounds free to move at all. An earlier
- * revision fixed one foreground lightness for the whole set; the single chip that had been
- * deepened came out at 4.17:1, below AA, and nothing flagged it. */
+ * loans (#E20372) is the single plain white in the set, and it has to be: white on that
+ * magenta is 4.68:1, so the entire contrast budget is spent before any pink can be mixed in.
+ * Every other light number carries real colour (#FFD2C7, #F7CDFF, #C7E1FF, #92FFC5).
+ *
+ * Every pair clears 4.6:1. Solved per chip rather than pinned for the set: an earlier revision
+ * fixed one foreground lightness for everything, and the single chip that had been deepened
+ * came out at 4.17:1, below AA, with nothing to flag it. */
 export const moduleColorText: Record<string, string> = {
   earning: '#002D18',
   spending: '#224602',
   saving: '#445B12',
   investing: '#694F00',
   credit: '#5A2E00',
-  risk: '#FFFFFF',
+  risk: '#FFD2C7',
   loans: '#FFFFFF',
-  taxes: '#FFFFFF',
-  psychology: '#FFFFFF',
+  taxes: '#F7CDFF',
+  psychology: '#C7E1FF',
   career: '#00455A',
-  scams: '#FFFFFF',
+  scams: '#92FFC5',
 };
 
 /**
