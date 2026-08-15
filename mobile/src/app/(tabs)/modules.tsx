@@ -154,12 +154,16 @@ export default function Modules() {
                         new player opened this tab to eleven pink "0%" chips — the app's
                         attention colour, on everything, reporting nothing. Untouched modules
                         state their size instead, in a quiet neutral chip. */}
+                    {/* Progress outranks the recommendation. "★ Start here" on a module you
+                        are 40% through is stale advice, and it was also hiding the one number
+                        worth showing: `recommended` came first, so a recommended module never
+                        displayed its percentage at all. */}
                     {status === 'done' ? (
                       <Tag tone="green" style={styles.tag}>✓ Complete</Tag>
-                    ) : recommended ? (
-                      <Tag tone="gold" style={styles.tag}>★ Start here</Tag>
                     ) : done > 0 ? (
                       <Tag tone="pink" style={styles.tag}>{Math.round(pct * 100)}%</Tag>
+                    ) : recommended ? (
+                      <Tag tone="gold" style={styles.tag}>★ Start here</Tag>
                     ) : (
                       <Txt style={styles.lessonCount}>{total} lessons</Txt>
                     )}
@@ -221,7 +225,12 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 12,
   },
-  rowHeadRecommended: { backgroundColor: colors.rewardBg },
+  // Deliberately empty of a fill. This was `backgroundColor: colors.rewardBg`, a pale yellow
+  // wash across the whole header — which put a third band of colour (module chip, yellow head,
+  // pink progress bar) into one small row, and read as a highlight sitting ON the progress bar
+  // rather than behind the title. The row already says "recommended" twice without it: a gold
+  // border around the card (rowRecommended) and the ★ Start here tag.
+  rowHeadRecommended: {},
   rowHeadPressed: { backgroundColor: colors.screen },
   rowHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
   rowTitle: { fontFamily: font.extra, fontSize: 14.5, color: colors.ink },

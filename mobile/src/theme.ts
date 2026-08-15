@@ -123,108 +123,49 @@ export const colors = {
   cream: '#FAF6ED',
 } as const;
 
-/** Module accent colors keyed by module id: a light chip background with a darker, same-hue
- * foreground for the icon glyph/text (see `moduleColorText` below). Used on module icons,
- * the lesson path, and the Progress page's per-module chart, so these eleven values are what
- * "a module has a color" means anywhere in the app.
+/** Module accent colours keyed by module id: a light chip background with a darker, same-hue
+ * foreground for the number on it (see moduleColorText). Used on module icons, the lesson
+ * path, and the Progress page's per-module chart, so these eleven values are what "a module
+ * has a colour" means anywhere in the app.
  *
- * These were ported from the website's `.mod-icon.<color>` pairs, which were pale and
- * desaturated, and three of the eleven weren't really colors at all: taxes was a blue-grey
- * (#E3E7F0), career a grey-lavender (#DCE0FA), and scams a tan-brown (#F5D9C8). Lined up next
- * to each other on the Modules tab, a third of the curriculum looked switched off.
+ * A RAINBOW IN MODULE ORDER, by request: 01 red, 02 orange, 03 yellow, 04 green, 05 blue,
+ * 06 indigo, 07 violet, and 08-11 repeating red/orange/green/blue at a different depth. The
+ * hues are fixed by hand in scripts/solve-module-colors.js; only lightness and chroma are
+ * solved. Re-run it and paste both scales rather than hand-editing a value.
  *
- * The replacements over-corrected: they were mixed by hand in HSL, which meant nothing held
- * them to a common weight. Backgrounds landed anywhere from L 0.78 to L 0.90 with chroma from
- * 0.10 to 0.16 (OKLCH), so some modules shouted and others whispered on the same row.
+ * Four constraints the solver holds, each of which was a real defect first:
  *
- * Both scales are solved now rather than mixed, by `scripts/solve-module-colors.js`. Hues are
- * chosen by hand; the solver anneals lightness and chroma to maximise the SMALLEST pairwise
- * distance in the set, which is the number that decides whether two modules look alike. Run it
- * to regenerate, and paste both scales — the values below are its output, not hand-edits.
+ *   - Colour blindness. Every pair is scored under deuteranope and protanope simulation
+ *     (Vienot 1999) as well as normal vision, and must stay 0.045 apart in all three. This is
+ *     the constraint that keeps biting: dichromacy discards hue and keeps LIGHTNESS, so the
+ *     first hand-built version of this rainbow, with the four repeats all set to "same hue,
+ *     lighter", put taxes and career 0.0046 apart for a green-blind student. The repeats have
+ *     to differ in depth from each other, not only from the hue they repeat.
+ *   - Visibility as a bare shape. A module colour is a hero border and a progress fill over
+ *     colors.track, not only a backdrop for a glyph, so each is measured against white, cream
+ *     AND track at 1.35:1. This is what caps yellow and yellow-green, which carry more
+ *     luminance than any other hue at the same perceptual lightness.
+ *   - Glyph contrast at 4.6:1, since the number on the chip is 16px and so not large text.
+ *   - Reserved tokens at 0.09, so a chip can't be mistaken for colors.reward, the app-wide
+ *     "come collect" gold. Module 03 is EXEMPT from this one and is the only exception in the
+ *     set: yellow was asked for explicitly and no yellow exists that clears both reward
+ *     (#F0C22E) and rewardBadgeBg (#FFEDB0). See RESERVED_EXEMPT in the solver for what that
+ *     costs and how to undo it.
  *
- * Four constraints it solves against, each of which was a real defect first:
- *
- *   - Reserved tokens. `colors.reward` (#F0C22E) means "come collect / recommended" app-wide,
- *     and the Modules tab draws the recommended row with a reward border, a rewardBg head and
- *     a gold tag. A yellow Loans chip once sat 0.0485 from it — inside the set's own tolerance
- *     — so a module mimicked the "start here" affordance. Nothing yellow can be safe here:
- *     reward, coin (#F3B33C) and flameLight (#FFB03A) occupy hue 72-94, and chartreuse starts
- *     at 110, leaving no window. So there is no yellow module, and the solver scores distance
- *     to those tokens, not just module-to-module.
- *   - Color blindness. Hues that separate cleanly for normal vision collapse under dichromacy:
- *     an earlier revision put investing and taxes 0.0031 apart under protanopia — the same
- *     color. Every pair is now scored under deuteranope and protanope simulation (Viénot 1999)
- *     as well as normal vision, and lightness spread is what pulls them apart, since dichromacy
- *     preserves lightness.
- *   - Visibility as a bare shape. These are not always behind a glyph: `learn/module/[id].tsx`
- *     uses `mod.color` as a hero border and a progress fill over `colors.track`, and the
- *     Progress chart fills columns with it. So each is scored against white, cream AND track,
- *     not just against its own foreground.
- *   - Brown and chartreuse. Both are failure modes of a hue, not hues: brown is orange gone
- *     dark and dull, chartreuse is yellow-green gone saturated. The 110-135 band is left empty
- *     and the warm hues carry chroma floors.
- *
- * PASTEL, by request, and getting there took changing the hues rather than the palette.
- *
- * The previous set crowded the green end (career 168, loans 178, saving 192 — ten degrees
- * between two of them) and paid for it out of lightness, because the only way to separate
- * near-identical hues, especially under dichromacy, is to make one deep and one pale. That
- * spend is exactly the budget pastel needs. Asking the old hues to go pale failed every time:
- * bounded to a genuinely pastel band, the best solution put loans and saving 0.0243 apart
- * under protanopia — the same colour for a red-blind student — against a 0.045 floor.
- *
- * Two other approaches failed less obviously, which is worth recording so they aren't retried:
- * tightening the solver's L/C bounds to a pastel band changed the set's mean lightness by
- * +0.004 (the old objective maximised separation, so it ran to the edges of any band it was
- * given), and making "lighter and softer" a direction rather than a target produced dusty
- * greys — psychology came out #B293AC. Cute pastels are light AND still coloured, which is a
- * point in the space, not a corner.
- *
- * So the hues are respaced about 25-30 degrees apart around the whole wheel, and separation
- * comes from hue rather than being paid for entirely out of lightness. The cost: saving moved
- * teal -> sky and career jade -> sage.
- *
- * The last piece was the TERRACOTTA, which a flat pastel target kept producing (risk came out
- * #EA9F79, a burnt orange). Not every chip can be pale — the set still has to spread over
- * lightness — so the question is what a chip should look like once it has been pushed down,
- * and "mid lightness, mid chroma" is the exact recipe for mud. Warm hues suffer worst, because
- * dulled orange IS brown. Chroma is therefore targeted as a function of lightness (see
- * C_SLOPE in the solver): a chip that gives up lightness gets chroma back, so the light ones
- * are soft pastels and the few forced deeper land as jewel tones. Nothing sits in the middle.
- * risk is #F6BDA0 now, a light peach.
- *
- * ROYGBIV order, finally, with two things worth knowing about the ends of the rainbow.
- *
- * There is no Y and there cannot be one. rewardBadgeBg is #FFEDB0, a pale yellow that means
- * "come collect" everywhere in the app; every pastel yellow measured lands 0.019-0.065 from
- * it against the 0.09 floor, so a yellow module would impersonate the collect-me affordance
- * on the Modules tab. Freeing the slot means recolouring the reward badge, not the palette.
- *
- * And earning, the yellow-GREEN at hue 120, is squeezed from both sides: dark it goes olive
- * (#ADC268, the terracotta problem in another hue), pale it goes invisible, because yellow-
- * green carries more luminance than any hue at the same perceptual lightness and hits the
- * surface-contrast floor early. A first fix at L 0.845 produced a pretty sage that failed at
- * 1.34 against colors.track — legible as a chip, useless as a progress fill. The window is
- * about 0.80-0.83 and PALE_ONLY_MIN_L sits inside it.
- *
- * The blues went from four to three (loans is jade again). Cyan through indigo is where hue
- * degrees buy the least perceived difference, so four chips there read as four blues however
- * far apart the numbers say they are.
- *
- * Measured on this set: closest pair 0.0480 (credit/investing, deuteranopia), every chip
- * clears 1.35:1 against the palest surface it is drawn on and 4.6:1 against its own glyph. */
+ * Measured on this set: closest pair 0.0483 (risk/scams, deuteranopia), every chip clearing
+ * 1.35:1 against the palest surface it is drawn on and 4.6:1 against its own number. */
 export const moduleColor: Record<string, string> = {
-  earning: '#C0D28C',
-  spending: '#F09BC3',
-  saving: '#86D8DC',
-  investing: '#C7A9FF',
-  credit: '#96C1E0',
-  risk: '#F99F76',
-  loans: '#2FC6A7',
-  taxes: '#BDC9FF',
-  psychology: '#D48DD8',
-  career: '#ACD5B3',
-  scams: '#F89B9B',
+  earning: '#F4BDB8',
+  spending: '#E99355',
+  saving: '#E5C95E',
+  investing: '#8BD98D',
+  credit: '#9AD1FF',
+  risk: '#B5B2FF',
+  loans: '#D9C0DE',
+  taxes: '#DDAEA9',
+  psychology: '#FAA468',
+  career: '#7FC881',
+  scams: '#8AB7DE',
 };
 
 /** Darker foreground paired with each `moduleColor` background — the module icon's glyph
@@ -246,17 +187,17 @@ export const moduleColor: Record<string, string> = {
  * revision fixed one foreground lightness for the whole set; the single chip that had been
  * deepened came out at 4.17:1, below AA, and nothing flagged it. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#4C5A01',
-  spending: '#772552',
-  saving: '#035E63',
-  investing: '#573784',
-  credit: '#004E76',
-  risk: '#792F00',
-  loans: '#024B3E',
-  taxes: '#444D9B',
-  psychology: '#5D2062',
-  career: '#00622A',
-  scams: '#7F242B',
+  earning: '#913532',
+  spending: '#5F2E00',
+  saving: '#645301',
+  investing: '#0F5F1C',
+  credit: '#00588D',
+  risk: '#473E8C',
+  loans: '#743C81',
+  taxes: '#822826',
+  psychology: '#733801',
+  career: '#005312',
+  scams: '#004773',
 };
 
 export const font = {

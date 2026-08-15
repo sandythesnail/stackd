@@ -85,69 +85,56 @@ function sim(hex, type) {
     toSrgb(clamp(-0.000365294 * L2 - 0.00412163 * M2 + 0.693513 * S)));
 }
 
-/* ---------------------------------------------------------------- palette definition
- * Hues are chosen by hand (identity: spending is pink, credit is blue, ...). Only lightness
- * and chroma are solved. There is no yellow module and there cannot be one - see `reserved`.
+/* ---------------------------------------------------------------- palette definition */
+/* ROYGBIV in MODULE-NUMBER order, by request: 01 red, 02 orange, 03 yellow, 04 green,
+ * 05 blue, 06 indigo, 07 violet, then 08-11 repeat the first four hues.
  *
- * These are RESPACED from the previous set, and that respacing is what made a pastel palette
- * possible at all. The old hues crowded the green end - career 168, loans 178, saving 192, so
- * ten degrees between two of them - and paid for it out of LIGHTNESS, since the only way to
- * tell near-identical hues apart (especially under dichromacy, which preserves lightness and
- * discards hue) is to make one deep and one pale. That spend is exactly the budget pastel
- * needs, so with those hues, every pale solution failed MIN_PAIR: bounded to a genuinely
- * pastel band the best result put loans and saving 0.0243 apart under protanopia, the same
- * colour for a red-blind student.
+ * Hues are fixed and only lightness/chroma are solved, which is the point: the ramp should
+ * read as a rainbow you can count along, not as eleven maximally-separated colours. The
+ * solver's job is now narrow — find the depth for each chip that keeps the set legible and
+ * colour-blind-safe without moving any hue.
  *
- * Now the eleven sit about 25-30 degrees apart around the whole wheel (minus the forbidden
- * yellow band), so separation comes from hue and lightness is free to go pale. Mean chroma
- * drops 0.112 -> 0.094 and mean lightness rises 0.777 -> 0.787, with the closest pair
- * comfortably clear at 0.048.
- *
- * The cost is real and worth stating: saving moves from teal toward sky, and career from jade
- * toward sage. The family identities survive (the green/teal end is still green/teal, spending
- * is still pink, credit still blue) but "four greens" is now three greens and a blue-teal. If
- * that identity matters more than the pastels, put the old hues back - and expect the palette
- * to go vivid again, because it must. */
-/* ROYGBIV order, with the blue band deliberately thinned.
- *
- * The previous set put loans 190, saving 215, credit 245 and taxes 272 inside one 82-degree
- * stretch, and cyan-through-indigo is the region where hue degrees buy the LEAST perceived
- * difference — so four chips there read as "four blues" however far apart the numbers say
- * they are. Three now (saving 200 cyan, credit 240 blue, taxes 275 indigo) with 40 and 35
- * degrees between them, and loans moved back to 175 where it is a jade green.
- *
- * There is no Y in this ROYGBIV and there cannot be. Yellow belongs to the reward tokens:
- * rewardBadgeBg is #FFEDB0, a pale yellow, and it means "come collect". Every pastel yellow
- * tested lands 0.019-0.065 from it, against the 0.09 floor — a yellow module would look like
- * the collect-me affordance on the Modules tab. The gap between risk (45) and earning (120)
- * is that reservation. Freeing it up means giving the reward badge a different colour, which
- * is a bigger change than a palette. */
+ * That job is still real, and the naive version fails: setting the four repeats to "same hue,
+ * lighter" by hand put taxes (light red) and career (light green) 0.0046 apart under
+ * deuteranopia, the same colour for a green-blind student, because dichromacy throws hue away
+ * and keeps lightness and both had been handed the same lightness. A repeat has to differ in
+ * DEPTH from the other repeats, not only from the hue it repeats. */
 const HUE = {
-  scams: 20, risk: 45, earning: 120, career: 150, loans: 175, saving: 200,
-  credit: 240, taxes: 275, investing: 300, psychology: 325, spending: 350,
+  earning: 25,      // 01 red
+  spending: 55,     // 02 orange
+  saving: 95,       // 03 yellow
+  investing: 145,   // 04 green
+  credit: 245,      // 05 blue
+  risk: 285,        // 06 indigo
+  loans: 320,       // 07 violet
+  taxes: 25,        // 08 red again
+  psychology: 55,   // 09 orange again
+  career: 145,      // 10 green again
+  scams: 245,       // 11 blue again
 };
 const KEYS = Object.keys(HUE);
 const ORDER = ['earning', 'spending', 'saving', 'investing', 'credit', 'risk',
                'loans', 'taxes', 'psychology', 'career', 'scams'];
 const RESERVED = { reward: '#F0C22E', rewardBg: '#FFF9E6', rewardBadgeBg: '#FFEDB0' };
 const SURFACES = { white: '#FFFFFF', cream: '#FAF6ED', track: '#E7ECE3' };
-const WARM = new Set(['scams', 'risk']);
-/* Hues whose failure mode is DARKNESS rather than dullness, so they need a lightness floor
- * where the warm hues need a chroma floor.
+/** Warm hues carry a chroma floor so they can't dull into brown. Orange is the one at risk
+ * now (module 02 and its repeat at 09); red is far enough round the wheel to be safe. */
+const WARM = new Set(['spending', 'psychology']);
+
+/* The one module allowed to sit near the reward tokens.
  *
- * earning sits at 120, yellow-green, and yellow-green stops being lime and becomes OLIVE the
- * moment it stops being pale — #ADC268, which is what the solver produced when nothing held
- * it up, is the same complaint as the terracotta in a different hue. (There is no true yellow
- * in the set — see HUE.)
+ * Module 03 is yellow because the rainbow says so, and yellow is the app's reward colour:
+ * `reward` is #F0C22E, `rewardBadgeBg` #FFEDB0, and every yellow measured lands 0.02-0.08
+ * from one of them against the 0.09 floor. There is no yellow that clears both — the band is
+ * closed from above and below. It was asked for explicitly, so the constraint is lifted for
+ * this one chip rather than quietly satisfied by shipping a green and calling it yellow.
  *
- * 0.818, and the exact number matters, because this hue is squeezed from BOTH sides. Yellow-
- * green carries more luminance than any other hue at the same perceptual lightness, so it hits
- * the MIN_SURFACE wall early: measured against colors.track (#E7ECE3, the progress-bar
- * groove), L 0.830 gives 1.386, L 0.840 gives 1.332 and the floor is 1.35. A first attempt at
- * 0.845 duly produced #C6D0AC, a pretty sage that was ILLEGIBLE as a progress fill. So the
- * window between olive and invisible is roughly 0.80-0.83, and this sits inside it. */
-const PALE_ONLY = new Set(['earning']);
-const PALE_ONLY_MIN_L = 0.818;
+ * The cost, stated so it can be reversed knowingly: the yellow chip is now the closest thing
+ * in the app to the "come collect" gold. The worst of that overlap is already gone — the
+ * Modules tab no longer washes its recommended row in pale yellow (see modules.tsx) — but the
+ * gold badge and the yellow chip are cousins. Remove 'saving' from this set to restore the old
+ * guarantee, and expect the solver to refuse every yellow it is offered. */
+const RESERVED_EXEMPT = new Set(['saving']);
 const VIEWS = ['norm', 'deut', 'prot'];
 
 const MIN_CONTRAST = 4.6;     // chip glyph, 16px so not large text
@@ -254,14 +241,13 @@ function score(spec) {
   let s = Math.min(worst, floor) - PASTEL_W * pastelMiss(spec);
   let pen = worst < floor ? (floor - worst) * 40 : 0;
   for (const k of KEYS) {
-    for (const t of Object.values(RESERVED)) { const d = dE(bg[k], t); if (d < MIN_RESERVED) pen += (MIN_RESERVED - d) * 3; }
+    if (!RESERVED_EXEMPT.has(k)) for (const t of Object.values(RESERVED)) { const d = dE(bg[k], t); if (d < MIN_RESERVED) pen += (MIN_RESERVED - d) * 3; }
     const surf = Math.min(...Object.values(SURFACES).map(v => cr(bg[k], v)));
     if (surf < MIN_SURFACE) pen += (MIN_SURFACE - surf) * 3;
     // Warm chroma floor, lowered from 0.10 with the pastel band. Its job is to stop scams and
     // risk sliding into brown, and brown is a DARK dull orange — at L 0.82+ a low-chroma warm
     // hue reads as peach, not mud, so the old floor now only forces those two to shout.
     if (WARM.has(k) && spec[k].C < 0.055) pen += (0.055 - spec[k].C) * 10;
-    if (PALE_ONLY.has(k) && spec[k].L < PALE_ONLY_MIN_L) pen += (PALE_ONLY_MIN_L - spec[k].L) * 12;
   }
   return s - pen;
 }
@@ -294,7 +280,7 @@ function check(bg, fg) {
     }
     for (const [n, t] of Object.entries(RESERVED)) {
       const d = dE(bg[k], t);
-      if (d < MIN_RESERVED) fail.push(`${k}: ${d.toFixed(4)} from colors.${n} < ${MIN_RESERVED}`);
+      if (d < MIN_RESERVED && !RESERVED_EXEMPT.has(k)) fail.push(`${k}: ${d.toFixed(4)} from colors.${n} < ${MIN_RESERVED}`);
     }
   }
   return fail;
