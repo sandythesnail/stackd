@@ -1,11 +1,10 @@
 import { useRef, useState } from 'react';
 import { View, Pressable, StyleSheet, Animated, Easing } from 'react-native';
-import Svg, { Path, Rect } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Txt, Button, Tag, Card, IconButton, CurrencyChip, Coin, Diamond, ItemArt, Hammy, Wallpaper } from '@/components';
 import { colors, font } from '@/theme';
-import { shopItemById, shopItemsReal } from '@/content';
+import { shopItemById } from '@/content';
 import {
   useStore, mysteryDropChance, mysteryPoolUnowned, itemRarity, MAX_EQUIPPED_ITEMS,
   type MysteryResult,
@@ -19,30 +18,11 @@ const CATEGORY_LABEL: Record<string, string> = {
 const RARITY_LABEL: Record<string, string> = { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
 const RARITY_COLOR: Record<string, string> = { common: '#2F9E44', rare: '#2E6FE0', epic: '#9B3FD6', legendary: '#C9781A' };
 
-function mysteryBoxNameFor(poolKey: string) {
-  return shopItemsReal.find((i) => i.isMysteryBox && i.mysteryPool === poolKey)?.name ?? 'a Mystery Box';
-}
-
-/** Ported from the website's ICON_GIFT (app.js) — a real drawn gift box (lid, ribbon, bow,
- * shine highlight), not the plain 🎁 unicode emoji mobile used before. `tone` recolors just
- * the box/lid (the gold ribbon stays gold regardless) — the accessory pool gets purple to
- * match its own card art (see accessory_mystery_box's gradient in shopItems.json), every
- * other pool keeps the site's original pink. */
-function GiftIcon({ size, tone = 'pink' }: { size: number; tone?: 'pink' | 'purple' }) {
-  const c = tone === 'purple'
-    ? { body: '#C9A0FF', lid: '#8A3FE0', stroke: '#4A1A8A' }
-    : { body: '#FF6FA0', lid: '#FF4F8A', stroke: '#8A2646' };
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24">
-      <Rect x={4} y={11} width={16} height={8.5} rx={1} fill={c.body} stroke={c.stroke} strokeWidth={1.4} />
-      <Rect x={3} y={8} width={18} height={3.4} rx={0.9} fill={c.lid} stroke={c.stroke} strokeWidth={1.4} />
-      <Rect x={10.7} y={8} width={2.6} height={11.5} fill="#FFD23F" stroke="#8A5A00" strokeWidth={0.8} />
-      <Path d="M12 8c-1.6-3.2-5.4-3.2-5.4-0.2 0 1.7 2.5 1 5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" strokeWidth={0.8} strokeLinejoin="round" />
-      <Path d="M12 8c1.6-3.2 5.4-3.2 5.4-0.2 0 1.7-2.5 1-5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" strokeWidth={0.8} strokeLinejoin="round" />
-      <Rect x={4} y={11} width={16} height={1.6} fill="#ffffff" opacity={0.25} />
-    </Svg>
-  );
-}
+/* GiftIcon is gone. It was a hand-drawn stand-in for a mystery box, in pink or purple, used
+ * while a box was being shaken open — so the box you tapped and the box that shook were two
+ * different pictures, and the diamond box (cyan) shook as a pink present. The three boxes are
+ * already one drawing in three colourways in the catalog, so the sheet renders the item's own
+ * art instead and the question cannot come up again. */
 
 /** Screen 22 — Shop item detail modal. Real item pulled from the ported shop catalog,
  * with the real purchase/equip economy and (for mystery boxes) the odds-weighted open
@@ -65,6 +45,7 @@ function ShopItemSheet() {
 
   const [opening, setOpening] = useState(false);
   const [reveal, setReveal] = useState<MysteryResult | null>(null);
+  const [notEnough, setNotEnough] = useState(false);
   const spin = useRef(new Animated.Value(0)).current;
 
   if (!item) {
@@ -119,6 +100,13 @@ function ShopItemSheet() {
   const scale = spin.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1, 1.15, 1] });
 
   const handlePrimaryAction = () => {
+    // Anything that costs something and isn't owned yet checks the balance HERE rather than
+    // arriving pre-disabled, so "you can't afford this" is something the app says when you
+    // ask, in the currency you're short of, instead of a grey rectangle you have to infer.
+    if (!owned && !equipped && !canAfford && (item.isMysteryBox || !item.reward)) {
+      setNotEnough(true);
+      return;
+    }
     if (item.isMysteryBox) { startMysteryOpen(); return; }
     if (item.slot) toggleRoomSlot(item.id);
     else buyOrEquipItem(item.id);
@@ -133,14 +121,16 @@ function ShopItemSheet() {
       buttonLabel = '✓ You’ve collected them all';
       buttonDisabled = true;
     } else {
-      buttonLabel = `Open for ${item.price} ${currency}${item.price === 1 ? '' : 's'}`;
-      buttonDisabled = !canAfford;
+      // "Buy", and never disabled for price. A greyed-out button is a dead end that doesn't
+      // say why; pressing it now tells you what you're short of (see notEnough below).
+      buttonLabel = 'Buy';
+      buttonDisabled = false;
     }
   } else if (item.reward) {
-    buttonLabel = `🎓 ${item.rewardHint ?? 'Complete all 11 modules to earn this'}`;
-    buttonDisabled = true;
-  } else if (item.mysteryOnly) {
-    buttonLabel = `🎁 Only from the ${mysteryBoxNameFor(item.mysteryPool!)}`;
+    // Just "Locked". The old label was the whole unlock condition with a mortarboard in front
+    // of it, which is a sentence pretending to be a button; the condition is already spelled
+    // out in the card's own description above.
+    buttonLabel = 'Locked';
     buttonDisabled = true;
   } else if (equipped) {
     // Three verbs, one per kind of thing: wallpaper is Applied, the rest of the furniture is
@@ -159,8 +149,11 @@ function ShopItemSheet() {
     buttonLabel = noFreeSlot ? `${equipVerb} (take something off first)` : equipVerb;
     buttonDisabled = noFreeSlot;
   } else {
-    buttonLabel = `Buy for ${item.price} ${currency}${item.price === 1 ? '' : 's'}`;
-    buttonDisabled = !canAfford;
+    // Mystery-pool items land here too now. They used to read "Only from the Hat Mystery
+    // Box" on a dead button, which named a thing to go and do while refusing to let you do
+    // anything; they carry a real price of their own, so they can simply be bought.
+    buttonLabel = 'Buy';
+    buttonDisabled = false;
   }
 
   return (
@@ -180,8 +173,11 @@ function ShopItemSheet() {
               wallpaper swatches, whose whole point is the colour they are. */}
           <View style={styles.preview}>
             {opening ? (
+              // The box that is actually being shaken, not a stand-in drawn to look like it.
+              // GiftIcon had its own pink/purple pair, which meant the diamond box shook as a
+              // pink present and the hat box's two representations never quite matched.
               <Animated.View style={{ transform: [{ rotate }, { scale }] }}>
-                <GiftIcon size={72} tone={item.mysteryPool === 'accessory' ? 'purple' : 'pink'} />
+                <ItemArt item={item} size={120} />
               </Animated.View>
             ) : reveal ? (
               // Wallpaper items have no `svg` field at all (they're a bg/pattern lookup,
@@ -250,6 +246,19 @@ function ShopItemSheet() {
                 </Card>
               ) : null}
 
+              {/* Says what you're short of and by how much, which is the only thing worth
+                  knowing at this point. Drawn in the sheet rather than through a platform
+                  alert: Alert.alert is a no-op under react-native-web, and /m is the build
+                  most people are shopping in (see lib/confirm.ts). */}
+              {notEnough ? (
+                <Pressable onPress={() => setNotEnough(false)} style={styles.shortRow}>
+                  {currency === 'diamond' ? <Diamond size={17} /> : <Coin size={17} />}
+                  <Txt style={styles.shortTxt}>
+                    {`Not enough ${currency}s. You need ${item.price - (currency === 'diamond' ? state.diamonds : state.coins)} more.`}
+                  </Txt>
+                </Pressable>
+              ) : null}
+
               <Button
                 label={buttonLabel}
                 // No currency icon once the label has stopped quoting a price — an exhausted
@@ -306,5 +315,12 @@ const styles = StyleSheet.create({
   },
   head: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 10 },
   balance: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingVertical: 14, paddingHorizontal: 16 },
+  shortRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginTop: 12, paddingVertical: 11, paddingHorizontal: 14,
+    backgroundColor: colors.dangerBg, borderRadius: 14,
+    borderWidth: 1.5, borderColor: '#F3D4D4',
+  },
+  shortTxt: { flex: 1, fontFamily: font.bold, fontSize: 13, lineHeight: 18, color: colors.dangerDeep },
   oddsLine: { fontFamily: font.extra, fontSize: 15, marginTop: 6 },
 });

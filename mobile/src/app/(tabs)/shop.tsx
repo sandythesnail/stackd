@@ -3,7 +3,7 @@ import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen, Header, Txt, Coin, Diamond, Gift, Hammy, ItemArt, Wallpaper } from '@/components';
+import { Screen, Header, Txt, Coin, Diamond, Hammy, ItemArt, Wallpaper } from '@/components';
 import { colors, font, radius } from '@/theme';
 import { shopItemsReal } from '@/content';
 import type { ShopItemReal } from '@/content';
@@ -53,8 +53,12 @@ const ITEMS_BY_CATEGORY: Record<string, ShopItemReal[]> = Object.fromEntries(
   SHOP_CATEGORIES.map((cat) => [cat.key, sortItems(shopItemsReal.filter((i) => i.category === cat.key))]),
 );
 
+function mysteryBoxFor(poolKey: string) {
+  return shopItemsReal.find((i) => i.isMysteryBox && i.mysteryPool === poolKey);
+}
+
 function mysteryBoxNameFor(poolKey: string) {
-  return shopItemsReal.find((i) => i.isMysteryBox && i.mysteryPool === poolKey)?.name ?? 'a Mystery Box';
+  return mysteryBoxFor(poolKey)?.name ?? 'a Mystery Box';
 }
 
 function formatPct(pct: number) {
@@ -127,17 +131,26 @@ export default function Shop() {
             <View key={cat.key} style={[styles.section, idx > 0 && styles.sectionDivider]}>
               {showHeader ? (
                 <View style={styles.sectionHead}>
+                  {/* Bigger across the board — these were 15-16px glyphs floating in a 34px
+                      well, which read as decoration rather than as the section's mark. Hats
+                      and accessories are grey (they're categories, not states); Rewards is a
+                      gold trophy, because gold is what "earned, not bought" means everywhere
+                      else in the app; Diamond Exclusives gets the real diamond token. */}
                   <View style={styles.sectionIconWrap}>
-                    {icon ? (
-                      <MaterialCommunityIcons name={icon} size={16} color={colors.greenDark} />
+                    {cat.key === 'exclusive' ? (
+                      <Diamond size={26} />
                     ) : (
-                      <Diamond size={15} />
+                      <MaterialCommunityIcons
+                        name={icon!}
+                        size={26}
+                        color={cat.key === 'reward' ? colors.reward : colors.muted4}
+                      />
                     )}
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <Txt variant="h2" style={styles.sectionTitle}>{cat.label}</Txt>
                     {cat.tag ? (
-                      <Txt style={styles.sectionTagTxt} numberOfLines={1}>{cat.tag}</Txt>
+                      <Txt style={styles.sectionTagTxt}>{cat.tag}</Txt>
                     ) : null}
                   </View>
                 </View>
@@ -227,7 +240,9 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
         )}
       </View>
 
-      <Txt style={styles.cardName} numberOfLines={1}>{item.name}</Txt>
+      {/* Two lines. "Accessory Mystery Box" is four words and was being cut to "Accessory
+            Mystery..." on a two-column grid. */}
+      <Txt style={styles.cardName} numberOfLines={2}>{item.name}</Txt>
 
       <View style={dimStatus ? { opacity: 0.55 } : undefined}>
         {isBox ? (
@@ -250,7 +265,17 @@ function ShopCard({ item, onPress }: { item: ShopItemReal; onPress: () => void }
         ) : owned ? (
           <View style={[styles.statusRow, styles.statusOwned]}><Txt style={[styles.statusTxt, { color: colors.tagGreenText }]}>Owned</Txt></View>
         ) : isLocked ? (
-          <View style={styles.statusRow}><Gift size={13} /><Txt style={styles.statusTxt} numberOfLines={1}>{mysteryBoxNameFor(item.mysteryPool!)}</Txt></View>
+          // The box's OWN art, not a generic gift glyph. A pink present sat next to the words
+          // "Diamond Mystery Box" and next to "Accessory Mystery Box", neither of which is
+          // pink — the three boxes are the same drawing in three colours (pink, purple, cyan,
+          // all with the gold ribbon), so pointing at the real one makes the small icon and
+          // the card it refers to identical by construction rather than by upkeep.
+          <View style={styles.statusRow}>
+            <View style={styles.statusBoxArt}>
+              <ItemArt item={mysteryBoxFor(item.mysteryPool!)!} fill />
+            </View>
+            <Txt style={styles.statusTxt} numberOfLines={2}>{mysteryBoxNameFor(item.mysteryPool!)}</Txt>
+          </View>
         ) : isReward ? (
           <View style={[styles.statusRow, styles.statusLock]}>
             <MaterialCommunityIcons name="lock-outline" size={13} color={colors.tagLockText} />
@@ -342,7 +367,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   sectionIconWrap: {
-    width: 30, height: 30, borderRadius: 10,
+    width: 42, height: 42, borderRadius: 14,
     backgroundColor: colors.screen, alignItems: 'center', justifyContent: 'center',
   },
   sectionTitle: { fontSize: 16 },
@@ -432,6 +457,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F7F1', borderRadius: 12, paddingVertical: 4, paddingHorizontal: 9,
   },
   statusOwned: { backgroundColor: colors.tagGreenBg },
+  statusBoxArt: { width: 20, height: 20 },
   statusLock: { backgroundColor: colors.tagLockBg },
   statusTxt: { fontFamily: font.extra, fontSize: 12, color: colors.ink, flexShrink: 1 },
   odds: { fontFamily: font.extra, fontSize: 10.5 },

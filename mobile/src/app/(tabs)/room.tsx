@@ -152,7 +152,9 @@ export default function Room() {
   // fit without scrolling on every screen, and the mascot is the one element that can give
   // ground — the grid below it can't shrink past legibility.
   const { height: winH } = useWindowDimensions();
-  const hammyStageSize = Math.max(110, Math.min(190, winH * 0.22));
+  // Capped lower than it was (190): the stage no longer stretches to fill the tab, so a
+  // mascot sized for that stretched panel now overfills the panel it actually gets.
+  const hammyStageSize = Math.max(104, Math.min(150, winH * 0.18));
 
   // No Header here on purpose — the level/coins/diamonds bar just ate space from an already
   // small room scene for no real benefit on this screen; the bottom tab bar and this
@@ -216,7 +218,7 @@ export default function Room() {
         // rather than to overflow.
         <View style={styles.wardrobeContent}>
           <View style={styles.wardrobeStage}>
-            <RoomFloor style={styles.wardrobeStageStripes} pointerEvents="none" />
+            <RoomFloor style={styles.wardrobeStageStripes} pointerEvents="none" edge={false} />
             <Hammy size={hammyStageSize} equipped={equipped} />
           </View>
 
@@ -380,18 +382,20 @@ const styles = StyleSheet.create({
   // Same floor as the Room tab's floorZone, not its own pink — the wardrobe is still
   // Hammy's room, just browsing outfits instead of furniture.
   //
-  // flex:1 with a low minHeight, so the stage absorbs whatever the grid below doesn't use
-  // and gives it back on a short screen. A fixed 240 here is what made the tab overflow.
+  // Sized to Hammy, not to the leftover space. `flex: 1` made this the tab's shock absorber:
+  // it took every pixel the grid below didn't use, so on a tall phone the stage grew into a
+  // huge brown panel with a small pig marooned in the middle of it. It still can't be a hard
+  // number (a fixed 240 is what made the tab overflow in the first place), so it's a maximum
+  // instead — it shrinks on a short screen and simply stops growing on a tall one.
   wardrobeStage: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#B98650',
     borderRadius: 24,
     overflow: 'hidden',
-    paddingTop: 14,
-    paddingBottom: 14,
-    minHeight: 150,
+    paddingTop: 12,
+    paddingBottom: 12,
+    minHeight: 140,
   },
   wardrobeStageStripes: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'row' },
   filters: { flexDirection: 'row', gap: 7, marginTop: 14 },

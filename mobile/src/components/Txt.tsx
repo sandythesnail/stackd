@@ -54,9 +54,30 @@ export function Txt({
       {...rest}
       {...webProps}
       maxFontSizeMultiplier={maxFontSizeMultiplier}
-      style={[styles[variant], color ? { color } : null, styles.noSelect, style]}
+      style={[styles[variant], color ? { color } : null, styles.noSelect, style, leadingFor(variant, style)]}
     />
   );
+}
+
+/**
+ * Keeps line spacing proportional when a call site shrinks the font.
+ *
+ * Every variant sets an explicit lineHeight, which it has to (see the h2 note below). But a
+ * caller overriding only `fontSize` inherited the variant's lineHeight unchanged, and 35 call
+ * sites do exactly that — `variant="lead" style={{ fontSize: 13 }}` is the common one. `lead`
+ * is 15/22, a 1.47 ratio; at 13px that same 22 becomes 1.69, which is what reads as
+ * double-spaced in every item description in the shop and the room.
+ *
+ * Scaling the variant's own ratio keeps the intended leading at any size, so the fix lands
+ * everywhere at once instead of at 35 call sites that would each have to remember. An
+ * explicit lineHeight in the override still wins: this only fills in the gap it left.
+ */
+function leadingFor(variant: Variant, style: TextProps['style']) {
+  const flat = StyleSheet.flatten(style) as { fontSize?: number; lineHeight?: number } | undefined;
+  if (!flat?.fontSize || flat.lineHeight) return null;
+  const base = styles[variant] as { fontSize?: number; lineHeight?: number };
+  if (!base?.fontSize || !base?.lineHeight) return null;
+  return { lineHeight: Math.round(flat.fontSize * (base.lineHeight / base.fontSize) * 10) / 10 };
 }
 
 const styles = StyleSheet.create({

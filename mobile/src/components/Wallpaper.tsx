@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { ViewStyle } from 'react-native';
-import Svg, { Defs, Pattern, Circle, Rect } from 'react-native-svg';
+import Svg, { Defs, Pattern, Circle, Rect, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import type { ShopItemReal } from '@/content';
 
 /** Ported from the website's wallCss (styles.css/app.css room-wall-zone + wallpaper items):
@@ -33,6 +33,7 @@ export function Wallpaper({ item, style }: { item?: ShopItemReal; style?: ViewSt
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const dotsId = `wp-dots-${uid}`;
   const stripeId = `wp-stripe-${uid}`;
+  const shadeId = `wp-shade-${uid}`;
 
   return (
     <Svg width="100%" height="100%" style={style}>
@@ -48,10 +49,20 @@ export function Wallpaper({ item, style }: { item?: ShopItemReal; style?: ViewSt
             <Rect x={10} y={0} width={10} height={20} fill={stripe[1]} />
           </Pattern>
         ) : null}
+        {/* Light falls from the top of the wall and gathers where it meets the floor. Without
+            it the wall was one flat fill behind a floor that has depth, which is what made
+            the room read as furniture standing in front of a swatch rather than in a room.
+            Gentle on purpose: a wall is the backdrop, so this should be felt and not seen. */}
+        <SvgLinearGradient id={shadeId} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.14" />
+          <Stop offset="0.55" stopColor="#FFFFFF" stopOpacity="0" />
+          <Stop offset="1" stopColor="#2C1E10" stopOpacity="0.13" />
+        </SvgLinearGradient>
       </Defs>
       <Rect x={0} y={0} width="100%" height="100%" fill={spec.bg} />
       {dot ? <Rect x={0} y={0} width="100%" height="100%" fill={`url(#${dotsId})`} /> : null}
       {stripe ? <Rect x={0} y={0} width="100%" height="100%" fill={`url(#${stripeId})`} /> : null}
+      <Rect x={0} y={0} width="100%" height="100%" fill={`url(#${shadeId})`} />
     </Svg>
   );
 }

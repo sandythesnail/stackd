@@ -52,9 +52,18 @@ const BOARD_ALPHA = [0.025, 0.022, 0.013, 0.010];
 export function RoomFloor({
   style,
   pointerEvents,
+  edge = true,
 }: {
   style?: StyleProp<ViewStyle>;
   pointerEvents?: 'none' | 'auto' | 'box-none' | 'box-only';
+  /** Draw the far wall: the dark line across the top and the contact shadow under it.
+   *
+   * True in the room scene, where there IS a wall up there and the floor has to stop at it.
+   * False in the wardrobe, where this same floor is only a backdrop inside a small rounded
+   * panel — there the line reads as a dark brown bar pinned across the top of the card and
+   * the seam shading as a heavy smudge under it, both of them describing a wall that isn't
+   * in the picture. */
+  edge?: boolean;
 }) {
   const [{ w, h }, setSize] = useState({ w: 0, h: 0 });
   const onLayout = (e: LayoutChangeEvent) => {
@@ -64,12 +73,12 @@ export function RoomFloor({
 
   return (
     <View style={style} onLayout={onLayout} pointerEvents={pointerEvents}>
-      {w > 0 && h > 0 ? <FloorSvg w={w} h={h} /> : null}
+      {w > 0 && h > 0 ? <FloorSvg w={w} h={h} edge={edge} /> : null}
     </View>
   );
 }
 
-function FloorSvg({ w, h }: { w: number; h: number }) {
+function FloorSvg({ w, h, edge }: { w: number; h: number; edge: boolean }) {
   const cx = w / 2;
   const k = BACK_SCALE;
   /** Horizontal position at the back wall (y=0) of a point that sits at `x` on the front edge. */
@@ -148,10 +157,14 @@ function FloorSvg({ w, h }: { w: number; h: number }) {
       <G>{boards}</G>
       <G>{edges}</G>
       <G>{seams}</G>
-      {/* The far edge itself. Without a hard line here the floor still reads as running on
-          past the wall, which was the whole complaint about the previous version. */}
-      <Line x1={0} y1={0.5} x2={w} y2={0.5} stroke="#5A3B1F" strokeOpacity={0.42} strokeWidth={2} />
-      <Rect x={0} y={0} width={w} height={Math.max(8, h * 0.10)} fill="url(#floorSeam)" />
+      {/* The far edge itself. Without a hard line here the floor reads as running on past the
+          wall — but only where there is a wall to stop at, hence `edge`. */}
+      {edge ? (
+        <>
+          <Line x1={0} y1={0.5} x2={w} y2={0.5} stroke="#5A3B1F" strokeOpacity={0.34} strokeWidth={1.5} />
+          <Rect x={0} y={0} width={w} height={Math.max(8, h * 0.09)} fill="url(#floorSeam)" />
+        </>
+      ) : null}
       <Rect x={0} y={0} width={w * 0.2} height={h} fill="url(#floorEdgeL)" />
       <Rect x={w * 0.8} y={0} width={w * 0.2} height={h} fill="url(#floorEdgeR)" />
     </Svg>
