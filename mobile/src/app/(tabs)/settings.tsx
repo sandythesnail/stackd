@@ -164,7 +164,7 @@ function FeedbackCardBody({
     <Card style={{ gap: 4, marginTop: 6 }}>
       <Txt style={styles.feedbackH}>Feedback & bug reports</Txt>
       <Txt variant="lead" style={{ fontSize: 12.5 }}>
-        Run into something broken, or just have a thought? It goes straight to the people building this.
+        Run into something broken, or just have a thought?
       </Txt>
       <View style={styles.feedbackChips}>
         {(['feedback', 'bug'] as const).map((c) => {

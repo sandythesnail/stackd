@@ -23,7 +23,7 @@ import {
 import { ClerkProvider } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
 import { StoreProvider } from '@/store';
-import { AchievementToast, OnboardingTourProvider, Txt, Button } from '@/components';
+import { AchievementToast, LevelUpModal, OnboardingTourProvider, Txt, Button } from '@/components';
 import { authEnabled, env } from '@/lib/env';
 import { tokenCache } from '@/lib/tokenCache';
 import { SupabaseSync } from '@/lib/SupabaseSync';
@@ -236,6 +236,7 @@ export default function RootLayout() {
               />
             </Stack>
             <AchievementToast />
+            <LevelUpModal />
           </OnboardingTourProvider>
         </StoreProvider>
         </AuthGate>

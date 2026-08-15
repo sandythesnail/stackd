@@ -8,6 +8,7 @@ import { colors, font } from '@/theme';
 import { authEnabled } from '@/lib/env';
 import { clerkError } from '@/lib/clerkErrors';
 import { fillMissingUsername, type ClerkSignUpResource } from '@/lib/clerkSignUp';
+import { useOnboardedAlready } from '@/lib/onboarded';
 import { WebAuthRedirect } from '@/lib/webAuth';
 import { SocialAuth } from '@/lib/socialAuth';
 
@@ -35,6 +36,7 @@ function ClerkSignUp() {
   const [busy, setBusy] = useState(false);
   const [pendingCode, setPendingCode] = useState(false);
   const [code, setCode] = useState('');
+  const onboardedAlready = useOnboardedAlready();
 
   // True from just before setActive until this screen has navigated itself — see the guard.
   const completing = useRef(false);
@@ -74,7 +76,9 @@ function ClerkSignUp() {
       // guard disarmed on a screen that isn't going anywhere.
       completing.current = true;
       await setActive({ session: res.createdSessionId });
-      router.replace('/(onboarding)/survey');
+      // Straight to the survey, unless this device has already been through it — see the
+      // SSO handler below for why a new account doesn't always mean a new person.
+      router.replace(onboardedAlready ? '/' : '/(onboarding)/survey');
       return;
     }
     if (res.unverifiedFields.includes('email_address')) {
@@ -181,10 +185,12 @@ function ClerkSignUp() {
       <View style={{ marginTop: 18 }}>
         <SocialAuth
           completingRef={completing}
-          // Same split as sign-in: new accounts owe the survey outright, returning ones go
-          // through the splash so their cloud progress decides. See index.tsx.
+          // Same split as sign-in: new accounts owe the survey, returning ones go through the
+          // splash so their cloud progress decides (see index.tsx) — and a new account on a
+          // device that has already done onboarding is treated as returning, because the
+          // person has seen it even though the account hasn't.
           onSignedIn={({ isNewUser }) =>
-            router.replace(isNewUser ? '/(onboarding)/survey' : '/')
+            router.replace(isNewUser && !onboardedAlready ? '/(onboarding)/survey' : '/')
           }
         />
       </View>

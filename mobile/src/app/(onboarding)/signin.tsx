@@ -6,6 +6,7 @@ import { Screen, Spacer, Txt, Button, Field, Hammy, Divider } from '@/components
 import { colors, font } from '@/theme';
 import { authEnabled } from '@/lib/env';
 import { clerkError } from '@/lib/clerkErrors';
+import { useOnboardedAlready } from '@/lib/onboarded';
 import { WebAuthRedirect } from '@/lib/webAuth';
 import { SocialAuth } from '@/lib/socialAuth';
 
@@ -26,6 +27,7 @@ function ClerkSignIn() {
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const onboardedAlready = useOnboardedAlready();
 
   // True from just before setActive until this screen has navigated itself — see the guard.
   const completing = useRef(false);
@@ -99,11 +101,15 @@ function ClerkSignIn() {
       <View style={{ marginTop: 20 }}>
         <SocialAuth
           completingRef={completing}
-          // A brand-new account definitionally owes the survey, so go straight there.
+          // A brand-new account owes the survey, so go straight there — unless this DEVICE
+          // has already been through it, which happens when someone plays locally and only
+          // creates an account afterwards. The account is new; the person is not, and they
+          // should not sit through the intro twice.
+          //
           // Anyone else goes via the splash, which decides once their cloud progress has
           // landed — "not new" does NOT mean "has done the mobile onboarding".
           onSignedIn={({ isNewUser }) =>
-            router.replace(isNewUser ? '/(onboarding)/survey' : '/')
+            router.replace(isNewUser && !onboardedAlready ? '/(onboarding)/survey' : '/')
           }
         />
       </View>

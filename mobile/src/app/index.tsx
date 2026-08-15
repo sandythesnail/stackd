@@ -48,11 +48,16 @@ const SETTLE_TIMEOUT_MS = 5000;
  * sign-up screen navigates to the survey itself, but force-quitting mid-survey and relaunching
  * landed on Home just the same.
  *
- * `onboardingTrackId` is the flag, set by the survey's finish() and stashed under the web
- * blob's `_mobile` key, so it survives a round trip through Supabase — which is exactly why
- * this waits for `remoteSettled` before reading it. A returning user's track lives in the
- * cloud, and for the moment before that read lands they look identical to a new account.
- * Deciding early would send an existing student back through onboarding.
+ * `hasCompletedOnboarding` is the flag, set by the survey's finish() AND the hammy-intro's,
+ * and stashed under the web blob's `_mobile` key so it survives a round trip through Supabase
+ * — which is exactly why this waits for `remoteSettled` before reading it. A returning user's
+ * progress lives in the cloud, and for the moment before that read lands they look identical
+ * to a new account. Deciding early would send an existing student back through onboarding.
+ *
+ * `onboardingTrackId` is accepted as equivalent, for accounts that finished onboarding before
+ * the explicit flag existed. Without that, the release that added the flag would have replayed
+ * the survey and the whole animated intro at every existing user exactly once — the precise
+ * thing the flag is here to prevent.
  */
 function AuthRedirect() {
   const router = useRouter();
@@ -71,17 +76,19 @@ function AuthRedirect() {
 
   const knowsProgress = hydrated && (remoteSettled || settleTimedOut);
 
+  const onboarded = state.hasCompletedOnboarding || !!state.onboardingTrackId;
+
   useEffect(() => {
     if (!isLoaded) return;
     if (isSignedIn && !knowsProgress) return;
     const target = !isSignedIn
       ? '/(onboarding)/signup'
-      : state.onboardingTrackId
+      : onboarded
         ? '/(tabs)/home'
         : '/(onboarding)/survey';
     const t = setTimeout(() => router.replace(target), isSignedIn ? 300 : 1200);
     return () => clearTimeout(t);
-  }, [isLoaded, isSignedIn, knowsProgress, state.onboardingTrackId, router]);
+  }, [isLoaded, isSignedIn, knowsProgress, onboarded, router]);
   return null;
 }
 

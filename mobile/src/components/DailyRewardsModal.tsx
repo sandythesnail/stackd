@@ -227,9 +227,10 @@ function DayTile({
             <Gift size={34} {...GIFT_COLORS[(day.day - 1) % GIFT_COLORS.length]} />
           </Reanimated.View>
           <Reanimated.View style={[styles.tileLayer, prizeStyle]}>
-            {/* The only number on the calendar, and it arrives as the reward for claiming. */}
-            <Coin size={17} />
-            <Txt style={styles.tileCoins}>{day.coins}</Txt>
+            {/* The only number on the calendar, and it arrives as the reward for claiming.
+                Day 7 pays diamonds rather than coins, so it shows the currency it pays. */}
+            {day.diamonds > 0 ? <Diamond size={16} /> : <Coin size={17} />}
+            <Txt style={styles.tileCoins}>{day.diamonds > 0 ? day.diamonds : day.coins}</Txt>
           </Reanimated.View>
         </View>
       ) : (

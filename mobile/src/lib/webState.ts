@@ -116,6 +116,7 @@ const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is str
 // because the device you're playing on is the only one that knows which chapter you're on.
 const MOBILE_ONLY_KEYS = [
   'shownLifeEventIds', 'pendingLifeEventId', 'lifeEventCooldown', 'onboardingTrackId', 'postTest',
+  'hasCompletedOnboarding',
   'questHintsUsed', 'termsLearned', 'completedLifeTaskIds',
   'hasSeenOnboardingTour', 'lessonProgress',
 ] as const;

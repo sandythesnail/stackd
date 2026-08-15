@@ -1,24 +1,10 @@
 import { View, ScrollView, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Screen, Header, Txt, Card, Stat, ProgressBar, MIcon } from '@/components';
-import { colors, font, moduleColorSolid } from '@/theme';
+import { colors, font } from '@/theme';
 import { modules } from '@/data';
 import { useStore, xpForLevel, xpProgressPct, MAX_LEVEL, TIERS } from '@/store';
 
-/** Rounds the XP chart's ceiling up to a clean number STRICTLY above the biggest bar.
- *
- * The chart used to scale every bar against `Math.max(...xpVals, 1)`, i.e. against its own
- * tallest value — so the leading module was pinned to full height permanently, from the very
- * first lesson finished. A bar chart whose tallest bar is always exactly full tells you
- * nothing and looks broken, which is precisely how it read: "already full but odd".
- *
- * Scaling to a labelled ceiling instead means the bars have somewhere to grow into, and the
- * axis figure printed beside the chart says what full height would actually mean. */
-function niceAxisMax(peak: number): number {
-  if (peak <= 0) return 100;
-  const step = peak <= 100 ? 25 : peak <= 500 ? 50 : peak <= 2000 ? 250 : 500;
-  return Math.ceil((peak + 1) / step) * step;
-}
 
 /** Screen 8 — Progress. Ported from the website's renderProgressPage: 4 stat cards, a
  * "Modules Done" donut with legend, a Module Progress chart, an "XP Earned by
@@ -60,8 +46,6 @@ export default function Progress() {
   // below has to branch on this rather than print `ceil`.
   const atMaxLevel = level >= MAX_LEVEL;
 
-  const xpVals = modules.map((m) => state.moduleStats[m.id]?.xp ?? 0);
-  const xpAxisMax = niceAxisMax(Math.max(...xpVals, 0));
 
   return (
     <Screen edges={['top']}>
@@ -115,30 +99,6 @@ export default function Progress() {
           </View>
         </Card>
 
-        <Card style={{ gap: 12 }}>
-          <View style={styles.chartHead}>
-            <Txt variant="h2">XP Earned by Module</Txt>
-            <Txt style={styles.axisLabel}>full bar = {xpAxisMax} XP</Txt>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.colScroll}>
-            {modules.map((m, i) => {
-              const xp = xpVals[i];
-              // A 6% floor so a module worth a handful of XP still shows something, but only
-              // once it has any: a module you've never opened draws no bar at all rather than
-              // the 2% stub every one of them used to get.
-              const hPct = xp > 0 ? Math.max(6, Math.round((xp / xpAxisMax) * 100)) : 0;
-              return (
-                <View key={m.id} style={styles.col}>
-                  <Txt style={styles.colVal}>{xp > 0 ? xp : ''}</Txt>
-                  <View style={styles.colBarWrap}>
-                    <View style={[styles.colBar, { height: `${hPct}%`, backgroundColor: moduleColorSolid[m.id] ?? m.color }]} />
-                  </View>
-                  <Txt style={styles.colLabel} numberOfLines={1}>{m.name.split(' ')[0]}</Txt>
-                </View>
-              );
-            })}
-          </ScrollView>
-        </Card>
 
         <Card style={styles.levelCard}>
           <Txt variant="h2">Level Progress</Txt>

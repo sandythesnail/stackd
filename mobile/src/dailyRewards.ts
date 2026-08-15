@@ -21,7 +21,22 @@
  * week's take in a single day, and it's the only rung that jumps rather than steps. The
  * six before it climb gently (8 → 22) so that missing a day costs something real without
  * the early days feeling like a rounding error. A full first week pays 120. */
-export const DAILY_REWARD_LADDER = [8, 10, 12, 15, 18, 22, 35] as const;
+export const DAILY_REWARD_LADDER = [8, 10, 12, 15, 18, 22, 0] as const;
+
+/** Day 7 pays DIAMONDS instead of coins.
+ *
+ * It was 35 coins, which is a third of the week in one day but still the same currency as
+ * every other rung - a bigger number, not a different kind of prize. Diamonds are the
+ * scarce currency (streaks, level-ups, and now this), and they are the only way to reach
+ * the Diamond Exclusives, so ending the week on them makes day 7 worth planning around
+ * rather than merely worth more. Ten is half a mystery box.
+ *
+ * Its coin rung is 0 rather than a small consolation: two currencies on one tile reads as
+ * a receipt, and the tile has room for one number. */
+export const DAILY_REWARD_DIAMONDS = 10;
+
+/** Which rung of the ladder pays in diamonds - the last one. */
+const DIAMOND_DAY_INDEX = 6;
 export const DAILY_REWARD_CYCLE_DAYS = DAILY_REWARD_LADDER.length;
 
 /** Every completed week adds this to each of the next week's seven rungs — "a little bit
@@ -51,6 +66,8 @@ export type DailyRewardDay = {
   /** 1-based position in the cycle, i.e. the "Day 3" the tile is labelled with. */
   day: number;
   coins: number;
+  /** Diamonds this slot pays. Only day 7 is non-zero - see DAILY_REWARD_DIAMONDS. */
+  diamonds: number;
   /** toDateString() of the calendar day this slot falls on — real for past slots, projected
    * for future ones. Past slots are looked up in dailyLoginLog by exactly this key. */
   date: string;
@@ -79,7 +96,16 @@ export function cycleBonus(weeksCompleted: number): number {
 export function dailyRewardCoins(streak: number): number {
   const day = Math.max(1, Math.floor(streak));
   const idx = (day - 1) % DAILY_REWARD_CYCLE_DAYS;
+  // The diamond day pays no coins at all, so the cycle bonus must not conjure some: it is
+  // a bonus ON the coin rung, and that rung is zero.
+  if (idx === DIAMOND_DAY_INDEX) return 0;
   return DAILY_REWARD_LADDER[idx] + cycleBonus(Math.floor((day - 1) / DAILY_REWARD_CYCLE_DAYS));
+}
+
+/** What a given streak day pays in diamonds. Zero on six days out of seven. */
+export function dailyRewardDiamonds(streak: number): number {
+  const day = Math.max(1, Math.floor(streak));
+  return (day - 1) % DAILY_REWARD_CYCLE_DAYS === DIAMOND_DAY_INDEX ? DAILY_REWARD_DIAMONDS : 0;
 }
 
 /** The whole seven-tile week around today, ready to render.
@@ -113,7 +139,14 @@ export function dailyRewardCycleFor(
     if (i < todayIndex) state = log[date] ? 'claimed' : 'missed';
     else if (i === todayIndex) state = claimedToday ? 'claimed' : 'today';
     else state = 'upcoming';
-    return { day: i + 1, coins: base + bonus, date, state };
+    const isDiamondDay = i === DIAMOND_DAY_INDEX;
+    return {
+      day: i + 1,
+      coins: isDiamondDay ? 0 : base + bonus,
+      diamonds: isDiamondDay ? DAILY_REWARD_DIAMONDS : 0,
+      date,
+      state,
+    };
   });
 
   return {

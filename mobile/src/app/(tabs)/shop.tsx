@@ -14,7 +14,7 @@ type ShopTab = 'boutique' | 'room';
 /** Ported from the website's SHOP_CATEGORIES (app.js) — each tab renders its categories as
  * stacked sections (a header + a grid), not filter chips that swap the grid's contents. */
 const SHOP_CATEGORIES: { key: ShopItemReal['category']; label: string; tab: ShopTab; tag?: string }[] = [
-  { key: 'exclusive', label: 'Diamond Exclusives', tab: 'boutique', tag: 'Earned via streaks, not coins' },
+  { key: 'exclusive', label: 'Diamond Exclusives', tab: 'boutique', tag: 'Earned via streaks and level-ups, not coins' },
   { key: 'hat', label: 'Hats', tab: 'boutique' },
   { key: 'accessory', label: 'Accessories', tab: 'boutique' },
   { key: 'reward', label: 'Rewards', tab: 'boutique', tag: 'Earned through major milestones, not bought' },

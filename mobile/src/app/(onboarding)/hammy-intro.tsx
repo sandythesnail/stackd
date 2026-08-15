@@ -5,10 +5,11 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAudioPlayer } from 'expo-audio';
+import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import Svg, { Path, Rect, Ellipse, Circle, Polygon, Defs, ClipPath, G, RadialGradient, Stop } from 'react-native-svg';
 import { Txt, Hammy, Coin, Diamond } from '@/components';
 import { colors, font } from '@/theme';
+import { useStore } from '@/store';
 import { REACTION_FACES, MOOD_FACES, type FaceOverlay } from '@/hammyFaces';
 
 /** Screen — animated "meet Hammy" intro. Replaces the old static piggy-born
@@ -37,7 +38,7 @@ const GREEN = '#6B8F65';
  * may refuse to play without a gesture, and every call below is wrapped so a failure can
  * never take the animation down with it. */
 const LEVEL_UP_SFX = require('../../../assets/sfx/levelup.wav');
-const LEVEL_UP_VOLUME = 0.55;
+const LEVEL_UP_VOLUME = 1;
 
 /* Face per dialogue line — same entries the rest of the app uses (hammyFaces). */
 const SCRIPT: { text: string; face: FaceOverlay; reply: string | null }[] = [
@@ -187,6 +188,8 @@ export default function HammyIntro() {
   const bankW = Math.min(W * 0.98, H * 1.1);
   const bankH = bankW * 0.8;
 
+  const { markOnboardingComplete } = useStore();
+
   const [phase, setPhase] = useState<'bank' | 'dialogue' | 'leaving'>('bank');
   const [lineIdx, setLineIdx] = useState(0);
   const [bubbleText, setBubbleText] = useState<string | null>(null);
@@ -209,12 +212,24 @@ export default function HammyIntro() {
 
   const levelUp = useAudioPlayer(LEVEL_UP_SFX);
 
-  /** Fire-and-forget. Every path is wrapped because audio is decoration here: a refused
-   * autoplay, a silenced phone or a missing session must never interrupt the animation. */
+  /* THE REASON YOU COULDN'T HEAR IT. By default iOS honours the hardware mute switch, and a
+   * phone that lives on silent plays nothing — which is most phones. The previous note here
+   * argued that talking over a silenced phone for a decoration was rude, and for a decoration
+   * it would be; but this jingle is the payoff of the whole intro, it fires once in a user's
+   * lifetime, and it was silent for anyone whose ringer was off, which is the majority.
+   *
+   * Scoped to this screen and nothing else: no other sound in the app overrides the switch. */
+  useEffect(() => {
+    setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
+  }, []);
+
+  /** Fire-and-forget. Every path is wrapped because a refused autoplay or a missing audio
+   * session must never interrupt the animation. */
   const playSfx = (player: typeof levelUp, volume: number) => {
     try {
       player.volume = volume;
-      player.seekTo(0).catch(() => {});
+      // No seekTo. The player is freshly mounted and sitting at 0, and seeking returns a
+      // promise that raced play() on the same frame for no benefit.
       player.play();
     } catch { /* silence is fine */ }
   };
@@ -232,6 +247,10 @@ export default function HammyIntro() {
     finished.current = true;
     timers.current.forEach(clearTimeout);
     timers.current = [];
+    // Belt to the survey's braces. Both ends of onboarding set the flag, so whichever screen
+    // the user actually leaves from, this never plays at them a second time — including via
+    // Skip, which is the exit most likely to be taken by someone who has seen it before.
+    markOnboardingComplete();
     // replace, not push. This is the end of onboarding, so the flow behind it should not
     // stay in history — and it doesn't merely clutter the stack, it strands the user. push
     // left this screen mounted under Home with `finished.current` already true and every
@@ -539,10 +558,8 @@ const styles = StyleSheet.create({
     borderTopColor: GREEN,
   },
   chrome: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center' },
-  // Top-LEFT. On the right it sat where nothing else on this screen lives, and the eye had
-  // to hunt for it; top-left is where a way out belongs, and it matches the back chevron
-  // every other onboarding screen puts in that corner.
-  skip: { position: 'absolute', top: 54, left: 18, padding: 8, opacity: 0.6 },
+  // Top-right corner.
+  skip: { position: 'absolute', top: 46, right: 14, padding: 8, opacity: 0.6 },
   skipTxt: { fontFamily: font.bold, fontSize: 14, color: GREEN_DARK },
   choice: {
     position: 'absolute',

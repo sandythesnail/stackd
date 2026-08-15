@@ -143,26 +143,27 @@ const MIN_RESERVED = 0.09;    // never confusable with the reward tokens
 const MIN_PAIR = 0.045;       // worst module pair, in ANY of the three views (solver only)
 /** Pairs knowingly allowed to collapse, as "moduleA/moduleB".
  *
- * All four of these are fine in normal vision and fine under protanopia; they collapse only
- * under DEUTERANOPIA, which is the common form of colour blindness (about 1 man in 16). The
- * supplied palette separates these particular pairs almost entirely along the red-green axis,
- * and that axis is exactly what green-blindness removes:
+ * All three are fine in normal vision - the palette's closest normal-vision pair is 0.0492,
+ * above the floor - and collapse only for a dichromat. The supplied hues separate these
+ * particular pairs almost entirely along the red-green axis, which is exactly the axis that
+ * red/green blindness removes:
  *
  *     pair                  normal    deut     prot
- *     saving/investing      0.1309    0.0190   0.0461     lime-yellow vs amber
- *     earning/loans         0.3530    0.0332   0.2440     green vs magenta
- *     spending/credit       0.2407    0.0264   0.0957     lime vs orange
- *     taxes/psychology      0.1721    0.0270   0.1014     purple vs dark blue
+ *     saving/risk           0.2549    0.0445   0.1520     deep olive vs deep red
+ *     spending/investing    0.1683    0.0806   0.0449     dark green vs amber
+ *     spending/credit       0.1670    0.0553   0.0355     dark green vs brown-orange
+ *
+ * Two of the three are within a thousandth of the 0.045 floor, i.e. borderline rather than
+ * indistinguishable; spending/credit at 0.0355 under protanopia is the one real merge.
  *
  * The hues were specified deliberately, so they are kept and the exceptions are written down
- * rather than silently tolerated: the other 51 pairs are still enforced, so a NEW collision
+ * rather than silently tolerated: the other 52 pairs are still enforced, so a NEW collision
  * introduced later still fails the build. Nothing in the app relies on chip colour alone -
  * every chip carries its module number - so this degrades identification, not function. */
 const ACCEPTED_COLLISIONS = new Set([
-  'saving/investing',
-  'earning/loans',
+  'saving/risk',
+  'spending/investing',
   'spending/credit',
-  'taxes/psychology',
 ]);
 /* The search space, which is now deliberately WIDER than the palette should be. The ceiling
  * is the only aesthetic-looking number here and it isn't one: MIN_SURFACE against white runs

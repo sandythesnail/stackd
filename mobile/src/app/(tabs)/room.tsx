@@ -204,14 +204,7 @@ export default function Room() {
               />
             );
           })}
-
-          {/* Hammy always stands on something. Without it he reads as pasted onto the floor
-              rather than standing on it, and the room's own rug is a purchasable item that
-              most players don't own yet. */}
-          <View style={styles.hammyRug} pointerEvents="none">
-            <WhiteRug width={230} />
-          </View>
-          <Hammy size={218} equipped={equipped} style={styles.hammy} />
+                    <Hammy size={218} equipped={equipped} style={styles.hammy} />
 
           <Pressable style={styles.furnitureCta} onPress={goToRoomShop}>
             <Txt style={styles.furnitureCtaTxt}>Buy some furniture from the Furniture Farm! 🛒</Txt>
@@ -232,8 +225,12 @@ export default function Room() {
               (the same reasoning as SquareWindowSlot above). */}
           <View style={[styles.wardrobeStage, { width: stageSize, height: stageSize }]}>
             <RoomFloor style={styles.wardrobeStageStripes} pointerEvents="none" edge={false} />
-            <WhiteRug width={hammyStageSize * 1.5} />
-            <Hammy size={hammyStageSize} equipped={equipped} />
+            {/* Nudged up. The 440x460 drawing reserves its bottom band for the ground shadow
+                and the feet, so centring the BOX leaves the pig himself sitting visibly low
+                in it — which the white rug used to disguise by filling that band. With the
+                rug gone the gap is just empty floor, so shift the art up by a slice of the
+                stage and let the mascot, not his bounding box, be what looks centred. */}
+            <Hammy size={hammyStageSize} equipped={equipped} style={{ transform: [{ translateY: -stageSize * 0.06 }] }} />
           </View>
 
           <View style={styles.filters}>
@@ -290,27 +287,6 @@ export default function Room() {
 // Renders nothing at all for an empty slot — no placeholder box, dashed or otherwise. The
 // furnitureCta banner is the one, single way into the shop from this screen now, so an
 // unfurnished room just reads as an empty room instead of a scene full of "+" outlines.
-/**
- * The soft white mat Hammy stands on, everywhere he appears in his room.
- *
- * An ellipse rather than a rectangle because it's read as a floor plane in perspective, and
- * it does two jobs at once: it plants him on the floor (a mascot with nothing under him reads
- * as pasted onto the background) and it gives his outline a light surface to sit against, so
- * he stays legible on every wallpaper and every wood tone underneath.
- *
- * Layered light-to-dark from the middle outward, so the edge fades rather than cutting.
- */
-function WhiteRug({ width }: { width: number }) {
-  const height = width * 0.34;
-  return (
-    <View style={{ width, height, alignItems: 'center', justifyContent: 'center' }}>
-      <View style={[styles.rugLayer, { width, height, backgroundColor: 'rgba(255,255,255,0.16)' }]} />
-      <View style={[styles.rugLayer, { width: width * 0.86, height: height * 0.86, backgroundColor: 'rgba(255,255,255,0.42)' }]} />
-      <View style={[styles.rugLayer, { width: width * 0.7, height: height * 0.7, backgroundColor: 'rgba(255,255,255,0.82)' }]} />
-    </View>
-  );
-}
-
 function RoomSlotBox({
   layout, item, onPress,
 }: { layout: SlotLayout; item?: ShopItemReal; onPress: () => void }) {
@@ -397,10 +373,6 @@ const styles = StyleSheet.create({
   // width of the scene. Nudged up slightly from 60.
   garlandBand: { top: 52, left: 0, right: 0 },
   hammy: { position: 'absolute', bottom: '12%', alignSelf: 'center' },
-  // Centred on Hammy's own feet: he sits at bottom 12% and his art has a little clearance
-  // below the body, so the mat sits a touch lower than his box's bottom edge.
-  hammyRug: { position: 'absolute', bottom: '10%', alignSelf: 'center' },
-  rugLayer: { position: 'absolute', borderRadius: 999 },
   furnitureCta: {
     position: 'absolute',
     top: 14,

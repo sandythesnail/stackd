@@ -5,7 +5,7 @@ import type { RoomSlot, ShopItemReal } from '@/content';
 import { ACHIEVEMENTS, EARNABLE_ACHIEVEMENTS, BADGE_TIER_REWARD, MODULE_MASTERY_ACHIEVEMENT, type Achievement } from '@/achievements';
 import { LIFE_EVENTS, LIFE_EVENT_UNLOCKS, LIFE_EVENT_CHANCE, LIFE_EVENT_COOLDOWN_SESSIONS, pickAmbientLifeEvent, type LifeEvent } from '@/lifeEvents';
 import type { QuestAnalytics } from '@/questReport';
-import { dailyRewardCoins, dailyRewardCycleFor, type DailyRewardCycle } from '@/dailyRewards';
+import { dailyRewardCoins, dailyRewardDiamonds, dailyRewardCycleFor, type DailyRewardCycle } from '@/dailyRewards';
 
 const STORAGE_KEY = 'stackd_state_v1';
 
@@ -41,6 +41,19 @@ export const QUEST_COIN_FLAT_FALLBACK = 8;
  * formula counted lifetime claimed days and flattened out permanently on the sixth one, so
  * every day after that paid an identical 20 — see @/dailyRewards, which replaces it with a
  * seven-day ladder positioned by `streak` and a small per-week bonus. */
+/** Diamonds paid for reaching a level, indexed by the level reached.
+ *
+ * Starts at 3 for level 2 and climbs by one a level. Deliberately small: diamonds buy the
+ * Diamond Exclusives, and the whole point of that shelf is that it takes a while. A full
+ * run to level 11 pays 3+4+...+12 = 75, against a 20-diamond mystery box, so levelling is a
+ * real second source of diamonds alongside streaks without replacing them.
+ *
+ * Index 0 and 1 are zero: level 1 is where everyone starts, so nobody "reaches" it. */
+const LEVEL_UP_DIAMONDS = [0, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+export function levelUpDiamonds(level: number) {
+  return LEVEL_UP_DIAMONDS[Math.min(level, LEVEL_UP_DIAMONDS.length - 1)] ?? 0;
+}
+
 const STREAK_DIAMOND_INTERVAL = 3;
 const STREAK_DIAMOND_REWARD = 5;
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
@@ -57,6 +70,21 @@ export const MAX_LEVEL = LEVEL_THRESHOLDS.length;
 
 export function xpForLevel(l: number) {
   return LEVEL_THRESHOLDS[Math.min(l, LEVEL_THRESHOLDS.length - 1)];
+}
+
+/** Credits the level-up reward when an XP award crosses a boundary, and arms the
+ * celebration. A no-op when the level did not change, which is almost every lesson.
+ *
+ * Takes the BEFORE xp and the already-updated next state, because level is derived from
+ * total xp rather than stored - there is no level field to compare, so the crossing has to
+ * be computed from the two totals. Multi-level jumps pay only the level actually reached;
+ * no single lesson is worth two levels at any point on the curve. */
+function applyLevelUp(beforeXp: number, next: AppState): AppState {
+  const before = levelForXp(beforeXp);
+  const after = levelForXp(next.xp);
+  if (after <= before) return next;
+  const diamonds = levelUpDiamonds(after);
+  return { ...next, diamonds: next.diamonds + diamonds, levelUpBanner: { level: after, diamonds } };
 }
 
 /** Ported from app.js's addXP loop, but computed fresh from total xp each time (no
@@ -181,6 +209,19 @@ export type AppState = {
    * the honest thing to record when the questions are drawn from a pool the student has now
    * seen. */
   postTest: { score: number; total: number; takenAt: string } | null;
+  /** Set the moment an XP award crosses a level boundary, cleared when the celebration is
+   * dismissed. Transient in spirit but stored like dailyLoginBanner, so a level-up earned
+   * on the last lesson before the app is closed is still announced when it reopens. */
+  levelUpBanner: { level: number; diamonds: number } | null;
+  /** Set once the first-run onboarding has been SEEN through to the end, and never unset.
+   *
+   * onboardingTrackId used to carry this by implication, but it answers a different
+   * question: it is the track you chose, so anyone who backed out of the survey, or whose
+   * track failed to reach the cloud, read as never having been onboarded and was sent
+   * through the whole thing again. This says only "they have seen it", which is the thing
+   * the routing actually needs to know. A retake from Settings deliberately does not clear
+   * it: retaking is for changing your track, not for watching the intro again. */
+  hasCompletedOnboarding: boolean;
   /** Module ids where a bossbattle-ending quest has been finished at least once — powers
    * the crisis_averted/fraud_fighter achievements. */
   questBossesWon: string[];
@@ -283,6 +324,8 @@ const DEFAULT_STATE: AppState = {
   dailyLoginLog: {},
   onboardingTrackId: null,
   postTest: null,
+  levelUpBanner: null,
+  hasCompletedOnboarding: false,
   questBossesWon: [],
   questHintsUsed: {},
   termsLearned: [],
@@ -629,6 +672,10 @@ type Ctx = {
   setOnboardingTrack: (trackId: string) => void;
   /** Record a finished final assessment. Overwrites any previous sitting - see AppState. */
   recordPostTest: (score: number, total: number) => void;
+  /** Marks first-run onboarding as seen. Idempotent and one-way. */
+  markOnboardingComplete: () => void;
+  /** Dismiss the level-up celebration. The diamonds are already credited by then. */
+  dismissLevelUpBanner: () => void;
   /** Marks the first-login spotlight tour as seen, whether it finished or was skipped —
    * see components/OnboardingTour.tsx. */
   markOnboardingTourSeen: () => void;
@@ -1074,6 +1121,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             }
           }
           liveState.current = next;
+          // Pays the level-up reward if this award crossed a boundary, and arms the
+          // celebration. No-op otherwise, which is almost every lesson.
+          next = applyLevelUp(s.xp, next);
           return next;
         });
         return { xpAwarded: advanced ? xpEarned : 0, coinsAwarded: advanced ? coinsEarned : 0 };
@@ -1134,6 +1184,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             }
           }
           liveState.current = next;
+          // Pays the level-up reward if this award crossed a boundary, and arms the
+          // celebration. No-op otherwise, which is almost every lesson.
+          next = applyLevelUp(s.xp, next);
           return next;
         });
         return { xpAwarded: firstTime ? xpEarned : 0, coinsAwarded: firstTime ? coinsEarned : 0 };
@@ -1230,14 +1283,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // Same race on the diamond half: read and zeroed through livePendingDiamonds, so the
         // second of two calls in a tick sees 0 rather than the pre-claim value and can't
         // bank the same milestone reward twice.
-        const diamonds = livePendingDiamonds.current;
+        // Day 7 pays diamonds rather than coins (see @/dailyRewards), so the claim can be
+        // worth something with coins at zero.
+        const dayDiamonds = alreadyClaimed ? 0 : dailyRewardDiamonds(s.streak);
+        const diamonds = livePendingDiamonds.current + dayDiamonds;
         if (coins === 0 && diamonds === 0) return;
         livePendingDiamonds.current = 0;
         setPendingStreakDiamonds(0);
         const next = applyAchievementUnlocks({
           ...s,
           coins: s.coins + coins,
-          dailyLoginLog: alreadyClaimed ? s.dailyLoginLog : { ...s.dailyLoginLog, [today]: coins },
+          diamonds: s.diamonds + dayDiamonds,
+          // The log value has to stay TRUTHY: dailyRewardCycleFor reads it as "was this day
+          // collected", and day 7 pays zero coins, so writing the coin figure there would
+          // mark the biggest day of the week as missed the moment it was claimed.
+          dailyLoginLog: alreadyClaimed ? s.dailyLoginLog : { ...s.dailyLoginLog, [today]: coins || dayDiamonds },
         });
         liveState.current = next;
         setState(next);
@@ -1259,6 +1319,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       recordPostTest: (score, total) => setState((s) => ({
         ...s, postTest: { score, total, takenAt: new Date().toISOString() },
       })),
+      markOnboardingComplete: () => setState((s) => (s.hasCompletedOnboarding ? s : { ...s, hasCompletedOnboarding: true })),
+      dismissLevelUpBanner: () => setState((s) => (s.levelUpBanner ? { ...s, levelUpBanner: null } : s)),
       markOnboardingTourSeen: () => setState((s) => (s.hasSeenOnboardingTour ? s : { ...s, hasSeenOnboardingTour: true })),
       setBudgetPlan: (next) => setState((s) => ({
         ...s, budgetPlan: typeof next === 'function' ? next(s.budgetPlan) : next,

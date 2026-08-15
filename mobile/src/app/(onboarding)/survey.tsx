@@ -1,6 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
-import Reanimated, { FadeIn, FadeInDown, FadeInRight, ZoomIn } from 'react-native-reanimated';
+import Reanimated, {
+  FadeIn, FadeInDown, FadeInRight, ZoomIn,
+  useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -35,6 +38,10 @@ import { MOOD_FACES, REACTION_FACES, type FaceOverlay } from '@/hammyFaces';
 
 type Familiarity = Record<string, number>;
 
+/** Hammy's own resting face, used for "I've heard of it" - a shrug is the honest reaction
+ * to a half-answer, and the nervy face made a perfectly reasonable one look like a wince. */
+const RESTING_FACE = MOOD_FACES.satisfied;
+
 /** The five answers, same 1-5 scale the scoring expects (see computeModulePriority).
  *
  * Each carries a face, so Hammy reacts to the answer as it's given. The run climbs the way
@@ -44,7 +51,7 @@ type Familiarity = Record<string, number>;
  * give — but a face that doesn't move is worse than no face, so it moves. */
 const SCALE: { value: number; label: string; face: FaceOverlay }[] = [
   { value: 1, label: 'Never heard of it', face: MOOD_FACES.sad },
-  { value: 2, label: 'I’ve heard of it', face: MOOD_FACES.nervy },
+  { value: 2, label: 'I’ve heard of it', face: RESTING_FACE },
   { value: 3, label: 'I kind of get it', face: REACTION_FACES.gentle },
   { value: 4, label: 'Pretty comfortable', face: REACTION_FACES.happy },
   { value: 5, label: 'I could explain it', face: MOOD_FACES.star },
@@ -52,6 +59,9 @@ const SCALE: { value: number; label: string; face: FaceOverlay }[] = [
 
 /** Before anything is picked. Curious reads as "well?", which is the question being asked. */
 const UNANSWERED_FACE = MOOD_FACES.curious;
+
+
+const AnimatedPressable = Reanimated.createAnimatedComponent(Pressable);
 
 const GOALS_STEP = modules.length;
 const RESULT_STEP = modules.length + 1;
@@ -62,7 +72,7 @@ export default function Survey() {
   // Set by Settings' "Retake onboarding survey" row — see finish() below for what changes.
   const { retake } = useLocalSearchParams<{ retake?: string }>();
   const isRetake = retake === '1';
-  const { setOnboardingTrack } = useStore();
+  const { setOnboardingTrack, markOnboardingComplete } = useStore();
 
   const [step, setStep] = useState(0);
   // Deliberately empty. Nothing is pre-answered — see the note at the top of the file.
@@ -105,6 +115,12 @@ export default function Survey() {
     if (finishing.current) return;
     finishing.current = true;
     setOnboardingTrack(activeTrack.id);
+    // Onboarding counts as seen the moment the survey is answered, not when the intro
+    // animation finishes. The animation is a reward, not a step: someone who answers the
+    // questions and then force-quits during the piggy bank has seen this screen once and
+    // should never be handed it again. hammy-intro sets the same flag for the path where the
+    // survey is skipped entirely.
+    markOnboardingComplete();
     // A retake from Settings just saves the new track and goes back where it came from.
     // It used to fall through to the same branch as first-run onboarding, which replayed the
     // whole animated piggy-born intro at someone who has been using the app for weeks — and
@@ -155,18 +171,23 @@ export default function Survey() {
                 {/* Hammy reacts to the answer as it is given. He is the only thing on this
                     screen that responds to a tap besides the number itself, which is what
                     turns eleven identical questions into something with a face on it. */}
-                <View style={styles.qHammy}>
-                  <Hammy
-                    size={92}
-                    bob={false}
-                    face={SCALE.find((s) => s.value === familiarity[module.id])?.face ?? UNANSWERED_FACE}
-                  />
-                </View>
+                <ReactingHammy face={SCALE.find((s) => s.value === familiarity[module.id])?.face ?? UNANSWERED_FACE} />
                 <Txt variant="h1" style={{ flex: 1 }}>How much do you know about this?</Txt>
               </View>
 
               <View style={[styles.qCard, { backgroundColor: module.color, borderColor: module.textColor }]}>
-                <MIcon abbr={module.icon} color={colors.white} textColor={module.textColor} size={54} r={16} fontSize={20} />
+                {/* The square, ringed. It used to be drawn as a WHITE tile carrying the
+                    module's number colour, which is a pale tint of the module's own hue — so
+                    loans, whose number is very nearly white, showed a blank white square, and
+                    risk showed a barely-there one. The module with no icon on its own topic
+                    card is not a subtle bug.
+                    Now the tile is the module's real chip, exactly as it appears everywhere
+                    else in the app, and the white ring is what separates it from the card
+                    behind it — which is that same colour. Outline for contrast, chip for
+                    identity, rather than recolouring the chip to solve the contrast. */}
+                <View style={styles.qIconRing}>
+                  <MIcon abbr={module.icon} color={module.color} textColor={module.textColor} size={54} r={16} fontSize={20} />
+                </View>
                 <View style={{ flex: 1, gap: 3 }}>
                   <Txt style={[styles.qTopic, { color: module.textColor }]}>
                     {`TOPIC ${step + 1} OF ${modules.length}`}
@@ -336,6 +357,83 @@ export default function Survey() {
  * kind of get it" was the middle or the fourth of five was something you had to work out.
  * A line of numbers with the two extremes labelled at its ends says it without being read.
  */
+/**
+ * Hammy, reacting when his face changes.
+ *
+ * A face that swaps silently reads as a bug — the drawing is identical apart from the eyes and
+ * mouth, so at a glance nothing appears to have happened. He hops and gives a small shake
+ * instead, which is what makes the swap read as HIM responding rather than as an image being
+ * replaced. Keyed on the face itself, so re-picking the same number doesn't re-trigger it.
+ */
+function ReactingHammy({ face }: { face: FaceOverlay }) {
+  const react = useSharedValue(0);
+  useEffect(() => {
+    react.value = 0;
+    react.value = withSequence(
+      withSpring(1, { damping: 7, stiffness: 340 }),
+      withSpring(0, { damping: 14, stiffness: 220 }),
+    );
+  }, [face, react]);
+
+  const style = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: -react.value * 9 },
+      { rotate: `${react.value * 5}deg` },
+      { scale: 1 + react.value * 0.06 },
+    ],
+  }));
+
+  return (
+    <Reanimated.View style={[styles.qHammy, style]}>
+      <Hammy size={92} bob={false} face={face} />
+    </Reanimated.View>
+  );
+}
+
+/**
+ * One point on the scale.
+ *
+ * Selection SPRINGS rather than switching: the chosen number swells past its resting size and
+ * settles back, which is what makes a tap feel like it landed on something. Its own press
+ * squeeze runs on a separate channel so the two can't fight — the same two-channel shape
+ * Option uses for its press-versus-verdict animations.
+ */
+function ScaleDot({
+  value, label, on, onPick,
+}: { value: number; label: string; on: boolean; onPick: (n: number) => void }) {
+  const press = useSharedValue(0);
+  const select = useSharedValue(on ? 1 : 0);
+
+  useEffect(() => {
+    select.value = on
+      // Overshoot and settle. Low damping on the way in is the "pop"; the resting spring is
+      // stiffer so it doesn't wobble afterwards.
+      ? withSequence(withSpring(1.18, { damping: 9, stiffness: 320 }), withSpring(1, { damping: 15, stiffness: 260 }))
+      : withTiming(0, { duration: 160 });
+  }, [on, select]);
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: (1 - press.value * 0.08) * (1 + select.value * 0.12) }],
+  }));
+
+  return (
+    <AnimatedPressable
+      onPress={() => onPick(value)}
+      onPressIn={() => { press.value = withTiming(1, { duration: 70 }); }}
+      onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 420, overshootClamping: true }); }}
+      accessibilityRole="button"
+      accessibilityLabel={`${value}, ${label}`}
+      accessibilityState={{ selected: on }}
+      hitSlop={6}
+      style={style}
+    >
+      <View style={[styles.scaleDot, on && styles.scaleDotOn]}>
+        <Txt style={[styles.scaleNum, on && styles.scaleNumOn]}>{value}</Txt>
+      </View>
+    </AnimatedPressable>
+  );
+}
+
 function ScalePicker({ value, onPick }: { value?: number; onPick: (n: number) => void }) {
   const picked = SCALE.find((s) => s.value === value);
   return (
@@ -343,24 +441,15 @@ function ScalePicker({ value, onPick }: { value?: number; onPick: (n: number) =>
       <View style={styles.scaleRow}>
         {/* The rail the points sit on. Behind them, inset so it doesn't poke out either end. */}
         <View style={styles.scaleRail} pointerEvents="none" />
-        {SCALE.map((s) => {
-          const on = value === s.value;
-          return (
-            <Pressable
-              key={s.value}
-              onPress={() => onPick(s.value)}
-              accessibilityRole="button"
-              accessibilityLabel={`${s.value}, ${s.label}`}
-              accessibilityState={{ selected: on }}
-              hitSlop={6}
-              style={({ pressed }) => [pressed && { transform: [{ scale: 0.92 }] }]}
-            >
-              <View style={[styles.scaleDot, on && styles.scaleDotOn]}>
-                <Txt style={[styles.scaleNum, on && styles.scaleNumOn]}>{s.value}</Txt>
-              </View>
-            </Pressable>
-          );
-        })}
+        {SCALE.map((s) => (
+          <ScaleDot
+            key={s.value}
+            value={s.value}
+            label={s.label}
+            on={value === s.value}
+            onPick={onPick}
+          />
+        ))}
       </View>
 
       <View style={styles.scaleEnds}>
@@ -401,6 +490,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 14,
     borderRadius: radius.card, borderWidth: 2, padding: 14,
   },
+  // Padding rather than a border, so the ring is a solid band of white with the chip's own
+  // rounding showing through it — a 3px border on the tile itself would sit inside the
+  // corner radius and read as a hairline.
+  qIconRing: { backgroundColor: colors.white, borderRadius: 19, padding: 3 },
   qTopic: { fontFamily: font.extra, fontSize: 11, letterSpacing: 0.9, opacity: 0.75 },
   qModule: { fontFamily: font.display, fontSize: 22 },
 

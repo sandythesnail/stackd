@@ -129,76 +129,81 @@ export const colors = {
  * Eleven saturated hues, ten supplied directly and the eleventh a deeper version of the first
  * so the set closes on the green it opens with. Vivid rather than pastel by choice.
  *
- * Two things follow from these particular values, both measured rather than assumed:
+ * Every HUE here is the supplied one, unrotated. What moved is depth, and it moved because of
+ * the one rule the numbers now follow: every number is a lighter tint of its own chip. A chip
+ * can only carry a lighter number if it is dark enough for one to be legible, and five of the
+ * supplied colours were nowhere near — white itself reaches only 1.65:1 on #A5DB01 lime and
+ * 1.67:1 on #F9C000 amber, against the 4.5:1 that text needs.
  *
- *   - Five chips take WHITE numbers and six take a deep same-hue tone. #6B0F7C and #044B8B
- *     are dark enough that no darker text can clear 4.6:1 against them, and #A5DB01 is light
- *     enough that white cannot. The pairing is solved per chip, not fixed for the set.
- *   - saving (#A5DB01) and investing (#F9C000) sit 0.0190 apart under DEUTERANOPIA, against a
- *     0.045 floor. Lime-yellow and amber are separated almost entirely by the red-green axis,
- *     which is exactly the axis green-blindness removes, so for roughly one man in twelve
- *     those two modules are the same colour. Both were specified, so both are kept and the
- *     pair is recorded as a known exception in the checker (ACCEPTED_COLLISIONS) rather than
- *     silently tolerated: any OTHER pair that collapses still fails the build. Nudging either
- *     hue about 15 degrees apart would clear it if that trade is ever worth making.
+ * The depths are solved jointly rather than hue by hue, which matters more than it sounds.
+ * Darkening each colour as little as it individually needs collapses the palette: five of the
+ * eleven hues sit in the yellow-green quadrant and were separated mostly BY lightness, so
+ * pushing them into one dark band put spending and saving 0.031 apart in normal vision — the
+ * same colour to everyone, not just to a dichromat. Solving all eleven together spreads them
+ * back out along depth instead, so saving lands deep (#344800) while investing stays mid
+ * (#8E6C01). The closest pair in normal vision is now earning/scams at 0.0492, which is the
+ * pair that is meant to be close: scams is the deeper reprise of earning's green.
+ *
+ * Under DEUTERANOPIA and PROTANOPIA three pairs still fall under the floor — saving/risk at
+ * 0.0445, spending/investing at 0.0449, spending/credit at 0.0355. The first two are a hair
+ * under and the third is real. All three are recorded in the checker (ACCEPTED_COLLISIONS)
+ * rather than silently tolerated; any OTHER pair that collapses still fails the build.
  *
  * scripts/solve-module-colors.js no longer generates these, it only checks them. Its solver
  * is kept because it is what can build a fresh palette if this one is ever replaced. */
 export const moduleColor: Record<string, string> = {
-  earning: '#3EA06D',
-  spending: '#66BF01',
-  saving: '#A5DB01',
-  investing: '#F9C000',
-  credit: '#F98800',
-  risk: '#AD2601',
-  loans: '#E20372',
-  taxes: '#6B0F7C',
-  psychology: '#044B8B',
-  career: '#3DB9E5',
-  scams: '#2B7350',
+  earning: '#00814E',
+  spending: '#346700',
+  saving: '#344800',
+  investing: '#8E6C01',
+  credit: '#944E00',
+  risk: '#861B00',
+  loans: '#DD016F',
+  taxes: '#640075',
+  psychology: '#004A8C',
+  career: '#007A9C',
+  scams: '#1C714B',
 };
 
-/** The number drawn ON each chip: a tint of that chip's OWN hue, light where the chip is dark
- * enough to allow it and deep where it isn't.
+/** The number drawn ON each chip: always a LIGHTER tint of that chip's own hue.
  *
- * The split is forced, not stylistic. Five of the eleven chips are too light for ANY lighter
- * colour to be legible on them — white itself reaches only 1.65:1 on #A5DB01 and 1.67:1 on
- * #F9C000, against the 4.5:1 that text needs — so those five take a deep tint of their hue and
- * the six darker chips take a pale one. Making every number light would mean darkening those
- * five chips into olive and brown, which was measured and rejected.
+ * One rule for all eleven, which is what makes the Modules tab read as a set rather than as two
+ * groups — an earlier revision had five deep numbers and six pale ones, split by which chips
+ * happened to be light, and the inconsistency showed.
  *
- * loans (#E20372) is the single plain white in the set, and it has to be: white on that
- * magenta is 4.68:1, so the entire contrast budget is spent before any pink can be mixed in.
- * Every other light number carries real colour (#FFD2C7, #F7CDFF, #C7E1FF, #92FFC5).
+ * Each tint is solved per chip: the most saturated light tone of the same hue that still clears
+ * 4.6:1. That is why they are not all the same value and none of them is plain white — a number
+ * on the green chip is faintly green, on the magenta faintly pink, and the deepest chips
+ * (#344800, #346700) have enough headroom to carry a properly green number rather than a wash.
+ * The ones that look nearly white (#FFF9EC on investing, #FFF7F9 on loans) are the chips with
+ * the least room left, where the contrast budget is spent before much hue can be mixed back in.
  *
- * Every pair clears 4.6:1. Solved per chip rather than pinned for the set: an earlier revision
- * fixed one foreground lightness for everything, and the single chip that had been deepened
- * came out at 4.17:1, below AA, with nothing to flag it. */
+ * Solved per chip rather than pinned for the set: an earlier revision fixed one foreground
+ * lightness for everything and one chip came out at 4.17:1, below AA, with nothing to flag it. */
 export const moduleColorText: Record<string, string> = {
-  earning: '#002D18',
-  spending: '#224602',
-  saving: '#445B12',
-  investing: '#694F00',
-  credit: '#5A2E00',
-  risk: '#FFD2C7',
-  loans: '#FFFFFF',
-  taxes: '#F7CDFF',
-  psychology: '#C7E1FF',
-  career: '#00455A',
-  scams: '#92FFC5',
+  earning: '#E3FFED',
+  spending: '#B3EB92',
+  saving: '#C3E786',
+  investing: '#FFF9EC',
+  credit: '#FFD6B8',
+  risk: '#FFC9BC',
+  loans: '#FFF7F9',
+  taxes: '#F5C3FF',
+  psychology: '#BCDBFF',
+  career: '#F3FBFF',
+  scams: '#8DFAC0',
 };
 
 /**
  * The module's colour when it is drawn as a BARE SHAPE rather than behind its number: the
  * Progress chart's columns, the module hero's border.
  *
- * Same value as `moduleColor` for nine of the eleven. The two palest steps of the ramp are
- * substituted, because a shape only exists if it contrasts with what's under it: #C7DDB5 sits
- * at 1.21 against the progress track and #DDEAD1 at 1.04, where 1.0 is literally invisible.
- * A 4%-complete bar in the palest green would be a bar you cannot see at all.
- *
- * Substituting only where it matters keeps the chips themselves exactly as specified — the
- * ramp you see on the Modules tab is the ramp that was asked for, top to bottom. */
+ * Identical to `moduleColor` today, and kept as a separate export rather than folded away.
+ * It exists because a shape only exists if it contrasts with what's under it, and an earlier
+ * palette had two steps so pale (1.21 and 1.04 against the progress track, where 1.0 is
+ * literally invisible) that they needed substitutes here. The current chips are all deep
+ * enough to draw themselves — the weakest is 3.98:1 against the lightest surface — so nothing
+ * is substituted. If a paler palette ever lands, this is where it gets fixed. */
 export const moduleColorSolid: Record<string, string> = { ...moduleColor };
 
 export const font = {
