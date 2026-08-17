@@ -70,15 +70,15 @@ export default function ModuleDetail() {
           <View style={{ flex: 1 }}>
             <Txt variant="h2">{content?.desc ?? mod.name}</Txt>
             <View style={styles.heroMeta}>
-              <Txt style={[styles.heroTiny, { color: mod.textColor }]}>{done} of {total} lessons</Txt>
+              <Txt style={[styles.heroTiny, { color: mod.inkColor }]}>{done} of {total} lessons</Txt>
               {/* The module's real total, not `xpReward`. That field is the website's flat
                   per-lesson figure and mobile pays real per-chapter XP instead, so "25 XP
                   each" was wrong for essentially every lesson in the module (they range from
                   about 10 to 79). One honest number for the whole module beats a per-lesson
                   one that can't be right for all of them — see moduleMaxXp. */}
-              <Txt style={[styles.heroTiny, { color: mod.textColor }]}>up to {moduleMaxXp(content)} XP</Txt>
+              <Txt style={[styles.heroTiny, { color: mod.inkColor }]}>up to {moduleMaxXp(content)} XP</Txt>
             </View>
-            <ProgressBar value={pct} height={9} fillColors={[mod.color, mod.textColor]} style={{ marginTop: 6 }} />
+            <ProgressBar value={pct} height={9} fillColors={[mod.color, mod.inkColor]} style={{ marginTop: 6 }} />
           </View>
         </LinearGradient>
 

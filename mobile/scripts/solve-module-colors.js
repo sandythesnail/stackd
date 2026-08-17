@@ -143,27 +143,40 @@ const MIN_RESERVED = 0.09;    // never confusable with the reward tokens
 const MIN_PAIR = 0.045;       // worst module pair, in ANY of the three views (solver only)
 /** Pairs knowingly allowed to collapse, as "moduleA/moduleB".
  *
- * All three are fine in normal vision - the palette's closest normal-vision pair is 0.0492,
- * above the floor - and collapse only for a dichromat. The supplied hues separate these
- * particular pairs almost entirely along the red-green axis, which is exactly the axis that
- * red/green blindness removes:
+ * All four of these are fine in normal vision and fine under protanopia; they collapse only
+ * under DEUTERANOPIA, which is the common form of colour blindness (about 1 man in 16). The
+ * supplied palette separates these particular pairs almost entirely along the red-green axis,
+ * and that axis is exactly what green-blindness removes:
  *
  *     pair                  normal    deut     prot
- *     saving/risk           0.2549    0.0445   0.1520     deep olive vs deep red
- *     spending/investing    0.1683    0.0806   0.0449     dark green vs amber
- *     spending/credit       0.1670    0.0553   0.0355     dark green vs brown-orange
- *
- * Two of the three are within a thousandth of the 0.045 floor, i.e. borderline rather than
- * indistinguishable; spending/credit at 0.0355 under protanopia is the one real merge.
+ *     saving/investing      0.1309    0.0190   0.0461     lime-yellow vs amber
+ *     earning/loans         0.3530    0.0332   0.2440     green vs magenta
+ *     spending/credit       0.2407    0.0264   0.0957     lime vs orange
+ *     taxes/psychology      0.1721    0.0270   0.1014     purple vs dark blue
  *
  * The hues were specified deliberately, so they are kept and the exceptions are written down
- * rather than silently tolerated: the other 52 pairs are still enforced, so a NEW collision
+ * rather than silently tolerated: the other 51 pairs are still enforced, so a NEW collision
  * introduced later still fails the build. Nothing in the app relies on chip colour alone -
  * every chip carries its module number - so this degrades identification, not function. */
 const ACCEPTED_COLLISIONS = new Set([
-  'saving/risk',
-  'spending/investing',
+  'saving/investing',
+  'earning/loans',
   'spending/credit',
+  'taxes/psychology',
+]);
+
+/** Chips knowingly allowed to carry an under-contrast number, as module ids.
+ *
+ * The numbers are plain white on every chip by request, and six of the eleven supplied chips
+ * are too light for white to reach 4.6:1 - two of them (saving 1.65, investing 1.67) so light
+ * that white is effectively unreadable on them. theme.ts lists the full measurement.
+ *
+ * This is a LIST, not a lowered floor, and the difference is the whole point: MIN_CONTRAST
+ * still applies to the other five and to anything added later, so a twelfth module with an
+ * illegible number fails the build like it always did. Removing a chip from this list is what
+ * makes its number enforced again. */
+const ACCEPTED_LOW_CONTRAST = new Set([
+  'earning', 'spending', 'saving', 'investing', 'credit', 'career',
 ]);
 /* The search space, which is now deliberately WIDER than the palette should be. The ceiling
  * is the only aesthetic-looking number here and it isn't one: MIN_SURFACE against white runs
@@ -330,10 +343,15 @@ if (process.argv.includes('--check')) {
 
   const fail = [];
 
-  // 1. The number on every chip has to be readable. This never bends.
+  // 1. The number on every chip has to be readable, except on the chips explicitly exempted in
+  //    ACCEPTED_LOW_CONTRAST - which are reported anyway, so the cost stays visible in the
+  //    build output instead of disappearing the moment it was accepted.
+  const lowContrast = [];
   for (const k of KEYS) {
     const c = cr(bg[k], fg[k]);
-    if (c < MIN_CONTRAST) fail.push(k + ': number contrast ' + c.toFixed(2) + ' < ' + MIN_CONTRAST);
+    if (c >= MIN_CONTRAST) continue;
+    if (ACCEPTED_LOW_CONTRAST.has(k)) { lowContrast.push(k + ' ' + c.toFixed(2)); continue; }
+    fail.push(k + ': number contrast ' + c.toFixed(2) + ' < ' + MIN_CONTRAST);
   }
 
   // 2. Anything drawn as a bare shape must be visible on every surface it lands on. That is
@@ -374,7 +392,11 @@ if (process.argv.includes('--check')) {
     ? ' (' + ACCEPTED_COLLISIONS.size + ' accepted collision: ' + [...ACCEPTED_COLLISIONS].join(', ') + ')'
     : '';
   console.log('\u2713 module colors: worst pair ' + worst.toFixed(4) + ' at ' + where + accepted +
-    ', every number clears ' + MIN_CONTRAST + ':1 and every solid tone ' + MIN_SURFACE + ':1.');
+    ', every solid tone clears ' + MIN_SURFACE + ':1.');
+  if (lowContrast.length) {
+    console.log('  ! white numbers below ' + MIN_CONTRAST + ':1 on ' + lowContrast.length +
+      ' chip(s), accepted by request: ' + lowContrast.join(', '));
+  }
   process.exit(0);
 }
 

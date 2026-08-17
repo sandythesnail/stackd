@@ -3,7 +3,7 @@
  * badges, shop items, and the sample learner (Maya). Mirrors the design mockups.
  * Swap for Sandra's web content / Supabase later.
  */
-import { moduleColor, moduleColorText } from '@/theme';
+import { moduleColor, moduleColorText, moduleColorInk } from '@/theme';
 
 // Mutable game state (coins, diamonds, xp, level, streak, inventory, equipped) lives in
 // the store (@/store) so it can persist and update live — this is just the static profile.
@@ -21,23 +21,27 @@ export type Module = {
    * field, shown in the module badge instead of a two-letter abbreviation. */
   icon: string;
   color: string;
+  /** The big display number on the chip — plain white on every module. */
   textColor: string;
+  /** Readable ink for WORDS on this module's colour, which white is not on the pale
+   * chips. See moduleColorInk. */
+  inkColor: string;
 };
 
 // Order, ids, and numbers match the website's MODULES array. Nothing is level-gated,
 // matching the website's no-gating behavior — every module and lesson is reachable any time.
 export const modules: Module[] = [
-  { id: 'earning', name: 'Earning', icon: '01', color: moduleColor.earning, textColor: moduleColorText.earning },
-  { id: 'spending', name: 'Spending', icon: '02', color: moduleColor.spending, textColor: moduleColorText.spending },
-  { id: 'saving', name: 'Saving', icon: '03', color: moduleColor.saving, textColor: moduleColorText.saving },
-  { id: 'investing', name: 'Investing', icon: '04', color: moduleColor.investing, textColor: moduleColorText.investing },
-  { id: 'credit', name: 'Managing Credit', icon: '05', color: moduleColor.credit, textColor: moduleColorText.credit },
-  { id: 'risk', name: 'Managing Risk', icon: '06', color: moduleColor.risk, textColor: moduleColorText.risk },
-  { id: 'loans', name: 'Loans', icon: '07', color: moduleColor.loans, textColor: moduleColorText.loans },
-  { id: 'taxes', name: 'Taxes', icon: '08', color: moduleColor.taxes, textColor: moduleColorText.taxes },
-  { id: 'psychology', name: 'Consumer Psychology', icon: '09', color: moduleColor.psychology, textColor: moduleColorText.psychology },
-  { id: 'career', name: 'Career & Salary', icon: '10', color: moduleColor.career, textColor: moduleColorText.career },
-  { id: 'scams', name: 'Scams & Fraud Prevention', icon: '11', color: moduleColor.scams, textColor: moduleColorText.scams },
+  { id: 'earning', name: 'Earning', icon: '01', color: moduleColor.earning, textColor: moduleColorText.earning, inkColor: moduleColorInk.earning },
+  { id: 'spending', name: 'Spending', icon: '02', color: moduleColor.spending, textColor: moduleColorText.spending, inkColor: moduleColorInk.spending },
+  { id: 'saving', name: 'Saving', icon: '03', color: moduleColor.saving, textColor: moduleColorText.saving, inkColor: moduleColorInk.saving },
+  { id: 'investing', name: 'Investing', icon: '04', color: moduleColor.investing, textColor: moduleColorText.investing, inkColor: moduleColorInk.investing },
+  { id: 'credit', name: 'Managing Credit', icon: '05', color: moduleColor.credit, textColor: moduleColorText.credit, inkColor: moduleColorInk.credit },
+  { id: 'risk', name: 'Managing Risk', icon: '06', color: moduleColor.risk, textColor: moduleColorText.risk, inkColor: moduleColorInk.risk },
+  { id: 'loans', name: 'Loans', icon: '07', color: moduleColor.loans, textColor: moduleColorText.loans, inkColor: moduleColorInk.loans },
+  { id: 'taxes', name: 'Taxes', icon: '08', color: moduleColor.taxes, textColor: moduleColorText.taxes, inkColor: moduleColorInk.taxes },
+  { id: 'psychology', name: 'Consumer Psychology', icon: '09', color: moduleColor.psychology, textColor: moduleColorText.psychology, inkColor: moduleColorInk.psychology },
+  { id: 'career', name: 'Career & Salary', icon: '10', color: moduleColor.career, textColor: moduleColorText.career, inkColor: moduleColorInk.career },
+  { id: 'scams', name: 'Scams & Fraud Prevention', icon: '11', color: moduleColor.scams, textColor: moduleColorText.scams, inkColor: moduleColorInk.scams },
 ];
 
 export const moduleById = (id: string) => modules.find((m) => m.id === id);

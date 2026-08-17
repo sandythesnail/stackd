@@ -175,7 +175,10 @@ export default function Survey() {
                 <Txt variant="h1" style={{ flex: 1 }}>How much do you know about this?</Txt>
               </View>
 
-              <View style={[styles.qCard, { backgroundColor: module.color, borderColor: module.textColor }]}>
+              {/* Ink, not textColor, for everything on this card except the number itself:
+                  the card IS the module's colour, and the numbers are white on every module
+                  now, so white words here would vanish on the pale chips. */}
+              <View style={[styles.qCard, { backgroundColor: module.color, borderColor: module.inkColor }]}>
                 {/* The square, ringed. It used to be drawn as a WHITE tile carrying the
                     module's number colour, which is a pale tint of the module's own hue — so
                     loans, whose number is very nearly white, showed a blank white square, and
@@ -189,10 +192,10 @@ export default function Survey() {
                   <MIcon abbr={module.icon} color={module.color} textColor={module.textColor} size={54} r={16} fontSize={20} />
                 </View>
                 <View style={{ flex: 1, gap: 3 }}>
-                  <Txt style={[styles.qTopic, { color: module.textColor }]}>
+                  <Txt style={[styles.qTopic, { color: module.inkColor }]}>
                     {`TOPIC ${step + 1} OF ${modules.length}`}
                   </Txt>
-                  <Txt style={[styles.qModule, { color: module.textColor }]}>{module.name}</Txt>
+                  <Txt style={[styles.qModule, { color: module.inkColor }]}>{module.name}</Txt>
                 </View>
               </View>
 
