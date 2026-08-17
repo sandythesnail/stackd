@@ -230,6 +230,34 @@ export const moduleColorInk: Record<string, string> = {
   scams: '#92FFC5',
 };
 
+/** The module's accent when it has to hold its own on a LIGHT surface: the lesson path's
+ * nodes, drawn on cream, where the shape IS the colour — border, glyph and glow all.
+ *
+ * A third token because there are genuinely three jobs. moduleColorText is the number on the
+ * chip (white). moduleColorInk is words on the chip (deep on pale chips, pale on deep ones).
+ * Neither works here: white on cream is nothing at all, and ink's pale values — #F7CDFF for
+ * taxes, #C7E1FF for psychology — are pale precisely BECAUSE their chip is dark, which makes
+ * them the worst possible choice against cream.
+ *
+ * So: the supplied hue, walked down until it clears 4.5:1 on cream, chroma at the gamut edge.
+ * Every one is recognisably its module's colour, just deep enough to be a line rather than a
+ * suggestion of one. Six of the eleven barely move (taxes and psychology not at all); the
+ * pale five come down a long way, which is unavoidable — a lime path node on cream is a lime
+ * path node you cannot see. */
+export const moduleColorDeep: Record<string, string> = {
+  earning: '#00824F',
+  spending: '#428002',
+  saving: '#5C7B01',
+  investing: '#8D6B00',
+  credit: '#AB5C00',
+  risk: '#AD2600',
+  loans: '#CF2F6F',
+  taxes: '#6E0080',
+  psychology: '#004B8C',
+  career: '#047A9C',
+  scams: '#10764C',
+};
+
 /**
  * The module's colour when it is drawn as a BARE SHAPE rather than behind its number: the
  * Progress chart's columns, the module hero's border.

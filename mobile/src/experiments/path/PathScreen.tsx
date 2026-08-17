@@ -546,7 +546,7 @@ function SectionView({
           <T weight="display" size={16} numberOfLines={1}>{mod.name}</T>
           <View style={styles.headMeta}>
             <T weight="bold" size={11} color={colors.muted3}>{section.done}/{section.total}</T>
-            <Bar value={pct} tint={section.mastered ? colors.green : mod.textColor} height={6} />
+            <Bar value={pct} tint={section.mastered ? colors.green : mod.deepColor} height={6} />
           </View>
         </View>
         {/* The module's own face. Every module gets one, in the same spot, instead of
@@ -597,7 +597,7 @@ function SectionView({
               state={n.state}
               index={i + 1}
               accentBg={mod.color}
-              accentFg={mod.textColor}
+              accentFg={mod.deepColor}
               reducedMotion={reducedMotion}
               onPress={() => onPressNode(n)}
               onHoverIn={() => setHovered(i)}

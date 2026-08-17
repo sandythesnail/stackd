@@ -356,7 +356,7 @@ function SectionView({
           <T weight="display" size={16} numberOfLines={1}>{mod.name}</T>
           <View style={styles.headMeta}>
             <T weight="bold" size={11} color={colors.muted3}>{section.done}/{section.total}</T>
-            <Bar value={pct} tint={section.mastered ? colors.green : mod.textColor} height={6} />
+            <Bar value={pct} tint={section.mastered ? colors.green : mod.deepColor} height={6} />
           </View>
         </View>
         <View pointerEvents="none" style={{ alignItems: 'center' }}>
@@ -414,7 +414,7 @@ function SectionView({
                   title={n.title}
                   state={n.state}
                   index={i + 1}
-                  accentFg={mod.textColor}
+                  accentFg={mod.deepColor}
                   reducedMotion={reducedMotion}
                   tourHighlighted={isTourTarget && activeTargetId === 'tour-lesson-node'}
                   onPress={() => {

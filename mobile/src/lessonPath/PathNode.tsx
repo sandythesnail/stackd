@@ -37,12 +37,17 @@ export function PathNode({
   state: NodeState;
   /** 1-based label shown on an unvisited main-line node. */
   index: number;
-  /** The owning module's darker paired foreground (@/theme's `moduleColorText`).
+  /** The owning module's deep accent (@/theme's `moduleColorDeep`).
    *
-   * Only the foreground. A node is a small solid shape on the cream path, so it is drawn in
-   * the accent's DARK tone throughout — border, glyph and glow all read `accentFg`. The pale
-   * `moduleColor` background has no role at this size and was previously accepted here as an
-   * `accentBg` prop that nothing ever read. */
+   * A node is a small solid shape on the cream path, so it is drawn in a DARK tone throughout
+   * — border, glyph and glow all read `accentFg`. The chip colour itself has no role at this
+   * size (a lime node on cream is 1.37:1, i.e. not there), and it was previously accepted
+   * here as an `accentBg` prop that nothing ever read.
+   *
+   * This used to be fed `moduleColorText`, which was the right shape when that token happened
+   * to be dark for every module. It is now plain white on all eleven, which drew the entire
+   * path in white on cream — every node a blank outline. Hence a token whose actual job is
+   * "this module, dark enough for a light surface", which is what this always wanted. */
   accentFg: string;
   reducedMotion: boolean;
   /** True while the onboarding tour's "Start a lesson" step is pointing at THIS node — draws

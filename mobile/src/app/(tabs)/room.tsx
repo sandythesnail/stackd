@@ -230,7 +230,15 @@ export default function Room() {
                 in it — which the white rug used to disguise by filling that band. With the
                 rug gone the gap is just empty floor, so shift the art up by a slice of the
                 stage and let the mascot, not his bounding box, be what looks centred. */}
-            <Hammy size={hammyStageSize} equipped={equipped} style={{ transform: [{ translateY: -stageSize * 0.06 }] }} />
+            {/* A much shallower float than the default 14. In the room Hammy drifts over a
+                floor that gives him somewhere to be; boxed in a small square stage he was
+                travelling far enough to read as levitating rather than breathing. */}
+            <Hammy
+              size={hammyStageSize}
+              equipped={equipped}
+              floatAmplitude={5}
+              style={{ transform: [{ translateY: -stageSize * 0.06 }] }}
+            />
           </View>
 
           <View style={styles.filters}>
