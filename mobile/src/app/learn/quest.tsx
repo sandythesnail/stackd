@@ -3198,8 +3198,20 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden',
   },
   storyAvatarTxt: { fontSize: 22 },
+  // flexShrink WITHOUT flex, and this is the whole reason the dialogue was invisible.
+  //
+  // `flex: 1` is flexBasis 0 — the same trap `content` above documents for heights, except
+  // this row measures WIDTH. The log is a centered column (storyLog), so each beat row
+  // shrink-wraps rather than filling the line, which leaves the row with no free space to
+  // distribute. A basis of 0 plus nothing to grow into is a bubble exactly 0 points wide: the
+  // text was laid out into a box with no width, so a story chapter rendered as a column of
+  // Hammy heads with nothing beside them.
+  //
+  // Basis `auto` instead — the bubble starts at the width of its own text, which is what
+  // "each beat sized to its own text" always meant — and flexShrink lets it give that width
+  // back when a long beat hits storyBeat's maxWidth and has to wrap.
   storyBubble: {
-    flex: 1, flexShrink: 1, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.borderOpt,
+    flexShrink: 1, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.borderOpt,
     borderRadius: 16, padding: 12,
   },
   storyBubbleTxt: { fontFamily: font.semi, fontSize: 14.5, lineHeight: 19, color: colors.ink },

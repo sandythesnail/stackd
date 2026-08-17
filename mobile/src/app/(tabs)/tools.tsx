@@ -62,17 +62,32 @@ function SliderRow({
 /** A compact "$123" numeric field — mirrors the website's `<input type="number">` money
  * fields exactly (free-form amount, no slider) rather than mobile's earlier slider-only
  * take on these same values. */
-function AmountField({ value, onChangeText, width = 84 }: { value: number | ''; onChangeText: (v: number | '') => void; width?: number }) {
+/** Digits allowed in any money box on this screen.
+ *
+ * Six, i.e. up to $999,999 — comfortably past a real loan balance and far past a monthly
+ * grocery bill, while being a hard stop on the box ever needing to be wider than it is.
+ * Without a cap the field accepted digits forever: the number outgrew its box, and on the web
+ * build (where TextInput is a real <input>) it pushed the row wider than the screen. A budget
+ * row does not need to express a billion dollars, so the fix is at the input rather than in
+ * ever-cleverer layout. */
+const AMOUNT_MAX_DIGITS = 6;
+
+function AmountField({ value, onChangeText, width = 74 }: { value: number | ''; onChangeText: (v: number | '') => void; width?: number }) {
   return (
+    // flexShrink 0 so the box keeps its stated width in a tight row instead of being squeezed
+    // by a long label, and the input inside takes minWidth 0 so it can never demand more room
+    // than the box gives it — the two halves of "this control is exactly `width` wide, full
+    // stop", which is what stops a long number dragging the row off screen.
     <View style={[styles.amountWrap, { width }]}>
       <Txt style={styles.amountPrefix}>$</Txt>
       <TextInput
         style={styles.amountInput}
         value={value === '' ? '' : String(value)}
         onChangeText={(t) => {
-          const cleaned = t.replace(/[^0-9]/g, '');
+          const cleaned = t.replace(/[^0-9]/g, '').slice(0, AMOUNT_MAX_DIGITS);
           onChangeText(cleaned === '' ? '' : Number(cleaned));
         }}
+        maxLength={AMOUNT_MAX_DIGITS}
         keyboardType="number-pad"
         placeholder="0"
         placeholderTextColor={colors.muted6}
@@ -263,18 +278,22 @@ function LoanPayoffPanel() {
   const [loanBalance, setLoanBalance] = useState(27000);
   const [annualRatePct, setAnnualRatePct] = useState(5.5);
   const [termYears, setTermYears] = useState(10);
-  const [monthlyIncome, setMonthlyIncome] = useState(3200);
-  const [rent, setRent] = useState(1100);
-  const [food, setFood] = useState(400);
-  const [otherExpenses, setOtherExpenses] = useState(300);
   const [extraPayment, setExtraPayment] = useState(0);
 
   const minPayment = computeLoanMinPayment({ principal: loanBalance, annualRatePct, termYears });
-  const essential = rent + food + otherExpenses;
-  const availableForLoan = monthlyIncome - essential;
-  const shortfall = minPayment - availableForLoan;
-  const canAffordMinimum = shortfall <= 0;
-  const maxExtra = Math.max(0, Math.floor(availableForLoan - minPayment));
+  /* How much extra the slider offers: up to the minimum payment again, i.e. as far as
+   * doubling what you already owe each month.
+   *
+   * This used to be derived from a whole second card of sliders — take-home pay, rent, food,
+   * other — which computed what was "left over" and capped the extra payment at that. Those
+   * four numbers were a budget, and the app has a Budget tool one tab away that does the same
+   * job properly and remembers what you typed. Here they were four guesses you had to make
+   * before the loan calculator would tell you anything, and every one of them was a default
+   * ($3,200 income, $1,100 rent) standing in for a life the student hasn't started yet.
+   *
+   * The loan question is answerable without them: what does this balance cost me, and what
+   * does paying more change. So the tool asks about the loan and nothing else. */
+  const maxExtra = Math.max(0, Math.round(minPayment));
   const cappedExtra = Math.min(extraPayment, maxExtra);
 
   const totalPayment = minPayment + cappedExtra;
@@ -295,17 +314,6 @@ function LoanPayoffPanel() {
 
         <Select label="Loan type" value={annualRatePct} options={LOAN_RATE_OPTIONS} onChange={setAnnualRatePct} />
         <Select label="Repayment plan" value={termYears} options={TERM_OPTIONS} onChange={setTermYears} />
-      </Card>
-
-      <Card style={{ gap: 15 }}>
-        <Txt style={styles.cardTitle}>Take-Home Pay & Living Costs</Txt>
-        <Txt variant="lead" style={{ fontSize: 12, marginTop: -6 }}>
-          Uses take-home (net) pay, not gross salary. The Earning module covers the difference.
-        </Txt>
-        <SliderRow label="Monthly take-home pay" value={monthlyIncome} onChange={setMonthlyIncome} min={1500} max={7000} step={50} format={money} />
-        <SliderRow label="Rent" value={rent} onChange={setRent} min={0} max={3000} step={25} format={money} />
-        <SliderRow label="Food" value={food} onChange={setFood} min={0} max={1000} step={10} format={money} />
-        <SliderRow label="Other (utilities, transport, etc.)" value={otherExpenses} onChange={setOtherExpenses} min={0} max={1500} step={10} format={money} />
       </Card>
 
       <Card style={styles.resultCard}>
@@ -330,23 +338,17 @@ function LoanPayoffPanel() {
         )}
       </Card>
 
-      <Card style={!canAffordMinimum ? [styles.resultCard, styles.warningCard] : styles.resultCard}>
-        <Txt style={styles.resultCap}>{canAffordMinimum ? 'MINIMUM PAYMENT' : 'BUDGET REALITY CHECK'}</Txt>
+      <Card style={styles.resultCard}>
+        <Txt style={styles.resultCap}>MINIMUM PAYMENT</Txt>
         <Txt style={styles.resultBig}>{money(minPayment)}/mo</Txt>
-        {canAffordMinimum ? (
-          <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center' }}>
-            {money(Math.max(0, availableForLoan - minPayment))}/mo left after expenses + minimum payment
-          </Txt>
-        ) : (
-          <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center' }}>
-            {money(Math.max(0, availableForLoan))} left after expenses, but the minimum is {money(minPayment)}. You&apos;re {money(shortfall)} short.
-          </Txt>
-        )}
+        <Txt variant="lead" style={{ fontSize: 13, textAlign: 'center' }}>
+          What this plan requires every month for {termYears} years.
+        </Txt>
       </Card>
 
-      {canAffordMinimum && maxExtra > 0 ? (
+      {maxExtra > 0 ? (
         <Card style={{ gap: 12 }}>
-          <Txt style={styles.cardTitle}>Pay Extra With What&apos;s Left</Txt>
+          <Txt style={styles.cardTitle}>Pay Extra</Txt>
           <SliderRow label="Extra toward the loan" value={cappedExtra} onChange={setExtraPayment} min={0} max={maxExtra} step={5} format={money} />
           {cappedExtra > 0 && minOnlyFinal && withExtraFinal && minOnly && withExtra ? (
             <View style={{ gap: 6 }}>
@@ -372,13 +374,21 @@ function CompareRow({ label, years, interest }: { label: string; years: number; 
   );
 }
 
-// Ported verbatim from the website's BUDGET_CATEGORY_LABELS/ORDER (app.js) — all 10 named
-// categories, not a mobile-only grouped-down set, so the Budget Calculator matches the
-// website's exactly (state.budgetPlan is now a shared, synced field — see lib/webState.ts).
+// The website's BUDGET_CATEGORY_ORDER (app.js) — all 10 named categories, not a mobile-only
+// grouped-down set, so the Budget Calculator matches the website's (state.budgetPlan is a
+// shared, synced field — see lib/webState.ts).
+//
+// The LABELS have been shortened away from the website's: no brand examples after Food
+// Delivery, no slashed pairs ("Clothing / Thrift", "Beauty / Personal Care"). A slash asks
+// the reader to decide whether their spending counts as one side or the other before they
+// can type a number into it, and the examples were three brand names' worth of line for a
+// row whose job is to hold one figure. School Supplies and Exercise replace Textbooks and
+// Gym for the same reason — they cover what students actually buy without naming one
+// instance of it.
 const BUDGET_CATEGORY_LABELS: Record<string, string> = {
-  groceries: 'Groceries', diningOut: 'Dining Out', foodDelivery: 'Food Delivery (DoorDash, Uber Eats, etc.)',
-  coffee: 'Coffee', clothing: 'Clothing / Thrift', beauty: 'Beauty / Personal Care',
-  transportation: 'Transportation', entertainment: 'Entertainment', textbooks: 'Textbooks', gym: 'Gym',
+  groceries: 'Groceries', diningOut: 'Dining Out', foodDelivery: 'Food Delivery',
+  coffee: 'Coffee', clothing: 'Clothing', beauty: 'Personal Care',
+  transportation: 'Transportation', entertainment: 'Entertainment', textbooks: 'School Supplies', gym: 'Exercise',
 };
 const BUDGET_CATEGORY_ORDER = ['groceries', 'diningOut', 'foodDelivery', 'coffee', 'clothing', 'beauty', 'transportation', 'entertainment', 'textbooks', 'gym'];
 
@@ -434,8 +444,8 @@ function BudgetPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan.incomeSources.length, plan.fixedExpenses.length]);
 
-  const [whatIfCategory, setWhatIfCategory] = useState('foodDelivery');
-  const [whatIfCut, setWhatIfCut] = useState(0);
+  // Once true it stays true for the session — see the reveal below.
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   const totalIncome = plan.incomeSources.reduce((s, x) => s + (Number(x.amount) || 0), 0);
   const totalFixed = plan.fixedExpenses.reduce((s, x) => s + (Number(x.amount) || 0), 0);
@@ -447,12 +457,6 @@ function BudgetPanel() {
 
   const savingsGoal = Number(plan.savingsGoal) || 0;
   const goalGap = savingsGoal > 0 ? remaining - savingsGoal : null;
-
-  // Hard $100 ceiling on the "what if" cut regardless of the category's own total — ported
-  // as-is from the website's own maxCut math, not a mobile-side bug.
-  const maxCut = Math.min(100, Number(plan.variableExpenses[whatIfCategory]) || 0);
-  const cut = Math.min(whatIfCut, maxCut);
-  const newRemaining = remaining + cut;
 
   const maxBar = Math.max(totalFixed, ...BUDGET_CATEGORY_ORDER.map((k) => Number(plan.variableExpenses[k]) || 0), 1);
 
@@ -520,10 +524,14 @@ function BudgetPanel() {
             callout={calloutOn && key === 'foodDelivery'}
           />
         ))}
-        {/* Opens itself when the delivery/beauty callout is live, since beauty is one of the
-            five hidden here and the callout is about that pair specifically. */}
-        <Collapsible title={`More categories (${BUDGET_CATEGORIES_MORE.length})`} defaultOpen={calloutOn}>
-          {BUDGET_CATEGORIES_MORE.map((key) => (
+        {/* A one-way reveal, not a toggle. "More categories" is a request for the rest of the
+            list, and once the list is there the control has nothing left to offer — a chevron
+            that folds five half-filled rows back out of sight mostly invites you to lose the
+            numbers you just typed. So it shows them and removes itself.
+            It also opens itself when the delivery/personal-care callout is live, since
+            Personal Care is one of the five hidden here and the callout is about that pair. */}
+        {showAllCategories || calloutOn ? (
+          BUDGET_CATEGORIES_MORE.map((key) => (
             <CategoryRow
               key={key}
               label={BUDGET_CATEGORY_LABELS[key]}
@@ -531,8 +539,12 @@ function BudgetPanel() {
               onChangeText={(v) => setVariable(key, v)}
               callout={calloutOn && key === 'beauty'}
             />
-          ))}
-        </Collapsible>
+          ))
+        ) : (
+          <Pressable onPress={() => setShowAllCategories(true)}>
+            <Tag tone="lock">+ More categories ({BUDGET_CATEGORIES_MORE.length})</Tag>
+          </Pressable>
+        )}
       </Card>
 
       <Card style={{ gap: 10 }}>
@@ -564,10 +576,16 @@ function BudgetPanel() {
         ) : null}
       </Card>
 
-      {/* Both of these are now closed by default. Between them they were eleven chart bars,
-          ten filter chips and a slider sitting open under the summary, which is a lot of
-          screen for two things you look at after you've finished entering the numbers, not
-          while you're entering them. */}
+      {/* Closed by default: eleven chart bars sitting open under the summary is a lot of
+          screen for something you look at after you've finished entering the numbers, not
+          while you're entering them.
+          A "What If?" card used to sit below this one — ten category chips, a slider, and a
+          sentence about what cutting one of them would leave. It has been removed rather
+          than repaired. Its cut was capped at $100 regardless of the category (inherited
+          from the website), so the slider frequently could not reach a number that changed
+          anything, and it answered a question the Summary above already answers: the
+          remaining balance moves as you edit the categories themselves. Two controls for one
+          number, one of them lying about its range. */}
       <Card style={{ gap: 12 }}>
         <Collapsible title="Spending by Category">
           <View style={{ gap: 12, marginTop: 10 }}>
@@ -579,32 +597,6 @@ function BudgetPanel() {
         </Collapsible>
       </Card>
 
-      <Card style={{ gap: 10 }}>
-        <Collapsible title="What If?">
-          <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-            {BUDGET_CATEGORY_ORDER.map((key) => (
-              <Pressable key={key} onPress={() => { setWhatIfCategory(key); setWhatIfCut(0); }}>
-                <Tag tone={whatIfCategory === key ? 'green' : 'lock'} style={{ paddingVertical: 5, paddingHorizontal: 8 }}>
-                  {shortLabel(BUDGET_CATEGORY_LABELS[key])}
-                </Tag>
-              </Pressable>
-            ))}
-          </View>
-          {maxCut > 0 ? (
-            <>
-              <SliderRow label={`Cut ${shortLabel(BUDGET_CATEGORY_LABELS[whatIfCategory])} by`} value={cut} onChange={setWhatIfCut} min={0} max={maxCut} step={1} format={money} />
-              <Txt variant="lead" style={{ fontSize: 12.5 }}>
-                Cutting {money(cut)} leaves {money(newRemaining)}
-                {savingsGoal > 0
-                  ? (newRemaining >= savingsGoal ? ', which hits your goal.' : `, still ${money(Math.max(0, savingsGoal - newRemaining))} short of your goal.`)
-                  : '.'}
-              </Txt>
-            </>
-          ) : (
-            <Txt variant="lead" style={{ fontSize: 12.5 }}>Add an amount above to see what cutting it would save.</Txt>
-          )}
-        </Collapsible>
-      </Card>
     </>
   );
 }
@@ -618,7 +610,6 @@ const styles = StyleSheet.create({
   chartHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   track: { height: 9, borderRadius: 8, backgroundColor: colors.track, overflow: 'hidden' },
   resultCard: { backgroundColor: '#EFF5EC', borderColor: '#D9E7D3', alignItems: 'center', gap: 2 },
-  warningCard: { backgroundColor: colors.dangerBg, borderColor: '#F2CDCD' },
   resultCap: { fontFamily: font.bold, fontSize: 12, color: colors.muted5, letterSpacing: 0.3 },
   resultBig: { fontFamily: font.display, fontSize: 32, color: colors.greenDark },
   compareRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colors.white, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12 },
@@ -653,12 +644,12 @@ const styles = StyleSheet.create({
     paddingVertical: 9, paddingHorizontal: 11, ...selectableInput,
   },
   amountWrap: {
-    flexDirection: 'row', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center', flexShrink: 0,
     backgroundColor: colors.screen, borderRadius: 10, borderWidth: 1.5, borderColor: colors.borderOpt,
-    paddingVertical: 9, paddingHorizontal: 10, gap: 2,
+    paddingVertical: 9, paddingHorizontal: 9, gap: 2,
   },
   amountPrefix: { fontFamily: font.extra, fontSize: 14, color: colors.muted4 },
-  amountInput: { flex: 1, fontFamily: font.extra, fontSize: 14, color: colors.ink, padding: 0, ...selectableInput },
+  amountInput: { flex: 1, minWidth: 0, fontFamily: font.extra, fontSize: 14, color: colors.ink, padding: 0, ...selectableInput },
   removeBtn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   removeTxt: { fontFamily: font.bold, fontSize: 18, color: colors.muted5, lineHeight: 20 },
 
