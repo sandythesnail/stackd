@@ -3,7 +3,7 @@ import { View, ScrollView, Pressable, StyleSheet, TextInput } from 'react-native
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Screen, Header, Txt, Card, Tag, Segmented, StackedAreaChart, Select, type SelectOption } from '@/components';
-import { colors, font, selectableInput } from '@/theme';
+import { colors, font, selectableInput, noFocusOutline } from '@/theme';
 import { useStore, type BudgetLineItem } from '@/store';
 import { computeCompoundGrowth, computeLoanMinPayment, computeLoanPayoff, SeriesPoint } from '@/simulators';
 
@@ -72,13 +72,25 @@ function SliderRow({
  * ever-cleverer layout. */
 const AMOUNT_MAX_DIGITS = 6;
 
+/** Focus state for a field that has had the browser's black outline taken off it.
+ *
+ * The ring has to be replaced, not merely removed: without it there is no way to tell which
+ * of eleven money boxes has the caret. The app's own version is the field's existing border
+ * going green, which sits inside the rounded corner where a rectangle drawn around it did
+ * not. */
+function useFocusRing() {
+  const [focused, setFocused] = useState(false);
+  return { focused, onFocus: () => setFocused(true), onBlur: () => setFocused(false) };
+}
+
 function AmountField({ value, onChangeText, width = 74 }: { value: number | ''; onChangeText: (v: number | '') => void; width?: number }) {
+  const ring = useFocusRing();
   return (
     // flexShrink 0 so the box keeps its stated width in a tight row instead of being squeezed
     // by a long label, and the input inside takes minWidth 0 so it can never demand more room
     // than the box gives it — the two halves of "this control is exactly `width` wide, full
     // stop", which is what stops a long number dragging the row off screen.
-    <View style={[styles.amountWrap, { width }]}>
+    <View style={[styles.amountWrap, { width }, ring.focused && styles.fieldFocused]}>
       <Txt style={styles.amountPrefix}>$</Txt>
       <TextInput
         style={styles.amountInput}
@@ -87,6 +99,8 @@ function AmountField({ value, onChangeText, width = 74 }: { value: number | ''; 
           const cleaned = t.replace(/[^0-9]/g, '').slice(0, AMOUNT_MAX_DIGITS);
           onChangeText(cleaned === '' ? '' : Number(cleaned));
         }}
+        onFocus={ring.onFocus}
+        onBlur={ring.onBlur}
         maxLength={AMOUNT_MAX_DIGITS}
         keyboardType="number-pad"
         placeholder="0"
@@ -107,12 +121,15 @@ function LineItemRow({
   onAmountChange: (v: number | '') => void;
   onRemove: () => void;
 }) {
+  const ring = useFocusRing();
   return (
     <View style={styles.lineRow}>
       <TextInput
-        style={styles.lineLabelInput}
+        style={[styles.lineLabelInput, ring.focused && styles.fieldFocused]}
         value={item.label}
         onChangeText={onLabelChange}
+        onFocus={ring.onFocus}
+        onBlur={ring.onBlur}
         placeholder="Label"
         placeholderTextColor={colors.muted6}
       />
@@ -639,17 +656,19 @@ const styles = StyleSheet.create({
   // Free-form income/fixed-expense row.
   lineRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   lineLabelInput: {
-    flex: 1, fontFamily: font.semi, fontSize: 14, color: colors.ink,
+    flex: 1, minWidth: 0, fontFamily: font.semi, fontSize: 14, color: colors.ink,
     backgroundColor: colors.screen, borderRadius: 10, borderWidth: 1.5, borderColor: colors.borderOpt,
-    paddingVertical: 9, paddingHorizontal: 11, ...selectableInput,
+    paddingVertical: 9, paddingHorizontal: 11, ...selectableInput, ...noFocusOutline,
   },
+  // Replaces the outline noFocusOutline removes — see its comment in theme.ts.
+  fieldFocused: { borderColor: colors.green },
   amountWrap: {
     flexDirection: 'row', alignItems: 'center', flexShrink: 0,
     backgroundColor: colors.screen, borderRadius: 10, borderWidth: 1.5, borderColor: colors.borderOpt,
     paddingVertical: 9, paddingHorizontal: 9, gap: 2,
   },
   amountPrefix: { fontFamily: font.extra, fontSize: 14, color: colors.muted4 },
-  amountInput: { flex: 1, minWidth: 0, fontFamily: font.extra, fontSize: 14, color: colors.ink, padding: 0, ...selectableInput },
+  amountInput: { flex: 1, minWidth: 0, fontFamily: font.extra, fontSize: 14, color: colors.ink, padding: 0, ...selectableInput, ...noFocusOutline },
   removeBtn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   removeTxt: { fontFamily: font.bold, fontSize: 18, color: colors.muted5, lineHeight: 20 },
 

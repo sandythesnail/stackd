@@ -1366,7 +1366,21 @@ function StoryView({
           const isNarrator = beat.speaker === 'narrator';
           const isHammy = beat.speaker === charName || beat.speaker === 'intro';
           return (
-            <Reanimated.View key={idx} entering={FadeInDown.duration(280)} style={styles.storyBeat}>
+            // A PLAIN View, and this is the second half of why the dialogue was invisible.
+            //
+            // Each beat used to enter with FadeInDown. A Reanimated entering animation starts
+            // the view at the animation's initial values — opacity 0 here — and relies on the
+            // animation actually running to bring it back. These beats mount inside the
+            // chapter wrapper, which is ITSELF entering (FadeInRight, keyed per chapter), and
+            // a nested entering animation that never gets scheduled leaves its view parked at
+            // opacity 0 forever. The result was a dialogue log that was fully laid out, fully
+            // present in the tree, and completely blank — and it stayed blank as you pressed
+            // Next, each new beat arriving just as invisible as the last.
+            //
+            // The log has motion already: the chapter itself slides in, and each Next appends
+            // a beat below the previous one, which is the movement that matters. Not worth a
+            // second animation that can silently eat the content.
+            <View key={idx} style={styles.storyBeat}>
               {!isNarrator ? (isHammy ? <HammyHeadAvatar /> : (
                 <View style={styles.storyAvatar}>
                   <Txt style={styles.storyAvatarTxt}>{beat.speaker.charAt(0)}</Txt>
@@ -1375,7 +1389,7 @@ function StoryView({
               <View style={[styles.storyBubble, isNarrator && styles.storyBubbleNarrator]}>
                 <Txt style={[styles.storyBubbleTxt, styles.storyBubbleTxtCentered, isNarrator && styles.storyBubbleNarratorTxt]}>{beat.text}</Txt>
               </View>
-            </Reanimated.View>
+            </View>
           );
         })
       )}

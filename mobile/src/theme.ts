@@ -305,6 +305,18 @@ export const space = (n: number) => n * 4;
  * puts a real input back to normal; it's a no-op on native, which has no such inheritance. */
 export const selectableInput = { userSelect: 'text' } as object;
 
+/** Kills the browser's own focus ring on a TextInput.
+ *
+ * On the web build a TextInput is a real <input>, so a focused field gets the user agent's
+ * default outline — in Chrome a hard black rectangle, drawn OUTSIDE the field's own rounded
+ * border, which reads as a black box slapped around the box you're typing in. Native has no
+ * equivalent and ignores this.
+ *
+ * Only ever use it alongside a focus state of the app's own (see the fields in tools.tsx,
+ * which deepen their border while focused). Removing the ring and putting nothing back leaves
+ * a keyboard user with no way to see where they are. */
+export const noFocusOutline = { outlineStyle: 'none', outlineWidth: 0 } as object;
+
 /** Soft ambient card shadow. */
 export const softShadow = {
   shadowColor: '#2C3E2D',
