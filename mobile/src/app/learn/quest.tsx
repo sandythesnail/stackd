@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent, KeyboardAvoidingView, Platform } from 'react-native';
 import Reanimated, {
   SlideInDown, FadeInDown, FadeIn, FadeInRight, FadeInUp, ZoomIn,
-  useSharedValue, useAnimatedStyle, withTiming, withSpring, withSequence,
+  useSharedValue, useAnimatedStyle, useReducedMotion, withTiming, withSpring, withSequence,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -170,6 +170,49 @@ function teachHint(chapter: TeachChapter, conceptIdx: number): string | undefine
   if (!concept?.check?.statement || !concept.plain) return undefined;
   return `Remember what ${concept.term} means: ${concept.plain}`;
 }
+
+/** The chapter page-turn — written so that it can only ever fail VISIBLE.
+ *
+ * This was `FadeInRight`, which animates opacity 0 → 1. A Reanimated entering animation starts
+ * its view at the animation's own initial values and relies on the animation actually running
+ * to leave them, so an entering animation that never gets scheduled parks its view at opacity
+ * 0 for good.
+ *
+ * That matters here because of WHERE this wrapper sits. It holds every chapter's content,
+ * while the story's title and its companion Hammy are rendered by QuestPlayer OUTSIDE it (they
+ * have to be — the companion lives outside the scroller). So this one animation failing looks
+ * exactly like the bug that has now been reported three times: Hammy and the heading sitting
+ * there perfectly, nothing at all where the dialogue belongs, and Next still advancing past
+ * it. The two previous attempts read that as "the dialogue is broken" and went looking inside
+ * StoryView, which is the one part of it that was never implicated — the reported boundary
+ * between what shows and what doesn't is this wrapper, not the beats.
+ *
+ * Honest about the evidence: the failure has NOT been reproduced. A full sweep of all 87 story
+ * chapters with dialogue renders correctly on the web build, at phone and desktop viewports,
+ * with a touch or a mouse pointer, with and without reduced motion, and via the real in-app
+ * push rather than a deep link. So this is not a repro-driven fix; it removes the single point
+ * of failure that matches the reported symptom exactly, and leaves nothing to fail.
+ *
+ * The fix is one initial value: opacity starts at 1 instead of 0. The animation is otherwise
+ * untouched — same built-in, same 170ms, same 10px of travel — so the page turn still reads
+ * exactly as it did. The generated keyframes now read
+ *   0% { opacity: 1; translateX(10px) } → 100% { opacity: 1; translateX(0px) }
+ * where frame 0 used to be opacity 0. Opacity animating 1 → 1 costs nothing, and the one thing
+ * this wrapper can no longer do is hide the chapter: if the animation never runs, the worst
+ * case is content sitting 10px right of where it belongs for a frame, which is readable, and
+ * readable is the only property here that actually matters.
+ *
+ * A hand-written worklet entering animation was tried first and is silently a no-op on web
+ * (measured: the wrapper never leaves `transform: none`, no REA-ENTERING keyframes emitted),
+ * which would have traded the bug for a dead page-turn on the build most students use.
+ *
+ * Reduced motion skips it outright, matching the lesson path's own entering animations
+ * (LessonPath's `reducedMotion ? undefined : ...`), which this screen had never honoured.
+ */
+const pageTurn = FadeInRight.duration(170).withInitialValues({
+  opacity: 1,
+  transform: [{ translateX: 10 }],
+});
 
 function initialLayoutMode(chapter: Chapter): LayoutMode {
   // Hammy's Tip is always its own full stage with a big tappable Hammy (HintView).
@@ -714,6 +757,9 @@ function QuestPlayerInner() {
     }
   };
 
+  // Gates the chapter page-turn (see pageTurn), the same way the lesson path gates its own.
+  const reduceMotion = useReducedMotion();
+
   const layoutMode: LayoutMode = reportedLayout?.chapterIdx === chapterIdx
     ? reportedLayout.mode
     : initialLayoutMode(chapter);
@@ -870,10 +916,13 @@ function QuestPlayerInner() {
             Kept deliberately small and quick: 10px of travel over 170ms, and no spring. The
             spring's overshoot plus the default 25px made every question visibly swing into
             place, which is a lot of movement to sit through on a fifteen-chapter quest — this
-            is meant to register as a page turn, not as an animation you wait for. */}
+            is meant to register as a page turn, not as an animation you wait for.
+
+            See pageTurn: the travel is the WHOLE animation, and nothing here touches opacity.
+            This wrapper holds every chapter's content, so it must not be able to hide it. */}
         <Reanimated.View
           key={chapter.id}
-          entering={FadeInRight.duration(170).withInitialValues({ transform: [{ translateX: 10 }] })}
+          entering={reduceMotion ? undefined : pageTurn}
           style={styles.chapterFill}
         >
           <ChapterView
