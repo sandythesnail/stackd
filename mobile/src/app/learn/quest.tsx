@@ -214,6 +214,25 @@ const pageTurn = FadeInRight.duration(170).withInitialValues({
   transform: [{ translateX: 10 }],
 });
 
+/** A new dialogue beat arriving in the story log, under the one before it.
+ *
+ * Deliberately quiet: 8px of rise over 220ms, no spring. A beat is a line of conversation
+ * appearing in a log that already has several lines in it, so this needs to read as "another
+ * one just landed" and nothing more — anything bigger turns every Next into an event, and a
+ * story chapter runs up to four of them back to back.
+ *
+ * Opacity is pinned at 1 for the same reason as pageTurn, and here the reason is not
+ * hypothetical: a fade is what made this log blank in the first place. The beats mount inside
+ * the chapter wrapper, so a fade starting at opacity 0 puts the text one unscheduled animation
+ * away from never being seen — which is exactly the bug this file has now been through three
+ * times. The rise is the whole animation; if it never runs, the beat is simply already in
+ * place. Motion in this log is worth having, but never at the price of the words.
+ */
+const beatArrive = FadeInDown.duration(220).withInitialValues({
+  opacity: 1,
+  transform: [{ translateY: 8 }],
+});
+
 function initialLayoutMode(chapter: Chapter): LayoutMode {
   // Hammy's Tip is always its own full stage with a big tappable Hammy (HintView).
   if (chapter.type === 'hint') return 'intro';
@@ -1361,6 +1380,8 @@ function StoryView({
   // already had it) — the website renders equipped items on every pig instance via
   // withFaceOverlay/getPigWithItemMarkup regardless of context, so mobile should too.
   const { equippedMascotItems } = useStore();
+  // Gates each beat's arrival animation (see beatArrive), same as the chapter page-turn.
+  const reduceMotion = useReducedMotion();
   // Every real story chapter's first beat is a scene-setting "intro" line (not a quoted
   // line of dialogue, unlike the beats after it) — used as the standalone intro screen's
   // context sentence instead of being folded into the dialogue log, so it isn't shown
@@ -1415,21 +1436,18 @@ function StoryView({
           const isNarrator = beat.speaker === 'narrator';
           const isHammy = beat.speaker === charName || beat.speaker === 'intro';
           return (
-            // A PLAIN View, and this is the second half of why the dialogue was invisible.
+            // Only the newest beat animates: the ones already on screen are never remounted
+            // (they keep their key and their place in the list), so an entering animation here
+            // plays exactly once per beat, as it arrives under the previous one.
             //
-            // Each beat used to enter with FadeInDown. A Reanimated entering animation starts
-            // the view at the animation's initial values — opacity 0 here — and relies on the
-            // animation actually running to bring it back. These beats mount inside the
-            // chapter wrapper, which is ITSELF entering (FadeInRight, keyed per chapter), and
-            // a nested entering animation that never gets scheduled leaves its view parked at
-            // opacity 0 forever. The result was a dialogue log that was fully laid out, fully
-            // present in the tree, and completely blank — and it stayed blank as you pressed
-            // Next, each new beat arriving just as invisible as the last.
-            //
-            // The log has motion already: the chapter itself slides in, and each Next appends
-            // a beat below the previous one, which is the movement that matters. Not worth a
-            // second animation that can silently eat the content.
-            <View key={idx} style={styles.storyBeat}>
+            // See beatArrive for why it must not touch opacity. This is the same trap the
+            // chapter wrapper above had, one level down, and it is the reason this used to be
+            // a plain View with no animation at all — an earlier pass read the invisible
+            // dialogue as "a nested entering animation never gets scheduled" and deleted the
+            // animation rather than the opacity. Nested entering animations do run (measured:
+            // REA-ENTERING keyframes are emitted for these beats), so the motion can come back
+            // now that it can't take the text with it.
+            <Reanimated.View key={idx} entering={reduceMotion ? undefined : beatArrive} style={styles.storyBeat}>
               {!isNarrator ? (isHammy ? <HammyHeadAvatar /> : (
                 <View style={styles.storyAvatar}>
                   <Txt style={styles.storyAvatarTxt}>{beat.speaker.charAt(0)}</Txt>
@@ -1438,7 +1456,7 @@ function StoryView({
               <View style={[styles.storyBubble, isNarrator && styles.storyBubbleNarrator]}>
                 <Txt style={[styles.storyBubbleTxt, styles.storyBubbleTxtCentered, isNarrator && styles.storyBubbleNarratorTxt]}>{beat.text}</Txt>
               </View>
-            </View>
+            </Reanimated.View>
           );
         })
       )}
