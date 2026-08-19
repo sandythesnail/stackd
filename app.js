@@ -16496,6 +16496,10 @@ let state = {
   // markModuleActivityToday, so the reset-progress flow's DEFAULT_STATE_JSON clears it too.
   lastModuleActivityDate: null,
   questProgress: {}, questBossesWon: [],
+  // The final assessment result, or null before it has been sat. Overwritten on a
+  // retake rather than appended to — a second sitting of questions now seen twice
+  // isn't comparable to the first. Mirrors mobile's AppState.postTest.
+  postTest: null,
   onboardingSurvey: { completed: false, moduleFamiliarity: {}, focusGoals: [], trackId: null, completedAt: null },
   budgetPlan: {
     incomeSources: [],
@@ -16541,8 +16545,8 @@ function saveState() {
   // is lifted" state was never written to localStorage OR synced, and reverted to the daily
   // mood on every reload — and the mobile app, which sets the same field, had no shared
   // field to hand it to (see mobile/src/lib/webState.ts).
-  const { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, lastModuleActivityDate, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted } = state;
-  const snapshot = { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, lastModuleActivityDate, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted };
+  const { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, lastModuleActivityDate, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted, postTest } = state;
+  const snapshot = { level, xp, streak, lastPlayedDate, lastSeenTier, resetToken, completedModules, completedLessons, unlockedAchievements, hadPerfect, coins, diamonds, ownedItems, equippedItems, ownedRoomItems, equippedRoom, metHammy, hasSeenOnboardingTour, lastModuleActivityDate, questProgress, questBossesWon, onboardingSurvey, budgetPlan, financialState, lifeEvents, dailyLoginLog, claimedBadgeRewards, referralClaimAttempted, postTest };
   // Guarded, like loadState's read already was. setItem throws when site data is blocked by
   // browser policy or an extension, and on a full quota — and this is called from 57 places,
   // several of them mid-lesson-completion, so an uncaught throw here doesn't just skip a save,
@@ -19075,6 +19079,10 @@ function renderModulesPage() {
   updateSidebarStats();
   const done = modulesCompletedCount();
   document.getElementById('modules-sub').textContent = done === MODULES.length ? 'All complete, replay to master!' : `${done}/${MODULES.length} complete`;
+  // The final assessment, once every module is mastered — '' before then, so the page is
+  // unchanged for anyone still working through the list. See post-test.js.
+  const ptHost = document.getElementById('modules-posttest');
+  if (ptHost) { ptHost.innerHTML = postTestCardHtml(); wirePostTestCard(); }
   renderModuleList('modules-grid');
 }
 

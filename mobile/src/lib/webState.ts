@@ -114,8 +114,13 @@ const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is str
 // through Supabase preserves it, while the web simply ignores it. Note that resuming still
 // doesn't cross devices: hydrateFromRemote deliberately keeps the LOCAL copy (see its comment),
 // because the device you're playing on is the only one that knows which chapter you're on.
+// postTest was here until the website grew its own final assessment (post-test.js). Now that
+// both apps have one, stashing it under `_mobile` is the lastModuleActivityDate trap again:
+// the same field on both sides, kept in a place the other can't see, so a student who sat the
+// assessment on their phone would be offered it as untaken on their laptop and vice versa.
+// It's a shared top-level field in both directions now.
 const MOBILE_ONLY_KEYS = [
-  'shownLifeEventIds', 'pendingLifeEventId', 'lifeEventCooldown', 'onboardingTrackId', 'postTest',
+  'shownLifeEventIds', 'pendingLifeEventId', 'lifeEventCooldown', 'onboardingTrackId',
   'hasCompletedOnboarding',
   'questHintsUsed', 'termsLearned', 'completedLifeTaskIds',
   'hasSeenOnboardingTour', 'lessonProgress',

@@ -3303,3 +3303,118 @@ select.budget-input { cursor: pointer; }
 @media (max-width: 700px) {
   .lp-body { max-width: 100%; }
 }
+
+/* ─── FINAL ASSESSMENT (post-test) ───
+   Ported from mobile/src/app/learn/post-test.tsx. See post-test.js. */
+.pt-wrap { max-width: 640px; margin: 0 auto; padding: 1.25rem 1.5rem 2rem; min-height: 100vh; display: flex; flex-direction: column; }
+.pt-topbar { display: flex; align-items: center; gap: 0.75rem; }
+.pt-prog-track { flex: 1; height: 8px; background: var(--track, #E7ECE3); border-radius: 999px; overflow: hidden; }
+.pt-prog-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width 0.25s ease; }
+.pt-step { font-size: 0.72rem; font-weight: 700; color: var(--green); white-space: nowrap; }
+
+.pt-body { flex: 1; padding-top: 1.5rem; }
+/* Cross-fades in place rather than sliding. A translate-in put the incoming question partly
+   outside its own container mid-animation, which clipped it down one side; a fade says "this
+   is a new question" just as well and never moves anything horizontally. */
+.pt-q { animation: ptFade 0.2s ease both; }
+@keyframes ptFade { from { opacity: 0; } to { opacity: 1; } }
+.pt-eyebrow {
+  font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; color: var(--green-dark);
+}
+.pt-stem {
+  font-family: var(--font-display); font-size: 1.4rem; font-weight: 700;
+  color: var(--text); margin: 0.35rem 0 0; line-height: 1.3;
+}
+.pt-opts { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.1rem; }
+.pt-opt {
+  display: flex; align-items: center; gap: 0.75rem; width: 100%; text-align: left;
+  padding: 0.85rem 1rem; border-radius: var(--radius);
+  background: #fff; border: 1.5px solid var(--border); color: var(--text);
+  font-family: var(--font); font-size: 0.9rem; font-weight: 600;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.pt-opt:hover:not(:disabled) { border-color: var(--green-light); background: var(--green-pale); }
+.pt-opt:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.pt-opt-letter {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); border: 1px solid var(--border);
+  font-size: 0.72rem; font-weight: 800; color: var(--text-mid);
+}
+.pt-opt-label { flex: 1; }
+/* Locked but never faded: after answering, every option still has to be readable, because
+   the one you got wrong and the one that was right are both part of the explanation. */
+.pt-opt-locked { cursor: default; }
+.pt-opt-correct {
+  border-color: var(--green); background: var(--green-pale);
+}
+.pt-opt-correct .pt-opt-letter { background: var(--green); border-color: var(--green-dark); color: #fff; }
+.pt-opt-wrong { border-color: #D08A8A; background: #FBEDED; }
+.pt-opt-wrong .pt-opt-letter { background: #C25A5A; border-color: #8A2F2F; color: #fff; }
+
+.pt-exp {
+  margin-top: 1rem; padding: 0.85rem 1rem; border-radius: var(--radius);
+  background: #E4EBE0; animation: ptFade 0.2s ease both;
+}
+.pt-exp-verdict { font-size: 0.8rem; font-weight: 800; }
+.pt-exp-verdict.pt-right { color: var(--green-dark); }
+.pt-exp-verdict.pt-wrong { color: #8A2F2F; }
+.pt-exp-txt { font-size: 0.8rem; font-weight: 600; color: #5C6E58; line-height: 1.5; margin-top: 0.2rem; }
+
+.pt-actions { padding-top: 1.25rem; }
+.pt-next { width: 100%; }
+.pt-next:disabled { opacity: 0.45; cursor: default; }
+
+/* ── result ── */
+.pt-result { text-align: center; padding-top: 1.5rem; }
+.pt-result-pig { display: flex; justify-content: center; margin-bottom: 0.75rem; }
+.pt-score {
+  font-family: var(--font-display); font-size: 2.6rem; font-weight: 700;
+  color: var(--text); margin: 0.35rem 0 0.5rem;
+}
+.pt-thanks { font-size: 1rem; color: var(--text-mid); margin: 0; }
+
+.pt-fb {
+  margin-top: 2rem; text-align: left; background: #fff;
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem;
+}
+.pt-fb-head { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--text); }
+.pt-fb-sub { font-size: 0.82rem; color: var(--text-mid); line-height: 1.5; margin: 0.3rem 0 0; }
+.pt-fb-input {
+  width: 100%; margin-top: 0.75rem; min-height: 88px; resize: vertical;
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 0.7rem; font-family: var(--font); font-size: 0.85rem; color: var(--text);
+}
+.pt-fb-input:focus-visible { outline: none; border-color: var(--green-light); }
+.pt-fb-send { width: 100%; margin-top: 0.65rem; }
+.pt-fb-status { font-size: 0.76rem; font-weight: 700; color: var(--green-dark); margin-top: 0.5rem; }
+.pt-fb-status.error { color: #8A2F2F; }
+.pt-fb-sent { font-size: 0.85rem; font-weight: 800; color: var(--green-dark); }
+.pt-done {
+  width: 100%; margin-top: 1.25rem; padding: 0.7rem;
+  font-size: 0.85rem; font-weight: 800; color: var(--text-mid);
+  background: none; border: none;
+}
+.pt-done:hover { color: var(--text); }
+
+/* ── the card on the Modules page ── */
+/* Sits at the TOP of the list rather than after eleven rows: by the time it exists the list
+   behind it is entirely ticked off, and this is the only thing left to do on the screen. */
+.pt-card {
+  display: flex; align-items: center; gap: 1rem; width: 100%; text-align: left;
+  padding: 1.15rem 1.35rem; margin-bottom: 1rem; border: none;
+  border-radius: var(--radius); background: var(--green-dark); color: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.pt-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.pt-card:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.pt-card-main { flex: 1; min-width: 0; }
+.pt-card-eyebrow { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.09em; opacity: 0.75; }
+.pt-card-title { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; margin-top: 0.15rem; }
+.pt-card-sub { font-size: 0.78rem; opacity: 0.8; margin-top: 0.15rem; line-height: 1.4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-q, .pt-exp { animation: none; }
+  .pt-card, .pt-prog-fill { transition: none; }
+}
