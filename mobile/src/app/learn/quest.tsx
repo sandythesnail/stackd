@@ -202,6 +202,17 @@ function useRise(from: number, axis: 'x' | 'y', duration: number, reduceMotion: 
   }));
 }
 
+/** Anything that should arrive under what is already on screen, rather than replacing it.
+ *
+ * Same rule as StoryBeat and for the same reason: an animated style, never Reanimated's
+ * `entering` prop, which takes the view out of flow on web and stacks every sibling on one
+ * spot. Reads its own reduced-motion setting so callers don't have to thread it. */
+function RiseIn({ children }: { children: ReactNode }) {
+  const reduceMotion = useReducedMotion();
+  const rise = useRise(8, 'y', 220, reduceMotion);
+  return <Reanimated.View style={rise}>{children}</Reanimated.View>;
+}
+
 /** One beat of the dialogue log. Its own component so the mount animation is a hook on
  * something that mounts exactly once per beat — 8px of rise over 220ms, no spring. A beat is
  * one line of conversation landing in a log that already has several, so it should read as
@@ -781,13 +792,9 @@ function QuestPlayerInner() {
   // Centered above the content, rather than off to its left, for the two chapter types
   // that read as a scene rather than a question: the story's dialogue (the conversation is
   // with him) and Match It (a centered grid).
-  //
-  // 'teach' joined them: a vocab definition is the one screen students said Hammy had gone
-  // missing from. He was there, but off in the left margin beside a card that fills the width
-  // under him — which reads as him standing next to the content rather than presenting it.
-  // Centred, he sits ABOVE the definition the way he sits above the dialogue, which is what
-  // the screen is: him telling you what a word means.
-  const companionCentered = chapter.type === 'story' || chapter.type === 'matching' || chapter.type === 'teach';
+  // Deliberately NOT the vocab chapter. Centring him over a definition was tried and reverted:
+  // he belongs off to the left there, with the card beside him.
+  const companionCentered = chapter.type === 'story' || chapter.type === 'matching';
   // The story's dialogue log puts its title above the companion rather than at the top of
   // the scroller — the companion lives outside the scroller, so a heading rendered inside
   // StoryView always landed underneath him. Only the dialogue log; the intro screen keeps
@@ -2679,26 +2686,35 @@ function SpotcheckView({ chapter, onComplete, onAction, reactTo, reportCheck }: 
   }
 
   if (revealed && review.length) {
-    const s = review[Math.min(reviewIdx, review.length - 1)];
-    const wasFlagged = flagged.has(s.id);
-    // Three verdicts, because "was it a red flag" and "did you catch it" are different
-    // questions and the student needs both answered.
-    const verdict = s.isRedFlag
-      ? (wasFlagged ? { tone: 'green' as const, label: '✓ YOU CAUGHT THIS' } : { tone: 'pink' as const, label: '✕ YOU MISSED THIS' })
-      : { tone: 'lock' as const, label: 'ACTUALLY FINE' };
+    // The verdicts ACCUMULATE, the way the story log does: each Next appends the next one
+    // under the last, and nothing leaves the screen. They used to replace each other one at a
+    // time, so reading the third meant having forgotten the first — on a chapter whose whole
+    // point is "here is everything you should have spotted", the list IS the answer, and you
+    // cannot compare items you are only ever shown one at a time.
+    const shown = review.slice(0, Math.min(reviewIdx, review.length - 1) + 1);
     return (
       <View style={{ gap: 10, flexGrow: 1 }}>
         <Txt variant="h2">{chapter.title}</Txt>
         <Txt style={styles.reviewProgress}>
-          You caught {caught.length} of {flags.length} · reviewing {reviewIdx + 1} of {review.length}
+          You caught {caught.length} of {flags.length} · {shown.length} of {review.length} reviewed
         </Txt>
-        <Reanimated.View key={s.id} entering={FadeIn.duration(220)} style={{ gap: 10 }}>
-          <Card style={{ gap: 8 }}>
-            <Tag tone={verdict.tone}>{verdict.label}</Tag>
-            <Txt style={styles.segmentTxt}>{s.text}</Txt>
-            <Txt variant="lead" style={{ fontSize: 13 }}>{s.explanation}</Txt>
-          </Card>
-        </Reanimated.View>
+        {shown.map((s) => {
+          const wasFlagged = flagged.has(s.id);
+          // Three verdicts, because "was it a red flag" and "did you catch it" are different
+          // questions and the student needs both answered.
+          const verdict = s.isRedFlag
+            ? (wasFlagged ? { tone: 'green' as const, label: '✓ YOU CAUGHT THIS' } : { tone: 'pink' as const, label: '✕ YOU MISSED THIS' })
+            : { tone: 'lock' as const, label: 'ACTUALLY FINE' };
+          return (
+            <RiseIn key={s.id}>
+              <Card style={{ gap: 8 }}>
+                <Tag tone={verdict.tone}>{verdict.label}</Tag>
+                <Txt style={styles.segmentTxt}>{s.text}</Txt>
+                <Txt variant="lead" style={{ fontSize: 13 }}>{s.explanation}</Txt>
+              </Card>
+            </RiseIn>
+          );
+        })}
       </View>
     );
   }

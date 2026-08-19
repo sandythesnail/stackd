@@ -11,6 +11,10 @@ export const colors = {
 
   // text
   ink: '#2C3E2D', // primary text / darkest green
+  // True black. Only for text that has to be maximally legible on a pale tinted ground and
+  // must not vary per module — see the survey's topic card, where eleven different inks read
+  // as eleven different degrees of washed out.
+  black: '#000000',
   inkSoft: '#3C4E3D',
 
   // greens

@@ -32,7 +32,10 @@ const fs = require('fs');
 const path = require('path');
 
 const RATE = 22050;        // plenty for a short metallic hit; halves the file vs 44.1k
-const DURATION = 1.0;      // seconds
+// 1.6s, up from 1.0. The old file ended while the coins were still ringing, so it stopped
+// rather than finished — the "cuts off immediately" complaint. Nothing is added to the front;
+// the extra time is tail, which is where a sound gets to sound satisfied with itself.
+const DURATION = 1.6;      // seconds
 const SEED = 20260813;
 const COINS = 11;
 const OUT = path.join(__dirname, '..', 'assets', 'sfx', 'coins.wav');
@@ -44,6 +47,18 @@ const PARTIALS = [
   [5.40, 0.34, 0.52],
   [8.93, 0.16, 0.38],
 ];
+
+/** A quiet major arpeggio under the coins — C5 E5 G5 C6, the shape every game uses to say
+ * "you earned that".
+ *
+ * The coins alone are an EVENT (metal landing) with no opinion about whether the event was
+ * good. Rising harmonic notes are the opinion. They sit well under the hits — this is still a
+ * coin jangle, not a jingle with coins on top — and their decays run long, so the phrase is
+ * what remains once the metal has stopped clattering, and the sound ends on a held note
+ * instead of a cut. */
+const ARPEGGIO = [523.25, 659.25, 783.99, 1046.50];
+const ARP_GAP = 0.10;      // seconds between note onsets
+const ARP_GAIN = 0.26;     // relative to the coins, which stay the loudest thing here
 
 /** Mulberry32 — small, seedable, good enough for scattering coins. */
 function rng(seed) {
@@ -65,7 +80,9 @@ function render() {
     // Front-loaded: the bank bursts, so most coins land at once and a few trail off.
     const start = Math.pow(rand(), 1.7) * 0.42;
     const f0 = 1500 + rand() * 1700;          // coin-sized fundamentals
-    const decay = 0.07 + rand() * 0.10;       // seconds to 1/e
+    // Longer than the old 0.07-0.17. Real coins on a hard surface ring for a good while after
+    // the strike, and the short decays are the other half of why this stopped dead.
+    const decay = 0.11 + rand() * 0.20;       // seconds to 1/e
     const gain = 0.55 + rand() * 0.45;
     const pan = 0;                             // mono; the burst is centred on screen
     const s0 = Math.floor(start * RATE);
@@ -84,12 +101,36 @@ function render() {
     }
   }
 
+  // The arpeggio, laid under everything above. Harmonic partials (integer multiples), unlike
+  // the coins' inharmonic ones — that difference is exactly what the ear hears as "a note"
+  // rather than "an object being hit", and it is what makes this read as earning something.
+  ARPEGGIO.forEach((f0, idx) => {
+    const last = idx === ARPEGGIO.length - 1;
+    const s0 = Math.floor((0.06 + idx * ARP_GAP) * RATE);
+    const decay = last ? 0.75 : 0.34;
+    for (let i = 0; i < n - s0; i++) {
+      const t = i / RATE;
+      const env = Math.min(1, t / 0.008) * Math.exp(-t / decay);
+      if (env < 0.0004) break;
+      let v = 0;
+      for (const [mult, amp] of [[1, 1.0], [2, 0.30], [3, 0.12]]) {
+        // Nyquist guard. At 22050 the ceiling is 11025, and a partial past it folds back down
+        // the spectrum as noise that has nothing to do with the note.
+        if (f0 * mult >= RATE / 2 * 0.9) continue;
+        v += amp * Math.sin(2 * Math.PI * f0 * mult * t);
+      }
+      buf[s0 + i] += v * env * ARP_GAIN * (last ? 1.15 : 1);
+    }
+  });
+
   // Normalise to just under full scale, then fade the last 60ms so the file can't end on a
   // discontinuity (which would click on every platform).
   let peak = 0;
   for (let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(buf[i]));
   const norm = peak > 0 ? 0.86 / peak : 1;
-  const fade = Math.floor(0.06 * RATE);
+  // A long fade, not the old 60ms. 60ms is a click-guard; this is a decrescendo, and it is
+  // what turns "the file ended" into "the sound finished".
+  const fade = Math.floor(0.34 * RATE);
   const pcm = Buffer.alloc(n * 2);
   for (let i = 0; i < n; i++) {
     let v = buf[i] * norm;

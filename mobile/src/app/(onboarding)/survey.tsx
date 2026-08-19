@@ -205,10 +205,10 @@ export default function Survey() {
                   <MIcon abbr={module.icon} color={module.color} textColor={module.textColor} size={54} r={16} fontSize={20} />
                 </View>
                 <View style={{ flex: 1, gap: 3 }}>
-                  <Txt style={[styles.qTopic, { color: module.inkColor }]}>
+                  <Txt style={styles.qTopic}>
                     {`MODULE ${step + 1} OF ${modules.length}`}
                   </Txt>
-                  <Txt style={[styles.qModule, { color: module.inkColor }]}>{module.name}</Txt>
+                  <Txt style={styles.qModule}>{module.name}</Txt>
                 </View>
               </View>
 
@@ -516,8 +516,12 @@ const styles = StyleSheet.create({
   qIconRing: { backgroundColor: colors.white, borderRadius: 19, padding: 3 },
   // 0.85 rather than the old 0.75: this is 11px of letter-spaced caps, the smallest text on
   // the card, and it is now carrying its own contrast instead of borrowing a dark ink colour.
-  qTopic: { fontFamily: font.extra, fontSize: 11, letterSpacing: 0.9, opacity: 0.85 },
-  qModule: { fontFamily: font.display, fontSize: 22 },
+  // Pure black, and the same black on every module including Managing Risk. These two lines
+  // used to take the module's own ink — a dark tint of its hue — which is a different colour
+  // eleven times over and reads as washed out against a pale card. Full opacity too: 0.85 on
+  // 11px caps was throwing away contrast the card could not spare.
+  qTopic: { fontFamily: font.extra, fontSize: 11, letterSpacing: 0.9, color: colors.black },
+  qModule: { fontFamily: font.display, fontSize: 22, color: colors.black },
 
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   scaleRail: {

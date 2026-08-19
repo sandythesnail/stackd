@@ -7,6 +7,7 @@ import { Screen, Header, Txt, Button, Card } from '@/components';
 import { colors, font, selectableInput } from '@/theme';
 import { user, modules } from '@/data';
 import { useStore } from '@/store';
+import { SURVEY_TRACKS } from '@/survey';
 import { authEnabled } from '@/lib/env';
 import { makeSupabase } from '@/lib/supabase';
 import { MODULE_SOURCES } from '@/references';
@@ -14,17 +15,20 @@ import { MODULE_SOURCES } from '@/references';
 /** Screen 14 — Settings (account, feedback, sources). */
 export default function Settings() {
   const router = useRouter();
-  const { state, level, tierName, resetProgress, debugSimulateNewDay } = useStore();
+  const { state, level, tierName, resetProgress, debugSimulateNewDay, setOnboardingTrack } = useStore();
 
   const [askingReset, setAskingReset] = useState(false);
+  const [pickingTrack, setPickingTrack] = useState(false);
 
   const doReset = () => {
     setAskingReset(false);
     resetProgress();
-    // Straight back to Home, not onboarding — the user is still signed in, and
-    // resetProgress() already zeroed local state, so Home immediately reflects the
-    // reset instead of showing a signup form to an already-authenticated account.
-    router.push('/(tabs)/home');
+    // Back to the very top of the app, not to Home and not to the survey directly. The splash
+    // is the thing that decides where onboarding starts, and resetProgress() has just cleared
+    // hasCompletedOnboarding — so it routes a signed-in, un-onboarded account into the survey
+    // itself, and the survey hands off to the piggy-bank intro. Wiping your progress plays the
+    // whole thing again, animation included, which is what "reset everything" should mean.
+    router.replace('/');
   };
   return (
     <Screen edges={['top']}>
@@ -34,12 +38,18 @@ export default function Settings() {
 
         <View style={{ marginTop: 2 }}>
           {authEnabled ? <ClerkAccountRow /> : <Row icon="user" title="Account" sub={user.email} />}
-          {/* The whole thing, survey and animated intro both — asking to retake onboarding is
-              asking for onboarding, and it is the intro people actually remember. REPLACE, not
-              push, so Settings isn't left under it for the intro's own replace to land on.
-              See survey.tsx's finish(). It plays once; finishing re-marks onboarding complete.
-              (was: retake=1, which saved the new track and came straight back here.) */}
-          <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.replace('/(onboarding)/survey')} />
+          {/* Replaces "Retake onboarding survey". Sitting through eleven familiarity questions
+              plus the piggy-bank intro was a long way round to change one setting, and the
+              track is the only thing the survey actually produces that you might want to
+              change later. This offers that thing directly. The survey itself still runs in
+              full from the one place it belongs to — a reset, which is the case where nothing
+              is known about you any more. */}
+          <Row
+            icon="compass"
+            title="Change starting track"
+            sub={SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId)?.title ?? 'Not set'}
+            onPress={() => setPickingTrack(true)}
+          />
           {/* The "Replay welcome tour" row is gone. The tour is still replayable from the
               help icon in Home's header (Header's onReplayTour), which is where it belongs —
               on the screen the tour actually walks through. */}
@@ -88,7 +98,71 @@ export default function Settings() {
         onCancel={() => setAskingReset(false)}
         onConfirm={doReset}
       />
+
+      <TrackPicker
+        visible={pickingTrack}
+        current={state.onboardingTrackId ?? null}
+        onClose={() => setPickingTrack(false)}
+        onPick={(id) => { setOnboardingTrack(id); setPickingTrack(false); }}
+      />
     </Screen>
+  );
+}
+
+/** Pick a different starting track, without re-answering the survey that produced the first
+ * one.
+ *
+ * The track is an ORDERING, not a gate — it decides which modules Home recommends first (see
+ * LessonPath's orderedModules) and nothing is ever locked behind it. So changing it is safe at
+ * any point, costs no progress, and is the one onboarding answer worth revisiting; which is
+ * why it gets a row of its own instead of a survey replay.
+ *
+ * Each track states the modules it leads with, because "Debt Freedom" is a name, not an
+ * answer to "what will I be doing first". */
+function TrackPicker({
+  visible, current, onClose, onPick,
+}: {
+  visible: boolean;
+  current: string | null;
+  onClose: () => void;
+  onPick: (trackId: string) => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.trackRoot}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
+        <View style={styles.trackSheet}>
+          <Txt variant="h2">Change starting track</Txt>
+          <Txt variant="lead" style={{ marginTop: 2, marginBottom: 4 }}>
+            This only changes which modules come first. Nothing is locked, and you keep all your progress.
+          </Txt>
+          {SURVEY_TRACKS.map((t) => {
+            const on = t.id === current;
+            return (
+              <Pressable
+                key={t.id}
+                onPress={() => onPick(t.id)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                style={[styles.trackOpt, on && styles.trackOptOn]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Txt style={[styles.trackTitle, on && { color: colors.greenDark }]}>{t.title}</Txt>
+                  <Txt style={styles.trackBlurb}>{t.blurb}</Txt>
+                  <Txt style={styles.trackMods}>
+                    {t.moduleIds
+                      .map((id) => modules.find((m) => m.id === id)?.name ?? id)
+                      .join(' · ')}
+                  </Txt>
+                </View>
+                {on ? <Feather name="check" size={18} color={colors.greenDark} /> : null}
+              </Pressable>
+            );
+          })}
+          <Button label="Done" variant="ghost" onPress={onClose} style={{ marginTop: 4 }} />
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -416,6 +490,19 @@ function Row({
 }
 
 const styles = StyleSheet.create({
+  // Track picker. Centred rather than bottom-sheeted: it is a choice among four peers, and a
+  // sheet implies a flow you are part-way through.
+  trackRoot: { flex: 1, backgroundColor: 'rgba(20,28,20,0.42)', justifyContent: 'center', padding: 20 },
+  trackSheet: { backgroundColor: colors.white, borderRadius: 22, padding: 18, gap: 8 },
+  trackOpt: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderWidth: 2, borderColor: colors.borderOpt, borderRadius: 16, padding: 12,
+  },
+  trackOptOn: { borderColor: colors.green, backgroundColor: colors.screen },
+  trackTitle: { fontFamily: font.display, fontSize: 16, color: colors.ink },
+  trackBlurb: { fontFamily: font.medium, fontSize: 12.5, lineHeight: 17, color: colors.muted2, marginTop: 2 },
+  // The modules themselves, because a track name doesn't say what you'll actually be doing.
+  trackMods: { fontFamily: font.semi, fontSize: 11, color: colors.muted4, marginTop: 5 },
   content: { paddingHorizontal: 22, paddingBottom: 28, gap: 12 },
   // Matched to the quest player's leave-lesson dialog, so the app has one confirm look.
   dialogRoot: {

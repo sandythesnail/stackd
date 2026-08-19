@@ -152,7 +152,9 @@ export function LessonPath({ width }: { width: number }) {
       state: done.has(absIdx) ? 'completed' : isRecommended(absIdx) ? 'current' : 'available',
       // Only meaningful while the lesson is unfinished — a completed lesson keeps no resume
       // point worth announcing, and "Started" under a green tick would read as a contradiction.
-      inProgress: !done.has(absIdx) && !!lessonProgressFor(m.id, absIdx),
+      // Not gated on being unfinished any more: a lesson you finished once and have since
+      // reopened is in progress NOW, and that is the state worth reporting.
+      inProgress: !!lessonProgressFor(m.id, absIdx),
     }));
 
     const lifeIdx = lessons.findIndex((l) => l.isLifeTask);
@@ -495,8 +497,16 @@ function HoverTip({
   columnWidth: number;
   columnHeight: number;
 }) {
-  const [h, setH] = useState(48);
-  const tip = STATE_TIP[node.state];
+  // null until measured. The card used to open at an ASSUMED 48px, position itself off that,
+  // and then jump the moment its real height landed — a visible hop under a cursor that is
+  // already moving. It stays invisible for that one frame instead, which costs nothing for
+  // something that was not on screen a moment ago.
+  const [h, setH] = useState<number | null>(null);
+  // An open resume point outranks the node's own state, completed included — see the preview
+  // sheet's stateLabel for why.
+  const tip = node.inProgress
+    ? { label: 'In progress', tone: colors.green }
+    : STATE_TIP[node.state];
   const measured = h ?? 48;
   const above = at.y - NODE_BOX / 2 - measured - 9;
   const below = at.y + NODE_BOX / 2 + 9;
@@ -512,6 +522,7 @@ function HoverTip({
       style={[
         styles.tip,
         { top, left: Math.max(6, Math.min(at.x - TIP_W / 2, columnWidth - TIP_W - 6)) },
+        h === null && { opacity: 0 },
       ]}
     >
       <View style={styles.tipState}>
@@ -636,7 +647,11 @@ function PreviewSheet({
   const saved = node.isLifeTask ? null : lessonProgressFor(node.moduleId, node.lessonIndex);
   // Same correction the hover card makes: a part-finished lesson says so, rather than
   // claiming it was never opened.
-  const stateLabel = saved && node.state === 'available' ? 'STARTED' : STATE_LABEL[node.state];
+  // An open resume point outranks EVERY state here, completed included. A lesson you have
+  // finished once and then stepped back into is a lesson you are part-way through right now —
+  // the pill saying COMPLETED over a sheet whose button says "Resume lesson" is the sheet
+  // contradicting itself, and "completed" is the half people read.
+  const stateLabel = saved ? 'IN PROGRESS' : STATE_LABEL[node.state];
   const cta = saved
     ? 'Resume lesson'
     : done ? 'Do it again' : node.state === 'current' ? 'Continue lesson' : 'Start lesson';
