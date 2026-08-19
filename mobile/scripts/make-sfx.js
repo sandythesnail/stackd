@@ -133,95 +133,9 @@ function renderLevelUp() {
 }
 
 
-/* ------------------------------------------------------------------ coins */
-/**
- * Coins jangling — the piggy bank's contents landing, which is what the animation shows.
- *
- * The very first version of this file was also a coin spill and was thrown out for sounding
- * like DROPPED money. Two things were wrong with it, and neither was the idea:
- *
- *   1. It aliased. Partials ran past Nyquist and folded back as inharmonic mush (see the
- *      header). Struck metal is already inharmonic, so aliasing on top of it is the one case
- *      where you cannot hear that anything is broken — it just sounds cheap.
- *   2. The hits were spread at random over the whole length, so it read as coins falling one
- *      by one onto a hard floor: a slow, unlucky, money-going-away sound.
- *
- * A JANGLE is the opposite event — coins moving against each other, all at once, in a hand or
- * a jar. So the hits are front-loaded into a tight cluster (most of them inside the first
- * 180ms, a few stragglers after), which is the rhythm of a handful being shaken rather than
- * dropped. Each coin is a small metal disc: a few inharmonic partials high in the spectrum,
- * a very short decay, and a click of filtered noise at the onset for the edge-on contact.
- *
- * Pitches are drawn from a fixed set of disc sizes rather than at random across a range, so
- * the same few "coins" recur through the cluster and it sounds like one pocketful instead of
- * twelve unrelated objects.
- */
-// Ratios for a small struck disc. Not a harmonic series — metal isn't — but chosen to sit
-// close enough to consonant that a cluster of them rings rather than clashes.
-const DISC_PARTIALS = [[1, 1.0], [2.41, 0.62], [3.86, 0.38], [5.17, 0.20], [7.02, 0.09]];
-// Five coin sizes. Higher = smaller coin.
-const COIN_F0 = [1180, 1420, 1650, 1980, 2360];
-
-/** Deterministic PRNG (mulberry32), so a re-run of this script is byte-identical. */
-function rng(seed) {
-  return function () {
-    seed = (seed + 0x6D2B79F5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function renderCoins() {
-  const dur = 1.15;
-  const n = Math.floor(RATE * dur);
-  const buf = new Float64Array(n);
-  const rand = rng(20260818);
-
-  const HITS = 14;
-  for (let h = 0; h < HITS; h++) {
-    // Front-loaded: t^2 over the first 0.42s packs most hits into the first third, which is
-    // the shake. The last two or three trail off as the handful settles.
-    const frac = h / (HITS - 1);
-    const onset = frac * frac * 0.42 + rand() * 0.02;
-    const s0 = Math.floor(onset * RATE);
-    if (s0 >= n) break;
-
-    // Detuned a few percent per hit so no two coins are literally the same object.
-    const f0 = COIN_F0[Math.floor(rand() * COIN_F0.length)] * (0.94 + rand() * 0.12);
-    const decay = 0.055 + rand() * 0.075;
-    // The first hits are the loudest — a shake starts with the impact, not with a swell.
-    const gain = (0.55 + rand() * 0.45) * (1 - frac * 0.45);
-
-    for (let i = 0; i < n - s0; i++) {
-      const t = i / RATE;
-      const env = Math.min(1, t / 0.0009) * Math.exp(-t / decay);
-      if (env < 0.0005) break;
-      let v = 0;
-      for (const [mult, amp] of DISC_PARTIALS) {
-        const f = f0 * mult;
-        // The header's rule, and the whole reason the first attempt sounded wrong: never
-        // render a partial anywhere near Nyquist, drop it instead of letting it fold back.
-        if (f >= NYQUIST * 0.9) continue;
-        v += amp * Math.sin(2 * Math.PI * f * t);
-      }
-      // Contact click: 3ms of noise at the onset, the sound of two edges meeting before
-      // either of them starts to ring.
-      if (t < 0.003) v += (rand() * 2 - 1) * 1.5 * (1 - t / 0.003);
-      buf[s0 + i] += v * gain * env;
-    }
-  }
-
-  // Gentler than the jingle's 9k — coins live high, and rolling them off hard is what makes
-  // a metal sound read as muffled or plastic. Just enough to take the noise burst's fizz off.
-  lowpass(buf, 12500);
-  normalise(buf, 0.80, 0.12);
-  return buf;
-}
-
 /* ------------------------------------------------------------------ main */
 fs.mkdirSync(OUT_DIR, { recursive: true });
-for (const [name, render] of [['levelup', renderLevelUp], ['coins', renderCoins]]) {
+for (const [name, render] of [['levelup', renderLevelUp]]) {
   const out = wav(render());
   const file = path.join(OUT_DIR, `${name}.wav`);
   fs.writeFileSync(file, out);

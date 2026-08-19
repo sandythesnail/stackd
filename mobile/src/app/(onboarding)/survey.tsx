@@ -9,6 +9,7 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen, Txt, Button, Option, ProgressBar, IconButton, MIcon, Hammy } from '@/components';
 import { colors, font, radius } from '@/theme';
+import { mixHex } from '@/colorMix';
 import { modules } from '@/data';
 import { SURVEY_GOALS, SURVEY_TRACKS, getRecommendedTrack, trackReason, type SurveyAnswers } from '@/survey';
 import { useStore } from '@/store';
@@ -62,6 +63,10 @@ const UNANSWERED_FACE = MOOD_FACES.curious;
 
 
 const AnimatedPressable = Reanimated.createAnimatedComponent(Pressable);
+
+/** How much of the module's own chip colour survives into the card behind it. Low enough that
+ * the full-strength chip still reads as the brightest thing on the card. */
+const CARD_TINT_PCT = 26;
 
 const GOALS_STEP = modules.length;
 const RESULT_STEP = modules.length + 1;
@@ -174,14 +179,19 @@ export default function Survey() {
                 <Txt variant="h1" style={{ flex: 1 }}>How much do you know about this?</Txt>
               </View>
 
-              {/* White words, on the module's DEEP tone rather than its pale chip tone.
-                  The text on this card is white for every module now. That could not be done
-                  on the old background: the card used to be module.color, the same pale tint
-                  the chips use, where white runs as low as 1.65:1 (saving, investing) — white
-                  words there are not low-contrast, they are invisible. So the card takes the
-                  module's deep tone, which is the same hue at a weight white can actually sit
-                  on, and the identity of the card is unchanged. */}
-              <View style={[styles.qCard, { backgroundColor: module.deepColor, borderColor: module.deepColor }]}>
+              {/* The card is a LIGHTER wash of the chip sitting on it — the same hue as the
+                  numbered square in the middle, mixed down into white, so the two read as one
+                  object rather than two colours that happen to be near each other. The chip
+                  keeps the full-strength tone and stays the brightest thing on the card, which
+                  is what makes the number the thing you look at first.
+
+                  Text goes back to the module's ink. White words need a dark ground and this
+                  one is deliberately pale, so ink is the only readable choice here; the white
+                  text that matters — the number on the chip — is untouched. */}
+              <View style={[styles.qCard, {
+                backgroundColor: mixHex(module.color, colors.white, CARD_TINT_PCT),
+                borderColor: module.color,
+              }]}>
                 {/* The square, ringed. It used to be drawn as a WHITE tile carrying the
                     module's number colour, which is a pale tint of the module's own hue — so
                     loans, whose number is very nearly white, showed a blank white square, and
@@ -195,10 +205,10 @@ export default function Survey() {
                   <MIcon abbr={module.icon} color={module.color} textColor={module.textColor} size={54} r={16} fontSize={20} />
                 </View>
                 <View style={{ flex: 1, gap: 3 }}>
-                  <Txt style={styles.qTopic}>
+                  <Txt style={[styles.qTopic, { color: module.inkColor }]}>
                     {`MODULE ${step + 1} OF ${modules.length}`}
                   </Txt>
-                  <Txt style={styles.qModule}>{module.name}</Txt>
+                  <Txt style={[styles.qModule, { color: module.inkColor }]}>{module.name}</Txt>
                 </View>
               </View>
 
@@ -506,8 +516,8 @@ const styles = StyleSheet.create({
   qIconRing: { backgroundColor: colors.white, borderRadius: 19, padding: 3 },
   // 0.85 rather than the old 0.75: this is 11px of letter-spaced caps, the smallest text on
   // the card, and it is now carrying its own contrast instead of borrowing a dark ink colour.
-  qTopic: { fontFamily: font.extra, fontSize: 11, letterSpacing: 0.9, opacity: 0.85, color: colors.white },
-  qModule: { fontFamily: font.display, fontSize: 22, color: colors.white },
+  qTopic: { fontFamily: font.extra, fontSize: 11, letterSpacing: 0.9, opacity: 0.85 },
+  qModule: { fontFamily: font.display, fontSize: 22 },
 
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   scaleRail: {

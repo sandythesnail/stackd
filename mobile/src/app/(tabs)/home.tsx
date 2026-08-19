@@ -16,6 +16,7 @@ import { moduleContentById } from '@/content';
 import { useStore, type AchievementView } from '@/store';
 import { LessonPath } from '@/lessonPath/LessonPath';
 import { authEnabled } from '@/lib/env';
+import { useOnboardedAlready } from '@/lib/onboarded';
 import { SURVEY_TRACKS } from '@/survey';
 import { todaysHammyMood, hasModuleActivityToday } from '@/hammyMood';
 import { MOOD_FACES } from '@/hammyFaces';
@@ -61,6 +62,8 @@ export default function Home() {
   const [pathWidth, setPathWidth] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const { startTour, activeTargetId, remeasureActive, activeRect } = useOnboardingTour();
+  // Survey + piggy-bank intro both finished. See the tour effect below.
+  const onboardedAlready = useOnboardedAlready();
   const { height: winH } = useWindowDimensions();
   // Live scroll offset, so the tour step below can convert the node's window position into an
   // absolute scroll target. A ref, not state — it changes on every scroll frame and nothing
@@ -78,12 +81,19 @@ export default function Home() {
   // moment later, so it replayed on every single reload no matter how many times it had
   // already been seen. Keying off the real field lets the effect re-run (and its cleanup
   // cancel the pending timeout) the instant the load resolves to true.
+  //
+  // Gated on onboarding being DONE as well, not just on the tour's own flag. Home is a tab, so
+  // it is already mounted behind Settings — the moment "Reset all progress" cleared the state,
+  // this effect saw a fresh hasSeenOnboardingTour and started the tour right there, on the
+  // screen behind the one being used, before the survey it is supposed to follow had even
+  // opened. The tour explains a Home that the survey hasn't finished setting up yet, so it
+  // waits for onboarding either way.
   useEffect(() => {
-    if (state.hasSeenOnboardingTour) return;
+    if (state.hasSeenOnboardingTour || !onboardedAlready) return;
     const t = setTimeout(startTour, 450);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.hasSeenOnboardingTour]);
+  }, [state.hasSeenOnboardingTour, onboardedAlready]);
 
   // The daily-reward calendar opens itself, once per visit to Home, when today's coins are
   // still uncollected. That's what a daily reward is for — the old behaviour was a yellow

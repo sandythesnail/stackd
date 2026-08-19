@@ -59,7 +59,8 @@
     "check:colors": "node ./scripts/solve-module-colors.js --check",
     "check:sso": "node ./scripts/check-sso-redirects.js",
     "gen:sfx": "node ./scripts/make-sfx.js",
-    "check": "npm run check:routes && npm run check:colors"
+    "check": "npm run check:routes && npm run check:colors",
+    "gen:coin-sfx": "node ./scripts/make-coin-sfx.js"
   },
   "private": true
 }

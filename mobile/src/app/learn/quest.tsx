@@ -781,7 +781,13 @@ function QuestPlayerInner() {
   // Centered above the content, rather than off to its left, for the two chapter types
   // that read as a scene rather than a question: the story's dialogue (the conversation is
   // with him) and Match It (a centered grid).
-  const companionCentered = chapter.type === 'story' || chapter.type === 'matching';
+  //
+  // 'teach' joined them: a vocab definition is the one screen students said Hammy had gone
+  // missing from. He was there, but off in the left margin beside a card that fills the width
+  // under him — which reads as him standing next to the content rather than presenting it.
+  // Centred, he sits ABOVE the definition the way he sits above the dialogue, which is what
+  // the screen is: him telling you what a word means.
+  const companionCentered = chapter.type === 'story' || chapter.type === 'matching' || chapter.type === 'teach';
   // The story's dialogue log puts its title above the companion rather than at the top of
   // the scroller — the companion lives outside the scroller, so a heading rendered inside
   // StoryView always landed underneath him. Only the dialogue log; the intro screen keeps

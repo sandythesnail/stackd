@@ -45,7 +45,11 @@ const STATE_LABEL: Record<NodeState, string> = {
   completed: 'COMPLETED',
   current: 'RECOMMENDED NEXT',
   available: 'NOT STARTED',
-  optional: 'OPTIONAL EXTRA',
+  // Not "optional extra". It is required to finish the module in its entirety — moduleTotal
+  // counts it as the 9th lesson and isModuleMastered will not call a module done without it
+  // (see store.tsx's moduleDoneCount). Calling it optional told students they could skip the
+  // one lesson that stops the module completing, which is the opposite of true.
+  optional: 'REAL LIFE SUB-QUEST',
 };
 
 /** The hover card's much shorter wording, and the dot colour that carries it.
@@ -58,7 +62,7 @@ const STATE_TIP: Record<NodeState, { label: string; tone: string }> = {
   completed: { label: 'Completed', tone: colors.greenSoft },
   current: { label: 'Up next', tone: colors.green },
   available: { label: 'Not started', tone: colors.muted5 },
-  optional: { label: 'Optional', tone: colors.reward },
+  optional: { label: 'Real life sub-quest', tone: colors.reward },
 };
 
 /** Hover-card width. Its height is measured rather than assumed — see HoverTip. */
@@ -69,6 +73,13 @@ type PathNodeData = {
   /** The lesson's authored one-paragraph scenario (LessonSummary.hook) — what the preview
    * is for, since a title alone rarely says what a lesson is actually about. */
   hook: string;
+  /** A part-finished lesson: there is a validated resume point saved for it (store's
+   * lessonProgressFor). Its own field rather than another NodeState, because it is orthogonal
+   * to the four — a lesson can be started AND be the recommended next one — and because the
+   * states drive the node's shape and colour on the path, which shouldn't change just because
+   * someone stepped into a lesson once. It only ever relabels: "Started" instead of
+   * "Not started", which was flatly wrong for a lesson you had left halfway through. */
+  inProgress?: boolean;
   /** Whether this node IS the module's real-life sub-quest (LessonSummary.isLifeTask).
    * Deliberately its own field rather than being read back off `state`: the node's state
    * changes to 'completed' once it's finished, so anything keying off state === 'optional'
@@ -96,7 +107,7 @@ export function LessonPath({ width }: { width: number }) {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
   const { endIfWaitingOn, activeTargetId } = useOnboardingTour();
-  const { state, moduleDoneIndices, moduleStatus, moduleTotal, nextLessonIndex } = useStore();
+  const { state, moduleDoneIndices, moduleStatus, moduleTotal, nextLessonIndex, lessonProgressFor } = useStore();
 
   const [pickedModule, setPickedModule] = useState<string | null>(null);
   const [preview, setPreview] = useState<PathNodeData | null>(null);
@@ -139,6 +150,9 @@ export function LessonPath({ width }: { width: number }) {
       title: lessons[absIdx].title,
       hook: lessons[absIdx].hook,
       state: done.has(absIdx) ? 'completed' : isRecommended(absIdx) ? 'current' : 'available',
+      // Only meaningful while the lesson is unfinished — a completed lesson keeps no resume
+      // point worth announcing, and "Started" under a green tick would read as a contradiction.
+      inProgress: !done.has(absIdx) && !!lessonProgressFor(m.id, absIdx),
     }));
 
     const lifeIdx = lessons.findIndex((l) => l.isLifeTask);
@@ -483,12 +497,13 @@ function HoverTip({
 }) {
   const [h, setH] = useState(48);
   const tip = STATE_TIP[node.state];
-  const above = at.y - NODE_BOX / 2 - h - 9;
+  const measured = h ?? 48;
+  const above = at.y - NODE_BOX / 2 - measured - 9;
   const below = at.y + NODE_BOX / 2 + 9;
   // Prefer above; drop below only when that would clip off the top of the column. The final
   // clamp keeps the flipped card inside the column too, for a path short enough that neither
   // side fits outright.
-  const top = above >= 0 ? above : Math.min(below, Math.max(0, columnHeight - h));
+  const top = above >= 0 ? above : Math.min(below, Math.max(0, columnHeight - measured));
 
   return (
     <View
@@ -619,6 +634,9 @@ function PreviewSheet({
    * make — and it was the wrong choice to offer, since replaying a lesson from the top is
    * what the node's own "Do it again" already does once the lesson is finished. */
   const saved = node.isLifeTask ? null : lessonProgressFor(node.moduleId, node.lessonIndex);
+  // Same correction the hover card makes: a part-finished lesson says so, rather than
+  // claiming it was never opened.
+  const stateLabel = saved && node.state === 'available' ? 'STARTED' : STATE_LABEL[node.state];
   const cta = saved
     ? 'Resume lesson'
     : done ? 'Do it again' : node.state === 'current' ? 'Continue lesson' : 'Start lesson';
@@ -648,7 +666,7 @@ function PreviewSheet({
           <View style={styles.grabber} />
           <View style={styles.previewHead}>
             <Pill
-              label={STATE_LABEL[node.state]}
+              label={stateLabel}
               bg={done ? colors.tagGreenBg : node.state === 'current' ? colors.rewardBadgeBg : colors.tagPinkBg}
               fg={done ? colors.tagGreenText : node.state === 'current' ? colors.rewardBadgeText : colors.tagPinkText}
             />
