@@ -21073,15 +21073,16 @@ function startQuest(moduleId, questId) {
       hintsUsed: 0,
       xpEarned: 0,
       isReplay,
-      analytics: { knowledgeCheck: [], mythCards: [], polls: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null },
+      analytics: { knowledgeCheck: [], mythCards: [], polls: [], checks: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null },
     };
   } else {
     // Defensive backfill in case this progress was saved before these fields existed.
     existing.learnedTerms = existing.learnedTerms || [];
     existing.hintsUsed = existing.hintsUsed || 0;
     existing.xpEarned = existing.xpEarned || 0;
-    existing.analytics = existing.analytics || { knowledgeCheck: [], mythCards: [], polls: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null };
+    existing.analytics = existing.analytics || { knowledgeCheck: [], mythCards: [], polls: [], checks: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null };
     existing.analytics.polls = existing.analytics.polls || [];
+    existing.analytics.checks = existing.analytics.checks || [];
   }
   saveState();
   showScreen('screen-quest');
@@ -21700,6 +21701,7 @@ function renderTeachChapter(chapter, mod, onDone) {
           // correct/wrong highlight on the two buttons above), so "Here's why:"/"Here's
           // what's true:" would dangle with nothing to point at.
           showHammyReaction(mod, isCorrect, 'noexplain');
+          recordQuestCheck(mod, (c.check && c.check.statement) || c.term, isCorrect);
           readyToAdvance();
         });
       });
@@ -21872,6 +21874,7 @@ function renderExplainbackChapter(chapter, mod, onDone) {
     saveState();
     document.getElementById('eb-input').disabled = true;
     showHammyReaction(mod, matched >= 1);
+    recordQuestCheck(mod, chapter.title || "In Your Own Words", matched >= 1);
 
     const resultBlock = document.createElement('div');
     resultBlock.className = 'explainback-result';
@@ -22164,6 +22167,7 @@ function renderPollChapter(chapter, mod, onDone) {
       qp.analytics.polls.push({ statement: chapter.statement, isTrue: chapter.isTrue, guessedRight });
       saveState();
       showHammyReaction(mod, guessedRight);
+      recordQuestCheck(mod, chapter.statement || chapter.title, guessedRight);
 
       // No claimed crowd statistics here — we don't have real survey data backing any
       // specific percentage, so the reveal sticks to the actual true/false answer and why,
@@ -22244,6 +22248,7 @@ function renderSpotcheckChapter(chapter, mod, onDone) {
         toggleBtn.textContent = isCollapsed ? 'Show the original posting ▾' : 'Hide the original posting ▴';
       });
       showHammyReaction(mod, caughtCount === flags.length);
+      recordQuestCheck(mod, chapter.title || chapter.postingTitle, caughtCount === flags.length);
       setQuestContinue('Continue →', () => {
         if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
         onDone();
@@ -22311,6 +22316,7 @@ function renderUrlInspectChapter(chapter, mod, onDone) {
         toggleBtn.textContent = isCollapsed ? 'Show the full URL ▾' : 'Hide the full URL ▴';
       });
       showHammyReaction(mod, caughtCount === suspicious.length);
+      recordQuestCheck(mod, chapter.title || "Inspect the link", caughtCount === suspicious.length);
       setQuestContinue('Continue →', () => {
         if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
         onDone();
@@ -22618,6 +22624,7 @@ function renderPriceIsRightChapter(chapter, mod, onDone) {
       <p class="price-explanation">${chapter.explanation}</p>`;
     main.appendChild(revealBlock);
     showHammyReaction(mod, wasClose);
+    recordQuestCheck(mod, chapter.prompt || chapter.title, wasClose);
     setQuestContinue('Continue →', () => {
       if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
       onDone();
@@ -22760,28 +22767,57 @@ function finishQuest(mod, chosenConsequence) {
 
 // Comprehensive end-of-quest report: every term taught, a score breakdown per activity type,
 // specific weak spots to revisit, and a short rule-based note from Hammy on what to work on.
+/** Records one graded right/wrong judgement against the quest, for the end-of-lesson report.
+ *
+ * WHY THIS EXISTS. The report only ever counted knowledgeCheck and mythCards. Every OTHER
+ * judgement the lesson put in front of the student — the poll's true/false, each vocab
+ * concept's inline check, the price guess, the spot-the-red-flag chapters, the URL inspector
+ * — was graded on screen, drew a reaction from Hammy, fed his answer streak, and was then
+ * counted by nothing.
+ *
+ * So the mastery ring routinely disagreed with the score printed above it on the same screen:
+ * a lesson whose only miss was a poll showed the miss at the top and a 100% ring captioned
+ * "you got every question right" underneath. Ported from mobile's reportCheck, which fixed
+ * the same split.
+ *
+ * One flat {label, isCorrect} shape rather than a bucket per chapter kind, because the report
+ * does exactly two things with these — count them, and name the missed ones under "Worth
+ * another look" — and neither needs to know which chapter it came from. */
+function recordQuestCheck(mod, label, isCorrect) {
+  const qp = getQP(mod);
+  if (!qp || !qp.analytics) return;
+  // Older saves predate this array; a quest resumed from one would otherwise throw on push
+  // at the exact moment the results screen is being built.
+  if (!Array.isArray(qp.analytics.checks)) qp.analytics.checks = [];
+  qp.analytics.checks.push({ label: label || "Check", isCorrect: !!isCorrect });
+}
 function buildQuestReport(mod, qp) {
   const a = qp.analytics;
   const kcRight = a.knowledgeCheck.filter(x => x.isCorrect);
   const kcWrong = a.knowledgeCheck.filter(x => !x.isCorrect);
   const mythRight = a.mythCards.filter(x => x.guessedRight);
   const mythWrong = a.mythCards.filter(x => !x.guessedRight);
-  const totalAnswered = a.knowledgeCheck.length + a.mythCards.length;
-  const totalRight = kcRight.length + mythRight.length;
+  // See recordQuestCheck: every other graded moment in the lesson, which used to be shown
+  // to the student and then left out of their score.
+  const checks = Array.isArray(a.checks) ? a.checks : [];
+  const checkRight = checks.filter(x => x.isCorrect);
+  const checkWrong = checks.filter(x => !x.isCorrect);
+  const totalAnswered = a.knowledgeCheck.length + a.mythCards.length + checks.length;
+  const totalRight = kcRight.length + mythRight.length + checkRight.length;
   const masteryPct = totalAnswered ? Math.round((totalRight / totalAnswered) * 100) : 100;
 
   const termsHtml = (qp.learnedTerms || []).map(t => `<span class="report-term-chip">${t.term}</span>`).join('')
     || '<span class="report-term-chip">None recorded</span>';
 
-  const strengths = [...kcRight.map(x => x.question), ...mythRight.map(x => x.myth)];
-  const weakSpots = [...kcWrong.map(x => x.question), ...mythWrong.map(x => x.myth)];
+  const strengths = [...kcRight.map(x => x.question), ...mythRight.map(x => x.myth), ...checkRight.map(x => x.label)];
+  const weakSpots = [...kcWrong.map(x => x.question), ...mythWrong.map(x => x.myth), ...checkWrong.map(x => x.label)];
 
   const strengthsHtml = strengths.length
     ? `<div class="report-section"><div class="report-section-title">What you got right</div><ul class="report-strong-list">${strengths.map(w => `<li>${w}</li>`).join('')}</ul></div>`
     : '';
   const weakHtml = weakSpots.length
     ? `<div class="report-section"><div class="report-section-title">Worth another look</div><ul class="report-weak-list">${weakSpots.map(w => `<li>${w}</li>`).join('')}</ul></div>`
-    : `<div class="report-section report-perfect">You got every question and true/false card right this time.</div>`;
+    : `<div class="report-section report-perfect">You got everything right this time.</div>`;
 
   const decisionsHtml = a.decisions.length
     ? `<div class="report-section"><div class="report-section-title">Choices you made</div><ul class="report-decision-list">${a.decisions.map(d => `<li><strong>${d.title}:</strong> ${d.choice}</li>`).join('')}${a.bossChoice ? `<li><strong>Boss battle:</strong> ${a.bossChoice}</li>` : ''}</ul></div>`
