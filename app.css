@@ -3611,3 +3611,35 @@ select.budget-input { cursor: pointer; }
   display: flex; flex-wrap: wrap; gap: 0.4rem;
 }
 .glossary-popup-all .btn-secondary { width: 100%; margin-top: 1.1rem; }
+
+/* ─── TRACK PICKER (Settings) ───
+   Ported from mobile's TrackPicker. See showTrackPicker in app.js. */
+.track-picker-overlay { z-index: 287; }
+.track-picker-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.5rem; max-width: 480px; width: 100%; text-align: left;
+  max-height: 84vh; overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(38,56,48,0.1); animation: fadeUp 0.3s ease both;
+}
+.track-picker-title { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--text); }
+.track-picker-sub { font-size: 0.82rem; color: var(--text-mid); line-height: 1.5; margin: 0.3rem 0 1rem; }
+.track-opt {
+  display: flex; align-items: center; gap: 0.75rem; width: 100%; text-align: left;
+  padding: 0.85rem 1rem; margin-bottom: 0.55rem;
+  background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius);
+  color: var(--text); transition: border-color 0.15s ease, background 0.15s ease;
+}
+.track-opt:hover { border-color: var(--green-light); background: var(--green-pale); }
+.track-opt:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.track-opt-on { border-color: var(--green); background: var(--green-pale); color: var(--green-dark); }
+.track-opt-body { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; min-width: 0; }
+.track-opt-title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; }
+.track-opt-blurb { font-size: 0.78rem; color: var(--text-mid); line-height: 1.45; }
+/* The modules it leads with, spelled out: "Debt Freedom" is a name, not an answer to
+   "what will I actually be doing first". */
+.track-opt-mods { font-size: 0.7rem; font-weight: 700; color: var(--text-soft); margin-top: 0.15rem; }
+.track-picker-done {
+  width: 100%; margin-top: 0.5rem; padding: 0.7rem;
+  font-size: 0.85rem; font-weight: 800; color: var(--text-mid); background: none; border: none;
+}
+.track-picker-done:hover { color: var(--text); }

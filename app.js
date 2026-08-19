@@ -19254,21 +19254,93 @@ function renderProgressPage() {
     </div>`;
 }
 
+/** Pick a different starting track, without re-answering the survey that produced the first
+ * one.
+ *
+ * The track is an ORDERING, not a gate: it decides which modules get the "Recommended"
+ * highlight and which one Home's path opens on (see getTrackModuleIds), and nothing is ever
+ * locked behind it. So changing it is safe at any point, costs no progress, and is the one
+ * onboarding answer worth revisiting — which is why it gets a row of its own instead of a
+ * survey replay. Ported from mobile's TrackPicker.
+ *
+ * Each track states the modules it leads with, because "Debt Freedom" is a name, not an
+ * answer to "what will I actually be doing first". */
+function showTrackPicker() {
+  const modal = getTrackPickerModal();
+  const survey = state.onboardingSurvey || {};
+  const current = survey.trackId || null;
+
+  modal.innerHTML = '<div class="track-picker-card">' +
+      '<h2 class="track-picker-title">Change starting track</h2>' +
+      '<p class="track-picker-sub">This only changes which modules come first. Nothing is locked, and you keep all your progress.</p>' +
+      SURVEY_TRACKS.map(function (t) {
+        const on = t.id === current;
+        const mods = t.moduleIds
+          .map(function (id) { const m = MODULES.find(function (x) { return x.id === id; }); return m ? m.title : id; })
+          .join(' · ');
+        return '<button type="button" class="track-opt' + (on ? ' track-opt-on' : '') + '" data-track="' + t.id + '">' +
+            '<span class="track-opt-body">' +
+              '<span class="track-opt-title">' + escapeHtml(t.title) + '</span>' +
+              '<span class="track-opt-blurb">' + escapeHtml(t.blurb) + '</span>' +
+              '<span class="track-opt-mods">' + escapeHtml(mods) + '</span>' +
+            '</span>' +
+            (on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="18" height="18" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>' : '') +
+          '</button>';
+      }).join('') +
+      '<button type="button" class="track-picker-done" id="track-picker-done">Done</button>' +
+    '</div>';
+
+  modal.querySelectorAll('[data-track]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      state.onboardingSurvey = state.onboardingSurvey || {};
+      state.onboardingSurvey.trackId = btn.getAttribute('data-track');
+      saveState();
+      closeTrackPicker(modal);
+      renderSettingsPage();
+    });
+  });
+  document.getElementById('track-picker-done').addEventListener('click', function () { closeTrackPicker(modal); });
+  modal.classList.add('show');
+  makeModalAccessible(modal, function () { closeTrackPicker(modal); });
+}
+
+function getTrackPickerModal() {
+  let modal = document.getElementById('track-picker');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'track-picker';
+    modal.className = 'achievement-modal-overlay track-picker-overlay';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeTrackPicker(modal); });
+  }
+  return modal;
+}
+
+function closeTrackPicker(modal) {
+  modal.classList.remove('show');
+  if (modal._a11yCleanup) modal._a11yCleanup();
+}
+
 // ── SETTINGS PAGE ──────────────────────────────
 function renderSettingsPage() {
-  // Dev-only: credits 1,000 coins for testing purchases (the Grandfather Clock alone is
-  // 220) without grinding lessons for XP-driven coin rewards. No equivalent existed here
-  // before — ported over alongside the mobile Settings screen's identical cheat button.
-  const devCoinsBalance = document.getElementById('dev-coins-balance');
-  if (devCoinsBalance) devCoinsBalance.textContent = `Balance: ${state.coins}`;
-  const devAddCoinsBtn = document.getElementById('dev-add-coins-btn');
-  if (devAddCoinsBtn) {
-    devAddCoinsBtn.onclick = () => {
-      state.coins += 1000;
-      saveState();
-      renderSettingsPage();
-    };
+  // The "Add 1,000 coins (dev)" cheat that used to sit here is GONE, not gated.
+  //
+  // It shipped to every student on the live site, which is the entire economy: lesson
+  // rewards, streak diamonds, mystery boxes and the whole shop are priced against coins
+  // that were three clicks away from unlimited. The Expo app removed its identical button
+  // for exactly this reason (see the note in mobile's settings.tsx, where two grant-style
+  // cheats were deleted rather than hidden behind __DEV__) — nothing outside a debug
+  // session wants it, and a debug session can set state.coins from the console.
+
+  // Which track Home leads with. The picker below can change it without replaying the survey.
+  const trackVal = document.getElementById('settings-track-val');
+  if (trackVal) {
+    const survey = state.onboardingSurvey || {};
+    const current = SURVEY_TRACKS.find(t => t.id === survey.trackId);
+    trackVal.textContent = current ? current.title : 'Not set';
   }
+  const changeTrackBtn = document.getElementById('change-track-btn');
+  if (changeTrackBtn) changeTrackBtn.onclick = showTrackPicker;
 
   const resetBtn = document.getElementById('reset-btn');
   if (resetBtn) {
@@ -19299,30 +19371,10 @@ function renderSettingsPage() {
       location.reload();
     };
   }
-  const retakeBtn = document.getElementById('retake-survey-btn');
-  if (retakeBtn) {
-    retakeBtn.onclick = () => {
-      // Previously wrote completed:false straight to persisted state before the user had
-      // answered anything — if they closed the tab or navigated away before finishing the
-      // retaken survey, that stuck: runFirstLoadSequence() forces the survey open on
-      // EVERY future load until it's completed, with no way to back out. showOnboardingSurvey
-      // already resets surveyDraft fresh in-memory on its own, so there's nothing to persist
-      // here — finishOnboardingSurvey is the only place that should ever write the real
-      // (completed) result, exactly like a first-time survey.
-      showOnboardingSurvey();
-    };
-  }
-  const replayTourBtn = document.getElementById('replay-tour-btn');
-  if (replayTourBtn) {
-    // Deliberately doesn't touch state.hasSeenOnboardingTour — a manual replay from Settings
-    // shouldn't reset the "seen it" flag, or the tour would just auto-play again on the very
-    // next login too.
-    replayTourBtn.onclick = () => {
-      showPage('home');
-      renderHome();
-      startOnboardingTour();
-    };
-  }
+  // The "Retake survey" and "Replay tour" handlers that used to sit here are gone with
+  // their rows. The survey now runs only from a reset, which is the one case where nothing
+  // is known about you any more, and the tour is replayed from the help icon in Home''s
+  // header — the screen it actually walks through. Both match where the Expo app put them.
 
   const referralLinkInput = document.getElementById('referral-link-input');
   if (referralLinkInput && window.Clerk?.user) {

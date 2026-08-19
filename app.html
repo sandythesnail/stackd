@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="app.css?v=39">
+  <link rel="stylesheet" href="app.css?v=40">
   <link rel="stylesheet" href="hammy-intro.css?v=1">
   <script
     defer
@@ -299,26 +299,18 @@
           </div>
         </div>
         <div class="settings-list">
+          <!-- Replaces "Retake onboarding survey". Sitting through eleven familiarity
+               questions plus the piggy-bank intro was a long way round to change one
+               setting, and the track is the only thing the survey produces that anyone
+               might want to change later. This offers that thing directly. The survey
+               still runs in full from the one place it belongs to: a reset, which is the
+               case where nothing is known about you any more. Mirrors mobile's Settings. -->
           <div class="settings-item">
             <div>
-              <div class="settings-label">Onboarding survey</div>
-              <div class="settings-val">Retake the "what's already in your toolkit" survey</div>
+              <div class="settings-label">Change starting track</div>
+              <div class="settings-val" id="settings-track-val">Not set</div>
             </div>
-            <button class="btn-secondary" id="retake-survey-btn">Retake</button>
-          </div>
-          <div class="settings-item">
-            <div>
-              <div class="settings-label">Welcome tour</div>
-              <div class="settings-val">Replay the quick tour of XP, the Shop &amp; modules</div>
-            </div>
-            <button class="btn-secondary" id="replay-tour-btn">Replay</button>
-          </div>
-          <div class="settings-item">
-            <div>
-              <div class="settings-label">Add 1,000 coins (dev)</div>
-              <div class="settings-val" id="dev-coins-balance">Balance: -</div>
-            </div>
-            <button class="btn-secondary" id="dev-add-coins-btn">Add</button>
+            <button class="btn-secondary" id="change-track-btn">Change</button>
           </div>
           <div class="settings-item">
             <div>
