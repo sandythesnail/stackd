@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { HomeIcon, ModulesIcon, ProgressIcon, ToolsIcon, RoomIcon, ShopIcon } from './NavIcons';
 import { colors, font } from '@/theme';
 import { Txt } from './Txt';
 import { TourTarget } from './OnboardingTour';
@@ -15,16 +15,25 @@ type TabBarProps = {
   };
 };
 
+/** The website's sidebar icons, drawn from its own path data — see NavIcons.tsx.
+ *
+ * These used to come from three different icon fonts, and three of the six disagreed with what
+ * the same destination wears on the web: Modules was a grid against an open book, Progress a
+ * bar chart against a trend line, Room a pig against a bed.
+ *
+ * They are also all one size now. The old set was 25, 26 and 27 depending on which font a
+ * glyph came from, which is why iconBox below had to exist at all — these are vector drawings
+ * on a shared 24 viewBox, so they simply agree. */
 const ICONS: Record<
   string,
   { label: string; render: (color: string) => ReactNode }
 > = {
-  home: { label: 'Home', render: (c) => <Feather name="home" size={25} color={c} /> },
-  modules: { label: 'Modules', render: (c) => <Feather name="grid" size={25} color={c} /> },
-  progress: { label: 'Progress', render: (c) => <Feather name="bar-chart-2" size={25} color={c} /> },
-  tools: { label: 'Tools', render: (c) => <Ionicons name="calculator-outline" size={26} color={c} /> },
-  room: { label: 'Room', render: (c) => <MaterialCommunityIcons name="pig-variant" size={27} color={c} /> },
-  shop: { label: 'Shop', render: (c) => <Feather name="shopping-bag" size={25} color={c} /> },
+  home: { label: 'Home', render: (c) => <HomeIcon color={c} /> },
+  modules: { label: 'Modules', render: (c) => <ModulesIcon color={c} /> },
+  progress: { label: 'Progress', render: (c) => <ProgressIcon color={c} /> },
+  tools: { label: 'Tools', render: (c) => <ToolsIcon color={c} /> },
+  room: { label: 'Room', render: (c) => <RoomIcon color={c} /> },
+  shop: { label: 'Shop', render: (c) => <ShopIcon color={c} /> },
 };
 
 /** No motion at all on a tab — no press squeeze, no hop when it becomes active. Both used to
@@ -59,12 +68,10 @@ function TabButton({
       }}
     >
       <View style={[styles.pill, focused && styles.pillOn]}>
-        {/* Fixed-height box around the glyph so every pill is the same size. The six icons
-            aren't drawn at one size — the pig is 27 and the calculator 26, against 25 for the
-            rest — and since they're glyphs, their laid-out height follows the icon font's own
-            metrics rather than the nominal size. Left to size themselves, the Room and Tools
-            highlights came out a couple of pixels taller than the other four, which is
-            visible when the boxes are filled in and sitting side by side. */}
+        {/* Fixed-height box around the icon so every pill is the same size. Less critical now
+            that all six are vector drawings on one 24 viewBox at one size — the mixed 25/26/27
+            glyph fonts this originally compensated for are gone — but kept because it pins the
+            pill's height to a number rather than to whatever the artwork happens to measure. */}
         <View style={styles.iconBox}>{meta.render(color)}</View>
         {/* numberOfLines so a label can never wrap onto a second line and make one pill
             taller than the other five — the bar gets tight on small phones and "Progress"
