@@ -3071,3 +3071,235 @@ select.budget-input { cursor: pointer; }
 @media (max-width: 600px) {
   .toast-container { left: 1rem; right: 1rem; top: 1rem; }
 }
+
+/* ─── LESSON PATH (Home's "Keep learning") ───
+   Ported from mobile/src/lessonPath/. The four node states are separated on three channels
+   at once — fill, border treatment and glyph — never on brightness: nothing here is dimmed,
+   because a dimmed node is indistinguishable from a locked one and nothing in this app is
+   locked. The recommended node wins by having things ADDED to it (halo, ripple, START tag)
+   while every other node keeps full contrast and stays clickable. See lesson-path.js. */
+.lp-section { display: flex; flex-direction: column; align-items: center; }
+/* The header and the trail share one width (LP_MAX_COL in lesson-path.js) so the module
+   name, the pager chevrons and the wave below them all sit on the same axis — a header
+   wider than its path reads as two separate things stacked. */
+.lp-head-block { width: 100%; max-width: 640px; }
+
+/* Fixed height, always occupied, contents conditional — mounting and unmounting this row
+   moved the module name, the trail and everything under it on every page. */
+.lp-rec-row {
+  height: 22px; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;
+}
+.lp-rec-pill {
+  font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em;
+  background: #FFEDB0; color: #8A6800; padding: 0.2rem 0.5rem; border-radius: 999px;
+}
+.lp-rec-note { font-size: 0.62rem; font-weight: 700; color: #8A9B86; }
+
+/* A transparent 2px border and the same padding in the base style, so turning the gold on
+   recolours the box without moving anything. */
+.lp-head {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.4rem; border-radius: 18px;
+  border: 2px solid transparent; margin-bottom: 0.15rem;
+}
+/* The same treatment the module rows use for "recommended", so the path and the module list
+   can't drift apart on what recommended looks like. */
+.lp-head-rec {
+  border-color: #F0C22E; background: #FFF9E6;
+  box-shadow: 0 0 6px rgba(240,194,46,0.25);
+}
+.lp-head-main { flex: 1; min-width: 0; }
+.lp-head-name {
+  font-family: var(--font-display); font-size: 0.92rem; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lp-head-meta { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.15rem; }
+.lp-head-count { font-size: 0.66rem; font-weight: 700; color: #7C8E78; }
+.lp-bar-track {
+  /* Capped rather than flex:1. At the column's full width the bar ran the whole way to the
+     pager chevron, which read as a page-wide rule with a module name parked at one end
+     instead of as that module's own progress. */
+  flex: 1; max-width: 190px; height: 6px;
+  background: var(--track, #E7ECE3); border-radius: 999px; overflow: hidden;
+}
+.lp-bar-fill {
+  display: block; height: 100%; border-radius: 999px; background: var(--mod-deep, var(--green));
+}
+.lp-bar-done { background: var(--green); }
+.lp-done-pill {
+  font-size: 0.6rem; font-weight: 800; letter-spacing: 0.05em;
+  background: #EAF3E7; color: var(--green-dark); padding: 0.2rem 0.5rem; border-radius: 999px;
+}
+.lp-pager {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #6E7E6B; background: none; border: none;
+}
+.lp-pager:hover { background: #E4EBE0; color: var(--text); }
+.lp-pager:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.lp-position {
+  text-align: center; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.09em;
+  color: #9DAE99; margin-bottom: 0.4rem;
+}
+
+.lp-body { position: relative; margin: 0 auto; }
+.lp-svg { position: absolute; inset: 0; pointer-events: none; }
+
+/* ── one node ── */
+.lp-slot {
+  position: absolute; width: 82px; height: 82px;
+  display: flex; align-items: center; justify-content: center;
+  animation: lpNodeIn 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@keyframes lpNodeIn {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+/* The full bounding box of the rotated diamond (~82px) is the click target, not the diamond
+   itself — which keeps it well clear of 44px even at the diamond's pinched corners. */
+.lp-hit {
+  position: relative; width: 82px; height: 82px; padding: 0; border: none; background: none;
+  display: flex; align-items: center; justify-content: center;
+}
+.lp-diamond {
+  width: 58px; height: 58px; border-radius: 15px; border: 2.25px solid;
+  display: flex; align-items: center; justify-content: center;
+  transform: rotate(45deg);
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+/* Counter-rotated, so the diamond is a diamond but its contents stay upright. */
+.lp-glyph {
+  transform: rotate(-45deg); display: flex; align-items: center; justify-content: center;
+}
+.lp-num { font-family: var(--font-display); font-size: 0.94rem; font-weight: 700; }
+
+/* Pointer-over and keyboard-focus lift. EVERY node gets it, in its own colour — the point of
+   the path is that nothing is dimmed or locked, so "the cursor is on this one" has to be
+   sayable about a completed node and a far-ahead one just as much as the recommended one. */
+.lp-lift {
+  position: absolute; width: 58px; height: 58px; border-radius: 20px;
+  transform: rotate(45deg) scale(1.04); opacity: 0; pointer-events: none;
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+}
+.lp-hit:hover ~ .lp-lift,
+.lp-slot:has(.lp-hit:hover) .lp-lift,
+.lp-slot:has(.lp-hit:focus-visible) .lp-lift {
+  opacity: 0.4; transform: rotate(45deg) scale(1.2);
+}
+.lp-hit:hover .lp-diamond,
+.lp-hit:focus-visible .lp-diamond {
+  transform: rotate(45deg) scale(1.075);
+  /* A cast shadow in the node's own colour on top of the glow behind it — the glow alone
+     reads as a flat ring, the two together read as the diamond coming forward. */
+  box-shadow: 0 0 10px var(--lp-glow);
+}
+.lp-hit:active .lp-diamond { transform: rotate(45deg) scale(0.94); }
+/* A real, visible focus ring, drawn as the same diamond offset outward. */
+.lp-hit:focus-visible { outline: none; }
+.lp-hit:focus-visible .lp-diamond {
+  box-shadow: 0 0 0 3px var(--text), 0 0 10px var(--lp-glow);
+}
+
+/* ── the recommended node's additions ── */
+.lp-halo {
+  position: absolute; width: 58px; height: 58px; border-radius: 18px;
+  background: var(--green); pointer-events: none;
+  animation: lpHalo 1.5s ease-in-out infinite alternate;
+}
+@keyframes lpHalo {
+  from { opacity: 0.13; transform: rotate(45deg) scale(1.06); }
+  to   { opacity: 0.33; transform: rotate(45deg) scale(1.22); }
+}
+/* A ring thrown off the node and out into the page — the one effect here that leaves the
+   node's own footprint, so the recommendation reads at the edge of vision rather than only
+   when you're looking straight at it. */
+.lp-ripple {
+  position: absolute; width: 58px; height: 58px; border-radius: 18px;
+  border: 2.5px solid var(--green); pointer-events: none;
+  animation: lpRipple 2.1s ease-out infinite;
+}
+@keyframes lpRipple {
+  from { opacity: 0.5; transform: rotate(45deg) scale(1); }
+  to   { opacity: 0; transform: rotate(45deg) scale(2.15); }
+}
+.lp-start-tag {
+  position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  background: var(--green-dark); color: #fff;
+  font-size: 0.53rem; font-weight: 800; letter-spacing: 0.07em;
+  padding: 0.16rem 0.5rem; border-radius: 999px; pointer-events: none; white-space: nowrap;
+}
+
+/* ── travelling dots ── */
+.lp-comet-layer { position: absolute; inset: 0; pointer-events: none; }
+.lp-comet {
+  position: absolute; top: 0; left: 0; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--green); opacity: 0; will-change: transform, opacity;
+}
+.lp-comet-faint { background: #84AB7B; }
+
+/* ── hover card ── */
+/* A lighter border and a softer, shorter shadow than a real card: at this size the heavy
+   treatment reads as a second card on the page rather than a label on a node. */
+.lp-tip {
+  position: absolute; width: 194px; z-index: 5; pointer-events: none;
+  background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 0.45rem 0.6rem;
+  box-shadow: 0 3px 9px rgba(44,62,45,0.12);
+}
+.lp-tip-state { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.15rem; }
+.lp-tip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.lp-tip-label { font-size: 0.55rem; font-weight: 800; letter-spacing: 0.07em; color: #8A9B86; }
+.lp-tip-title {
+  font-family: var(--font-display); font-size: 0.74rem; font-weight: 600;
+  color: var(--text); line-height: 1.3;
+}
+
+/* ── preview panel ── */
+.lp-preview-overlay { z-index: 285; }
+.lp-preview-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.75rem; max-width: 430px; width: 100%;
+  box-shadow: 0 8px 40px rgba(38,56,48,0.1); animation: fadeUp 0.3s ease both;
+}
+.lp-preview-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.lp-preview-pill {
+  font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem; border-radius: 999px;
+}
+.lp-pill-done { background: #EAF3E7; color: var(--green-dark); }
+.lp-pill-rec  { background: #FFEDB0; color: #8A6800; }
+.lp-pill-new  { background: var(--pink-pale); color: var(--pink-dark); }
+.lp-preview-meta { font-size: 0.66rem; font-weight: 700; color: #8A9B86; }
+.lp-preview-title {
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 700;
+  color: var(--text); margin: 0.55rem 0 0;
+}
+.lp-preview-hook {
+  font-size: 0.8rem; color: #6E7E6B; line-height: 1.5; margin: 0.45rem 0 0;
+}
+.lp-preview-note {
+  font-size: 0.7rem; font-weight: 700; color: var(--green-dark); margin: 0.55rem 0 0;
+}
+.lp-preview-cta { width: 100%; margin-top: 1.1rem; }
+.lp-preview-close {
+  width: 100%; margin-top: 0.25rem; padding: 0.6rem;
+  font-size: 0.76rem; font-weight: 800; color: #6E7E6B; background: none; border: none;
+}
+.lp-preview-close:hover { color: var(--text); }
+
+/* Reduced motion costs the animation, not the affordance: the recommended node keeps a
+   halo, it just stops breathing, and the trail dots (which say nothing the halo doesn't)
+   are never started at all — see lpReducedMotion in lesson-path.js. */
+@media (prefers-reduced-motion: reduce) {
+  .lp-slot { animation: none; }
+  .lp-halo { animation: none; opacity: 0.23; transform: rotate(45deg) scale(1.14); }
+  .lp-ripple { display: none; }
+  .lp-diamond, .lp-lift { transition: none; }
+  .lp-preview-card { animation: none; }
+}
+
+/* The trail is a fixed-width column (see LP_MAX_COL); below that the page is narrower than
+   the column, so let it shrink with the viewport rather than overflow. */
+@media (max-width: 700px) {
+  .lp-body { max-width: 100%; }
+}

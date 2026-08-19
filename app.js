@@ -17130,6 +17130,8 @@ function closeAllModals() {
   if (achievementModal && achievementModal.classList.contains('show')) closeAchievementModal(achievementModal);
   const dailyLoginModal = document.getElementById('daily-login-modal');
   if (dailyLoginModal && dailyLoginModal.classList.contains('show')) closeDailyLoginModal(dailyLoginModal);
+  const lessonPreview = document.getElementById('lp-preview-modal');
+  if (lessonPreview && lessonPreview.classList.contains('show')) lpClosePreview(lessonPreview);
 }
 
 function showPage(id) {
@@ -18925,49 +18927,6 @@ function renderWardrobeScene() {
 // repeating the full 11-row accordion the Modules tab already owns. That full list on
 // Home was most of what made the page read as mostly empty space once expanded/scanned;
 // "See all" hands off to the real Modules page for everything past these 4.
-function renderHomeModulePreview(containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = '';
-
-  const trackModuleIds = getTrackModuleIds();
-
-  MODULES.slice(0, 4).forEach(m => {
-    const { totalUnits, unitsDone, allDone } = moduleUnitsProgress(m);
-    const isRecommended = !allDone && trackModuleIds.includes(m.id);
-    const pct = totalUnits ? Math.round((unitsDone / totalUnits) * 100) : 0;
-
-    const badge = allDone
-      ? `<span class="card-badge badge-done">✓ Done</span>`
-      : isRecommended
-        ? `<span class="card-badge badge-recommend">★ Recommended</span>`
-        : `<span class="card-badge badge-progress">${pct}%</span>`;
-
-    const tile = document.createElement('div');
-    tile.className = 'home-mod-tile' + (allDone ? ' completed' : '') + (isRecommended ? ' recommended' : '');
-    tile.innerHTML = `
-      <div class="hmt-top">
-        <div class="mod-icon" data-mod="${m.id}">${m.icon}</div>
-        ${badge}
-      </div>
-      <div class="hmt-title">${m.title}</div>
-      <div class="hmt-bar-track"><div class="hmt-bar-fill${allDone ? ' hmt-bar-green' : ''}" style="width:${pct}%"></div></div>`;
-    tile.addEventListener('click', () => goToModule(m.id));
-    container.appendChild(tile);
-  });
-}
-
-// Jumps to the Modules tab and expands/scrolls to a specific module's row — used by the
-// Home preview tiles (mirrors mobile pushing straight into that module's detail screen).
-function goToModule(moduleId) {
-  document.getElementById('nav-modules-btn').click();
-  const row = document.querySelector(`#modules-grid .module-row[data-module-id="${moduleId}"]`);
-  if (!row) return;
-  row.classList.add('expanded');
-  row.querySelector('.module-row-header')?.setAttribute('aria-expanded', 'true');
-  row.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
 function renderHome() {
   showPage('home');
   updateSidebarStats();
@@ -18978,7 +18937,7 @@ function renderHome() {
 
   renderHomeMascotCard(done);
 
-  renderHomeModulePreview('home-modules-grid');
+  renderLessonPath('home-lesson-path');
   renderAchievementBadges('home-achievements-row', 'home-achieve-sub', { onlyUnlocked: true });
 }
 
