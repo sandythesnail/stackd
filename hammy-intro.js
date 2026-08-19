@@ -96,24 +96,68 @@
     var finished = false;
     function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
 
-    /* ── Coin jingle: PLACEHOLDER synthesized with WebAudio (no audio assets in
-       the repo yet — swap for a real licensed SFX file later). By this point
-       the user has clicked through the survey, so the context is normally
+    /* ── Coin jingle ──
+       sfx/coins.wav, byte-identical to the file the Expo app plays at this exact moment
+       of its own intro (mobile/assets/sfx/coins.wav), so the piggy bank bursting open
+       sounds the same on both. Synthesised by mobile/scripts/make-sfx.js rather than
+       licensed, which is why it can live in the repo at all — re-runnable and re-tunable
+       instead of a binary nobody can touch.
+
+       This replaces a synthesised placeholder that was explicitly marked for exactly this
+       swap. The oscillator version is kept as a FALLBACK rather than deleted: a sample can
+       fail to arrive (offline, a 404 after a bad deploy, a decode a browser refuses) and
+       the pop is the payoff of the whole intro, so having some sound is better than the
+       silence a missing file would otherwise leave.
+
+       By this point the user has clicked through the survey, so the context is normally
        allowed to run; if the browser still blocks audio we skip silently. ── */
+    var COIN_SFX_URL = '/sfx/coins.wav';
     var audioCtx = null;
+    var coinBuffer = null;
     function unlockAudio() {
       try {
         var Ctx = window.AudioContext || window.webkitAudioContext;
         if (!Ctx) return;
-        if (!audioCtx) audioCtx = new Ctx();
+        if (!audioCtx) { audioCtx = new Ctx(); loadCoinSfx(); }
         if (audioCtx.state === 'suspended') audioCtx.resume().catch(function () {});
       } catch (e) { /* no audio available — fine */ }
     }
     document.addEventListener('pointerdown', unlockAudio);
     unlockAudio();
 
+    /* Fire-and-forget. Every failure path leaves coinBuffer null, which simply means the
+       fallback plays — decoding must never be able to interrupt the intro. */
+    function loadCoinSfx() {
+      if (!window.fetch || !audioCtx) return;
+      fetch(COIN_SFX_URL)
+        .then(function (r) { return r.ok ? r.arrayBuffer() : null; })
+        .then(function (buf) {
+          if (!buf || !audioCtx) return null;
+          // Callback form as well as the promise: Safari resolves decodeAudioData only
+          // through the callback on older versions.
+          return new Promise(function (resolve, reject) {
+            var p = audioCtx.decodeAudioData(buf, resolve, reject);
+            if (p && p.then) p.then(resolve, reject);
+          });
+        })
+        .then(function (decoded) { if (decoded) coinBuffer = decoded; })
+        .catch(function () { /* fallback jingle covers it */ });
+    }
+
     function playJingle() {
       if (!audioCtx || audioCtx.state !== 'running') return;
+      if (coinBuffer) {
+        try {
+          var src = audioCtx.createBufferSource();
+          var vol = audioCtx.createGain();
+          vol.gain.value = 0.55;
+          src.buffer = coinBuffer;
+          src.connect(vol);
+          vol.connect(audioCtx.destination);
+          src.start();
+          return;
+        } catch (e) { /* fall through to the synthesised jingle */ }
+      }
       try {
         var t0 = audioCtx.currentTime;
         var master = audioCtx.createGain();
@@ -255,6 +299,7 @@
       timers = [];
       document.removeEventListener('pointerdown', unlockAudio);
       if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
+      coinBuffer = null;
       overlay.remove();
       if (typeof onDone === 'function') onDone();
     }
