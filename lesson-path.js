@@ -14,19 +14,22 @@
    One module is on screen at a time, opening on whichever holds the recommended lesson,
    with chevrons paging through the catalog.
 
-   ── Two deliberate divergences from mobile, both because the web's model differs ──
+   ── Where this differs from mobile, and why ──
 
-   1. The real-life sub-quest is NOT optional here. On mobile it's `isLifeTask` and carries an
-      'optional' state with a star glyph and an "OPTIONAL EXTRA" label. On the web it is a
-      required 9th lesson: moduleUnits() includes it, and module completion, mastery, the X/9
-      progress everywhere and the continue-card's next-lesson pointer all key off it (see the
-      comment on moduleUnits in app.js). Labelling it optional here would tell people they can
-      skip a lesson that gates their module completion — a false statement, not a port.
+   1. The real-life sub-quest is not called optional. It is a required 9th lesson: moduleUnits()
+      includes it, and module completion, mastery, the X/9 progress everywhere and the
+      continue-card's next-lesson pointer all key off it (see the comment on moduleUnits in
+      app.js). Calling it optional would tell people they can skip the one lesson that stops
+      their module completing.
 
-      What IS kept is the part that makes it read as "elsewhere" rather than "ahead": the
-      dashed spur, and the position further off the centre line. Mobile keys both of those off
-      `isLifeTask` rather than off the state for its own reasons, which is exactly what lets
-      the two be separated here. So it still looks aside; it just doesn't claim to be skippable.
+      It still reads as "elsewhere" rather than "ahead" — the dashed spur and the position
+      further off the centre line, both keyed off `isLifeTask` rather than off the state, so
+      finishing it doesn't pull it back onto the main line.
+
+      This started as a divergence: mobile labelled it OPTIONAL EXTRA at the time of the port.
+      Mobile has since reached the same conclusion for the same reason (c45e2bb), and its
+      'optional' state now reads REAL LIFE SUB-QUEST. The two agree again; only the mechanism
+      differs, since the web never needed a fifth state to say it.
 
    2. Module ordering follows the web's, not mobile's. Mobile orders the carousel by the
       survey track; the web deliberately keeps modules in fixed numeric order and lets
@@ -172,6 +175,15 @@ const LP_STATE_LABEL = {
   completed: 'COMPLETED',
   current: 'RECOMMENDED NEXT',
   available: 'NOT STARTED',
+  // A lesson stepped into and left. Flatly wrong to call it "not started", which is what it
+  // read as before. Not a state of its own — see the note on `inProgress`.
+  started: 'STARTED',
+  // The sub-quest, when it is neither finished nor the recommended next. Mobile calls this
+  // its 'optional' state, but NOT "optional extra": it is required to finish the module in
+  // its entirety (moduleUnits counts it as the 9th lesson and isModuleFullyDone won't call a
+  // module done without it), so calling it optional told students they could skip the one
+  // lesson that stops the module completing.
+  lifeTask: 'REAL LIFE SUB-QUEST',
 };
 /** The hover card's much shorter wording, and the dot colour that carries it.
  *
@@ -183,7 +195,21 @@ const LP_STATE_TIP = {
   completed: { label: 'Completed', tone: 'var(--green-light)' },
   current: { label: 'Up next', tone: 'var(--green)' },
   available: { label: 'Not started', tone: '#9DAE99' },
+  started: { label: 'Started', tone: 'var(--green)' },
+  lifeTask: { label: 'Real life sub-quest', tone: '#F0C22E' },
 };
+
+/** Which label a node wears, which is NOT the same question as which state it is in.
+ *
+ * The state drives the node's shape and colour on the path, and there are four of those.
+ * These two extra labels are orthogonal to it: a lesson can be started and also be the
+ * recommended next one, and the sub-quest is a normal node that happens to be elsewhere.
+ * Neither should change how the diamond looks, only what it is called. */
+function lpLabelKey(n) {
+  if (n.state === 'completed' || n.state === 'current') return n.state;
+  if (n.isLifeTask) return 'lifeTask';
+  return n.inProgress ? 'started' : 'available';
+}
 
 /** Which module the path is showing. Sticky once the user pages the carousel, so a re-render
  *  (finishing a lesson, claiming a reward) doesn't yank them back to the recommended module. */
@@ -229,6 +255,11 @@ function lpSection(m, recommended) {
       // being true for exactly the lessons that have been played — which on mobile used to
       // pull the sub-quest back onto the main line the moment you completed it.
       isLifeTask: isLife,
+      // A lesson stepped into and left. The web's resume point is qp.chapterIdx, the same
+      // signal the module list reads to offer "Resume" instead of "Begin". Only meaningful
+      // while the lesson is unfinished — a completed lesson keeps no resume point worth
+      // announcing, and "Started" under a green tick would read as a contradiction.
+      inProgress: !done && !!(qp && qp.chapterIdx > 0),
       state: done ? 'completed' : isRec ? 'current' : 'available',
     };
   });
@@ -418,7 +449,7 @@ function lpSectionEl(section, shownIdx, sections, recommendedTrack) {
       '<span class="lp-lift" style="background:' + glow + '"></span>' +
       (isCurrent ? '<span class="lp-ripple"></span><span class="lp-halo"></span>' : '') +
       '<button type="button" class="lp-hit"' +
-        ' aria-label="' + escapeHtml(n.title) + '. ' + LP_STATE_WORDS[n.state] + '."' +
+        ' aria-label="' + escapeHtml(n.title) + '. ' + LP_STATE_TIP[lpLabelKey(n)].label.toLowerCase() + '."' +
         (isCurrent ? ' aria-current="true"' : '') + '>' +
         '<span class="lp-diamond" style="background:' + fill + ';border-color:' + border + ';--lp-glow:' + glow + '">' +
           '<span class="lp-glyph" style="color:' + glyphColor + '">' + glyph + '</span>' +
@@ -529,7 +560,7 @@ function lpStartComet(body, samples) {
  * two-line version over the node it belongs to. */
 function lpShowTip(node, at, body, colW, colH) {
   lpHideTip();
-  const tip = LP_STATE_TIP[node.state];
+  const tip = LP_STATE_TIP[lpLabelKey(node)];
   const el = document.createElement('div');
   el.className = 'lp-tip';
   el.id = 'lp-tip';
@@ -573,7 +604,7 @@ function lpOpenPreview(node, section) {
   modal.innerHTML =
     '<div class="lp-preview-card" data-mod="' + node.moduleId + '">' +
       '<div class="lp-preview-head">' +
-        '<span class="lp-preview-pill ' + pillClass + '">' + LP_STATE_LABEL[node.state] + '</span>' +
+        '<span class="lp-preview-pill ' + pillClass + '">' + LP_STATE_LABEL[lpLabelKey(node)] + '</span>' +
         '<span class="lp-preview-meta">' + escapeHtml(section.module.title) +
           (section.total ? ' · Lesson ' + (node.index + 1) + ' of ' + section.total : '') + '</span>' +
       '</div>' +
