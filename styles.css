@@ -27,6 +27,152 @@
   --radius-sm: 8px;
   --font-display: 'Lora', Georgia, 'Times New Roman', serif;
   --font: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ── Module accent palette ──────────────────────────────────────────────
+     Ported verbatim from mobile/src/theme.ts so the web and Expo apps wear the
+     same eleven chips. Four tokens per module because there are genuinely four
+     jobs, and one value cannot do them all:
+
+       --mod-<id>        the chip itself
+       --mod-<id>-text   the big decorative NUMBER on the chip (white, all eleven)
+       --mod-<id>-ink    real WORDS on the chip (solved per chip, every pair >= 4.6:1)
+       --mod-<id>-deep   the module's accent on cream (--bg), for lesson-path nodes
+
+     The -text values are white on all eleven by request, which clears AA on five
+     and falls short on six (investing 1.67:1 and saving 1.65:1 are effectively
+     unreadable). That is a property of the supplied colours, not of this code:
+     nothing darker than white helps on lime, and the only fix is a darker chip,
+     which was tried and reverted. It is an acceptable trade only because the
+     number is decoration - it repeats the module name sitting beside it
+     everywhere it appears, so it is never the sole carrier of meaning. Anything
+     that has to be READ uses -ink or -deep, both of which are solved.
+
+     Known, accepted: saving (#A5DB01) and investing (#F9C000) sit 0.0190 apart
+     under deuteranopia against a 0.045 floor, as do three other pairs - for
+     roughly one man in twelve those modules share a colour. Both were specified,
+     so both are kept, and the module name is always present as the real label.
+     See mobile/scripts/solve-module-colors.js (ACCEPTED_COLLISIONS /
+     ACCEPTED_LOW_CONTRAST) - the guard still fires for any chip changed later. */
+  --mod-earning: #3EA06D;
+  --mod-spending: #66BF01;
+  --mod-saving: #A5DB01;
+  --mod-investing: #F9C000;
+  --mod-credit: #F98800;
+  --mod-risk: #AD2601;
+  --mod-loans: #E20372;
+  --mod-taxes: #6B0F7C;
+  --mod-psychology: #044B8B;
+  --mod-career: #3DB9E5;
+  --mod-scams: #2B7350;
+
+  --mod-earning-text: #FFFFFF;
+  --mod-spending-text: #FFFFFF;
+  --mod-saving-text: #FFFFFF;
+  --mod-investing-text: #FFFFFF;
+  --mod-credit-text: #FFFFFF;
+  --mod-risk-text: #FFFFFF;
+  --mod-loans-text: #FFFFFF;
+  --mod-taxes-text: #FFFFFF;
+  --mod-psychology-text: #FFFFFF;
+  --mod-career-text: #FFFFFF;
+  --mod-scams-text: #FFFFFF;
+
+  --mod-earning-ink: #002D18;
+  --mod-spending-ink: #224602;
+  --mod-saving-ink: #445B12;
+  --mod-investing-ink: #694F00;
+  --mod-credit-ink: #5A2E00;
+  --mod-risk-ink: #FFD2C7;
+  --mod-loans-ink: #FFFFFF;
+  --mod-taxes-ink: #F7CDFF;
+  --mod-psychology-ink: #C7E1FF;
+  --mod-career-ink: #00455A;
+  --mod-scams-ink: #92FFC5;
+
+  --mod-earning-deep: #00824F;
+  --mod-spending-deep: #428002;
+  --mod-saving-deep: #5C7B01;
+  --mod-investing-deep: #8D6B00;
+  --mod-credit-deep: #AB5C00;
+  --mod-risk-deep: #AD2600;
+  --mod-loans-deep: #CF2F6F;
+  --mod-taxes-deep: #6E0080;
+  --mod-psychology-deep: #004B8C;
+  --mod-career-deep: #047A9C;
+  --mod-scams-deep: #10764C;
+}
+
+
+/* Module scope: put data-mod="<id>" on any element and the four palette tokens resolve
+   for it and everything inside it. One hop of indirection so components (.mod-icon, the
+   lesson-path nodes, module cards) are written once against --mod-color/-text/-ink/-deep
+   instead of eleven times against each module. Mirrors how mobile passes a single module
+   id down and reads theme.moduleColor* from it. */
+[data-mod="earning"] {
+  --mod-color: var(--mod-earning);
+  --mod-text: var(--mod-earning-text);
+  --mod-ink: var(--mod-earning-ink);
+  --mod-deep: var(--mod-earning-deep);
+}
+[data-mod="spending"] {
+  --mod-color: var(--mod-spending);
+  --mod-text: var(--mod-spending-text);
+  --mod-ink: var(--mod-spending-ink);
+  --mod-deep: var(--mod-spending-deep);
+}
+[data-mod="saving"] {
+  --mod-color: var(--mod-saving);
+  --mod-text: var(--mod-saving-text);
+  --mod-ink: var(--mod-saving-ink);
+  --mod-deep: var(--mod-saving-deep);
+}
+[data-mod="investing"] {
+  --mod-color: var(--mod-investing);
+  --mod-text: var(--mod-investing-text);
+  --mod-ink: var(--mod-investing-ink);
+  --mod-deep: var(--mod-investing-deep);
+}
+[data-mod="credit"] {
+  --mod-color: var(--mod-credit);
+  --mod-text: var(--mod-credit-text);
+  --mod-ink: var(--mod-credit-ink);
+  --mod-deep: var(--mod-credit-deep);
+}
+[data-mod="risk"] {
+  --mod-color: var(--mod-risk);
+  --mod-text: var(--mod-risk-text);
+  --mod-ink: var(--mod-risk-ink);
+  --mod-deep: var(--mod-risk-deep);
+}
+[data-mod="loans"] {
+  --mod-color: var(--mod-loans);
+  --mod-text: var(--mod-loans-text);
+  --mod-ink: var(--mod-loans-ink);
+  --mod-deep: var(--mod-loans-deep);
+}
+[data-mod="taxes"] {
+  --mod-color: var(--mod-taxes);
+  --mod-text: var(--mod-taxes-text);
+  --mod-ink: var(--mod-taxes-ink);
+  --mod-deep: var(--mod-taxes-deep);
+}
+[data-mod="psychology"] {
+  --mod-color: var(--mod-psychology);
+  --mod-text: var(--mod-psychology-text);
+  --mod-ink: var(--mod-psychology-ink);
+  --mod-deep: var(--mod-psychology-deep);
+}
+[data-mod="career"] {
+  --mod-color: var(--mod-career);
+  --mod-text: var(--mod-career-text);
+  --mod-ink: var(--mod-career-ink);
+  --mod-deep: var(--mod-career-deep);
+}
+[data-mod="scams"] {
+  --mod-color: var(--mod-scams);
+  --mod-text: var(--mod-scams-text);
+  --mod-ink: var(--mod-scams-ink);
+  --mod-deep: var(--mod-scams-deep);
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }

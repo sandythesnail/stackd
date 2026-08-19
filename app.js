@@ -22,6 +22,45 @@ function getTier(modulesCompleted) {
   return TIERS.find(t => modulesCompleted >= t.min && modulesCompleted <= t.max) || TIERS[TIERS.length - 1];
 }
 
+// ── Module palette ───────────────────────────
+// The same eleven chips the Expo app wears, kept in sync with mobile/src/theme.ts and with
+// the --mod-* custom properties in styles.css. Duplicated as JS (rather than read back out of
+// getComputedStyle) because the lesson path draws its connectors into SVG, where a paint
+// server needs a real colour value at build time, not a var() reference resolved later.
+//
+// MODULE_COLOR       the chip
+// MODULE_COLOR_TEXT  the decorative NUMBER on it (white on all eleven, by request)
+// MODULE_COLOR_INK   real words on it (solved per chip, every pair >= 4.6:1)
+// MODULE_COLOR_DEEP  the accent on cream (--bg), for lesson-path nodes
+//
+// See the palette note in styles.css for what the white numbers cost and why it is an
+// accepted trade. Anything that has to be read uses INK or DEEP.
+const MODULE_COLOR = {
+  earning: '#3EA06D', spending: '#66BF01', saving: '#A5DB01', investing: '#F9C000',
+  credit: '#F98800', risk: '#AD2601', loans: '#E20372', taxes: '#6B0F7C',
+  psychology: '#044B8B', career: '#3DB9E5', scams: '#2B7350',
+};
+const MODULE_COLOR_TEXT = {
+  earning: '#FFFFFF', spending: '#FFFFFF', saving: '#FFFFFF', investing: '#FFFFFF',
+  credit: '#FFFFFF', risk: '#FFFFFF', loans: '#FFFFFF', taxes: '#FFFFFF',
+  psychology: '#FFFFFF', career: '#FFFFFF', scams: '#FFFFFF',
+};
+const MODULE_COLOR_INK = {
+  earning: '#002D18', spending: '#224602', saving: '#445B12', investing: '#694F00',
+  credit: '#5A2E00', risk: '#FFD2C7', loans: '#FFFFFF', taxes: '#F7CDFF',
+  psychology: '#C7E1FF', career: '#00455A', scams: '#92FFC5',
+};
+const MODULE_COLOR_DEEP = {
+  earning: '#00824F', spending: '#428002', saving: '#5C7B01', investing: '#8D6B00',
+  credit: '#AB5C00', risk: '#AD2600', loans: '#CF2F6F', taxes: '#6E0080',
+  psychology: '#004B8C', career: '#047A9C', scams: '#10764C',
+};
+// Falls back to the brand green so an unknown/new module id renders as Stacked rather than as
+// nothing at all — the same defensive default mobile's moduleColor lookups use.
+function modColor(id) { return MODULE_COLOR[id] || '#6B8F65'; }
+function modColorDeep(id) { return MODULE_COLOR_DEEP[id] || '#4A6844'; }
+function modColorInk(id) { return MODULE_COLOR_INK[id] || '#FFFFFF'; }
+
 // ── Modules ──────────────────────────────────
 const MODULES = [
   {
@@ -17347,7 +17386,7 @@ function renderModuleList(containerId) {
     row.innerHTML = `
       <div class="module-row-header" role="button" tabindex="0" aria-expanded="false">
         <div class="mrh-left">
-          <div class="mod-icon ${m.iconColor}">${m.icon}</div>
+          <div class="mod-icon" data-mod="${m.id}">${m.icon}</div>
           <div class="mrh-info">
             <div class="mrh-title">${m.title}</div>
             <div class="mrh-desc">${m.desc}</div>
@@ -17954,7 +17993,7 @@ function renderSurveyStep() {
               ${trackModules.map((m, i) => `
                 <div class="survey-track-module">
                   <span class="survey-track-step">${i + 1}</span>
-                  <div class="mod-icon ${m.iconColor}">${m.icon}</div>
+                  <div class="mod-icon" data-mod="${m.id}">${m.icon}</div>
                   <span class="survey-track-module-title">${m.title}</span>
                 </div>`).join('')}
             </div>
@@ -18908,7 +18947,7 @@ function renderHomeModulePreview(containerId) {
     tile.className = 'home-mod-tile' + (allDone ? ' completed' : '') + (isRecommended ? ' recommended' : '');
     tile.innerHTML = `
       <div class="hmt-top">
-        <div class="mod-icon ${m.iconColor}">${m.icon}</div>
+        <div class="mod-icon" data-mod="${m.id}">${m.icon}</div>
         ${badge}
       </div>
       <div class="hmt-title">${m.title}</div>
@@ -19204,7 +19243,7 @@ function renderProgressPage() {
           const scorePct = comp ? (comp.score / (comp.total || 5)) * 100 : 0;
           const isPink = pinkMods.has(m.id);
           return `<div class="pg-bar-row">
-            <div class="mod-icon mod-icon-sm ${m.iconColor}">${m.icon}</div>
+            <div class="mod-icon mod-icon-sm" data-mod="${m.id}">${m.icon}</div>
             <span class="pg-bar-label">${m.title}</span>
             <div class="pg-bar-track">
               <div class="pg-bar-fill${isPink ? ' pg-bar-pink' : ''}" style="width:${scorePct}%"></div>
