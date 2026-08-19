@@ -1336,8 +1336,24 @@ select.budget-input { cursor: pointer; }
 /* Each chapter/question fades in on entry — matches the mobile app's per-chapter
    `entering={FadeIn.duration(260)}` (quest.tsx), retriggered in renderChapter() by
    removing/re-adding this class so it replays every time quest-main's content changes. */
-.quest-main.chapter-enter { animation: chapterFadeIn 0.26s ease; }
-@keyframes chapterFadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* Quest mount animations: TRANSFORM ONLY, never opacity.
+
+   Ported from mobile/src/app/learn/quest.tsx (useRise), and the reason is the same one that
+   file documents at length. An animation that starts at opacity 0 is fail-HIDDEN: if it is
+   interrupted, never runs, or the element is rebuilt mid-flight, the content is not merely
+   unanimated, it is invisible. A transform is fail-visible for free — the worst case is a
+   line of dialogue sitting eight pixels low, which is perfectly readable.
+
+   That is not hypothetical here. Both of these used to run `fadeUp` (translateY plus
+   opacity 0 -> 1), which is exactly the mount the mobile app had to fix four times over
+   before the dialogue would reliably appear at all.
+
+   Deliberately NOT changing the shared `fadeUp` keyframes, which 25 other rules use — a
+   modal card fading in is a different job with a different failure mode: it has no siblings
+   accumulating beneath it, and its container is not rebuilt beat by beat. */
+@keyframes questRise { from { transform: translateY(8px); } to { transform: translateY(0); } }
+@keyframes questPageTurn { from { transform: translateX(10px); } to { transform: translateX(0); } }
+.quest-main.chapter-enter { animation: questPageTurn 0.17s ease-out; }
 
 /* Shared chapter title — sits above the two-column layout, bled past quest-body's own padding
    so it hugs the true left edge of the screen, further left than everything else on the page. */
@@ -1360,7 +1376,11 @@ select.budget-input { cursor: pointer; }
 .quest-kc-counter { font-size: 0.78rem; font-weight: 600; color: var(--text-soft); margin-bottom: 0.5rem; }
 
 /* Story beats */
-.story-beat { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; animation: fadeUp 0.4s ease; align-items: flex-start; }
+.story-beat { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; animation: questRise 0.22s ease-out; align-items: flex-start; }
+
+@media (prefers-reduced-motion: reduce) {
+  .story-beat, .intro-scene, .quest-main.chapter-enter { animation: none; }
+}
 .story-avatar {
   width: 46px; height: 46px; border-radius: 50%; background: var(--green-pale);
   display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--green-dark);
@@ -1378,7 +1398,7 @@ select.budget-input { cursor: pointer; }
    the full width and height of quest-main to work with). */
 .intro-scene {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; min-height: 300px; margin-bottom: 0; animation: fadeUp 0.4s ease;
+  text-align: center; min-height: 300px; margin-bottom: 0; animation: questPageTurn 0.17s ease-out;
 }
 .intro-avatar { display: flex; justify-content: center; margin-bottom: 1.25rem; }
 .intro-caption {
