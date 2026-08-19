@@ -20239,7 +20239,7 @@ function startBonusActivity(moduleId, lessonIdx) {
   document.getElementById('glossary-tray').classList.remove('show');
   document.getElementById('hint-budget').innerHTML = '';
   document.getElementById('quest-side').style.display = 'flex';
-  document.getElementById('hammy-side-avatar').innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.38, getEquippedItems()));
+  document.getElementById('hammy-side-avatar').innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.36 : 0.52, getEquippedItems()));
   document.getElementById('hammy-side-avatar').className = 'hammy-side-avatar';
   document.getElementById('hammy-side-msg').textContent = '';
   document.getElementById('hammy-side-msg').className = 'hammy-side-msg';
@@ -20986,10 +20986,15 @@ function renderChapter(mod, idx) {
   const hammySide = document.getElementById('hammy-side-avatar');
   const hammyMsg = document.getElementById('hammy-side-msg');
   questSide.style.display = HAMMY_SIDE_HIDDEN_TYPES.includes(chapter.type) ? 'none' : 'flex';
+  clearTimeout(hammyMsg._hideTimer);
+  clearTimeout(hammySide._faceHideTimer);
   hammySide.className = 'hammy-side-avatar';
-  // ~60% of the old desktop scale. Hammy was the loudest element on a screen where the
-  // question should be; at 0.38 he still reads as a character without competing with it.
-  hammySide.innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.28 : 0.38, getEquippedItems()));
+  // Sized against the Expo app's companion, which is 130pt beside a ~390pt screen — a third
+  // of the width, so he reads as a character in the scene rather than an icon next to it.
+  // The web's pig is drawn in a 440x460 frame, so 0.52 lands at roughly the same presence in
+  // the quest's side column. He is deliberately NOT scaled per chapter type here: changing
+  // size between chapters is movement, and he is supposed to stay put.
+  hammySide.innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.36 : 0.52, getEquippedItems()));
   hammyMsg.className = 'hammy-side-msg';
   hammyMsg.textContent = '';
 
@@ -21187,14 +21192,10 @@ function pushLearnedTerm(mod, term, plain, section) {
   renderGlossaryTray(mod);
 }
 
-function renderGlossaryTray(mod) {
-  const tray = document.getElementById('glossary-tray');
-  if (!tray) return;
+/** Groups the terms learned so far in this quest, preserving the order each section was
+ *  first encountered. */
+function glossarySections(mod) {
   const terms = (getQP(mod).learnedTerms) || [];
-  if (!terms.length) { tray.innerHTML = ''; tray.classList.remove('show'); return; }
-  tray.classList.add('show');
-
-  // Group into sections, preserving the order each section was first encountered.
   const sections = [];
   terms.forEach(t => {
     const name = t.section || 'Other Terms';
@@ -21202,13 +21203,70 @@ function renderGlossaryTray(mod) {
     if (!section) { section = { name, terms: [] }; sections.push(section); }
     section.terms.push(t);
   });
+  return sections;
+}
 
-  tray.innerHTML = `<span class="glossary-label">📖 Look back:</span>` + sections.map((s, i) =>
-    `<button class="glossary-chip glossary-section-chip" data-idx="${i}">${s.name} <span class="glossary-count">${s.terms.length}</span></button>`
-  ).join('');
-  tray.querySelectorAll('.glossary-section-chip').forEach(btn => {
-    btn.addEventListener('click', () => showGlossarySectionPopup(sections[Number(btn.dataset.idx)]));
+/** ONE pill, not a row of section chips.
+ *
+ * Every section learned used to get its own named chip up here, so the band above the lesson
+ * grew a word at a time and eventually wrapped onto a second line. Two things were wrong with
+ * that. It put a glossary — reference material you consult when stuck — permanently in front
+ * of the question, competing with it. And because the band's height depended on how many
+ * sections you had collected, learning a term RESIZED THE HEADER mid-lesson and pushed the
+ * whole layout down, Hammy included: measured at 61px the first time a term landed.
+ *
+ * Now it is a book you open. The pill is one fixed size whatever is behind it, so the header
+ * is the same height on the first chapter and the last, and everything below it holds still.
+ */
+function renderGlossaryTray(mod) {
+  const tray = document.getElementById('glossary-tray');
+  if (!tray) return;
+  const sections = glossarySections(mod);
+  const total = sections.reduce((n, s) => n + s.terms.length, 0);
+  if (!total) { tray.innerHTML = ''; tray.classList.remove('show'); return; }
+  tray.classList.add('show');
+  tray.innerHTML =
+    '<button class="glossary-pill" id="glossary-pill" aria-haspopup="dialog">' +
+      '<svg class="glossary-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true">' +
+        '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>' +
+      '</svg>' +
+      '<span>Look back</span>' +
+      '<span class="glossary-count">' + total + '</span>' +
+    '</button>';
+  document.getElementById('glossary-pill').addEventListener('click', () => showGlossaryAllPopup(mod));
+}
+
+/** Everything learned so far, in one panel: each section, with its words under it.
+ *  Tapping a word swaps to its definition, with a way back here. */
+function showGlossaryAllPopup(mod) {
+  const modal = getGlossaryModal();
+  const sections = glossarySections(mod);
+  modal.innerHTML = '<div class="glossary-popup-card glossary-popup-all">' +
+      '<div class="glossary-popup-title">Look back</div>' +
+      '<p class="glossary-popup-sub">Every word you have learned in this lesson. Tap one for what it means.</p>' +
+      '<div class="glossary-popup-scroll">' +
+        sections.map((sec, si) =>
+          '<div class="glossary-popup-section">' +
+            '<div class="glossary-popup-section-title">' + escapeHtml(sec.name) + '</div>' +
+            '<div class="glossary-popup-word-grid">' +
+              sec.terms.map((t, ti) =>
+                '<button class="glossary-popup-word-chip" data-sec="' + si + '" data-term="' + ti + '">' +
+                  escapeHtml(t.term.replace(/\s*\(.*?\)/, '')) +
+                '</button>').join('') +
+            '</div>' +
+          '</div>').join('') +
+      '</div>' +
+      '<button class="btn-secondary" id="glossary-popup-close">Close</button>' +
+    '</div>';
+  modal.querySelectorAll('.glossary-popup-word-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const sec = sections[Number(chip.dataset.sec)];
+      showGlossaryPopup(sec.terms[Number(chip.dataset.term)], { mod: mod });
+    });
   });
+  modal.classList.add('show');
+  document.getElementById('glossary-popup-close').addEventListener('click', () => modal.classList.remove('show'));
+  makeModalAccessible(modal, () => modal.classList.remove('show'));
 }
 
 function getGlossaryModal() {
@@ -21223,41 +21281,21 @@ function getGlossaryModal() {
   return modal;
 }
 
-// Step 1 of the look-back flow: tapping a section shows just the words taught in it.
-function showGlossarySectionPopup(section) {
-  const modal = getGlossaryModal();
-  modal.innerHTML = `<div class="glossary-popup-card">
-    <div class="glossary-popup-section-title">${section.name}</div>
-    <div class="glossary-popup-word-grid" id="glossary-popup-word-grid"></div>
-    <button class="btn-secondary" id="glossary-popup-close">Close</button>
-  </div>`;
-  const grid = document.getElementById('glossary-popup-word-grid');
-  section.terms.forEach((t, i) => {
-    const chip = document.createElement('button');
-    chip.className = 'glossary-popup-word-chip';
-    chip.textContent = t.term.replace(/\s*\(.*?\)/, '');
-    chip.addEventListener('click', () => showGlossaryPopup(t, section));
-    grid.appendChild(chip);
-  });
-  modal.classList.add('show');
-  document.getElementById('glossary-popup-close').addEventListener('click', () => modal.classList.remove('show'));
-}
-
 // Step 2: tapping a word within a section shows its definition, with a way back to the
 // section's word list so re-checking a few words in a row doesn't mean re-opening the tray
 // each time.
-function showGlossaryPopup(term, backToSection) {
+function showGlossaryPopup(term, backTo) {
   const modal = getGlossaryModal();
   modal.innerHTML = `<div class="glossary-popup-card">
-    ${backToSection ? `<button class="glossary-popup-back" id="glossary-popup-back">← Back to ${backToSection.name}</button>` : ''}
+    ${backTo ? `<button class="glossary-popup-back" id="glossary-popup-back">← Back to all words</button>` : ''}
     <div class="glossary-popup-term">${term.term}</div>
     <p class="glossary-popup-def">${term.plain}</p>
     <button class="btn-primary" id="glossary-popup-close">Got it</button>
   </div>`;
   modal.classList.add('show');
   document.getElementById('glossary-popup-close').addEventListener('click', () => modal.classList.remove('show'));
-  if (backToSection) {
-    document.getElementById('glossary-popup-back').addEventListener('click', () => showGlossarySectionPopup(backToSection));
+  if (backTo) {
+    document.getElementById('glossary-popup-back').addEventListener('click', () => showGlossaryAllPopup(backTo.mod));
   }
 }
 
@@ -21312,6 +21350,47 @@ const HAMMY_OUTCOME_GENTLE_MSGS = ["Hmm, that one stings a bit.", "That'll cost 
 // bubble auto-clears itself a couple seconds later so it never sits stale through a later,
 // unrelated activity in the same chapter (e.g. a second question, or a chapter with no
 // true/false check at all).
+/* Why a readiness flag instead of just setting the class and trusting the image.
+ *
+ * `streak` is the one reaction that swaps Hammy's WHOLE face, so it is the only one that
+ * hides the CSS eyes, cheeks and snout underneath (see app.css). Those two things happen in
+ * the same frame, but they do not finish in the same frame: the hiding is instant and the
+ * illustration has to be fetched and decoded first. On a cold cache, a slow connection, or
+ * a 404 after a bad deploy, the gap between them is a Hammy with no face at all — which is
+ * exactly the blank face that gets reported, and it is intermittent precisely because it
+ * depends on whether the file happened to be cached.
+ *
+ * So the swap is gated. Until the image has decoded, `faces-ready` is absent, the CSS
+ * leaves the base face alone, and a streak simply renders as the ordinary happy reaction.
+ * A less exciting Hammy for one moment beats no Hammy at all, and once it is decoded the
+ * flag is permanent for the session.
+ *
+ * The mouth-only reactions (happy, gentle) are NOT gated: they add a mouth on top of the
+ * resting face without hiding anything, so a missing image there costs the mouth and
+ * nothing else. There is no blank state to guard against. */
+let hammyFacesReady = false;
+const HAMMY_SWAP_FACES = ['faces/hammy-happy.png?v=17'];
+function preloadHammyFaces() {
+  if (hammyFacesReady) return;
+  let pending = HAMMY_SWAP_FACES.length;
+  HAMMY_SWAP_FACES.forEach(function (src) {
+    const img = new Image();
+    // Only a full set counts. A partial load would re-open the same gap for whichever
+    // face was still missing.
+    img.onload = function () { if (--pending === 0) hammyFacesReady = true; };
+    img.onerror = function () { /* stays false: the base face is never hidden */ };
+    img.src = src;
+  });
+}
+preloadHammyFaces();
+
+/** Applies a reaction class, downgrading a whole-face swap to the mouth-only happy face
+ *  while its illustration is still unavailable. */
+function applyHammyFace(avatar, cls) {
+  if (cls === 'streak' && !hammyFacesReady) { avatar.classList.add('happy'); return; }
+  if (hammyFacesReady) avatar.classList.add('faces-ready');
+  avatar.classList.add(cls);
+}
 function showHammyReaction(mod, isCorrect, context = 'answer') {
   const avatar = document.getElementById('hammy-side-avatar');
   const msgEl = document.getElementById('hammy-side-msg');
@@ -21328,25 +21407,23 @@ function showHammyReaction(mod, isCorrect, context = 'answer') {
   const isStreak = isCorrect && qp.streak > 0 && qp.streak % 3 === 0;
   if (isStreak) msg = `🎉 ${qp.streak} in a row! You're on fire!`;
 
-  clearTimeout(msgEl._hideTimer);
   msgEl.textContent = msg;
   avatar.className = 'hammy-side-avatar';
   msgEl.className = 'hammy-side-msg';
   void avatar.offsetWidth; // restart CSS animations
-  avatar.classList.add(isCorrect ? 'happy' : 'gentle');
+  applyHammyFace(avatar, isCorrect ? 'happy' : 'gentle');
   msgEl.classList.add('show', isCorrect ? 'happy' : 'gentle');
-  if (isStreak) { avatar.classList.add('streak'); msgEl.classList.add('streak'); }
+  if (isStreak) { applyHammyFace(avatar, 'streak'); msgEl.classList.add('streak'); }
   // Face and message hide together (previously the face reverted to blank at 1300ms while
   // the bubble stayed up until 2400ms, leaving Hammy blank-faced under a still-visible message).
   // The avatar's own timer is tracked/cleared the same way msgEl's is below — without that, a
   // second reaction fired within 1400ms of the first left the FIRST call's stale timeout to
   // strip the mood class out from under the second one, going blank-faced mid-message.
-  clearTimeout(avatar._faceHideTimer);
-  avatar._faceHideTimer = setTimeout(() => avatar.classList.remove('happy', 'gentle', 'streak'), 1400);
-  msgEl._hideTimer = setTimeout(() => {
-    msgEl.classList.remove('show');
-    setTimeout(() => { if (!msgEl.classList.contains('show')) msgEl.textContent = ''; }, 320);
-  }, 1400);
+  // No hide timer. The reaction stays until renderChapter puts up the next chapter, which
+  // is the only moment it stops being true. Timers here used to clear the bubble a second or
+  // so after it appeared — long enough to read "Not quite, here's why:" and lose it before
+  // reading the why — and two of them racing across quick successive answers is what stripped
+  // the mood class out from under a live message and left the face blank.
 }
 
 // Puts specific, given text (rather than a random pick) in Hammy's speech bubble — used where
@@ -21356,23 +21433,18 @@ function showHammyMessage(text, isGood) {
   const avatar = document.getElementById('hammy-side-avatar');
   const msgEl = document.getElementById('hammy-side-msg');
   if (!avatar || !msgEl) return;
-  clearTimeout(msgEl._hideTimer);
   msgEl.textContent = text;
   avatar.className = 'hammy-side-avatar';
   msgEl.className = 'hammy-side-msg';
   void avatar.offsetWidth;
-  avatar.classList.add(isGood ? 'happy' : 'gentle');
+  applyHammyFace(avatar, isGood ? 'happy' : 'gentle');
   msgEl.classList.add('show', isGood ? 'happy' : 'gentle');
   // Face and message hide together (previously the face reverted to blank at 1300ms while
   // this longer narration text stayed up until 4500ms, leaving Hammy blank-faced for ~3s).
   // Same stale-timeout race as showHammyReaction above — track/clear the avatar's own timer
   // too, or a rapid second call lets the first call's timeout blank the face out from under it.
-  clearTimeout(avatar._faceHideTimer);
-  avatar._faceHideTimer = setTimeout(() => avatar.classList.remove('happy', 'gentle'), 2800);
-  msgEl._hideTimer = setTimeout(() => {
-    msgEl.classList.remove('show');
-    setTimeout(() => { if (!msgEl.classList.contains('show')) msgEl.textContent = ''; }, 320);
-  }, 2800);
+  // Same as showHammyReaction: no hide timer, the next chapter clears it. This one carried
+  // the actual explanation, so timing it out was worse here than anywhere else.
 }
 
 // ── Chapter type: teach (plain-English concept explainer) ──

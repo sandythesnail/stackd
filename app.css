@@ -1086,9 +1086,13 @@ select.budget-input { cursor: pointer; }
    button lives here too, so it's always reachable at the top without scrolling. Dashboard and
    the hint/continue controls share a single row (no separate bar + divider line underneath). */
 .quest-sticky-header { flex-shrink: 0; z-index: 9; background: var(--bg); }
-/* Collapses to nothing when the step has no hint and no glossary, instead of leaving an
-   empty band under the topbar. */
-.quest-sticky-header:not(:has(.hint-ask-btn)):not(:has(.glossary-chip)) { display: none; }
+/* Deliberately NOT collapsed when empty any more.
+   It used to display:none until a hint button or a glossary chip existed, which meant the
+   first term you learned made a 61px band appear out of nowhere and shove the entire lesson —
+   Hammy included — down the page. Measured. A reserved band that is sometimes empty is a much
+   smaller cost than the whole screen jumping mid-question, and with the single Look back pill
+   the band is thin and always the same height. */
+.quest-sticky-header { min-height: 3rem; }
 
 .quest-toolrow {
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
@@ -1123,7 +1127,7 @@ select.budget-input { cursor: pointer; }
    single chip row's worth of space from the very first chapter (quietly, at opacity:0,
    before any term exists yet), so learning a term never changes the sticky header's size. */
 .glossary-tray {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; min-height: 2.35rem;
+  display: flex; flex-wrap: nowrap; align-items: center; gap: 0.4rem; height: 3rem; box-sizing: border-box;
   padding: 0.4rem 1rem; background: var(--bg); border-bottom: 1px solid var(--border);
   opacity: 0; visibility: hidden; transition: opacity 0.25s ease;
 }
@@ -1238,9 +1242,16 @@ select.budget-input { cursor: pointer; }
 /* Hammy at ~60% of his old footprint. At 300px he was the widest, loudest thing on a screen
    whose job is to ask a question — he took roughly a quarter of the viewport and pulled the
    eye away from the content column beside him. */
+/* Anchored to the TOP of the row, not centred in it.
+   Centring made Hammy's position a function of how tall the question beside him happened to
+   be — so revealing an explanation, which grows quest-main, slid him down the page by however
+   much the answer added. Measured at 60px on a knowledge check, on top of the 131px the speech
+   bubble was already costing. The row's top edge does not move, so anchoring to it is what
+   actually holds him still; the padding puts him at roughly the height he used to sit at on a
+   typical chapter. */
 .quest-side {
-  flex-shrink: 0; width: 190px; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; text-align: center; gap: 0.7rem;
+  flex-shrink: 0; width: 272px; display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-start; padding-top: 7rem; text-align: center; gap: 0.7rem;
 }
 .hammy-side-avatar { position: relative; }
 /* A white speech bubble floats above Hammy's head whenever they react, instead of plain
@@ -1266,9 +1277,12 @@ select.budget-input { cursor: pointer; }
 .hammy-side-msg.happy { color: var(--green-dark); }
 .hammy-side-msg.gentle { color: var(--pink-dark); }
 .hammy-side-msg.streak { color: var(--pink-dark); }
-.hammy-side-avatar.happy .pig { animation: hammyBounce 0.7s ease-in-out !important; }
-.hammy-side-avatar.gentle .pig { animation: hammyWobble 0.6s ease-in-out !important; }
-.hammy-side-avatar.streak .pig { animation: hammyCelebrate 1s ease-in-out !important; }
+/* Deliberately no animation on .pig for any reaction state.
+   These used to bounce, wobble and celebrate the whole character on every answer. A mascot
+   that jumps each time you press a button reads as a toy rather than a teacher, and it moved
+   the one fixed point on a screen whose content is already changing underneath it. The
+   reaction is carried entirely by the face and the speech bubble now, neither of which moves
+   him. The sparkles below are on the wrapper's pseudo-elements, so they still fire. */
 .hammy-side-avatar.happy::before, .hammy-side-avatar.streak::before,
 .hammy-side-avatar.happy::after, .hammy-side-avatar.streak::after {
   content: '\2728'; position: absolute; font-size: 1.1rem; opacity: 0; pointer-events: none;
@@ -1305,13 +1319,13 @@ select.budget-input { cursor: pointer; }
   opacity: 1; background-image: url('faces/hammy-mouth-confused.png?v=1');
   top: 258px; left: 214px; width: 48px; height: 30px; background-size: contain;
 }
-.hammy-side-avatar.streak .hammy-face-overlay { opacity: 1; background-image: url('faces/hammy-happy.png?v=17'); }
+.hammy-side-avatar.faces-ready.streak .hammy-face-overlay { opacity: 1; background-image: url('faces/hammy-happy.png?v=17'); }
 /* The illustrated face's own eyes replace these, and its edges fade to transparent (so they
    blend into the pig's skin instead of a hard rectangle) — leaving the original CSS eyes at
    full opacity underneath would show through that fade and double up as ghosting. */
 .pig-eye, .pig-cheek { transition: opacity 0.15s ease; }
-.hammy-side-avatar.streak .pig-eye,
-.hammy-side-avatar.streak .pig-cheek { opacity: 0; }
+.hammy-side-avatar.faces-ready.streak .pig-eye,
+.hammy-side-avatar.faces-ready.streak .pig-cheek { opacity: 0; }
 /* The illustration has its own shading baked in on the side it covers — drop just the
    bottom-right inset shadow (the part that would otherwise fall right behind the art) but
    keep the top-left highlight, so the head keeps its dimensional look on the left. */
@@ -1327,7 +1341,7 @@ select.budget-input { cursor: pointer; }
    a blank-faced flash on every single reaction. Crossfading all the swapped features on the
    same clock means some face is always at full combined opacity. */
 .pig-snout, .pig-eye, .pig-cheek { transition: opacity 0.15s ease; }
-.hammy-side-avatar.streak .pig-snout { opacity: 0; }
+.hammy-side-avatar.faces-ready.streak .pig-snout { opacity: 0; }
 
 /* Centers vertically within whatever height the row ends up (quest-layout's min-height is set
    in JS from the real available space), so short content isn't squished against the top with
@@ -3540,3 +3554,60 @@ select.budget-input { cursor: pointer; }
   animation: fadeUp 0.26s ease 0.18s both;
 }
 .levelup-reward.show { display: inline-flex; }
+
+/* Hammy holds still in a lesson.
+   Every pig on the site carries `pigFloat` (styles.css) — a continuous 14px rise and a ±1deg
+   rock. On the landing page and the Home mascot that reads as life. Beside a question it does
+   not: he is the one fixed thing on a screen whose content changes under him, and a companion
+   that never stops drifting while you are trying to read is what "he keeps moving" means.
+   Scoped to the quest companion only, so nothing else on the site changes. */
+.hammy-side-avatar .pig,
+.hammy-side-avatar .pig-ear-l,
+.hammy-side-avatar .pig-ear-r,
+.hammy-side-avatar .pig-tail { animation: none !important; }
+/* The blink stays. It is the one movement that costs no position — the eye scales in place,
+   the character does not travel — and without it he reads as a still image rather than calm. */
+.hammy-side-avatar .pig-eye { animation: pigBlink 4s infinite !important; }
+
+/* Hammy's position must not depend on what he is saying.
+   The bubble used to be an ordinary flex sibling above him, so the moment a reaction landed
+   its height went from empty-padding to two lines and shoved him 131px down the column —
+   measured, and it is exactly the "he moves when the dialogue appears" complaint. The comment
+   that used to sit here claimed the box never changed size; it did.
+   The slot is zero-height and contributes nothing to the column, and the bubble is absolutely
+   positioned inside it, growing UPWARD from a fixed baseline. However long the message, the
+   avatar below is untouched. */
+.hammy-side-slot { position: relative; width: 100%; height: 0; }
+.hammy-side-msg {
+  position: absolute; bottom: 0; left: 0; right: 0;
+}
+
+/* The Look back pill: one fixed-size control, whatever is behind it. */
+.glossary-pill {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.32rem 0.8rem; border-radius: 999px;
+  background: #fff; border: 1px solid var(--border); color: var(--text-mid);
+  font-family: var(--font); font-size: 0.76rem; font-weight: 700;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.glossary-pill:hover { border-color: var(--green); color: var(--green-dark); }
+.glossary-pill:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.glossary-pill-icon { flex-shrink: 0; }
+
+/* The all-words panel. Scrolls internally so a long lesson's glossary can't grow the card
+   past the viewport. */
+.glossary-popup-all { max-width: 520px; text-align: left; }
+.glossary-popup-title {
+  font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--text);
+}
+.glossary-popup-sub { font-size: 0.78rem; color: var(--text-mid); margin: 0.25rem 0 0.9rem; line-height: 1.45; }
+.glossary-popup-scroll { max-height: 52vh; overflow-y: auto; }
+.glossary-popup-section + .glossary-popup-section { margin-top: 1rem; }
+.glossary-popup-all .glossary-popup-section-title {
+  font-size: 0.66rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--text-soft); margin-bottom: 0.4rem;
+}
+.glossary-popup-all .glossary-popup-word-grid {
+  display: flex; flex-wrap: wrap; gap: 0.4rem;
+}
+.glossary-popup-all .btn-secondary { width: 100%; margin-top: 1.1rem; }
