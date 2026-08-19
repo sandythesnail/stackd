@@ -16836,78 +16836,46 @@ function buildStreakDiamondBanner(diamondsEarned) {
 }
 
 // ── Daily Login Bonus ───────────────────────────
-// A small "thanks for showing up" coin drip, entirely separate from the streak/diamond
-// system above — missing a day never breaks it and it never breaks the streak. Scales
-// modestly by the count of distinct calendar days ever logged (not consecutive days),
-// then flattens out so it stays a nudge, never a grind target.
-const DAILY_LOGIN_BASE_COINS = 10;
-const DAILY_LOGIN_STEP_COINS = 2;
-const DAILY_LOGIN_CAP_COINS = 20;
+// A seven-day reward cycle that climbs and pays diamonds on day 7 — the ladder, the
+// calendar modal and the payout maths all live in daily-rewards.js. Entirely separate from
+// the streak/diamond milestone system above: missing a day never breaks that, and that
+// never breaks this. What remains here is only the state-writing half.
 
-// Whether today's bonus hasn't been claimed yet, used to highlight the streak card on
-// Home rather than auto-popping a modal on every login.
+// Whether today has anything left to collect, used to highlight the streak card on Home
+// rather than auto-popping a modal on every login.
 function dailyLoginBonusPending() {
   const today = new Date().toDateString();
   return !(state.dailyLoginLog && state.dailyLoginLog[today]);
 }
 
-// Returns coins awarded this call (0 if today was already claimed).
-function claimDailyLoginBonus() {
+// Credits today's rung plus any streak-milestone diamonds that updateStreak already
+// banked and left waiting to be announced. Returns what was actually paid, so the modal
+// can report the real figures rather than the slot's advertised ones — on a diamonds-only
+// claim those differ, and showing the slot value would credit the player, in writing, with
+// coins they were paid hours ago.
+//
+// Positional on state.streak, NOT on Object.keys(dailyLoginLog).length: the old counter
+// totalled every day ever collected, so a player who missed a week came back to a bigger
+// reward than they left with, and no coherent "day N of 7" could ever be drawn from it.
+function claimDailyLoginBonus(pendingDiamonds) {
   const today = new Date().toDateString();
   state.dailyLoginLog = state.dailyLoginLog || {};
-  if (state.dailyLoginLog[today]) return 0;
-  const dayNumber = Object.keys(state.dailyLoginLog).length + 1;
-  const coins = Math.min(DAILY_LOGIN_BASE_COINS + DAILY_LOGIN_STEP_COINS * (dayNumber - 1), DAILY_LOGIN_CAP_COINS);
-  state.dailyLoginLog[today] = coins;
-  state.coins = (state.coins || 0) + coins;
-  saveState();
-  return coins;
-}
-
-function closeDailyLoginModal(modal) {
-  modal.classList.remove('show');
-  if (modal._a11yCleanup) modal._a11yCleanup();
-}
-
-function getDailyLoginModal() {
-  let modal = document.getElementById('daily-login-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'daily-login-modal';
-    modal.className = 'achievement-modal-overlay';
-    document.body.appendChild(modal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeDailyLoginModal(modal); });
+  const alreadyClaimed = !!state.dailyLoginLog[today];
+  const coins = alreadyClaimed ? 0 : dailyRewardCoins(state.streak);
+  const dayDiamonds = alreadyClaimed ? 0 : dailyRewardDiamonds(state.streak);
+  const diamonds = (pendingDiamonds || 0) + dayDiamonds;
+  if (coins === 0 && diamonds === 0) return { coins: 0, diamonds: 0 };
+  if (!alreadyClaimed) {
+    // The log value has to stay TRUTHY: dailyRewardCycleFor reads it as "was this day
+    // collected", and day 7 pays zero coins — writing the coin figure there would mark the
+    // biggest day of the week as missed the moment it was claimed.
+    state.dailyLoginLog[today] = coins || dayDiamonds;
   }
-  return modal;
+  state.coins = (state.coins || 0) + coins;
+  state.diamonds = (state.diamonds || 0) + dayDiamonds;
+  saveState();
+  return { coins: coins, diamonds: diamonds };
 }
-
-// A popup on login, so the daily coin drip is hard to miss instead of a toast that
-// could get lost in the corner. Titled off state.streak (floored to 1 for display, since
-// a brand-new player claiming their very first bonus hasn't completed a lesson yet and
-// state.streak is still technically 0 at that point) so day one reads as a congrats
-// moment rather than a generic "welcome back."
-function showDailyLoginModal(coins, diamonds = 0) {
-  const modal = getDailyLoginModal();
-  const displayStreak = Math.max(1, state.streak);
-  const title = displayStreak === 1 ? '1 Day Streak! 🎉' : `${displayStreak} Day Streak!`;
-  const rewardText = diamonds > 0
-    ? `<strong>+${coins} coins</strong> and <strong>+${diamonds} diamonds</strong>`
-    : `<strong>+${coins} coins</strong>`;
-  const desc = displayStreak === 1
-    ? `Congrats, you started a streak! You earned ${rewardText}. Come back tomorrow to keep it going.`
-    : `You earned ${rewardText} for logging in today.`;
-  modal.innerHTML = `
-    <div class="daily-login-modal-card">
-      <div class="daily-login-modal-icon">${diamonds > 0 ? '💎' : '🪙'}</div>
-      <h2 class="daily-login-modal-title">${title}</h2>
-      <p class="daily-login-modal-desc">${desc}</p>
-      <button class="btn-primary" id="daily-login-modal-close">Nice!</button>
-    </div>`;
-  modal.classList.add('show');
-  document.getElementById('daily-login-modal-close').addEventListener('click', () => closeDailyLoginModal(modal));
-  makeModalAccessible(modal, () => closeDailyLoginModal(modal));
-}
-
 // ── Lightweight toasts ──────────────────────────
 // Small, auto-dismissing notices for low-stakes moments (referral activation) that don't
 // warrant a full modal like the streak/achievement/level-up celebrations do.
@@ -17133,7 +17101,7 @@ function closeAllModals() {
   const achievementModal = document.getElementById('achievement-modal');
   if (achievementModal && achievementModal.classList.contains('show')) closeAchievementModal(achievementModal);
   const dailyLoginModal = document.getElementById('daily-login-modal');
-  if (dailyLoginModal && dailyLoginModal.classList.contains('show')) closeDailyLoginModal(dailyLoginModal);
+  if (dailyLoginModal && dailyLoginModal.classList.contains('show')) closeDailyRewardsModal(dailyLoginModal);
   const lessonPreview = document.getElementById('lp-preview-modal');
   if (lessonPreview && lessonPreview.classList.contains('show')) lpClosePreview(lessonPreview);
 }
@@ -18977,14 +18945,13 @@ function questStatsRowHtml(done) {
 
 function wireHomeStreakCard() {
   document.getElementById('hs-streak-card').addEventListener('click', () => {
-    const coins = claimDailyLoginBonus();
+    // Opens the calendar whether or not anything is pending — the week is worth looking at
+    // on a day you have already collected, which is the point of showing a week at all.
+    // The claim itself is a button inside it, so collecting is a deliberate act rather than
+    // a side effect of tapping a stat tile.
     const diamonds = pendingStreakDiamonds;
-    if (coins > 0 || diamonds > 0) {
-      pendingStreakDiamonds = 0;
-      showDailyLoginModal(coins, diamonds);
-      updateSidebarStats();
-      renderHome();
-    }
+    pendingStreakDiamonds = 0;
+    showDailyRewardsModal(diamonds);
   });
 }
 
