@@ -171,67 +171,56 @@ function teachHint(chapter: TeachChapter, conceptIdx: number): string | undefine
   return `Remember what ${concept.term} means: ${concept.plain}`;
 }
 
-/** The chapter page-turn — written so that it can only ever fail VISIBLE.
+/** Mount animation as an animated STYLE, never as Reanimated's `entering` prop.
  *
- * This was `FadeInRight`, which animates opacity 0 → 1. A Reanimated entering animation starts
- * its view at the animation's own initial values and relies on the animation actually running
- * to leave them, so an entering animation that never gets scheduled parks its view at opacity
- * 0 for good.
+ * `entering` is unusable for anything that has siblings in flow on the web build, and this is
+ * the actual, measured reason the story dialogue has been broken over and over:
  *
- * That matters here because of WHERE this wrapper sits. It holds every chapter's content,
- * while the story's title and its companion Hammy are rendered by QuestPlayer OUTSIDE it (they
- * have to be — the companion lives outside the scroller). So this one animation failing looks
- * exactly like the bug that has now been reported three times: Hammy and the heading sitting
- * there perfectly, nothing at all where the dialogue belongs, and Next still advancing past
- * it. The two previous attempts read that as "the dialogue is broken" and went looking inside
- * StoryView, which is the one part of it that was never implicated — the reported boundary
- * between what shows and what doesn't is this wrapper, not the beats.
+ *   Reanimated gives every view carrying an `entering` animation `position: absolute` on web,
+ *   and leaves it there after the animation has finished.
  *
- * Honest about the evidence: the failure has NOT been reproduced. A full sweep of all 87 story
- * chapters with dialogue renders correctly on the web build, at phone and desktop viewports,
- * with a touch or a mouse pointer, with and without reduced motion, and via the real in-app
- * push rather than a deep link. So this is not a repro-driven fix; it removes the single point
- * of failure that matches the reported symptom exactly, and leaves nothing to fail.
+ * The dialogue log is a column of beats that accumulate down the screen. Take them out of flow
+ * and every beat lands on the same spot — three bubbles stacked on top of each other at the
+ * same y, only the newest readable, the earlier ones bleeding off the side. Pair that with the
+ * `flex: 1` the bubble used to carry (flexBasis 0, so zero points wide with nothing to grow
+ * into) and the log rendered as nothing whatsoever. That is the whole bug, and it is why it
+ * read both as "the dialogue never shows up" and as "it does some weird animation".
  *
- * The fix is one initial value: opacity starts at 1 instead of 0. The animation is otherwise
- * untouched — same built-in, same 170ms, same 10px of travel — so the page turn still reads
- * exactly as it did. The generated keyframes now read
- *   0% { opacity: 1; translateX(10px) } → 100% { opacity: 1; translateX(0px) }
- * where frame 0 used to be opacity 0. Opacity animating 1 → 1 costs nothing, and the one thing
- * this wrapper can no longer do is hide the chapter: if the animation never runs, the worst
- * case is content sitting 10px right of where it belongs for a frame, which is readable, and
- * readable is the only property here that actually matters.
- *
- * A hand-written worklet entering animation was tried first and is silently a no-op on web
- * (measured: the wrapper never leaves `transform: none`, no REA-ENTERING keyframes emitted),
- * which would have traded the bug for a dead page-turn on the build most students use.
- *
- * Reduced motion skips it outright, matching the lesson path's own entering animations
- * (LessonPath's `reducedMotion ? undefined : ...`), which this screen had never honoured.
+ * An animated style is driven by the same Reanimated timing but is only ever a transform, so
+ * the view stays in normal flow and the column keeps stacking. It is fail-visible for free:
+ * nothing here touches opacity, so if the animation never runs the content simply sits a few
+ * pixels off and is perfectly readable.
  */
-const pageTurn = FadeInRight.duration(170).withInitialValues({
-  opacity: 1,
-  transform: [{ translateX: 10 }],
-});
+function useRise(from: number, axis: 'x' | 'y', duration: number, reduceMotion: boolean) {
+  const offset = useSharedValue(reduceMotion ? 0 : from);
+  useEffect(() => {
+    offset.value = withTiming(0, { duration });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return useAnimatedStyle(() => ({
+    transform: [axis === 'y' ? { translateY: offset.value } : { translateX: offset.value }],
+  }));
+}
 
-/** A new dialogue beat arriving in the story log, under the one before it.
- *
- * Deliberately quiet: 8px of rise over 220ms, no spring. A beat is a line of conversation
- * appearing in a log that already has several lines in it, so this needs to read as "another
- * one just landed" and nothing more — anything bigger turns every Next into an event, and a
- * story chapter runs up to four of them back to back.
- *
- * Opacity is pinned at 1 for the same reason as pageTurn, and here the reason is not
- * hypothetical: a fade is what made this log blank in the first place. The beats mount inside
- * the chapter wrapper, so a fade starting at opacity 0 puts the text one unscheduled animation
- * away from never being seen — which is exactly the bug this file has now been through three
- * times. The rise is the whole animation; if it never runs, the beat is simply already in
- * place. Motion in this log is worth having, but never at the price of the words.
- */
-const beatArrive = FadeInDown.duration(220).withInitialValues({
-  opacity: 1,
-  transform: [{ translateY: 8 }],
-});
+/** One beat of the dialogue log. Its own component so the mount animation is a hook on
+ * something that mounts exactly once per beat — 8px of rise over 220ms, no spring. A beat is
+ * one line of conversation landing in a log that already has several, so it should read as
+ * "another one just arrived" and nothing more; a story chapter plays up to four of them back
+ * to back, and anything bigger turns every Next into an event of its own. */
+function StoryBeat({ reduceMotion, children }: { reduceMotion: boolean; children: ReactNode }) {
+  const rise = useRise(8, 'y', 220, reduceMotion);
+  return <Reanimated.View style={[styles.storyBeat, rise]}>{children}</Reanimated.View>;
+}
+
+/** The chapter page-turn: 10px of travel over 170ms, meant to register as a page turn rather
+ * than an animation you wait for. This wrapper used to carry an `entering` too, which made
+ * every chapter's content `position: absolute` inside the scroller — so the scroll height had
+ * nothing real to measure (783px of reported content for one 38px line of dialogue). Keyed on
+ * the chapter id by its caller, so it mounts once per chapter. */
+function ChapterFrame({ reduceMotion, children }: { reduceMotion: boolean; children: ReactNode }) {
+  const slide = useRise(10, 'x', 170, reduceMotion);
+  return <Reanimated.View style={[styles.chapterFill, slide]}>{children}</Reanimated.View>;
+}
 
 function initialLayoutMode(chapter: Chapter): LayoutMode {
   // Hammy's Tip is always its own full stage with a big tappable Hammy (HintView).
@@ -776,7 +765,7 @@ function QuestPlayerInner() {
     }
   };
 
-  // Gates the chapter page-turn (see pageTurn), the same way the lesson path gates its own.
+  // Gates the chapter page-turn (see ChapterFrame), as the lesson path gates its own.
   const reduceMotion = useReducedMotion();
 
   const layoutMode: LayoutMode = reportedLayout?.chapterIdx === chapterIdx
@@ -939,11 +928,7 @@ function QuestPlayerInner() {
 
             See pageTurn: the travel is the WHOLE animation, and nothing here touches opacity.
             This wrapper holds every chapter's content, so it must not be able to hide it. */}
-        <Reanimated.View
-          key={chapter.id}
-          entering={reduceMotion ? undefined : pageTurn}
-          style={styles.chapterFill}
-        >
+        <ChapterFrame key={chapter.id} reduceMotion={reduceMotion}>
           <ChapterView
             chapter={chapter}
             questions={content.questions}
@@ -958,7 +943,7 @@ function QuestPlayerInner() {
             learnTerm={learnTerm}
             {...reportProps}
           />
-        </Reanimated.View>
+        </ChapterFrame>
       </ScrollView>
       {/* Persistent bottom bar: "Look back" pinned bottom-left, the chapter's primary action
           centered. Equal-width slots on both sides (the right one deliberately empty) rather
@@ -1380,7 +1365,7 @@ function StoryView({
   // already had it) — the website renders equipped items on every pig instance via
   // withFaceOverlay/getPigWithItemMarkup regardless of context, so mobile should too.
   const { equippedMascotItems } = useStore();
-  // Gates each beat's arrival animation (see beatArrive), same as the chapter page-turn.
+  // Gates each beat's arrival animation (see StoryBeat), same as the chapter page-turn.
   const reduceMotion = useReducedMotion();
   // Every real story chapter's first beat is a scene-setting "intro" line (not a quoted
   // line of dialogue, unlike the beats after it) — used as the standalone intro screen's
@@ -1447,7 +1432,7 @@ function StoryView({
             // animation rather than the opacity. Nested entering animations do run (measured:
             // REA-ENTERING keyframes are emitted for these beats), so the motion can come back
             // now that it can't take the text with it.
-            <Reanimated.View key={idx} entering={reduceMotion ? undefined : beatArrive} style={styles.storyBeat}>
+            <StoryBeat key={idx} reduceMotion={reduceMotion}>
               {!isNarrator ? (isHammy ? <HammyHeadAvatar /> : (
                 <View style={styles.storyAvatar}>
                   <Txt style={styles.storyAvatarTxt}>{beat.speaker.charAt(0)}</Txt>
@@ -1456,7 +1441,7 @@ function StoryView({
               <View style={[styles.storyBubble, isNarrator && styles.storyBubbleNarrator]}>
                 <Txt style={[styles.storyBubbleTxt, styles.storyBubbleTxtCentered, isNarrator && styles.storyBubbleNarratorTxt]}>{beat.text}</Txt>
               </View>
-            </Reanimated.View>
+            </StoryBeat>
           );
         })
       )}
