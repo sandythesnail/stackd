@@ -233,6 +233,29 @@ function ChapterFrame({ reduceMotion, children }: { reduceMotion: boolean; child
   return <Reanimated.View style={[styles.chapterFill, slide]}>{children}</Reanimated.View>;
 }
 
+/** Roughly how many characters of definition fit beside the companion before the card has to
+ * be scrolled. Derived from the layout rather than tuned by eye: ~46 characters a line at the
+ * conceptPlain size, and about nine lines of room once the header, the companion, the term,
+ * the analogy and the bottom bar have taken theirs. */
+const CONCEPT_FITS_CHARS = 420;
+
+/** Does this vocab chapter carry a definition long enough that Hammy should step aside?
+ *
+ * Read off the CONTENT, never off a measurement. This file has one hard-won rule about that
+ * (see the note above TALL_CHAPTER_TYPES): an earlier version laid the chapter out, measured
+ * whether it overflowed, then revealed or collapsed Hammy — and the window between those two
+ * IS the "Hammy disappears for a second and comes back" bug. The chapter data cannot change
+ * while the chapter is on screen, so deciding from it is a static decision made before the
+ * first paint, and nothing ever moves afterwards.
+ *
+ * Deliberately "extremely long", not "long": the point is to keep him for the ordinary
+ * definition and drop him only where a student would otherwise be scrolling a wall of text
+ * with a pig taking up the top third. Only 4 of 374 concepts clear this bar. */
+function hasOverlongConcept(chapter: Chapter): boolean {
+  if (chapter.type !== 'teach') return false;
+  return chapter.concepts.some((c) => (c.plain?.length ?? 0) > CONCEPT_FITS_CHARS);
+}
+
 function initialLayoutMode(chapter: Chapter): LayoutMode {
   // Hammy's Tip is always its own full stage with a big tappable Hammy (HintView).
   if (chapter.type === 'hint') return 'intro';
@@ -788,7 +811,9 @@ function QuestPlayerInner() {
   // but the threshold caught almost everything, so in practice he vanished from the ordinary
   // questions too. He's worth more on screen than the handful of scroll-free screens the
   // estimate bought; long chapters scroll instead.
-  const showCompanion = layoutMode === 'normal' && !TALL_CHAPTER_TYPES.has(chapter.type);
+  const showCompanion = layoutMode === 'normal'
+    && !TALL_CHAPTER_TYPES.has(chapter.type)
+    && !hasOverlongConcept(chapter);
   // Centered above the content, rather than off to its left, for the two chapter types
   // that read as a scene rather than a question: the story's dialogue (the conversation is
   // with him) and Match It (a centered grid).
@@ -1386,11 +1411,31 @@ function StoryView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showIntro]);
 
+  /** Leaving the intro screen for the dialogue log, as ONE render rather than two.
+   *
+   * This is the flash on the first Next of a lesson. `setShowIntro(false)` alone switches this
+   * view to the dialogue immediately, but the screen's layout mode is reported from the effect
+   * above — which React runs AFTER that render has painted. So there was one frame showing the
+   * dialogue log in the INTRO layout: no companion Hammy, no chapter title, the beat sitting up
+   * where the big centred Hammy had just been. Then the effect landed, the companion and the
+   * heading appeared, and everything shifted down. One frame, which is exactly long enough to
+   * register as a flicker and not long enough to see what it was.
+   *
+   * Reporting the mode in the same handler puts both updates in one batch, so the first frame
+   * of the dialogue log is already the dialogue log. The effect stays: it still owns the mount
+   * case and the unmount cleanup, and calling it twice with the same value is a no-op.
+   */
+  const leaveIntro = () => {
+    onLayoutMode('normal');
+    setShowIntro(false);
+  };
+
   useEffect(() => {
     if (showIntro) {
       // A chapter that's nothing but its intro beat (no dialogue after it) completes
       // straight from the intro screen instead of flashing an empty dialogue screen.
-      onAction({ label: 'Next', onPress: () => (dialogueBeats.length === 0 ? onComplete(0) : setShowIntro(false)) });
+      // leaveIntro, not a bare setShowIntro — see below for the frame it removes.
+      onAction({ label: 'Next', onPress: () => (dialogueBeats.length === 0 ? onComplete(0) : leaveIntro()) });
     } else {
       onAction({ label: 'Next', onPress: () => (last ? onComplete(0) : setI(i + 1)) });
     }

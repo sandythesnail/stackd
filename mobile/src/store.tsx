@@ -31,8 +31,8 @@ const MYSTERY_DUPLICATE_REFUND_RATE = 0.5;
  * call (keep score and reward honest, accept the softer grind), not an accident — if the
  * pacing needs winding back, this constant is the single knob: 4 restores roughly the old
  * coins-per-lesson while keeping the payout and the score in agreement. */
-export const QUEST_COIN_PER_CORRECT = 8;
-export const QUEST_COIN_FLAT_FALLBACK = 8;
+export const QUEST_COIN_PER_CORRECT = 4;
+export const QUEST_COIN_FLAT_FALLBACK = 4;
 
 /** STREAK_DIAMOND_INTERVAL/REWARD ported verbatim from app.js (updateStreak) — a
  * once-per-calendar-day streak bonus, auto-credited at boot.
@@ -49,7 +49,7 @@ export const QUEST_COIN_FLAT_FALLBACK = 8;
  * real second source of diamonds alongside streaks without replacing them.
  *
  * Index 0 and 1 are zero: level 1 is where everyone starts, so nobody "reaches" it. */
-const LEVEL_UP_DIAMONDS = [0, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const LEVEL_UP_DIAMONDS = [0, 0, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6];
 export function levelUpDiamonds(level: number) {
   return LEVEL_UP_DIAMONDS[Math.min(level, LEVEL_UP_DIAMONDS.length - 1)] ?? 0;
 }
@@ -59,8 +59,19 @@ const STREAK_DIAMOND_REWARD = 5;
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
 const RARITY_WEIGHT: Record<string, number> = { common: 8, rare: 4, epic: 2, legendary: 1 };
 
-/** LEVEL_THRESHOLDS ported verbatim from app.js — xp needed to REACH each level (index = level). */
-const LEVEL_THRESHOLDS = [0, 90, 200, 330, 480, 660, 880, 1150, 1450, 1800, 2200];
+/** XP needed to REACH each level (index = level).
+ *
+ * No longer app.js's numbers: every threshold is scaled about 1.7x (90 -> 150 for level 2,
+ * 2200 -> 3900 for the top), so levelling takes noticeably longer at every stage rather than
+ * only at the end. Lesson XP is untouched — the pacing change is entirely here, so a lesson is
+ * worth exactly what it was worth and the ladder is simply longer.
+ *
+ * This deliberately diverges from the website, which still runs the original ladder. The two
+ * share progress through user_progress.state (see lib/webState.ts), so the SAME xp total reads
+ * as a lower level here than there until the site is changed to match. Levels are derived from
+ * xp on read, not stored, so nothing is corrupted by the disagreement — a player just sees two
+ * different level numbers for the same work. */
+const LEVEL_THRESHOLDS = [0, 150, 340, 570, 840, 1160, 1550, 2020, 2560, 3180, 3900];
 
 /** Highest real level — a player at this level has no "next level" to progress toward.
  * Exported so screens showing "X XP to next level" (progress.tsx) can hide/adjust that

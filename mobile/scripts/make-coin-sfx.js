@@ -58,7 +58,16 @@ const PARTIALS = [
  * instead of a cut. */
 const ARPEGGIO = [523.25, 659.25, 783.99, 1046.50];
 const ARP_GAP = 0.10;      // seconds between note onsets
-const ARP_GAIN = 0.26;     // relative to the coins, which stay the loudest thing here
+// Up from 0.26. The arpeggio is the part that says "good thing happened", and under the old
+// mix it was a hint rather than a statement — audible in isolation, lost under eleven coins.
+const ARP_GAIN = 0.42;     // still under the coins, but now clearly present
+
+/** C major, two octaves of it — C E G, from C6 up. Coin-sized fundamentals (metal this small
+ * rings high) that happen to spell the same chord the arpeggio plays. */
+const COIN_NOTES = [
+  1046.50, 1318.51, 1567.98,   // C6  E6  G6
+  2093.00, 2637.02, 3135.96,   // C7  E7  G7
+];
 
 /** Mulberry32 — small, seedable, good enough for scattering coins. */
 function rng(seed) {
@@ -79,7 +88,17 @@ function render() {
   for (let c = 0; c < COINS; c++) {
     // Front-loaded: the bank bursts, so most coins land at once and a few trail off.
     const start = Math.pow(rand(), 1.7) * 0.42;
-    const f0 = 1500 + rand() * 1700;          // coin-sized fundamentals
+    // TUNED, not random. This is what makes the jangle major rather than vaguely ominous.
+    //
+    // Random fundamentals across 1500-3200 Hz land wherever they land, and eleven of them at
+    // once produce every interval at once — including the minor thirds and tritones that are
+    // exactly what "minor key" sounds like. The ear does not need a melody to hear a key; a
+    // cluster of pitches is enough, and an untuned cluster averages out gloomy.
+    //
+    // So each coin takes a note from a C major triad spread over two octaves. The partials
+    // above it stay inharmonic (that is still what makes it metal, not a bell choir) but the
+    // fundamentals now agree with each other and with the arpeggio underneath.
+    const f0 = COIN_NOTES[Math.floor(rand() * COIN_NOTES.length)];
     // Longer than the old 0.07-0.17. Real coins on a hard surface ring for a good while after
     // the strike, and the short decays are the other half of why this stopped dead.
     const decay = 0.11 + rand() * 0.20;       // seconds to 1/e
@@ -91,6 +110,13 @@ function render() {
       const t = i / RATE;
       let v = 0;
       for (const [ratio, amp, decayMul] of PARTIALS) {
+        // Nyquist guard, and it matters more here than anywhere else in this file. At 22050 the
+        // ceiling is 11025, and the 8.93 partial of a high coin lands near 28 kHz — which does
+        // not vanish, it FOLDS back down as a partial at some unrelated frequency. Inharmonic
+        // metal hides that better than anything else, which is why it was never obvious; but a
+        // pile of folded partials is a pile of pitches nobody chose, and it is a large part of
+        // why a tuned major chord still came out sounding sour.
+        if (f0 * ratio >= RATE / 2 * 0.9) continue;
         const env = Math.exp(-t / (decay * decayMul));
         if (env < 0.0005) continue;
         v += amp * env * Math.sin(2 * Math.PI * f0 * ratio * t);
