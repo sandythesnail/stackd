@@ -3507,3 +3507,16 @@ select.budget-input { cursor: pointer; }
   .dr-today-tile.dr-revealed .dr-prize { transition: none; }
   .dr-card { animation: none; }
 }
+
+/* The diamonds a level-up pays, on the tier overlay. Hidden by default: a level that crosses
+   no reward rung (there aren't any, but the ladder is data and could gain a zero) shouldn't
+   leave an empty pill behind. See LEVEL_UP_DIAMONDS in app.js. */
+.levelup-reward {
+  display: none; align-items: center; justify-content: center; gap: 0.4rem;
+  margin: -0.75rem 0 1.25rem;
+  padding: 0.45rem 1rem; border-radius: 999px;
+  background: #EAF3E7; color: var(--green-dark);
+  font-size: 0.92rem; font-weight: 800;
+  animation: fadeUp 0.26s ease 0.18s both;
+}
+.levelup-reward.show { display: inline-flex; }

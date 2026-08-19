@@ -16462,12 +16462,24 @@ function maybeShowPostCompletionOverlays(mod, leveled) {
       state.lastSeenTier = tier.name;
       saveState();
       pendingLifeEvent = lifeEvent;
+      const reward = lastLevelUpReward.diamonds;
       setTimeout(() => {
         document.getElementById('new-tier').textContent = tier.name;
+        const rewardEl = document.getElementById('levelup-reward');
+        if (rewardEl) {
+          rewardEl.innerHTML = reward > 0
+            ? `${diamondIconSvg(20)}<span>+${reward} diamonds</span>`
+            : '';
+          rewardEl.classList.toggle('show', reward > 0);
+        }
         document.getElementById('levelup-overlay').classList.add('visible');
       }, 700);
     } else {
-      showToast(`Level up! You're now Level ${state.level}.`, '⭐');
+      showToast(
+        lastLevelUpReward.diamonds > 0
+          ? `Level ${state.level}! +${lastLevelUpReward.diamonds} diamonds.`
+          : `Level up! You're now Level ${state.level}.`,
+        lastLevelUpReward.diamonds > 0 ? '💎' : '⭐');
       if (lifeEvent) setTimeout(() => showLifeEvent(lifeEvent), 700);
     }
   } else if (lifeEvent) {
@@ -16765,12 +16777,42 @@ function xpProgressPct() {
   return Math.min(100, ((state.xp - base) / (ceil - base)) * 100);
 }
 
+// ── Level-up rewards ───────────────────────────
+// Levelling used to be silent here: XP accumulated, the header number changed, and on a
+// level that did not also change TIER the only acknowledgement was a toast. The one
+// recurring progression the app has ran almost unmarked while much smaller things (the
+// daily coin drip, a badge) got their own screens.
+//
+// The diamonds are what make it more than a message. They are the second source of the
+// currency that buys the Diamond Exclusives, alongside streak milestones — which is why
+// climbing a level is now worth something rather than merely being told about.
+//
+// Ported from mobile/src/store.tsx (levelUpDiamonds). Index 0 and 1 are zero: level 1 is
+// where everyone starts, so nobody ever "reaches" it.
+const LEVEL_UP_DIAMONDS = [0, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+function levelUpDiamonds(level) {
+  return LEVEL_UP_DIAMONDS[Math.min(level, LEVEL_UP_DIAMONDS.length - 1)] || 0;
+}
+
+// What the most recent addXP() paid, for whichever celebration ends up announcing it.
+// A module-scope handoff rather than a changed return type, because addXP's boolean is
+// read in three places and none of them want to care about rewards.
+let lastLevelUpReward = { level: 0, diamonds: 0 };
 function addXP(amount) {
   state.xp += amount;
   let leveled = false;
+  // Summed across the loop: one quest's XP can cross several levels at once, and paying for
+  // only the last one would quietly short a player for exactly the biggest single award they
+  // ever get. The banner names the level they ended on.
+  let diamonds = 0;
   while (state.level < LEVEL_THRESHOLDS.length && state.xp >= xpForLevel(state.level)) {
     state.level++;
+    diamonds += levelUpDiamonds(state.level);
     leveled = true;
+  }
+  if (leveled) {
+    state.diamonds = (state.diamonds || 0) + diamonds;
+    lastLevelUpReward = { level: state.level, diamonds: diamonds };
   }
   return leveled;
 }
