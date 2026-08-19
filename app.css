@@ -2226,13 +2226,16 @@ select.budget-input { cursor: pointer; }
   letter-spacing: -0.5px; color: var(--text); margin: 0 0 0.3rem;
 }
 .room-subtitle { font-size: 1rem; color: var(--text-mid); }
+/* The wood is drawn in SVG now (paintRoomFloor in app.js), in one-point perspective, so
+   there is no background here to fight with it. The repeating-linear-gradient that used to
+   sit here made fixed-width parallel boards, which is the one thing a real floor never does. */
 .room-floor {
   position: absolute; left: 0; right: 0; bottom: 0; height: 42%;
   display: flex; align-items: flex-end; justify-content: center;
-  background:
-    repeating-linear-gradient(90deg, #C6935B 0, #C6935B 58px, #B98650 58px, #B98650 62px),
-    linear-gradient(180deg, #D7A968, #B9834C);
 }
+/* The generated svg sits behind whatever the scene puts in the floor (Hammy, floor-standing
+   furniture), filling the box exactly. */
+.room-floor > svg:first-child { position: absolute; inset: 0; z-index: 0; }
 .room-pig { position: relative; z-index: 2; margin-bottom: 6%; cursor: pointer; }
 .room-pig .pig-stage { transform-origin: bottom center; }
 .room-slot { position: absolute; }
@@ -2311,10 +2314,13 @@ select.budget-input { cursor: pointer; }
 /* Same striped floor as the Room page's .room-floor, not its own pink — the wardrobe is
    still Hammy's room, just browsing outfits instead of furniture. */
 .wardrobe-backdrop {
-  background: repeating-linear-gradient(90deg, #C6935B 0, #C6935B 58px, #B98650 58px, #B98650 62px);
+  position: relative;
   display: flex; align-items: stretch; gap: 1.5rem;
   padding: 1.75rem; overflow-y: auto;
 }
+/* Same drawn floor as the room, without the far-wall line: here it is only a backdrop behind
+   a panel, and a dark bar across the top would describe a wall that is not in the picture. */
+.wardrobe-backdrop > svg:first-child { position: absolute; inset: 0; z-index: 0; }
 .wardrobe-panel {
   flex: 1 1 340px; max-width: 380px; background: rgba(255,255,255,0.96);
   border-radius: var(--radius); padding: 1.5rem; display: flex; flex-direction: column;
@@ -3688,3 +3694,17 @@ select.budget-input { cursor: pointer; }
   .sim-meter-float.show { animation: none; opacity: 1; }
   .sim-decision-chip { transition: none; }
 }
+
+/* The Furniture Farm nudge, ported from mobile's furnitureCta.
+   The room starts empty and nothing in the scene says where furniture comes from — the shop
+   is a sibling item in the sidebar, which is easy to miss when you are looking at a bare room. */
+.room-furniture-cta {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 5;
+  max-width: 84%; padding: 0.55rem 1.1rem; border: none; border-radius: 18px;
+  background: var(--pink); color: #fff;
+  font-family: var(--font); font-size: 0.85rem; font-weight: 800;
+  box-shadow: var(--shadow-sm); white-space: nowrap;
+  transition: background 0.15s ease;
+}
+.room-furniture-cta:hover { background: var(--pink-dark); }
+.room-furniture-cta:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }

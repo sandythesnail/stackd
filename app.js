@@ -15166,18 +15166,22 @@ const MODULES = [
 const SHOP_ITEMS = [
   // ── HATS ──
   {
+    // The three mystery boxes are one present in three colours, ported from mobile
+    // (MYSTERY_BOX_GIFT) — the same present the daily-reward calendar opens. They used to be
+    // three unrelated drawings, and the diamond one in particular was a near-black body
+    // (#1C1C2E) that read as a dark slab rather than a gift. One design for "a box with
+    // something in it", everywhere it appears, at every size; the gold ribbon on all three
+    // is what keeps three colours reading as one set.
     id: 'hat_mystery_box', name: 'Hat Mystery Box', category: 'hat', price: 150,
     isMysteryBox: true, mysteryPool: 'hat',
-    viewBox: '20 20 80 75',
+    viewBox: '0 0 24 24',
     desc: 'A random hat, ribbon and all. You never know what you\'ll get!',
-    svg: `<defs><linearGradient id="hb-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FF8FB8"/><stop offset="100%" stop-color="#E0507F"/></linearGradient></defs>
-          <rect x="35" y="45" width="50" height="40" rx="3" fill="url(#hb-g)"/>
-          <rect x="35" y="45" width="50" height="10" fill="rgba(255,255,255,0.2)"/>
-          <rect x="55" y="45" width="10" height="40" fill="#FFD700"/>
-          <rect x="35" y="60" width="50" height="10" fill="#FFD700"/>
-          <path d="M60,45 Q48,32 40,38 Q38,45 48,46 Q54,46 60,45Z" fill="#FFD700"/>
-          <path d="M60,45 Q72,32 80,38 Q82,45 72,46 Q66,46 60,45Z" fill="#FFD700"/>
-          <circle cx="60" cy="45" r="4" fill="#FFE87A"/>`
+    svg: `<rect x="4" y="11" width="16" height="8.5" rx="1" fill="#FF8FB8" stroke="#5E1630" stroke-width="1.4"/>
+          <rect x="3" y="8" width="18" height="3.4" rx="0.9" fill="#E0507F" stroke="#5E1630" stroke-width="1.4"/>
+          <rect x="10.7" y="8" width="2.6" height="11.5" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8"/>
+          <path d="M12 8c-1.6-3.2-5.4-3.2-5.4-0.2 0 1.7 2.5 1 5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8" stroke-linejoin="round"/>
+          <path d="M12 8c1.6-3.2 5.4-3.2 5.4-0.2 0 1.7-2.5 1-5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8" stroke-linejoin="round"/>
+          <rect x="4" y="11" width="16" height="1.6" fill="#ffffff" opacity="0.25"/>`
   },
   {
     id: 'party_hat', name: 'Party Hat', category: 'hat', price: 50,
@@ -15516,16 +15520,14 @@ const SHOP_ITEMS = [
   {
     id: 'accessory_mystery_box', name: 'Accessory Mystery Box', category: 'accessory', price: 110,
     isMysteryBox: true, mysteryPool: 'accessory',
-    viewBox: '20 20 80 75',
+    viewBox: '0 0 24 24',
     desc: 'A random accessory to complete the look.',
-    svg: `<defs><linearGradient id="ab-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#C9A0FF"/><stop offset="100%" stop-color="#8A3FE0"/></linearGradient></defs>
-          <rect x="35" y="45" width="50" height="40" rx="3" fill="url(#ab-g)"/>
-          <rect x="35" y="45" width="50" height="10" fill="rgba(255,255,255,0.2)"/>
-          <rect x="55" y="45" width="10" height="40" fill="#FFD700"/>
-          <rect x="35" y="60" width="50" height="10" fill="#FFD700"/>
-          <path d="M60,45 Q48,32 40,38 Q38,45 48,46 Q54,46 60,45Z" fill="#FFD700"/>
-          <path d="M60,45 Q72,32 80,38 Q82,45 72,46 Q66,46 60,45Z" fill="#FFD700"/>
-          <circle cx="60" cy="45" r="4" fill="#FFE87A"/>`
+    svg: `<rect x="4" y="11" width="16" height="8.5" rx="1" fill="#C9A0FF" stroke="#3A1264" stroke-width="1.4"/>
+          <rect x="3" y="8" width="18" height="3.4" rx="0.9" fill="#8A3FE0" stroke="#3A1264" stroke-width="1.4"/>
+          <rect x="10.7" y="8" width="2.6" height="11.5" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8"/>
+          <path d="M12 8c-1.6-3.2-5.4-3.2-5.4-0.2 0 1.7 2.5 1 5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8" stroke-linejoin="round"/>
+          <path d="M12 8c1.6-3.2 5.4-3.2 5.4-0.2 0 1.7-2.5 1-5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8" stroke-linejoin="round"/>
+          <rect x="4" y="11" width="16" height="1.6" fill="#ffffff" opacity="0.25"/>`
   },
   {
     id: 'bow_tie', name: 'Bow Tie', category: 'accessory', price: 65,
@@ -16010,16 +16012,14 @@ const SHOP_ITEMS = [
   {
     id: 'diamond_mystery_box', name: 'Diamond Mystery Box', category: 'exclusive', currency: 'diamond', price: 20,
     isMysteryBox: true, mysteryPool: 'exclusive',
-    viewBox: '20 20 80 75',
+    viewBox: '0 0 24 24',
     desc: 'Crack open a dazzling diamond-tier surprise.',
-    svg: `<defs><linearGradient id="db-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8FE3F5"/><stop offset="100%" stop-color="#2AA8C4"/></linearGradient></defs>
-          <rect x="35" y="45" width="50" height="40" rx="3" fill="#1C1C2E"/>
-          <rect x="35" y="45" width="50" height="40" rx="3" fill="none" stroke="url(#db-g)" stroke-width="2"/>
-          <rect x="55" y="45" width="10" height="40" fill="url(#db-g)"/>
-          <rect x="35" y="60" width="50" height="10" fill="url(#db-g)"/>
-          <path d="M60,38 L67,45 L60,54 L53,45 Z" fill="url(#db-g)" stroke="#E8FBFF" stroke-width="0.8"/>
-          <path d="M28,40 L29,37 L30,40 L33,41 L30,42 L29,45 L28,42 L25,41 Z" fill="#FFF7C4" opacity="0.85"/>
-          <path d="M92,50 L92.8,47.6 L93.6,50 L96,50.8 L93.6,51.6 L92.8,54 L92,51.6 L89.6,50.8 Z" fill="#FFF7C4" opacity="0.7"/>`
+    svg: `<rect x="4" y="11" width="16" height="8.5" rx="1" fill="#8FE3F5" stroke="#0C4652" stroke-width="1.4"/>
+          <rect x="3" y="8" width="18" height="3.4" rx="0.9" fill="#2AA8C4" stroke="#0C4652" stroke-width="1.4"/>
+          <rect x="10.7" y="8" width="2.6" height="11.5" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8"/>
+          <path d="M12 8c-1.6-3.2-5.4-3.2-5.4-0.2 0 1.7 2.5 1 5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8" stroke-linejoin="round"/>
+          <path d="M12 8c1.6-3.2 5.4-3.2 5.4-0.2 0 1.7-2.5 1-5.4 0.2z" fill="#FFD23F" stroke="#8A5A00" stroke-width="0.8" stroke-linejoin="round"/>
+          <rect x="4" y="11" width="16" height="1.6" fill="#ffffff" opacity="0.25"/>`
   },
   {
     id: 'diamond_crown', name: 'Diamond Crown', category: 'exclusive', currency: 'diamond', price: 15,
@@ -18760,6 +18760,129 @@ function updateRoomSubnavActiveState() {
 // wall — mirrors mobile's SLOT_LAYOUT `floorStanding` flags exactly. See slotBlock below.
 const FLOOR_STANDING_SLOTS = new Set(['lamp', 'plant', 'bed', 'rug', 'desk']);
 
+/* ── The room's wooden floor, drawn in one-point perspective ──
+ *
+ * Ported from mobile/src/components/RoomFloor.tsx, constants and all. What was here before is
+ * exactly what that file was written to replace: a repeating-linear-gradient of fixed-width
+ * vertical stripes. Parallel stripes of constant width are the one thing a real floor never
+ * looks like — a floor recedes, so its boards converge — and flat stripes read as a striped
+ * WALL standing behind Hammy rather than a surface he is standing on.
+ *
+ * The vanishing point sits ABOVE the frame rather than on the wall seam, and the floor is the
+ * bounded trapezoid between the front edge and that seam. Converging to a point on the seam is
+ * how you draw a plane that never ends, which turns a bedroom into an airfield; a real room's
+ * floor stops at the far wall, and its boards still have width when they get there. */
+
+/** Board width at the back wall as a fraction of its width at your feet. Lower = deeper room:
+ *  a corridor, then a runway. 1.0 is flat stripes again. 0.74 is a room you could touch the
+ *  far wall of, which is what this is meant to be. */
+const FLOOR_BACK_SCALE = 0.74;
+const FLOOR_BOARD_W = 74;
+const FLOOR_SEAM_ROWS = 5;
+/* Board-to-board tone by low-alpha overlay rather than per-board fills, so the depth gradient
+ * shows through all of them and one wood colour stays in charge. A wooden floor has variation
+ * you notice when you look for it, not from across the room. */
+const FLOOR_TINT = ['#FFFFFF', '#000000', '#FFFFFF', '#000000'];
+const FLOOR_ALPHA = [0.025, 0.022, 0.013, 0.010];
+
+/** Builds the floor SVG for a box of `w` x `h` px.
+ *
+ * `edge` draws the far wall — the dark line across the top and the contact shading under it.
+ * True in the room, where there IS a wall up there for the floor to stop at. False in the
+ * wardrobe, where this same floor is only a backdrop behind a panel: there the line reads as a
+ * brown bar pinned across the top and the shading as a smudge under it, both describing a wall
+ * that isn't in the picture. */
+function roomFloorSvg(w, h, edge) {
+  const cx = w / 2;
+  const k = FLOOR_BACK_SCALE;
+  const toBack = (x) => cx + (x - cx) * k;
+  // The front edge is drawn 1/k times wider than the floor, so that after converging it lands
+  // exactly on the full width at the back — the floor fills its box at both ends rather than
+  // tapering away from the back corners.
+  const spread = w / k;
+  const left = cx - spread / 2;
+  const count = Math.ceil(spread / FLOOR_BOARD_W);
+
+  let boards = '', edges = '';
+  for (let i = 0; i < count; i++) {
+    const x0 = left + i * FLOOR_BOARD_W;
+    const x1 = x0 + FLOOR_BOARD_W;
+    // A trapezoid, not a triangle: the board still has width at the far wall.
+    boards += '<path d="M ' + x0 + ' ' + h + ' L ' + x1 + ' ' + h + ' L ' + toBack(x1).toFixed(2) +
+      ' 0 L ' + toBack(x0).toFixed(2) + ' 0 Z" fill="' + FLOOR_TINT[i % FLOOR_TINT.length] +
+      '" fill-opacity="' + FLOOR_ALPHA[i % FLOOR_ALPHA.length] + '"/>';
+    edges += '<line x1="' + x0 + '" y1="' + h + '" x2="' + toBack(x0).toFixed(2) +
+      '" y2="0" stroke="#8A6038" stroke-opacity="0.16" stroke-width="1"/>';
+  }
+
+  // Cross seams evenly spaced in world DEPTH and then projected, so they bunch toward the wall
+  // on their own. The last lands exactly on the seam, which is what gives the floor a far edge
+  // rather than an endless one.
+  const Hv = (h * k) / (1 - k);
+  const dMax = h / Hv;
+  let seams = '';
+  for (let i = 1; i <= FLOOR_SEAM_ROWS; i++) {
+    const d = (i / FLOOR_SEAM_ROWS) * dMax;
+    const sFrac = d / (1 + d);
+    const y = h - sFrac * (h + Hv);
+    const t = y / h;
+    seams += '<line x1="0" y1="' + y.toFixed(2) + '" x2="' + w + '" y2="' + y.toFixed(2) +
+      '" stroke="#7A5330" stroke-opacity="' + (0.06 + 0.08 * t).toFixed(3) +
+      '" stroke-width="' + (0.5 + 0.8 * t).toFixed(2) + '"/>';
+  }
+
+  return '<svg width="' + w + '" height="' + h + '" xmlns="http://www.w3.org/2000/svg">' +
+    '<defs>' +
+      // Light from the front of the room: a little darker at the wall, warm at the feet.
+      '<linearGradient id="floorDepth" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#BC8B57"/><stop offset="0.5" stop-color="#C89A66"/><stop offset="1" stop-color="#D5A873"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="floorSeam" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#4A3018" stop-opacity="0.20"/><stop offset="1" stop-color="#4A3018" stop-opacity="0"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="floorEdgeL" x1="0" y1="0" x2="1" y2="0">' +
+        '<stop offset="0" stop-color="#000000" stop-opacity="0.06"/><stop offset="1" stop-color="#000000" stop-opacity="0"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="floorEdgeR" x1="1" y1="0" x2="0" y2="0">' +
+        '<stop offset="0" stop-color="#000000" stop-opacity="0.06"/><stop offset="1" stop-color="#000000" stop-opacity="0"/>' +
+      '</linearGradient>' +
+    '</defs>' +
+    '<rect x="0" y="0" width="' + w + '" height="' + h + '" fill="url(#floorDepth)"/>' +
+    '<g>' + boards + '</g><g>' + edges + '</g><g>' + seams + '</g>' +
+    (edge
+      ? '<line x1="0" y1="0.5" x2="' + w + '" y2="0.5" stroke="#5A3B1F" stroke-opacity="0.34" stroke-width="1.5"/>' +
+        '<rect x="0" y="0" width="' + w + '" height="' + Math.max(8, h * 0.09).toFixed(1) + '" fill="url(#floorSeam)"/>'
+      : '') +
+    '<rect x="0" y="0" width="' + (w * 0.2).toFixed(1) + '" height="' + h + '" fill="url(#floorEdgeL)"/>' +
+    '<rect x="' + (w * 0.8).toFixed(1) + '" y="0" width="' + (w * 0.2).toFixed(1) + '" height="' + h + '" fill="url(#floorEdgeR)"/>' +
+    '</svg>';
+}
+
+/** Measures the element and paints the floor into it.
+ *
+ * Measured rather than given a fixed viewBox, because the convergence maths depends on the
+ * real pixel aspect ratio — scaling one viewBox to fit would stretch the perspective and the
+ * boards would stop meeting the wall where the seams do. Repainted on resize for the same
+ * reason. */
+function paintRoomFloor(el, edge) {
+  if (!el) return;
+  const paint = () => {
+    const w = Math.round(el.clientWidth);
+    const h = Math.round(el.clientHeight);
+    if (!w || !h) return;
+    if (el._floorW === w && el._floorH === h) return;
+    el._floorW = w; el._floorH = h;
+    el.innerHTML = roomFloorSvg(w, h, edge) + (el._floorKeep || '');
+  };
+  // Keep whatever was already inside (the room scene puts Hammy in here).
+  el._floorKeep = el.innerHTML;
+  paint();
+  if (typeof ResizeObserver !== 'undefined' && !el._floorRO) {
+    el._floorRO = new ResizeObserver(paint);
+    el._floorRO.observe(el);
+  }
+}
+
 function renderRoomPage() {
   updateRoomSubnavActiveState();
   if (roomActiveTab === 'wardrobe') { renderWardrobeScene(); return; }
@@ -18824,11 +18947,22 @@ function renderRoomPage() {
       ${slotBlock('plant', 'Plant')}
       ${slotBlock('bed', 'Bed')}
       ${slotBlock('desk', 'Desk')}
+      <button type="button" class="room-furniture-cta" id="room-furniture-cta">Buy some furniture from the Furniture Farm! 🛒</button>
       <div class="room-floor">
         ${slotBlock('rug', 'Rug')}
         <div class="room-pig">${getPigWithItemMarkup(window.innerWidth <= 768 ? 0.4 : 0.75, equippedOutfit)}</div>
       </div>
     </div>`;
+
+  // The floor is drawn, not a CSS gradient — see paintRoomFloor.
+  paintRoomFloor(scene.querySelector('.room-floor'), true);
+
+  const furnitureCta = document.getElementById('room-furniture-cta');
+  if (furnitureCta) furnitureCta.addEventListener('click', () => {
+    shopActiveTab = 'room';
+    showPage('shop');
+    renderShopPage();
+  });
 
   scene.querySelectorAll('.room-slot.empty').forEach(el => {
     el.addEventListener('click', () => { showPage('shop'); renderShopPage(); });
@@ -18918,6 +19052,9 @@ function renderWardrobeScene() {
         <div class="wardrobe-pig-stage">${getPigWithItemMarkup(window.innerWidth <= 768 ? 0.4 : 1, getEquippedItems())}</div>
       </div>
     </div>`;
+
+  // edge=false: this floor is a backdrop behind a panel, with no far wall in shot.
+  paintRoomFloor(scene.querySelector('.wardrobe-backdrop'), false);
 
   scene.querySelectorAll('.wardrobe-tab[data-wardrobe-tab]').forEach(btn => {
     btn.addEventListener('click', () => {
