@@ -3643,3 +3643,48 @@ select.budget-input { cursor: pointer; }
   font-size: 0.85rem; font-weight: 800; color: var(--text-mid); background: none; border: none;
 }
 .track-picker-done:hover { color: var(--text); }
+
+/* ─── MONEY HABITS (simulator chapter) ───
+   The hidden-then-revealed impact chip, ported from mobile's HabitChoice. */
+.sim-decision-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+}
+.sim-decision-label { flex: 1; text-align: left; }
+/* "?" until tapped. The chapter intro promises "tap each one to see the impact"; this is
+   the impact. Fixed min-width so revealing a number can't resize the row. */
+.sim-decision-chip {
+  flex-shrink: 0; min-width: 46px; padding: 0.2rem 0.5rem; border-radius: 999px;
+  background: var(--bg); border: 1px solid var(--border);
+  font-size: 0.78rem; font-weight: 800; color: var(--text-soft);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.sim-decision-used { opacity: 1; }
+.sim-decision-good { border-color: var(--green-light); background: var(--green-pale); }
+.sim-decision-good .sim-decision-chip { background: var(--green); border-color: var(--green-dark); color: #fff; }
+.sim-decision-bad { border-color: #E0A99C; background: #FBEDED; }
+.sim-decision-bad .sim-decision-chip { background: #C25A5A; border-color: #8A2F2F; color: #fff; }
+/* A revealed habit is done, not disabled-looking: the number on it is the lesson, so it has
+   to stay readable rather than fading out the way a spent button normally would. */
+.sim-decision-btn:disabled { cursor: default; opacity: 1; }
+
+/* The delta rising off the meter it just changed. */
+.sim-meter-value-row { display: flex; align-items: baseline; justify-content: center; gap: 0.5rem; }
+.sim-meter-float {
+  font-family: var(--font-display); font-size: 1.1rem; font-weight: 700;
+  opacity: 0; transform: translateY(0); pointer-events: none;
+}
+.sim-meter-float.show { animation: simFloat 1.4s ease-out forwards; }
+.sim-float-good { color: var(--green); }
+.sim-float-bad { color: var(--pink-dark); }
+@keyframes simFloat {
+  0%   { opacity: 0; transform: translateY(6px); }
+  18%  { opacity: 1; transform: translateY(-2px); }
+  70%  { opacity: 1; transform: translateY(-10px); }
+  100% { opacity: 0; transform: translateY(-18px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The number still appears and still says what changed; it just doesn't travel. */
+  .sim-meter-float.show { animation: none; opacity: 1; }
+  .sim-decision-chip { transition: none; }
+}

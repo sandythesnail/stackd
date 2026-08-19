@@ -22300,6 +22300,18 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
 }
 
 // ── Chapter type: simulator (registry) ──────────
+/** First sentence, capped — ported from mobile's shortFeedback.
+ *
+ * The simulator notes are written as full explanations, and Hammy's bubble is a speech
+ * bubble: the whole note overruns it badly. The first sentence is the verdict, which is
+ * what belongs beside the number that just moved. */
+function simShortNote(text, maxLen = 90) {
+  if (!text) return '';
+  const first = (text.match(/^.*?[.!?](?=\s|$)/) || [text])[0].trim();
+  if (first.length <= maxLen) return first;
+  return first.slice(0, maxLen).replace(/\s+\S*$/, '') + '…';
+}
+
 const SIMULATORS = {
   // A live meter that climbs/falls as one-shot decisions are clicked. Originally hardcoded
   // to "credit score, 300-850" — now reads meterKey/meterMin/meterMax from chapter data
@@ -22314,44 +22326,89 @@ const SIMULATORS = {
       let score = qp.dashboard[meterKey];
       const usedIds = new Set();
       const pctFor = s => Math.max(0, Math.min(100, (s - min) / (max - min) * 100));
+      let floatSeq = 0;
 
-      function render() {
-        container.innerHTML = `
-          <p class="quest-prompt">${chapter.intro}</p>
-          <div class="sim-meter-wrap">
-            <div class="sim-meter-score" id="sim-score">${Math.round(score)}</div>
-            <div class="sim-meter-track"><div class="sim-meter-marker" id="sim-marker" style="left:${pctFor(score)}%"></div></div>
-            <div class="sim-meter-scale"><span>${min}</span><span>${max}</span></div>
-          </div>
-          <div class="sim-decisions" id="sim-decisions">
-            ${chapter.decisions.map(d => `<button class="option-btn sim-decision-btn" data-id="${d.id}" ${usedIds.has(d.id) ? 'disabled' : ''}>${d.label}</button>`).join('')}
-          </div>`;
+      container.innerHTML =
+        '<p class="quest-prompt">' + chapter.intro + '</p>' +
+        '<div class="sim-meter-wrap">' +
+          '<div class="sim-meter-value-row">' +
+            '<div class="sim-meter-score" id="sim-score">' + Math.round(score) + '</div>' +
+            '<div class="sim-meter-float" id="sim-float" aria-hidden="true"></div>' +
+          '</div>' +
+          '<div class="sim-meter-track"><div class="sim-meter-marker" id="sim-marker" style="left:' + pctFor(score) + '%"></div></div>' +
+          '<div class="sim-meter-scale"><span>' + min + '</span><span>' + max + '</span></div>' +
+        '</div>' +
+        '<div class="sim-decisions" id="sim-decisions">' +
+          chapter.decisions.map(function (d) {
+            /* Each habit keeps its number hidden behind a "?" until it is tapped.
+               The intro on every one of these chapters says "Tap each one to see the impact",
+               and until now nothing ever showed an impact: the meter moved and the player was
+               left to infer the size of it from a needle. The chip is the promise being kept,
+               and it is what makes this a guess worth making rather than a list of buttons.
+               Ported from mobile's HabitChoice. */
+            return '<button class="option-btn sim-decision-btn" data-id="' + d.id + '">' +
+                '<span class="sim-decision-label">' + d.label + '</span>' +
+                '<span class="sim-decision-chip">?</span>' +
+              '</button>';
+          }).join('') +
+        '</div>';
 
-        container.querySelectorAll('.sim-decision-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const d = chapter.decisions.find(x => x.id === btn.dataset.id);
-            usedIds.add(d.id);
-            const from = score;
-            score = Math.max(min, Math.min(max, score + d.scoreDelta));
-            qp.dashboard[meterKey] = score;
-            saveState();
-            renderQuestDashboard(mod);
-            document.getElementById('sim-marker').style.left = pctFor(score) + '%';
-            tweenNumber(document.getElementById('sim-score'), from, score, {});
-            // Hammy narrates the actual explanation for this decision, in their speech bubble,
-            // instead of a generic "Nice!"/"Not quite" reaction.
-            showHammyMessage(d.note, d.scoreDelta >= 0);
-            btn.disabled = true;
-            if (usedIds.size === chapter.decisions.length) {
-              setQuestContinue('Continue →', () => {
-                if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
-                onDone();
-              }, true);
-            }
-          });
+      const scoreEl = document.getElementById('sim-score');
+      const markerEl = document.getElementById('sim-marker');
+      const floatEl = document.getElementById('sim-float');
+
+      container.querySelectorAll('.sim-decision-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (usedIds.has(btn.dataset.id)) return;
+          const d = chapter.decisions.find(function (x) { return x.id === btn.dataset.id; });
+          usedIds.add(d.id);
+          const from = score;
+          score = Math.max(min, Math.min(max, score + d.scoreDelta));
+          // Kept on the quest's own dashboard stat rather than a fresh midpoint each time,
+          // which is the one place this deliberately does NOT follow mobile: the web's meter
+          // is a running quest stat that other chapters read and renderQuestDashboard shows,
+          // so resetting it per chapter would sever it from everything around it.
+          qp.dashboard[meterKey] = score;
+          saveState();
+          renderQuestDashboard(mod);
+          markerEl.style.left = pctFor(score) + '%';
+          tweenNumber(scoreEl, from, score, {});
+
+          const good = d.scoreDelta >= 0;
+          const sign = good ? '+' : '−';
+          const amount = sign + Math.abs(d.scoreDelta);
+
+          // Reveal this habit's own number, in place.
+          const chip = btn.querySelector('.sim-decision-chip');
+          chip.textContent = amount;
+          btn.classList.add('sim-decision-used', good ? 'sim-decision-good' : 'sim-decision-bad');
+          btn.disabled = true;
+
+          /* The same number floating up off the meter it just changed, so the movement has a
+             visible cause sitting next to it. Keyed by a counter rather than by the value, so
+             tapping two habits worth the same amount still replays the animation. */
+          floatSeq += 1;
+          floatEl.textContent = amount;
+          floatEl.className = 'sim-meter-float ' + (good ? 'sim-float-good' : 'sim-float-bad');
+          void floatEl.offsetWidth;
+          floatEl.classList.add('show');
+          const mySeq = floatSeq;
+          setTimeout(function () { if (mySeq === floatSeq) floatEl.classList.remove('show'); }, 1400);
+
+          // Hammy narrates this decision rather than saying a generic "Nice!". Trimmed to its
+          // first sentence the way mobile's shortFeedback does — the full note runs long
+          // enough to fill the bubble several times over.
+          showHammyMessage(simShortNote(d.note), good);
+
+          // Continue as soon as ONE habit has been tried, matching mobile. Requiring all of
+          // them meant a player who understood it after two taps still had to clear the board
+          // before the app would let them move on.
+          setQuestContinue('Continue →', function () {
+            if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
+            onDone();
+          }, true);
         });
-      }
-      render();
+      });
     }
   }
 };
