@@ -455,29 +455,22 @@ function QuestPlayerInner() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [chapterIdx, kcQuestionIdx]);
-  // ...and follows the content back DOWN when a chapter grows under you.
+  // Nothing follows the content down any more, and that is deliberate.
   //
-  // Nearly every chapter answers you by appending: the Quick Check puts its explanation card
-  // below four options, the poll below its buttons, microsim below the sliders. That's
-  // deliberate — this file has repeatedly rejected layouts where answering moves what you
-  // were reading. But the content it appends to is often taller than the screen: quiz options
-  // run to 223 characters and question stems to 231, so a Quick Check with four long options
-  // puts its explanation somewhere below the fold. The student taps an answer, sees nothing
-  // happen, and the always-visible Next button in the bottom bar invites them straight past
-  // the explanation they just earned.
+  // There used to be a companion to the reset above: whenever a chapter grew under you, the
+  // scroller jumped to the bottom of it. The reasoning was that chapters answer you by
+  // appending — the Quick Check puts its explanation below four options, the poll below its
+  // buttons — and on a long chapter that explanation can land below the fold, where the
+  // always-visible Next button invites you straight past it.
   //
-  // So: growth within the step you're on scrolls to show it; a new chapter or a new question
-  // re-baselines instead (that's the reset above, not a reveal). Keyed on the step rather
-  // than measured against a stored height alone, so it doesn't matter whether this native
-  // callback or the effect above lands first.
-  const stepKey = `${chapterIdx}:${kcQuestionIdx}`;
-  const followRef = useRef<{ key: string; height: number }>({ key: '', height: 0 });
-  const followContentGrowth = (h: number) => {
-    const prev = followRef.current;
-    followRef.current = { key: stepKey, height: h };
-    if (prev.key !== stepKey) return;
-    if (h > prev.height + 8) scrollRef.current?.scrollToEnd({ animated: true });
-  };
+  // It cost more than it bought. A vocab definition that doesn't quite fit is the common case,
+  // not the rare one, so in practice the screen yanked itself downward while you were still
+  // reading the top of the card — and it fired on ANY growth of more than 8px, which includes
+  // a bubble wrapping onto one more line. Being moved mid-sentence by the page is worse than
+  // having to scroll: a scroll is something you chose, and you can see there is more.
+  //
+  // The reset-to-top on a new chapter or a new question stays. That one puts you at the START
+  // of something you haven't read, which is where you were going anyway.
   const [terms, setTerms] = useState<LearnedTerm[]>(resumed?.terms ?? []);
   // Mirrors `terms` synchronously. The final chapter's onComplete builds the results payload
   // in the same handler that can add the last word, and a setState isn't visible yet at that
@@ -902,11 +895,6 @@ function QuestPlayerInner() {
           raised && { paddingTop: 0, paddingBottom: matchLift },
         ]}
         showsVerticalScrollIndicator={false}
-        // See followContentGrowth. Covers the story's dialogue log (each Next appends a beat,
-        // which past three or four landed below the fold, so pressing Next appeared to do
-        // nothing) and every chapter that appends its answer feedback under content taller
-        // than the screen.
-        onContentSizeChange={(_w, h) => followContentGrowth(h)}
         // A student typing their answer on the explainback chapter has the keyboard up over
         // half the screen. Dragging the content now dismisses it, and taps land on what they
         // hit rather than being swallowed as "dismiss the keyboard" — on iOS a multiline box

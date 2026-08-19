@@ -20,25 +20,29 @@ import { REACTION_FACES, MOOD_FACES, type FaceOverlay } from '@/hammyFaces';
  * tour auto-starts for first-time users (see home.tsx). Ported from the
  * website's hammy-intro.js.
  *
- * Sound: expo-audio plays assets/sfx/levelup.wav on the pop, synthesised by
+ * Sound: expo-audio plays assets/sfx/coins.wav on the pop, synthesised by
  * scripts/make-sfx.js rather than licensed, so it can be re-tuned and re-generated. See
- * LEVEL_UP_SFX below for what happens when it can't play, which is "nothing, silently" — the
+ * COIN_SFX below for what happens when it can't play, which is "nothing, silently" — the
  * intro is not allowed to depend on it. */
 
 const GREEN_DARK = '#4A6844';
 const GREEN = '#6B8F65';
 
-/** The bank bursting, played on the pop — an XP level-up jingle rather than a spill of loose
- * change. The coin version was what physically happens and it sounded like dropped money,
- * which is to say like LOSING money; a rising major arpeggio says the opposite about the same
- * event. See scripts/make-sfx.js.
+/** The bank bursting, played on the pop: coins jangling, which is what the animation shows.
+ *
+ * This was an XP level-up arpeggio for a while, because the coin sound that preceded it read
+ * as money being DROPPED — slow, spread-out hits landing one by one on a hard floor. That was
+ * a fault in the rendering rather than in the idea: it also aliased badly (see the header in
+ * scripts/make-sfx.js), which struck metal hides better than anything else. renderCoins fixes
+ * both — the hits are front-loaded into a tight cluster, so it is a handful being SHAKEN
+ * rather than dropped, and no partial goes anywhere near Nyquist.
  *
  * Silence is an acceptable outcome everywhere. On iOS the hardware mute switch stops it (we
  * don't override the audio session to talk over a silenced phone for a decoration), a browser
  * may refuse to play without a gesture, and every call below is wrapped so a failure can
  * never take the animation down with it. */
-const LEVEL_UP_SFX = require('../../../assets/sfx/levelup.wav');
-const LEVEL_UP_VOLUME = 1;
+const COIN_SFX = require('../../../assets/sfx/coins.wav');
+const COIN_VOLUME = 1;
 
 /* Face per dialogue line — same entries the rest of the app uses (hammyFaces). */
 const SCRIPT: { text: string; face: FaceOverlay; reply: string | null }[] = [
@@ -210,7 +214,7 @@ export default function HammyIntro() {
   const hopX = useRef(new Animated.Value(0)).current;
   const hopY = useRef(new Animated.Value(0)).current;
 
-  const levelUp = useAudioPlayer(LEVEL_UP_SFX);
+  const coinJangle = useAudioPlayer(COIN_SFX);
 
   /* THE REASON YOU COULDN'T HEAR IT. By default iOS honours the hardware mute switch, and a
    * phone that lives on silent plays nothing — which is most phones. The previous note here
@@ -225,7 +229,7 @@ export default function HammyIntro() {
 
   /** Fire-and-forget. Every path is wrapped because a refused autoplay or a missing audio
    * session must never interrupt the animation. */
-  const playSfx = (player: typeof levelUp, volume: number) => {
+  const playSfx = (player: typeof coinJangle, volume: number) => {
     try {
       player.volume = volume;
       // No seekTo. The player is freshly mounted and sitting at 0, and seeking returns a
@@ -321,7 +325,7 @@ export default function HammyIntro() {
 
     // 1.35 POP — halves fly apart, flash, ring, shake, burst
     at(1350, () => {
-      playSfx(levelUp, LEVEL_UP_VOLUME);   // on the same frame the bank gives way
+      playSfx(coinJangle, COIN_VOLUME);   // on the same frame the bank gives way
       crackOp.setValue(0);
       Animated.timing(popP, { toValue: 1, duration: 600, easing: Easing.bezier(0.3, 0.6, 0.6, 1), useNativeDriver: true }).start();
       Animated.timing(ringP, { toValue: 1, duration: 650, easing: Easing.bezier(0.1, 0.7, 0.3, 1), useNativeDriver: true }).start();

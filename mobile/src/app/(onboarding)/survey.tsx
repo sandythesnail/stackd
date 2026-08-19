@@ -6,7 +6,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen, Txt, Button, Option, ProgressBar, IconButton, MIcon, Hammy } from '@/components';
 import { colors, font, radius } from '@/theme';
 import { modules } from '@/data';
@@ -69,9 +69,6 @@ const TOTAL_STEPS = modules.length + 2;
 
 export default function Survey() {
   const router = useRouter();
-  // Set by Settings' "Retake onboarding survey" row — see finish() below for what changes.
-  const { retake } = useLocalSearchParams<{ retake?: string }>();
-  const isRetake = retake === '1';
   const { setOnboardingTrack, markOnboardingComplete } = useStore();
 
   const [step, setStep] = useState(0);
@@ -121,18 +118,20 @@ export default function Survey() {
     // should never be handed it again. hammy-intro sets the same flag for the path where the
     // survey is skipped entirely.
     markOnboardingComplete();
-    // A retake from Settings just saves the new track and goes back where it came from.
-    // It used to fall through to the same branch as first-run onboarding, which replayed the
-    // whole animated piggy-born intro at someone who has been using the app for weeks — and
-    // then pushed a SECOND (tabs) entry on top of the one they started from, the same
-    // duplicate-stack problem results.tsx documents at length.
-    if (isRetake) {
-      if (router.canGoBack()) router.back();
-      else router.replace('/(tabs)/settings');
-      return;
-    }
-    // First run: the animated hammy-intro plays here, on "Start learning", before landing on
-    // Home — see hammy-intro.tsx's own finish handler.
+    // The animated hammy-intro plays here, on "Start learning", before landing on Home — see
+    // hammy-intro.tsx's own finish handler, which REPLACES rather than pushes.
+    //
+    // Every entry into this screen now runs the whole thing, first run or not. A retake used
+    // to skip the intro and hop straight back to Settings, on the reasoning that replaying the
+    // piggy bank at someone who has used the app for weeks is an imposition — but asking to
+    // retake onboarding is asking for onboarding, and the animation is the half people
+    // actually remember. Both entrances (Settings' retake row, and the reset that wipes
+    // progress) are deliberate, one-tap-and-confirmed requests for exactly this.
+    //
+    // It plays ONCE per request either way: markOnboardingComplete() above sets the flag again
+    // the moment the questions are answered, so nothing here re-arms itself. Both callers
+    // REPLACE their way in, so Settings isn't left underneath and hammy-intro's own replace
+    // lands on a clean stack rather than the duplicate (tabs) entry results.tsx documents.
     router.push('/(onboarding)/hammy-intro');
   };
 
@@ -175,10 +174,14 @@ export default function Survey() {
                 <Txt variant="h1" style={{ flex: 1 }}>How much do you know about this?</Txt>
               </View>
 
-              {/* Ink, not textColor, for everything on this card except the number itself:
-                  the card IS the module's colour, and the numbers are white on every module
-                  now, so white words here would vanish on the pale chips. */}
-              <View style={[styles.qCard, { backgroundColor: module.color, borderColor: module.inkColor }]}>
+              {/* White words, on the module's DEEP tone rather than its pale chip tone.
+                  The text on this card is white for every module now. That could not be done
+                  on the old background: the card used to be module.color, the same pale tint
+                  the chips use, where white runs as low as 1.65:1 (saving, investing) — white
+                  words there are not low-contrast, they are invisible. So the card takes the
+                  module's deep tone, which is the same hue at a weight white can actually sit
+                  on, and the identity of the card is unchanged. */}
+              <View style={[styles.qCard, { backgroundColor: module.deepColor, borderColor: module.deepColor }]}>
                 {/* The square, ringed. It used to be drawn as a WHITE tile carrying the
                     module's number colour, which is a pale tint of the module's own hue — so
                     loans, whose number is very nearly white, showed a blank white square, and
@@ -192,10 +195,10 @@ export default function Survey() {
                   <MIcon abbr={module.icon} color={module.color} textColor={module.textColor} size={54} r={16} fontSize={20} />
                 </View>
                 <View style={{ flex: 1, gap: 3 }}>
-                  <Txt style={[styles.qTopic, { color: module.inkColor }]}>
-                    {`TOPIC ${step + 1} OF ${modules.length}`}
+                  <Txt style={styles.qTopic}>
+                    {`MODULE ${step + 1} OF ${modules.length}`}
                   </Txt>
-                  <Txt style={[styles.qModule, { color: module.inkColor }]}>{module.name}</Txt>
+                  <Txt style={styles.qModule}>{module.name}</Txt>
                 </View>
               </View>
 
@@ -335,7 +338,10 @@ export default function Survey() {
           label={
             module ? 'Next'
               : step === GOALS_STEP ? 'See my starting track'
-                : isRetake ? 'Save my track' : 'Start learning'
+                // "Start learning" on every path now, including a retake: the button leads
+                // into the intro and then Home, so "Save my track" would name the smaller
+                // half of what it does.
+                : 'Start learning'
           }
           // White until a number is picked, green once one is. The colour IS the receipt for
           // the tap, which is what the auto-advance used to be; unanswered, the button simply
@@ -364,32 +370,33 @@ export default function Survey() {
  * Hammy, reacting when his face changes.
  *
  * A face that swaps silently reads as a bug — the drawing is identical apart from the eyes and
- * mouth, so at a glance nothing appears to have happened. He hops and gives a small shake
- * instead, which is what makes the swap read as HIM responding rather than as an image being
- * replaced. Keyed on the face itself, so re-picking the same number doesn't re-trigger it.
+ * mouth, so at a glance nothing appears to have happened. He reacts, which is what makes the
+ * swap read as HIM responding rather than as an image being replaced.
+ *
+ * The reaction is Hammy's OWN 'happy' one — the exact animation the quest player plays when
+ * you get a question right (hammyBounce, ported from the website's keyframes; see Hammy.tsx).
+ * This screen used to hand-roll its own instead: a spring that lifted him 9px, tilted him 5
+ * degrees and scaled him up 6%. The tilt is what made it look wrong — it is a resting pose
+ * held at an angle for the length of a spring, not a beat of movement, so between answers he
+ * simply sat there crooked. Reusing the real one means he rests straight and only ever moves
+ * as part of a reaction, and the survey stops being the one place in the app with its own
+ * private idea of how the mascot responds to you.
  */
 function ReactingHammy({ face }: { face: FaceOverlay }) {
-  const react = useSharedValue(0);
+  // Bumped rather than derived from the face, so picking the SAME number twice still replays
+  // the reaction — the identical rule Hammy's own reactionKey exists for in the quest player.
+  const [reactionKey, setReactionKey] = useState(0);
+  const first = useRef(true);
   useEffect(() => {
-    react.value = 0;
-    react.value = withSequence(
-      withSpring(1, { damping: 7, stiffness: 340 }),
-      withSpring(0, { damping: 14, stiffness: 220 }),
-    );
-  }, [face, react]);
-
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: -react.value * 9 },
-      { rotate: `${react.value * 5}deg` },
-      { scale: 1 + react.value * 0.06 },
-    ],
-  }));
+    // Not on mount: the unanswered face is the resting state, not a reaction to anything.
+    if (first.current) { first.current = false; return; }
+    setReactionKey((k) => k + 1);
+  }, [face]);
 
   return (
-    <Reanimated.View style={[styles.qHammy, style]}>
-      <Hammy size={92} bob={false} face={face} />
-    </Reanimated.View>
+    <View style={styles.qHammy}>
+      <Hammy size={92} bob={false} face={face} reaction="happy" reactionKey={reactionKey} />
+    </View>
   );
 }
 
@@ -497,8 +504,10 @@ const styles = StyleSheet.create({
   // rounding showing through it — a 3px border on the tile itself would sit inside the
   // corner radius and read as a hairline.
   qIconRing: { backgroundColor: colors.white, borderRadius: 19, padding: 3 },
-  qTopic: { fontFamily: font.extra, fontSize: 11, letterSpacing: 0.9, opacity: 0.75 },
-  qModule: { fontFamily: font.display, fontSize: 22 },
+  // 0.85 rather than the old 0.75: this is 11px of letter-spaced caps, the smallest text on
+  // the card, and it is now carrying its own contrast instead of borrowing a dark ink colour.
+  qTopic: { fontFamily: font.extra, fontSize: 11, letterSpacing: 0.9, opacity: 0.85, color: colors.white },
+  qModule: { fontFamily: font.display, fontSize: 22, color: colors.white },
 
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   scaleRail: {

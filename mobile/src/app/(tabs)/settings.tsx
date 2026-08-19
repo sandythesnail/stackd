@@ -34,10 +34,12 @@ export default function Settings() {
 
         <View style={{ marginTop: 2 }}>
           {authEnabled ? <ClerkAccountRow /> : <Row icon="user" title="Account" sub={user.email} />}
-          {/* retake=1 so the survey saves the new track and comes straight back here, rather
-              than treating this like a first run — replaying the animated piggy-born intro and
-              landing on a second copy of the tabs. See survey.tsx's finish(). */}
-          <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.push('/(onboarding)/survey?retake=1')} />
+          {/* The whole thing, survey and animated intro both — asking to retake onboarding is
+              asking for onboarding, and it is the intro people actually remember. REPLACE, not
+              push, so Settings isn't left under it for the intro's own replace to land on.
+              See survey.tsx's finish(). It plays once; finishing re-marks onboarding complete.
+              (was: retake=1, which saved the new track and came straight back here.) */}
+          <Row icon="rotate-ccw" title="Retake onboarding survey" onPress={() => router.replace('/(onboarding)/survey')} />
           {/* The "Replay welcome tour" row is gone. The tour is still replayable from the
               help icon in Home's header (Header's onReplayTour), which is where it belongs —
               on the screen the tour actually walks through. */}
