@@ -3905,3 +3905,23 @@ input[type="range"].microsim-range {
    it sits in the content column, so the band would only add a gap under it. */
 .quest-layout-hint .hammy-side-slot { display: none; }
 .quest-layout-hint .hint-bubble { margin: 0 auto; }
+
+/* Light on the wall — ported from mobile's Wallpaper.tsx.
+   The wall was one flat fill standing behind a floor that has real depth, which is what made
+   the room read as furniture in front of a swatch rather than furniture in a room. Light falls
+   from the top and gathers where the wall meets the floor.
+
+   A separate layer rather than part of each wallpaper's own CSS: the eight wallpapers set
+   `wallCss` inline (see SHOP_ITEMS), so baking a gradient into each would mean eight copies
+   of it and a ninth for the default. This sits over whichever is equipped.
+
+   Deliberately gentle, and the same three stops mobile uses. A wall is the backdrop; this
+   should be felt rather than seen. The zone has no children of its own — the furniture are
+   siblings painted after it — so covering it costs nothing. */
+.room-wall-zone::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0) 55%,
+    rgba(44, 30, 16, 0.13) 100%);
+}
