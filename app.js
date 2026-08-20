@@ -16551,6 +16551,9 @@ function loadState() {
   try {
     const s = localStorage.getItem('stackd_v2');
     if (s) Object.assign(state, JSON.parse(s));
+    // A save written under an older XP ladder carries a level that ladder no longer agrees
+    // with. Recomputing here means the rest of the app never sees the two disagree.
+    syncLevelToXp();
   } catch (_) {}
 }
 
@@ -16655,7 +16658,8 @@ function applyRemoteState(remote) {
   // re-upload it, undoing the reset on the very next debounced sync.
   if ((remote.resetToken || 0) > (state.resetToken || 0)) {
     Object.assign(state, remote);
-    saveState();
+    syncLevelToXp();
+  saveState();
     renderHome();
     return;
   }
@@ -16741,6 +16745,7 @@ function applyRemoteState(remote) {
   state.completedModules = { ...(state.completedModules || {}), ...localCompletedModules };
   state.completedLessons = { ...(state.completedLessons || {}), ...localCompletedLessons };
   state.questProgress = mergeQuestProgress(localQuestProgress, state.questProgress || {});
+  syncLevelToXp();
   saveState();
   renderHome();
 }
@@ -16781,6 +16786,32 @@ function ensureLocalStateOwner(userId) {
 }
 
 // ── XP / Level ─────────────────────────────────
+/** The level a given XP total actually earns.
+ *
+ * Ported from mobile's levelForXp, which computes it fresh every time precisely so there is
+ * no stored level to drift out of step with the XP beside it. Here the level WAS stored and
+ * only ever incremented, which breaks in both directions:
+ *
+ *   - Raise xp without going through addXP — which a remote sync does, since applyRemoteState
+ *     merges fields one at a time — and the level stays behind. The Progress page then does
+ *     xpForLevel(level) - xp and prints a NEGATIVE "XP to next level", over a bar past 100%.
+ *   - Retune the thresholds, which just happened, and every existing save carries a level
+ *     computed against the old ladder. An increment-only loop can never walk that back down.
+ *
+ * Deriving makes both unrepresentable. */
+function levelForXp(xp) {
+  let level = 1;
+  while (level < LEVEL_THRESHOLDS.length && xp >= xpForLevel(level)) level++;
+  return level;
+}
+
+/** Brings a stored level back in line with the XP it is meant to describe. Called wherever
+ *  state arrives from outside this session: a load, or a merge from the server. */
+function syncLevelToXp() {
+  const derived = levelForXp(state.xp || 0);
+  if (state.level !== derived) state.level = derived;
+}
+
 function xpForLevel(l) { return LEVEL_THRESHOLDS[Math.min(l, LEVEL_THRESHOLDS.length - 1)]; }
 
 function xpProgressPct() {
