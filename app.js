@@ -19342,7 +19342,6 @@ function renderProgressPage() {
   const tier = getTier(done);
   const unlocked = state.unlockedAchievements.length;
   const pct = xpProgressPct();
-  const nextXP = xpForLevel(state.level);
 
   // Donut chart math — ported from mobile's Ring (size=140, stroke=16), so r=(140-16)/2=62.
   const r = 62;
@@ -19356,38 +19355,23 @@ function renderProgressPage() {
   // Alternating bar colors
   const pinkMods = new Set(['spending', 'credit', 'taxes']);
 
-  const pigMsg = done === MODULES.length ? "You did it! All modules complete!"
-    : done > 0 ? "Keep going, you're doing great!"
-    : "Let's get started!";
 
   document.getElementById('progress-body').innerHTML = `
-    <!-- Pig mascot -->
-    <div class="pg-mascot-wrap">
-      <div class="pg-mascot-pig">${getPigWithItemMarkup(0.36, getEquippedItems())}</div>
-      <div class="pg-mascot-bubble">${pigMsg}</div>
-    </div>
-
-    <!-- Stat cards -->
+    <!-- Three, as on mobile: level out of the ladder, the streak, badges out of the set.
+         Total XP is gone — it is on the sidebar footer, updating as it is earned, and it was
+         the one number here that named a quantity nothing on the page acts on. -->
     <div class="pg-stats-row">
       <div class="pg-stat-card">
-        <div class="pg-stat-label">Total XP</div>
-        <div class="pg-stat-num">${state.xp.toLocaleString()}</div>
-        <div class="pg-stat-sub">${tier.name}</div>
-      </div>
-      <div class="pg-stat-card">
+        <div class="pg-stat-num">${state.level}<span class="pg-stat-den">/${LEVEL_THRESHOLDS.length}</span></div>
         <div class="pg-stat-label">Level</div>
-        <div class="pg-stat-num">${state.level}</div>
-        <div class="pg-stat-sub">${pct.toFixed(0)}% to Level ${state.level + 1}</div>
       </div>
       <div class="pg-stat-card">
-        <div class="pg-stat-label">Day Streak</div>
         <div class="pg-stat-num">${state.streak}</div>
-        <div class="pg-stat-sub">days in a row</div>
+        <div class="pg-stat-label">Day Streak</div>
       </div>
       <div class="pg-stat-card">
+        <div class="pg-stat-num">${unlocked}<span class="pg-stat-den">/${ACHIEVEMENTS.length}</span></div>
         <div class="pg-stat-label">Badges</div>
-        <div class="pg-stat-num">${unlocked}</div>
-        <div class="pg-stat-sub">of ${ACHIEVEMENTS.length} unlocked</div>
       </div>
     </div>
 
@@ -19417,39 +19401,24 @@ function renderProgressPage() {
         </div>
       </div>
 
-      <div class="pg-chart-card">
-        <div class="pg-chart-title">Level Progress</div>
-        <div class="pg-level-row">
-          <div class="pg-level-badge"><span class="pg-level-badge-txt">Lv ${state.level}</span></div>
-          <div class="pg-level-info">
-            <div class="pg-xp-row-detail">
-              <span>${state.xp.toLocaleString()} XP earned</span>
-              <span>${nextXP.toLocaleString()} XP needed</span>
-            </div>
-            <div class="pg-level-bar-track">
-              <div class="pg-level-bar-fill" style="width:${pct}%"></div>
-            </div>
-            <div class="pg-xp-sub">${state.level >= LEVEL_THRESHOLDS.length ? `Max level reached · ${tier.name}` : `${(nextXP - state.xp).toLocaleString()} XP to Level ${state.level + 1} · ${tier.name}`}</div>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <!-- Module Scores -->
+    <!-- Module Progress -->
     <div class="pg-chart-card">
-      <div class="pg-chart-title">Module Scores</div>
+      <div class="pg-chart-title">Module Progress</div>
       <div class="pg-bar-chart">
         ${MODULES.map(m => {
-          const comp = state.completedModules[m.id];
-          const scorePct = comp ? (comp.score / (comp.total || 5)) * 100 : 0;
-          const isPink = pinkMods.has(m.id);
-          return `<div class="pg-bar-row">
+          // Lessons done out of the module's own total — the same count as the module list,
+          // the lesson path and Home's continue card, so no two screens disagree.
+          const { totalUnits, unitsDone } = moduleUnitsProgress(m);
+          const donePct = totalUnits ? (unitsDone / totalUnits) * 100 : 0;
+          return `<div class="pg-bar-row" data-mod="${m.id}">
             <div class="mod-icon mod-icon-sm" data-mod="${m.id}">${m.icon}</div>
             <span class="pg-bar-label">${m.title}</span>
             <div class="pg-bar-track">
-              <div class="pg-bar-fill${isPink ? ' pg-bar-pink' : ''}" style="width:${scorePct}%"></div>
+              <div class="pg-bar-fill" style="width:${donePct}%; background: var(--mod-color, var(--green));"></div>
             </div>
-            <span class="pg-bar-val">${comp ? `${comp.score}/${comp.total || 5}` : '-'}</span>
+            <span class="pg-bar-val">${unitsDone} out of ${totalUnits}</span>
           </div>`;
         }).join('')}
       </div>

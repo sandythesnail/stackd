@@ -571,8 +571,10 @@ body { background: var(--bg); min-height: 100vh; }
 /* Modules Done + Level Progress — equal columns since both are naturally compact cards
    (unlike the old pairing with the tall 11-row Module Scores card, which forced this row
    to stretch to match and left a lot of dead space around the ring). */
+/* One card wide since Level Progress was removed — see renderProgressPage. A two-column
+   grid with one occupant is just a half-empty row. */
 .pg-top-row {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: stretch;
+  display: grid; grid-template-columns: 1fr; gap: 1.25rem; align-items: stretch;
 }
 .pg-chart-card {
   background: #fff; border: 1px solid var(--border);
@@ -637,7 +639,10 @@ body { background: var(--bg); min-height: 100vh; }
   height: 100%; background: var(--green); border-radius: 999px; transition: width 0.7s ease;
 }
 .pg-bar-pink { background: var(--pink); }
-.pg-bar-val { font-size: 0.72rem; font-weight: 700; color: var(--text-mid); width: 34px; flex-shrink: 0; text-align: right; }
+.pg-bar-val {
+  font-size: 0.72rem; font-weight: 700; color: var(--text-mid);
+  width: 68px; flex-shrink: 0; text-align: right; white-space: nowrap;
+}
 
 /* Level progress card — ported from mobile's levelBig badge (pale-green box, not a giant
    number) so it reads as a small chip beside the XP bar rather than a headline. */
