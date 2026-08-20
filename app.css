@@ -1068,7 +1068,7 @@ select.budget-input { cursor: pointer; }
    below whatever content happens to be on the step. */
 #screen-quest.active { display: flex; flex-direction: column; overflow: hidden; }
 .quest-topbar {
-  flex-shrink: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border);
+  flex-shrink: 0; z-index: 10; background: var(--bg);
   padding: 0.55rem 1rem 0.4rem;
 }
 .quest-topbar-row { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.2rem; }
@@ -1086,13 +1086,13 @@ select.budget-input { cursor: pointer; }
    button lives here too, so it's always reachable at the top without scrolling. Dashboard and
    the hint/continue controls share a single row (no separate bar + divider line underneath). */
 .quest-sticky-header { flex-shrink: 0; z-index: 9; background: var(--bg); }
-/* Deliberately NOT collapsed when empty any more.
-   It used to display:none until a hint button or a glossary chip existed, which meant the
-   first term you learned made a 61px band appear out of nowhere and shove the entire lesson —
-   Hammy included — down the page. Measured. A reserved band that is sometimes empty is a much
-   smaller cost than the whole screen jumping mid-question, and with the single Look back pill
-   the band is thin and always the same height. */
-.quest-sticky-header { min-height: 3rem; }
+/* Collapses when there is nothing in it.
+   It used to have to stay reserved, because the glossary lived here and learning a word
+   mid-question would otherwise make a band appear from nowhere and shove the whole lesson —
+   Hammy included — 61px down the page. The glossary is pinned to the corner now, so the only
+   occupant left is the hint button, which is settled per chapter rather than mid-question.
+   Nothing here can change size while a question is on screen, so nothing needs reserving. */
+.quest-sticky-header:not(:has(.hint-ask-btn)) { display: none; }
 
 .quest-toolrow {
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
@@ -1127,11 +1127,13 @@ select.budget-input { cursor: pointer; }
    single chip row's worth of space from the very first chapter (quietly, at opacity:0,
    before any term exists yet), so learning a term never changes the sticky header's size. */
 .glossary-tray {
-  display: flex; flex-wrap: nowrap; align-items: center; gap: 0.4rem; height: 3rem; box-sizing: border-box;
-  padding: 0.4rem 1rem; background: var(--bg); border-bottom: 1px solid var(--border);
+  position: fixed; left: 1rem; bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  z-index: 12; display: flex; align-items: center; gap: 0.4rem;
   opacity: 0; visibility: hidden; transition: opacity 0.25s ease;
 }
 .glossary-tray.show { opacity: 1; visibility: visible; }
+/* Clear of the Next button's bar, which is fixed to the bottom of the lesson. */
+#screen-quest .glossary-tray { bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)); }
 .glossary-label { font-size: 0.72rem; font-weight: 700; color: var(--text-soft); }
 .glossary-chip {
   padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid var(--border); background: #fff;
@@ -1251,7 +1253,7 @@ select.budget-input { cursor: pointer; }
    typical chapter. */
 .quest-side {
   flex-shrink: 0; width: 272px; display: flex; flex-direction: column; align-items: center;
-  justify-content: flex-start; padding-top: 7rem; text-align: center; gap: 0.7rem;
+  justify-content: flex-start; padding-top: 1.25rem; text-align: center; gap: 0.7rem;
 }
 .hammy-side-avatar { position: relative; }
 /* A white speech bubble floats above Hammy's head whenever they react, instead of plain
@@ -1358,7 +1360,7 @@ select.budget-input { cursor: pointer; }
 /* Centers vertically within whatever height the row ends up (quest-layout's min-height is set
    in JS from the real available space), so short content isn't squished against the top with
    Hammy floating awkwardly beside empty space below. */
-.quest-main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.quest-main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
 /* Each chapter/question fades in on entry — matches the mobile app's per-chapter
    `entering={FadeIn.duration(260)}` (quest.tsx), retriggered in renderChapter() by
    removing/re-adding this class so it replays every time quest-main's content changes. */

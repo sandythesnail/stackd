@@ -21195,7 +21195,10 @@ function renderChapter(mod, idx) {
   const titleRow = document.getElementById('quest-title-row');
   titleRow.textContent = getChapterTitle(chapter);
   titleRow.classList.remove('centered');
-  document.getElementById('quest-layout').style.minHeight = Math.max(240, computeAvailableQuestHeight()) + 'px';
+  // No forced full-viewport row. It was set so a short chapter still filled the screen, but
+  // paired with a centred column that just moved the question into the middle of a lot of
+  // nothing. The row is its content's height now and everything sits up at the top.
+  document.getElementById('quest-layout').style.minHeight = '';
 
   // Reset the persistent Hammy to a neutral idle pose for the new chapter.
   const questSide = document.getElementById('quest-side');
