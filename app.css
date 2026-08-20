@@ -1277,12 +1277,16 @@ select.budget-input { cursor: pointer; }
 .hammy-side-msg.happy { color: var(--green-dark); }
 .hammy-side-msg.gentle { color: var(--pink-dark); }
 .hammy-side-msg.streak { color: var(--pink-dark); }
-/* Deliberately no animation on .pig for any reaction state.
-   These used to bounce, wobble and celebrate the whole character on every answer. A mascot
-   that jumps each time you press a button reads as a toy rather than a teacher, and it moved
-   the one fixed point on a screen whose content is already changing underneath it. The
-   reaction is carried entirely by the face and the speech bubble now, neither of which moves
-   him. The sparkles below are on the wrapper's pseudo-elements, so they still fire. */
+/* The reaction shake — a one-shot response to answering, on request.
+ *
+ * These are transforms, so they cost no layout: nothing around Hammy moves, and he returns to
+ * exactly the same spot when the animation ends. That is the distinction that matters here.
+ * What stays gone is `pigFloat`, the perpetual 14px drift every pig on the site carries — a
+ * companion that never stops moving while you are trying to read is a different thing from one
+ * that reacts when you answer. See the freeze rule further down. */
+.hammy-side-avatar.happy .pig { animation: hammyBounce 0.7s ease-in-out !important; }
+.hammy-side-avatar.gentle .pig { animation: hammyWobble 0.6s ease-in-out !important; }
+.hammy-side-avatar.streak .pig { animation: hammyCelebrate 1s ease-in-out !important; }
 .hammy-side-avatar.happy::before, .hammy-side-avatar.streak::before,
 .hammy-side-avatar.happy::after, .hammy-side-avatar.streak::after {
   content: '\2728'; position: absolute; font-size: 1.1rem; opacity: 0; pointer-events: none;
@@ -1319,7 +1323,15 @@ select.budget-input { cursor: pointer; }
   opacity: 1; background-image: url('faces/hammy-mouth-confused.png?v=1');
   top: 258px; left: 214px; width: 48px; height: 30px; background-size: contain;
 }
-.hammy-side-avatar.faces-ready.streak .hammy-face-overlay { opacity: 1; background-image: url('faces/hammy-happy.png?v=17'); }
+/* Geometry restated, not inherited.
+   The mouth-only states (happy, gentle) set a small box and background-size: contain, and if
+   any of them is ever on the element at the same time as this one, their box wins and the
+   whole illustrated face gets squeezed into a space meant for a mouth. applyHammyFace now
+   guarantees only one is ever applied; this makes the rule survive it happening anyway. */
+.hammy-side-avatar.faces-ready.streak .hammy-face-overlay {
+  opacity: 1; background-image: url('faces/hammy-happy.png?v=17');
+  top: 145px; left: 90px; width: 260px; height: 155px; background-size: cover;
+}
 /* The illustrated face's own eyes replace these, and its edges fade to transparent (so they
    blend into the pig's skin instead of a hard rectangle) — leaving the original CSS eyes at
    full opacity underneath would show through that fade and double up as ghosting. */
@@ -3567,7 +3579,10 @@ select.budget-input { cursor: pointer; }
    not: he is the one fixed thing on a screen whose content changes under him, and a companion
    that never stops drifting while you are trying to read is what "he keeps moving" means.
    Scoped to the quest companion only, so nothing else on the site changes. */
-.hammy-side-avatar .pig,
+/* At REST only. The reaction states above re-enable an animation on .pig deliberately, and
+   they carry !important for the same reason this does, so :not() is what keeps the two from
+   fighting: idle Hammy is perfectly still, answering Hammy reacts and then settles back. */
+.hammy-side-avatar:not(.happy):not(.gentle):not(.streak) .pig { animation: none !important; }
 .hammy-side-avatar .pig-ear-l,
 .hammy-side-avatar .pig-ear-r,
 .hammy-side-avatar .pig-tail { animation: none !important; }

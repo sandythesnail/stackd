@@ -21605,6 +21605,18 @@ preloadHammyFaces();
 function applyHammyFace(avatar, cls) {
   if (cls === 'streak' && !hammyFacesReady) { avatar.classList.add('happy'); return; }
   if (hammyFacesReady) avatar.classList.add('faces-ready');
+  /* EXACTLY ONE face state at a time.
+   *
+   * A streak used to be applied ON TOP of the happy it had already been given, so the avatar
+   * carried both. Both CSS rules then matched the same overlay: streak won the background
+   * image (the whole illustrated face) while happy still won the geometry (a 32x37 box meant
+   * for a MOUTH, background-size contain). The result was Hammy's entire face squeezed into a
+   * 17x19 thumbnail over his snout, with his real eyes and snout hidden underneath — which is
+   * what "his face breaks and goes extremely small" is, and it fired on every third correct
+   * answer in a row.
+   *
+   * A streak IS a kind of happy, so it replaces it rather than stacking on it. */
+  avatar.classList.remove('happy', 'gentle', 'streak');
   avatar.classList.add(cls);
 }
 function showHammyReaction(mod, isCorrect, context = 'answer') {
