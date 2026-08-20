@@ -21236,6 +21236,9 @@ function renderChapter(mod, idx) {
   const hammySide = document.getElementById('hammy-side-avatar');
   const hammyMsg = document.getElementById('hammy-side-msg');
   questSide.style.display = HAMMY_SIDE_HIDDEN_TYPES.includes(chapter.type) ? 'none' : 'flex';
+  // Hammy''s Tip gets its own centred stage — the tip above him rather than beside him,
+  // matching mobile. Toggled here so every other chapter clears it.
+  document.getElementById('quest-layout').classList.toggle('quest-layout-hint', chapter.type === 'hint');
   clearTimeout(hammyMsg._hideTimer);
   clearTimeout(hammySide._faceHideTimer);
   hammySide.className = 'hammy-side-avatar';
