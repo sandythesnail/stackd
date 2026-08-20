@@ -2,9 +2,32 @@
    STACKED app.js - PRD v1.0
 ══════════════════════════════════════════════ */
 
-// Tuned so a first-time, all-correct pass through every module lands right around level 9-10 —
-// leveling up should track finishing the whole curriculum, not just a couple of modules.
-const LEVEL_THRESHOLDS = [0, 90, 200, 330, 480, 660, 880, 1150, 1450, 1800, 2200];
+// XP needed to REACH each level (index = level).
+//
+// Scaled about 1.7x from the original ladder (90 -> 150 for level 2, 2200 -> 3900 for the top)
+// so levelling takes noticeably longer at every stage rather than only at the end. Lesson XP is
+// untouched: a lesson is worth exactly what it was worth, the ladder is simply longer.
+//
+// MUST stay identical to mobile/src/store.tsx's LEVEL_THRESHOLDS. The two apps share progress
+// through user_progress.state and derive level from xp on read rather than storing it, so if
+// these drift the same student sees two different level numbers for the same work.
+const LEVEL_THRESHOLDS = [0, 150, 340, 570, 840, 1160, 1550, 2020, 2560, 3180, 3900];
+
+// Coins paid per correct answer, and the reduced rate for replaying something already finished.
+//
+// Halved (8 -> 4, and 3 -> 2 on replay). These were bare literals at four separate call sites
+// — finishQuiz, finishBonusActivity, the boss battle, and awardQuestXP's reader — which is how
+// the same number came to be written as 8, 16, and chapterScore * 8 in three different places.
+// Named here so the rate is one decision, and so it can be compared against mobile's
+// QUEST_COIN_PER_CORRECT at a glance.
+const QUEST_COIN_PER_CORRECT = 4;
+const QUEST_COIN_PER_CORRECT_REPLAY = 2;
+// What a chapter with nothing gradeable in it pays, so finishing still pays something.
+const QUEST_COIN_FLAT_FALLBACK = 4;
+// A bonus activity is one whole exercise rather than a run of questions, so it pays a flat
+// amount: was 16 / 6, now halved with everything else.
+const BONUS_ACTIVITY_COINS = 8;
+const BONUS_ACTIVITY_COINS_REPLAY = 3;
 
 // Tier/rank is driven by how many modules are actually completed, not by level/XP — level
 // tracks activity (quizzes, activities, replays) and can climb well past module count, so
@@ -924,7 +947,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Self-Employment Tax',
-                plain: "On a W-2 job, your employer pays HALF of your FICA tax automatically. As a gig worker, there's no employer splitting that cost, so you owe both halves yourself, called self-employment tax. The Taxes module covers exactly how to calculate and file this, for now, just know it exists and it's part of why gig income needs extra planning.",
+                plain: "On a W-2 job your employer pays half your FICA tax. Gig work has no employer to split it, so you owe both halves yourself — that's self-employment tax. The Taxes module covers filing it; for now, know it exists, and that it's why gig income needs extra planning.",
                 analogy: "It's like splitting a bill with a friend versus covering the whole thing solo, the total owed is simply bigger when nobody else is chipping in their half.",
                 check: { statement: "Gig workers only owe income tax on their earnings, with no additional tax beyond what a W-2 employee owes.", isTrue: false }
               }
@@ -1068,7 +1091,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Quarterly Estimated Taxes',
-                plain: "If you expect to owe $1,000 or more for the year from gig income, the IRS generally expects estimated payments spread across four due dates during the year, not one lump sum the following April. The Taxes module covers exactly how to calculate and file these, for now, just know the set-aside money is what makes those payments possible when they come due.",
+                plain: "If you expect to owe $1,000 or more for the year on gig income, the IRS expects payments across four due dates during the year, not one lump sum the following April. The Taxes module covers how to calculate and file them; for now, the set-aside money is what makes those payments possible.",
                 analogy: "It's like paying a big tuition bill in installments instead of all at once, spread out, but still due on a schedule.",
                 check: { statement: "Gig workers who expect to owe a meaningful amount in taxes may need to make payments during the year, not just in April.", isTrue: true }
               }
@@ -2301,7 +2324,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Limited Aid Pools',
-                plain: "Federal grants like the Pell Grant are guaranteed if you qualify, but many STATE and SCHOOL aid programs work on a fixed, limited pool of money each year, awarded first-come, first-served until it runs out. Submitting in October, versus March, can be the difference between getting that aid and missing it entirely, even with an identical application.",
+                plain: "Federal grants like the Pell Grant are guaranteed if you qualify. Many STATE and SCHOOL programs are not: they run on a fixed pool each year, first-come, first-served until it runs out. Applying in October rather than March can decide whether you get that aid at all.",
                 analogy: "It's like a limited-quantity sale, showing up on day one versus month three can mean the difference between getting it and finding it sold out.",
                 check: { statement: "All financial aid programs have unlimited funding, so submission timing never affects the outcome.", isTrue: false }
               }
@@ -2635,7 +2658,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Outside Scholarships',
-                plain: "Local businesses, community foundations, cultural organizations, and even a parent's employer often offer scholarships that never appear on a school's aid offer automatically, they have to be searched for and applied to separately. Some part-time employers also offer tuition assistance for enrolled students, worth asking about directly.",
+                plain: "Local businesses, community foundations, cultural organizations and even a parent's employer often offer scholarships that never appear on a school's aid offer — you have to find and apply for them separately. Some part-time employers also offer tuition assistance; worth asking directly.",
                 analogy: "It's like money sitting in a drawer nobody thought to check, it's real, but only found by actually looking.",
                 check: { statement: "Every scholarship a student is eligible for automatically appears on their school's financial aid offer.", isTrue: false }
               }
@@ -4374,7 +4397,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Step 1: Compare a Few Options',
-                plain: "Look for the highest APY with no monthly fees and no minimum balance requirement. Several online banks typically compete for the top rates with none of those catches, though the exact leaders and numbers shift with the market, so it's worth checking current rates rather than trusting any one number for long. FDIC insurance up to $250,000 is standard on real banks and non-negotiable: never open an account without it.",
+                plain: "Look for the highest APY with no monthly fee and no minimum balance. Online banks usually lead on rate without those catches, though the leaders shift, so check current rates rather than trusting one number. FDIC insurance up to $250,000 is standard and non-negotiable — never open an account without it.",
                 analogy: "Shopping for a savings account is like comparing phone plans, same basic service, but the fine print on fees and rates varies a lot.",
                 check: { statement: 'FDIC insurance is an optional extra that most savings accounts don\'t include.', isTrue: false }
               },
@@ -8855,7 +8878,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Grad PLUS Loan',
-                plain: "A related but different loan, historically taken out by GRADUATE or professional students themselves (not a parent), also to cover costs beyond other aid, requiring a credit check like Parent PLUS. As of July 1, 2026, Grad PLUS was discontinued for new borrowers, graduate students now borrow through higher Direct Unsubsidized Loan limits instead ($20,500/year, $100,000 lifetime; professional-degree students like law or medicine get $50,000/year, $200,000 lifetime). Students who already had a loan for their current program before that date keep access to the old rules for up to three more years under a legacy provision.",
+                plain: "A loan graduate and professional students took out themselves, not a parent, with a credit check. Discontinued for new borrowers on July 1, 2026 — grad students now use higher Direct Unsubsidized limits instead ($20,500/year, or $50,000 for law and medicine). Anyone already borrowing for their program keeps the old rules for up to three more years.",
                 analogy: "Same family of loan, different borrower, a Parent PLUS loan is the parent's name on it, a Grad PLUS loan was the graduate student's own name, until it was phased out for new borrowers.",
                 check: { statement: "As of the 2026-27 school year, a brand-new graduate student can still take out a Grad PLUS loan the same way parents can take out a Parent PLUS loan.", isTrue: false }
               }
@@ -9292,7 +9315,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Standard Repayment Plan',
-                plain: "The Standard Plan is the default. For loans first disbursed before July 1, 2026, that means a fixed payment over a flat 10 years. Starting July 1, 2026, the default became the Tiered Standard Plan instead: the term now scales with how much is owed, under $25,000 still gets 10 years, $25,000-$49,999 gets 15 years, $50,000-$99,999 gets 20 years, and $100,000+ stretches to 25 years. Either way, the Standard Plan generally results in the LEAST total interest paid for a given balance, since it pays it off on the shortest available timeline, but the monthly payment is also the highest of the common options.",
+                plain: "The default plan. Loans disbursed before July 1, 2026 get a fixed payment over a flat 10 years. After that date the default is the Tiered Standard Plan, where the term scales with the balance: 10 years under $25,000, rising to 25 years at $100,000+. Either way it costs the least total interest, and has the highest monthly payment.",
                 analogy: "It's like the default setting on a subscription, works fine for most people, but not automatically the best fit for every budget, and the exact default terms depend on when the loan started.",
                 check: { statement: "Every federal Direct Loan borrower is on the exact same fixed 10-year default schedule, no matter how large the balance or when the loan was taken out.", isTrue: false }
               }
@@ -9304,7 +9327,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Income-Driven Repayment',
-                plain: "Income-driven plans set the monthly payment as a percentage of income, generally lower than the Standard Plan's fixed amount, especially on a modest starting salary. The tradeoff: the loan is typically paid off over a longer period, meaning more total interest over time. For loans first disbursed on or after July 1, 2026, the older lineup of income-driven plans is being replaced by a single new option, the Repayment Assistance Plan (RAP), so new borrowers should check studentaid.gov for exactly which plans they qualify for.",
+                plain: "These set the monthly payment as a share of your income, so it's usually lower than the Standard Plan's — especially on a modest starting salary. The tradeoff is a longer payoff and more interest overall. For loans disbursed on or after July 1, 2026, the older plans are replaced by one option, the Repayment Assistance Plan (RAP).",
                 analogy: "It's like a subscription that scales with what you can actually afford right now, easier monthly, but often costs more in total over a longer stretch.",
                 check: { statement: "Income-driven repayment plans generally result in lower total interest paid than the Standard Plan.", isTrue: false }
               }
@@ -14510,7 +14533,7 @@ const MODULES = [
             concepts: [
               {
                 term: 'Reporting & Freezing',
-                plain: "If you think your identity has been stolen (someone opened an account, filed taxes, or applied for aid in your name), report it at IdentityTheft.gov (run by the FTC) for a personalized recovery plan, and place a free credit freeze with all three credit bureaus (Equifax, Experian, TransUnion) so no new accounts can be opened in your name.",
+                plain: "If someone opens an account, files taxes or applies for aid in your name, report it at IdentityTheft.gov (run by the FTC) for a personalized recovery plan, and place a free credit freeze with all three bureaus — Equifax, Experian and TransUnion — so no new accounts can be opened.",
                 analogy: "A credit freeze is like changing the locks. It doesn't undo what already happened, but it stops anyone from walking back in through that same door.",
                 check: { statement: 'A credit freeze costs money and can only be placed a limited number of times per year.', isTrue: false }
               },
@@ -16789,7 +16812,10 @@ function xpProgressPct() {
 //
 // Ported from mobile/src/store.tsx (levelUpDiamonds). Index 0 and 1 are zero: level 1 is
 // where everyone starts, so nobody ever "reaches" it.
-const LEVEL_UP_DIAMONDS = [0, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+// Halved from 3,4,...,12 — 40 diamonds over a full run instead of 75, against a 20-diamond
+// mystery box. Levelling stays a real second source alongside streaks; it just no longer pays
+// for most of the Diamond Exclusives shelf on its own. Keep in step with mobile.
+const LEVEL_UP_DIAMONDS = [0, 0, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6];
 function levelUpDiamonds(level) {
   return LEVEL_UP_DIAMONDS[Math.min(level, LEVEL_UP_DIAMONDS.length - 1)] || 0;
 }
@@ -20454,7 +20480,7 @@ function finishBonusActivity(mod, lesson, lessonIdx, bonusXp = 0) {
   const prevRec = state.completedLessons[lessonKey];
   const wasDone = !!prevRec;
   const xpEarned = (wasDone ? Math.round(activity.xpOnComplete * 0.5) : activity.xpOnComplete) + bonusXp;
-  const coinsEarned = wasDone ? 6 : 16;
+  const coinsEarned = wasDone ? BONUS_ACTIVITY_COINS_REPLAY : BONUS_ACTIVITY_COINS;
   state.coins = (state.coins || 0) + coinsEarned;
   // `optimal` is sticky: once you have taken the best path through a boss challenge, you have
   // done it, and replaying can only ever add to that record.
@@ -20917,7 +20943,7 @@ function finishQuiz() {
   const wasLessonDone = !!state.completedLessons[lessonKey];
   const base = Math.round(mod.xpReward * (score / total));
   const xpEarned = wasLessonDone ? Math.round(base * 0.5) : (isPerfect ? Math.round(mod.xpReward * 1.25) : base);
-  const coinsEarned = wasLessonDone ? Math.round(score * 3) : score * 8;
+  const coinsEarned = wasLessonDone ? Math.round(score * QUEST_COIN_PER_CORRECT_REPLAY) : score * QUEST_COIN_PER_CORRECT;
   state.coins = (state.coins || 0) + coinsEarned;
 
   const prevLesson = state.completedLessons[lessonKey];
@@ -22737,8 +22763,8 @@ function finishQuest(mod, chosenConsequence) {
   // Same 3-per-correct-vs-8-per-correct reduction finishQuiz already applies on replay
   // (wasLessonDone ? score*3 : score*8) — see isReplay's other reader, awardQuestXP.
   const coinsEarned = qp.isReplay
-    ? (qp.chapterTotal > 0 ? qp.chapterScore * 3 : 3)
-    : (qp.chapterTotal > 0 ? qp.chapterScore * 8 : 8);
+    ? (qp.chapterTotal > 0 ? qp.chapterScore * QUEST_COIN_PER_CORRECT_REPLAY : QUEST_COIN_PER_CORRECT_REPLAY)
+    : (qp.chapterTotal > 0 ? qp.chapterScore * QUEST_COIN_PER_CORRECT : QUEST_COIN_FLAT_FALLBACK);
   state.coins = (state.coins || 0) + coinsEarned;
 
   // Streak/diamonds are earned by opening the app (see boot sequence), not by finishing a lesson.
