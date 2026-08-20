@@ -8,9 +8,10 @@
     "build": "node scripts/build.js",
     "vercel-build": "npm run build && cd mobile && npm ci && npm run check && EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=\"$CLERK_PUBLISHABLE_KEY\" EXPO_PUBLIC_SUPABASE_URL=\"$SUPABASE_URL\" EXPO_PUBLIC_SUPABASE_ANON_KEY=\"$SUPABASE_ANON_KEY\" npx expo export -p web && cd .. && cp -r mobile/dist dist/m && node scripts/inject-m-redirect.js",
     "check:colors": "node scripts/check-module-colors.js",
-    "check": "npm run check:colors && npm run check:posttest && npm run check:daily && npm run check:levels",
+    "check": "npm run check:colors && npm run check:posttest && npm run check:daily && npm run check:levels && npm run check:content",
     "check:posttest": "node scripts/check-post-test.js",
     "check:daily": "node scripts/check-daily-rewards.js",
-    "check:levels": "node scripts/check-level-ladder.js"
+    "check:levels": "node scripts/check-level-ladder.js",
+    "check:content": "node scripts/check-content.js"
   }
 }
