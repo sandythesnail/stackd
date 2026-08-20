@@ -8,7 +8,6 @@
     "scheme": "stackd",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "app.trystacked.mobile",
       "supportsTablet": false
     },

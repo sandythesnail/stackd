@@ -61,7 +61,10 @@ const FILES_WITH_PLACEHOLDERS = new Set([
 // secret accidentally pasted into it before a deploy.
 const EXCLUDE_AT_ROOT = new Set([
   '.git', 'node_modules', 'dist', '.claude', '.agents', '.github',
-  'mobile', 'SecurityAgent', 'supabase', 'scripts',
+  'mobile', 'SecurityAgent', 'supabase',
+  // App Store submission assets (icon, 6.7" screenshots). Kept in the repo so they are
+  // versioned alongside the build they depict, but there is no reason to serve them.
+  'store-assets', 'scripts',
   'package.json', 'package-lock.json', 'skills-lock.json', '.gitignore', 'vercel.json',
   '.env', '.env.example',
 ]);
