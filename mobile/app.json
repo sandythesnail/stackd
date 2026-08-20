@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Stacked",
-    "slug": "stackd",
+    "slug": "stacked",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -20,7 +20,13 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "app.trystacked.mobile"
+      "package": "app.trystacked.mobile",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "web": {
       "output": "static",
@@ -43,6 +49,13 @@
       "typedRoutes": true,
       "reactCompiler": true,
       "baseUrl": "/m"
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a3a96b80-f57a-4a27-b1ba-a9f0a8857043"
+      }
+    },
+    "owner": "sandythesnails-team"
   }
 }
