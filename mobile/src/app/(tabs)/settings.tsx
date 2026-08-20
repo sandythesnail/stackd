@@ -74,12 +74,18 @@ export default function Settings() {
               onPress={debugSimulateNewDay}
             />
           ) : null}
+          {/* Required by App Review 5.1.1(v) for any app that offers account creation, and it
+              has to be reachable in-app rather than by emailing us. "Reset all progress" above
+              does NOT satisfy it — that keeps the login, and the login is the account. */}
+          {authEnabled ? <DeleteAccountRow /> : null}
           {authEnabled ? (
             <ClerkSignOutRow />
           ) : (
             <StubSignOutRow onSignOut={() => router.push('/(onboarding)/signin')} />
           )}
         </View>
+
+        <PrivacyCard />
 
         <FeedbackCard />
 
@@ -428,6 +434,119 @@ function StubSignOutRow({ onSignOut }: { onSignOut: () => void }) {
 }
 
 /** Real Clerk sign-out (only rendered when auth is on). */
+/** Permanently delete the account and everything keyed to it.
+ *
+ * The App Store requires this. An app that offers account CREATION must offer account
+ * DELETION from inside the app — not an email address to write to, not a web form
+ * (App Review Guideline 5.1.1(v)). "Reset all progress" does not satisfy it: that keeps the
+ * login, and the login is the account.
+ *
+ * Order matters, and it is rows first, Clerk second. Every row is reachable only by the
+ * signed-in user's own token (row-level security keys off auth.jwt()->>'sub'), so once the
+ * Clerk user is gone there is no longer any credential that can address them — delete the
+ * login first and the progress row is orphaned in the database forever, unreachable and
+ * undeletable by the person it belongs to. If a row delete fails we stop and say so rather
+ * than continuing to the point of no return.
+ *
+ * See supabase/account-deletion.sql for the policies this depends on. Without them the
+ * deletes are not errors — they match zero rows and report success, which would leave this
+ * screen honestly reporting a deletion that did not happen.
+ */
+function DeleteAccountRow() {
+  const { user } = useUser();
+  const { getToken, userId } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+  const supabase = useMemo(() => makeSupabase(() => getTokenRef.current()), []);
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const doDelete = async () => {
+    if (busy || !userId) return;
+    setBusy(true);
+    setError(null);
+    try {
+      // Progress first — it is the row that actually holds personal data. Then the two
+      // side tables. `referrals` names the user in either column, hence the .or().
+      const steps: { label: string; run: () => PromiseLike<{ error: unknown }> }[] = [
+        { label: 'progress', run: () => supabase.from('user_progress').delete().eq('clerk_user_id', userId) },
+        { label: 'feedback', run: () => supabase.from('feedback').delete().eq('clerk_user_id', userId) },
+        { label: 'referrals', run: () => supabase.from('referrals').delete().or(`referrer_id.eq.${userId},referred_id.eq.${userId}`) },
+      ];
+      for (const step of steps) {
+        const { error: e } = await step.run();
+        if (e) throw new Error(`Could not delete your ${step.label}. Nothing has been deleted — please try again.`);
+      }
+      // Point of no return. Clerk self-deletion needs "Allow users to delete their accounts"
+      // enabled on the instance; if it is off this throws rather than silently no-opping, and
+      // the message below is what the student sees.
+      await user?.delete();
+      // No navigation: RequireAuth sees the session vanish and replaces the route itself,
+      // the same way ClerkSignOutRow relies on it.
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong. Nothing has been deleted.');
+      setBusy(false);
+      return;
+    }
+    setBusy(false);
+    setAsking(false);
+  };
+
+  return (
+    <>
+      <Row
+        icon="user-x"
+        title={busy ? 'Deleting…' : 'Delete my account'}
+        sub="Removes your login and everything saved to it."
+        danger
+        onPress={() => { setError(null); setAsking(true); }}
+      />
+      {error ? <Txt style={styles.deleteError}>{error}</Txt> : null}
+      <ConfirmDialog
+        visible={asking}
+        title="Delete your account?"
+        body={'This permanently deletes your login and everything saved to it: XP, level, streak, coins, diamonds, badges, every lesson you have finished, your shop and room items, your budget figures and your assessment result.\n\nThis cannot be undone. If you only want to start over, use "Reset all progress" instead.'}
+        cancelLabel="Keep my account"
+        confirmLabel="Delete permanently"
+        confirmVariant="pink"
+        onCancel={() => setAsking(false)}
+        onConfirm={doDelete}
+      />
+    </>
+  );
+}
+
+/** What the app stores, in the app, in plain words.
+ *
+ * The full policy lives on the website and is what the App Store listing links to; this is the
+ * same information where someone is actually likely to look for it. Deliberately concrete —
+ * naming the fields rather than saying "certain usage data" — and it states the absences too,
+ * because "no ads, no tracking, no bank access" is the part a student worrying about a money
+ * app actually wants answered. */
+function PrivacyCard() {
+  return (
+    <Card style={styles.privacyCard}>
+      <Txt variant="h2">Your data</Txt>
+      <Txt style={styles.privacyBody}>
+        Stacked stores your email address so you can sign in, and your progress so it follows you
+        between your phone and your laptop: XP, level, streak, coins and diamonds, the lessons
+        you have finished, your badges and room items, and anything you type into the Budget tool.
+      </Txt>
+      <Txt style={styles.privacyBody}>
+        There are no ads, no analytics or tracking of any kind, and no connection to any bank —
+        the Budget tool only ever holds numbers you type in yourself. Nothing is sold or shared.
+      </Txt>
+      <Txt style={styles.privacyBody}>
+        You can delete all of it at any time with “Delete my account” above.
+      </Txt>
+      <Pressable onPress={() => Linking.openURL('https://trystacked.app/privacy.html')}>
+        <Txt style={styles.privacyLink}>Read the full privacy policy →</Txt>
+      </Pressable>
+    </Card>
+  );
+}
+
 function ClerkSignOutRow() {
   const { signOut } = useClerk();
   const [asking, setAsking] = useState(false);
@@ -490,6 +609,10 @@ function Row({
 }
 
 const styles = StyleSheet.create({
+  deleteError: { fontFamily: font.semi, fontSize: 12.5, lineHeight: 17, color: colors.pinkDark, paddingHorizontal: 4, paddingTop: 6 },
+  privacyCard: { gap: 8, padding: 16, marginTop: 14 },
+  privacyBody: { fontFamily: font.medium, fontSize: 13, lineHeight: 19, color: colors.muted2 },
+  privacyLink: { fontFamily: font.bold, fontSize: 13, color: colors.greenDark, marginTop: 2 },
   // Track picker. Centred rather than bottom-sheeted: it is a choice among four peers, and a
   // sheet implies a flow you are part-way through.
   trackRoot: { flex: 1, backgroundColor: 'rgba(20,28,20,0.42)', justifyContent: 'center', padding: 20 },
