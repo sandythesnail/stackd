@@ -164,6 +164,30 @@ function lpSmoothPath(pts, through) {
   return d;
 }
 
+/** One distinct expression per module — eleven modules, eleven different faces.
+ *
+ * Ported from mobile's MODULE_FACE. Two of these are the quest player's own answer reactions,
+ * which a student already knows from answering questions: happy on Saving, gentle on Loans.
+ * Both are mouth-only overlays — Hammy keeps his eyes, cheeks and snout and only the mouth
+ * changes — so they read subtler than the nine full-face swaps around them.
+ *
+ * The nine full faces are the same mood classes Home's mascot uses (see app.css's .mood-*);
+ * the two mouth-only ones get .face-happy / .face-gentle, which are the same artwork the
+ * quest companion wears, unscoped from it so anything can use them. */
+const LP_MODULE_FACE = {
+  earning: 'mood-wink',
+  spending: 'mood-surprise',
+  saving: 'face-happy',
+  investing: 'mood-star',
+  credit: 'mood-sleepy',
+  risk: 'mood-nervy',
+  loans: 'face-gentle',
+  taxes: 'mood-sad',
+  psychology: 'mood-love',
+  career: 'mood-curious',
+  scams: 'mood-angry',
+};
+
 /* ─────────────────────────── state ─────────────────────────── */
 
 const LP_STATE_WORDS = {
@@ -349,6 +373,11 @@ function lpSectionEl(section, shownIdx, sections, recommendedTrack) {
           '<span class="lp-head-count">' + section.done + '/' + section.total + '</span>' +
           '<span class="lp-bar-track"><span class="lp-bar-fill' + (section.mastered ? ' lp-bar-done' : '') + '" style="width:' + pct + '%"></span></span>' +
         '</div>' +
+      '</div>' +
+      // Hammy, wearing this module's own face. Mobile puts him here and it is the one
+      // thing that made the header read as a module rather than a row of numbers.
+      '<div class="lp-head-hammy has-face-overlay ' + (LP_MODULE_FACE[mod.id] || 'mood-star') + '">' +
+        withFaceOverlay(getHammyFaceMarkup(0.14)) +
       '</div>' +
       (section.mastered ? '<span class="lp-done-pill">DONE</span>' : '') +
       '<button type="button" class="lp-pager" data-lp-page="1" aria-label="Next module">' +

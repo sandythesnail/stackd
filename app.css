@@ -135,8 +135,8 @@ body { background: var(--bg); min-height: 100vh; }
 .app-main {
   margin-left: 220px; flex: 1; min-width: 0; min-height: 100vh;
   background-color: var(--bg);
-  background-image: radial-gradient(circle, rgba(107,143,101,0.16) 1.5px, transparent 1.5px);
-  background-size: 26px 26px;
+  /* No dot grid. It was on every page behind every card, and mobile's screens are flat cream —
+     against a winding path and a pink card it read as texture competing with the content. */
   transition: margin-left 0.2s ease;
 }
 
@@ -3783,4 +3783,62 @@ select.budget-input { cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   .levelup-card, .levelup-reward { animation: none; }
+}
+
+/* ─── HOME, matched to mobile ─── */
+/* Streak, coins and diamonds, above the pink card. */
+.home-stats-host { margin-bottom: 1rem; }
+.quest-stats-row { display: flex; gap: 0.6rem; }
+.quest-stat {
+  flex: 1; min-width: 0; background: #fff; border: 1.5px solid var(--border);
+  border-radius: var(--radius); padding: 0.6rem 0.5rem; text-align: center;
+  position: relative;
+}
+.quest-stat-num {
+  display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+  font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--text);
+}
+.quest-stat-icon { display: inline-flex; align-items: center; line-height: 1; }
+.quest-stat-label {
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--text-soft); margin-top: 0.1rem;
+}
+/* The streak is the only one you can act on, so it is the only one that looks pressable —
+   and it goes gold when today's reward is still sitting there. */
+.quest-stat-streak { cursor: pointer; transition: border-color 0.15s ease; }
+.quest-stat-streak:hover { border-color: var(--green-light); }
+.quest-stat-reward { border-color: #F0C22E; background: #FFF9E6; }
+
+/* Mobile's card: a pink field inside a pink border, not a white card that happens to be
+   tinted. Everything in it is the same, only the frame changes. */
+.mascot-card.quest-card {
+  background: var(--pink-pale); border: 1.5px solid var(--pink-light);
+}
+
+/* Less air around the path. The section had a full heading block plus the path's own top
+   padding plus a centred column, which stacked up to a screenful of nothing above the first
+   node. */
+.home-section { margin-top: 1.25rem; }
+#home-lesson-path .lp-section { padding-top: 0.25rem; }
+#home-lesson-path .lp-rec-row { height: 18px; margin-bottom: 0.2rem; }
+#home-lesson-path .lp-position { margin-bottom: 0.15rem; }
+
+/* Hammy's head in the module header, between the progress bar and the pager. */
+.lp-head-hammy {
+  flex-shrink: 0; width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; overflow: visible;
+}
+.lp-head-hammy .pig-stage { transform-origin: center; }
+
+/* The two mouth-only reactions, unscoped from the quest companion so the module header can
+   wear them too. Same artwork and the same boxes — see the notes on .hammy-side-avatar.happy
+   and .gentle, which these mirror. */
+.face-happy .hammy-face-overlay {
+  opacity: 1; background-image: url('faces/hammy-mouth-happy.png?v=1');
+  top: 260px; left: 204px; width: 32px; height: 37px; background-size: contain;
+}
+.face-gentle .hammy-face-overlay {
+  opacity: 1; background-image: url('faces/hammy-mouth-confused.png?v=1');
+  top: 258px; left: 214px; width: 48px; height: 30px; background-size: contain;
 }

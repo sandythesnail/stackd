@@ -19128,6 +19128,7 @@ function renderHome() {
   document.getElementById('home-hdr-coins').textContent = (state.coins || 0).toLocaleString();
   document.getElementById('home-hdr-diamonds').textContent = (state.diamonds || 0).toLocaleString();
 
+  renderHomeStats(done);
   renderHomeMascotCard(done);
 
   renderLessonPath('home-lesson-path');
@@ -19140,32 +19141,39 @@ function renderHome() {
 // inside the SAME card as Hammy instead. Keeps the id="home-stats-row" the onboarding
 // tour's XP step already targets as its mobile-layout fallback (see ONBOARDING_TOUR_STEPS)
 // — that selector didn't need to change, just what it now points at.
+/** Streak, coins, diamonds — the three mobile shows, in that order.
+ *
+ * XP, Level and Modules are gone. XP and Level are already on the sidebar footer, which is
+ * where the onboarding tour points for them and where they update as you earn; Modules is the
+ * same count the "Keep learning" heading states two inches below. Three tiles restating things
+ * on the same screen crowded out the only one that is a live thing to act on — the streak,
+ * which is a button that opens today's reward.
+ *
+ * The id stays: the tour's XP step falls back to it on layouts where the sidebar is hidden. */
 function questStatsRowHtml(done) {
   const loginBonusPending = dailyLoginBonusPending() || pendingStreakDiamonds > 0;
   return `
     <div class="quest-stats-row" id="home-stats-row">
-      <div class="quest-stat">
-        <div class="quest-stat-num">${state.xp.toLocaleString()}</div>
-        <div class="quest-stat-label">XP</div>
-      </div>
-      <div class="quest-stat">
-        <div class="quest-stat-num">${state.level}</div>
-        <div class="quest-stat-label">Level</div>
-      </div>
       <button type="button" class="quest-stat quest-stat-streak${loginBonusPending ? ' quest-stat-reward' : ''}" id="hs-streak-card">
-        <div class="quest-stat-num">${state.streak}</div>
+        <div class="quest-stat-num"><span class="quest-stat-icon">🔥</span>${state.streak}</div>
         <div class="quest-stat-label">Streak</div>
         ${loginBonusPending ? '<span class="quest-stat-reward-dot" title="A bonus is waiting"></span>' : ''}
       </button>
       <div class="quest-stat">
-        <div class="quest-stat-num">${done}<span class="quest-stat-den">/${MODULES.length}</span></div>
-        <div class="quest-stat-label">Modules</div>
+        <div class="quest-stat-num"><span class="quest-stat-icon">${coinIconSvg(17)}</span>${(state.coins || 0).toLocaleString()}</div>
+        <div class="quest-stat-label">Coins</div>
+      </div>
+      <div class="quest-stat">
+        <div class="quest-stat-num"><span class="quest-stat-icon">${diamondIconSvg(16)}</span>${(state.diamonds || 0).toLocaleString()}</div>
+        <div class="quest-stat-label">Diamonds</div>
       </div>
     </div>`;
 }
 
 function wireHomeStreakCard() {
-  document.getElementById('hs-streak-card').addEventListener('click', () => {
+  const btn = document.getElementById('hs-streak-card');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
     // Opens the calendar whether or not anything is pending — the week is worth looking at
     // on a day you have already collected, which is the point of showing a week at all.
     // The claim itself is a button inside it, so collecting is a deliberate act rather than
@@ -19182,6 +19190,15 @@ function wireHomeStreakCard() {
 // questStatsRowHtml). Falls back to the plain mood-only layout once every module is done
 // (mobile just hides its card there; keeping Hammy's mood visible even after "graduating"
 // is existing web behavior this port doesn't otherwise touch).
+/** Paints the three chips above the pink card. Separate from the card because mobile keeps
+ *  them apart, and because the card is rebuilt on every mood change while these are not. */
+function renderHomeStats(done) {
+  const host = document.getElementById('home-stats-host');
+  if (!host) return;
+  host.innerHTML = questStatsRowHtml(done);
+  wireHomeStreakCard();
+}
+
 function renderHomeMascotCard(done) {
   const satisfiedToday = hasModuleActivityToday();
   const mood = todaysHammyMood();
@@ -19201,8 +19218,7 @@ function renderHomeMascotCard(done) {
           <div class="mascot-mood-msg">${satisfiedToday ? "Thanks for working on a module today, Hammy's mood is lifted!" : mood.msg}</div>
         </div>
       </div>
-      ${questStatsRowHtml(done)}`;
-    wireHomeStreakCard();
+      `;
     return;
   }
 
@@ -19228,7 +19244,7 @@ function renderHomeMascotCard(done) {
       ${pigMarkup(0.24)}
       <div class="speech-bubble quest-speech">${speechMsg}</div>
     </div>
-    ${questStatsRowHtml(done)}
+    
     <div>
       <div class="quest-meta-row">
         <span class="quest-module-name">${nextModule.title}</span>
@@ -19240,7 +19256,6 @@ function renderHomeMascotCard(done) {
     ${satisfiedToday ? `<div class="quest-nudge">🔥 ${state.streak}-day streak, Hammy will be even happier tomorrow</div>` : ''}`;
 
   document.getElementById('quest-cta-btn').addEventListener('click', () => startNextLessonFor(nextModule));
-  wireHomeStreakCard();
 }
 
 // Resumes (or, if every lesson/quest is already done, replays the last one — defensive
