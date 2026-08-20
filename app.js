@@ -18673,8 +18673,7 @@ function renderShopPage() {
     <div class="shop-earned-notice">
       <span class="shop-earned-notice-icon" aria-hidden="true">🔒</span>
       <p><strong>Coins and diamonds can only be earned.</strong> You earn coins by finishing
-      lessons and diamonds by keeping a streak. Neither can be bought with real money, and
-      Stacked never asks students for payment.</p>
+      lessons and diamonds by keeping a streak.</p>
     </div>`;
 
   grid.innerHTML = `

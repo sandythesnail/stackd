@@ -3725,3 +3725,28 @@ select.budget-input { cursor: pointer; }
 }
 .room-furniture-cta:hover { background: var(--pink-dark); }
 .room-furniture-cta:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* ─── The Expo app's greens and pinks ───
+   styles.css holds the SITE's palette, and its --green (#6B8F65) is the brand green the
+   landing page is built on. mobile/src/theme.ts keeps that same value under `greenBrand` and
+   deliberately uses a brighter one for app chrome — buttons, links, progress, the recommended
+   node — because a muted sage that reads as identity on a marketing page reads as washed out
+   on a button you are meant to press.
+
+   Same split here. This file is loaded by app.html and nothing else, so overriding the tokens
+   at this level gives the app mobile's shades while index.html, login.html and signup.html
+   keep the brand green untouched.
+
+   green  #6B8F65 -> #4F9D52   (theme.ts `green`)
+   pink   #D4899E -> #E8688F   (theme.ts `pink`)
+
+   The rest of both ramps already matched mobile exactly — green-light/pale/dark are its
+   greenSoft/greenPale/greenDark, and pink-light/pale/dark are its pinkBorder/pinkBg/pinkDark —
+   so only the two head colours move, and everything derived from them follows. */
+:root {
+  --green: #4F9D52;
+  --pink: #E8688F;
+  /* The two mid-tones mobile pairs with them, so gradients and hovers keep their footing. */
+  --green-bright: #84AB7B;
+  --pink-soft: #E39BB1;
+}
