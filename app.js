@@ -16485,25 +16485,15 @@ function maybeShowPostCompletionOverlays(mod, leveled) {
       state.lastSeenTier = tier.name;
       saveState();
       pendingLifeEvent = lifeEvent;
-      const reward = lastLevelUpReward.diamonds;
-      setTimeout(() => {
-        document.getElementById('new-tier').textContent = tier.name;
-        const rewardEl = document.getElementById('levelup-reward');
-        if (rewardEl) {
-          rewardEl.innerHTML = reward > 0
-            ? `${diamondIconSvg(20)}<span>+${reward} diamonds</span>`
-            : '';
-          rewardEl.classList.toggle('show', reward > 0);
-        }
-        document.getElementById('levelup-overlay').classList.add('visible');
-      }, 700);
+      setTimeout(() => showLevelUpCard(), 700);
     } else {
-      showToast(
-        lastLevelUpReward.diamonds > 0
-          ? `Level ${state.level}! +${lastLevelUpReward.diamonds} diamonds.`
-          : `Level up! You're now Level ${state.level}.`,
-        lastLevelUpReward.diamonds > 0 ? '💎' : '⭐');
-      if (lifeEvent) setTimeout(() => showLifeEvent(lifeEvent), 700);
+      // Also the card now, not a toast. The guard that used to send a non-tier level-up here
+      // existed because the overlay announced the TIER, so a module that crossed two levels
+      // without changing tier showed "You're a Frugal Freshman" twice in a row. It announces
+      // the LEVEL now, which is different every time, so there is nothing left to repeat —
+      // and mobile shows its card on every level-up for the same reason.
+      setTimeout(() => showLevelUpCard(), 700);
+      if (lifeEvent) setTimeout(() => showLifeEvent(lifeEvent), 1400);
     }
   } else if (lifeEvent) {
     setTimeout(() => showLifeEvent(lifeEvent), 700);
@@ -16894,6 +16884,33 @@ function updateStreak() {
     return STREAK_DIAMOND_REWARD;
   }
   return 0;
+}
+
+/** Fills in and opens the level-up card — mobile's LevelUpModal, on the web.
+ *
+ * Hammy wears his star face and whatever the player has equipped, so the celebration has the
+ * mascot in it like every other one does; the tick-in-a-circle it replaces was the only
+ * moment in the app that congratulated you without him.
+ *
+ * The reward line is only drawn when there is one. The ladder pays on every level, but it is
+ * data, and a rung worth nothing should leave an empty pill rather than a lying one. */
+function showLevelUpCard() {
+  const overlay = document.getElementById('levelup-overlay');
+  if (!overlay) return;
+  const hammy = document.getElementById('levelup-hammy');
+  if (hammy) {
+    hammy.className = 'levelup-hammy has-face-overlay mood-star';
+    hammy.innerHTML = withFaceOverlay(getPigWithItemMarkup(0.25, getEquippedItems()));
+  }
+  const sub = document.getElementById('levelup-sub');
+  if (sub) sub.textContent = 'You\u2019ve levelled up to level ' + state.level + '.';
+  const rewardEl = document.getElementById('levelup-reward');
+  if (rewardEl) {
+    const reward = lastLevelUpReward.diamonds;
+    rewardEl.innerHTML = reward > 0 ? diamondIconSvg(20) + '<span>+' + reward + ' diamonds</span>' : '';
+    rewardEl.classList.toggle('show', reward > 0);
+  }
+  overlay.classList.add('visible');
 }
 
 function buildStreakDiamondBanner(diamondsEarned) {

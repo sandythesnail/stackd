@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="app.css?v=41">
+  <link rel="stylesheet" href="app.css?v=42">
   <link rel="stylesheet" href="hammy-intro.css?v=1">
   <script
     defer
@@ -601,11 +601,15 @@
   <!-- LEVEL-UP OVERLAY -->
   <div class="levelup-overlay" id="levelup-overlay">
     <div class="levelup-card">
-      <div class="levelup-mark"></div>
-      <h2>Level Up</h2>
-      <p>You're now <strong><span id="new-tier"></span></strong></p>
+      <!-- Hammy with his star face, the way mobile's LevelUpModal opens. The tick in a
+           circle that used to sit here was the one celebration in the app the mascot wasn't
+           part of. Filled in by renderLevelUpCard so he wears whatever the player has
+           equipped. -->
+      <div class="levelup-hammy" id="levelup-hammy"></div>
+      <h2>Congratulations!</h2>
+      <p id="levelup-sub">You&rsquo;ve levelled up.</p>
       <div class="levelup-reward" id="levelup-reward"></div>
-      <button class="btn-primary" id="levelup-ok">Continue</button>
+      <button class="btn-primary" id="levelup-ok">Nice!</button>
     </div>
   </div>
 

@@ -3750,3 +3750,37 @@ select.budget-input { cursor: pointer; }
   --green-bright: #84AB7B;
   --pink-soft: #E39BB1;
 }
+
+/* ─── LEVEL-UP CARD, matched to mobile's LevelUpModal ─── */
+/* A dark scrim, not a pale blur. Mobile uses rgba(22,32,23,0.55); the frosted cream one here
+   made the celebration read as the page dimming rather than as something arriving on top. */
+.levelup-overlay {
+  background: rgba(22,32,23,0.55); backdrop-filter: none;
+}
+.levelup-card {
+  max-width: 340px; border-width: 1.5px; padding: 1.4rem 1.4rem 1.5rem;
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+}
+/* Hammy, where the tick in a circle used to be. Fixed height so the card is the same size
+   whatever he is wearing — a tall hat would otherwise make the whole panel grow. */
+.levelup-hammy {
+  height: 118px; display: flex; align-items: flex-end; justify-content: center;
+  margin-bottom: 0.35rem; pointer-events: none;
+}
+.levelup-hammy .pig-stage { transform-origin: bottom center; }
+.levelup-card h2 { margin-bottom: 0.15rem; }
+.levelup-card p { color: var(--text-mid); font-size: 0.92rem; margin-bottom: 0; line-height: 1.4; }
+/* The reward pill: mobile's tagGreenBg on tagGreenText, sized to sit under the sentence. */
+.levelup-reward {
+  display: none; align-items: center; justify-content: center; gap: 0.4rem;
+  margin: 0.9rem 0 0; padding: 0.45rem 1rem; border-radius: 999px;
+  background: #EAF3E7; color: var(--green-dark);
+  font-size: 0.95rem; font-weight: 800;
+  animation: fadeUp 0.26s ease 0.18s both;
+}
+.levelup-reward.show { display: inline-flex; }
+.levelup-card .btn-primary { width: 100%; margin-top: 1.1rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .levelup-card, .levelup-reward { animation: none; }
+}
