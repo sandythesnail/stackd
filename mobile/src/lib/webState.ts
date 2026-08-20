@@ -29,6 +29,7 @@
  * completion + mastery + all currencies are exact.
  */
 import { moduleContent, moduleContentById } from '@/content';
+import { levelForXp } from '@/store';
 import type { AppState, BudgetPlan } from '@/store';
 import type { StatDelta } from '@/content';
 
@@ -93,12 +94,14 @@ export type WebState = {
   [key: string]: unknown;
 };
 
-const LEVEL_THRESHOLDS = [0, 90, 200, 330, 480, 660, 880, 1150, 1450, 1800, 2200];
-function levelForXp(xp: number) {
-  let level = 1;
-  while (level < LEVEL_THRESHOLDS.length && xp >= LEVEL_THRESHOLDS[level]) level++;
-  return level;
-}
+/* levelForXp comes from the store rather than being reimplemented here.
+ *
+ * This file kept its own copy of LEVEL_THRESHOLDS, and it had gone stale: the ladder was
+ * retuned to [0, 150, 340, ...] in both app.js and store.tsx, and this copy was left on the
+ * old [0, 90, 200, ...]. Since mobileToWeb writes  into the
+ * SHARED record, that meant a sync from the phone could stamp a level the same XP does not
+ * earn on either app — and the number would visibly change when the student opened the other
+ * device. Two ladders cannot be right; one import cannot drift. */
 
 const num = (v: unknown, d = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
 const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
@@ -251,9 +254,17 @@ export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState
     const content = moduleContentById(modId);
     const mainQuests = content?.quests.filter((q) => !q.parentQuestId) ?? [];
     const total = mainQuests.length;
-    const validIdxs = doneIdxs.filter((i) => i >= 0 && i < mainQuests.length);
+    // doneIdxs are ABSOLUTE positions in lessons/quests; mainQuests is the FILTERED array.
+    // Indexing one with the other is the index-space mix-up this file's header and
+    // mainLessonAbsoluteIndices both warn about — it only happens to be right while the
+    // sub-quest sits last in every module (true today, enforced nowhere). Map through the
+    // absolute list instead, so a sub-quest authored anywhere else can't silently shift every
+    // completed lesson onto its neighbour and report quests the student never finished.
+    const validIdxs = doneIdxs.filter((i) => i >= 0 && i < (content?.quests.length ?? 0)
+      && !content?.quests[i]?.parentQuestId);
     for (const i of validIdxs) {
-      const quest = mainQuests[i];
+      const quest = content?.quests[i];
+      if (!quest) continue;
       const key = `${modId}::${quest.id}`;
       if (!questProgress[key]?.done) questProgress[key] = finishedQuestRecord(quest.chapters.length, quest.initialState);
       // Legacy fields — no real reader left for real modules, kept only so an old client
@@ -261,7 +272,17 @@ export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState
       const legacyKey = `${modId}_${i}`;
       if (!completedLessons[legacyKey]) completedLessons[legacyKey] = { score: 1, total: 1, xpEarned: 0 };
     }
-    if (total && new Set(validIdxs).size >= total && !completedModules[modId]) {
+    // The real-life sub-quest counts. `total` is the EIGHT main quests, so this used to write
+    // "module complete" into the web blob as soon as those eight were done — while mobile's own
+    // isModuleMastered requires all nine, sub-quest included (moduleTotal = lessons.length).
+    // The two apps disagreed about the same module, and the one that said "complete" was the
+    // one the student hadn't finished: a module could be reported done on the website with its
+    // sub-quest untouched, which is precisely the "I don't remember finishing the real-life
+    // sub-quest" report. Same rule on both sides now.
+    const lifeDone = mobile.completedLifeTaskIds.includes(modId);
+    const hasSubQuest = !!content?.quests.some((q) => q.parentQuestId);
+    const allMainDone = !!total && new Set(validIdxs).size >= total;
+    if (allMainDone && (lifeDone || !hasSubQuest) && !completedModules[modId]) {
       completedModules[modId] = { score: total, total, xpEarned: 0 };
     }
   }

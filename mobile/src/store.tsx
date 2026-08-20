@@ -100,7 +100,7 @@ function applyLevelUp(beforeXp: number, next: AppState): AppState {
 
 /** Ported from app.js's addXP loop, but computed fresh from total xp each time (no
  * incremental state.level field to drift out of sync). */
-function levelForXp(xp: number) {
+export function levelForXp(xp: number) {
   let level = 1;
   while (level < LEVEL_THRESHOLDS.length && xp >= xpForLevel(level)) level++;
   return level;

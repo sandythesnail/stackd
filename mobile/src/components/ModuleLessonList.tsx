@@ -48,8 +48,15 @@ export function ModuleLessonList({
   const doneSet = new Set(doneIndices);
   // "Next up" = the first not-yet-completed lesson, wherever it is in the list.
   const nextIdx = lessons.findIndex((_, i) => !doneSet.has(absOf(i)));
+  // Per-lesson truth only. This used to short-circuit on `status === 'done'`, ticking EVERY
+  // row whenever the module was mastered rather than asking whether that particular lesson was
+  // finished. The two agree today — a module is only mastered once all nine are done — so it
+  // was never visibly wrong, but it means a lesson row's tick was being derived from an
+  // aggregate rather than from the record of that lesson, and any future disagreement between
+  // the two (a re-authored module, a partial cloud merge) would show as ticks against lessons
+  // the student never opened. doneSet is the record; use it.
   const rowStatusFor = (i: number) =>
-    status === 'done' || doneSet.has(absOf(i)) ? 'done' : i === nextIdx ? 'active' : 'upcoming';
+    doneSet.has(absOf(i)) ? 'done' : i === nextIdx ? 'active' : 'upcoming';
   // Whether the player has finished anything in this module decides what the next-up row is
   // allowed to CALL itself: on an untouched module it's the starting point, on one you've
   // been working through it's where you left off. Being part-way through a specific lesson is
@@ -162,7 +169,14 @@ function LessonSectionBlock({
       <Pressable onPress={() => setOpen((o) => !o)} style={styles.sectionHead}>
         <Txt style={styles.sectionLabel}>{label}</Txt>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Txt style={styles.sectionMeta}>{done}/{lessons.length} done</Txt>
+          {/* "in this section", not "done".
+
+              The count itself was always right — it counts this section's own lessons, and a
+              module shows three or four of these — but "3/3 done" sitting above a list of
+              lessons reads as "this module is finished", which is exactly how a student with
+              33% of a module lands on the idea that they have completed things they haven't.
+              Naming the scope costs three words and removes the only reading that was wrong. */}
+          <Txt style={styles.sectionMeta}>{done}/{lessons.length} in this section</Txt>
           {/* Feather, not the ▾/▸ glyph pair — see the same change on the module rows in
               app/(tabs)/modules.tsx: the two characters aren't the same width, so the
               control resized every time you opened a section. */}
