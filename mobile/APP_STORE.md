@@ -205,6 +205,17 @@ Developer account:
 Test the Apple button on a real device before submitting. Until step 3 is done the button is
 there and fails, which is worse than not shipping it.
 
+**Why a browser round-trip instead of the native `AuthenticationServices` button:** this app has
+no other native code needing an Xcode-level rewrite for auth, and the browser flow is Apple's
+own officially-supported OAuth path for exactly this case (it's what non-Apple-platform and
+web integrations use, and Clerk implements it the same way for every provider so there's one
+code path instead of a special case for Apple). It really is Apple's identity system underneath
+— same account, same Face ID/Touch ID prompt if the device is signed in to iCloud, same
+`appleid.com` domain. The one thing worth confirming on a real device once Clerk is configured:
+that it *feels* native (Face ID sheet, not a login form) — if it ever shows Apple's website
+asking for a typed password, that means the device isn't signed into an Apple ID, not that the
+integration is wrong.
+
 ---
 
 ## 8. Before the first submission
@@ -240,3 +251,13 @@ there and fails, which is worse than not shipping it.
 - [x] `ITSAppUsesNonExemptEncryption: false` in `ios.infoPlist`. Correct (HTTPS only), and
       without it every build waits in App Store Connect for the export-compliance question.
 - [x] Splash image is Hammy, not the Expo logo it shipped as.
+- [x] `usesAppleSignIn: true` under `ios`. Adds the `com.apple.developer.applesignin`
+      entitlement the build needs now that Apple is one of the SSO providers (section 7) —
+      independent of Clerk's own configuration, and needed regardless of which Apple API a
+      provider's SDK uses under the hood.
+- [x] `expo-secure-store` configured with `faceIDPermission: false`. The plugin's default adds
+      `NSFaceIDUsageDescription` unconditionally; the token cache (`lib/tokenCache.ts`) never
+      requests biometric-protected storage, so the string described a capability the app
+      doesn't use. Lower severity than the audio permissions above — Face ID access only
+      prompts the user if the code actually asks for it, which it doesn't — but the same class
+      of "declared, unused" mismatch, and free to remove.

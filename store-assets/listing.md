@@ -95,7 +95,7 @@ budget,saving,invest,credit,loans,taxes,college,finance,literacy,quiz,scam,paych
 
 | Field | Value |
 |---|---|
-| Support URL | `https://trystacked.app` |
+| Support URL | `https://trystacked.app/support.html` |
 | Marketing URL | `https://trystacked.app` |
 | Privacy Policy URL | `https://trystacked.app/privacy.html` |
 
@@ -134,18 +134,21 @@ Answer the questionnaire in App Store Connect. For this app:
 
 Expected result: **4+**
 
-### The one to think about: mystery boxes
+### Mystery boxes — already handled, not a decision left to make
 
-The shop sells a mystery box for coins and diamonds you earn by playing. Apple asks about
-"Simulated Gambling", and loot boxes have drawn scrutiny.
+The shop sells mystery boxes for coins and diamonds you earn by playing. Apple asks about
+"Simulated Gambling", and loot boxes have drawn scrutiny, but two things are already true of
+this app and both matter:
 
-The odds disclosure rule in Guideline 3.1.1 applies to loot boxes bought with **real money**.
-Stacked has no in-app purchases at all, and the box only pays out cosmetics, so it should not
-apply. Answering "None" for Simulated Gambling is defensible on that basis.
+- **No real money is involved anywhere.** The odds-disclosure rule in Guideline 3.1.1 is about
+  loot boxes bought with real money; Stacked has no in-app purchases at all.
+- **The odds are already shown.** Every mystery-linked item in the shop displays its rarity and
+  exact drop percentage next to the price (`shop.tsx`'s `mysteryDropChance` /
+  `RARITY_LABEL` — a line like "Rare · 12%" sits on the card itself, not buried in a menu).
+  That's the stronger of the two options this file used to describe as a choice to make before
+  submitting — it's built, not pending.
 
-If you would rather not have the conversation at all, the alternative is to publish the drop
-odds somewhere in the shop UI. That costs one small screen and removes the question entirely.
-Your call, but decide it before you submit rather than after a rejection.
+Answer "None" for Simulated Gambling with confidence.
 
 ---
 
