@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Pressable, StyleSheet, Platform, ScrollView, Linking } from 'react-native';
+import { View, Pressable, StyleSheet, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuth, useSignUp } from '@clerk/clerk-expo';
@@ -11,6 +11,7 @@ import { fillMissingUsername, type ClerkSignUpResource } from '@/lib/clerkSignUp
 import { useOnboardedAlready } from '@/lib/onboarded';
 import { WebAuthRedirect } from '@/lib/webAuth';
 import { SocialAuth } from '@/lib/socialAuth';
+import { openLegalPage, PRIVACY_URL, TERMS_URL } from '@/lib/legalLinks';
 
 /** Screen 3 — Sign up. On the web build we reuse the site's real Clerk sign-up (Google +
  * all methods) via WebAuthRedirect. On native it's Apple/Google/Microsoft SSO plus the in-app
@@ -288,7 +289,7 @@ function StubSignUp() {
  * hitSlop because 20px of art is under Apple's 44pt minimum on its own.
  */
 function TermsLine({ on, onToggle }: { on: boolean; onToggle?: () => void }) {
-  const open = (url: string) => () => { void Linking.openURL(url); };
+  const open = (url: string) => () => openLegalPage(url);
   return (
     <View style={styles.terms}>
       <Pressable onPress={onToggle} hitSlop={12} accessibilityRole="checkbox" accessibilityState={{ checked: on }}>
@@ -303,9 +304,6 @@ function TermsLine({ on, onToggle }: { on: boolean; onToggle?: () => void }) {
     </View>
   );
 }
-
-const TERMS_URL = 'https://trystacked.app/terms.html';
-const PRIVACY_URL = 'https://trystacked.app/privacy.html';
 
 const styles = StyleSheet.create({
   scroll: { flexGrow: 1, paddingHorizontal: 22 },

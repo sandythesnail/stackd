@@ -11,6 +11,7 @@ import { SURVEY_TRACKS } from '@/survey';
 import { authEnabled } from '@/lib/env';
 import { makeSupabase } from '@/lib/supabase';
 import { MODULE_SOURCES } from '@/references';
+import { openLegalPage, PRIVACY_URL } from '@/lib/legalLinks';
 
 /** Screen 14 — Settings (account, feedback, sources). */
 export default function Settings() {
@@ -540,7 +541,7 @@ function PrivacyCard() {
       <Txt style={styles.privacyBody}>
         You can delete all of it at any time with “Delete my account” above.
       </Txt>
-      <Pressable onPress={() => Linking.openURL('https://trystacked.app/privacy.html')}>
+      <Pressable onPress={() => openLegalPage(PRIVACY_URL)}>
         <Txt style={styles.privacyLink}>Read the full privacy policy →</Txt>
       </Pressable>
     </Card>
