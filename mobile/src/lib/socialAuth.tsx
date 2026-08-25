@@ -1,13 +1,13 @@
 /**
- * Google + Microsoft sign-in for the NATIVE app.
+ * Apple + Google + Microsoft sign-in for the NATIVE app.
  *
  * Until now the native build had no social sign-in at all: the only real control on the
  * sign-in screen was email + password, and the one Microsoft-branded button that had existed
- * was a fake (it navigated to Home without authenticating anybody) and was removed. Both
- * providers are enabled and authenticatable on the production Clerk instance — the web app
- * has always offered them through Clerk's hosted widget, and the /m web build reuses that
- * widget by redirecting to /login.html (see webAuth.tsx). This is the same two providers,
- * done the way a native app has to do them.
+ * was a fake (it navigated to Home without authenticating anybody) and was removed. Google
+ * and Microsoft are enabled and authenticatable on the production Clerk instance — the web
+ * app has always offered them through Clerk's hosted widget, and the /m web build reuses
+ * that widget by redirecting to /login.html (see webAuth.tsx). This is those providers, done
+ * the way a native app has to do them, plus Apple (below).
  *
  * Clerk's SSO on native is a browser round-trip: create the sign-in, open the provider in an
  * auth session (SFAuthenticationSession / Custom Tab, NOT a webview — the providers block
@@ -18,6 +18,17 @@
  * `resource_missmatch` ("Redirect url mismatch") for every provider alike. See
  * ssoRedirectUrl() below for exactly what gets sent and what Clerk accepts, and run
  * `npm run check:sso` to ask Clerk directly rather than assuming.
+ *
+ * APPLE IS NOT OPTIONAL. App Review Guideline 4.8 requires that an app using a third-party
+ * login service to set up the user's primary account ALSO offer a privacy-preserving
+ * equivalent, and Sign in with Apple is the one Apple names. Offering Google and Microsoft
+ * without it is the classic 4.8 rejection, and it costs a rebuild + resubmit to fix after
+ * the fact. It is listed first here because Apple's own guidance is that it appears above
+ * the other providers, and "equivalent option" in 4.8 is read as equal prominence.
+ *
+ * Apple is deliberately shown on Android too, even though 4.8 is an iOS rule. Someone who
+ * creates their account with Apple on an iPhone and later opens the app on an Android tablet
+ * has no other way in — hiding the button off-iOS would lock them out of their own account.
  */
 import { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
@@ -25,6 +36,7 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import Svg, { Path, Rect } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { Button, Txt } from '@/components';
 import { colors, font } from '@/theme';
@@ -36,7 +48,7 @@ import { fillMissingUsername } from './clerkSignUp';
 // to have run before any redirect can come back.
 WebBrowser.maybeCompleteAuthSession();
 
-type Strategy = 'oauth_google' | 'oauth_microsoft';
+type Strategy = 'oauth_apple' | 'oauth_google' | 'oauth_microsoft';
 
 /**
  * Makes the provider show its account chooser instead of silently reusing whoever the device
@@ -45,6 +57,12 @@ type Strategy = 'oauth_google' | 'oauth_microsoft';
  * account a student is already signed into — with no way to pick a personal one. The website
  * needs the same thing and gets it a different way, since Clerk's hosted widget makes the
  * call there; see clerk-account-picker.js in the repo root.
+ *
+ * Sent per-provider, NOT to everyone: it is an OIDC parameter that Google and Microsoft both
+ * implement, and Apple does not. Apple's authorize endpoint documents `response_mode`,
+ * `scope` and `state`; `prompt` is not among them, and an unrecognised parameter there risks
+ * an `invalid_request` bounce before the user ever sees a sign-in sheet. Apple also has no
+ * problem to solve here — it always presents its own account sheet.
  */
 const PROMPT = 'select_account';
 
@@ -73,9 +91,16 @@ function ssoRedirectUrl(): string {
   return name ? `${name}://` : Linking.createURL('/sso-callback');
 }
 
-const PROVIDERS: { strategy: Strategy; name: string; Logo: () => React.JSX.Element }[] = [
-  { strategy: 'oauth_google', name: 'Google', Logo: GoogleLogo },
-  { strategy: 'oauth_microsoft', name: 'Microsoft', Logo: MicrosoftLogo },
+const PROVIDERS: {
+  strategy: Strategy;
+  name: string;
+  Logo: () => React.JSX.Element;
+  /** Omitted for Apple — see PROMPT above. */
+  prompt?: string;
+}[] = [
+  { strategy: 'oauth_apple', name: 'Apple', Logo: AppleLogo },
+  { strategy: 'oauth_google', name: 'Google', Logo: GoogleLogo, prompt: PROMPT },
+  { strategy: 'oauth_microsoft', name: 'Microsoft', Logo: MicrosoftLogo, prompt: PROMPT },
 ];
 
 export function SocialAuth({
@@ -94,8 +119,8 @@ export function SocialAuth({
 }) {
   // Deliberately NOT clerk-expo's useSSO(). Its startSSOFlow runs exactly the sequence below
   // but calls signIn.create({ strategy, redirectUrl }) with no way to add anything, and the
-  // one thing that has to be added is oidcPrompt — without it neither provider shows its
-  // account chooser (see PROMPT below). Everything else here matches what useSSO does.
+  // one thing that has to be added is oidcPrompt — without it neither Google nor Microsoft
+  // shows its account chooser (see PROMPT above). Everything else here matches what useSSO does.
   const { signIn, setActive, isLoaded: signInReady } = useSignIn();
   const { signUp, isLoaded: signUpReady } = useSignUp();
   const [busy, setBusy] = useState<Strategy | null>(null);
@@ -112,7 +137,7 @@ export function SocialAuth({
     return () => { WebBrowser.coolDownAsync().catch(() => {}); };
   }, []);
 
-  const start = async (strategy: Strategy, name: string) => {
+  const start = async (strategy: Strategy, name: string, prompt?: string) => {
     if (busy || !signInReady || !signUpReady) return;
     setBusy(strategy);
     setError(null);
@@ -122,8 +147,8 @@ export function SocialAuth({
       // Ask Clerk for the provider's authorization URL. oidcPrompt is the whole reason this
       // isn't useSSO(): it becomes `prompt=select_account` on the provider URL, which is what
       // makes Google and Microsoft ASK which account instead of silently reusing the one the
-      // device is already signed into.
-      await signIn.create({ strategy, redirectUrl, oidcPrompt: PROMPT });
+      // device is already signed into. Passed as undefined for Apple, which does not take it.
+      await signIn.create({ strategy, redirectUrl, ...(prompt ? { oidcPrompt: prompt } : {}) });
       const providerUrl = signIn.firstFactorVerification.externalVerificationRedirectURL;
       if (!providerUrl) {
         setError(`Couldn't reach ${name}. Please try again.`);
@@ -175,7 +200,7 @@ export function SocialAuth({
 
   return (
     <View style={{ gap: 10 }}>
-      {PROVIDERS.map(({ strategy, name, Logo }) => (
+      {PROVIDERS.map(({ strategy, name, Logo, prompt }) => (
         <Button
           key={strategy}
           variant="ghost"
@@ -185,7 +210,7 @@ export function SocialAuth({
           // without this the button looked live and a tap did nothing at all — the exact
           // "I pressed it and nothing happened" report that is impossible to diagnose.
           disabled={busy !== null || !signInReady || !signUpReady}
-          onPress={() => { void start(strategy, name); }}
+          onPress={() => { void start(strategy, name, prompt); }}
         />
       ))}
       {error ? <Txt style={styles.error}>{error}</Txt> : null}
@@ -196,6 +221,17 @@ export function SocialAuth({
 /* Both marks are drawn rather than bundled as images: they're a handful of paths each, they
    stay crisp at any density, and they keep the providers' own colours, which both companies'
    branding terms require on a sign-in button. */
+
+/* The one mark that is NOT drawn here. Apple's Sign in with Apple guidelines require their
+   own official mark, in black on a light button or white on a dark one, and Ionicons ships
+   the shape Apple publishes — so this takes it from the icon set the app already depends on
+   rather than hand-tracing a trademark. `colors.dark` on the ghost (white) button is the
+   black-on-light pairing Apple asks for. */
+function AppleLogo() {
+  // -1 nudge: the mark's leaf sits high in its own box, so on the shared baseline it reads
+  // as floating a hair above the Google and Microsoft logos next to it.
+  return <Ionicons name="logo-apple" size={20} color={colors.dark} style={{ marginTop: -1 }} />;
+}
 
 function GoogleLogo() {
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Pressable, StyleSheet, Platform, ScrollView } from 'react-native';
+import { View, Pressable, StyleSheet, Platform, ScrollView, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuth, useSignUp } from '@clerk/clerk-expo';
@@ -13,7 +13,7 @@ import { WebAuthRedirect } from '@/lib/webAuth';
 import { SocialAuth } from '@/lib/socialAuth';
 
 /** Screen 3 — Sign up. On the web build we reuse the site's real Clerk sign-up (Google +
- * all methods) via WebAuthRedirect. On native it's Google/Microsoft SSO plus the in-app
+ * all methods) via WebAuthRedirect. On native it's Apple/Google/Microsoft SSO plus the in-app
  * Clerk email + password flow, or the local stub when auth isn't configured. */
 export default function SignUp() {
   if (Platform.OS === 'web' && authEnabled) return <WebAuthRedirect page="signup" />;
@@ -224,10 +224,7 @@ function ClerkSignUp() {
         />
       </View>
 
-      <Pressable style={styles.terms} onPress={() => setAgreed((a) => !a)}>
-        <CheckBox on={agreed} />
-        <Txt style={styles.termsTxt}>I agree to the Terms of Use and Privacy Policy.</Txt>
-      </Pressable>
+      <TermsLine on={agreed} onToggle={() => setAgreed((a) => !a)} />
 
       {error ? <Txt style={styles.error}>{error}</Txt> : null}
 
@@ -265,10 +262,7 @@ function StubSignUp() {
         />
       </View>
 
-      <View style={styles.terms}>
-        <CheckBox on />
-        <Txt style={styles.termsTxt}>I agree to the Terms of Use and Privacy Policy.</Txt>
-      </View>
+      <TermsLine on />
 
       <Spacer />
       <Button label="Continue" onPress={() => router.push('/(onboarding)/survey')} style={{ marginBottom: 10 }} />
@@ -280,9 +274,43 @@ function StubSignUp() {
   );
 }
 
+/** The consent line, with the two documents it names actually reachable.
+ *
+ * They weren't. The whole row was one Pressable that toggled the checkbox, and "Terms of Use"
+ * and "Privacy Policy" were plain words inside it — so the student agreed to two documents
+ * with no way to read either, and a reviewer who taps them (they do) found nothing. Worse,
+ * there was no Terms of Use anywhere: trystacked.app/terms.html was a 404 while this sentence
+ * claimed you'd agreed to it. Both pages now exist at the repo root and are linked here.
+ *
+ * Structure matters for the tap targets. A nested <Text onPress> wins over its parent's
+ * handler on both native and react-native-web, so the two links open their pages while every
+ * other part of the sentence — and the checkbox — still toggles the box. The checkbox gets
+ * hitSlop because 20px of art is under Apple's 44pt minimum on its own.
+ */
+function TermsLine({ on, onToggle }: { on: boolean; onToggle?: () => void }) {
+  const open = (url: string) => () => { void Linking.openURL(url); };
+  return (
+    <View style={styles.terms}>
+      <Pressable onPress={onToggle} hitSlop={12} accessibilityRole="checkbox" accessibilityState={{ checked: on }}>
+        <CheckBox on={on} />
+      </Pressable>
+      <Txt style={styles.termsTxt} onPress={onToggle}>
+        I agree to the{' '}
+        <Txt style={styles.termsLink} onPress={open(TERMS_URL)}>Terms of Use</Txt>
+        {' '}and{' '}
+        <Txt style={styles.termsLink} onPress={open(PRIVACY_URL)}>Privacy Policy</Txt>.
+      </Txt>
+    </View>
+  );
+}
+
+const TERMS_URL = 'https://trystacked.app/terms.html';
+const PRIVACY_URL = 'https://trystacked.app/privacy.html';
+
 const styles = StyleSheet.create({
   scroll: { flexGrow: 1, paddingHorizontal: 22 },
   terms: { flexDirection: 'row', gap: 11, marginTop: 16, alignItems: 'center' },
+  termsLink: { fontFamily: font.extra, fontSize: 12.5, color: colors.green, textDecorationLine: 'underline' },
   termsTxt: { fontFamily: font.semi, fontSize: 12.5, color: colors.muted2, flexShrink: 1 },
   error: { fontFamily: font.bold, fontSize: 13, color: colors.danger, marginTop: 12 },
   footer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 8 },

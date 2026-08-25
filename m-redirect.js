@@ -17,6 +17,25 @@
     var p = location.pathname;
     return p === '/login.html' || p === '/signup.html' || p === '/login' || p === '/signup';
   }
+  // Legal + support pages, exempt for the same reason and then some: they are DESTINATIONS
+  // people are sent to from inside the mobile app, and from the App Store listing.
+  //
+  // Without this, every one of those links was broken on the device most likely to follow it.
+  // Settings' "Read the full privacy policy" opens trystacked.app/privacy.html in the phone's
+  // browser; the phone is a mobile UA, so this script replaced it with /m/ before a word of
+  // the policy rendered, and the student landed back in the app wondering what happened. The
+  // signup screen's Terms of Use and Privacy Policy links do the same thing. So does the
+  // Privacy Policy URL on the App Store listing when a reviewer taps it on an iPhone — which
+  // is a metadata rejection, since the required policy is unreachable from the required link.
+  //
+  // These pages are also plain, self-contained documents that already read fine at any width,
+  // so there is nothing for the viewport rule to improve by sending a phone elsewhere.
+  function isLegalPage() {
+    var p = location.pathname;
+    return p === '/privacy.html' || p === '/privacy'
+        || p === '/terms.html' || p === '/terms'
+        || p === '/support.html' || p === '/support';
+  }
   function isNarrow() {
     return !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
   }
@@ -79,7 +98,7 @@
       // Read first, and on every call: `pinned()` consumes ?desktop=1 into sessionStorage, and
       // the flag has to be recorded before this tab can be sent anywhere.
       var isPinned = pinned();
-      if (isAuthPage()) return;
+      if (isAuthPage() || isLegalPage()) return;
       if (midQuest()) return;
       if (!underApp()) {
         // On the vanilla site: a phone or a narrow viewport belongs in the app.

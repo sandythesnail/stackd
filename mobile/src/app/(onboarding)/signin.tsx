@@ -11,7 +11,7 @@ import { WebAuthRedirect } from '@/lib/webAuth';
 import { SocialAuth } from '@/lib/socialAuth';
 
 /** Screen 4 — Sign in. On the web build we reuse the site's real Clerk sign-in (Google +
- * all methods) via WebAuthRedirect. On native it's Google/Microsoft SSO plus the in-app
+ * all methods) via WebAuthRedirect. On native it's Apple/Google/Microsoft SSO plus the in-app
  * Clerk email/password form (or the local stub when auth isn't configured). */
 export default function SignIn() {
   if (Platform.OS === 'web' && authEnabled) return <WebAuthRedirect page="login" />;
@@ -140,6 +140,20 @@ function ClerkSignIn() {
         />
       </View>
 
+      {/* Carries whatever they typed above, so the reset screen doesn't ask for the address
+          a second time. */}
+      <View style={{ alignItems: 'flex-end', marginTop: 12 }}>
+        <Txt
+          style={styles.link}
+          onPress={() => router.push({
+            pathname: '/(onboarding)/reset-password',
+            params: email.trim() ? { email: email.trim() } : {},
+          })}
+        >
+          Forgot password?
+        </Txt>
+      </View>
+
       {error ? <Txt style={styles.error}>{error}</Txt> : null}
 
       <Button label={busy ? 'Signing in…' : 'Sign in'} onPress={onSignIn} style={{ marginTop: 16 }} />
@@ -189,11 +203,13 @@ function StubSignIn() {
         <Field label="PASSWORD" value="••••••••••" right={<Txt style={styles.link}>Show</Txt>} />
       </View>
 
-      <View style={{ alignItems: 'flex-end', marginTop: 12 }}>
-        <Txt style={styles.link}>Forgot password?</Txt>
-      </View>
+      {/* No "Forgot password?" here, unlike the real form. This stub has no sign-in server
+          and no password — the credentials above are decoration — so a reset link would be
+          another control that looks live and does nothing, which is exactly what the fake
+          Microsoft button above was. The real screen's link is wired to
+          (onboarding)/reset-password. */}
 
-      <Button label="Sign in" onPress={() => router.push('/(tabs)/home')} style={{ marginTop: 10 }} />
+      <Button label="Sign in" onPress={() => router.push('/(tabs)/home')} style={{ marginTop: 16 }} />
 
       <Spacer />
       <View style={styles.footer}>

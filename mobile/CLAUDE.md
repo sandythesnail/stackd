@@ -25,9 +25,9 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   `authEnabled`) loads on sign-in, debounced-upserts on change, flushes on background. Same Clerk instance
   + Supabase project as the web (trystacked.app) → cross-device sync. Real Clerk sign-in/up live in
   `(onboarding)/signin|signup` (stub fallback when disabled); real sign-out + account in Settings.
-  Google/Microsoft SSO is `socialAuth.tsx` on native (Clerk's `useSSO` browser round-trip) and the
+  Apple/Google/Microsoft SSO is `socialAuth.tsx` on native (a Clerk browser round-trip) and the
   site's hosted widget on web (`webAuth.tsx` redirects to /login.html). Native SSO additionally needs
-  the app's redirect URL (`stackd://sso-callback`, or the `exp://…` one under Expo Go) added to the
+  the app's redirect URL (`stackd://`, or the `exp://…` one under Expo Go) added to the
   Clerk instance's allowed redirect URLs — `npm run check:sso` asks Clerk and prints what it accepts.
   The instance requires a username at sign-up that the mobile forms don't collect, so
   `clerkSignUp.ts` derives one from the email; both flows react to Clerk's `missingFields` /
@@ -35,7 +35,9 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   and there are no second factors).
 - `src/app/` routes:
   - `index.tsx` — splash (screen 1), auto-advances to onboarding.
-  - `(onboarding)/` — welcome, signup, signin, piggy-born, survey (screens 2–6).
+  - `(onboarding)/` — welcome, signup, signin, reset-password, piggy-born, survey (screens 2–6).
+    Sign-in's "Forgot password?" goes to `reset-password` (Clerk `reset_password_email_code`);
+    a successful reset returns a complete sign-in, so it ends signed in rather than back at the form.
   - `(tabs)/` — home, modules, tools, room, shop (tabs) + progress, badges, settings (hidden tab siblings; the
     custom `TabBar` only renders the 5 known routes, so the bar persists on these). Screens 7–14.
   - `learn/` — module/[id], hook, lesson, quiz, results (screens 15–19); full-screen, no tab bar.
