@@ -1,6 +1,6 @@
 /**
- * Guards the two apps' shared CONTENT against each other: the eleven modules, and the
- * achievement definitions.
+ * Guards the two apps' shared CONTENT against each other: the eleven modules, the achievement
+ * definitions, and Hammy's daily moods.
  *
  * These are the two biggest datasets that exist twice. mobile/src/content/modules.json is
  * extracted verbatim from app.js's MODULES and kept that way precisely so the two can be
@@ -181,6 +181,30 @@ const note = (m, where) => {
   for (const a of mob) if (!wIds.has(a.id)) note(`achievement ${a.id}: missing from app.js`);
 }
 
+/* ── Hammy's daily moods ── */
+{
+  /* Nine lines of copy and one index, shown on Home. They have to match for a reason beyond
+     tone: both apps derive the day's mood from the date with the same hash, so if the LISTS
+     differ the same student opening both devices on the same morning is told Hammy feels two
+     different things. */
+  const { literal } = require('./lib/literal');
+  const web = literal(appJs, 'HAMMY_MOODS', '[', 'app.js');
+  const mob = literal(read('mobile/src/hammyMood.ts'), 'HAMMY_MOODS', '[', 'hammyMood.ts');
+
+  if (web.length !== mob.length) {
+    note(`moods: app.js has ${web.length}, mobile has ${mob.length}`);
+  } else {
+    // Order matters as much as wording: the position IS what the date hashes to.
+    for (let i = 0; i < web.length; i++) {
+      for (const k of ['id', 'label', 'msg']) {
+        if (web[i][k] !== mob[i][k]) {
+          note(`mood[${i}].${k}: app.js ${JSON.stringify(web[i][k])} / mobile ${JSON.stringify(mob[i][k])}`);
+        }
+      }
+    }
+  }
+}
+
 if (problems.length) {
   console.error('Shared content has drifted between the web app and mobile:\n');
   for (const p of problems) console.error('  ' + p);
@@ -188,7 +212,7 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log('Content OK — 11 modules and every achievement match between app.js and mobile.');
+console.log('Content OK — 11 modules, every achievement and all 9 Hammy moods match between app.js and mobile.');
 if (accepted.length) {
   console.log('  ' + accepted.length + ' recorded difference(s) skipped — see ACCEPTED_DRIFT. These are real and still' +
     ' need settling; they are exempt so that NEW drift is what fails.');

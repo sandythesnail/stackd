@@ -18883,22 +18883,46 @@ function withFaceOverlay(pigMarkup) {
 // login streak in updateStreak()) so it holds steady across renders/refreshes and only
 // changes once players come back on a new day — not a random reroll on every page visit.
 const HAMMY_MOODS = [
-  { id: 'star', label: 'starstruck', msg: "Hammy's feeling starstruck today. Give them something to be proud of: finish a module!" },
+  { id: 'star', label: 'starstruck', msg: "Hammy's feeling starstruck today. Give them something to be proud of by finishing a module!" },
   { id: 'sleepy', label: 'sleepy', msg: "Hammy's a little sleepy today. Wake them up with a quick module!" },
-  { id: 'curious', label: 'curious', msg: "Hammy's feeling curious today. Satisfy their curiosity: start a module!" },
+  { id: 'curious', label: 'curious', msg: "Hammy's feeling curious today. Satisfy their curiosity and start a module!" },
   { id: 'angry', label: 'grumpy', msg: "Hammy woke up grumpy today. Turn their mood around with a module!" },
-  { id: 'love', label: 'smitten', msg: "Hammy's feeling the love today! Show them some back: finish a module." },
-  { id: 'nervy', label: 'nervous', msg: "Hammy's a bit nervous today. Ease their nerves: complete a module." },
-  { id: 'sad', label: 'a little blue', msg: "Hammy's feeling a little blue today. Cheer them up: finish a module!" },
-  { id: 'surprise', label: 'surprised', msg: "Hammy's totally surprised today. See what's in store: start a module!" },
-  { id: 'wink', label: 'playful', msg: "Hammy's feeling playful today. Play along: finish a module!" },
+  { id: 'love', label: 'smitten', msg: "Hammy's feeling the love today! Show them some back and finish a module." },
+  { id: 'nervy', label: 'nervous', msg: "Hammy's a bit nervous today. Ease their nerves by completing a module." },
+  { id: 'sad', label: 'a little blue', msg: "Hammy's feeling a little blue today. Cheer them up and finish a module!" },
+  { id: 'surprise', label: 'surprised', msg: "Hammy's totally surprised today. See what's in store and start a module!" },
+  { id: 'wink', label: 'playful', msg: "Hammy's feeling playful today. Play along and finish a module!" },
 ];
 
-function todaysHammyMood() {
-  const dateStr = new Date().toDateString();
+function moodIndexForDate(date) {
+  const dateStr = date.toDateString();
   let hash = 0;
   for (let i = 0; i < dateStr.length; i++) hash = (hash * 31 + dateStr.charCodeAt(i)) | 0;
-  return HAMMY_MOODS[Math.abs(hash) % HAMMY_MOODS.length];
+  return Math.abs(hash) % HAMMY_MOODS.length;
+}
+
+/** One mood per calendar day, deterministic from the date so it holds steady across renders
+ * and reloads and only turns over when the player comes back on a new day.
+ *
+ * The hash alone lands on the same mood two days running about one time in nine, often
+ * enough that "Hammy is sleepy again" reads as the feature being broken rather than as a
+ * coincidence. Bumping to the next mood whenever today's raw hash equals yesterday's cuts
+ * that by about three quarters (411 repeats per decade down to 109) while staying stateless:
+ * nothing to store, and two devices asked on the same day still answer the same thing.
+ *
+ * Not to zero, and deliberately so. The bump compares today's RAW hash against yesterday's
+ * RAW hash, so a day that was itself bumped can still be matched by the next day's raw
+ * value. Comparing against yesterday's BUMPED value would need yesterday's own predecessor,
+ * and so on back to the epoch. This is mobile's algorithm exactly, which matters more than
+ * the residue: the two apps must pick the same mood on the same day, and any improvement
+ * made on one side alone would show as Hammy being in two different moods at once. */
+function todaysHammyMood() {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  let idx = moodIndexForDate(today);
+  if (idx === moodIndexForDate(yesterday)) idx = (idx + 1) % HAMMY_MOODS.length;
+  return HAMMY_MOODS[idx];
 }
 
 // Whether the player has already worked on a module today — flips Home's Hammy to a
