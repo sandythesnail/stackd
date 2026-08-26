@@ -548,6 +548,55 @@ step('no hint button where no hint was written', () => {
   }
 });
 
+// 12. Tools: named options, and the loan tool asking only about the loan.
+console.log('\ntools');
+function openTool(tab) {
+  window.showPage('tools');
+  window.document.querySelectorAll('.tools-tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === tab));
+  window.renderToolsPage();
+  return window.document.getElementById('tools-panel');
+}
+step('the rate question is a named list, not a bare percentage', () => {
+  const panel = openTool('compound');
+  const sel = panel.querySelector('#ci-rate');
+  if (!sel || sel.tagName !== 'SELECT') throw new Error('the rate is still a ' + (sel && sel.tagName));
+  const labels = [...sel.options].map((o) => o.textContent);
+  if (labels.length !== 5) throw new Error(labels.length + ' options, expected 5');
+  if (!labels.some((l) => l.startsWith('Index fund'))) throw new Error('options read: ' + labels.join(' | '));
+  if (Number(sel.value) !== 8.5) throw new Error('default rate is ' + sel.value);
+  if (panel.querySelector('.ci-preset-btn')) throw new Error('the old preset chips are still there');
+});
+step('the loan tool asks about the loan and nothing else', () => {
+  const panel = openTool('loan');
+  for (const id of ['lp-income', 'lp-rent', 'lp-food', 'lp-other', 'lp-reality-card']) {
+    if (panel.querySelector('#' + id)) throw new Error('#' + id + ' is still on the page');
+  }
+  const rate = panel.querySelector('#lp-rate');
+  const term = panel.querySelector('#lp-term');
+  if (!rate || rate.tagName !== 'SELECT') throw new Error('loan type is not a select');
+  if (!term || term.tagName !== 'SELECT') throw new Error('repayment plan is not a select');
+  if (rate.options.length !== 4) throw new Error(rate.options.length + ' loan types, expected 4');
+  if (![...rate.options].some((o) => Number(o.value) === 12)) throw new Error('the 12% option is missing');
+  if (term.options.length !== 3) throw new Error(term.options.length + ' repayment plans, expected 3');
+});
+step('extra payments are capped at doubling the minimum', () => {
+  const panel = openTool('loan');
+  const slider = panel.querySelector('#lp-extra');
+  if (!slider) throw new Error('no extra-payment slider');
+  // $27,000 at 5.5% over 10 years is about $293/month, so the cap should be near that.
+  const max = Number(slider.max);
+  if (max < 250 || max > 340) throw new Error('cap is ' + max + ', expected roughly the minimum payment');
+});
+step('changing the loan type re-runs the maths', () => {
+  const panel = openTool('loan');
+  const before = panel.querySelector('#lp-headline').textContent;
+  const rate = panel.querySelector('#lp-rate');
+  rate.value = '12';
+  rate.dispatchEvent(new window.Event('change'));
+  const after = window.document.querySelector('#lp-headline').textContent;
+  if (before === after) throw new Error('the answer did not change when the rate went 5.5% -> 12%');
+});
+
 console.log('\n' + (problems.length ? `FAILED (${problems.length})\n` + problems.join('\n\n') : 'PASS — no errors'));
 process.exit(problems.length ? 1 : 0);
 })();

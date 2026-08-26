@@ -20518,12 +20518,59 @@ function renderSettingsPage() {
 // module progress. Both panels reuse existing chart/input conventions (.pg-bar-chart for
 // category breakdowns, the same range-slider look as the quest engine's microsim sliders)
 // rather than introducing new visual language.
+/** Mobile's wording. Five of the ten were narrower here — "Textbooks" rather than "School
+ * Supplies", "Gym" rather than "Exercise", "Clothing / Thrift", "Beauty / Personal Care", and
+ * "Food Delivery (DoorDash, Uber Eats, etc.)" — and a student whose spending does not happen
+ * to be a textbook or a gym membership has nowhere obvious to put it. The keys are unchanged,
+ * which is what matters for the synced budgetPlan; only what the row is called changed. */
 const BUDGET_CATEGORY_LABELS = {
-  groceries: 'Groceries', diningOut: 'Dining Out', foodDelivery: 'Food Delivery (DoorDash, Uber Eats, etc.)',
-  coffee: 'Coffee', clothing: 'Clothing / Thrift', beauty: 'Beauty / Personal Care',
-  transportation: 'Transportation', entertainment: 'Entertainment', textbooks: 'Textbooks', gym: 'Gym',
+  groceries: 'Groceries', diningOut: 'Dining Out', foodDelivery: 'Food Delivery',
+  coffee: 'Coffee', clothing: 'Clothing', beauty: 'Personal Care',
+  transportation: 'Transportation', entertainment: 'Entertainment', textbooks: 'School Supplies', gym: 'Exercise',
 };
 const BUDGET_CATEGORY_ORDER = ['groceries', 'diningOut', 'foodDelivery', 'coffee', 'clothing', 'beauty', 'transportation', 'entertainment', 'textbooks', 'gym'];
+
+/** A labelled <select>, the shape both simulators now ask their "which kind" questions in.
+ *
+ * Both used to ask with a row of preset chips plus a raw percentage slider. Mobile replaced
+ * that on the grounds that a student who does not already know what rate to expect cannot
+ * answer a bare percentage — but can answer "where would the money sit" or "what kind of loan
+ * is it". The named options carry the rate; nobody has to guess a number to get an answer.
+ */
+function toolSelectHtml(id, label, options, value) {
+  return `
+    <div class="tool-select-row">
+      <label class="tool-select-label" for="${id}">${label}</label>
+      <select class="tool-select" id="${id}">
+        ${options.map(o => `<option value="${o.value}"${o.value === value ? ' selected' : ''}>${o.label} — ${o.sub}</option>`).join('')}
+      </select>
+    </div>`;
+}
+
+/** Where the money sits, and what that historically pays. Identical to mobile's
+ *  CI_RATE_OPTIONS. */
+const CI_RATE_OPTIONS = [
+  { value: 0.5, label: 'Regular savings account', sub: 'about 0.5% a year' },
+  { value: 4.5, label: 'High-yield savings (HYSA)', sub: 'about 4.5% a year' },
+  { value: 6, label: 'Bonds', sub: 'about 6% a year' },
+  { value: 8.5, label: 'Index fund', sub: 'about 8.5% a year' },
+  { value: 10, label: 'All-stock portfolio', sub: 'about 10% a year, bumpier' },
+];
+
+/** Identical to mobile's LOAN_RATE_OPTIONS and TERM_OPTIONS. The fourth loan type is new to
+ *  the web — the chips only went as far as ~9% private, which is not the worst a student
+ *  will be offered. */
+const LOAN_RATE_OPTIONS = [
+  { value: 5.5, label: 'Federal subsidized', sub: 'about 5.5%' },
+  { value: 7, label: 'Federal unsubsidized', sub: 'about 7%' },
+  { value: 9, label: 'Private loan', sub: 'about 9%' },
+  { value: 12, label: 'High-rate private loan', sub: 'about 12%' },
+];
+const LOAN_TERM_OPTIONS = [
+  { value: 10, label: 'Standard', sub: '10 years' },
+  { value: 20, label: 'Extended', sub: '20 years' },
+  { value: 25, label: 'Income-driven', sub: '25 years' },
+];
 
 function computeBudgetTotals(plan) {
   const totalIncome = plan.incomeSources.reduce((s, x) => s + (Number(x.amount) || 0), 0);
@@ -20906,7 +20953,8 @@ function buildStackedAreaChart(points, baseKey, totalKey, { width = 480, height 
 
 function renderCompoundInterestPanel() {
   const panel = document.getElementById('tools-panel');
-  const sim = { startingAmount: 500, monthlyContribution: 100, annualRatePct: 8, years: 10, rateMode: 'index' };
+  // 8.5 is the index-fund option, matching mobile's default.
+  const sim = { startingAmount: 500, monthlyContribution: 100, annualRatePct: 8.5, years: 10 };
 
   const returnBtnHtml = compoundInterestReturnTo
     ? `<button class="ci-return-btn" id="ci-return-btn" type="button">← Back to ${MODULES.find(m => m.id === compoundInterestReturnTo.moduleId).title}</button>`
@@ -20930,15 +20978,7 @@ function renderCompoundInterestPanel() {
             <div class="microsim-slider-label"><span>Years</span><span class="microsim-slider-val" id="ci-years-val">${sim.years}</span></div>
             <input type="range" class="microsim-range" id="ci-years" min="1" max="47" step="1" value="${escapeHtml(sim.years)}" aria-label="Years">
           </div>
-          <div class="ci-rate-presets" id="ci-rate-presets">
-            <button class="ci-preset-btn" data-mode="hysa" type="button">HYSA<span>4–5%</span></button>
-            <button class="ci-preset-btn active" data-mode="index" type="button">Index Fund<span>7–10%</span></button>
-            <button class="ci-preset-btn" data-mode="custom" type="button">Custom</button>
-          </div>
-          <div class="microsim-slider-row">
-            <div class="microsim-slider-label"><span>Annual interest rate</span><span class="microsim-slider-val" id="ci-rate-val">${sim.annualRatePct}%</span></div>
-            <input type="range" class="microsim-range" id="ci-rate" min="1" max="12" step="0.5" value="${escapeHtml(sim.annualRatePct)}" aria-label="Annual interest rate">
-          </div>
+          ${toolSelectHtml('ci-rate', 'Where the money sits', CI_RATE_OPTIONS, sim.annualRatePct)}
           <button class="budget-add-btn" id="ci-compare-toggle" type="button">Compare: start at 18 vs. start at 28 →</button>
         </div>
       </div>
@@ -21014,19 +21054,6 @@ function renderCompoundInterestPanel() {
     comparisonRaf = requestAnimationFrame(() => { comparisonRaf = null; renderComparison(); });
   };
 
-  document.querySelectorAll('.ci-preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.ci-preset-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      sim.rateMode = btn.dataset.mode;
-      if (btn.dataset.mode === 'hysa') sim.annualRatePct = 4.5;
-      else if (btn.dataset.mode === 'index') sim.annualRatePct = 8.5;
-      document.getElementById('ci-rate').value = sim.annualRatePct;
-      document.getElementById('ci-rate-val').textContent = sim.annualRatePct + '%';
-      renderMainChart();
-      if (document.getElementById('ci-compare-card').style.display !== 'none') renderComparison();
-    });
-  });
   document.getElementById('ci-start').addEventListener('input', (e) => {
     sim.startingAmount = Number(e.target.value);
     document.getElementById('ci-start-val').textContent = '$' + sim.startingAmount;
@@ -21043,14 +21070,10 @@ function renderCompoundInterestPanel() {
     document.getElementById('ci-years-val').textContent = sim.years;
     scheduleMainChart();
   });
-  document.getElementById('ci-rate').addEventListener('input', (e) => {
+  document.getElementById('ci-rate').addEventListener('change', (e) => {
     sim.annualRatePct = Number(e.target.value);
-    sim.rateMode = 'custom';
-    document.querySelectorAll('.ci-preset-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector('.ci-preset-btn[data-mode="custom"]').classList.add('active');
-    document.getElementById('ci-rate-val').textContent = sim.annualRatePct + '%';
-    scheduleMainChart();
-    if (document.getElementById('ci-compare-card').style.display !== 'none') scheduleComparison();
+    renderMainChart();
+    if (document.getElementById('ci-compare-card').style.display !== 'none') renderComparison();
   });
   document.getElementById('ci-compare-toggle').addEventListener('click', () => {
     const card = document.getElementById('ci-compare-card');
@@ -21072,10 +21095,7 @@ function renderCompoundInterestPanel() {
 // actually left over" framing as the Budget Calculator, applied to a loan payoff timeline.
 function renderLoanPayoffPanel() {
   const panel = document.getElementById('tools-panel');
-  const sim = {
-    loanBalance: 27000, annualRatePct: 5.5, rateMode: 'subsidized', termYears: 10,
-    monthlyIncome: 3200, rent: 1100, food: 400, otherExpenses: 300, extraPayment: 0,
-  };
+  const sim = { loanBalance: 27000, annualRatePct: 5.5, termYears: 10, extraPayment: 0 };
 
   panel.innerHTML = `
     <div class="budget-grid">
@@ -21086,40 +21106,8 @@ function renderLoanPayoffPanel() {
             <div class="microsim-slider-label"><span>Loan balance</span><span class="microsim-slider-val" id="lp-balance-val">$${sim.loanBalance.toLocaleString()}</span></div>
             <input type="range" class="microsim-range" id="lp-balance" min="1000" max="100000" step="500" value="${escapeHtml(sim.loanBalance)}" aria-label="Loan balance">
           </div>
-          <div class="ci-rate-presets" id="lp-rate-presets">
-            <button class="ci-preset-btn active" data-mode="subsidized" type="button">Fed. Subsidized<span>~5.5%</span></button>
-            <button class="ci-preset-btn" data-mode="unsubsidized" type="button">Fed. Unsubsidized<span>~7%</span></button>
-            <button class="ci-preset-btn" data-mode="private" type="button">Private<span>~9%</span></button>
-          </div>
-          <div class="microsim-slider-row">
-            <div class="microsim-slider-label"><span>Interest rate</span><span class="microsim-slider-val" id="lp-rate-val">${sim.annualRatePct}%</span></div>
-            <input type="range" class="microsim-range" id="lp-rate" min="1" max="14" step="0.25" value="${escapeHtml(sim.annualRatePct)}" aria-label="Interest rate">
-          </div>
-          <div class="ci-rate-presets">
-            <button class="ci-preset-btn active" data-term="10" type="button">Standard<span>10yr</span></button>
-            <button class="ci-preset-btn" data-term="20" type="button">Extended<span>20yr</span></button>
-            <button class="ci-preset-btn" data-term="25" type="button">Income-Driven<span>25yr</span></button>
-          </div>
-        </div>
-        <div class="budget-card">
-          <div class="budget-card-title">Monthly Take-Home Pay & Living Costs</div>
-          <div class="budget-note">Uses take-home (net) pay, not gross salary. See the Earning module for the difference.</div>
-          <div class="microsim-slider-row">
-            <div class="microsim-slider-label"><span>Monthly take-home pay</span><span class="microsim-slider-val" id="lp-income-val">$${sim.monthlyIncome.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-income" min="1500" max="7000" step="50" value="${escapeHtml(sim.monthlyIncome)}" aria-label="Monthly take-home pay">
-          </div>
-          <div class="microsim-slider-row">
-            <div class="microsim-slider-label"><span>Rent</span><span class="microsim-slider-val" id="lp-rent-val">$${sim.rent.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-rent" min="0" max="3000" step="25" value="${escapeHtml(sim.rent)}" aria-label="Rent">
-          </div>
-          <div class="microsim-slider-row">
-            <div class="microsim-slider-label"><span>Food</span><span class="microsim-slider-val" id="lp-food-val">$${sim.food.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-food" min="0" max="1000" step="10" value="${escapeHtml(sim.food)}" aria-label="Food">
-          </div>
-          <div class="microsim-slider-row">
-            <div class="microsim-slider-label"><span>Other (utilities, transport, etc.)</span><span class="microsim-slider-val" id="lp-other-val">$${sim.otherExpenses.toLocaleString()}</span></div>
-            <input type="range" class="microsim-range" id="lp-other" min="0" max="1500" step="10" value="${escapeHtml(sim.otherExpenses)}" aria-label="Other expenses (utilities, transport, etc.)">
-          </div>
+          ${toolSelectHtml('lp-rate', 'Loan type', LOAN_RATE_OPTIONS, sim.annualRatePct)}
+          ${toolSelectHtml('lp-term', 'Repayment plan', LOAN_TERM_OPTIONS, sim.termYears)}
         </div>
       </div>
       <div class="budget-col">
@@ -21129,7 +21117,6 @@ function renderLoanPayoffPanel() {
           <div class="ci-chart-wrap" id="lp-chart"></div>
           <div class="ci-milestones" id="lp-milestones"></div>
         </div>
-        <div class="budget-card" id="lp-reality-card"></div>
         <div class="budget-card" id="lp-extra-card"></div>
       </div>
     </div>`;
@@ -21138,38 +21125,31 @@ function renderLoanPayoffPanel() {
     return computeLoanMinPayment({ principal: sim.loanBalance, annualRatePct: sim.annualRatePct, termYears: sim.termYears });
   }
 
-  function renderRealityCheck(minPayment) {
-    const essential = sim.rent + sim.food + sim.otherExpenses;
-    const availableForLoan = sim.monthlyIncome - essential;
-    const shortfall = minPayment - availableForLoan;
-    const card = document.getElementById('lp-reality-card');
-    card.classList.toggle('ci-warning-card', shortfall > 0);
-    if (shortfall > 0) {
-      card.innerHTML = `
-        <div class="budget-card-title">⚠ Budget Reality Check</div>
-        <p class="budget-goal-msg bad">After rent, food, and other expenses, you have <strong>$${Math.max(0, availableForLoan).toFixed(0)}</strong>/month left, but the minimum payment on this loan is <strong>$${minPayment.toFixed(0)}</strong>/month. You're <strong>$${shortfall.toFixed(0)}</strong> short. This isn't sustainable without cutting expenses, increasing income, or choosing a longer loan term.</p>`;
-    } else {
-      card.innerHTML = `
-        <div class="budget-card-title">Budget Reality Check</div>
-        <p class="budget-goal-msg ok">After rent, food, other expenses, and the minimum loan payment, you have <strong>$${(availableForLoan - minPayment).toFixed(0)}</strong>/month left over.</p>`;
-    }
-    return { availableForLoan, canAffordMinimum: shortfall <= 0 };
+  /** How much extra the slider offers: up to the minimum payment again, i.e. as far as
+   * doubling what you already pay each month.
+   *
+   * This used to be derived from a whole second card of sliders — take-home pay, rent, food,
+   * other — which computed what was "left over" and capped the extra payment at that, and fed
+   * a "Budget Reality Check" card. Those four numbers were a budget, and the app has a Budget
+   * tool one tab away that does the same job properly and remembers what you typed. Here they
+   * were four guesses you had to make before the loan calculator would tell you anything, and
+   * every one of them shipped with a default ($3,200 income, $1,100 rent) standing in for a
+   * life the student hasn't started yet.
+   *
+   * The loan question is answerable without them: what does this balance cost me, and what
+   * does paying more change. So the tool asks about the loan and nothing else. Mobile made
+   * exactly this cut, for exactly this reason. */
+  function maxExtraPayment(minPayment) {
+    return Math.max(0, Math.round(minPayment));
   }
 
-  function renderExtraPaymentCard(minPayment, availableForLoan, canAffordMinimum) {
+  function renderExtraPaymentCard(minPayment) {
     const card = document.getElementById('lp-extra-card');
-    const maxExtra = Math.max(0, Math.floor(availableForLoan - minPayment));
-    if (!canAffordMinimum) {
-      card.innerHTML = `<div class="budget-card-title">Extra Payments</div><p class="budget-note">Cover the minimum payment above before there's room to pay extra.</p>`;
-      return;
-    }
-    if (maxExtra <= 0) {
-      card.innerHTML = `<div class="budget-card-title">Extra Payments</div><p class="budget-note">No spare room in this budget beyond the minimum payment. Every dollar of take-home pay is already spoken for.</p>`;
-      return;
-    }
+    const maxExtra = maxExtraPayment(minPayment);
+    if (maxExtra <= 0) { card.innerHTML = ''; return; }
     sim.extraPayment = Math.min(sim.extraPayment, maxExtra);
     card.innerHTML = `
-      <div class="budget-card-title">Pay Extra With What's Left Over</div>
+      <div class="budget-card-title">Pay Extra</div>
       <div class="microsim-slider-row">
         <div class="microsim-slider-label"><span>Extra toward the loan</span><span class="microsim-slider-val" id="lp-extra-val">$${sim.extraPayment}</span></div>
         <input type="range" class="microsim-range" id="lp-extra" min="0" max="${maxExtra}" step="5" value="${escapeHtml(sim.extraPayment)}" aria-label="Extra toward the loan">
@@ -21229,9 +21209,8 @@ function renderLoanPayoffPanel() {
 
   function renderAll() {
     const minPayment = computeMinPayment();
-    const { availableForLoan, canAffordMinimum } = renderRealityCheck(minPayment);
     renderChart(minPayment);
-    renderExtraPaymentCard(minPayment, availableForLoan, canAffordMinimum);
+    renderExtraPaymentCard(minPayment);
   }
 
   // Same fix as renderCompoundInterestPanel's scheduleMainChart above — 'input' fires on
@@ -21255,54 +21234,17 @@ function renderLoanPayoffPanel() {
     });
   };
 
-  document.querySelectorAll('#lp-rate-presets .ci-preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#lp-rate-presets .ci-preset-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      sim.rateMode = btn.dataset.mode;
-      sim.annualRatePct = btn.dataset.mode === 'subsidized' ? 5.5 : btn.dataset.mode === 'unsubsidized' ? 7 : 9;
-      document.getElementById('lp-rate').value = sim.annualRatePct;
-      document.getElementById('lp-rate-val').textContent = sim.annualRatePct + '%';
-      renderAll();
-    });
+  document.getElementById('lp-rate').addEventListener('change', (e) => {
+    sim.annualRatePct = Number(e.target.value);
+    renderAll();
   });
-  document.querySelectorAll('.ci-rate-presets .ci-preset-btn[data-term]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.ci-rate-presets .ci-preset-btn[data-term]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      sim.termYears = Number(btn.dataset.term);
-      renderAll();
-    });
+  document.getElementById('lp-term').addEventListener('change', (e) => {
+    sim.termYears = Number(e.target.value);
+    renderAll();
   });
   document.getElementById('lp-balance').addEventListener('input', (e) => {
     sim.loanBalance = Number(e.target.value);
     document.getElementById('lp-balance-val').textContent = '$' + sim.loanBalance.toLocaleString();
-    scheduleRenderAll();
-  });
-  document.getElementById('lp-rate').addEventListener('input', (e) => {
-    sim.annualRatePct = Number(e.target.value);
-    document.querySelectorAll('#lp-rate-presets .ci-preset-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('lp-rate-val').textContent = sim.annualRatePct + '%';
-    scheduleRenderAll();
-  });
-  document.getElementById('lp-income').addEventListener('input', (e) => {
-    sim.monthlyIncome = Number(e.target.value);
-    document.getElementById('lp-income-val').textContent = '$' + sim.monthlyIncome.toLocaleString();
-    scheduleRenderAll();
-  });
-  document.getElementById('lp-rent').addEventListener('input', (e) => {
-    sim.rent = Number(e.target.value);
-    document.getElementById('lp-rent-val').textContent = '$' + sim.rent.toLocaleString();
-    scheduleRenderAll();
-  });
-  document.getElementById('lp-food').addEventListener('input', (e) => {
-    sim.food = Number(e.target.value);
-    document.getElementById('lp-food-val').textContent = '$' + sim.food.toLocaleString();
-    scheduleRenderAll();
-  });
-  document.getElementById('lp-other').addEventListener('input', (e) => {
-    sim.otherExpenses = Number(e.target.value);
-    document.getElementById('lp-other-val').textContent = '$' + sim.otherExpenses.toLocaleString();
     scheduleRenderAll();
   });
 

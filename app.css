@@ -695,6 +695,20 @@ body { background: var(--bg); min-height: 100vh; }
 /* Column / bar chart. No longer used by the Progress page (its "XP Earned by Module" chart
    is gone — see renderProgressPage), but still the chart the quest engine's poll and
    decision-chain activities draw with, so these rules stay. */
+/* The named-option question both simulators ask ("Where the money sits", "Loan type").
+   It replaced a row of preset chips plus a raw percentage slider — see toolSelectHtml. */
+.tool-select-row { display: flex; flex-direction: column; gap: 0.35rem; }
+.tool-select-label {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-soft);
+}
+.tool-select {
+  font-family: inherit; font-size: 0.86rem; font-weight: 600; color: var(--text);
+  background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 0.55rem 0.7rem; width: 100%; cursor: pointer;
+}
+.tool-select:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+
 .pg-col-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .pg-col-scroll .pg-column-chart,
 .pg-col-scroll .pg-col-labels { min-width: 660px; }
@@ -900,22 +914,11 @@ select.budget-input { cursor: pointer; }
   .budget-col { display: contents; }
   .ci-inputs-card { order: 1; }
   .ci-result-card { order: 2; }
-  .ci-warning-card { order: 3; }
   #ci-compare-card { order: 4; }
 }
 
 /* Compound interest simulator — reuses microsim-slider-row/microsim-range from the quest
    engine's budget microsim for input consistency, plus the new stacked-area chart. */
-.ci-rate-presets { display: flex; gap: 0.5rem; margin: 0.9rem 0 0.3rem; }
-.ci-preset-btn {
-  flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  padding: 0.5rem 0.4rem; font-family: inherit; font-size: 0.78rem; font-weight: 700; color: var(--text-mid);
-  cursor: pointer; text-align: center; transition: border-color 0.15s, background 0.15s, color 0.15s;
-}
-.ci-preset-btn span { display: block; font-size: 0.68rem; font-weight: 600; color: var(--text-soft); margin-top: 0.1rem; }
-.ci-preset-btn:hover { border-color: var(--green); }
-.ci-preset-btn.active { background: var(--green-pale); border-color: var(--green); color: var(--green-dark); }
-.ci-preset-btn.active span { color: var(--green-dark); }
 
 .ci-result-card { }
 .ci-headline { margin-bottom: 1rem; min-height: 5.3rem; }
@@ -949,8 +952,6 @@ select.budget-input { cursor: pointer; }
 .ci-compare-gap { font-size: 0.85rem; font-weight: 600; color: var(--green-dark); background: var(--green-pale); border-radius: var(--radius-sm); padding: 0.7rem 0.9rem; margin-top: 0.8rem; line-height: 1.5; }
 .ci-compare-gap strong { font-family: var(--font-display); font-size: 1.05rem; }
 
-.ci-warning-card { border-color: var(--pink-light); }
-.ci-warning-card .budget-card-title { color: var(--pink-dark); }
 .ci-area-debt { fill: var(--pink-light); opacity: 0.55; }
 .ci-line-debt { fill: none; stroke: var(--pink-dark); stroke-width: 2.5; stroke-dasharray: 1000; stroke-dashoffset: 1000; transition: stroke-dashoffset 1s ease; }
 .ci-line-debt.drawn { stroke-dashoffset: 0; }
