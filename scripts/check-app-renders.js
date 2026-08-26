@@ -476,6 +476,78 @@ step('the two unwinnable badges are never awarded', () => {
   }
 });
 
+// 10. Replaying a finished lesson pays nothing, as on mobile.
+console.log('\nreplay pays nothing');
+step('a first run pays, a replay does not', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  const quest = window.mainQuests(mod)[0];
+  const key = window.questKey(mod.id, quest.id);
+
+  // First time through.
+  delete s.questProgress[key];
+  s.xp = 0; s.coins = 0; s.level = 1;
+  window.startQuest(mod.id, quest.id);
+  const qp = s.questProgress[key];
+  qp.chapterScore = 5; qp.chapterTotal = 5;
+  window.finishQuest(mod, { text: 'ok', xpMultiplier: 1 });
+  const firstXp = s.xp, firstCoins = s.coins;
+  if (firstXp <= 0 || firstCoins <= 0) throw new Error(`a first run paid ${firstXp} XP / ${firstCoins} coins`);
+
+  // Same lesson again, now that it is done.
+  window.startQuest(mod.id, quest.id);
+  const qp2 = s.questProgress[key];
+  if (!qp2.isReplay) throw new Error('the second run was not flagged as a replay');
+  qp2.chapterScore = 5; qp2.chapterTotal = 5;
+  window.finishQuest(mod, { text: 'ok', xpMultiplier: 1 });
+  if (s.xp !== firstXp) throw new Error(`the replay paid ${s.xp - firstXp} XP`);
+  if (s.coins !== firstCoins) throw new Error(`the replay paid ${s.coins - firstCoins} coins`);
+
+  const wrap = window.document.getElementById('results-wrap').textContent;
+  if (!wrap.includes('already finished this one')) throw new Error('a bare +0 with no explanation');
+});
+
+// 11. Hints: no budget, and no button where no hint was written.
+console.log('\nhints');
+step('a hint can be asked for as often as there are hints', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  // A chapter that carries a real authored hint.
+  let target = null;
+  for (const q of window.mainQuests(mod)) {
+    const i = q.chapters.findIndex((c) => c.hintText);
+    if (i >= 0) { target = { quest: q, idx: i }; break; }
+  }
+  if (!target) throw new Error('no authored hint to test with');
+
+  delete s.questProgress[window.questKey(mod.id, target.quest.id)];
+  window.startQuest(mod.id, target.quest.id);
+  const qp = s.questProgress[window.questKey(mod.id, target.quest.id)];
+
+  // Ask far more times than the old budget of three allowed.
+  for (let i = 0; i < 6; i++) {
+    window.renderChapter(mod, target.idx);
+    const btn = window.document.getElementById('hint-ask-btn');
+    if (!btn) throw new Error('no hint button on a chapter that has a hint (attempt ' + (i + 1) + ')');
+    if (btn.disabled) throw new Error('the hint button greyed out after ' + i + ' uses');
+    btn.click();
+  }
+  if ((qp.hintsUsed || 0) !== 6) throw new Error('hintsUsed is ' + qp.hintsUsed + ', expected 6');
+});
+step('no hint button where no hint was written', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  let target = null;
+  for (const q of window.mainQuests(mod)) {
+    const i = q.chapters.findIndex((c) => !c.hintText && !(c.hintTexts || []).some(Boolean) && c.type !== 'knowledgecheck');
+    if (i >= 0) { target = { quest: q, idx: i }; break; }
+  }
+  if (!target) throw new Error('every chapter has a hint, nothing to test');
+  delete s.questProgress[window.questKey(mod.id, target.quest.id)];
+  window.startQuest(mod.id, target.quest.id);
+  window.renderChapter(mod, target.idx);
+  if (window.document.getElementById('hint-ask-btn')) {
+    throw new Error('offered a hint on a chapter that has none');
+  }
+});
+
 console.log('\n' + (problems.length ? `FAILED (${problems.length})\n` + problems.join('\n\n') : 'PASS — no errors'));
 process.exit(problems.length ? 1 : 0);
 })();

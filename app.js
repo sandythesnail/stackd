@@ -13,14 +13,17 @@
 // these drift the same student sees two different level numbers for the same work.
 const LEVEL_THRESHOLDS = [0, 150, 340, 570, 840, 1160, 1550, 2020, 2560, 3180, 3900];
 
-// Coins paid per correct answer, and the reduced rate for replaying something already finished.
+// Coins paid per correct answer. Matches mobile's QUEST_COIN_PER_CORRECT exactly — both apps
+// pay into the same balance in the same synced blob, so this is one number, not two.
 //
-// Halved (8 -> 4, and 3 -> 2 on replay). These were bare literals at four separate call sites
-// — finishQuiz, finishBonusActivity, the boss battle, and awardQuestXP's reader — which is how
-// the same number came to be written as 8, 16, and chapterScore * 8 in three different places.
-// Named here so the rate is one decision, and so it can be compared against mobile's
-// QUEST_COIN_PER_CORRECT at a glance.
+// These were bare literals at four separate call sites — finishQuiz, finishBonusActivity, the
+// boss battle, and awardQuestXP's reader — which is how the same rate came to be written as 8,
+// 16, and chapterScore * 8 in three different places. Named here so it is one decision.
 const QUEST_COIN_PER_CORRECT = 4;
+// The reduced replay rate, which the LIVE lesson path no longer uses: a replay pays nothing
+// now, the same as on mobile (see finishQuest/awardQuestXP). Still read by finishQuiz, the
+// pre-quest flat-quiz path, which nothing can reach any more because every module is a quest
+// chain — left in place with the rest of that dead branch rather than half-removed.
 const QUEST_COIN_PER_CORRECT_REPLAY = 2;
 // What a chapter with nothing gradeable in it pays, so finishing still pays something.
 const QUEST_COIN_FLAT_FALLBACK = 4;
@@ -17321,11 +17324,18 @@ function addXP(amount) {
 function awardQuestXP(mod, amount) {
   if (!amount) return false;
   const qp = getQP(mod);
-  // Replaying an already-completed quest pays half XP — see isReplay's other reader
-  // (finishQuest's coinsEarned) and where it's set (startQuest). This is the single
-  // choke point every chapter's xpOnComplete AND the boss battle's finishQuest XP flow
-  // through, so halving here covers the whole quest, not just one chapter.
-  const awarded = qp?.isReplay ? Math.round(amount * 0.5) : amount;
+  // Replaying a lesson you have already finished pays nothing — see isReplay's other reader
+  // (finishQuest's coinsEarned) and where it is set (startQuest). This is the single choke
+  // point every chapter's xpOnComplete AND the boss battle's finishQuest XP flow through, so
+  // zeroing here covers the whole lesson, not just one chapter.
+  //
+  // It used to pay half. Mobile pays nothing at all — its completeLesson gates both xp and
+  // coins behind `advanced`, which is false the second time through — and the two apps spend
+  // one wallet in one synced blob. Half on one device and nothing on the other is not a
+  // difference of polish: it is a lesson worth farming on a laptop and worth nothing on a
+  // phone, out of the same balance. Replaying is for going back over something, and it stays
+  // free to do; it just stops paying twice.
+  const awarded = qp?.isReplay ? 0 : amount;
   const leveled = addXP(awarded);
   if (qp) qp.xpEarned = (qp.xpEarned || 0) + awarded;
   return leveled;
@@ -22067,7 +22077,7 @@ function renderChapter(mod, idx) {
   renderQuestDashboard(mod);
   document.getElementById('quest-dashboard').classList.toggle('highlight', !!chapter.highlightDashboard);
   renderGlossaryTray(mod);
-  renderHintBudget(mod, chapter.type, chapter.hintText);
+  renderHintButton(mod, chapter.hintText);
   clearQuestContinue();
   const titleRow = document.getElementById('quest-title-row');
   titleRow.textContent = getChapterTitle(chapter);
@@ -22402,31 +22412,34 @@ function showGlossaryPopup(term, backTo) {
 
 // Limited "Ask Hammy for a hint" budget — available during interactive chapters only,
 // so getting stuck on a decision/question doesn't leave the student with nowhere to turn.
-const HINT_BUDGET = 3;
-const HINT_FREE_CHAPTER_TYPES = ['story', 'teach', 'hint'];
-
-function renderHintBudget(mod, chapterType, hintText) {
+/** "Ask Hammy for a hint".
+ *
+ * There is no budget. It used to be three per lesson, and a lesson runs a median of THIRTEEN
+ * chapters — so spending the three early greyed the button out for the whole rest of the
+ * lesson, which is why hints looked permanently disabled. Being stuck is exactly when you
+ * want one, and rationing them mostly punished the students who needed them most. Mobile
+ * removed the budget for that reason and this follows.
+ *
+ * The button also only appears where a hint has actually been WRITTEN. It used to appear on
+ * every chapter that was not story/teach/hint and fall back to "Reread the question closely.
+ * One phrase in the options usually gives it away." — generic filler that says nothing about
+ * a myth card or a poll, and which cost one of the three. Of 1,270 chapters, 451 carry a real
+ * hint; the other 819 now show no button rather than a button that wastes a tap.
+ *
+ * hintsUsed is still counted and still reported on the results screen. It is a signal about
+ * how the lesson went; it just no longer gates anything.
+ */
+function renderHintButton(mod, hintText) {
   const el = document.getElementById('hint-budget');
   if (!el) return;
-  if (HINT_FREE_CHAPTER_TYPES.includes(chapterType)) {
-    el.innerHTML = '';
-    return;
-  }
+  if (!hintText) { el.innerHTML = ''; return; }
   const qp = getQP(mod);
-  const remaining = Math.max(0, HINT_BUDGET - (qp.hintsUsed || 0));
-  el.innerHTML = `<button class="hint-ask-btn" id="hint-ask-btn" ${remaining <= 0 ? 'disabled' : ''}>💡 Hint (${remaining} left)</button>`;
-  const btn = document.getElementById('hint-ask-btn');
-  if (btn && remaining > 0) {
-    btn.addEventListener('click', () => {
-      qp.hintsUsed = (qp.hintsUsed || 0) + 1;
-      saveState();
-      renderHintBudget(mod, chapterType, hintText);
-      showGlossaryPopup({
-        term: "🐷 Hammy's Hint",
-        plain: hintText || "Reread the question closely. One phrase in the options usually gives it away."
-      });
-    });
-  }
+  el.innerHTML = '<button class="hint-ask-btn" id="hint-ask-btn">💡 Hint</button>';
+  document.getElementById('hint-ask-btn').addEventListener('click', () => {
+    qp.hintsUsed = (qp.hintsUsed || 0) + 1;
+    saveState();
+    showGlossaryPopup({ term: "🐷 Hammy's Hint", plain: hintText });
+  });
 }
 
 
@@ -23569,7 +23582,7 @@ function renderKnowledgeCheckChapter(chapter, mod, onDone) {
   function renderQ() {
     clearQuestContinue();
     // Per-question hints (chapter.hintTexts is aligned with chapter.qIndices order).
-    renderHintBudget(mod, 'knowledgecheck', chapter.hintTexts ? chapter.hintTexts[qIdx] : chapter.hintText);
+    renderHintButton(mod, chapter.hintTexts ? chapter.hintTexts[qIdx] : chapter.hintText);
 
     const q = questions[qIdx];
     main.innerHTML = `
@@ -23657,10 +23670,11 @@ function finishQuest(mod, chosenConsequence) {
   if (qp.chapterTotal > 0 && qp.chapterScore === qp.chapterTotal) state.hadPerfect = true;
 
   const bossXP = Math.round(mod.xpReward * (chosenConsequence.xpMultiplier ?? 1));
-  // Same 3-per-correct-vs-8-per-correct reduction finishQuiz already applies on replay
-  // (wasLessonDone ? score*3 : score*8) — see isReplay's other reader, awardQuestXP.
+  // Zero on a replay, matching the XP (see awardQuestXP) and mobile's own `advanced` gate.
+  // Otherwise a coin per correct answer, or the flat fallback when the lesson had nothing
+  // gradeable in it at all — the same basis as mobile's completeLesson.
   const coinsEarned = qp.isReplay
-    ? (qp.chapterTotal > 0 ? qp.chapterScore * QUEST_COIN_PER_CORRECT_REPLAY : QUEST_COIN_PER_CORRECT_REPLAY)
+    ? 0
     : (qp.chapterTotal > 0 ? qp.chapterScore * QUEST_COIN_PER_CORRECT : QUEST_COIN_FLAT_FALLBACK);
   state.coins = (state.coins || 0) + coinsEarned;
 
@@ -23889,7 +23903,9 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
     <div class="results-grade">🎉 LESSON COMPLETE</div>
     <h2 class="results-title">${headline}</h2>
     ${scoreLine ? `<p class="results-score results-score-tally">${scoreLine}</p>` : ''}
-    <p class="results-score">${consequenceText}${qp.isReplay ? ' · replay (0.5× XP)' : ''}</p>
+    <p class="results-score">${consequenceText}</p>
+    ${qp.isReplay ? `<p class="results-replay-note">You had already finished this one, so there is
+      no XP or coins for it this time. Nothing you had is lost.</p>` : ''}
     <div class="results-rewards-row">
       <div class="results-xp-card">
         <div class="results-xp-num">+${xpEarned} XP</div>

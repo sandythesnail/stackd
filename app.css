@@ -1143,6 +1143,9 @@ select.budget-input { cursor: pointer; }
    Hammy included — 61px down the page. The glossary is pinned to the corner now, so the only
    occupant left is the hint button, which is settled per chapter rather than mid-question.
    Nothing here can change size while a question is on screen, so nothing needs reserving. */
+/* The sticky bar holds the (hidden) dashboard and the hint button and nothing else, so with
+   no hint on this chapter there is nothing in it to show. This fires far more often now that
+   the button only appears where a hint was actually written. */
 .quest-sticky-header:not(:has(.hint-ask-btn)) { display: none; }
 
 .quest-toolrow {
@@ -1230,7 +1233,8 @@ select.budget-input { cursor: pointer; }
   border: 1px solid var(--pink-light); border-radius: var(--radius-sm); padding: 0.45rem 0.8rem;
   font-family: inherit; cursor: pointer; transition: opacity 0.2s;
 }
-.hint-ask-btn:disabled { opacity: 0.45; cursor: default; }
+/* No :disabled rule: the hint button has no disabled state any more. It used to grey out
+   once a lesson's budget of three was spent — see renderHintButton for why that is gone. */
 /* ── The one and only primary action ──
    Pinned to the bottom of the quest screen, full width of the content column, on every
    step. Previously this button appeared top-right on some steps, inline at the bottom of
@@ -1984,6 +1988,12 @@ select.budget-input { cursor: pointer; }
 .results-score { font-size: 0.88rem; color: var(--text-mid); }
 /* The graded tally, sitting directly under the headline it belongs to. */
 .results-score-tally { font-weight: 700; color: var(--text); margin-bottom: -0.75rem; }
+/* Says why the reward line reads zero, so a replay is not a bare "+0". */
+.results-replay-note {
+  font-size: 0.82rem; line-height: 1.55; color: var(--text-mid);
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 0.7rem 0.95rem; margin: 0;
+}
 
 /* The level bar you just moved. XP is paid on this screen; until now the only place it went
    was the sidebar. */
