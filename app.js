@@ -16355,7 +16355,391 @@ const LIFE_EVENTS = [
       { id: 'b', label: 'Ignore it and deal with it later', effect: { creditScore: -25 }, result: 'Unpaid medical bills can go to collections faster than people expect, and a collections account can knock a credit score down hard for years.' },
       { id: 'c', label: 'Call the billing office and ask for a payment plan', effect: { checking: -35 }, result: 'Most providers have an interest-free payment plan, but almost nobody asks. A 5-minute call turns $210 into $35/month.' }
     ]
-  }
+  },
+
+  // ── Module-tagged events, ported from mobile's MODULE_LIFE_EVENTS ──────────────────
+  //
+  // Three per module, so the interruption is about whatever is being learned right now.
+  // Without them this pool was the three general scenarios above and nothing else, which is
+  // how a student ended up being told the same car-repair story every couple of lessons for
+  // an entire curriculum. Ambient events deliberately carry no `effect`, exactly as on
+  // mobile: thirty-three of them all nudging financialState would swamp the three that were
+  // written to move it, and only `coinDelta` (which a handful of the sharpest "you spotted
+  // it" answers pay) touches anything the player can spend.
+  // ── earning ──
+  {
+    id: "earn_first_paycheck", moduleId: "earning",
+    tag: "Wait, what?",
+    title: "Your First Paycheck Is Short",
+    scenario: "You worked 20 hours at $16/hr at the campus library. You did the math: $320. The deposit says $271.44.",
+    choices: [
+      { id: "a", label: "Assume payroll made a mistake and email HR", result: "Worth checking, but the math usually holds up. That $48.56 is FICA (Social Security and Medicare) plus withholding, and it left before you ever saw it. Gross is the promise, net is the paycheck." },
+      { id: "b", label: "Read the pay stub line by line", result: "Exactly the right move. The stub itemises every deduction, and it's the only way to catch a real error, like being taxed as if you work full-time all year." },
+      { id: "c", label: "Shrug and move on", result: "Understandable, but budgeting off gross pay is how people end up short every month. Build your budget on the number that actually lands." },
+    ]
+  },
+  {
+    id: "earn_cash_shift", moduleId: "earning",
+    tag: "Life happens...",
+    title: "Paid Under the Table",
+    scenario: "A local cafe offers you weekend shifts at $18/hr, cash, no paperwork. That's better than your campus job pays, and they want an answer today.",
+    choices: [
+      { id: "a", label: "Take it, cash is cash", result: "More per hour today, but off-the-books work builds no earnings record: no W-2, no proof of income for an apartment application, and nothing paid into Social Security under your name." },
+      { id: "b", label: "Ask to be put on the books instead", result: "The professional answer. You may net slightly less per hour, but you get a pay stub, legal protection if they stiff you, and income you can actually document." },
+      { id: "c", label: "Turn it down", result: "Fair. Just know the issue isn't cash itself. It's whether the work is reported. Plenty of legitimate jobs pay cash and still issue a W-2 or 1099." },
+    ]
+  },
+  {
+    id: "earn_overtime_clash", moduleId: "earning",
+    tag: "Uh oh!",
+    title: "An Extra Shift, A Worse Grade",
+    scenario: "Your manager offers a Sunday shift: 8 hours, $128 after tax. You have a midterm Monday in the class you're already sitting at a B-minus in.",
+    choices: [
+      { id: "a", label: "Take the shift, study after", result: "$128 is real money. So is a GPA. It gates scholarships, internships and grad school. Just make the trade knowingly instead of by default." },
+      { id: "b", label: "Decline and study", result: "You protected the asset with the bigger long-run payoff. One shift is $128; a scholarship you keep is often thousands." },
+      { id: "c", label: "Ask for a shorter shift", result: "The move most people forget. Managers usually prefer four hours to none, and asking costs nothing." },
+    ]
+  },
+  // ── spending ──
+  {
+    id: "spend_meal_plan_gone", moduleId: "spending",
+    tag: "Uh oh!",
+    title: "Your Meal Plan Ran Out in March",
+    scenario: "You just tapped your student ID at the dining hall and it declined. Your meal plan is empty, and there are seven weeks of semester left.",
+    choices: [
+      { id: "a", label: "Add $400 to the plan", result: "Convenient, and campus dining is often priced above grocery cost per meal. Fine if you have it, just know you're paying for the convenience." },
+      { id: "b", label: "Start cooking with a grocery budget", result: "Usually the cheapest path: $40-60/week of groceries beats most meal-plan top-ups. The real cost is time, and time in March is not free." },
+      { id: "c", label: "Work out what went wrong first", result: "The most useful five minutes you can spend. Dividing the plan by weeks in the semester gives you a per-week number, and that's the thing to track next term." },
+    ]
+  },
+  {
+    id: "spend_group_dinner", moduleId: "spending",
+    tag: "Life happens...",
+    title: "Split It Evenly?",
+    scenario: "Eight of you go out for someone's birthday. You ordered a $12 pasta and water. The table wants to split evenly: $34 each, because half the table ordered cocktails and appetisers.",
+    choices: [
+      { id: "a", label: "Pay the $34, keep the peace", result: "Sometimes that's the right call for a friendship. Just notice it's a $22 choice, not a $0 one, and that this table will do it again." },
+      { id: "b", label: "Offer to pay for what you ordered", result: "Slightly awkward for ten seconds. Said plainly and without apology (\"I'll grab mine, I only had the pasta\"), it's almost never a problem." },
+      { id: "c", label: "Say something before ordering next time", result: "The version that avoids the whole situation. Deciding how the bill splits at the start of dinner is much easier than renegotiating at the end." },
+    ]
+  },
+  {
+    id: "spend_subscription_creep", moduleId: "spending",
+    tag: "Something unexpected happened!",
+    title: "Seven Subscriptions",
+    scenario: "You scroll your bank app and count them: two streaming services, a music app, cloud storage, a fitness app you used twice, a game pass, and something called \"PRO PLAN\" for $9.99 you cannot identify. Total: $61/month.",
+    choices: [
+      { id: "a", label: "Cancel everything you did not use this month", result: "$61/month is $732/year. Cancelling the four you'd forgotten about is one of the highest hourly-rate things you'll do all semester." },
+      { id: "b", label: "Keep them, they are only a few dollars each", result: "That's exactly the design. Individually trivial, collectively a phone bill. Subscriptions are priced to stay below the threshold where you'd bother to cancel." },
+      { id: "c", label: "Track down the mystery $9.99 first", result: "Smart. An unrecognised recurring charge is sometimes a free trial you forgot, and sometimes card fraud. Either way you want to know which." },
+    ]
+  },
+  // ── saving ──
+  {
+    id: "save_laptop_died", moduleId: "saving",
+    tag: "Uh oh!",
+    title: "Your Laptop Died During Finals Week",
+    scenario: "It won't power on. The campus tech desk says the board is gone and it isn't worth fixing. You have two papers due in five days and $600 in savings.",
+    choices: [
+      { id: "a", label: "Buy a $550 replacement today", result: "This is what the emergency fund was for. It hurts to watch it go, but you had it, and that's the whole point, and you finish your papers." },
+      { id: "b", label: "Use library computers and keep the savings", result: "Free, and genuinely workable for two papers. Just be honest about whether library hours actually cover your writing schedule during finals." },
+      { id: "c", label: "Finance it at $46/month for 12 months", result: "$552 total if it's truly 0%, more if it isn't, so read that carefully. Financing something you could pay for is trading real money for keeping your cushion intact." },
+    ]
+  },
+  {
+    id: "save_spring_break", moduleId: "saving",
+    tag: "Life happens...",
+    title: "Everyone Is Going",
+    scenario: "Your friends booked a spring break trip. Your share is $520 and they need it by Friday. You have $700 saved, most of it earmarked as your emergency fund.",
+    choices: [
+      { id: "a", label: "Go, you are only in college once", result: "A real reason, and worth something. But it leaves $180 between you and the next surprise, which is a thin margin for six more weeks of semester." },
+      { id: "b", label: "Skip it", result: "Not the fun answer. It does keep the fund whole, and an emergency fund you keep raiding for non-emergencies is just a checking account with extra steps." },
+      { id: "c", label: "Go, but earn it back before you leave", result: "The middle path most people don't consider: five or six extra shifts between now and break turns this into a spending decision instead of a savings one." },
+    ]
+  },
+  {
+    id: "save_hysa_offer", moduleId: "saving",
+    tag: "Something unexpected happened!",
+    title: "Your Savings Earned 4 Cents",
+    scenario: "Your statement arrives: $1,200 in savings, interest earned this month, $0.04. A high-yield account online is advertising 4.2% APY.",
+    choices: [
+      { id: "a", label: "Move it to the high-yield account", result: "$1,200 at 4.2% is roughly $50/year versus about 50 cents where it sits. Same money, same access, same FDIC insurance. Check the transfer time before you move an emergency fund." },
+      { id: "b", label: "Leave it, 4% of not much is not much", result: "It compounds, and the gap widens as the balance grows. On $1,200 it's a nice dinner; on $10,000 it's $420 a year for filling in one form." },
+      { id: "c", label: "Check the fine print first", result: "Right instinct. Look for minimum balances, introductory rates that drop after a few months, and how long a withdrawal takes to reach you." },
+    ]
+  },
+  // ── investing ──
+  {
+    id: "invest_roommate_tip", moduleId: "investing",
+    tag: "Uh oh!",
+    title: "Your Roommate Has a Guaranteed Thing",
+    scenario: "Your roommate is up 60% on a coin he heard about in a Discord server. He says the next one launches tonight and wants you in for $200. \"It literally cannot go down before the listing.\"",
+    choices: [
+      { id: "a", label: "Put in $200", result: "You may win. But \"cannot go down\" is not a sentence that describes any real asset, and the person telling you has every reason to want more buyers." },
+      { id: "b", label: "Pass", result: "Being up 60% makes someone lucky, not informed. The people who tell you about their wins rarely mention the positions that went to zero." },
+      { id: "c", label: "Put in what you would be fine losing", result: "The honest framing. If $200 disappearing changes your month, it isn't play money, and speculation should only ever come out of play money." },
+    ]
+  },
+  {
+    id: "invest_market_drop", moduleId: "investing",
+    tag: "Something unexpected happened!",
+    title: "Down 18% in Three Weeks",
+    scenario: "You finally started investing: $600 into a broad index fund. Three weeks later the market has fallen and your account shows $492. Every headline uses the word 'plunge'.",
+    choices: [
+      { id: "a", label: "Sell before it gets worse", result: "This turns a paper loss into a real one. Selling after a drop is the single most common way beginners lose money that would have come back." },
+      { id: "b", label: "Do nothing", result: "Boring and usually correct. You didn't lose $108. The price moved, and it only becomes a loss if you sell there. Your money was never meant for this month." },
+      { id: "c", label: "Buy more at the lower price", result: "Reasonable if the money is genuinely spare and your timeline is years out. Just don't confuse it with timing the bottom, which nobody reliably does." },
+    ]
+  },
+  {
+    id: "invest_employer_match", moduleId: "investing",
+    tag: "Life happens...",
+    title: "Free Money You Have to Opt Into",
+    scenario: "Your part-time employer offers a retirement plan: they match 100% of what you contribute, up to 3% of your pay. Enrolment closes at the end of the month. Contributing 3% costs you about $18 a paycheck.",
+    choices: [
+      { id: "a", label: "Enrol at 3%", result: "An instant 100% return before the market does anything. $18 becomes $36 every paycheck. There is no other investment that does this." },
+      { id: "b", label: "Skip it, retirement is 45 years away", result: "That distance is the reason to start, not to wait. It's also the only time you can leave an employer match on the table without anyone stopping you." },
+      { id: "c", label: "Enrol at 1% to be safe", result: "Better than nothing, but you left two-thirds of the match unclaimed. Match up to the full percentage first, then decide about anything beyond it." },
+    ]
+  },
+  // ── credit ──
+  {
+    id: "credit_free_tshirt", moduleId: "credit",
+    tag: "Life happens...",
+    title: "A Table, A Clipboard, A Free T-Shirt",
+    scenario: "On the main walkway there's a card sign-up table. Free t-shirt and a water bottle just for applying. The rep says \"it builds your credit, and there's no annual fee.\"",
+    choices: [
+      { id: "a", label: "Apply, free stuff and free credit history", result: "The t-shirt costs them $4 and is aimed at exactly this decision. Some campus-table cards are fine; plenty carry 29% APR and low limits that are easy to max." },
+      { id: "b", label: "Take the terms sheet, decide later", result: "The right pace. APR, fees and limit are all on that sheet, and no good card offer expires because you walked away to read it." },
+      { id: "c", label: "Walk past", result: "No harm done. A first card is genuinely useful for building history, just chosen deliberately, not because someone handed you a water bottle." },
+    ]
+  },
+  {
+    id: "credit_utilization", moduleId: "credit",
+    tag: "Uh oh!",
+    title: "Maxed Out the Week Before",
+    scenario: "You have a $1,000 limit and a $940 balance from textbooks and a flight home. You pay it in full every month, so you have never paid interest. You are applying for a car loan in two weeks.",
+    choices: [
+      { id: "a", label: "Nothing to fix, you always pay in full", result: "Paying in full protects you from interest, not from utilisation. The balance reported on your statement date is what scores see, and 94% of your limit reads as maxed out." },
+      { id: "b", label: "Pay it down before the statement closes", result: "Exactly. Paying before the statement date, not just before the due date, is what changes the number the credit bureaus actually see." },
+      { id: "c", label: "Ask for a limit increase", result: "Also works. The same $940 against a $2,500 limit is 38% instead of 94%. Just make sure the request is a soft pull, and that the bigger limit does not change how you spend." },
+    ]
+  },
+  {
+    id: "credit_cosign", moduleId: "credit",
+    tag: "Something unexpected happened!",
+    title: "Can You Co-Sign?",
+    scenario: "Your cousin asks you to co-sign a $3,200 used car loan. They have a job, they say they are good for it, and they only need you because their credit is thin. Your name would be on it too.",
+    choices: [
+      { id: "a", label: "Sign, family is family", result: "A generous instinct with a hard mechanic behind it: co-signing means you owe the full amount, not half. Every missed payment lands on your credit report as well as theirs." },
+      { id: "b", label: "Say no", result: "Uncomfortable, and often correct. \"I can't put my name on debt I can't pay off myself\" is a complete answer that doesn't require you to question their character." },
+      { id: "c", label: "Offer to help another way", result: "Often the best version: helping with a bigger down payment, or going with them to compare rates, gives real help without tying your credit to their next twelve months." },
+    ]
+  },
+  // ── risk ──
+  {
+    id: "risk_break_in", moduleId: "risk",
+    tag: "Uh oh!",
+    title: "Someone Came Through the Window",
+    scenario: "You come back to your off-campus apartment and your laptop and headphones are gone, about $1,400 of stuff. Your landlord's insurance covers the building, not your belongings. You never got renters insurance.",
+    choices: [
+      { id: "a", label: "Absorb the loss", result: "$1,400 out of pocket. Renters insurance typically runs $10-20 a month, so this is the year of premiums it would have taken to cover it, several times over." },
+      { id: "b", label: "Check whether a parent policy covers you", result: "Genuinely worth a call: many homeowners policies extend to a dependent student's belongings away at school. Most students never think to ask." },
+      { id: "c", label: "Get renters insurance now", result: "Doesn't help with this loss, but it's the correct lesson at the correct moment. Check whether it's replacement cost or actual cash value before you buy." },
+    ]
+  },
+  {
+    id: "risk_health_waiver", moduleId: "risk",
+    tag: "Life happens...",
+    title: "A $2,100 Charge You Can Remove",
+    scenario: "Your tuition bill includes the university health plan at $2,100 for the year. You are 20 and still on a parent's insurance. There is a waiver form, and the deadline is in four days.",
+    choices: [
+      { id: "a", label: "File the waiver", result: "$2,100 back for one form. Schools auto-enrol by default and the deadline is real. Miss it and you're usually billed for the whole year regardless." },
+      { id: "b", label: "Keep the school plan too", result: "Rarely worth it. Double coverage doesn't pay you twice, and campus health centres normally bill outside insurance fine." },
+      { id: "c", label: "Check what the parent plan covers near campus first", result: "The careful version. If your family plan is a narrow regional network and your school is out of state, the campus plan can genuinely be the better buy." },
+    ]
+  },
+  {
+    id: "risk_phone_deductible", moduleId: "risk",
+    tag: "Something unexpected happened!",
+    title: "The Screen Is Spiderwebbed",
+    scenario: "Your phone hit the sidewalk face down. You pay $8/month for phone insurance. You check the policy: the deductible for a screen replacement is $99. A repair shop two blocks away quotes $110.",
+    choices: [
+      { id: "a", label: "File the insurance claim", result: "Saves $11 today. Worth checking whether a claim raises your premium or counts against a claim limit. On a margin this thin, it often isn't worth using." },
+      { id: "b", label: "Pay the repair shop", result: "$11 more, no claim on your record, and often faster. This is the calculation people forget to run: insurance you own isn't automatically the cheaper option." },
+      { id: "c", label: "Reconsider the $8/month", result: "$96 a year plus a $99 deductible is $195 to fix one screen. Insurance is for losses you cannot absorb, and a screen repair usually isn't one of them." },
+    ]
+  },
+  // ── loans ──
+  {
+    id: "loans_refund_check", moduleId: "loans",
+    tag: "Life happens...",
+    title: "A Surprise $2,400 in Your Account",
+    scenario: "Your loans and grants exceeded your tuition and fees, so the bursar refunded the difference: $2,400 just landed in your checking account. It is borrowed money, and it is accruing.",
+    choices: [
+      { id: "a", label: "Return it to the loan servicer", result: "Usually the best financial move if you don't need it. Most servicers let you return a disbursement within a set window with no interest charged at all." },
+      { id: "b", label: "Keep it for rent and books", result: "Exactly what it's for, if that's what it goes to. The trap isn't spending a refund. It's spending it on things you'd never have borrowed for deliberately." },
+      { id: "c", label: "Spend some, save the rest", result: "Fine, as long as you know the price. At around 6%, $2,400 held for four years plus repayment costs meaningfully more than $2,400 to pay back." },
+    ]
+  },
+  {
+    id: "loans_grace_ending", moduleId: "loans",
+    tag: "Uh oh!",
+    title: "Your Grace Period Ends in 30 Days",
+    scenario: "An email from your servicer: first payment due in 30 days, $312/month on the standard plan. You're earning $2,400/month at your first job, and rent is $1,100.",
+    choices: [
+      { id: "a", label: "Take the standard plan", result: "Highest monthly payment, lowest total interest, done in ten years. If $312 fits, this is usually the cheapest way out." },
+      { id: "b", label: "Ask about income-driven repayment", result: "Lowers the monthly payment to a share of your discretionary income, which is real breathing room, at the cost of more interest over a longer term. Worth knowing it exists before you need it." },
+      { id: "c", label: "Ignore it for now", result: "The one genuinely bad option. Federal loans go delinquent at 90 days and default at 270, and default can mean wage garnishment and a wrecked credit report." },
+    ]
+  },
+  {
+    id: "loans_private_gap", moduleId: "loans",
+    tag: "Something unexpected happened!",
+    title: "Federal Aid Came Up $4,000 Short",
+    scenario: "Your aid package covers most of next year but leaves a $4,000 gap. A private lender pre-approves you at 11.5% variable. Your federal unsubsidised rate would be about 6.5% fixed, but you have not maxed it.",
+    choices: [
+      { id: "a", label: "Take the private loan", result: "Fast, and expensive. Variable means the rate can climb, and private loans skip income-driven repayment, deferment options and forgiveness programmes entirely." },
+      { id: "b", label: "Max federal borrowing first", result: "The standard order of operations. Fixed rate, borrower protections, and you can still cover a remainder privately if a gap is left." },
+      { id: "c", label: "Talk to the financial aid office", result: "The step almost nobody takes. Appeals, emergency grants and payment plans exist, and a changed family circumstance can genuinely reopen a package." },
+    ]
+  },
+  // ── taxes ──
+  {
+    id: "taxes_should_i_file", moduleId: "taxes",
+    tag: "Life happens...",
+    title: "A W-2 Arrives and You Made $4,100",
+    scenario: "You earned $4,100 at your campus job last year, below the threshold where you are required to file. Your W-2 shows $290 of federal income tax withheld.",
+    choices: [
+      { id: "a", label: "Skip filing, you are not required to", result: "True, and it costs you $290. Withholding you didn't owe only comes back if you file a return to ask for it." },
+      { id: "b", label: "File and claim the refund", result: "$290 back for maybe forty minutes of work, and free filing software covers a return this simple. Refunds are your money being returned, not a bonus." },
+      { id: "c", label: "File and check for education credits", result: "Better still. Credits like the American Opportunity Credit can be worth far more than the withholding itself, and you have to file to claim any of them." },
+    ]
+  },
+  {
+    id: "taxes_1099_surprise", moduleId: "taxes",
+    tag: "Uh oh!",
+    title: "Nobody Withheld Anything",
+    scenario: "You made $3,800 last year doing freelance design. A 1099-NEC arrives with $3,800 in box 1 and nothing withheld anywhere. You already spent all of it.",
+    choices: [
+      { id: "a", label: "Set aside money for the bill now", result: "The right reflex. Self-employment tax alone is about 15.3% on top of income tax, so roughly 25-30% of freelance income should never have felt like yours." },
+      { id: "b", label: "Deduct your business expenses first", result: "Absolutely do: software, equipment and a share of your phone bill reduce the taxable amount. Keep receipts; this is why freelancers track expenses all year." },
+      { id: "c", label: "Assume it is too small to matter", result: "The IRS got the same 1099 you did. Under-reporting a form they already have on file is the most reliable way to get a letter." },
+    ]
+  },
+  {
+    id: "taxes_refund_cut", moduleId: "taxes",
+    tag: "Something unexpected happened!",
+    title: "\"I'll Do Your Taxes for 20% of the Refund\"",
+    scenario: "Someone in your group chat is offering to file returns for students. They take 20% of whatever refund they get you, and they promise refunds \"way bigger than the free software gives you\".",
+    choices: [
+      { id: "a", label: "Let them do it", result: "A preparer paid a share of your refund has an incentive to inflate it, and you sign the return, so you own the penalties if it's wrong." },
+      { id: "b", label: "Use free filing software instead", result: "IRS Free File and similar tools cover a student return easily, cost nothing, and leave the numbers as yours." },
+      { id: "c", label: "Ask if they have a PTIN", result: "The right question. Anyone paid to prepare returns must have a Preparer Tax Identification Number and sign the return themselves. The ones who won't are telling you something." },
+    ]
+  },
+  // ── psychology ──
+  {
+    id: "psych_bnpl", moduleId: "psychology",
+    tag: "Life happens...",
+    title: "Or 4 Payments of $37.25",
+    scenario: "You have $149 boots in your cart. At checkout, a button offers four interest-free payments of $37.25. The smaller number feels much easier to say yes to.",
+    choices: [
+      { id: "a", label: "Use the payment plan", result: "It's genuinely interest-free if you never miss one. The real effect is that $37 feels affordable when $149 didn't, which is exactly what it's designed to do." },
+      { id: "b", label: "Pay the $149 outright", result: "You felt the full price, which is the point. If $149 gives you pause and $37.25 doesn't, the pause was the accurate signal." },
+      { id: "c", label: "Close the tab and check back in two days", result: "The cheapest test there is. Most impulse carts don't survive 48 hours, and the ones that do were probably worth buying." },
+    ]
+  },
+  {
+    id: "psych_limited_drop", moduleId: "psychology",
+    tag: "Uh oh!",
+    title: "Only 3 Left at This Price",
+    scenario: "A countdown timer says 11 minutes. A banner says only 3 left. A little popup says someone in your city just bought one. The price is $89, down from a \"was\" price of $160.",
+    choices: [
+      { id: "a", label: "Buy before the timer runs out", result: "Timers reset, stock counters are often decoration, and 'was $160' frequently means it was $160 for one week in order to be legal. All three exist to stop you thinking." },
+      { id: "b", label: "Check the real price history", result: "The counter-move to anchoring. Price trackers and a quick search usually show $89 is just the price, and the discount is against a number nobody paid." },
+      { id: "c", label: "Let the timer run out on purpose", result: "A useful experiment to run once. Watching the same deal reappear tomorrow permanently changes how much urgency you feel." },
+    ]
+  },
+  {
+    id: "psych_free_trial", moduleId: "psychology",
+    tag: "Something unexpected happened!",
+    title: "The Free Trial Was Never Free",
+    scenario: "A $14.99 charge appears from a service you signed up to in October for a free month. You used it twice. It has been billing quietly for five months: $74.95.",
+    choices: [
+      { id: "a", label: "Cancel it", result: "Do it now, before the next cycle. Also ask for a refund on unused months. Companies grant them more often than people expect, because the alternative is a chargeback." },
+      { id: "b", label: "Cancel and audit every other trial", result: "The thorough version. Free trials that require a card are designed around the fact that most people forget. The business model depends on it." },
+      { id: "c", label: "Set a reminder next time you start a trial", result: "The fix that actually generalises: a calendar reminder two days before any trial ends turns a default into a decision." },
+    ]
+  },
+  // ── career ──
+  {
+    id: "career_first_offer", moduleId: "career",
+    tag: "Life happens...",
+    title: "They Offered $58,000",
+    scenario: "Your first full-time offer: $58,000. You researched the range for this role in this city and it runs $56,000 to $68,000. The recruiter needs an answer by Thursday.",
+    choices: [
+      { id: "a", label: "Accept, it is a good offer", result: "It is. It's also at the bottom of the band, and every future raise is a percentage of this number, and a $5,000 gap now compounds across a whole career." },
+      { id: "b", label: "Counter at $65,000 with your research", result: "The move that works far more often than people believe. A polite, specific counter backed by market data almost never costs you an offer." },
+      { id: "c", label: "Ask for more time to decide", result: "Reasonable and normal. A few extra days is a standard request, and an employer who refuses one is telling you about themselves." },
+    ]
+  },
+  {
+    id: "career_unpaid_internship", moduleId: "career",
+    tag: "Uh oh!",
+    title: "Great Experience, No Pay",
+    scenario: "A well-known company offers you a summer internship: unpaid, 40 hours a week, \"incredible exposure\". You also have a standing offer to keep your $17/hr job over the summer, which is about $8,800.",
+    choices: [
+      { id: "a", label: "Take the internship", result: "Can absolutely pay off if it leads somewhere real. Ask directly what percentage of interns get return offers. A company proud of that number will tell you." },
+      { id: "b", label: "Keep the paying job", result: "$8,800 is a semester of not borrowing. Prestige is worth something, but it isn't worth an unlimited amount, and plenty of hiring managers value real work history." },
+      { id: "c", label: "Ask if there is any stipend or credit", result: "Worth asking every time. Many \"unpaid\" internships have housing stipends or course credit available that only appear when a candidate raises it." },
+    ]
+  },
+  {
+    id: "career_two_offers", moduleId: "career",
+    tag: "Something unexpected happened!",
+    title: "$4,000 More, Or a 6% Match",
+    scenario: "Two offers. One pays $62,000 with no retirement match. The other pays $58,000 with a 6% employer match and better health coverage.",
+    choices: [
+      { id: "a", label: "Take the higher salary", result: "The bigger visible number. A 6% match on $58,000 is $3,480 a year of additional compensation, which closes almost the entire gap before you count the health plan." },
+      { id: "b", label: "Take the one with the match", result: "You read total compensation instead of salary. The match is real money, it's yours once vested, and it compounds for decades." },
+      { id: "c", label: "Ask the first company to match the benefits", result: "The best of both. Naming a competing offer's specific benefit is one of the few negotiation levers that reliably moves a number." },
+    ]
+  },
+  // ── scams ──
+  {
+    id: "scam_fake_job_check", moduleId: "scams",
+    tag: "Uh oh!",
+    title: "The Job That Sends You Money First",
+    scenario: "A \"campus brand ambassador\" role emails you from a lookalike address. They mail you a $2,450 check, tell you to deposit it, keep $450 as your first payment, and wire $2,000 to their equipment supplier today.",
+    choices: [
+      { id: "a", label: "Deposit it and send the $2,000", result: "This is the oldest version of the scam. The check bounces in about a week, the bank claws back the full $2,450, and the $2,000 you wired is gone for good." },
+      { id: "b", label: "Delete it", result: "Correct. No legitimate employer sends money before you work, and none needs you to forward funds to a third party. Overpayment plus urgency is the entire tell." },
+      { id: "c", label: "Report it to your school", result: "Even better. These campaigns target one campus at a time using scraped student directories, and reporting it is how the next fifty students get warned." },
+    ]
+  },
+  {
+    id: "scam_rental_deposit", moduleId: "scams",
+    tag: "Something unexpected happened!",
+    title: "The Apartment Is Perfect and Cheap",
+    scenario: "A listing near campus is $400 below every comparable unit. The \"owner\" says he is abroad and cannot show it, but will mail the keys as soon as you send a $900 deposit by Zelle.",
+    choices: [
+      { id: "a", label: "Send the deposit before someone else takes it", result: "Zelle and similar apps are effectively cash. Once it's sent it's unrecoverable. Below-market rent plus an absent landlord plus an irreversible payment is three tells at once." },
+      { id: "b", label: "Insist on seeing it in person first", result: "The non-negotiable step. Anyone who cannot arrange for you or a friend to physically stand in a unit is not renting you that unit." },
+      { id: "c", label: "Look up who actually owns the property", result: "Sharp. County property records are public and free, and they'll show you a name that either matches the person you're talking to or doesn't." },
+    ]
+  },
+  {
+    id: "scam_accidental_payment", moduleId: "scams",
+    tag: "Life happens...",
+    title: "\"Sorry, Wrong Person. Can You Send It Back?\"",
+    scenario: "You get $300 on a payment app from a stranger. A minute later they message: wrong contact, please send it back. Your balance really does show $300.",
+    choices: [
+      { id: "a", label: "Send the $300 back", result: "The original $300 came from a stolen card or account. When the real owner reports it, that payment reverses, and the $300 you sent from your own money is simply gone." },
+      { id: "b", label: "Tell them to have the app reverse it", result: "Exactly right. A genuine mistaken payment is fixed through the app's support, not by a second payment from you. Refusing costs you nothing if it's honest." },
+      { id: "c", label: "Keep it", result: "Don't. It isn't yours and it will be reversed. But don't send it anywhere either. Report it in-app and let the platform unwind it." },
+    ]
+  },
 ];
 
 // One-time scenarios tied to finishing a specific module, keyed by module id. Fires the first
@@ -16397,9 +16781,43 @@ function maybeTriggerAmbientLifeEvent() {
   if (sessionsSince < LIFE_EVENT_COOLDOWN_SESSIONS) return null;
   if (Math.random() > LIFE_EVENT_CHANCE) return null;
 
-  const unseen = LIFE_EVENTS.filter(e => !le.history.includes(e.id));
-  const pool = unseen.length ? unseen : LIFE_EVENTS;
+  return pickAmbientLifeEvent(state.activeModuleId, le);
+}
+
+/** Picks the next ambient event, preferring one tagged to the module being worked through.
+ *
+ * Two things this does that a uniform draw over the whole pool did not. Relevance: finishing
+ * a Taxes lesson should surface a tax scenario, not a car repair. And repetition — the real
+ * complaint — anything already seen is excluded until its pool is exhausted, rather than
+ * being eligible again on the very next draw. Ported from mobile's pickAmbientLifeEvent.
+ *
+ * `history` is shared with the guaranteed module-unlock events. That is safe because unlock
+ * ids never appear in LIFE_EVENTS, and the exhaustion reset below only ever forgets ambient
+ * ids — an unlock must still fire exactly once, ever. */
+function pickAmbientLifeEvent(moduleId, le) {
+  if (!LIFE_EVENTS.length) return null;
+  const seen = new Set(le.history);
+  const unseen = LIFE_EVENTS.filter(e => !seen.has(e.id));
+  if (unseen.length) return pickRandomLifeEvent(preferModuleEvents(unseen, moduleId));
+
+  // Everything has been seen: forget the ambient half of the history and start the rotation
+  // over, keeping the unlock ids untouched.
+  const ambientIds = new Set(LIFE_EVENTS.map(e => e.id));
+  le.history = le.history.filter(id => !ambientIds.has(id));
+  return pickRandomLifeEvent(preferModuleEvents(LIFE_EVENTS, moduleId));
+}
+
+function pickRandomLifeEvent(pool) {
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/** This module's events if it has any left, otherwise the whole pool — never empty, so a
+ * module whose three scenarios have all been seen still gets a general one rather than
+ * silently skipping the interruption. */
+function preferModuleEvents(pool, moduleId) {
+  if (!moduleId) return pool;
+  const matching = pool.filter(e => e.moduleId === moduleId);
+  return matching.length ? matching : pool;
 }
 
 function applyLifeEventChoice(event, choice) {
@@ -21627,7 +22045,7 @@ function renderSubQuestResults(mod, qp, newAchs) {
 
   document.getElementById('results-wrap').innerHTML = `
     <div class="subquest-celebrate-hammy hammy-side-avatar streak">${withFaceOverlay(getPigWithItemMarkup(0.55, getEquippedItems()))}</div>
-    <div class="results-grade">Sub-Quest Complete</div>
+    <div class="results-grade">🎉 REAL-LIFE SUB-QUEST COMPLETE</div>
     <h2 class="results-title">${quest.topic}</h2>
     <p class="results-score">Hammy just walked through this one step by step, for real. Here's what stuck.</p>
     <div class="results-rewards-row">
@@ -21636,15 +22054,17 @@ function renderSubQuestResults(mod, qp, newAchs) {
         <div class="results-xp-label">${getTier(modulesCompletedCount()).name} · ${state.xp.toLocaleString()} total</div>
       </div>
     </div>
+    ${levelBarHtml()}
     ${achHtml}
     ${buildQuestReport(mod, qp)}
     <div class="results-actions">
-      <button class="btn-primary" id="res-home">Back to Modules</button>
-      <button class="btn-secondary" id="res-replay">Replay Sub-Quest</button>
+      <button class="btn-primary" id="res-home">Continue</button>
+      <button class="btn-secondary" id="res-replay">Replay guide</button>
     </div>`;
 
   document.getElementById('res-home').addEventListener('click', exitToModules);
   document.getElementById('res-replay').addEventListener('click', () => startQuest(mod.id, state.activeQuestId));
+  wireQuestReport();
 }
 
 // Per-module quests track different dashboard stats (credit score, portfolio value, a
@@ -23137,23 +23557,49 @@ function recordQuestCheck(mod, label, isCorrect) {
   if (!Array.isArray(qp.analytics.checks)) qp.analytics.checks = [];
   qp.analytics.checks.push({ label: label || "Check", isCorrect: !!isCorrect });
 }
+/** Everything graded in one lesson, counted once.
+ *
+ * Split out of buildQuestReport so the headline above the report and the mastery ring inside
+ * it are the same number. Mobile learned this the hard way: it had a headline count, a ring
+ * and a payout on three different bases, so one lesson could read "3/4 correct" above a 100%
+ * ring. */
+function questTally(qp) {
+  const a = qp.analytics;
+  const kcRight = a.knowledgeCheck.filter(x => x.isCorrect);
+  const mythRight = a.mythCards.filter(x => x.guessedRight);
+  // See recordQuestCheck: every other graded moment in the lesson, which used to be shown
+  // to the student and then left out of their score.
+  const checks = Array.isArray(a.checks) ? a.checks : [];
+  const checkRight = checks.filter(x => x.isCorrect);
+  const total = a.knowledgeCheck.length + a.mythCards.length + checks.length;
+  const right = kcRight.length + mythRight.length + checkRight.length;
+  return { right, total, allRight: total > 0 && right === total };
+}
+
 function buildQuestReport(mod, qp) {
   const a = qp.analytics;
   const kcRight = a.knowledgeCheck.filter(x => x.isCorrect);
   const kcWrong = a.knowledgeCheck.filter(x => !x.isCorrect);
   const mythRight = a.mythCards.filter(x => x.guessedRight);
   const mythWrong = a.mythCards.filter(x => !x.guessedRight);
-  // See recordQuestCheck: every other graded moment in the lesson, which used to be shown
-  // to the student and then left out of their score.
   const checks = Array.isArray(a.checks) ? a.checks : [];
   const checkRight = checks.filter(x => x.isCorrect);
   const checkWrong = checks.filter(x => !x.isCorrect);
-  const totalAnswered = a.knowledgeCheck.length + a.mythCards.length + checks.length;
-  const totalRight = kcRight.length + mythRight.length + checkRight.length;
-  const masteryPct = totalAnswered ? Math.round((totalRight / totalAnswered) * 100) : 100;
+  const { right: totalRight, total: totalAnswered } = questTally(qp);
+  // 100% for a lesson with nothing gradeable in it is mathematically the only sensible
+  // default, but as a full green ring it claimed a perfect score for a lesson that never
+  // asked a question. An em dash on an empty track says what actually happened.
+  const graded = totalAnswered > 0;
+  const masteryPct = graded ? Math.round((totalRight / totalAnswered) * 100) : 0;
 
-  const termsHtml = (qp.learnedTerms || []).map(t => `<span class="report-term-chip">${t.term}</span>`).join('')
-    || '<span class="report-term-chip">None recorded</span>';
+  // Hidden entirely when there is nothing in it. A "None recorded" chip under a heading
+  // reading "Words you learned (0)" is a section whose only content is the news that it has
+  // no content.
+  const terms = qp.learnedTerms || [];
+  const termsHtml = terms.length
+    ? `<div class="report-section-title">Words you learned</div>
+       <div class="report-terms">${terms.map(t => `<span class="report-term-chip">${t.term}</span>`).join('')}</div>`
+    : '';
 
   const strengths = [...kcRight.map(x => x.question), ...mythRight.map(x => x.myth), ...checkRight.map(x => x.label)];
   const weakSpots = [...kcWrong.map(x => x.question), ...mythWrong.map(x => x.myth), ...checkWrong.map(x => x.label)];
@@ -23161,9 +23607,21 @@ function buildQuestReport(mod, qp) {
   const strengthsHtml = strengths.length
     ? `<div class="report-section"><div class="report-section-title">What you got right</div><ul class="report-strong-list">${strengths.map(w => `<li>${w}</li>`).join('')}</ul></div>`
     : '';
+  // Two, then a "+N more" that opens the rest — a lesson can end with a dozen of these, and
+  // a wall of them under "Worth another look" is not a thing anybody reads.
+  const WEAK_PREVIEW = 2;
   const weakHtml = weakSpots.length
-    ? `<div class="report-section"><div class="report-section-title">Worth another look</div><ul class="report-weak-list">${weakSpots.map(w => `<li>${w}</li>`).join('')}</ul></div>`
-    : `<div class="report-section report-perfect">You got everything right this time.</div>`;
+    ? `<div class="report-section"><div class="report-section-title">Worth another look</div>
+        <ul class="report-weak-list">${weakSpots.slice(0, WEAK_PREVIEW).map(w => `<li>${w}</li>`).join('')}</ul>
+        ${weakSpots.length > WEAK_PREVIEW ? `
+          <ul class="report-weak-list report-weak-rest" hidden>${weakSpots.slice(WEAK_PREVIEW).map(w => `<li>${w}</li>`).join('')}</ul>
+          <button type="button" class="report-weak-more">+ ${weakSpots.length - WEAK_PREVIEW} more</button>` : ''}
+      </div>`
+    // Only when there were questions to get right. "No weak spots" and "no questions" are
+    // the same empty list, so a lesson built entirely from story/teach/simulator chapters was
+    // congratulated for a clean sweep of nothing — directly under the line saying nothing was
+    // graded.
+    : graded ? `<div class="report-section report-perfect">Every question right this time. 🎉</div>` : '';
 
   const decisionsHtml = a.decisions.length
     ? `<div class="report-section"><div class="report-section-title">Choices you made</div><ul class="report-decision-list">${a.decisions.map(d => `<li><strong>${d.title}:</strong> ${d.choice}</li>`).join('')}${a.bossChoice ? `<li><strong>Boss battle:</strong> ${a.bossChoice}</li>` : ''}</ul></div>`
@@ -23194,20 +23652,29 @@ function buildQuestReport(mod, qp) {
   }
   const advice = adviceParts.slice(0, 2).join(' ');
 
+  // Only the tiles this lesson earned. Lessons draw on different chapter types, so most have
+  // no matching round and no true/false at all — and a tile reading "0/0" does not say "there
+  // weren't any", it looks like a score of nothing. Hints appears once one has been used; a
+  // spotless 0 there is not a stat worth a tile either.
+  const statTiles = [
+    a.knowledgeCheck.length ? { num: `${kcRight.length}/${a.knowledgeCheck.length}`, label: 'Quick Check' } : null,
+    a.mythCards.length ? { num: `${mythRight.length}/${a.mythCards.length}`, label: 'True/False' } : null,
+    a.matchingMistakes > 0 ? { num: String(a.matchingMistakes), label: 'Matching Misses' } : null,
+    (qp.hintsUsed || 0) > 0 ? { num: String(qp.hintsUsed), label: 'Hints Used' } : null,
+  ].filter(Boolean);
+  const statTilesHtml = statTiles.length
+    ? `<div class="report-stat-row">${statTiles.map(t =>
+        `<div class="report-stat"><div class="report-stat-num">${t.num}</div><div class="report-stat-label">${t.label}</div></div>`).join('')}</div>`
+    : '';
+
   return `
     <div class="quest-report">
       <div class="report-mastery">
-        <div class="report-mastery-ring" style="--mastery-pct:${masteryPct}"><span>${masteryPct}%</span></div>
-        <div class="report-mastery-label">Overall mastery this quest<br><span class="report-mastery-sub">${totalRight} of ${totalAnswered} correct across quick checks and true/false cards</span></div>
+        <div class="report-mastery-ring${graded ? '' : ' report-mastery-ungraded'}" style="--mastery-pct:${masteryPct}"><span>${graded ? masteryPct + '%' : '—'}</span></div>
+        <div class="report-mastery-label">Mastery this lesson<br><span class="report-mastery-sub">${graded ? `${totalRight}/${totalAnswered} correct` : 'Nothing graded this lesson'}</span></div>
       </div>
-      <div class="report-section-title">Words you learned (${(qp.learnedTerms || []).length})</div>
-      <div class="report-terms">${termsHtml}</div>
-      <div class="report-stat-row">
-        <div class="report-stat"><div class="report-stat-num">${kcRight.length}/${a.knowledgeCheck.length}</div><div class="report-stat-label">Quick Check</div></div>
-        <div class="report-stat"><div class="report-stat-num">${mythRight.length}/${a.mythCards.length}</div><div class="report-stat-label">True/False</div></div>
-        <div class="report-stat"><div class="report-stat-num">${a.matchingMistakes}</div><div class="report-stat-label">Matching Misses</div></div>
-        <div class="report-stat"><div class="report-stat-num">${qp.hintsUsed || 0}</div><div class="report-stat-label">Hints Used</div></div>
-      </div>
+      ${termsHtml}
+      ${statTilesHtml}
       ${decisionsHtml}
       ${explainbackHtml}
       ${strengthsHtml}
@@ -23216,6 +23683,28 @@ function buildQuestReport(mod, qp) {
         <div class="hammy-report-avatar">${getPigWithItemMarkup(0.4, getEquippedItems())}</div>
         <p><strong>Hammy's advice:</strong> ${advice}</p>
       </div>
+    </div>`;
+}
+
+/** The level bar you just moved.
+ *
+ * XP is paid on this screen and the number is printed on it, but there was nothing here
+ * showing what that XP did — the bar lived on the sidebar and on the Progress page, neither
+ * of which is where you are when you earn it. Mobile puts it directly under the rewards.
+ *
+ * xpProgressPct returns a flat 100 at the top of the ladder (its ceiling collapses onto its
+ * floor), so this has to branch rather than promise a Level 12 that does not exist. */
+function levelBarHtml() {
+  const maxLevel = LEVEL_THRESHOLDS.length;
+  const pct = xpProgressPct();
+  const atMax = state.level >= maxLevel;
+  return `
+    <div class="results-level">
+      <div class="results-level-row">
+        <span>LEVEL ${state.level}</span>
+        <span>${atMax ? 'Max level reached' : `${Math.round(pct)}% to Level ${state.level + 1}`}</span>
+      </div>
+      <div class="results-level-track"><div class="results-level-fill" style="width:${atMax ? 100 : pct}%"></div></div>
     </div>`;
 }
 
@@ -23231,9 +23720,18 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
   }).join('');
 
   const quest = getActiveQuest(mod);
+  const tally = questTally(qp);
+  // Mobile's headline: the lesson's own name, finished off by how it went. "Quest Complete"
+  // named the internal term and said nothing about the lesson or the attempt.
+  const headline = `${quest.topic || quest.character.name} — ${tally.allRight ? 'nailed it!' : 'done!'}`;
+  const scoreLine = tally.total ? `${tally.right}/${tally.total} correct` : '';
   document.getElementById('results-wrap').innerHTML = `
-    <div class="results-grade">Quest Complete</div>
-    <h2 class="results-title">${quest.topic || quest.character.name}</h2>
+    <!-- The 3-in-a-row streak face, not the neutral one: this screen is a celebration, and
+         the sub-quest results screen has always opened on Hammy this way. -->
+    <div class="subquest-celebrate-hammy hammy-side-avatar streak">${withFaceOverlay(getPigWithItemMarkup(0.55, getEquippedItems()))}</div>
+    <div class="results-grade">🎉 LESSON COMPLETE</div>
+    <h2 class="results-title">${headline}</h2>
+    ${scoreLine ? `<p class="results-score results-score-tally">${scoreLine}</p>` : ''}
     <p class="results-score">${consequenceText}${qp.isReplay ? ' · replay (0.5× XP)' : ''}</p>
     <div class="results-rewards-row">
       <div class="results-xp-card">
@@ -23245,18 +23743,32 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
         <div class="results-xp-label">${(state.coins || 0).toLocaleString()} total coins</div>
       </div>
     </div>
+    ${levelBarHtml()}
     ${gradHtml}
     ${diamondHtml}
     ${achHtml}
     <div class="results-breakdown quest-final-dashboard">${dashHtml}</div>
     ${buildQuestReport(mod, qp)}
     <div class="results-actions">
-      <button class="btn-primary" id="res-home">Back to Modules</button>
-      <button class="btn-secondary" id="res-replay">Replay Quest</button>
+      <button class="btn-primary" id="res-home">Continue</button>
+      <button class="btn-secondary" id="res-replay">Replay lesson</button>
     </div>`;
 
   document.getElementById('res-home').addEventListener('click', exitToModules);
   document.getElementById('res-replay').addEventListener('click', () => startQuest(mod.id, state.activeQuestId));
+  wireQuestReport();
+}
+
+/** Opens the rest of the "Worth another look" list. Called by whichever screen just painted a
+ * report — the quest results and the sub-quest results both do. */
+function wireQuestReport() {
+  document.querySelectorAll('.report-weak-more').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rest = btn.parentElement.querySelector('.report-weak-rest');
+      if (rest) rest.hidden = false;
+      btn.remove();
+    });
+  });
 }
 
 // ── Event listeners ────────────────────────────

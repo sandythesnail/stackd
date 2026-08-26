@@ -1935,6 +1935,10 @@ select.budget-input { cursor: pointer; }
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--text);
 }
+/* Nothing gradeable in this lesson: a grey track and an em dash, not a full green ring
+   claiming a perfect score for questions that were never asked. */
+.report-mastery-ungraded { background: var(--border); }
+.report-mastery-ungraded span { color: var(--text-soft); }
 .report-mastery-label { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--text); }
 .report-mastery-sub { display: block; font-family: var(--font); font-size: 0.78rem; font-weight: 500; color: var(--text-soft); margin-top: 0.3rem; }
 .report-section-title { font-family: var(--font-display); font-weight: 700; font-size: 1.02rem; color: var(--text); }
@@ -1952,6 +1956,12 @@ select.budget-input { cursor: pointer; }
 .report-weak-list, .report-strong-list, .report-decision-list { margin: 0.5rem 0 0; padding-left: 1.25rem; }
 .report-weak-list li, .report-strong-list li, .report-decision-list li { margin-bottom: 0.4rem; }
 .report-explainback-note { margin: 0.4rem 0 0; }
+/* "+ N more" under a two-item preview of the weak spots. */
+.report-weak-more {
+  font-family: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+  background: none; border: none; padding: 0.2rem 0; color: var(--green-dark);
+}
+.report-weak-more:hover { text-decoration: underline; }
 .report-advice { display: flex; align-items: center; gap: 1rem; background: var(--bg); border-radius: var(--radius-sm); padding: 1.1rem 1.2rem; }
 .hammy-report-avatar { flex-shrink: 0; }
 .report-advice p { font-size: 0.9rem; line-height: 1.6; color: var(--text-mid); margin: 0; }
@@ -1972,6 +1982,22 @@ select.budget-input { cursor: pointer; }
   font-size: 2rem; font-weight: 700; letter-spacing: -1px; line-height: 1.1; color: var(--text);
 }
 .results-score { font-size: 0.88rem; color: var(--text-mid); }
+/* The graded tally, sitting directly under the headline it belongs to. */
+.results-score-tally { font-weight: 700; color: var(--text); margin-bottom: -0.75rem; }
+
+/* The level bar you just moved. XP is paid on this screen; until now the only place it went
+   was the sidebar. */
+.results-level {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: #fff; padding: 1rem 1.25rem;
+}
+.results-level-row {
+  display: flex; justify-content: space-between; gap: 0.75rem;
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.5px;
+  color: var(--text-soft); margin-bottom: 0.5rem;
+}
+.results-level-track { height: 10px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.results-level-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
 .results-xp-card {
   background: var(--green-pale); border: 1px solid var(--green-light);
   border-radius: var(--radius); padding: 1.25rem 1.5rem;
