@@ -54,44 +54,11 @@ function arrayFromAppJs(src, name) {
   return vm.runInNewContext('(' + src.slice(open, end + 1) + ')', Object.create(null));
 }
 
-/**
- * Differences that already existed when this checker was written, recorded rather than
- * silently tolerated — the same approach mobile/scripts/solve-module-colors.js takes with its
- * ACCEPTED_COLLISIONS.
- *
- * All eleven are the same shape: one vocab concept whose TERM and DEFINITION match on both
- * sides, but whose true/false check does not. The web asks you to apply the idea to a
- * scenario ("On the same $1,000 balance, a traditional savings account paying 0.01% APY and a
- * HYSA paying 4-5% APY would earn roughly the same" — false); mobile restates the definition
- * ("APY measures how much your savings balance actually grows over a year" — true).
- *
- * Eleven of 358 vocab checks. The other 347 are identical, and both banks keep a similar
- * true/false balance (25% and 26% true), so this is isolated drift and not two different
- * philosophies of question — though it may still be a deliberate simplification for a small
- * screen, which is why it is recorded for a person to settle rather than "fixed" here.
- *
- * This list is an exemption, not a lowered bar: any OTHER content difference still fails.
- * Resolve one and delete its lines.
- */
-const ACCEPTED_DRIFT = new Set([
-  'module career.quests[1].chapters[5].concepts[0].check.isTrue',
-  'module career.quests[1].chapters[5].concepts[0].check.statement',
-  'module credit.quests[7].chapters[1].concepts[0].check.statement',
-  'module earning.quests[0].chapters[5].concepts[0].check.statement',
-  'module investing.quests[0].chapters[14].concepts[0].check.isTrue',
-  'module investing.quests[0].chapters[14].concepts[0].check.statement',
-  'module loans.quests[6].chapters[11].concepts[0].check.isTrue',
-  'module loans.quests[6].chapters[11].concepts[0].check.statement',
-  'module psychology.quests[1].chapters[1].concepts[0].check.statement',
-  'module risk.quests[0].chapters[2].concepts[1].check.statement',
-  'module saving.quests[1].chapters[2].concepts[0].check.isTrue',
-  'module saving.quests[1].chapters[2].concepts[0].check.statement',
-  'module scams.quests[2].chapters[11].concepts[0].check.isTrue',
-  'module scams.quests[2].chapters[11].concepts[0].check.statement',
-  'module spending.quests[0].chapters[8].concepts[0].check.statement',
-  'module taxes.quests[1].chapters[5].concepts[0].check.isTrue',
-  'module taxes.quests[1].chapters[5].concepts[0].check.statement',
-]);
+/* No exemptions. The eleven vocab checks that had forked were resolved by taking mobile's
+ * wording onto the web, so every module and every achievement now matches outright and any
+ * difference at all is a failure. If a difference is ever deliberate, reintroduce a list like
+ * mobile/scripts/solve-module-colors.js's ACCEPTED_COLLISIONS rather than loosening this. */
+const ACCEPTED_DRIFT = new Set();
 
 const appJs = read('app.js');
 const problems = [];

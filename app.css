@@ -364,7 +364,9 @@ body { background: var(--bg); min-height: 100vh; }
 .badge-done { background: var(--green-light); color: var(--green-dark); }
 .badge-xp   { background: var(--pink-light);  color: var(--pink-dark); }
 .badge-recommend { background: #FFEDB0; color: #8A6800; }
-.badge-progress { background: var(--bg); color: var(--text-mid); border: 1px solid var(--border); }
+.badge-progress { background: var(--pink-light); color: var(--pink-dark); }
+/* An untouched module states its size, in a quiet neutral chip — not a pink "0% done". */
+.badge-count { background: transparent; color: var(--text-soft); border: none; padding-left: 0; padding-right: 0; }
 
 .mod-title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--text); }
 .mod-desc  { font-size: 0.85rem; color: var(--text-mid); line-height: 1.55; margin-bottom: 1rem; }
@@ -571,11 +573,16 @@ body { background: var(--bg); min-height: 100vh; }
 /* Modules Done + Level Progress — equal columns since both are naturally compact cards
    (unlike the old pairing with the tall 11-row Module Scores card, which forced this row
    to stretch to match and left a lot of dead space around the ring). */
-/* One card wide since Level Progress was removed — see renderProgressPage. A two-column
-   grid with one occupant is just a half-empty row. */
+/* Modules Done and Level Progress side by side — both are naturally compact, and pairing
+   them keeps the ring from stretching to match a much taller neighbour. Stacks on narrow
+   screens, where mobile stacks them too. */
 .pg-top-row {
-  display: grid; grid-template-columns: 1fr; gap: 1.25rem; align-items: stretch;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: stretch;
 }
+@media (max-width: 900px) {
+  .pg-top-row { grid-template-columns: 1fr; }
+}
+.pg-level-card { display: flex; flex-direction: column; justify-content: center; }
 .pg-chart-card {
   background: #fff; border: 1px solid var(--border);
   border-radius: var(--radius); padding: 1.5rem 1.65rem;
@@ -644,31 +651,50 @@ body { background: var(--bg); min-height: 100vh; }
   width: 68px; flex-shrink: 0; text-align: right; white-space: nowrap;
 }
 
-/* Level progress card — ported from mobile's levelBig badge (pale-green box, not a giant
-   number) so it reads as a small chip beside the XP bar rather than a headline. */
+/* Level progress card — mobile's levelBig chip (pale-green box stacking LEVEL / n / of 11,
+   not a giant bare number) beside the within-this-level XP bar. */
 .pg-level-row { display: flex; align-items: center; gap: 1.25rem; }
-.pg-level-badge {
+.pg-level-big {
   width: 62px; height: 62px; border-radius: 20px; background: #EAF3E7;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex-shrink: 0; line-height: 1;
 }
-.pg-level-badge-txt {
-  font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--green-dark);
+.pg-level-big-cap {
+  font-size: 0.53rem; font-weight: 800; letter-spacing: 0.05em; color: var(--text-soft);
 }
-.pg-level-info { flex: 1; }
-.pg-xp-row-detail {
-  display: flex; justify-content: space-between;
+.pg-level-big-num {
+  font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
+  color: var(--green-dark); line-height: 1.15;
+}
+.pg-level-meter { flex: 1; min-width: 0; }
+.pg-level-xp-row {
+  display: flex; justify-content: space-between; gap: 0.6rem;
   font-size: 0.7rem; color: var(--text-soft); font-weight: 600; margin-bottom: 0.45rem;
 }
-.pg-level-bar-track { height: 10px; background: var(--border); border-radius: 999px; overflow: hidden; }
-.pg-level-bar-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width 0.7s ease; }
-.pg-xp-sub { font-size: 0.7rem; color: var(--text-soft); margin-top: 0.4rem; }
+.pg-level-track { height: 10px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.pg-level-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width 0.7s ease; }
+.pg-level-sub { font-size: 0.7rem; color: var(--text-soft); font-weight: 600; margin-top: 0.4rem; }
 
-/* Column / bar chart (XP by module) */
-/* 11 modules' worth of column + label never fit a phone-width screen without
-   either truncating a module name or squeezing every column unreadably thin.
-   Scrolling the chart horizontally as one unit (bars and labels share this
-   wrapper so they can't drift out of sync) keeps every label fully readable
-   instead of forcing the whole page wider than the viewport. */
+/* Ranks ladder — what the tier name in the sidebar actually costs. */
+.pg-ranks-lead {
+  font-size: 0.78rem; color: var(--text-soft); font-weight: 500;
+  margin: -0.25rem 0 0.15rem; line-height: 1.45;
+}
+.pg-ranks { display: flex; flex-direction: column; gap: 0.45rem; }
+.pg-rank-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding: 0.5rem 0.7rem; border-radius: 12px; background: var(--bg);
+  border: 1.5px solid transparent;
+}
+.pg-rank-on { background: #EAF3E7; border-color: var(--green-pale); }
+.pg-rank-name { font-size: 0.79rem; font-weight: 700; color: var(--text-mid); }
+.pg-rank-on .pg-rank-name { font-weight: 800; color: var(--green-dark); }
+.pg-rank-need { font-size: 0.72rem; font-weight: 700; color: var(--text-soft); white-space: nowrap; }
+.pg-rank-on .pg-rank-need { color: var(--green-dark); }
+
+/* Column / bar chart. No longer used by the Progress page (its "XP Earned by Module" chart
+   is gone — see renderProgressPage), but still the chart the quest engine's poll and
+   decision-chain activities draw with, so these rules stay. */
 .pg-col-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .pg-col-scroll .pg-column-chart,
 .pg-col-scroll .pg-col-labels { min-width: 660px; }
@@ -728,15 +754,35 @@ body { background: var(--bg); min-height: 100vh; }
   margin: 0 0 0.3rem;
 }
 .referral-card-head .section-sub { display: block; margin-bottom: 1.1rem; line-height: 1.5; }
-.referral-link-row { display: flex; gap: 0.6rem; }
-.referral-link-input {
-  flex: 1; min-width: 0; font-family: inherit; font-size: 0.85rem; color: var(--text-mid);
-  background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  padding: 0.6rem 0.85rem;
+/* "Your data" card, and the error line under the delete-account row. */
+.privacy-body {
+  font-size: 0.86rem; color: var(--text-mid); line-height: 1.6; margin: 0 0 0.8rem;
 }
-@media (max-width: 480px) {
-  .referral-link-row { flex-direction: column; }
+.privacy-link {
+  font-size: 0.86rem; font-weight: 700; color: var(--green-dark); text-decoration: none;
 }
+.privacy-link:hover { text-decoration: underline; }
+.settings-error {
+  font-size: 0.82rem; font-weight: 600; color: var(--pink-dark); line-height: 1.5;
+  padding: 0.75rem 1.15rem; border-top: 1px solid var(--border);
+}
+
+/* Styled confirm, replacing window.confirm on the destructive settings rows. Reuses the
+   achievement modal's overlay; only the card differs (left-aligned prose, stacked buttons
+   with the safe one first, as in mobile's ConfirmDialog). */
+.confirm-dialog-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1.85rem; max-width: 420px; width: 100%; text-align: left;
+  box-shadow: 0 8px 40px rgba(38,56,48,0.1); animation: fadeUp 0.3s ease both;
+}
+.confirm-dialog-title {
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--text);
+  margin: 0 0 0.7rem;
+}
+.confirm-dialog-body {
+  font-size: 0.88rem; color: var(--text-mid); line-height: 1.6; margin: 0 0 0.8rem;
+}
+.confirm-dialog-cancel, .confirm-dialog-ok { display: block; width: 100%; margin-top: 0.6rem; }
 
 .feedback-chips { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; }
 .feedback-chip {
@@ -2323,13 +2369,6 @@ select.budget-input { cursor: pointer; }
    over the desk entirely and neither desk item ever appeared. */
 .room-slot-desk  { bottom: 34%; left: 50%; transform: translateX(-50%); width: 37%; height: 45%; z-index: 2; }
 
-/* No visual box for an empty slot at all — matches the mobile app, which renders nothing.
-   Still fully tappable (see the click handler in renderRoomPage), just invisible until
-   there's actually an item to show. */
-.room-slot.empty {
-  border: none; background: none; cursor: pointer;
-}
-
 .wallpaper-swatch { width: 100%; height: 100%; border-radius: var(--radius-sm); }
 
 /* ─── WARDROBE ─── */
@@ -2364,20 +2403,46 @@ select.budget-input { cursor: pointer; }
    max-height — a fixed cap left dead white space below a short list on tall screens while
    still forcing an early scroll on shorter ones. min-height:0 lets it shrink below its
    content size so overflow-y:auto is the thing that scrolls, not the whole panel. */
-.wardrobe-items-list { display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; flex: 1; min-height: 0; }
-.wardrobe-row {
-  display: flex; align-items: center; gap: 0.75rem;
-  background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  padding: 0.5rem 0.75rem; cursor: pointer; transition: border-color 0.18s, background 0.18s;
-  text-align: left;
+.wardrobe-items-list { overflow-y: auto; flex: 1; min-height: 0; }
+/* A three-across tile grid, as on mobile, rather than a stack of full-width rows: a closet
+   of nine hats read as a long scrolling list of nearly identical lines. */
+.wardrobe-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 0.6rem;
 }
-.wardrobe-row:hover { border-color: var(--green); }
-.wardrobe-row.equipped { border-color: var(--green); background: var(--green-pale); }
-.wardrobe-row-icon { width: 36px; height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.wardrobe-row-icon svg { width: 100%; height: 100%; }
-.wardrobe-row-name { flex: 1; font-size: 0.88rem; font-weight: 700; color: var(--text); }
-.wardrobe-row-status { font-size: 0.75rem; font-weight: 700; color: var(--text-soft); flex-shrink: 0; }
-.wardrobe-row.equipped .wardrobe-row-status { color: var(--green-dark); }
+.wardrobe-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  padding: 0.75rem 0.5rem; cursor: pointer;
+  background: #fff; border: 1.5px solid var(--border); border-radius: 16px;
+  font-family: inherit; text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.wardrobe-tile:hover { border-color: var(--green); }
+.wardrobe-tile.equipped { border-color: var(--green); background: var(--green-pale); }
+.wardrobe-tile.blocked { opacity: 0.45; cursor: default; }
+.wardrobe-tile.blocked:hover { border-color: var(--border); }
+.wardrobe-tile-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+.wardrobe-tile-icon svg { width: 100%; height: 100%; }
+.wardrobe-tile-name {
+  font-size: 0.75rem; font-weight: 700; color: var(--text); line-height: 1.25;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+}
+.wardrobe-tile-status { font-size: 0.7rem; font-weight: 800; color: var(--text-soft); }
+.wardrobe-tile.equipped .wardrobe-tile-status { color: var(--green-dark); }
+.wardrobe-full-note {
+  font-size: 0.76rem; color: var(--text-mid); font-weight: 600;
+  margin: 0 0 0.6rem; line-height: 1.4;
+}
+
+/* The Room / Wardrobe switch on the page itself — mobile's two chips above the scene. */
+.room-tabs { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; }
+.room-tab {
+  flex: 1; padding: 0.55rem 1rem; border-radius: 16px; cursor: pointer;
+  background: #fff; border: 1.5px solid var(--border);
+  font-family: inherit; font-size: 0.84rem; font-weight: 800; color: var(--text-mid);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.room-tab:hover { border-color: var(--text-soft); }
+.room-tab.active { background: var(--text); border-color: var(--text); color: #fff; }
 .wardrobe-empty { color: var(--text-mid); font-size: 0.9rem; text-align: center; padding: 1.5rem 0.5rem; }
 
 .wardrobe-pig-side {
@@ -2693,6 +2758,10 @@ select.budget-input { cursor: pointer; }
 /* Keep "Lesson N" on one line — without this it can word-wrap between the
    label and the number when the XP badge next to it leaves little room. */
 .lt-num-label { white-space: nowrap; }
+/* The real-life sub-quest's kicker, in the module's pink accent — it is a different kind of
+   lesson, not lesson number nine. */
+.lt-subquest-kicker { color: var(--pink-dark); font-weight: 800; }
+.subquest-tile.done .lt-subquest-kicker { color: var(--green-dark); }
 .lt-num .badge-xp { text-transform: none; letter-spacing: normal; }
 .lt-title {
   font-family: var(--font-display);
@@ -2828,29 +2897,18 @@ select.budget-input { cursor: pointer; }
 .shop-earned-notice strong { color: var(--green-dark); }
 
 /* Mystery boxes, in their own row above the items rather than mixed into the same grid. */
-.shop-box-row {
-  border: 1.5px dashed var(--border); border-radius: var(--radius);
-  padding: 0.9rem 1rem 1rem; background: rgba(255,255,255,0.5);
-  display: flex; flex-direction: column; gap: 0.8rem;
+/* The Boutique / Room switch on the page itself, matching mobile's two chips above the
+   storefront. Same pill treatment as the Badges and Wardrobe filters. */
+.shop-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.1rem; }
+.shop-tab {
+  flex: 1; padding: 0.6rem 1rem; border-radius: 16px; cursor: pointer;
+  background: #fff; border: 1.5px solid var(--border);
+  font-family: inherit; font-size: 0.84rem; font-weight: 800; color: var(--text-mid);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
-.shop-box-row-head { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
-.shop-box-row-title { font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; color: var(--text); }
-.shop-box-row-note { font-size: 0.75rem; color: var(--text-mid); }
-.shop-items-grid-boxes { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-/* Boxes read as a different kind of thing from the items they contain. */
-.shop-box-card { background: #FFFDF5; border-style: dashed; border-color: #E4CE93; }
-.shop-box-card .shop-item-price { color: #7A5D14; }
+.shop-tab:hover { border-color: var(--text-soft); }
+.shop-tab.active { background: var(--text); border-color: var(--text); color: #fff; }
 
-/* Odds disclosed once, per tier, where the number is actually informative — instead of the
-   same "Common · 18%" repeated across five sibling cards. */
-.shop-odds-legend {
-  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
-  font-size: 0.74rem; font-weight: 700; color: var(--text-mid);
-  padding-top: 0.15rem;
-}
-.shop-odds-legend-label { font-weight: 600; color: var(--text-mid); }
-.shop-odds-legend-item { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--text); }
-.shop-odds-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
 /* Category sections */
 .shop-category { display: flex; flex-direction: column; gap: 1rem; margin-top: 0.8rem; }

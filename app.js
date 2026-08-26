@@ -240,7 +240,7 @@ const MODULES = [
                 term: 'Withholding',
                 plain: "Beyond FICA, your employer also withholds federal (and often state) income tax, an estimate of what you'll owe in April, taken out a little at a time instead of all at once. How much gets withheld depends on the W-4 form you filled out when you were hired.",
                 analogy: "It's like paying off a big bill in small installments throughout the year instead of one lump sum, so April doesn't blindside you.",
-                check: { statement: "If nothing were withheld from each paycheck, the entire year's income tax bill would come due all at once in April.", isTrue: true }
+                check: { statement: "How much income tax gets withheld from each paycheck depends on the W-4 form filled out when you were hired.", isTrue: true }
               }
             ],
             xpOnComplete: 3
@@ -1861,7 +1861,7 @@ const MODULES = [
                 term: 'Savings & Debt Repayment',
                 plain: "The 20% slice covers BOTH building savings and paying down debt beyond the minimum, credit card balances, student loan extra payments, and more. If you're carrying debt, extra payments toward it count as part of your 20%, not as a \"want.\"",
                 analogy: "It's like one shared lane for two kinds of traffic, both savings deposits and extra debt payments are heading the same direction: a stronger financial position.",
-                check: { statement: "On an $800/month budget using the 50/30/20 split, an extra $50 payment toward a credit card balance belongs in the same 20% slice as savings, not lumped in with \"wants\" spending.", isTrue: true }
+                check: { statement: "Extra payments toward paying down debt faster count as part of the 20% savings/debt slice.", isTrue: true }
               }
             ],
             xpOnComplete: 3
@@ -3387,7 +3387,7 @@ const MODULES = [
                 term: 'APY (Annual Percentage Yield)',
                 plain: "APY is the rate your balance actually grows over a year, including compounding. A traditional big-bank savings account might pay 0.01% APY, a HYSA might pay 4-5%, on the same $1,000, that's the difference between about 10 cents and about $45 a year.",
                 analogy: "It's like two gardens with the exact same seed, one gets almost no sunlight, the other gets full sun, same starting point, very different growth.",
-                check: { statement: "On the same $1,000 balance, a traditional savings account paying 0.01% APY and a HYSA paying 4-5% APY would earn roughly the same amount of interest in a year.", isTrue: false }
+                check: { statement: "APY measures how much your savings balance actually grows over a year.", isTrue: true }
               }
             ],
             xpOnComplete: 2
@@ -4715,7 +4715,7 @@ const MODULES = [
                 term: 'Time in the Market',
                 plain: "Trying to perfectly predict market ups and downs (timing the market) is extremely difficult, even for professionals. Staying invested consistently over a long time horizon (time IN the market) has historically outperformed trying to guess the perfect moments to buy and sell.",
                 analogy: "It's like trying to catch every green light across a whole city versus just consistently driving the route, one is nearly impossible, the other reliably gets you there.",
-                check: { statement: "Selling investments during a 15% market dip to avoid further losses is generally a better move than staying invested and waiting for a recovery.", isTrue: false }
+                check: { statement: "Historically, consistently staying invested over time has tended to outperform trying to perfectly time the market.", isTrue: true }
               }
             ],
             xpOnComplete: 3
@@ -7010,7 +7010,7 @@ const MODULES = [
                 term: 'Avalanche Method',
                 plain: "The avalanche method puts extra payments toward the HIGHEST-interest debt first, while paying minimums on everything else. Mathematically, this saves the most money overall, since the most expensive debt gets paid down fastest.",
                 analogy: "It's like patching the leak that's losing water the fastest, not the leak that's closest to being empty.",
-                check: { statement: "With $200 owed at 24% APR and $80 owed at 15% APR, the avalanche method would put an extra payment toward the $200 balance first.", isTrue: true }
+                check: { statement: "The avalanche method prioritizes extra payments toward the debt with the highest interest rate.", isTrue: true }
               }
             ],
             xpOnComplete: 2
@@ -7317,7 +7317,7 @@ const MODULES = [
                 term: 'Copay',
                 plain: "A copay is a flat fee you pay per visit or service, often after your deductible is met, like $30 for a doctor's visit. It's predictable and separate from the deductible.",
                 analogy: "It's like a flat cover charge every time you go out, regardless of how much you actually spend once you're inside.",
-                check: { statement: "After meeting a $500 deductible, a visit with a $30 copay costs the same $30 whether the visit's total bill is $100 or $400.", isTrue: true }
+                check: { statement: "A copay is a flat fee paid per visit, separate from the deductible.", isTrue: true }
               }
             ],
             xpOnComplete: 3
@@ -9672,7 +9672,7 @@ const MODULES = [
                 term: 'Working Backward From the Due Date',
                 plain: "Knowing the exact date the grace period ends makes it possible to plan backward: when to choose a repayment plan, when to build the payment into a budget, when to set up autopay. A known deadline turns an abstract future cost into a concrete plan.",
                 analogy: "It's like planning backward from a flight departure time, working out exactly when everything else needs to happen before it.",
-                check: { statement: "If a grace period is known to end in six months, waiting until payments actually start to pick a repayment plan is the most effective approach.", isTrue: false }
+                check: { statement: "Knowing the exact grace period end date makes it possible to plan the budget and repayment choice in advance.", isTrue: true }
               }
             ],
             xpOnComplete: 3
@@ -10219,7 +10219,7 @@ const MODULES = [
                 term: 'Self-Employment Tax',
                 plain: "Beyond regular income tax, 1099 earners may owe self-employment tax, roughly 15.3%, covering the same Social Security and Medicare that a W-2 employer would normally split with you. This kicks in once net 1099 earnings pass $400.",
                 analogy: "As a W-2 employee, your employer covers half of this cost automatically. As a 1099 earner, you're covering both halves yourself.",
-                check: { statement: "A student who earns $250 in net 1099 freelance income for the year would owe self-employment tax on it.", isTrue: false }
+                check: { statement: "1099 earners may owe self-employment tax on top of regular income tax.", isTrue: true }
               }
             ],
             xpOnComplete: 3
@@ -11585,7 +11585,7 @@ const MODULES = [
                 term: 'Lifestyle Inflation',
                 plain: "This is when spending rises to match perceived social norms or income increases, often without a matching rise in savings. It happens gradually, each individual \"yes\" feels small, but they add up fast over months.",
                 analogy: "It's like a balloon that slowly fills to match whatever container it's in, spending naturally expands to meet whatever room feels available.",
-                check: { statement: "Lifestyle inflation can happen even when income hasn't increased at all, driven by spending creeping up to match the people around you.", isTrue: true }
+                check: { statement: "Lifestyle inflation is when spending increases to match income or social norms, without a matching rise in savings.", isTrue: true }
               }
             ],
             xpOnComplete: 2
@@ -12887,7 +12887,7 @@ const MODULES = [
                 term: 'Compounding Salary Gaps',
                 plain: "Future raises, bonuses, and even new job offers are often calculated as a percentage of your current salary. A $5,000 gap at your first job doesn't stay $5,000, it widens every year raises get calculated as a percentage, similar to compound interest.",
                 analogy: "It's like two savings accounts starting at slightly different balances, both earning the same percentage return, the gap between them keeps growing every year, not shrinking.",
-                check: { statement: "Two coworkers start $5,000 apart in salary. If both get identical percentage raises every year, that dollar gap will shrink over time.", isTrue: false }
+                check: { statement: "An early salary gap tends to widen over a career because future raises are often a percentage of current salary.", isTrue: true }
               }
             ],
             xpOnComplete: 3
@@ -14433,7 +14433,7 @@ const MODULES = [
                 term: 'Two Habits Cover Most of This',
                 plain: "Almost every financial aid scam is caught by two simple habits: check the actual domain a link points to, and remember that real aid never requires payment to receive it. Together, they catch the phishing link AND the processing-fee scam in one pass.",
                 analogy: "It's like checking both the lock and the ID before letting someone in, one habit alone leaves a gap the other one closes.",
-                check: { statement: "An email offering a scholarship from a lookalike domain that also asks for a small \"processing fee\" before releasing the funds would pass both of the two key checks.", isTrue: false }
+                check: { statement: "Checking the real domain and remembering that aid never requires payment together catch most financial aid scams.", isTrue: true }
               }
             ],
             xpOnComplete: 3
@@ -17350,7 +17350,11 @@ function groupLessonTiles(moduleId, tiles, extraHtml = '') {
     const isCurrent = firstIncompleteIdx === -1
       ? sIdx === 0
       : (firstIncompleteIdx >= startIdx && firstIncompleteIdx < cursor);
-    const metaText = doneCount === section.count ? 'All done' : `${doneCount}/${section.count} done`;
+    // "in this section", not "done". The count was always right, but "3/3 done" sitting
+    // above a list of lessons reads as "this module is finished", which is how a student
+    // 33% of the way through a module lands on the idea that they have finished it. Naming
+    // the scope costs three words and removes the only reading that was wrong.
+    const metaText = `${doneCount}/${section.count} in this section`;
     return `<div class="lesson-section${isCurrent ? ' expanded' : ''}">
       <div class="lesson-section-header" role="button" tabindex="0" aria-expanded="${isCurrent}">
         <span class="lsh-label">${section.label}</span>
@@ -17373,6 +17377,31 @@ function getTrackModuleIds() {
   return activeTrack ? activeTrack.moduleIds : [];
 }
 
+/** MODULES, with the user's recommended track's modules pulled to the front.
+ *
+ * "Which module comes next" was being answered by MODULES.find(m => !isModuleFullyDone(m))
+ * in two separate places — Home's continue card and the lesson path's lpRecommended — and
+ * that is catalog order, which ignores the track the survey just spent eleven questions
+ * choosing. A brand-new "Debt Freedom" student was sent to Earning regardless. Mobile fixed
+ * the same bug the same way (see home.tsx's orderedModules, repeated deliberately in
+ * LessonPath.tsx so the card and the path can never point at different lessons); this is the
+ * one shared copy of it, so both web surfaces agree by construction.
+ *
+ * Only an ORDERING, never a gate: every module is still in the list, still reachable, and
+ * the Modules tab keeps its own fixed 01–11 order. */
+function orderedModulesByTrack() {
+  const trackIds = getTrackModuleIds();
+  if (!trackIds.length) return MODULES;
+  const inTrack = trackIds.map(id => MODULES.find(m => m.id === id)).filter(Boolean);
+  return [...inTrack, ...MODULES.filter(m => !trackIds.includes(m.id))];
+}
+
+/** The module Home and the lesson path should open on: the first unfinished one in track
+ * order. */
+function nextModuleForUser() {
+  return orderedModulesByTrack().find(m => !isModuleFullyDone(m));
+}
+
 // Shared by the full Modules list and the Home preview tiles — how many of a module's
 // units (lessons/quests, including its real-life sub-quest) are done.
 function moduleUnitsProgress(m) {
@@ -17389,13 +17418,29 @@ function renderModuleList(containerId) {
   if (!container) return;
   container.innerHTML = '';
 
+  // ONE recommendation, not the whole track. Every track carries three module ids, and
+  // putting the heaviest treatment on the page — gold border, gold badge — on a third of
+  // the list recommends nothing. The first unfinished module in the track's own order is
+  // the one to point at. Mirrors mobile's `recommendedId`.
   const trackModuleIds = getTrackModuleIds();
+  const recommendedId = trackModuleIds.find(id => {
+    const m = MODULES.find(x => x.id === id);
+    return m && !isModuleFullyDone(m);
+  }) || null;
+
+  // The module the player is actually working through opens expanded, so a returning user
+  // lands on their next lesson instead of on eleven closed rows. Falls back to any
+  // part-finished module, then to the recommended one; a brand-new account opens fully
+  // collapsed. `activeModuleId` is the last module a quest was started in (startQuest).
+  const lastMod = MODULES.find(m => m.id === state.activeModuleId && !isModuleFullyDone(m));
+  const startedMod = MODULES.find(m => !isModuleFullyDone(m) && moduleUnitsProgress(m).unitsDone > 0);
+  const openModuleId = (lastMod && lastMod.id) || (startedMod && startedMod.id) || recommendedId;
 
   MODULES.forEach(m => {
     const quest = hasQuest(m);
     const { totalUnits, unitsDone, allDone } = moduleUnitsProgress(m);
 
-    const isRecommended = !allDone && trackModuleIds.includes(m.id);
+    const isRecommended = !allDone && m.id === recommendedId;
     const row = document.createElement('div');
     row.className = 'module-row' + (allDone ? ' completed' : '') + (isRecommended ? ' recommended' : '');
     row.dataset.moduleId = m.id;
@@ -17406,15 +17451,18 @@ function renderModuleList(containerId) {
     // a single finished lesson look identical to a fully finished module elsewhere (the
     // aggregate "modules done" stat had the same underlying bug — see modulesCompletedCount).
     const donePct = totalUnits ? Math.round((unitsDone / totalUnits) * 100) : 0;
+    // Progress outranks the recommendation: "★ Start here" on a module you are 40% through
+    // is stale advice, and it used to hide the one number worth showing. An untouched module
+    // states its SIZE rather than a pink "0% done" chip — every module starts at zero and
+    // nothing is gated, so a new player opened this page to eleven attention-coloured chips
+    // all reporting nothing. Same ladder as mobile's Modules rows.
     const badge = allDone
       ? `<span class="card-badge badge-done">✓ Complete</span>`
       : unitsDone > 0
-        ? `<span class="card-badge badge-progress">${donePct}% done</span>`
+        ? `<span class="card-badge badge-progress">${donePct}%</span>`
         : isRecommended
-          ? `<span class="card-badge badge-recommend">★ Recommended</span>`
-          // Was "Up to XXX XP" — percent complete instead, matching the percent-based
-          // language used everywhere else progress shows up (Modules Done, Progress page).
-          : `<span class="card-badge badge-progress">${donePct}% done</span>`;
+          ? `<span class="card-badge badge-recommend">★ Start here</span>`
+          : `<span class="card-badge badge-count">${totalUnits} lessons</span>`;
 
     let bodyHtml;
     if (quest) {
@@ -17442,10 +17490,15 @@ function renderModuleList(containerId) {
         const subQp = state.questProgress[questKey(m.id, sub.id)];
         const subDone = !!(subQp && subQp.done);
         const subCta = subDone ? '↻ Replay Guide' : (subQp && subQp.chapterIdx > 0 ? `Resume ${questLabel(m, sub)} →` : 'Begin Guide →');
+        // Never numbered "Lesson 9". It is a required lesson — moduleUnits counts it and the
+        // module isn't complete without it — but it is a different KIND of lesson, and every
+        // other surface (the lesson path, Home's continue card, mobile's own list) calls it
+        // by name instead of giving it a number. Mirrors mobile's RealLifeSubQuestRow: a
+        // kicker, the guide's own title, and the module's pink accent.
         subHtml = `<div class="lesson-tile quest-tile subquest-tile${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">
           <div class="lt-body">
-            <div class="lt-num"><span class="lt-num-label">Lesson ${quests.length + 1}</span> <span class="card-badge badge-xp">Up to ${questMaxXP(sub, m)} XP</span></div>
-            <div class="lt-title">Real-life sub-quest: ${sub.topic}</div>
+            <div class="lt-num"><span class="lt-num-label lt-subquest-kicker">${subDone ? '✓' : '🎯'} Real-life sub-quest</span> <span class="card-badge badge-xp">Up to ${questMaxXP(sub, m)} XP</span></div>
+            <div class="lt-title">${sub.topic}</div>
             <div class="lt-meta">${sub.character.tagline}</div>
           </div>
           <span class="lt-cta">${subCta}</span>
@@ -17487,7 +17540,11 @@ function renderModuleList(containerId) {
       </div>
       ${bodyHtml}`;
 
+    if (m.id === openModuleId) {
+      row.classList.add('expanded');
+    }
     const header = row.querySelector('.module-row-header');
+    if (m.id === openModuleId) header.setAttribute('aria-expanded', 'true');
     const toggleExpanded = () => {
       const expanded = row.classList.toggle('expanded');
       header.setAttribute('aria-expanded', String(expanded));
@@ -17513,7 +17570,7 @@ function renderModuleList(containerId) {
       // .quest-tile — see the subquest-tile markup above).
       row.querySelectorAll('.quest-tile').forEach(tile => {
         tile.addEventListener('click', () => {
-          dismissTourForLessonStart(tile);
+          dismissTourForLessonStart();
           startQuest(tile.dataset.module, tile.dataset.quest);
         });
       });
@@ -17522,7 +17579,7 @@ function renderModuleList(containerId) {
         const lessonIdx = parseInt(tile.dataset.lesson);
         const lesson = m.lessons[lessonIdx];
         tile.addEventListener('click', () => {
-          dismissTourForLessonStart(tile);
+          dismissTourForLessonStart();
           if (lesson.type) startBonusActivity(tile.dataset.module, lessonIdx);
           else startHook(tile.dataset.module, lessonIdx);
         });
@@ -17720,17 +17777,14 @@ function runFirstLoadSequence() {
 // Next hidden there and shown again on Start-a-lesson; that's now flipped to match mobile.
 const ONBOARDING_TOUR_STEPS = [
   {
-    // The sidebar's own Level/XP bar (.sidebar-footer) is the more specific, always-in-the-
-    // same-spot target for "here's your XP" — it's what actually moves every time XP is
-    // earned. It's hidden on the mobile layout though (.sidebar-footer{display:none}), so
-    // this falls back to the Home page's stat row there instead of pointing at nothing.
-    target: () => {
-      const footer = document.querySelector('.sidebar-footer');
-      if (footer && footer.offsetParent !== null) return footer;
-      return document.getElementById('home-stats-row');
-    },
-    title: 'Earn XP as you go',
-    body: 'Finish lessons and quests to earn XP and level up through the tiers.',
+    // The streak tile on Home, which is a BUTTON that opens the reward calendar — mobile
+    // opens on it for that reason. The step this replaces pointed at the sidebar's XP bar
+    // and explained XP, which is a number the reader cannot act on and which the sidebar
+    // shows permanently anyway; the streak is the one thing on Home that is a live thing to
+    // do, and it is also the one control nobody discovers on their own.
+    target: () => document.getElementById('hs-streak-card'),
+    title: 'Come back every day',
+    body: "Your streak counts the days in a row you show up. Tap it to open the reward calendar and collect the day you're on.",
   },
   {
     target: () => document.getElementById('nav-shop-btn'),
@@ -17773,65 +17827,65 @@ const ONBOARDING_TOUR_STEPS = [
     },
   },
   {
-    // The first lesson tile of the first module row on the Modules page — forced open in
-    // beforeShow below, since a collapsed module row's tiles are all max-height:0 (nothing
-    // real to measure/spotlight) until expanded. Advanced by the real click itself, not the
-    // Next button (see requiresRealClick handling in renderTourStep/positionTourStep) — the
-    // user practices the actual navigation instead of reading about it, and gets a glowing
-    // yellow ring around the exact tile to click (see .tour-spotlight-yellow in app.css —
-    // drawn on the tour's own spotlight element so it's always aligned with it, not a
-    // separate ring on the tile itself).
-    target: () => document.querySelector('#modules-grid .module-row .lesson-tile'),
-    title: 'Start a lesson',
-    body: 'Tap this first lesson to start it. Finish them in order to complete the module.',
+    // The recommended node on Home's own lesson path — the thing the whole screen points at
+    // — rather than "whatever tile happens to be first in the Modules grid", which was a
+    // different lesson from the one every other surface recommends. Two steps, as on mobile:
+    // open the lesson's preview, then start it. Both advance on the real click (see
+    // advanceTourOnRealClick) instead of on Next, so the reader practises the navigation
+    // rather than reading about it, and both get the glowing yellow ring
+    // (.tour-spotlight-yellow, drawn on the tour's own measured spotlight so it is always
+    // exactly aligned with the highlighted element).
+    target: () => document.querySelector('#home-lesson-path .lp-hit[aria-current="true"]'),
+    title: 'Pick your first lesson',
+    body: 'Tap this one to see what it covers. Finish them in order to complete the module.',
     requiresRealClick: true,
+    clickKey: 'lesson-node',
     beforeShow: () => {
-      // Modules step above no longer requires a real click into this page (see comment on
-      // ONBOARDING_TOUR_STEPS above), so this step now navigates there itself.
-      showPage('modules');
-      renderModulesPage();
-      const row = document.querySelector('#modules-grid .module-row');
-      if (row && !row.classList.contains('expanded')) {
-        const lessons = row.querySelector('.module-row-lessons');
-        // Skips the row's own 0.3s expand transition so the tile is immediately full-size
-        // and measurable instead of racing the animation.
-        if (lessons) lessons.style.transition = 'none';
-        row.classList.add('expanded');
-        row.querySelector('.module-row-header')?.setAttribute('aria-expanded', 'true');
-        if (lessons) requestAnimationFrame(() => { lessons.style.transition = ''; });
-      }
-      // Dismissal itself is NOT wired up here — see dismissTourForLessonStart(), called from
-      // the tile's own real click handler in renderModuleList. A second bolted-on listener
-      // captured on this specific DOM node used to do it instead, which silently stopped
-      // working if the grid re-rendered (replacing tile nodes) between this beforeShow and
-      // the user's actual click, leaving the tour stuck open with only Skip able to close
-      // it. Driving dismissal from the real "start the lesson" action itself instead means
-      // it can never go stale, on any render pass.
-      // Purely a JS marker for "this is the tile the tour is currently waiting on" — no
-      // visual styling of its own. The actual glowing ring is .tour-spotlight-yellow
-      // (toggled in positionTourStep), which tracks the tour's own measured spotlight rect
-      // rather than this element, so it's always exactly aligned with it.
-      const tile = document.querySelector('#modules-grid .module-row .lesson-tile');
-      if (tile) tile.classList.add('tour-lesson-target');
+      // The path lives on Home, and the step before this left the reader looking at the
+      // sidebar's Modules link, so bring Home back and paint the path before measuring it.
+      showPage('home');
+      renderHome();
+      const node = document.querySelector('#home-lesson-path .lp-hit[aria-current="true"]');
+      if (node) node.scrollIntoView({ block: 'center', behavior: 'auto' });
     },
+  },
+  {
+    // The preview card's own CTA, which only exists once the previous step's click has
+    // opened it — hence no beforeShow: the click that advances the tour is also what
+    // creates this target.
+    target: () => document.getElementById('lp-preview-start'),
+    title: 'Now start it',
+    body: "Tap the highlighted button and you're in. Everything you finish earns XP and coins.",
+    requiresRealClick: true,
+    clickKey: 'lesson-start',
   },
 ];
 let tourStepIdx = 0;
 let tourOpenedMobileNav = false;
 
-// Called from the real "start this lesson" click handlers in renderModuleList (both the
-// quest-tile and plain-lesson-tile paths) — not a second bolted-on listener, so it can't go
-// stale if the grid re-renders. Always safe to call unconditionally alongside a tile's
-// normal click behavior: no-ops unless the tour is actually on the requiresRealClick step
-// AND this is the exact tile it's waiting on (mirrors the mobile app's
-// advanceIfWaitingOn/isTourTarget check in OnboardingTour.tsx + ModuleLessonList.tsx).
-function dismissTourForLessonStart(tile) {
+/** Called from the real controls the tour waits on — the lesson-path node and the preview
+ * card's start button — rather than from a listener bolted onto whichever DOM node happened
+ * to exist when the step opened. A bolted-on listener silently stops working if that element
+ * is re-rendered between the step opening and the reader clicking, which left the tour stuck
+ * with only Skip able to close it; driving it from the real action cannot go stale.
+ *
+ * Always safe to call unconditionally: a no-op unless the tour is open, on a
+ * requiresRealClick step, and waiting on exactly this control. Mirrors mobile's
+ * advanceIfWaitingOn. */
+function advanceTourOnRealClick(clickKey) {
   const overlay = document.getElementById('tour-overlay');
   if (!overlay || !overlay.classList.contains('visible')) return;
-  if (!ONBOARDING_TOUR_STEPS[tourStepIdx].requiresRealClick) return;
-  if (!tile.classList.contains('tour-lesson-target')) return;
-  tile.classList.remove('tour-lesson-target');
+  const step = ONBOARDING_TOUR_STEPS[tourStepIdx];
+  if (!step.requiresRealClick || step.clickKey !== clickKey) return;
   advanceOnboardingTour();
+}
+
+/** Starting a lesson from anywhere else (a Modules tile, Home's continue button) ends the
+ * tour rather than leaving it hanging over the lesson that just opened. */
+function dismissTourForLessonStart() {
+  const overlay = document.getElementById('tour-overlay');
+  if (!overlay || !overlay.classList.contains('visible')) return;
+  endOnboardingTour();
 }
 
 function startOnboardingTour() {
@@ -17927,14 +17981,13 @@ function positionTourStep() {
   spotlight.style.display = '';
   tooltip.style.transform = 'none';
 
-  // The "Start a lesson" highlight hugs the tile much tighter than every other step's
-  // spotlight — the tile is a wide, full-row element, so the usual 8px padding on all sides
-  // made the glowing box read as noticeably taller/wider than the tile itself. The bottom
-  // edge specifically sits a bit tighter still (padBottom < pad) — pulled up a few px past
-  // even, into the tile's own inner padding, which reads better against a wide short row
-  // than the symmetric padding every other side uses.
-  const pad = step.requiresRealClick ? 1 : 8;
-  const padBottom = step.requiresRealClick ? -6 : pad;
+  // One symmetric padding for every step. The click-me steps used to hug their target with
+  // 1px, and -6px along the bottom, because that target was a wide full-width lesson tile
+  // that the usual 8px made look inflated. They now point at a small round path node and at
+  // a button, where a negative bottom inset crops the highlight into the thing it is
+  // supposed to be drawing a ring around.
+  const pad = 8;
+  const padBottom = pad;
   spotlight.style.top = (r.top - pad) + 'px';
   spotlight.style.left = (r.left - pad) + 'px';
   spotlight.style.width = (r.width + pad * 2) + 'px';
@@ -17989,11 +18042,6 @@ function endOnboardingTour() {
     document.getElementById('sidebar').classList.remove('collapsed');
     tourOpenedMobileNav = false;
   }
-  // Defensive: only actually needed if the tour ends (e.g. Skip) while the "click the first
-  // lesson" step is still active and waiting — a real click already clears its own marker
-  // via dismissTourForLessonStart. querySelectorAll rather than a captured single-node
-  // reference so this can't miss a re-rendered tile.
-  document.querySelectorAll('.tour-lesson-target').forEach(el => el.classList.remove('tour-lesson-target'));
   document.getElementById('tour-spotlight')?.classList.remove('tour-spotlight-yellow');
   state.hasSeenOnboardingTour = true;
   saveState();
@@ -18116,18 +18164,23 @@ function renderSurveyStep() {
 // full locked/unlocked roster. detailed: the dedicated Badges page's version — every badge,
 // earned or not, always shows its full description, lock state, and reward payout inline
 // so the wall reads as a checklist/roadmap rather than something you click through to see.
-function renderAchievementBadges(containerId, subId, { onlyUnlocked = false, detailed = false, filterTier = 'all', filterStatus = 'all' } = {}) {
+/** `limit` caps how many badges are painted (Home shows four, the Badges page shows every
+ * one). `filterStatus` is gone with the Badges page's earned/unearned toggle — see
+ * renderBadgesPage; the grid states earned-ness on every tile, so filtering by it only ever
+ * hid badges from the one screen whose job is to show them all. */
+function renderAchievementBadges(containerId, subId, { onlyUnlocked = false, detailed = false, filterTier = 'all', limit = 0 } = {}) {
   const unlocked = state.unlockedAchievements.length;
-  if (subId) document.getElementById(subId).textContent = onlyUnlocked ? `${unlocked} earned` : `${unlocked}/${ACHIEVEMENTS.length} unlocked`;
+  // "3 / 22 earned" on both surfaces, matching mobile's Home and Badges headers — a bare
+  // count of earned badges says nothing about how many there are to earn.
+  if (subId) document.getElementById(subId).textContent = `${unlocked} / ${ACHIEVEMENTS.length} earned`;
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = '';
   let list = onlyUnlocked ? ACHIEVEMENTS.filter(a => state.unlockedAchievements.includes(a.id)) : ACHIEVEMENTS;
   if (filterTier !== 'all') list = list.filter(a => a.tier === filterTier);
-  if (filterStatus === 'earned') list = list.filter(a => state.unlockedAchievements.includes(a.id));
-  else if (filterStatus === 'unearned') list = list.filter(a => !state.unlockedAchievements.includes(a.id));
+  if (limit > 0) list = list.slice(0, limit);
   if (list.length === 0) {
-    container.innerHTML = `<p class="ach-empty">${onlyUnlocked ? 'No badges yet. Complete a lesson to start earning them.' : 'No badges match these filters.'}</p>`;
+    container.innerHTML = `<p class="ach-empty">${onlyUnlocked ? 'No badges yet. Finish a lesson to earn your first one!' : 'No badges match these filters.'}</p>`;
     return;
   }
   list.forEach(a => {
@@ -18437,30 +18490,6 @@ function mysteryOddsLabel(item) {
   return `<span style="color:${RARITY_COLOR[rarity]}">${RARITY_LABEL[rarity]} · ${pctStr}%</span>`;
 }
 
-// Rarity alone for the card face. Every common in a pool shares one drop chance, so printing
-// it on each of five cards in a row made the number read as decoration rather than
-// information. The actual odds are still disclosed — per tier, once, in the legend under the
-// section header (mysteryOddsLegend) and again in full on the box's own modal.
-function itemRarityLabel(item) {
-  const rarity = itemRarity(item);
-  return `<span style="color:${RARITY_COLOR[rarity]}">${RARITY_LABEL[rarity]}</span>`;
-}
-
-// One row of "this tier drops this often", derived from the same weights the roll uses.
-function mysteryOddsLegend(poolKey) {
-  const pool = mysteryPoolAll(poolKey);
-  if (!pool.length) return '';
-  const tiers = RARITY_ORDER.filter(r => pool.some(i => itemRarity(i) === r));
-  const totalWeight = pool.reduce((sum, i) => sum + RARITY_WEIGHT[itemRarity(i)], 0);
-  const cells = tiers.map(r => {
-    const count = pool.filter(i => itemRarity(i) === r).length;
-    const pct = (RARITY_WEIGHT[r] * count) / totalWeight * 100;
-    const pctStr = pct >= 10 ? Math.round(pct) : Math.round(pct * 10) / 10;
-    return `<span class="shop-odds-legend-item"><span class="shop-odds-legend-dot" style="background:${RARITY_COLOR[r]}"></span>${RARITY_LABEL[r]} · ${pctStr}%</span>`;
-  }).join('');
-  return `<div class="shop-odds-legend"><span class="shop-odds-legend-label">Drop rates per box:</span>${cells}</div>`;
-}
-
 function refreshShopModal(itemId) {
   const item = SHOP_ITEMS.find(i => i.id === itemId);
   if (!item) return;
@@ -18572,8 +18601,11 @@ function closeShopModal() {
 // ── SHOP ───────────────────────────────────────
 let shopActiveTab = 'boutique';
 let roomActiveTab = 'room';
+// Tier only. The earned/unearned toggle is gone: every tile already states whether it is
+// earned (a lock, a dimmed medal, a "claimed" reward tag), so filtering by it only ever hid
+// badges from the one page whose whole job is to show the full set. Mobile's Badges tab has
+// the same five chips and nothing else.
 let badgesFilterTier = 'all';
-let badgesFilterStatus = 'all';
 
 const ICON_COIN = '<svg class="icon-coin" viewBox="0 0 24 24" width="1.15em" height="1.15em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#FFC400" stroke="#8A5A00" stroke-width="1.6"/><circle cx="12" cy="12" r="7.3" fill="none" stroke="#8A5A00" stroke-width="1" opacity="0.55"/><text x="12" y="16.2" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="800" fill="#8A5A00">$</text></svg>';
 const ICON_DIAMOND = '<svg class="icon-diamond" viewBox="0 0 24 24" width="1.15em" height="1.15em" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polygon points="8,6 16,6 20,10.5 12,19 4,10.5" fill="#159CDE" stroke="#0A4A6E" stroke-width="1.2" stroke-linejoin="round"/><polygon points="4,10.5 12,19 12,10.5" fill="#0A4A6E" opacity="0.18"/><polygon points="8,6 16,6 20,10.5 4,10.5" fill="#ffffff" opacity="0.3"/><polygon points="9.2,7.4 14.8,7.4 17,10.5 7,10.5" fill="#ffffff" opacity="0.18"/><line x1="4" y1="10.5" x2="20" y2="10.5" stroke="#0A4A6E" stroke-width="0.6" opacity="0.6"/><line x1="12" y1="6" x2="12" y2="19" stroke="#0A4A6E" stroke-width="0.6" opacity="0.55"/><line x1="8" y1="6" x2="9.2" y2="10.5" stroke="#0A4A6E" stroke-width="0.5" opacity="0.4"/><line x1="16" y1="6" x2="14.8" y2="10.5" stroke="#0A4A6E" stroke-width="0.5" opacity="0.4"/><path d="M18.5 4.5l0.6 1.5 1.5 0.6-1.5 0.6-0.6 1.5-0.6-1.5-1.5-0.6 1.5-0.6z" fill="#ffffff" opacity="0.85"/></svg>';
@@ -18634,11 +18666,18 @@ function renderShopPage() {
         // Same fix as refreshShopModal's equipVerb/equippedVerb above: wearables now say
         // "Worn" here too, matching the Wardrobe tab instead of contradicting it.
         ? (item.slot === 'wallpaper' ? '✓ Applied' : isRoom ? '✓ Placed' : '✓ Worn')
-        : owned ? 'Owned'
-        : isLocked ? `${ICON_GIFT} ${mysteryBoxNameFor(item.mysteryPool)}`
-        : isReward ? '🎓 Locked'
+        // "Unlocked" for something that WAS locked, "Owned" for something bought — the word
+        // that lands should answer the word that was there a moment ago.
+        : owned ? (item.mysteryOnly ? '✓ Unlocked' : 'Owned')
+        // Just "Locked", the same chip the milestone rewards use. This used to name the box
+        // the item comes from, which spent the card's widest line repeating the section
+        // header — on every single locked item in the section.
+        : isLocked ? '🔒 Locked'
+        : isReward ? '🔒 Locked'
         : shopPriceLabel(item);
-      const oddsLabel = isPoolItem ? `<div class="shop-item-odds">${itemRarityLabel(item)}</div>` : '';
+      // The real odds, per item, on the card face — mobile prints "Rare · 12%" here and the
+      // separate per-box legend this replaces is gone with the box row (see below).
+      const oddsLabel = isPoolItem ? `<div class="shop-item-odds">${mysteryOddsLabel(item)}</div>` : '';
       const preview = item.slot === 'wallpaper'
         ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
         : (isRoom || isBox)
@@ -18657,32 +18696,22 @@ function renderShopPage() {
       </div>`;
     };
 
-    // Mystery boxes get their own row above the items, not a slot in the same grid. A box
-    // card shows a price where each of its four neighbours showed a rarity — same visual
-    // container, same position, different kind of information — which made the row's
-    // bottom line unreadable at a glance.
-    const boxes = items.filter(i => i.isMysteryBox);
-    const regular = items.filter(i => !i.isMysteryBox);
-    const poolKeys = [...new Set(boxes.map(b => b.mysteryPool))];
-    const boxRowHtml = boxes.length ? `
-      <div class="shop-box-row">
-        <div class="shop-box-row-head">
-          <span class="shop-box-row-title">${ICON_GIFT} Mystery boxes</span>
-          <span class="shop-box-row-note">Random item from this section's pool</span>
-        </div>
-        <div class="shop-items-grid shop-items-grid-boxes">${boxes.map(cardHtml).join('')}</div>
-        ${poolKeys.map(mysteryOddsLegend).join('')}
-      </div>` : '';
-
+    // One grid per section, with the mystery boxes leading it — the order the `sort` above
+    // already produces, and the shelf mobile shows. Boxes used to be lifted out into a
+    // separate row of their own with a drop-rate legend under it; the legend's job is done
+    // by the per-item odds now printed on every pool card (mysteryOddsLabel), and the box's
+    // own modal still spells the rates out in full.
+    // Room Decor is the only category on its tab, so a titled header above it would just
+    // repeat the storefront sign one line above ("The Furniture Farm").
+    const showHeader = cat.key !== 'room';
     return `<div class="shop-category${isExclusiveCat ? ' shop-category-exclusive' : ''}">
-      <div class="shop-cat-header">
+      ${showHeader ? `<div class="shop-cat-header">
         <span class="shop-cat-icon">${cat.icon}</span>
         <h2 class="shop-cat-title">${cat.label}</h2>
-        ${isExclusiveCat ? '<span class="shop-cat-tag">Earned via streaks, not coins</span>' : ''}
+        ${isExclusiveCat ? '<span class="shop-cat-tag">Earned via streaks and level-ups, not coins</span>' : ''}
         ${isRewardCat ? '<span class="shop-cat-tag">Earned through major milestones, not bought</span>' : ''}
-      </div>
-      ${boxRowHtml}
-      <div class="shop-items-grid">${regular.map(cardHtml).join('')}</div>
+      </div>` : ''}
+      <div class="shop-items-grid">${items.map(cardHtml).join('')}</div>
     </div>`;
   }).join('');
 
@@ -18696,7 +18725,7 @@ function renderShopPage() {
           <div class="shop-storefront-room-icon">🛋️</div>
           <div class="shop-storefront-text">
             <div class="shop-storefront-sign">The Furniture Farm</div>
-            <div class="shop-storefront-sub">${filledRoomSlots ? `${filledRoomSlots} piece${filledRoomSlots === 1 ? '' : 's'} furnished so far` : 'Furnish Hammy\'s room: every cozy upgrade compounds!'}</div>
+            <div class="shop-storefront-sub">${filledRoomSlots ? `${filledRoomSlots} piece${filledRoomSlots === 1 ? '' : 's'} furnished so far` : 'Furnish Hammy\'s room. Every cozy upgrade compounds!'}</div>
           </div>
         </div>
       </div>`
@@ -18724,10 +18753,28 @@ function renderShopPage() {
       lessons and diamonds by keeping a streak.</p>
     </div>`;
 
+  // The Boutique/Room switch also lives on the page itself, not only in the sidebar's
+  // expandable Shop sub-nav — mobile puts the two chips at the top of the Shop screen, and
+  // on a narrow layout (where the sidebar is a hidden drawer) they were the only way to
+  // reach the Furniture Farm without opening the drawer first.
+  const shopTabsHtml = `
+    <div class="shop-tabs">
+      <button type="button" class="shop-tab${shopActiveTab === 'boutique' ? ' active' : ''}" data-shop-page-tab="boutique">Boutique</button>
+      <button type="button" class="shop-tab${shopActiveTab === 'room' ? ' active' : ''}" data-shop-page-tab="room">Room</button>
+    </div>`;
+
   grid.innerHTML = `
+    ${shopTabsHtml}
     ${storefrontHtml}
     ${earnedOnlyNotice}
     ${categoriesHtml}`;
+
+  grid.querySelectorAll('[data-shop-page-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      shopActiveTab = btn.dataset.shopPageTab;
+      renderShopPage();
+    });
+  });
 
   grid.querySelectorAll('.shop-card[data-item-id]').forEach(card => {
     card.addEventListener('click', () => openShopModal(card.dataset.itemId));
@@ -18956,6 +19003,33 @@ function paintRoomFloor(el, edge) {
   }
 }
 
+/** The Room/Wardrobe switch on the page itself, mirroring mobile's two chips at the top of
+ * the Room screen. The sidebar's expandable Room sub-nav still works; on a narrow layout it
+ * is a hidden drawer, and the wardrobe was unreachable without opening it. */
+function roomTabsHtml() {
+  return `
+    <div class="room-tabs">
+      <button type="button" class="room-tab${roomActiveTab === 'wardrobe' ? '' : ' active'}" data-room-page-tab="room">Room</button>
+      <button type="button" class="room-tab${roomActiveTab === 'wardrobe' ? ' active' : ''}" data-room-page-tab="wardrobe">Wardrobe</button>
+    </div>`;
+}
+
+function wireRoomTabs(scene) {
+  scene.querySelectorAll('[data-room-page-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      roomActiveTab = btn.dataset.roomPageTab;
+      renderRoomPage();
+    });
+  });
+}
+
+/** Everything in the room scene leads here: the CTA, an empty wall, a placed piece. */
+function goToFurnitureFarm() {
+  shopActiveTab = 'room';
+  showPage('shop');
+  renderShopPage();
+}
+
 function renderRoomPage() {
   updateRoomSubnavActiveState();
   if (roomActiveTab === 'wardrobe') { renderWardrobeScene(); return; }
@@ -18983,7 +19057,13 @@ function renderRoomPage() {
         <svg viewBox="${item.viewBox}"${par} xmlns="http://www.w3.org/2000/svg">${namespacedItemSvg(item.svg)}</svg>
       </div>`;
     }
-    return `<div class="room-slot room-slot-${slotKey} empty" data-slot="${slotKey}" aria-label="${emptyLabel}"></div>`;
+    // Nothing at all for an empty slot — no dashed placeholder box. The furniture CTA below
+    // is the one way into the Furniture Farm from this screen, so an unfurnished room reads
+    // as an empty room rather than a scene full of "+" outlines. Mirrors mobile's
+    // RoomSlotBox, which returns null for a slot with nothing in it. `emptyLabel` is kept as
+    // the parameter name so each call still documents which slot it is describing.
+    void emptyLabel;
+    return '';
   }
 
   // Fairy Lights span the full width of the scene as GARLAND_COUNT repeated, edge-to-edge
@@ -18995,9 +19075,7 @@ function renderRoomPage() {
   function garlandBlock() {
     const itemId = room.garland;
     const item = itemId ? SHOP_ITEMS.find(i => i.id === itemId) : null;
-    if (!item) {
-      return `<div class="room-slot room-slot-garland empty" data-slot="garland" aria-label="Fairy lights"></div>`;
-    }
+    if (!item) return '';
     // Namespaced fresh per cell (not once for all 10) — otherwise all ten copies would
     // share the same ids and collide with EACH OTHER, not just with any other instance
     // elsewhere on the page.
@@ -19011,6 +19089,7 @@ function renderRoomPage() {
   const wallpaper = wallpaperId ? SHOP_ITEMS.find(i => i.id === wallpaperId) : null;
 
   scene.innerHTML = `
+    ${roomTabsHtml()}
     <div class="room-backdrop">
       <div class="room-wall-zone" id="room-wall-zone" style="${wallpaper ? wallpaper.wallCss : ''}"></div>
       ${garlandBlock()}
@@ -19027,54 +19106,28 @@ function renderRoomPage() {
       </div>
     </div>`;
 
+  wireRoomTabs(scene);
+
   // The floor is drawn, not a CSS gradient — see paintRoomFloor.
   paintRoomFloor(scene.querySelector('.room-floor'), true);
 
   const furnitureCta = document.getElementById('room-furniture-cta');
-  if (furnitureCta) furnitureCta.addEventListener('click', () => {
-    shopActiveTab = 'room';
-    showPage('shop');
-    renderShopPage();
+  if (furnitureCta) furnitureCta.addEventListener('click', goToFurnitureFarm);
+
+  // Every placed piece is a door back to the Furniture Farm, which is where swapping and
+  // removing happen (the item's own sheet has the Remove button). This used to strip the
+  // item on a single click with no confirmation and no undo — one stray click on the room
+  // you had spent coins furnishing and the piece was simply gone. Mirrors mobile, where
+  // every slot's onPress is goToRoomShop.
+  scene.querySelectorAll('.room-slot').forEach(el => {
+    el.addEventListener('click', goToFurnitureFarm);
   });
 
-  scene.querySelectorAll('.room-slot.empty').forEach(el => {
-    el.addEventListener('click', () => { showPage('shop'); renderShopPage(); });
-  });
-
-  // A filled slot previously had no click handler at all — removing/swapping a room item
-  // was only reachable via the Shop page's own "Remove" button, not by clicking the placed
-  // item here in the room scene. Mirrors mobile's toggleRoomSlot: clicking an equipped
-  // item unequips it directly, staying on this page (an empty slot instead sends the
-  // player to the shop to browse/buy, since there's nothing to remove).
-  scene.querySelectorAll('.room-slot:not(.empty)').forEach(el => {
-    el.addEventListener('click', () => {
-      const slotKey = el.dataset.slot;
-      if (!slotKey || !state.equippedRoom) return;
-      state.equippedRoom[slotKey] = null;
-      saveState();
-      renderRoomPage();
-    });
-  });
-
-  // Wallpaper renders into its own #room-wall-zone div, not a .room-slot element (it fills
-  // the whole backdrop rather than a discrete box), so the click-to-unequip wiring above
-  // never covered it — a returning user who'd learned "click a placed item in the Room to
-  // remove it" from every other slot got a silent dead click here instead, needing a trip
-  // back to the Shop just for wallpaper. Same click-to-remove-or-shop pattern as every
-  // other slot, applied here too.
+  // Wallpaper renders into its own #room-wall-zone div rather than a .room-slot (it fills
+  // the whole backdrop instead of a discrete box), so the wiring above doesn't reach it.
+  // Same destination as every other surface in the room.
   const wallZone = document.getElementById('room-wall-zone');
-  if (wallZone) {
-    wallZone.addEventListener('click', () => {
-      if (wallpaper) {
-        state.equippedRoom.wallpaper = null;
-        saveState();
-        renderRoomPage();
-      } else {
-        showPage('shop');
-        renderShopPage();
-      }
-    });
-  }
+  if (wallZone) wallZone.addEventListener('click', goToFurnitureFarm);
 
   scene.querySelector('.room-pig').addEventListener('click', () => {
     roomActiveTab = 'wardrobe';
@@ -19095,18 +19148,32 @@ function renderWardrobeScene() {
   const closetItems = SHOP_ITEMS.filter(i => i.category === wardrobeActiveTab && !i.isMysteryBox && (state.ownedItems || []).includes(i.id));
   const wardrobeTabLabels = { hat: 'hats', accessory: 'accessories', exclusive: 'diamond exclusives' };
 
+  // Hammy wears at most MAX_EQUIPPED_ITEMS things and handleShopAction simply returns when
+  // a fourth is asked for — so once three were on, clicking "Wear" on anything else did
+  // nothing at all: no change, no message, a row that looked broken. The shop's own item
+  // sheet has always explained this; the Wardrobe, which is where you actually go to swap an
+  // outfit, never did. Say it here, and don't invite a click that cannot work. (Taking
+  // something OFF is always allowed, so this is per-tile, not a blanket lock.)
+  const wardrobeFull = wornIds.length >= MAX_EQUIPPED_ITEMS;
+  const fullNote = wardrobeFull && closetItems.length
+    ? `<p class="wardrobe-full-note">Hammy's wearing ${MAX_EQUIPPED_ITEMS} things. Take one off to put something else on.</p>`
+    : '';
+
   const itemsHtml = closetItems.length
-    ? closetItems.map(item => {
+    ? `<div class="wardrobe-grid">${closetItems.map(item => {
         const isWorn = wornIds.includes(item.id);
-        return `<button type="button" class="wardrobe-row${isWorn ? ' equipped' : ''}" data-id="${item.id}">
-          <span class="wardrobe-row-icon"><svg viewBox="${item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120'}" xmlns="http://www.w3.org/2000/svg">${namespacedItemSvg(item.svg)}</svg></span>
-          <span class="wardrobe-row-name">${item.name}</span>
-          <span class="wardrobe-row-status">${isWorn ? '✓ Worn' : 'Wear'}</span>
+        const blocked = !isWorn && wardrobeFull;
+        return `<button type="button" class="wardrobe-tile${isWorn ? ' equipped' : ''}${blocked ? ' blocked' : ''}"
+          data-id="${item.id}"${blocked ? ' disabled' : ''}>
+          <span class="wardrobe-tile-icon"><svg viewBox="${item.viewBox || CAT_VIEWBOX[item.category] || '0 0 120 120'}" xmlns="http://www.w3.org/2000/svg">${namespacedItemSvg(item.svg)}</svg></span>
+          <span class="wardrobe-tile-name">${item.name}</span>
+          <span class="wardrobe-tile-status">${isWorn ? '✓ Worn' : 'Wear'}</span>
         </button>`;
-      }).join('')
+      }).join('')}</div>`
     : `<div class="wardrobe-empty">No ${wardrobeTabLabels[wardrobeActiveTab]} yet, visit the Shop to get some.</div>`;
 
   scene.innerHTML = `
+    ${roomTabsHtml()}
     <div class="room-backdrop wardrobe-backdrop">
       <div class="wardrobe-panel">
         <div class="wardrobe-header">
@@ -19118,6 +19185,7 @@ function renderWardrobeScene() {
           <button type="button" class="wardrobe-tab${wardrobeActiveTab === 'accessory' ? ' active' : ''}" data-wardrobe-tab="accessory">Accessories</button>
           <button type="button" class="wardrobe-tab${wardrobeActiveTab === 'exclusive' ? ' active' : ''}" data-wardrobe-tab="exclusive">Exclusives</button>
         </div>
+        ${fullNote}
         <div class="wardrobe-items-list">${itemsHtml}</div>
       </div>
       <div class="wardrobe-pig-side">
@@ -19136,7 +19204,9 @@ function renderWardrobeScene() {
     });
   });
 
-  scene.querySelectorAll('.wardrobe-row[data-id]').forEach(btn => {
+  wireRoomTabs(scene);
+
+  scene.querySelectorAll('.wardrobe-tile[data-id]').forEach(btn => {
     btn.addEventListener('click', () => {
       handleShopAction(btn.dataset.id);
       renderWardrobeScene();
@@ -19151,10 +19221,60 @@ function renderWardrobeScene() {
 // repeating the full 11-row accordion the Modules tab already owns. That full list on
 // Home was most of what made the page read as mostly empty space once expanded/scanned;
 // "See all" hands off to the real Modules page for everything past these 4.
+/** "Good morning" / "Good afternoon" / "Good evening" by the reader's own clock. Mobile's
+ * home.tsx grew this because the greeting there was hardcoded to "Good afternoon"; the web
+ * had no greeting at all, just the word "Dashboard". */
+function timeOfDayGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+/** First name from the signed-in Clerk user, the email's local part if there's no name on
+ * the account, and 'there' when nobody is signed in — same fallback chain as mobile's
+ * ClerkName. */
+function greetingName() {
+  const u = window.Clerk?.user;
+  if (!u) return 'there';
+  return u.firstName
+    || u.primaryEmailAddress?.emailAddress?.split('@')[0]
+    || 'there';
+}
+
+// How many earned badges Home shows before handing off to the Badges page. Mobile shows
+// four; the web used to print every single unlocked badge here, so the row grew without
+// limit and eventually pushed the rest of the page down for exactly the players who had
+// earned the most.
+const HOME_BADGE_LIMIT = 4;
+
+// The reward calendar opens itself once per visit to Home while today's coins are still
+// uncollected — that is what a daily reward is for. Mobile made the same change for the
+// same reason: the only invitation used to be a yellow outline on a stat tile, and a player
+// who never worked out that the tile was a button never collected anything at all.
+//
+// Held back while the onboarding tour is running: the tour owns the screen and a modal on
+// top of it would cover the very elements it spends six steps pointing at.
+let homeAutoOpenedRewards = false;
+
+function maybeAutoOpenDailyRewards() {
+  if (homeAutoOpenedRewards) return;
+  const tour = document.getElementById('tour-overlay');
+  if (tour && tour.classList.contains('visible')) return;
+  if (!state.hasSeenOnboardingTour) return;
+  if (!dailyLoginBonusPending() && pendingStreakDiamonds <= 0) return;
+  homeAutoOpenedRewards = true;
+  const diamonds = pendingStreakDiamonds;
+  pendingStreakDiamonds = 0;
+  showDailyRewardsModal(diamonds);
+}
+
 function renderHome() {
   showPage('home');
   updateSidebarStats();
   const done = modulesCompletedCount();
+  const greeting = document.getElementById('home-greeting');
+  if (greeting) greeting.textContent = `${timeOfDayGreeting()}, ${greetingName()}`;
   document.getElementById('modules-home-sub').textContent = done === MODULES.length ? 'All complete, replay to master!' : `${done}/${MODULES.length} complete`;
   document.getElementById('home-hdr-coins').textContent = (state.coins || 0).toLocaleString();
   document.getElementById('home-hdr-diamonds').textContent = (state.diamonds || 0).toLocaleString();
@@ -19163,7 +19283,15 @@ function renderHome() {
   renderHomeMascotCard(done);
 
   renderLessonPath('home-lesson-path');
-  renderAchievementBadges('home-achievements-row', 'home-achieve-sub', { onlyUnlocked: true });
+  renderAchievementBadges('home-achievements-row', 'home-achieve-sub', {
+    onlyUnlocked: true, limit: HOME_BADGE_LIMIT,
+  });
+  const seeAllBadges = document.getElementById('home-badges-seeall');
+  if (seeAllBadges) {
+    seeAllBadges.textContent = `All ${ACHIEVEMENTS.length} →`;
+    seeAllBadges.onclick = () => { showPage('badges'); renderBadgesPage(); };
+  }
+  maybeAutoOpenDailyRewards();
 }
 
 // The 4 stat chips (XP, Level, Streak, Modules) used to be their own full-width row above
@@ -19236,7 +19364,8 @@ function renderHomeMascotCard(done) {
   const moodClass = satisfiedToday ? 'mood-satisfied' : `mood-${mood.id}`;
   const pigMarkup = (scale) => `<div class="mascot-pig-wrap has-face-overlay ${moodClass}">${withFaceOverlay(getPigWithItemMarkup(scale, getEquippedItems()))}</div>`;
 
-  const nextModule = MODULES.find(m => !isModuleFullyDone(m));
+  // Track order, not catalog order — see orderedModulesByTrack.
+  const nextModule = nextModuleForUser();
   const card = document.getElementById('home-mascot-card');
   card.classList.toggle('quest-card', !!nextModule);
 
@@ -19266,9 +19395,19 @@ function renderHomeMascotCard(done) {
     : nextModule.lessons.findIndex((_, i) => !state.completedLessons[`${nextModule.id}_${i}`]);
   const nextLessonNum = Math.max(0, nextIdx) + 1;
   const nextPct = totalUnits ? Math.round((doneUnits / totalUnits) * 100) : 0;
+  // The real-life sub-quest is never numbered anywhere else — the Modules list and the
+  // lesson path both show it as its own unnumbered "Real-life sub-quest" row. Asked of the
+  // content rather than inferred from "it's the last one", which is only true while the
+  // sub-quest happens to be authored last (true today, enforced nowhere). Same split mobile
+  // makes with nextIsLifeTask.
+  const nextUnit = quest ? moduleUnits(nextModule)[Math.max(0, nextIdx)] : null;
+  const nextIsSubQuest = !!(nextUnit && nextUnit.parentQuestId);
+  const lessonCountLabel = nextIsSubQuest ? 'Real-life sub-quest' : `Lesson ${nextLessonNum} / ${totalUnits}`;
 
   const speechMsg = satisfiedToday ? "Hammy's had a great day already, thanks to you! Keep it going?" : mood.msg;
-  const ctaLabel = satisfiedToday ? 'Keep Hammy happy: do another module' : 'Continue quest';
+  // "quest" is otherwise an internal term — Results, Modules and the lesson path all say
+  // "lesson" — so this one spot read as if a quest and a lesson were two different things.
+  const ctaLabel = satisfiedToday ? 'Keep Hammy happy, do another module' : 'Continue lesson';
 
   card.innerHTML = `
     <div class="quest-top">
@@ -19279,12 +19418,12 @@ function renderHomeMascotCard(done) {
     <div>
       <div class="quest-meta-row">
         <span class="quest-module-name">${nextModule.title}</span>
-        <span class="quest-lesson-count">Lesson ${nextLessonNum} / ${totalUnits}</span>
+        <span class="quest-lesson-count">${lessonCountLabel}</span>
       </div>
       <div class="quest-bar-track"><div class="quest-bar-fill" style="width:${nextPct}%"></div></div>
     </div>
     <button type="button" class="quest-cta-btn" id="quest-cta-btn">${ctaLabel}</button>
-    ${satisfiedToday ? `<div class="quest-nudge">🔥 ${state.streak}-day streak, Hammy will be even happier tomorrow</div>` : ''}`;
+    ${satisfiedToday ? `<div class="quest-nudge">🔥 ${state.streak}-day streak. Hammy will be even happier tomorrow</div>` : ''}`;
 
   document.getElementById('quest-cta-btn').addEventListener('click', () => startNextLessonFor(nextModule));
 }
@@ -19294,6 +19433,7 @@ function renderHomeMascotCard(done) {
 // least one undone lesson/quest by construction) whichever lesson/quest in `mod` comes
 // next, exactly matching what clicking that same tile in the module list itself would do.
 function startNextLessonFor(mod) {
+  dismissTourForLessonStart();
   if (hasQuest(mod)) {
     // Includes the real-life sub-quest — once the 8 main quests are done, it's next.
     const units = moduleUnits(mod);
@@ -19312,7 +19452,9 @@ function startNextLessonFor(mod) {
 function renderModulesPage() {
   updateSidebarStats();
   const done = modulesCompletedCount();
-  document.getElementById('modules-sub').textContent = done === MODULES.length ? 'All complete, replay to master!' : `${done}/${MODULES.length} complete`;
+  document.getElementById('modules-sub').textContent = done === MODULES.length
+    ? 'All complete, replay to master!'
+    : `${done} / ${MODULES.length} done`;
   // The final assessment, once every module is mastered — '' before then, so the page is
   // unchanged for anyone still working through the list. See post-test.js.
   const ptHost = document.getElementById('modules-posttest');
@@ -19331,7 +19473,7 @@ function exitToModules() {
 function renderBadgesPage() {
   updateSidebarStats();
   renderAchievementBadges('achievements-row', 'achieve-sub', {
-    detailed: true, filterTier: badgesFilterTier, filterStatus: badgesFilterStatus,
+    detailed: true, filterTier: badgesFilterTier,
   });
 }
 
@@ -19348,13 +19490,17 @@ function renderProgressPage() {
   const circ = +(2 * Math.PI * r).toFixed(2);
   const offset = +(circ * (1 - done / MODULES.length)).toFixed(2);
 
-  // Column chart: XP per module, scaled to tallest
-  const xpVals = MODULES.map(m => state.completedModules[m.id]?.xpEarned || 0);
-  const maxXP = Math.max(...xpVals, 1);
-
-  // Alternating bar colors
-  const pinkMods = new Set(['spending', 'credit', 'taxes']);
-
+  // Level Progress card figures. These flank the bar, so they have to be the BAR's
+  // endpoints — the bar measures progress WITHIN the current level, so both are per-level
+  // figures, not cumulative totals.
+  const MAX_LEVEL = LEVEL_THRESHOLDS.length;
+  const base = xpForLevel(state.level - 1);
+  const ceil = xpForLevel(state.level);
+  const xpToNext = Math.max(0, ceil - state.xp);
+  // At the top level there is no next threshold: xpForLevel clamps to the last entry, so
+  // `ceil` collapses onto `base` while xp keeps climbing past it. Every readout below has to
+  // branch on this rather than print `ceil` and promise a Level 12 that cannot exist.
+  const atMaxLevel = state.level >= MAX_LEVEL;
 
   document.getElementById('progress-body').innerHTML = `
     <!-- Three, as on mobile: level out of the ladder, the streak, badges out of the set.
@@ -19401,6 +19547,29 @@ function renderProgressPage() {
         </div>
       </div>
 
+      <!-- Level Progress. The card was described in the comment above and then never
+           rendered: xpProgressPct was computed and dropped on the floor, so the one place the app
+           explains what XP is actually FOR was missing from the page about progress. -->
+      <div class="pg-chart-card pg-level-card">
+        <div class="pg-chart-title">Level Progress</div>
+        <div class="pg-level-row">
+          <div class="pg-level-big">
+            <span class="pg-level-big-cap">LEVEL</span>
+            <span class="pg-level-big-num">${state.level}</span>
+            <span class="pg-level-big-cap">of ${MAX_LEVEL}</span>
+          </div>
+          <div class="pg-level-meter">
+            <div class="pg-level-xp-row">
+              <span>${atMaxLevel ? 'Highest level reached' : `${(state.xp - base).toLocaleString()} / ${(ceil - base).toLocaleString()} XP this level`}</span>
+              <span>${atMaxLevel ? '' : `Level ${state.level + 1} next`}</span>
+            </div>
+            <div class="pg-level-track"><div class="pg-level-fill" style="width:${pct}%"></div></div>
+            <div class="pg-level-sub">${atMaxLevel
+              ? `Level ${MAX_LEVEL} is the last one. There's nothing above it.`
+              : `${xpToNext.toLocaleString()} more XP to reach Level ${state.level + 1}`}</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Module Progress -->
@@ -19424,26 +19593,31 @@ function renderProgressPage() {
       </div>
     </div>
 
-    <!-- XP by module column chart -->
+    <!-- The rank ladder, stated outright.
+         The sidebar shows a tier name sitting directly under a level number, which reads as
+         "my level earned me this rank". It doesn't: rank comes from how many modules are
+         finished and has nothing to do with level or XP at all. Nowhere on the site said so,
+         and nowhere listed what any tier costs — so a player could see "Money-Aware
+         Sophomore" with no idea what it meant or how the next one arrives.
+
+         The "XP Earned by Module" column chart this replaces is gone. It plotted
+         state.completedModules[id].xpEarned, which only a fully-finished module ever writes,
+         so for everybody mid-curriculum it was eleven empty columns; the per-module progress
+         it seemed to promise is the card directly above. Mobile dropped it for the same
+         reason. -->
     <div class="pg-chart-card">
-      <div class="pg-chart-title">XP Earned by Module</div>
-      <div class="pg-col-scroll">
-        <div class="pg-column-chart">
-          ${MODULES.map((m, i) => {
-            const xp = xpVals[i];
-            const hPct = Math.round((xp / maxXP) * 100);
-            const isPink = pinkMods.has(m.id);
-            return `<div class="pg-col">
-              <span class="pg-col-val">${xp > 0 ? xp : ''}</span>
-              <div class="pg-col-bar-wrap">
-                <div class="pg-col-bar${isPink ? ' pg-col-pink' : ''}" style="height:${hPct}%"></div>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
-        <div class="pg-col-labels">
-          ${MODULES.map(m => `<span>${m.title.split(' ')[0]}</span>`).join('')}
-        </div>
+      <div class="pg-chart-title">Ranks</div>
+      <p class="pg-ranks-lead">Your rank comes from how many modules you finish, not from your
+        level. You&rsquo;ve finished ${done} of ${MODULES.length}.</p>
+      <div class="pg-ranks">
+        ${TIERS.map(t => {
+          const current = t.name === tier.name;
+          const need = t.min === t.max ? `all ${t.max}` : `${t.min}`;
+          return `<div class="pg-rank-row${current ? ' pg-rank-on' : ''}">
+            <span class="pg-rank-name">${t.name}</span>
+            <span class="pg-rank-need">${t.min === 0 ? 'from the start' : `${need} modules`}</span>
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
 }
@@ -19515,6 +19689,109 @@ function closeTrackPicker(modal) {
   if (modal._a11yCleanup) modal._a11yCleanup();
 }
 
+/** A styled two-button confirm, replacing the browser's own confirm() for the destructive
+ * rows on this page. Mobile has always asked with a real dialog (ConfirmDialog); the web
+ * asked with a native modal that is unstyled, differently worded on every browser, and
+ * suppressible — so the single most destructive action in the app was gated behind the one
+ * piece of UI the page has no control over. Resolves true/false. */
+function confirmDialog({ title, body, confirmLabel, cancelLabel = 'Cancel', danger = true }) {
+  return new Promise(resolve => {
+    let modal = document.getElementById('confirm-dialog');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'confirm-dialog';
+      modal.className = 'achievement-modal-overlay confirm-dialog-overlay';
+      document.body.appendChild(modal);
+    }
+    const done = (answer) => {
+      modal.classList.remove('show');
+      if (modal._a11yCleanup) modal._a11yCleanup();
+      modal.onclick = null;
+      resolve(answer);
+    };
+    modal.innerHTML = `
+      <div class="confirm-dialog-card">
+        <h2 class="confirm-dialog-title">${escapeHtml(title)}</h2>
+        ${[].concat(body).map(para => `<p class="confirm-dialog-body">${escapeHtml(para)}</p>`).join('')}
+        <button type="button" class="btn-secondary confirm-dialog-cancel" id="confirm-dialog-cancel">${escapeHtml(cancelLabel)}</button>
+        <button type="button" class="${danger ? 'btn-danger' : 'btn-primary'} confirm-dialog-ok" id="confirm-dialog-ok">${escapeHtml(confirmLabel)}</button>
+      </div>`;
+    modal.onclick = (e) => { if (e.target === modal) done(false); };
+    document.getElementById('confirm-dialog-cancel').addEventListener('click', () => done(false));
+    document.getElementById('confirm-dialog-ok').addEventListener('click', () => done(true));
+    modal.classList.add('show');
+    makeModalAccessible(modal, () => done(false));
+  });
+}
+
+/** "Delete my account" — the account itself, not just its contents.
+ *
+ * Ported from mobile's DeleteAccountRow, including the order the rows go in: progress first
+ * (it is the row that actually holds personal data), then the two side tables, and only then
+ * the Clerk user. Every step is checked, and the first failure aborts with nothing deleted
+ * rather than leaving a half-erased account behind — a partial delete is worse than none,
+ * because the login still works and the student believes their data is gone.
+ *
+ * Clerk self-deletion needs "Allow users to delete their accounts" enabled on the instance;
+ * if it is off, user.delete() throws and the message below is what the student sees. */
+function wireDeleteAccount() {
+  const btn = document.getElementById('delete-account-btn');
+  const errorEl = document.getElementById('delete-account-error');
+  if (!btn) return;
+  const showError = (msg) => {
+    if (!errorEl) return;
+    errorEl.textContent = msg;
+    errorEl.hidden = !msg;
+  };
+  showError('');
+  btn.onclick = async () => {
+    showError('');
+    const userId = window.Clerk?.user?.id;
+    if (!userId || !window.stackdSupabase) {
+      showError('You need to be signed in to delete your account.');
+      return;
+    }
+    const ok = await confirmDialog({
+      title: 'Delete your account?',
+      body: [
+        'This permanently deletes your login and everything saved to it: XP, level, streak, coins, diamonds, badges, every lesson you have finished, your shop and room items, your budget figures and your assessment result.',
+        'This cannot be undone. If you only want to start over, use "Reset all progress" instead.',
+      ],
+      cancelLabel: 'Keep my account',
+      confirmLabel: 'Delete permanently',
+    });
+    if (!ok) return;
+    btn.disabled = true;
+    const originalLabel = btn.textContent;
+    btn.textContent = 'Deleting…';
+    const sb = window.stackdSupabase;
+    // `referrals` names the user in either column, hence the .or().
+    const steps = [
+      { label: 'progress', run: () => sb.from('user_progress').delete().eq('clerk_user_id', userId) },
+      { label: 'feedback', run: () => sb.from('feedback').delete().eq('clerk_user_id', userId) },
+      { label: 'referrals', run: () => sb.from('referrals').delete().or(`referrer_id.eq.${userId},referred_id.eq.${userId}`) },
+    ];
+    try {
+      for (const step of steps) {
+        const { error } = await step.run();
+        if (error) throw new Error(`Could not delete your ${step.label}. Nothing has been deleted — please try again.`);
+      }
+      // Point of no return.
+      clearTimeout(supabaseSyncTimeout);
+      localStorage.removeItem('stackd_v2');
+      localStorage.removeItem('stackd_v2_owner');
+      await Clerk.user.delete();
+      window.location.href = '/';
+      return;
+    } catch (e) {
+      console.error('Account deletion failed:', e);
+      showError(e instanceof Error ? e.message : 'Something went wrong. Nothing has been deleted.');
+    }
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  };
+}
+
 // ── SETTINGS PAGE ──────────────────────────────
 function renderSettingsPage() {
   // The "Add 1,000 coins (dev)" cheat that used to sit here is GONE, not gated.
@@ -19539,7 +19816,16 @@ function renderSettingsPage() {
   const resetBtn = document.getElementById('reset-btn');
   if (resetBtn) {
     resetBtn.onclick = async () => {
-      if (!confirm('Reset all progress? This wipes your XP, modules, badges, coins, diamonds, shop items, room decor, and budget plan. This cannot be undone.')) return;
+      const ok = await confirmDialog({
+        title: 'Reset all progress?',
+        body: [
+          'This wipes your XP, level, streak, coins, diamonds, badges, every lesson you have finished, your shop and room items, and your budget plan.',
+          'This cannot be undone.',
+        ],
+        cancelLabel: 'Keep my progress',
+        confirmLabel: 'Reset everything',
+      });
+      if (!ok) return;
       clearTimeout(supabaseSyncTimeout);
       localStorage.removeItem('stackd_v2');
       if (window.stackdSupabase && window.Clerk?.user) {
@@ -19570,22 +19856,7 @@ function renderSettingsPage() {
   // is known about you any more, and the tour is replayed from the help icon in Home''s
   // header — the screen it actually walks through. Both match where the Expo app put them.
 
-  const referralLinkInput = document.getElementById('referral-link-input');
-  if (referralLinkInput && window.Clerk?.user) {
-    referralLinkInput.value = `${window.location.origin}/signup.html?ref=${Clerk.user.id}`;
-  }
-  const referralCopyBtn = document.getElementById('referral-copy-btn');
-  if (referralCopyBtn) {
-    referralCopyBtn.onclick = () => {
-      if (!referralLinkInput || !referralLinkInput.value) return;
-      referralLinkInput.select();
-      (navigator.clipboard?.writeText(referralLinkInput.value) || Promise.reject()).then(() => {
-        const original = referralCopyBtn.textContent;
-        referralCopyBtn.textContent = 'Copied!';
-        setTimeout(() => { referralCopyBtn.textContent = original; }, 1500);
-      }).catch(() => {});
-    };
-  }
+  wireDeleteAccount();
 
   // Feedback / bug reports — writes straight to the shared `feedback` table (see
   // supabase/feedback.sql), same table the mobile app's Settings screen writes to. One-way
@@ -23076,13 +23347,6 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => {
       badgesFilterTier = btn.dataset.tier;
       document.querySelectorAll('#badges-tier-filter .badges-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
-      renderBadgesPage();
-    });
-  });
-  document.querySelectorAll('#badges-status-filter .badges-filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      badgesFilterStatus = btn.dataset.status;
-      document.querySelectorAll('#badges-status-filter .badges-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
       renderBadgesPage();
     });
   });

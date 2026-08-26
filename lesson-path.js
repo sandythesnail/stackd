@@ -303,7 +303,10 @@ function lpSection(m, recommended) {
  * Taken from the same search renderHomeMascotCard runs, so the highlighted node and the
  * continue-card are incapable of naming different lessons. */
 function lpRecommended() {
-  const mod = MODULES.find(function (m) { return !isModuleFullyDone(m); });
+  // nextModuleForUser (app.js) puts the survey's recommended track first, so the path opens
+  // on the module the track actually leads with rather than on whatever sits first in the
+  // fixed 01-11 catalog.
+  const mod = nextModuleForUser();
   if (!mod || !hasQuest(mod)) return null;
   const units = moduleUnits(mod);
   const next = units.find(function (q) {
@@ -489,7 +492,12 @@ function lpSectionEl(section, shownIdx, sections, recommendedTrack) {
     if (n.isLifeTask) slot.classList.add('lp-slot-spur');
 
     const hit = slot.querySelector('.lp-hit');
-    hit.addEventListener('click', function () { lpOpenPreview(n, section); });
+    hit.addEventListener('click', function () {
+      lpOpenPreview(n, section);
+      // Opened FIRST, then the tour advances — the tour's next step spotlights the preview
+      // card's own start button, so that button has to exist by the time it measures.
+      advanceTourOnRealClick('lesson-node');
+    });
     // Hover/focus card. :hover alone can't build the card (it needs the node's data), so the
     // pointer events drive a shared tip element positioned against this node.
     hit.addEventListener('mouseenter', function () { lpShowTip(n, pts[i], body, colW, h); });
@@ -652,6 +660,9 @@ function lpOpenPreview(node, section) {
 
   document.getElementById('lp-preview-start').addEventListener('click', function () {
     lpClosePreview(modal);
+    // The tour's last step waits on this exact button; anywhere else, starting a lesson just
+    // closes the tour (dismissTourForLessonStart, called from the module tiles).
+    advanceTourOnRealClick('lesson-start');
     startQuest(node.moduleId, node.questId);
   });
   document.getElementById('lp-preview-close').addEventListener('click', function () {
