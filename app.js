@@ -20168,6 +20168,47 @@ function closeTrackPicker(modal) {
   if (modal._a11yCleanup) modal._a11yCleanup();
 }
 
+/** The lesson player's X.
+ *
+ * Three things this fixes, all of them mobile's (see the long note on confirmQuit in
+ * mobile's quest.tsx). It asked through window.confirm, which is OS chrome prefixed
+ * "trystacked.app says:" and looks nothing like the app — at the most-tapped exit in the
+ * whole player. It said "Exit the quest", the internal word the student sees nowhere else.
+ * And it asked on chapter one, where nothing has been saved and there is nothing to warn or
+ * reassure anybody about.
+ *
+ * The reassurance is the point: tapping X and having the lesson vanish feels exactly like
+ * losing your work, and the "Resume" label that proves otherwise is back on a screen you
+ * haven't reached yet. So the dialog says the place is kept, and names the chapter it will
+ * come back to. */
+async function confirmLeaveLesson() {
+  if (state.inBonusActivity) {
+    state.inBonusActivity = false;
+    exitToModules();
+    return;
+  }
+  const mod = MODULES.find(m => m.id === state.activeModuleId);
+  const qp = mod ? getQP(mod) : null;
+  // Nothing advanced yet, so there is no resume point and no promise to make.
+  if (!qp || !qp.chapterIdx) { exitToModules(); return; }
+
+  const quest = mod ? getActiveQuest(mod) : null;
+  const chapter = quest && quest.chapters[qp.chapterIdx];
+  const title = chapter ? getChapterTitle(chapter) : '';
+  const place = title
+    ? `You'll come back to "${title}".`
+    : `You'll come back to chapter ${qp.chapterIdx + 1} of ${quest ? quest.chapters.length : '?'}.`;
+
+  const ok = await confirmDialog({
+    title: 'Leave this lesson?',
+    body: [`Your place is saved. ${place}`],
+    cancelLabel: 'Keep going',
+    confirmLabel: 'Leave',
+    danger: false,
+  });
+  if (ok) exitToModules();
+}
+
 /** A styled two-button confirm, replacing the browser's own confirm() for the destructive
  * rows on this page. Mobile has always asked with a real dialog (ConfirmDialog); the web
  * asked with a native modal that is unstyled, differently worded on every browser, and
@@ -23927,17 +23968,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('mod-detail-exit').addEventListener('click', exitToModules);
   document.getElementById('hook-exit').addEventListener('click', exitToModules);
   document.getElementById('hook-start').addEventListener('click', startQuiz);
-  document.getElementById('quiz-exit').addEventListener('click', () => {
-    if (confirm('Exit quiz? Your progress for this session will be lost.')) exitToModules();
+  document.getElementById('quiz-exit').addEventListener('click', async () => {
+    const ok = await confirmDialog({
+      title: 'Leave this quiz?',
+      body: ["You haven't finished it, so this attempt won't be saved and you'd start again from the first question."],
+      cancelLabel: 'Keep going',
+      confirmLabel: 'Leave',
+    });
+    if (ok) exitToModules();
   });
-  document.getElementById('quest-exit').addEventListener('click', () => {
-    if (state.inBonusActivity) {
-      state.inBonusActivity = false;
-      exitToModules();
-      return;
-    }
-    if (confirm('Exit the quest? Your progress is saved up to your last completed chapter.')) exitToModules();
-  });
+  document.getElementById('quest-exit').addEventListener('click', confirmLeaveLesson);
   document.getElementById('btn-next').addEventListener('click', () => {
     if (state.currentQ < state.sessionQuestions.length - 1) {
       const advance = () => { state.currentQ++; renderQuestion(); };
