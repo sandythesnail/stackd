@@ -18095,25 +18095,31 @@ const SURVEY_TOTAL_STEPS = SURVEY_MODULE_IDS.length + 1; // familiarity sliders 
 // full roster — the rest of the catalog is still there, just not thrust at them on day one.
 // Modules can appear in more than one track; tracks are overlapping suggested paths, not a
 // strict partition of the catalog.
+//
+// The blurbs are mobile's, which are a good deal shorter than the ones they replace. They
+// read in two places — the survey's last step and the Settings track picker — and both apps
+// should describe the same track the same way; a student who saw "Debt Freedom" explained one
+// way on their laptop and another on their phone has no way to tell whether it is the same
+// thing. Guarded by scripts/check-content.js.
 const SURVEY_TRACKS = [
   {
     id: 'starting_fresh', title: 'Starting Fresh',
-    blurb: "You're just getting going, so let's cover the everyday basics first: where money comes from and where it goes.",
+    blurb: 'The everyday basics: where money comes from, and where it goes.',
     moduleIds: ['earning', 'spending', 'saving'],
   },
   {
     id: 'debt_freedom', title: 'Debt Freedom',
-    blurb: 'Get a handle on loans, credit, and your paycheck so debt stops being scary.',
+    blurb: 'Loans, credit and your paycheck, so debt stops being scary.',
     moduleIds: ['loans', 'credit', 'taxes'],
   },
   {
     id: 'building_wealth', title: 'Building Wealth',
-    blurb: "You've got the basics covered, now let's grow what you have and earn more of it.",
+    blurb: 'Grow what you have, and earn more of it.',
     moduleIds: ['saving', 'investing', 'career'],
   },
   {
     id: 'stay_protected', title: 'Stay Protected',
-    blurb: 'Sharpen your radar for scams, marketing tricks, and risk before they cost you.',
+    blurb: 'Spot scams, marketing tricks and risk before they cost you.',
     moduleIds: ['risk', 'psychology', 'scams'],
   },
 ];

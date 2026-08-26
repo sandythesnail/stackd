@@ -14,7 +14,8 @@
  *  - `effect` (checking/savings/creditScore). The website has an ambient financial simulation
  *    for the three general events to move; the mobile app has no such state, so its copies
  *    carry no deltas. `coinDelta`, which both apps really do pay, IS compared.
- *  - Curly vs straight quotes, which are normalised away (see `norm`).
+ *  - Curly vs straight quotes, which are normalised away (see lib/literal's
+ *    normalizeQuotes).
  *
  * Everything else — every event, general, module-tagged and unlock, field by field and choice
  * by choice — must match outright. There are no exemptions. lifeEvents.ts's header warns that
@@ -26,61 +27,20 @@
  */
 const fs = require('fs');
 const path = require('path');
-const vm = require('vm');
+const { literal, normalizeQuotes: norm } = require('./lib/literal');
 
 const root = path.join(__dirname, '..');
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 
-/**
- * Slices a top-level `const NAME<...> = <open> … <close>;` literal out of a source file and
- * evaluates just that literal in a bare context. No app or module code runs, and the sandbox
- * has no globals for it to reach if it tried — the same approach check-content.js takes with
- * app.js's MODULES.
- */
-function literal(src, name, open, close, label) {
-  const decl = src.indexOf('const ' + name);
-  if (decl < 0) throw new Error(`${label}: no ${name}`);
-  // From the `=`, not from the declaration. `const GENERAL_LIFE_EVENTS: LifeEvent[] = [`
-  // puts a `[` inside the TYPE annotation, so searching from the name found that one and
-  // sliced the empty pair out of `LifeEvent[]` — an empty catalogue that then silently
-  // compared equal to nothing.
-  const eq = src.indexOf('=', decl);
-  const start = src.indexOf(open, eq);
-  // Comment-aware, not just string-aware. Both catalogues are heavily commented and those
-  // comments are full of apostrophes ("mobile's", "you're"); a scanner that only tracks
-  // quotes reads the first one as the start of a string literal and loses the plot several
-  // hundred characters later, at whichever brace it then fails to count.
-  let depth = 0, str = null, esc = false, comment = null, end = -1;
-  for (let i = start; i < src.length; i++) {
-    const c = src[i];
-    const next = src[i + 1];
-    if (comment === 'line') { if (c === '\n') comment = null; continue; }
-    if (comment === 'block') { if (c === '*' && next === '/') { comment = null; i++; } continue; }
-    if (str) {
-      if (esc) { esc = false; continue; }
-      if (c === '\\') { esc = true; continue; }
-      if (c === str) str = null;
-      continue;
-    }
-    if (c === '/' && next === '/') { comment = 'line'; i++; continue; }
-    if (c === '/' && next === '*') { comment = 'block'; i++; continue; }
-    if (c === '"' || c === "'" || c === '`') { str = c; continue; }
-    if (c === open) depth++;
-    else if (c === close) { depth--; if (depth === 0) { end = i + 1; break; } }
-  }
-  if (end < 0) throw new Error(`${label}: unterminated ${name}`);
-  return vm.runInNewContext('(' + src.slice(start, end) + ')');
-}
-
 const appJs = read('app.js');
 const mobileTs = read('mobile/src/lifeEvents.ts');
 
-const webAmbient = literal(appJs, 'LIFE_EVENTS', '[', ']', 'app.js');
-const webUnlocks = literal(appJs, 'LIFE_EVENT_UNLOCKS', '{', '}', 'app.js');
+const webAmbient = literal(appJs, 'LIFE_EVENTS', '[', 'app.js');
+const webUnlocks = literal(appJs, 'LIFE_EVENT_UNLOCKS', '{', 'app.js');
 
-const mobileGeneral = literal(mobileTs, 'GENERAL_LIFE_EVENTS', '[', ']', 'lifeEvents.ts');
-const mobileByModule = literal(mobileTs, 'MODULE_LIFE_EVENTS', '{', '}', 'lifeEvents.ts');
-const mobileUnlocks = literal(mobileTs, 'LIFE_EVENT_UNLOCKS', '{', '}', 'lifeEvents.ts');
+const mobileGeneral = literal(mobileTs, 'GENERAL_LIFE_EVENTS', '[', 'lifeEvents.ts');
+const mobileByModule = literal(mobileTs, 'MODULE_LIFE_EVENTS', '{', 'lifeEvents.ts');
+const mobileUnlocks = literal(mobileTs, 'LIFE_EVENT_UNLOCKS', '{', 'lifeEvents.ts');
 
 // Mirrors lifeEvents.ts's own LIFE_EVENTS composition: the general set, then every module's
 // events tagged with the module they belong to.
@@ -98,19 +58,6 @@ function compareIds(where, web, mob) {
   const m = mob.map((e) => e.id).join(', ');
   if (w !== m) fail(`${where}: event ids differ\n  app.js: ${w}\n  mobile: ${m}`);
 }
-
-/**
- * Curly quotes and apostrophes are normalised away before prose is compared.
- *
- * The website's copy is typeset (’ and “ ”); mobile's copies of the same lines use the
- * straight ASCII forms. That is a rendering choice on two different platforms, not two
- * different sentences, and failing the build over it would train people to ignore this
- * checker. Everything that changes MEANING — a different number, a reworded outcome, a
- * missing choice — survives the normalisation and still fails.
- */
-const norm = (v) => (typeof v === 'string'
-  ? v.replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
-  : v);
 
 function compareChoices(where, web, mob) {
   if (web.length !== mob.length) {
