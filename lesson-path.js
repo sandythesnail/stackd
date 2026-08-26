@@ -200,8 +200,9 @@ const LP_STATE_LABEL = {
   current: 'RECOMMENDED NEXT',
   available: 'NOT STARTED',
   // A lesson stepped into and left. Flatly wrong to call it "not started", which is what it
-  // read as before. Not a state of its own — see the note on `inProgress`.
-  started: 'STARTED',
+  // read as before. Not a state of its own — see the note on `inProgress`. Mobile's word for
+  // the same idea, so the two apps don't have separate vocabulary for one situation.
+  started: 'IN PROGRESS',
   // The sub-quest, when it is neither finished nor the recommended next. Mobile calls this
   // its 'optional' state, but NOT "optional extra": it is required to finish the module in
   // its entirety (moduleUnits counts it as the 9th lesson and isModuleFullyDone won't call a
@@ -219,7 +220,7 @@ const LP_STATE_TIP = {
   completed: { label: 'Completed', tone: 'var(--green-light)' },
   current: { label: 'Up next', tone: 'var(--green)' },
   available: { label: 'Not started', tone: '#9DAE99' },
-  started: { label: 'Started', tone: 'var(--green)' },
+  started: { label: 'In progress', tone: 'var(--green)' },
   lifeTask: { label: 'Real life sub-quest', tone: '#F0C22E' },
 };
 

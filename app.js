@@ -19639,6 +19639,10 @@ function renderRoomPage() {
   // which tiles for the same reason: a single 120x45 strand stretched to 100% width and a
   // short height would either distort (stretch) or letterbox with dead space on both sides
   // (meet), neither of which reads as a garland actually running across the room.
+  // Ten here, three on mobile, and that is not drift: the count is tiles-across-the-scene,
+  // and the scene is a phone's width there and a desktop panel's here. Mobile's cell works
+  // out at roughly the art's own 120px; ten across a wide room scene is the closest this gets
+  // to the same bulb spacing. Change it by looking at the room, not by matching the number.
   const GARLAND_COUNT = 10;
   function garlandBlock() {
     const itemId = room.garland;
