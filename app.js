@@ -20530,6 +20530,17 @@ const BUDGET_CATEGORY_LABELS = {
 };
 const BUDGET_CATEGORY_ORDER = ['groceries', 'diningOut', 'foodDelivery', 'coffee', 'clothing', 'beauty', 'transportation', 'entertainment', 'textbooks', 'gym'];
 
+/** The five most students actually spend on every month, shown by default; the other five sit
+ * behind "More categories".
+ *
+ * Ten money fields in a row was most of what made this card a chore: a first-time visitor met
+ * a wall of inputs with no indication that leaving one blank was fine, so filling in a budget
+ * felt like a form to complete rather than a question to answer. The stored shape is
+ * untouched — all ten still exist, still sync, and still count toward every total. This is
+ * only what is on screen before you ask for more. Mirrors mobile. */
+const BUDGET_CATEGORIES_COMMON = ['groceries', 'diningOut', 'foodDelivery', 'coffee', 'transportation'];
+const BUDGET_CATEGORIES_MORE = BUDGET_CATEGORY_ORDER.filter(k => !BUDGET_CATEGORIES_COMMON.includes(k));
+
 /** A labelled <select>, the shape both simulators now ask their "which kind" questions in.
  *
  * Both used to ask with a row of preset chips plus a raw percentage slider. Mobile replaced
@@ -20634,6 +20645,11 @@ function returnFromCompoundInterestSimulator() {
   else startBonusActivity(ret.moduleId, ret.lessonIdx);
 }
 
+/** Whether the five extra categories have been opened. Deliberately not persisted: it is a
+ *  disclosure state, not a preference, and renderRows re-opens it on its own whenever any of
+ *  those five holds a figure. */
+let budgetMoreOpen = false;
+
 function renderBudgetCalculatorPanel() {
   const panel = document.getElementById('tools-panel');
   const plan = state.budgetPlan;
@@ -20698,7 +20714,7 @@ function renderBudgetCalculatorPanel() {
   function renderRows() {
     document.getElementById('income-rows').innerHTML = plan.incomeSources.map(x => rowHtml(x, 'income')).join('');
     document.getElementById('fixed-rows').innerHTML = plan.fixedExpenses.map(x => rowHtml(x, 'fixed')).join('');
-    document.getElementById('variable-rows').innerHTML = BUDGET_CATEGORY_ORDER.map(key => {
+    const categoryRow = (key) => {
       const isCallout = key === 'foodDelivery' || key === 'beauty';
       // The labels here are ours (BUDGET_CATEGORY_LABELS), but the VALUE is a stored number
       // that arrives back from localStorage/Supabase, so it gets escaped like the rows above.
@@ -20706,7 +20722,17 @@ function renderBudgetCalculatorPanel() {
         <span class="budget-row-label">${BUDGET_CATEGORY_LABELS[key]}</span>
         <div class="budget-input-wrap"><span class="budget-input-prefix">$</span><input type="number" class="budget-input" min="0" step="5" value="${escapeHtml(plan.variableExpenses[key] || '')}" placeholder="0" data-varkey="${key}" aria-label="${BUDGET_CATEGORY_LABELS[key]} amount"></div>
       </div>`;
-    }).join('');
+    };
+    // The extra five open automatically if any of them already has a figure in it — a
+    // returning student should not have to rediscover where their own numbers went.
+    const moreHasValues = BUDGET_CATEGORIES_MORE.some(k => Number(plan.variableExpenses[k]) > 0);
+    const moreOpen = budgetMoreOpen || moreHasValues;
+    document.getElementById('variable-rows').innerHTML =
+      BUDGET_CATEGORIES_COMMON.map(categoryRow).join('')
+      + `<div class="budget-more" ${moreOpen ? '' : 'hidden'} id="budget-more">${BUDGET_CATEGORIES_MORE.map(categoryRow).join('')}</div>`
+      + (moreOpen ? '' : `<button type="button" class="budget-add-btn" id="budget-more-btn">+ More categories (${BUDGET_CATEGORIES_MORE.length})</button>`);
+    const moreBtn = document.getElementById('budget-more-btn');
+    if (moreBtn) moreBtn.addEventListener('click', () => { budgetMoreOpen = true; renderRows(); });
 
     document.querySelectorAll('#income-rows .budget-input, #fixed-rows .budget-input').forEach(wireRowInput);
     document.querySelectorAll('#income-rows .budget-row-remove, #fixed-rows .budget-row-remove').forEach(btn => {

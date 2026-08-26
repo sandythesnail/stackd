@@ -597,6 +597,36 @@ step('changing the loan type re-runs the maths', () => {
   if (before === after) throw new Error('the answer did not change when the rate went 5.5% -> 12%');
 });
 
+step('the budget shows five categories, with the rest behind a disclosure', () => {
+  s.budgetPlan = {
+    incomeSources: [], fixedExpenses: [], savingsGoal: 0,
+    variableExpenses: { groceries: 0, diningOut: 0, foodDelivery: 0, coffee: 0, clothing: 0,
+      beauty: 0, transportation: 0, entertainment: 0, textbooks: 0, gym: 0 },
+  };
+  ev('budgetMoreOpen = false');
+  let panel = openTool('budget');
+  const visible = [...panel.querySelectorAll('#variable-rows > .budget-row')];
+  if (visible.length !== 5) throw new Error(visible.length + ' categories shown, expected 5');
+  const more = panel.querySelector('#budget-more');
+  if (!more || !more.hidden) throw new Error('the extra five are not tucked away');
+  if (more.querySelectorAll('.budget-row').length !== 5) throw new Error('wrong number behind the disclosure');
+
+  const btn = panel.querySelector('#budget-more-btn');
+  if (!btn) throw new Error('no "More categories" button');
+  btn.click();
+  if (window.document.querySelector('#budget-more').hidden) throw new Error('the button did not open them');
+});
+step('a category with a figure in it opens itself', () => {
+  s.budgetPlan.variableExpenses.textbooks = 60;
+  ev('budgetMoreOpen = false');
+  const panel = openTool('budget');
+  const more = panel.querySelector('#budget-more');
+  if (!more || more.hidden) throw new Error('a student came back to their own number hidden');
+  // All ten still count, whether shown or not.
+  const totals = window.computeBudgetTotals(s.budgetPlan);
+  if (totals.totalVariable !== 60) throw new Error('a hidden category stopped counting: ' + totals.totalVariable);
+});
+
 console.log('\n' + (problems.length ? `FAILED (${problems.length})\n` + problems.join('\n\n') : 'PASS — no errors'));
 process.exit(problems.length ? 1 : 0);
 })();
