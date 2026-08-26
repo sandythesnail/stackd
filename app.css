@@ -2923,6 +2923,12 @@ select.budget-input { cursor: pointer; }
 .shop-earned-notice strong { color: var(--green-dark); }
 
 /* Mystery boxes, in their own row above the items rather than mixed into the same grid. */
+/* Mystery boxes draw the reward calendar's present rather than their own catalogue picture
+   (see mysteryBoxArt) — a plain inline <svg> at a fixed size, centred in whatever well it
+   is sitting in. */
+.shop-box-art { display: flex; align-items: center; justify-content: center; }
+.shop-box-art svg { display: block; }
+
 /* The Boutique / Room switch on the page itself, matching mobile's two chips above the
    storefront. Same pill treatment as the Badges and Wardrobe filters. */
 .shop-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.1rem; }

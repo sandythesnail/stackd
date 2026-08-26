@@ -12,10 +12,11 @@
  * `correct` index that moves is a right answer scored wrong. This is the content the whole
  * product is, so it is the last thing that should be allowed to fork quietly.
  *
- * Deliberately compares only what both apps actually USE. Mobile's Achievement carries an
- * `available` flag that has no web counterpart (it marks unlock conditions the mobile app
- * cannot check yet), and modules.json is regenerated with its keys in a different order.
- * Neither is drift, so neither is reported.
+ * Deliberately compares only what both apps actually USE: modules.json is regenerated with
+ * its keys in a different order, which is not drift and is not reported. The `available`
+ * flag IS compared — it used to be mobile-only, but the web has it now, and it decides
+ * whether a badge can be won at all, so the two sides disagreeing about that is exactly the
+ * kind of difference worth failing over.
  *
  *   node scripts/check-content.js
  */
@@ -137,9 +138,9 @@ const note = (m, where) => {
   const body = ts.slice(ts.indexOf('export const ACHIEVEMENTS'));
 
   /* Parsed rather than evaluated: the file is TypeScript, so it cannot be run here. Only the
-     scalar fields both apps share are read — `check` is a function on the web side and an
-     `available` flag on mobile's, which is a real difference in what each can compute and not
-     something to hold them to. */
+     scalar fields both apps share are read; the unlock condition itself is a closure on both
+     sides and is compared by neither — what it can DECIDE is guarded by the `available` flag
+     below, which is the part that was actually wrong. */
   const mob = [];
   /* Both quote styles. A `desc` whose text contains an apostrophe is written with double
      quotes ("Ace both of Hammy's credit quests."), and a single-quote-only pattern silently
@@ -147,13 +148,15 @@ const note = (m, where) => {
      they are both there. */
   const S = "(?:'((?:[^'\\\\]|\\\\.)*)'|\"((?:[^\"\\\\]|\\\\.)*)\")";
   const entryRe = new RegExp(
-    '\\{\\s*id:\\s*' + S + ',\\s*tier:\\s*' + S + ',\\s*label:\\s*' + S + ',\\s*desc:\\s*' + S + ',\\s*color:\\s*' + S, 'g');
+    '\\{\\s*id:\\s*' + S + ',\\s*tier:\\s*' + S + ',\\s*label:\\s*' + S + ',\\s*desc:\\s*' + S
+    + ',\\s*color:\\s*' + S + ',\\s*available:\\s*(true|false)', 'g');
   const unq = (a, b) => (a !== undefined ? a : b || '').replace(/\\(['"])/g, '$1');
   let m;
   while ((m = entryRe.exec(body))) {
     mob.push({
       id: unq(m[1], m[2]), tier: unq(m[3], m[4]), label: unq(m[5], m[6]),
       desc: unq(m[7], m[8]), color: unq(m[9], m[10]),
+      available: m[11] === 'true',
     });
   }
   if (!mob.length) note('achievements: parsed none from mobile — the checker, not the data, is probably broken');
@@ -165,6 +168,13 @@ const note = (m, where) => {
     if (!b) { note(`achievement ${a.id}: missing from mobile`); continue; }
     for (const k of ['tier', 'label', 'desc', 'color']) {
       if (a[k] !== b[k]) note(`achievement ${a.id}.${k}: app.js ${JSON.stringify(a[k])} / mobile ${JSON.stringify(b[k])}`);
+    }
+    /* Whether the badge can be won at all. Absent on the web means winnable, which is how
+       twenty of the twenty-two are written; only the two that nothing in either app can award
+       say so out loud. The apps disagreeing here means one of them is advertising a badge it
+       can never hand out, or hiding one it could. */
+    if ((a.available !== false) !== (b.available !== false)) {
+      note(`achievement ${a.id}.available: app.js ${a.available !== false} / mobile ${b.available !== false}`);
     }
   }
   const wIds = new Set(web.map((a) => a.id));

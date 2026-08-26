@@ -439,6 +439,43 @@ await stepAsync('later chapters promise the place is kept, and name it', async (
 });
 
 
+// 9. The badge ceiling has to be a real one.
+console.log('\nbadge ceiling');
+step('every badge on the grid can actually be won', () => {
+  const earnable = ev('EARNABLE_ACHIEVEMENTS');
+  const all = api.ACHIEVEMENTS;
+  if (earnable.length >= all.length) throw new Error('nothing is marked unwinnable');
+  const hidden = all.filter((a) => !earnable.includes(a)).map((a) => a.id).sort().join(',');
+  if (hidden !== 'excellent_credit,iron_will') throw new Error('unexpected hidden set: ' + hidden);
+  // The grid, and the counter above it, must both agree with that list.
+  s.unlockedAchievements = [];
+  window.renderBadgesPage();
+  const tiles = window.document.querySelectorAll('#achievements-row .ach-badge');
+  if (tiles.length !== earnable.length) throw new Error(tiles.length + ' tiles for ' + earnable.length + ' winnable badges');
+  const sub = window.document.getElementById('achieve-sub').textContent;
+  if (!sub.includes('/ ' + earnable.length)) throw new Error('counter reads: ' + sub);
+});
+step('Grandmaster is reachable', () => {
+  const earnable = ev('EARNABLE_ACHIEVEMENTS');
+  // Everything except Grandmaster itself, exactly as a player would arrive at it.
+  s.unlockedAchievements = earnable.filter((a) => a.id !== 'grandmaster').map((a) => a.id);
+  s.claimedBadgeRewards = [...s.unlockedAchievements];
+  const got = window.checkAchievementsAndAnnounce();
+  if (!got.some((a) => a.id === 'grandmaster')) {
+    throw new Error('the hardest badge in the app still cannot be earned');
+  }
+});
+step('the two unwinnable badges are never awarded', () => {
+  s.unlockedAchievements = [];
+  s.claimedBadgeRewards = [];
+  // Conditions that would satisfy both of them if anything were reading them.
+  s.financialState = { checking: 600, savings: 200, creditScore: 850 };
+  window.checkAchievements();
+  for (const id of ['iron_will', 'excellent_credit']) {
+    if (s.unlockedAchievements.includes(id)) throw new Error(id + ' was awarded from a state nothing can reach');
+  }
+});
+
 console.log('\n' + (problems.length ? `FAILED (${problems.length})\n` + problems.join('\n\n') : 'PASS — no errors'));
 process.exit(problems.length ? 1 : 0);
 })();

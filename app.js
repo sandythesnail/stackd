@@ -15660,18 +15660,23 @@ const SHOP_ITEMS = [
     viewBox: '0 0 100 130',
     desc: 'A little pep talk on the wall.',
     svg: `<rect x="4" y="4" width="92" height="122" rx="4" fill="var(--white)" stroke="var(--border)" stroke-width="4"/>
-          <rect x="14" y="14" width="72" height="102" fill="var(--pink-pale)"/>
-          <circle cx="50" cy="50" r="22" fill="var(--pink-light)"/>
-          <path d="M40,50 L47,58 L62,42" stroke="var(--pink-dark)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          <text x="50" y="95" font-size="10" text-anchor="middle" fill="var(--pink-dark)" font-weight="700">YOU GOT THIS</text>`
+          <rect x="14" y="14" width="72" height="102" fill="#E7EFF6"/>
+          <circle cx="50" cy="50" r="22" fill="#8FB8D9"/>
+          <path d="M40,50 L47,58 L62,42" stroke="#3B6B94" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="50" y="95" font-size="10" text-anchor="middle" fill="#3B6B94" font-weight="700">YOU GOT THIS</text>`
   },
   {
     id: 'wall_plant_frame', name: 'Plant Frame Art', category: 'room', slot: 'wall', price: 65,
     viewBox: '0 0 100 130',
-    desc: 'A little greenery, framed up.',
+    desc: 'Watch your savings grow.',
     svg: `<rect x="4" y="4" width="92" height="122" rx="4" fill="var(--white)" stroke="var(--border)" stroke-width="4"/>
           <rect x="14" y="14" width="72" height="102" fill="var(--green-pale)"/>
-          <path d="M50,100 L50,55" stroke="#4A7840" stroke-width="4" stroke-linecap="round"/>
+          <rect x="36" y="88" width="28" height="26" rx="3" fill="none" stroke="#8A6438" stroke-width="3"/>
+          <circle cx="42" cy="98" r="4" fill="#C9A227"/>
+          <circle cx="50" cy="104" r="4" fill="#E8C468"/>
+          <circle cx="58" cy="97" r="4" fill="#C9A227"/>
+          <circle cx="46" cy="106" r="4" fill="#E8C468"/>
+          <path d="M50,88 L50,55" stroke="#4A7840" stroke-width="4" stroke-linecap="round"/>
           <ellipse cx="38" cy="58" rx="14" ry="9" fill="#7EC96A" transform="rotate(-25 38 58)"/>
           <ellipse cx="62" cy="52" rx="14" ry="9" fill="#8FDD78" transform="rotate(25 62 52)"/>
           <ellipse cx="50" cy="40" rx="12" ry="16" fill="#6FAE5C"/>`
@@ -15681,10 +15686,10 @@ const SHOP_ITEMS = [
     viewBox: '0 0 100 130',
     desc: 'Up and to the right, baby.',
     svg: `<rect x="4" y="4" width="92" height="122" rx="4" fill="var(--white)" stroke="var(--border)" stroke-width="4"/>
-          <rect x="14" y="14" width="72" height="102" fill="var(--green-pale)"/>
-          <rect x="26" y="86" width="10" height="20" fill="var(--green-light)"/>
-          <rect x="42" y="70" width="10" height="36" fill="var(--green)"/>
-          <rect x="58" y="50" width="10" height="56" fill="var(--green-dark)"/>
+          <rect x="14" y="14" width="72" height="102" fill="#F2EEE6"/>
+          <rect x="26" y="86" width="10" height="20" fill="#E3A392"/>
+          <rect x="42" y="70" width="10" height="36" fill="#8FB8D9"/>
+          <rect x="58" y="50" width="10" height="56" fill="var(--green)"/>
           <path d="M24,64 L44,44 L58,54 L76,28" stroke="#FFD700" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M68,28 L76,28 L76,36" stroke="#FFD700" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
   },
@@ -15733,10 +15738,11 @@ const SHOP_ITEMS = [
     viewBox: '0 0 220 70',
     desc: 'Ringed in every color of the collection.',
     svg: `<ellipse cx="110" cy="40" rx="105" ry="28" fill="var(--pink-light)"/>
-          <ellipse cx="110" cy="40" rx="88" ry="23" fill="var(--white)"/>
-          <ellipse cx="110" cy="40" rx="70" ry="18" fill="var(--green-light)"/>
-          <ellipse cx="110" cy="40" rx="45" ry="11" fill="var(--white)"/>
-          <ellipse cx="110" cy="40" rx="22" ry="5.5" fill="var(--pink-light)"/>`
+          <ellipse cx="110" cy="40" rx="90" ry="24" fill="var(--white)"/>
+          <ellipse cx="110" cy="40" rx="72" ry="19" fill="var(--green-light)"/>
+          <ellipse cx="110" cy="40" rx="56" ry="14.5" fill="var(--white)"/>
+          <ellipse cx="110" cy="40" rx="38" ry="10" fill="#8FB8D9"/>
+          <ellipse cx="110" cy="40" rx="20" ry="5.5" fill="#DD6D5E"/>`
   },
   {
     id: 'bed_cozy', name: 'Cozy Blue Bed', category: 'room', slot: 'bed', price: 140,
@@ -15796,7 +15802,7 @@ const SHOP_ITEMS = [
           <rect x="133" y="64" width="6" height="28" fill="#8A6438"/>
           <rect x="58" y="56" width="44" height="5" rx="1" fill="var(--border)"/>
           <rect x="61" y="35" width="38" height="23" rx="2" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
-          <path d="M33,50 L31,56 L45,56 L43,50 Z" fill="#D68A54"/>
+          <path d="M32,50 L30,56 L44,56 L42,50 Z" fill="#D68A54"/>
           <rect x="31" y="48" width="14" height="4" fill="#B06A38"/>
           <rect x="36" y="36" width="4" height="14" rx="2" fill="#6FAE5C"/>
           <rect x="30" y="42" width="3" height="8" rx="1.5" fill="#6FAE5C"/>
@@ -15877,7 +15883,7 @@ const SHOP_ITEMS = [
   {
     id: 'clock_grandfather', name: 'Grandfather Clock', category: 'room', slot: 'lamp', price: 220,
     viewBox: '0 0 70 110',
-    desc: 'The priciest piece on the farm, time really is money.',
+    desc: 'The priciest piece on the farm — time really is money.',
     svg: `<rect x="10" y="98" width="50" height="8" rx="2" fill="#5A3D22"/>
           <rect x="14" y="24" width="42" height="76" rx="2" fill="#6B4A2E"/>
           <path d="M14,27 Q35,4 56,27 Z" fill="#6B4A2E"/>
@@ -16018,8 +16024,8 @@ const SHOP_ITEMS = [
     svg: `<defs><linearGradient id="sw-sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#6B4C8A"/><stop offset="45%" stop-color="#E8724A"/><stop offset="100%" stop-color="#FFC15E"/></linearGradient></defs>
           <rect x="8" y="8" width="144" height="144" rx="8" fill="#8A6438"/>
           <rect x="20" y="20" width="120" height="120" fill="url(#sw-sky)"/>
-          <circle cx="105" cy="100" r="18" fill="#FFE9A6"/>
-          <circle cx="100" cy="95" r="6" fill="#FFF6DC" opacity="0.6"/>
+          <circle cx="105" cy="100" r="18" fill="#FFC15E"/>
+          <circle cx="100" cy="95" r="6" fill="#FFE3B0" opacity="0.5"/>
           <path d="M20,140 Q45,120 70,132 Q95,115 120,130 Q130,125 140,130 L140,140 L20,140 Z" fill="#4A2C3A"/>
           <rect x="20" y="20" width="120" height="120" fill="none" stroke="#8A6438" stroke-width="5"/>
           <line x1="80" y1="20" x2="80" y2="140" stroke="#8A6438" stroke-width="5"/>
@@ -16286,15 +16292,22 @@ const ACHIEVEMENTS = [
     icon: '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
   { id: 'on_fire', tier: 'gold', color: '#E8622C', label: 'On a Roll', desc: 'Play 7 days in a row.', check: s => s.streak >= 7,
     icon: '<path d="M12 2c1 4-3 5-3 9a3 3 0 0 0 6 0c0-2-1-3-1-3s2 1 2 4a5 5 0 0 1-10 0c0-5 4-6 4-10z"/>' },
-  { id: 'iron_will', tier: 'gold', color: '#4A4A57', label: 'Iron Will', desc: 'Land the optimal path on both Boss Challenges.', check: s => bossChallengeOptimal(s, 'spending') && bossChallengeOptimal(s, 'psychology'),
+  // available: false — bossChallengeOptimal reads state.completedLessons, which only the
+  // pre-quest flat-lesson renderer ever writes. Every module is a quest chain now, so
+  // startBonusActivity is unreachable from the UI and the Boss Challenge lessons this
+  // badge grades cannot be played at all.
+  { id: 'iron_will', tier: 'gold', color: '#4A4A57', label: 'Iron Will', available: false, desc: 'Land the optimal path on both Boss Challenges.', check: s => bossChallengeOptimal(s, 'spending') && bossChallengeOptimal(s, 'psychology'),
     icon: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>' },
-  { id: 'excellent_credit', tier: 'gold', color: '#1F9D6B', label: 'Excellent Credit', desc: 'Push your credit score to 800 or above.', check: s => !!(s.financialState && s.financialState.creditScore >= 800),
+  // available: false — financialState.creditScore starts at 650 and has exactly one
+  // writer, applyLifeEventChoice. Every creditScore effect in the whole life-event
+  // catalogue is negative, so the score can only ever fall: 800 is not reachable.
+  { id: 'excellent_credit', tier: 'gold', color: '#1F9D6B', label: 'Excellent Credit', available: false, desc: 'Push your credit score to 800 or above.', check: s => !!(s.financialState && s.financialState.creditScore >= 800),
     icon: '<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/><path d="M9 3l3 6-3 12"/><path d="M15 3l-3 6 3 12"/>' },
   { id: 'marathoner', tier: 'diamond', color: '#2856A8', label: 'Marathoner', desc: 'Play 30 days in a row. Ultra rare.', check: s => s.streak >= 30,
     icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' },
   { id: 'stackd_star', tier: 'diamond', color: '#D4A017', label: 'Stacked Star', desc: 'Master every module. Ultra rare.', check: s => MODULES.every(m => hasMasteredModule(s, m.id)),
     icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
-  { id: 'grandmaster', tier: 'diamond', color: '#9B1B30', label: 'Grandmaster', desc: 'Unlock every other badge. The hardest one.', check: s => ACHIEVEMENTS.filter(x => x.id !== 'grandmaster').every(x => (s.unlockedAchievements || []).includes(x.id)),
+  { id: 'grandmaster', tier: 'diamond', color: '#9B1B30', label: 'Grandmaster', desc: 'Unlock every other badge. The hardest one.', check: s => EARNABLE_ACHIEVEMENTS.filter(x => x.id !== 'grandmaster').every(x => (s.unlockedAchievements || []).includes(x.id)),
     icon: '<path d="M2 18h20L19 8l-5 4-2-6-2 6-5-4z"/>' },
 ];
 
@@ -16307,6 +16320,22 @@ const BADGE_TIER_REWARD = {
   gold:    { type: 'coins',    amount: 15 },
   diamond: { type: 'diamonds', amount: 10 },
 };
+/** The badges this build can actually award — the catalogue minus anything whose unlock
+ * condition nothing here can ever satisfy (see the two `available: false` entries above).
+ *
+ * This is the list everything user-facing and everything derived must use: the Badges grid,
+ * every "X / Y earned" count, the unlock scan, and — critically — the grandmaster check.
+ * That check read the FULL catalogue, which silently included those two. Nothing anywhere can
+ * add them to a player's unlocked set, so the hardest badge in the app was mathematically
+ * unreachable, and every counter advertised a total of 22 against a real ceiling of 19.
+ *
+ * Deriving all of it from one list makes the ceiling real, and flipping an `available` flag
+ * back to true is all it takes to bring a badge into play once the tracking behind it exists
+ * — there is no second place to remember. Ported from mobile's EARNABLE_ACHIEVEMENTS, which
+ * fixed the identical bug on that side.
+ */
+const EARNABLE_ACHIEVEMENTS = ACHIEVEMENTS.filter(a => a.available !== false);
+
 function badgeReward(a) { return BADGE_TIER_REWARD[a.tier]; }
 
 function buildNewAchBanner(a) {
@@ -17519,7 +17548,7 @@ function checkAchievements() {
   maybeClaimReferralActivation();
   const newOnes = [];
   state.claimedBadgeRewards = state.claimedBadgeRewards || [];
-  ACHIEVEMENTS.forEach(a => {
+  EARNABLE_ACHIEVEMENTS.forEach(a => {
     if (!state.unlockedAchievements.includes(a.id) && a.check(state)) {
       state.unlockedAchievements.push(a.id);
       newOnes.push(a);
@@ -18648,11 +18677,11 @@ function renderAchievementBadges(containerId, subId, { onlyUnlocked = false, det
   const unlocked = state.unlockedAchievements.length;
   // "3 / 22 earned" on both surfaces, matching mobile's Home and Badges headers — a bare
   // count of earned badges says nothing about how many there are to earn.
-  if (subId) document.getElementById(subId).textContent = `${unlocked} / ${ACHIEVEMENTS.length} earned`;
+  if (subId) document.getElementById(subId).textContent = `${unlocked} / ${EARNABLE_ACHIEVEMENTS.length} earned`;
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = '';
-  let list = onlyUnlocked ? ACHIEVEMENTS.filter(a => state.unlockedAchievements.includes(a.id)) : ACHIEVEMENTS;
+  let list = onlyUnlocked ? EARNABLE_ACHIEVEMENTS.filter(a => state.unlockedAchievements.includes(a.id)) : EARNABLE_ACHIEVEMENTS;
   if (filterTier !== 'all') list = list.filter(a => a.tier === filterTier);
   if (limit > 0) list = list.slice(0, limit);
   if (list.length === 0) {
@@ -18933,6 +18962,28 @@ function buildPigPreviewSvg(itemSvg, viewBox = '0 0 120 162') {
   </svg>`;
 }
 
+/** A mystery box is drawn as the same present the daily-reward calendar draws, in its own
+ * pool's colour, rather than as its own picture from the catalogue.
+ *
+ * The catalogue art was a different drawing of the same idea, so "a box with something in it"
+ * looked like two unrelated objects depending on which screen you were on — the calendar's
+ * present on Home, a different box in the Shop. Mobile unified them for that reason and this
+ * follows; giftSvg lives in daily-rewards.js, which loads before this file.
+ *
+ * Colours match mobile's MYSTERY_BOX_GIFT exactly. */
+const MYSTERY_BOX_GIFT = {
+  hat: { box: '#FF8FB8', lid: '#E0507F', line: '#5E1630' },
+  accessory: { box: '#C9A0FF', lid: '#8A3FE0', line: '#3A1264' },
+  exclusive: { box: '#8FE3F5', lid: '#2AA8C4', line: '#0C4652' },
+};
+const MYSTERY_BOX_GIFT_FALLBACK = { box: '#E8C468', lid: '#B8860B', line: '#5A4200' };
+
+/** `size` is a CSS length for the rendered <svg>. */
+function mysteryBoxArt(item, size) {
+  const colors = MYSTERY_BOX_GIFT[item.mysteryPool] || MYSTERY_BOX_GIFT_FALLBACK;
+  return giftSvg(size, colors);
+}
+
 const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
 const RARITY_WEIGHT = { common: 8, rare: 4, epic: 2, legendary: 1 };
 const RARITY_LABEL = { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
@@ -19012,9 +19063,11 @@ function refreshShopModal(itemId) {
   pigEl.style.display = '';
   pigEl.innerHTML = (isWallpaper)
     ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
-    : (isRoom || item.isMysteryBox)
-      ? `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${namespacedItemSvg(item.svg)}</svg>`
-      : getPigWithItemMarkup(0.42, item);
+    : item.isMysteryBox
+      ? `<span class="shop-box-art">${mysteryBoxArt(item, 132)}</span>`
+      : isRoom
+        ? `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${namespacedItemSvg(item.svg)}</svg>`
+        : getPigWithItemMarkup(0.42, item);
   const accessoryEl = document.getElementById('shop-modal-accessory');
   accessoryEl.style.display = (isRoom || item.isMysteryBox) ? 'none' : '';
   accessoryEl.innerHTML = (isRoom || item.isMysteryBox)
@@ -19156,9 +19209,11 @@ function renderShopPage() {
       const oddsLabel = isPoolItem ? `<div class="shop-item-odds">${mysteryOddsLabel(item)}</div>` : '';
       const preview = item.slot === 'wallpaper'
         ? `<div class="wallpaper-swatch" style="${item.wallCss}"></div>`
-        : (isRoom || isBox)
-          ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${namespacedItemSvg(item.svg)}</svg>`
-          : getPigWithItemMarkup(0.29, item);
+        : isBox
+          ? `<span class="shop-box-art">${mysteryBoxArt(item, 72)}</span>`
+          : isRoom
+            ? `<svg viewBox="${item.viewBox}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">${namespacedItemSvg(item.svg)}</svg>`
+            : getPigWithItemMarkup(0.29, item);
       return `<div class="shop-card${isBox ? ' shop-box-card' : ''}${equipped ? ' shop-equipped' : ''}${owned && !equipped ? ' shop-owned' : ''}${!owned && !canAfford ? ' shop-broke' : ''}${isDiamond ? ' shop-exclusive-card' : ''}${(isReward || isLocked) && !owned ? ' shop-reward-card' : ''}" data-item-id="${item.id}">
         ${isBox || (isDiamond && !isBox) || (isLocked && !isDiamond) ? `<span class="${isDiamond ? 'shop-exclusive-ribbon' : 'shop-gold-ribbon'}">Mystery</span>` : (isReward && !owned) ? '<span class="shop-milestone-ribbon">Reward</span>' : ''}
         <div class="shop-preview">
@@ -19767,7 +19822,7 @@ function renderHome() {
   });
   const seeAllBadges = document.getElementById('home-badges-seeall');
   if (seeAllBadges) {
-    seeAllBadges.textContent = `All ${ACHIEVEMENTS.length} →`;
+    seeAllBadges.textContent = `All ${EARNABLE_ACHIEVEMENTS.length} →`;
     seeAllBadges.onclick = () => { showPage('badges'); renderBadgesPage(); };
   }
   maybeAutoOpenDailyRewards();
@@ -19995,7 +20050,7 @@ function renderProgressPage() {
         <div class="pg-stat-label">Day Streak</div>
       </div>
       <div class="pg-stat-card">
-        <div class="pg-stat-num">${unlocked}<span class="pg-stat-den">/${ACHIEVEMENTS.length}</span></div>
+        <div class="pg-stat-num">${unlocked}<span class="pg-stat-den">/${EARNABLE_ACHIEVEMENTS.length}</span></div>
         <div class="pg-stat-label">Badges</div>
       </div>
     </div>
