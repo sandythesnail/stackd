@@ -17408,6 +17408,7 @@ function claimDailyLoginBonus(pendingDiamonds) {
   state.coins = (state.coins || 0) + coins;
   state.diamonds = (state.diamonds || 0) + dayDiamonds;
   saveState();
+  updateSidebarStats();
   return { coins: coins, diamonds: diamonds };
 }
 // ── Lightweight toasts ──────────────────────────
@@ -17548,6 +17549,57 @@ function checkAchievements() {
     state.ownedItems = [...(state.ownedItems || []), 'marathon_medal'];
     equipItem('marathon_medal');
   }
+  return newOnes;
+}
+
+/** Announces badges unlocked away from a results screen.
+ *
+ * checkAchievements was only ever called from the four lesson-completion points, so the
+ * badges whose conditions are met somewhere else — Homebody (fill every slot in the room),
+ * On a Roll and Marathoner (streak days, which tick over at boot) — were not awarded when
+ * they were earned. They were awarded silently at the player's NEXT finished lesson, which
+ * is both late and invisible: you furnish the whole room, nothing happens, and two days
+ * later some coins appear with no explanation.
+ *
+ * The banner treatment (buildNewAchBanner) belongs to the results screen, which has room for
+ * a description and a reward line. Everywhere else gets mobile's toast: the medal, the label,
+ * and a count when several land at once. */
+function showAchievementToast(newOnes) {
+  if (!newOnes.length) return;
+  const first = newOnes[0];
+  const remaining = newOnes.length - 1;
+  const container = getToastContainer();
+  const toast = document.createElement('button');
+  toast.type = 'button';
+  toast.className = 'toast toast-achievement';
+  toast.style.setProperty('--ach-color', first.color);
+  toast.innerHTML = `
+    <span class="ach-abbr toast-ach-medal" style="--ach-color: ${first.color}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">${first.icon}</svg>
+    </span>
+    <span class="toast-ach-text">
+      <span class="toast-ach-eyebrow">Achievement unlocked</span>
+      <span class="toast-ach-label">${escapeHtml(first.label)}</span>
+    </span>
+    ${remaining > 0 ? `<span class="toast-ach-more">+${remaining}</span>` : ''}`;
+  // Tapping it opens the badge, the way tapping the toast does on mobile.
+  toast.addEventListener('click', () => showAchievementDetail(first, true));
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 4500);
+}
+
+/** Check + announce, for every caller that is not a results screen. Also repaints the
+ * sidebar, since a badge reward changes the coin/diamond totals shown there. */
+function checkAchievementsAndAnnounce() {
+  const newOnes = checkAchievements();
+  if (!newOnes.length) return newOnes;
+  saveState();
+  updateSidebarStats();
+  showAchievementToast(newOnes);
   return newOnes;
 }
 
@@ -19261,6 +19313,9 @@ function handleShopAction(itemId) {
       state.equippedRoom[item.slot] = itemId;
     }
     saveState();
+    // Placing the last piece of furniture is what earns Homebody, and nothing here used to
+    // ask.
+    checkAchievementsAndAnnounce();
     renderShopPage();
     return;
   }
@@ -23918,6 +23973,11 @@ document.addEventListener('DOMContentLoaded', () => {
   state.lifeEvents.sessionCount++;
   pendingStreakDiamonds = updateStreak();
   saveState();
+  // A streak badge (On a Roll at 7 days, Marathoner at 30) is earned by opening the app on
+  // the right day, not by finishing anything — so it has to be checked here. Until this, the
+  // only caller was lesson completion, and the badge for showing up thirty days running was
+  // handed over silently at whatever lesson the player happened to finish next.
+  checkAchievementsAndAnnounce();
   // Reopen whichever page was active before a reload, instead of always dumping the user
   // back on Home (see LAST_PAGE_KEY/showPage above) — page-home is the only page marked
   // "active" in the static HTML, so anything else needs an explicit showPage swap first.

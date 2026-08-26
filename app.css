@@ -3214,6 +3214,34 @@ select.budget-input { cursor: pointer; }
 }
 .toast.show { opacity: 1; transform: translateY(0); }
 .toast-icon { font-size: 1.1rem; }
+
+/* Badge toast — mobile's AchievementToast: the medal, the eyebrow, the name, and a count
+   when several land together. Clickable (the container is pointer-events:none, so the toast
+   itself has to opt back in) and it opens the badge's own card. */
+.toast-achievement {
+  pointer-events: auto; cursor: pointer; text-align: left;
+  font-family: inherit; gap: 0.75rem; padding: 0.7rem 1rem;
+  border-color: color-mix(in srgb, var(--ach-color) 40%, var(--border));
+}
+.toast-achievement:hover { border-color: var(--ach-color); }
+.toast-ach-medal {
+  flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--ach-color) 14%, #fff);
+  color: var(--ach-color); border: 2px solid color-mix(in srgb, var(--ach-color) 45%, #fff);
+}
+.toast-ach-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.toast-ach-eyebrow {
+  font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.09em;
+  color: var(--text-soft);
+}
+.toast-ach-label {
+  font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; color: var(--text);
+}
+.toast-ach-more {
+  margin-left: auto; flex-shrink: 0; font-size: 0.78rem; font-weight: 800;
+  color: var(--text-soft); background: var(--bg); border-radius: 999px; padding: 0.15rem 0.5rem;
+}
 @media (max-width: 600px) {
   .toast-container { left: 1rem; right: 1rem; top: 1rem; }
 }
