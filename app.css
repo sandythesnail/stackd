@@ -1527,6 +1527,13 @@ select.budget-input { cursor: pointer; }
 /* .quest-continue-btn is gone — the myth-card stack was the last chapter type injecting its
    own inline "next" button; it now uses the shared footer slot like everything else. */
 .quest-kc-counter { font-size: 0.78rem; font-weight: 600; color: var(--text-soft); margin-bottom: 0.5rem; }
+/* Verdict lines that open a chapter's feedback — green for right, pink for not, the same
+   language the option buttons and the review cards speak. */
+.explainback-feedback.is-right, .price-verdict.is-right { color: var(--green-dark); }
+.explainback-feedback.is-wrong, .price-verdict.is-wrong { color: var(--pink-dark); }
+.price-verdict {
+  font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; margin: 0 0 0.35rem;
+}
 /* The vocab card's true/false verdict, in words — mobile's AnswerFeedback line. */
 .word-check-verdict {
   margin: 0.65rem 0 0; font-size: 13px; font-weight: 700; animation: questRise 0.22s ease-out;
@@ -1904,6 +1911,11 @@ select.budget-input { cursor: pointer; }
 .spotcheck-summary-item.caught .myth-card-tag { color: var(--green-dark); }
 .spotcheck-summary-item.missed { border-color: var(--pink-light); background: var(--pink-pale); }
 .spotcheck-summary-item.missed .myth-card-tag { color: var(--pink-dark); }
+/* A part that is fine, which the student flagged anyway. Neither green nor pink: it isn't a
+   catch, and it isn't a missed red flag either — it's a false alarm, and mobile gives it the
+   same quiet neutral chip. Green in particular would be wrong; see spotcheckReviewHtml. */
+.spotcheck-summary-item.fine { border-color: var(--border); background: var(--bg); }
+.spotcheck-summary-item.fine .myth-card-tag { color: var(--text-soft); }
 .spotcheck-summary-text { font-size: 0.88rem; font-weight: 600; font-style: italic; color: var(--text); margin: 0; }
 .spotcheck-summary-exp { font-size: 0.85rem; font-weight: 500; line-height: 1.5; color: var(--text-mid); margin: 0; }
 

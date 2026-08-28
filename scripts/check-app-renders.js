@@ -643,6 +643,77 @@ step('correctly calling a false statement false is not painted as a mistake', ()
   }
 });
 
+step('a wrong flag is explained, and is not painted as a catch', () => {
+  // Any module with a spot-check; scams and psychology carry most of them.
+  let found = null;
+  for (const mod of api.MODULES) {
+    for (const q of window.mainQuests(mod)) {
+      const i = q.chapters.findIndex((c) => c.type === 'spotcheck'
+        && c.segments.some((s) => s.isRedFlag) && c.segments.some((s) => !s.isRedFlag));
+      if (i >= 0) { found = { mod, quest: q, idx: i, chapter: q.chapters[i] }; break; }
+    }
+    if (found) break;
+  }
+  if (!found) throw new Error('no spot-check with both a red flag and a clean line');
+
+  delete s.questProgress[window.questKey(found.mod.id, found.quest.id)];
+  window.startQuest(found.mod.id, found.quest.id);
+  window.renderChapter(found.mod, found.idx);
+
+  const clean = found.chapter.segments.filter((x) => !x.isRedFlag);
+  const flag = found.chapter.segments.find((x) => x.isRedFlag);
+  // Flag one clean line (a false alarm) and leave the real red flag alone.
+  window.document.querySelector('.spotcheck-segment[data-id="' + clean[0].id + '"]').click();
+  window.document.getElementById('quest-continue-btn').click();
+
+  const items = [...window.document.querySelectorAll('.spotcheck-summary-item')];
+  const byText = (t) => items.find((el) => el.textContent.includes(t));
+  const falseAlarm = byText(clean[0].text);
+  if (!falseAlarm) throw new Error('the wrong flag got no card at all');
+  if (falseAlarm.classList.contains('caught')) throw new Error('a wrong flag was painted as a catch');
+  if (!falseAlarm.classList.contains('fine')) throw new Error('the wrong flag reads: ' + falseAlarm.className);
+  const missed = byText(flag.text);
+  if (!missed || !missed.classList.contains('missed')) throw new Error('the real red flag was not reported as missed');
+  // A clean line nobody flagged has nothing to say, so it is not in the list.
+  const untouched = clean.find((x) => x.id !== clean[0].id);
+  if (untouched && byText(untouched.text)) throw new Error('a clean, unflagged line was reviewed anyway');
+});
+
+step('an empty answer cannot be submitted, and a real one is quoted back', () => {
+  let found = null;
+  for (const mod of api.MODULES) {
+    for (const q of window.mainQuests(mod)) {
+      const i = q.chapters.findIndex((c) => c.type === 'explainback' && (c.keywords || []).length);
+      if (i >= 0) { found = { mod, quest: q, idx: i, chapter: q.chapters[i] }; break; }
+    }
+    if (found) break;
+  }
+  if (!found) throw new Error('no explainback with keywords to test with');
+
+  delete s.questProgress[window.questKey(found.mod.id, found.quest.id)];
+  window.startQuest(found.mod.id, found.quest.id);
+  window.renderChapter(found.mod, found.idx);
+
+  const btn = () => window.document.getElementById('quest-continue-btn');
+  if (!btn().disabled) throw new Error('an empty answer could be submitted');
+  const input = window.document.getElementById('eb-input');
+  input.value = '   ';
+  input.dispatchEvent(new window.Event('input', { bubbles: true }));
+  if (!btn().disabled) throw new Error('whitespace counted as an answer');
+
+  const keyword = found.chapter.keywords[0];
+  input.value = 'something about ' + keyword + ' here';
+  input.dispatchEvent(new window.Event('input', { bubbles: true }));
+  if (btn().disabled) throw new Error('a real answer left the button dead');
+  btn().click();
+
+  const feedback = window.document.querySelector('.explainback-feedback');
+  if (!feedback.textContent.includes(keyword)) {
+    throw new Error('the feedback did not name what was covered: ' + feedback.textContent);
+  }
+  if (!feedback.classList.contains('is-right')) throw new Error('a hit was not coloured as one');
+});
+
 // 14. Tools: named options, and the loan tool asking only about the loan.
 console.log('\ntools');
 function openTool(tab) {

@@ -22904,35 +22904,49 @@ function renderExplainbackChapter(chapter, mod, onDone) {
   clearQuestContinue();
   main.innerHTML = `
     <p class="quest-prompt">${chapter.prompt}</p>
-    <textarea class="explainback-input" id="eb-input" rows="3" placeholder="Type your answer here. There's no wrong way to start."></textarea>`;
+    <textarea class="explainback-input" id="eb-input" rows="3" placeholder="Explain it in your own words…"></textarea>`;
 
-  // Same shared bottom slot as every other chapter, rather than its own inline button.
-  setQuestContinue('Check My Answer →', () => {
-    const val = document.getElementById('eb-input').value.toLowerCase();
-    const matched = chapter.keywords.filter(k => val.includes(k.toLowerCase())).length;
-    let feedbackText, tier;
-    if (matched >= 2) { feedbackText = "You got the key idea. Here's the full definition, locked in:"; tier = 'great'; }
-    else if (matched === 1) { feedbackText = "Good start, you're onto something. Here's the fuller picture:"; tier = 'ok'; }
-    else { feedbackText = "No worries, this one's tricky. Let's go over it one more time:"; tier = 'retry'; }
+  const input = document.getElementById('eb-input');
+
+  function submit() {
+    const val = input.value.toLowerCase();
+    const hits = chapter.keywords.filter(k => val.includes(k.toLowerCase()));
+    const matched = hits.length;
+    const tier = matched >= 2 ? 'great' : matched === 1 ? 'ok' : 'retry';
+    // Names the words the student actually landed, rather than grading them in the abstract.
+    // "Good start, you're onto something" tells them a tier; "Nice, you covered: principal,
+    // interest" tells them which part of the idea they had — which is the thing they can do
+    // something with, and is what mobile's ExplainbackView says here.
+    const feedbackText = matched
+      ? `Nice, you covered: ${hits.join(', ')}`
+      : "Here's the full picture:";
 
     const qp = getQP(mod);
     qp.analytics.explainback = { term: chapter.title || 'In Your Own Words', tier };
     saveState();
-    document.getElementById('eb-input').disabled = true;
+    input.disabled = true;
     showHammyReaction(mod, matched >= 1);
     recordQuestCheck(mod, chapter.title || "In Your Own Words", matched >= 1);
 
     const resultBlock = document.createElement('div');
     resultBlock.className = 'explainback-result';
     resultBlock.innerHTML = `
-      <p class="explainback-feedback">${feedbackText}</p>
+      <p class="explainback-feedback ${matched ? 'is-right' : 'is-wrong'}">${feedbackText}</p>
       <p class="explainback-definition">${chapter.fullDefinition}</p>`;
     main.appendChild(resultBlock);
     setQuestContinue('Continue →', () => {
       if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
       onDone();
     }, true);
-  }, true);
+  }
+
+  // Same shared bottom slot as every other chapter, rather than its own inline button — and
+  // dead until something has actually been typed. It used to be live from the first paint, so
+  // pressing it on an empty box submitted the empty string, scored it as a miss and told the
+  // student they had got it wrong. Mobile disables it on `!text.trim()` for that reason.
+  const syncAction = () => setQuestContinue('Check My Answer →', submit, !!input.value.trim());
+  syncAction();
+  input.addEventListener('input', syncAction);
 }
 
 // ── Chapter type: story ─────────────────────────
@@ -23246,6 +23260,43 @@ function renderPollChapter(chapter, mod, onDone) {
   });
 }
 
+/** The review list both tap-to-flag chapters end on — ported from mobile's SpotcheckView.
+ *
+ * Two things the web had wrong, and mobile had already worked out.
+ *
+ * WHAT IS IN THE LIST. Mobile reviews every red flag PLUS anything the student flagged that
+ * turned out to be fine, and nothing else. A wrong flag is exactly the case where the
+ * explanation is worth reading, and the spot-check dropped those cards entirely — so the one
+ * mistake the student actually made got no feedback at all (it was tinted inside the original
+ * posting, which is collapsed by default, so in practice it was invisible). The URL inspector
+ * had the opposite problem: it listed every part including the fine ones nobody flagged, which
+ * have nothing to say.
+ *
+ * WHAT COLOUR IT IS. A fine part the student flagged was coming out GREEN with a "THIS PART IS
+ * FINE" tag — green means "you got it" everywhere else in this app, and that student got it
+ * wrong. It is a third outcome, not a good one and not quite a miss, so it gets its own quiet
+ * treatment rather than borrowing either.
+ *
+ * The items are normalized to { id, text, explanation, isFlagWorthy } by each caller, since the
+ * two chapter types name those fields differently in the content. */
+function spotcheckReviewHtml(items, flaggedIds) {
+  return items
+    .filter(it => it.isFlagWorthy || flaggedIds.has(it.id))
+    .map(it => {
+      const wasFlagged = flaggedIds.has(it.id);
+      const verdict = it.isFlagWorthy
+        ? (wasFlagged
+          ? { cls: 'caught', label: '✓ YOU CAUGHT THIS' }
+          : { cls: 'missed', label: '✕ YOU MISSED THIS' })
+        : { cls: 'fine', label: 'ACTUALLY FINE' };
+      return `<div class="spotcheck-summary-item ${verdict.cls}">
+        <span class="myth-card-tag">${verdict.label}</span>
+        <p class="spotcheck-summary-text">"${it.text}"</p>
+        <p class="spotcheck-summary-exp">${it.explanation}</p>
+      </div>`;
+    }).join('');
+}
+
 // ── Chapter type: spotcheck (tap-to-flag red flags in a block of content) ──────
 // Mirrors the myth-card-tag/is-true/is-false reveal convention so tapping through a fake
 // job posting reads as the same "test your instincts, then see the answer" language as
@@ -23289,6 +23340,10 @@ function renderSpotcheckChapter(chapter, mod, onDone) {
       // just doubles the same text on screen and forces a scroll on shorter viewports.
       const flags = chapter.segments.filter(s => s.isRedFlag);
       const caughtCount = flags.filter(s => flaggedIds.has(s.id)).length;
+      const reviewHtml = spotcheckReviewHtml(
+        chapter.segments.map(s => ({ id: s.id, text: s.text, explanation: s.explanation, isFlagWorthy: s.isRedFlag })),
+        flaggedIds,
+      );
       main.innerHTML = `
         <p class="quest-prompt">${chapter.intro}</p>
         <button class="spotcheck-toggle" id="spotcheck-toggle" type="button">Show the original posting ▾</button>
@@ -23298,12 +23353,10 @@ function renderSpotcheckChapter(chapter, mod, onDone) {
         </div>
         <div class="spotcheck-summary" id="spotcheck-summary">
           <p class="spotcheck-score">You caught ${caughtCount} of ${flags.length} red flags.</p>
-          ${flags.map(s => `
-            <div class="spotcheck-summary-item ${flaggedIds.has(s.id) ? 'caught' : 'missed'}">
-              <span class="myth-card-tag">${flaggedIds.has(s.id) ? '✓ YOU CAUGHT THIS' : 'YOU MISSED THIS'}</span>
-              <p class="spotcheck-summary-text">"${s.text}"</p>
-              <p class="spotcheck-summary-exp">${s.explanation}</p>
-            </div>`).join('')}
+          ${reviewHtml || `<div class="spotcheck-summary-item caught">
+            <span class="myth-card-tag">✓ NOTHING TO FLAG</span>
+            <p class="spotcheck-summary-exp">Right call. There was nothing wrong with this one, and you didn't flag anything that was fine.</p>
+          </div>`}
         </div>`;
       const toggleBtn = document.getElementById('spotcheck-toggle');
       const postingEl = document.getElementById('spotcheck-posting');
@@ -23365,12 +23418,10 @@ function renderUrlInspectChapter(chapter, mod, onDone) {
         <div class="urlinspect-bar collapsed" id="urlinspect-bar-wrap">${chapter.parts.map(p => partHtml(p, true)).join('')}</div>
         <div class="spotcheck-summary" id="urlinspect-summary">
           <p class="spotcheck-score">You caught ${caughtCount} of ${suspicious.length} suspicious part${suspicious.length === 1 ? '' : 's'}.</p>
-          ${chapter.parts.map(p => `
-            <div class="spotcheck-summary-item ${!p.isSuspicious ? 'caught' : flaggedIds.has(p.id) ? 'caught' : 'missed'}">
-              <span class="myth-card-tag">${p.isSuspicious ? (flaggedIds.has(p.id) ? '✓ YOU CAUGHT THIS' : 'YOU MISSED THIS') : 'THIS PART IS FINE'}</span>
-              <p class="spotcheck-summary-text">"${p.segment}"</p>
-              <p class="spotcheck-summary-exp">${p.note}</p>
-            </div>`).join('')}
+          ${spotcheckReviewHtml(
+            chapter.parts.map(p => ({ id: p.id, text: p.segment, explanation: p.note, isFlagWorthy: p.isSuspicious })),
+            flaggedIds,
+          )}
           <p class="urlinspect-final-note">${chapter.correctAnswerNote}</p>
         </div>`;
       const toggleBtn = document.getElementById('urlinspect-toggle');
@@ -23699,8 +23750,13 @@ function renderPriceIsRightChapter(chapter, mod, onDone) {
     document.getElementById('price-guess-display').textContent = `$${guess}`;
     const revealBlock = document.createElement('div');
     revealBlock.className = 'price-reveal-block';
+    // Leads with the verdict. The reveal named the actual answer and how far off the guess
+    // was and left the student to do the comparison themselves — but the chapter has already
+    // decided (wasClose is what Hammy reacts to and what the score records), so it may as well
+    // say so. Mobile opens this card with "Close enough!" or the actual figure, coloured.
     revealBlock.innerHTML = `
-      <p class="price-actual-label">Actual answer: $${chapter.actualValue} <span class="price-diff">(your guess of $${guess} was $${diff} off)</span></p>
+      <p class="price-verdict ${wasClose ? 'is-right' : 'is-wrong'}">${wasClose ? 'Close enough!' : 'Not quite'}</p>
+      <p class="price-actual-label">Actual answer: ${chapter.actualValue} <span class="price-diff">(your guess of ${guess} was ${diff} off)</span></p>
       <p class="price-explanation">${chapter.explanation}</p>`;
     main.appendChild(revealBlock);
     showHammyReaction(mod, wasClose);
