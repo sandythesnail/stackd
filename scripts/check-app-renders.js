@@ -607,6 +607,58 @@ step('a lesson whose only miss is a check still gets advice', () => {
   }
 });
 
+// 10c. The real-life guide is a lesson, and finishing it is a lesson finish.
+step('the real-life sub-quest pays, counts as activity, and can master a module', () => {
+  const mod = api.MODULES.find((m) => m.id === 'saving');
+  const sub = window.moduleSubQuest(mod);
+  if (!sub) throw new Error('saving has no real-life sub-quest');
+  const key = window.questKey(mod.id, sub.id);
+  const RATE = window.eval('QUEST_COIN_PER_CORRECT');
+
+  delete s.questProgress[key];
+  s.coins = 0;
+  s.lastModuleActivityDate = null;
+  // Every main quest already done, so finishing the guide is what masters this module — the
+  // moment the module's guaranteed unlock life event is supposed to fire.
+  for (const q of window.mainQuests(mod)) {
+    s.questProgress[window.questKey(mod.id, q.id)] = {
+      chapterIdx: 0, dashboard: {}, chapterScore: 0, chapterTotal: 0, streak: 0, done: true,
+      learnedTerms: [], hintsUsed: 0, xpEarned: 0, isReplay: false,
+      analytics: { knowledgeCheck: [], mythCards: [], polls: [], checks: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null },
+    };
+  }
+  s.lifeEvents.history = [];
+
+  window.startQuest(mod.id, sub.id);
+  const qp = s.questProgress[key];
+  qp.analytics.checks = [
+    { label: 'step 1', isCorrect: true },
+    { label: 'step 2', isCorrect: true },
+    { label: 'step 3', isCorrect: false },
+  ];
+  window.finishSubQuest(mod);
+
+  // Read off the screen, not off the wallet: mastering the module also unlocks a badge, and
+  // badge rewards are paid into the same balance.
+  const paid = Number((window.document.getElementById('results-wrap').textContent.match(/\+(\d+) 🪙/) || [])[1]);
+  if (paid !== 2 * RATE) throw new Error(`the guide paid ${paid} coins for 2 right, expected ${2 * RATE}`);
+  if (s.coins < 2 * RATE) throw new Error('the guide coins never reached the wallet');
+  if (s.lastModuleActivityDate !== new Date().toDateString()) {
+    throw new Error('finishing a guide did not count as module activity today');
+  }
+  const wrap = window.document.getElementById('results-wrap').textContent;
+  if (!wrap.includes('2/3 correct')) throw new Error('the guide results screen shows no score');
+  if (!/\+\d+ 🪙/.test(wrap)) throw new Error('the guide results screen shows no coins');
+  // Mastering the module here must reach the post-completion overlays, which is where the
+  // module's guaranteed unlock life event lives.
+  if (!window.isModuleFullyDone(mod)) throw new Error('the module did not master');
+  const unlock = window.eval('LIFE_EVENT_UNLOCKS')[mod.id];
+  if (unlock && !s.lifeEvents.history.includes(unlock.id)) {
+    // showLifeEvent runs on a timer; what matters is that the overlay path was entered at all.
+    if (!window.checkModuleUnlockLifeEvent(mod)) throw new Error('the unlock event was consumed but not recorded');
+  }
+});
+
 // 11b. Every chapter in the catalogue, rendered.
 //
 // The other quest tests each pick one representative chapter. This one walks all 1,270 across

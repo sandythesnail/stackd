@@ -22260,31 +22260,72 @@ function advanceChapter(mod) {
 }
 
 // ── Sub-quest finish (no boss battle — closes out via a lighter congrats screen) ──
+/** Finishing the real-life guide now does everything finishing any other lesson does.
+ *
+ * It is a REQUIRED ninth lesson — moduleUnits counts it, and a module isn't complete without
+ * it — but it closed out through this lighter path, which did none of what finishQuest does:
+ *
+ *  - It paid no coins at all. Mobile's completeLifeTask pays on exactly the same basis as
+ *    completeLesson, so the same guide paid a full lesson's coins on a phone and nothing on a
+ *    laptop, out of one synced wallet.
+ *  - It didn't mark today as a day with module activity, so working through a guide and
+ *    nothing else left Hammy's daily mood reading the day as idle.
+ *  - It never ran the post-completion overlays. Since this is the ninth of nine, finishing it
+ *    is very often the thing that MASTERS the module — which is exactly when the module's
+ *    guaranteed unlock life event is meant to fire, and it could not, because the only caller
+ *    of maybeShowPostCompletionOverlays was finishQuest. A level-up card crossed here was
+ *    swallowed the same way.
+ */
 function finishSubQuest(mod) {
   const qp = getQP(mod);
   qp.done = true;
+  // Same basis as finishQuest: a coin per correct answer over every graded moment, the flat
+  // fallback when the guide had nothing gradeable in it, and nothing at all on a replay.
+  const tally = questTally(qp);
+  const coinsEarned = qp.isReplay
+    ? 0
+    : (tally.total > 0 ? tally.right * QUEST_COIN_PER_CORRECT : QUEST_COIN_FLAT_FALLBACK);
+  state.coins = (state.coins || 0) + coinsEarned;
+  markModuleActivityToday();
   const newAchs = checkAchievements();
   saveState();
+  // A guide's XP is paid chapter by chapter as it goes, so by the time we get here any level
+  // crossing has already happened and there is no awardQuestXP return left to read. Asking
+  // what the level would have been before this run's XP recovers it exactly, with no extra
+  // state to keep in sync (qp.xpEarned is this run's total, and is already replay-gated).
+  const leveled = levelForXp(Math.max(0, state.xp - (qp.xpEarned || 0))) < state.level;
   showScreen('screen-results');
-  renderSubQuestResults(mod, qp, newAchs);
+  renderSubQuestResults(mod, qp, newAchs, coinsEarned);
+  maybeShowPostCompletionOverlays(mod, leveled);
 }
 
-function renderSubQuestResults(mod, qp, newAchs) {
+function renderSubQuestResults(mod, qp, newAchs, coinsEarned) {
   const quest = getActiveQuest(mod);
-  // Sub-quest chapters award their XP as they go (via each chapter's own xpOnComplete),
-  // so the total here is just what those chapters are worth — nothing left to add now.
-  const xpEarned = quest.chapters.reduce((sum, c) => sum + (c.xpOnComplete || 0), 0);
+  // What this run actually paid, not what the guide is worth: qp.xpEarned is already
+  // replay-gated (see awardQuestXP), so a replay reads +0 here instead of promising the full
+  // amount again. Falls back to the chapters' own total for a save written before the field.
+  const xpEarned = qp.xpEarned != null
+    ? qp.xpEarned
+    : quest.chapters.reduce((sum, c) => sum + (c.xpOnComplete || 0), 0);
   const achHtml = newAchs.map(buildNewAchBanner).join('');
+  const tally = questTally(qp);
 
   document.getElementById('results-wrap').innerHTML = `
     <div class="subquest-celebrate-hammy hammy-side-avatar streak">${withFaceOverlay(getPigWithItemMarkup(0.55, getEquippedItems()))}</div>
     <div class="results-grade">🎉 REAL-LIFE SUB-QUEST COMPLETE</div>
     <h2 class="results-title">${quest.topic}</h2>
+    ${tally.total ? `<p class="results-score results-score-tally">${tally.right}/${tally.total} correct</p>` : ''}
     <p class="results-score">Hammy just walked through this one step by step, for real. Here's what stuck.</p>
+    ${qp.isReplay ? `<p class="results-replay-note">You had already finished this one, so there is
+      no XP or coins for it this time. Nothing you had is lost.</p>` : ''}
     <div class="results-rewards-row">
       <div class="results-xp-card">
         <div class="results-xp-num">+${xpEarned} XP</div>
         <div class="results-xp-label">${getTier(modulesCompletedCount()).name} · ${state.xp.toLocaleString()} total</div>
+      </div>
+      <div class="results-coins-card">
+        <div class="results-coins-num">+${coinsEarned || 0} 🪙</div>
+        <div class="results-xp-label">${(state.coins || 0).toLocaleString()} total coins</div>
       </div>
     </div>
     ${levelBarHtml()}
