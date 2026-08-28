@@ -1813,13 +1813,15 @@ select.budget-input { cursor: pointer; }
 }
 .myth-swipe-hint { align-self: center; font-size: 0.72rem; font-weight: 600; color: var(--text-soft); margin-top: 0.25rem; }
 .myth-card-back { transform: rotateY(180deg); }
-.myth-card-back.is-true .myth-card-tag { color: var(--green-dark); }
-.myth-card-back.is-true { border-color: var(--green-light); background: var(--green-pale); }
-.myth-card-back.is-false .myth-card-tag { color: var(--pink-dark); }
-.myth-card-back.is-false { border-color: var(--pink-light); background: var(--pink-pale); }
+/* Right/wrong, not true/false — green means "you got it" here exactly as it does on the
+   option buttons and the spot-check summary. See wireDrag in app.js. */
+.myth-card-back.is-right .myth-card-tag { color: var(--green-dark); }
+.myth-card-back.is-right { border-color: var(--green-light); background: var(--green-pale); }
+.myth-card-back.is-wrong .myth-card-tag { color: var(--pink-dark); }
+.myth-card-back.is-wrong { border-color: var(--pink-light); background: var(--pink-pale); }
 .myth-card-back .myth-guess-line { font-size: 0.85rem !important; font-weight: 700 !important; margin-bottom: 0.25rem; }
-.myth-card-back .myth-guess-line.right { color: var(--green-dark); }
-.myth-card-back .myth-guess-line.wrong { color: var(--pink-dark); }
+.myth-card-back.is-right .myth-guess-line, .myth-card-back.is-right .myth-explanation { color: var(--green-dark); }
+.myth-card-back.is-wrong .myth-guess-line, .myth-card-back.is-wrong .myth-explanation { color: var(--pink-dark); }
 .myth-card-back .myth-explanation { font-size: 0.88rem !important; font-weight: 500 !important; line-height: 1.55; }
 @keyframes flyOffRight { to { transform: translateX(140%) rotate(18deg); opacity: 0; } }
 @keyframes flyOffLeft  { to { transform: translateX(-140%) rotate(-18deg); opacity: 0; } }
@@ -1852,10 +1854,13 @@ select.budget-input { cursor: pointer; }
   border-radius: var(--radius); border: 1px solid var(--border); padding: 1rem 1.25rem;
   display: flex; flex-direction: column; align-items: center; gap: 0.4rem; text-align: center;
 }
-.poll-truth.is-true { border-color: var(--green-light); background: var(--green-pale); }
-.poll-truth.is-true .myth-card-tag { color: var(--green-dark); }
-.poll-truth.is-false { border-color: var(--pink-light); background: var(--pink-pale); }
-.poll-truth.is-false .myth-card-tag { color: var(--pink-dark); }
+/* Right/wrong, not true/false — see the note in renderPollChapter. Which WAY it went is
+   already on screen: the True/False buttons above recolour so the correct one turns green
+   whichever was pressed, exactly as mobile's TrueFalseButton pair does. */
+.poll-truth.is-right { border-color: var(--green-light); background: var(--green-pale); }
+.poll-truth.is-right .myth-card-tag, .poll-truth.is-right .poll-explanation { color: var(--green-dark); }
+.poll-truth.is-wrong { border-color: var(--pink-light); background: var(--pink-pale); }
+.poll-truth.is-wrong .myth-card-tag, .poll-truth.is-wrong .poll-explanation { color: var(--pink-dark); }
 .poll-explanation { font-size: 0.88rem; font-weight: 500; line-height: 1.55; color: var(--text); margin: 0; }
 
 /* Spotcheck chapter — tap-to-flag red flags in a block of content (e.g. a fake job
@@ -1965,28 +1970,58 @@ select.budget-input { cursor: pointer; }
 .price-marker-rail.markers-tight .price-marker-guess .price-marker-pin { display: none; }
 
 /* Boss battle */
-.boss-banner {
-  background: linear-gradient(135deg, var(--pink-pale), #fff);
-  border: 1.5px solid var(--pink-light); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.25rem;
-}
-.boss-banner .quest-chapter-title { margin-bottom: 0.6rem; }
-/* Every choice stays on screen, with the consequence of the pick arriving underneath them —
-   mobile's BossbattleView, which keeps the full choice list and puts the verdict below rather
-   than in a second column beside it. */
-.boss-split { display: flex; flex-direction: column; gap: 10px; }
+/* No decorative banner around the scenario. Mobile leads with the warm ⚔ tag (drawn off
+   .quest-title-row.boss), the title, then the scenario as plain lead text — the tag is what
+   marks this chapter as the finale, and a pink gradient box around the prose on top of that
+   was a second thing doing the same job. */
 .boss-choices { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
-.boss-outcome-col { min-width: 0; }
+/* A real <button> now, so the choice list is reachable and operable from the keyboard like
+   every other set of options in the player. */
 .boss-choice-card {
+  width: 100%; text-align: left; font-family: inherit;
   border: 2.5px solid var(--border); border-radius: var(--radius); padding: 1rem;
-  cursor: pointer; transition: border-color 0.2s, background 0.2s; font-size: 1.03rem; font-weight: 500; color: var(--text);
+  background: #fff; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  font-size: 1.03rem; font-weight: 500; color: var(--text);
 }
-.boss-choice-card:hover { border-color: var(--pink); background: var(--pink-pale); }
-.boss-choice-card.disabled { pointer-events: none; opacity: 0.5; }
-.boss-outcome {
-  animation: fadeUp 0.4s ease; padding: 1rem 1.1rem; border-radius: var(--radius);
-  border: 1px solid var(--green-light); background: var(--green-pale);
+.boss-choice-card:hover:not(:disabled) { border-color: var(--pink); background: var(--pink-pale); }
+/* Selected, not committed — a highlight the student can move around until they press Check
+   answer. Deliberately the neutral "you picked this" treatment rather than green, which in
+   this app means "and it was right". */
+.boss-choice-card.selected { border-color: var(--text); background: var(--bg); }
+/* After checking, the rows carry the answer themselves — same green/pink as the option
+   buttons everywhere else. */
+.boss-choice-card.correct { border-color: var(--green); background: var(--green-pale); }
+.boss-choice-card.wrong { border-color: var(--pink); background: var(--pink-pale); }
+.boss-choice-card:disabled { cursor: default; }
+.boss-choice-card:disabled:not(.correct):not(.wrong) { opacity: 0.55; }
+
+/* ── Boss-battle verdict ── */
+.boss-verdict-card { max-width: 400px; text-align: center; }
+/* The mark comes first and is the biggest thing in the card: the whole point of this popup
+   is that the grade should not have to be inferred from the prose under it. */
+.boss-verdict-mark {
+  width: 62px; height: 62px; border-radius: 50%; margin: 0 auto 0.65rem;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: #fff;
 }
-.boss-outcome p { color: var(--green-dark); font-weight: 500; line-height: 1.6; margin: 0; }
+.boss-verdict-mark.ok { background: var(--green); }
+.boss-verdict-mark.bad { background: var(--pink); }
+.boss-verdict-title {
+  font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; margin: 0 0 0.5rem;
+}
+.boss-verdict-title.ok { color: var(--green-dark); }
+.boss-verdict-title.bad { color: var(--pink-dark); }
+.boss-verdict-body { font-size: 0.92rem; line-height: 1.55; color: var(--text-mid); margin: 0; }
+.boss-better-move {
+  margin-top: 1rem; padding: 0.85rem 1rem; border-radius: var(--radius);
+  background: var(--bg); text-align: left;
+}
+.boss-better-move-label {
+  font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--text-soft); margin-bottom: 0.25rem;
+}
+.boss-better-move-text { font-size: 0.9rem; line-height: 1.5; color: var(--text); margin: 0; }
+.boss-verdict-finish { width: 100%; margin-top: 1.25rem; }
 
 /* Quest module card/list tag */
 .quest-tag {
@@ -2640,15 +2675,13 @@ select.budget-input { cursor: pointer; }
   .pg-top-row { grid-template-columns: 1fr; }
   .pg-level-row { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .quest-body { padding-left: 0.6rem; padding-right: 0.6rem; }
-  /* Narrower than before — the Hammy column was eating enough horizontal room that longer
-     chapter content (job postings, URL bars, teach paragraphs) wrapped into many extra
-     lines and pushed the whole screen into a scroll. Giving quest-main more width directly
-     cuts wrapped-line count, which is the main lever on total content height. */
-  .quest-side { width: 120px; gap: 0.4rem; }
+  /* Hammy's band gets less room above the chapter here, so he takes less of it. This used to
+     set `width: 120px` on .quest-side, from when it was a fixed column down the left — as a
+     row across the top that would have squeezed the band itself rather than the pig in it. */
+  .quest-side { padding-top: 10px; gap: 0.4rem; }
   .hammy-side-msg { font-size: 0.85rem; padding: 0.45rem 0.65rem; }
-  .quest-title-row { font-size: 1.4rem; margin: 0.5rem 0 0.5rem; margin-left: calc(-1 * 0.6rem); }
-  .quest-title-row.centered { margin-left: 0; }
-  .kc-split, .sim-split, .boss-split { flex-direction: column; }
+  .quest-title-row { font-size: 17px; }
+  .quest-title-row.story { font-size: 22px; }
   /* Narrow screens have much less width to spread text across, so the desktop font-size
      bumps would wrap into extra lines and reintroduce scrolling — scale back down here. */
   .quest-prompt { font-size: 1rem; }

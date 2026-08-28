@@ -682,6 +682,26 @@
   </div>
 
   <!-- LIFE EVENT OVERLAY -->
+  <!-- Boss-battle verdict. The graded finale of a lesson used to answer a choice by
+       narrating its consequence and nothing else, leaving the student to infer from the
+       tone of a paragraph whether they had got it right. This says so first, in a mark and
+       a word, before any prose. Ported from mobile's BossbattleView; built as a centred
+       card rather than mobile's bottom sheet because that is the shape THIS app's other
+       mid-lesson interruption already has (see .lifeevent-overlay right below), and the
+       point of the pattern is that the two read as the same kind of thing. -->
+  <div class="lifeevent-overlay boss-verdict-overlay" id="boss-verdict-overlay">
+    <div class="lifeevent-card boss-verdict-card">
+      <div class="boss-verdict-mark" id="boss-verdict-mark"></div>
+      <h2 class="boss-verdict-title" id="boss-verdict-title"></h2>
+      <p class="boss-verdict-body" id="boss-verdict-body"></p>
+      <div class="boss-better-move" id="boss-better-move">
+        <div class="boss-better-move-label">The stronger move</div>
+        <p class="boss-better-move-text" id="boss-better-move-text"></p>
+      </div>
+      <button type="button" class="btn-primary boss-verdict-finish" id="boss-verdict-finish">Finish quest →</button>
+    </div>
+  </div>
+
   <div class="lifeevent-overlay" id="lifeevent-overlay">
     <div class="lifeevent-card">
       <div class="lifeevent-header">

@@ -22620,6 +22620,37 @@ function showHammyReaction(mod, isCorrect, context = 'answer') {
   // the mood class out from under a live message and left the face blank.
 }
 
+/** Takes Hammy's reaction down early.
+ *
+ * The reaction has no hide timer on purpose (see the note at the end of showHammyReaction) —
+ * it stays up until the next chapter replaces it, so a "Not quite, here's why:" can't vanish
+ * while you're still reading the why. That is right between chapters and wrong WITHIN one:
+ * the two chapter types that step through several items in a row while Hammy is on screen —
+ * a vocab card's concepts and the myth-card stack — carried the last item's verdict over the
+ * top of the next, unanswered one. Mobile calls clearReaction() at exactly those two advances
+ * and nowhere else; this is that call. */
+function clearHammyReaction() {
+  const avatar = document.getElementById('hammy-side-avatar');
+  const msgEl = document.getElementById('hammy-side-msg');
+  if (!avatar || !msgEl) return;
+  avatar.className = 'hammy-side-avatar';
+  msgEl.className = 'hammy-side-msg';
+  msgEl.textContent = '';
+}
+
+/** Back to the top of the step.
+ *
+ * renderChapter does this for every new chapter, but the two multi-step chapter types advance
+ * by rebuilding #quest-main without going through it — so answering a Quick Check question
+ * near the fold and tapping "Next question" left you scrolled halfway down a question you had
+ * not read a word of. Mobile resets on both the chapter and the step within it, for the same
+ * reason: the top of something you haven't read is where you were going anyway. */
+function resetQuestScroll() {
+  const bodyEl = document.getElementById('quest-body');
+  if (bodyEl) bodyEl.scrollTop = 0;
+  updateQuestScrollCue();
+}
+
 // Puts specific, given text (rather than a random pick) in Hammy's speech bubble — used where
 // the "reaction" IS the explanation itself (e.g. Credit Climb narrating what each decision
 // actually does), so it needs longer on screen than a quick "Nice!".
@@ -22731,7 +22762,7 @@ function renderTeachChapter(chapter, mod, onDone) {
           if (chapter.xpOnComplete) { awardQuestXP(mod, chapter.xpOnComplete); saveState(); }
           onDone();
         } else {
-          const advance = () => { idx++; renderConcept(); };
+          const advance = () => { idx++; clearHammyReaction(); renderConcept(); resetQuestScroll(); };
           const lifeEvent = maybeTriggerAmbientLifeEvent();
           if (lifeEvent) showLifeEvent(lifeEvent, advance); else advance();
         }
@@ -23165,8 +23196,10 @@ function renderPollChapter(chapter, mod, onDone) {
       </div>
     </div>
     <div class="poll-reveal" id="poll-reveal">
-      <div class="poll-truth ${chapter.isTrue ? 'is-true' : 'is-false'}">
-        <span class="myth-card-tag">${chapter.isTrue ? 'TRUE' : 'FALSE'}</span>
+      <!-- Deliberately no is-true/is-false here any more. The panel's colour is decided by
+           whether the STUDENT was right, at click time — see the handler below. -->
+      <div class="poll-truth" id="poll-truth">
+        <span class="myth-card-tag" id="poll-verdict"></span>
         <p class="poll-explanation">${chapter.explanation}</p>
       </div>
     </div>`;
@@ -23192,6 +23225,17 @@ function renderPollChapter(chapter, mod, onDone) {
       // No claimed crowd statistics here — we don't have real survey data backing any
       // specific percentage, so the reveal sticks to the actual true/false answer and why,
       // the same way a myth card does, instead of implying a poll that never happened.
+      //
+      // The panel reports whether the STUDENT was right, not whether the statement was true.
+      // It used to be tinted by chapter.isTrue: correctly answering "False" to a false
+      // statement painted the reveal pink and tagged it in pink — and green-means-right,
+      // pink-means-wrong is the language every other graded thing in the app speaks (the
+      // option buttons right above it, the Quick Check panel, the spot-check summary). Half
+      // of all correct answers were being coloured as mistakes. Mobile fixed the same bug on
+      // its own myth cards for the same reason; this is that fix, applied to the poll too.
+      const truthEl = document.getElementById('poll-truth');
+      truthEl.classList.add(guessedRight ? 'is-right' : 'is-wrong');
+      document.getElementById('poll-verdict').textContent = guessedRight ? '✓ CORRECT' : '✕ NOT QUITE';
       document.getElementById('poll-reveal').classList.add('show');
 
       setQuestContinue('Continue →', () => {
@@ -23397,8 +23441,10 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
             <p>${card.myth}</p>
             <span class="myth-swipe-hint">← False &nbsp;·&nbsp; True →</span>
           </div>
-          <div class="myth-card-back ${card.isTrue ? 'is-true' : 'is-false'}">
-            <span class="myth-card-tag">${card.isTrue ? 'TRUE' : 'FALSE'}</span>
+          <!-- The back's colour and its tag are filled in on release, from whether the
+               student was RIGHT — not from the card's own truth. See wireDrag. -->
+          <div class="myth-card-back">
+            <span class="myth-card-tag"></span>
             <p class="myth-guess-line"></p>
             <p class="myth-explanation">${card.explanation}</p>
           </div>
@@ -23430,8 +23476,19 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
         el.style.transform = `translateX(${dx > 0 ? 40 : -40}px) rotate(${dx / 30}deg)`;
         el.classList.add('flipped');
 
+        // Leads with the verdict, not the answer. The tag used to show the card's actual
+        // truth ("TRUE"/"FALSE") and take its colour from that, so a card could read FALSE
+        // in pink while the student had just correctly called it false — the tag and the
+        // colour saying opposite things about how it went. Correctness is what you want
+        // first; the truth of the statement is in the line under it. Ported from mobile's
+        // MythcardsView, which carries this fix and the reasoning for it.
+        const back = el.querySelector('.myth-card-back');
+        back.classList.add(guessedRight ? 'is-right' : 'is-wrong');
+        back.querySelector('.myth-card-tag').textContent = guessedRight ? '✓ CORRECT' : '✕ NOT QUITE';
         const guessLine = el.querySelector('.myth-guess-line');
-        guessLine.textContent = `You said ${guessedTrue ? 'True' : 'False'}, ${guessedRight ? 'and that is right.' : 'not quite.'}`;
+        // Names the actual answer rather than trailing off in "not quite" — a student who
+        // got it wrong was never told which way it actually went.
+        guessLine.textContent = `You said ${guessedTrue ? 'True' : 'False'}, and it's ${card.isTrue ? 'True' : 'False'}.`;
         guessLine.classList.add(guessedRight ? 'right' : 'wrong');
 
         const resolvedIdx = cardIdx;
@@ -23446,7 +23503,10 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
           clearQuestContinue();
           setTimeout(() => {
             cardIdx++;
-            if (cardIdx >= cards.length) onAllDone(); else renderCards();
+            if (cardIdx >= cards.length) { onAllDone(); return; }
+            clearHammyReaction();
+            renderCards();
+            resetQuestScroll();
           }, 400);
         }, true);
       } else {
@@ -23703,7 +23763,7 @@ function renderKnowledgeCheckChapter(chapter, mod, onDone) {
       // panel, so it stays in the same place across every chapter type.
       const isLast = qIdx === questions.length - 1;
       setQuestContinue(isLast ? 'Continue →' : 'Next question →', () => {
-        if (qIdx < questions.length - 1) { qIdx++; renderQ(); } else { onDone(); }
+        if (qIdx < questions.length - 1) { qIdx++; renderQ(); resetQuestScroll(); } else { onDone(); }
       }, true);
     });
   }
@@ -23711,38 +23771,112 @@ function renderKnowledgeCheckChapter(chapter, mod, onDone) {
 }
 
 // ── Chapter type: bossbattle (terminal) ─────────
+/** The lesson's graded finale — pick a move, then Check answer, then a verdict.
+ *
+ * Ported from mobile's BossbattleView, which is on its fourth approach to this chapter and
+ * documents why. The web was still on the first: tapping a choice committed it instantly and
+ * appended the consequence text beside the choice list, so there was no way to change your
+ * mind after a mis-tap and, more importantly, the chapter never said whether you were RIGHT.
+ * "How it played out" narrates a consequence and leaves the grade to be inferred from its
+ * tone, which is a lot to ask of a paragraph at the climax of a lesson.
+ *
+ * So selection is now separate from commitment, and the verdict leads with a mark and a word
+ * before any prose. On a wrong answer it also names the stronger move, which the student
+ * otherwise never learns — the choice list recolours, but a green row with no explanation is
+ * only half the lesson.
+ *
+ * "Right" is the choice with the highest xpMultiplier. The content scores every boss choice
+ * on a 0.4-1.25 scale with exactly one top option per chapter, so the best move is already
+ * unambiguous in the data and nothing new had to be authored for this. */
 function renderBossBattleChapter(chapter, mod) {
   const main = document.getElementById('quest-main');
-  clearQuestContinue();
+  // "Check answer", inert until something is selected — the same disabled-not-absent
+  // placeholder every other chapter starts with, so the footer never changes height.
+  setQuestContinue('Check answer', null, false);
   main.innerHTML = `
-    <div class="boss-banner">
-      <p class="quest-prompt">${chapter.scenario}</p>
-    </div>
-    <div class="boss-split">
-      <div class="boss-choices" id="boss-choices"></div>
-      <div class="boss-outcome-col" id="boss-outcome-col"></div>
-    </div>`;
+    <p class="quest-prompt">${chapter.scenario}</p>
+    <div class="boss-choices" id="boss-choices"></div>`;
 
   const choicesEl = document.getElementById('boss-choices');
-  chapter.choices.forEach(choice => {
-    const card = document.createElement('div');
+  const mult = (c) => c.consequence.xpMultiplier ?? 1;
+  const best = chapter.choices.reduce((a, b) => (mult(b) > mult(a) ? b : a));
+  let picked = null;
+  let checked = false;
+
+  const cards = chapter.choices.map(choice => {
+    const card = document.createElement('button');
+    card.type = 'button';
     card.className = 'boss-choice-card';
     card.textContent = choice.label;
     card.addEventListener('click', () => {
-      choicesEl.querySelectorAll('.boss-choice-card').forEach(c => c.classList.add('disabled'));
-      applyQuestStateDelta(mod, choice.consequence.delta || {});
-      const qp = getQP(mod);
-      qp.analytics.bossChoice = choice.label;
-      saveState();
-      const outcomeBlock = document.createElement('div');
-      outcomeBlock.className = 'boss-outcome';
-      outcomeBlock.innerHTML = `<p>${choice.consequence.text}</p>`;
-      document.getElementById('boss-outcome-col').appendChild(outcomeBlock);
-      showHammyReaction(mod, (choice.consequence.xpMultiplier ?? 1) >= 1);
-      setQuestContinue('See Results →', () => finishQuest(mod, choice.consequence), true);
+      if (checked) return;
+      picked = choice;
+      cards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      setQuestContinue('Check answer', check, true);
     });
     choicesEl.appendChild(card);
+    return card;
   });
+
+  function check() {
+    if (checked || !picked) return;
+    checked = true;
+    const isRight = picked === best;
+    // Every choice stays on screen, carrying the answer — so the verdict popup isn't the
+    // only place it exists, and closing it doesn't take the information with it.
+    cards.forEach((c, i) => {
+      c.disabled = true;
+      c.classList.remove('selected');
+      if (chapter.choices[i] === best) c.classList.add('correct');
+      else if (chapter.choices[i] === picked) c.classList.add('wrong');
+    });
+    applyQuestStateDelta(mod, picked.consequence.delta || {});
+    const qp = getQP(mod);
+    qp.analytics.bossChoice = picked.label;
+    // Counted, not just logged. bossChoice records WHICH move was made, for the report's
+    // decision list; this records whether it was the right one, which is what the score is
+    // made of. Without it the last chapter of 88 of the 99 quests graded the student on
+    // screen and then contributed nothing to the number on the very next one (see
+    // questTally, which sums analytics.checks).
+    recordQuestCheck(mod, chapter.title || 'Boss battle', isRight);
+    saveState();
+    showHammyReaction(mod, isRight);
+    // No footer action while the verdict is up: its own button is the way forward, and a
+    // second "Finish quest" sitting behind the overlay reads as the screen having two.
+    clearQuestContinue();
+    showBossVerdict(picked, best, isRight, () => finishQuest(mod, picked.consequence));
+  }
+}
+
+/** The verdict itself: a mark, a word, the consequence, and — when it went wrong — the move
+ *  that would have been better. */
+function showBossVerdict(picked, best, isRight, onFinish) {
+  const overlay = document.getElementById('boss-verdict-overlay');
+  if (!overlay) { onFinish(); return; }
+  const mark = document.getElementById('boss-verdict-mark');
+  mark.textContent = isRight ? '✓' : '✕';
+  mark.className = 'boss-verdict-mark ' + (isRight ? 'ok' : 'bad');
+  const title = document.getElementById('boss-verdict-title');
+  title.textContent = isRight ? 'Correct!' : 'Not quite';
+  title.className = 'boss-verdict-title ' + (isRight ? 'ok' : 'bad');
+  document.getElementById('boss-verdict-body').textContent = picked.consequence.text;
+  document.getElementById('boss-better-move').style.display = isRight ? 'none' : '';
+  document.getElementById('boss-better-move-text').textContent = best.label;
+
+  // Guarded, because there are two ways to reach it — the button and Escape — and this is
+  // the last chapter of its quest, so a double fire finishes the whole lesson twice.
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    overlay.classList.remove('visible');
+    if (overlay._a11yCleanup) overlay._a11yCleanup();
+    onFinish();
+  };
+  document.getElementById('boss-verdict-finish').onclick = finish;
+  makeModalAccessible(overlay, finish);
+  overlay.classList.add('visible');
 }
 
 // ── Quest finish / results ──────────────────────

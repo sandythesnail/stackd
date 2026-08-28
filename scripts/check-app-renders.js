@@ -548,7 +548,102 @@ step('no hint button where no hint was written', () => {
   }
 });
 
-// 12. Tools: named options, and the loan tool asking only about the loan.
+// 12. The boss battle grades the student, and says so.
+console.log('\nboss battle');
+function openBossChapter() {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  let target = null;
+  for (const q of window.mainQuests(mod)) {
+    const i = q.chapters.findIndex((c) => c.type === 'bossbattle');
+    if (i >= 0) { target = { quest: q, idx: i, chapter: q.chapters[i] }; break; }
+  }
+  if (!target) throw new Error('no boss battle to test with');
+  delete s.questProgress[window.questKey(mod.id, target.quest.id)];
+  window.startQuest(mod.id, target.quest.id);
+  window.renderChapter(mod, target.idx);
+  const cards = [...window.document.querySelectorAll('.boss-choice-card')];
+  const mult = (c) => (c.consequence.xpMultiplier === undefined ? 1 : c.consequence.xpMultiplier);
+  const best = target.chapter.choices.reduce((a, b) => (mult(b) > mult(a) ? b : a));
+  const bestIdx = target.chapter.choices.indexOf(best);
+  return { mod, target, cards, best, bestIdx, qp: s.questProgress[window.questKey(mod.id, target.quest.id)] };
+}
+step('picking a move does not commit it', () => {
+  const { cards, qp } = openBossChapter();
+  const btn = () => window.document.getElementById('quest-continue-btn');
+  if (!btn().disabled) throw new Error('Check answer was live before anything was picked');
+  cards[0].click();
+  if (btn().disabled) throw new Error('Check answer stayed dead after a pick');
+  // Change your mind: the second pick is the one that counts, and neither has been graded.
+  cards[1].click();
+  if (!cards[1].classList.contains('selected')) throw new Error('the second pick did not take');
+  if (cards[0].classList.contains('selected')) throw new Error('both picks are still selected');
+  if (qp.analytics.bossChoice) throw new Error('a choice was recorded before Check answer');
+  if (qp.analytics.checks.length) throw new Error('the chapter was graded before Check answer');
+});
+step('the verdict says whether it was right, and counts toward the score', () => {
+  const { cards, best, bestIdx, qp } = openBossChapter();
+  cards[bestIdx].click();
+  window.document.getElementById('quest-continue-btn').click();
+
+  const overlay = window.document.getElementById('boss-verdict-overlay');
+  if (!overlay.classList.contains('visible')) throw new Error('no verdict after Check answer');
+  if (window.document.getElementById('boss-verdict-title').textContent !== 'Correct!') {
+    throw new Error('the best move was not called correct');
+  }
+  if (window.document.getElementById('boss-better-move').style.display !== 'none') {
+    throw new Error('a correct answer was still shown a stronger move');
+  }
+  if (qp.analytics.bossChoice !== best.label) throw new Error('the wrong choice was recorded');
+  const checks = qp.analytics.checks;
+  if (checks.length !== 1 || !checks[0].isCorrect) {
+    throw new Error('the boss battle contributed ' + checks.length + ' graded check(s)');
+  }
+  if (!window.questTally(qp).allRight) throw new Error('a perfect boss battle did not read as all-right');
+});
+step('a wrong move is named as wrong, and the better one is named', () => {
+  const { cards, target, best, bestIdx, qp } = openBossChapter();
+  if (target.chapter.choices.length < 2) throw new Error('a boss battle with one choice');
+  const wrongIdx = bestIdx === 0 ? 1 : 0;
+  cards[wrongIdx].click();
+  window.document.getElementById('quest-continue-btn').click();
+
+  if (window.document.getElementById('boss-verdict-title').textContent !== 'Not quite') {
+    throw new Error('a wrong move was not called wrong');
+  }
+  if (window.document.getElementById('boss-better-move-text').textContent !== best.label) {
+    throw new Error('the stronger move was not named');
+  }
+  // The rows carry the answer too, so closing the popup does not take it with them.
+  if (!cards[bestIdx].classList.contains('correct')) throw new Error('the best row is not marked correct');
+  if (!cards[wrongIdx].classList.contains('wrong')) throw new Error('the picked row is not marked wrong');
+  if (qp.analytics.checks[0].isCorrect) throw new Error('a wrong move was scored as right');
+});
+
+// 13. Green means "you were right" — never "the statement was true".
+console.log('\nright, not true');
+step('correctly calling a false statement false is not painted as a mistake', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  let target = null;
+  for (const q of window.mainQuests(mod)) {
+    const i = q.chapters.findIndex((c) => c.type === 'poll' && c.isTrue === false);
+    if (i >= 0) { target = { quest: q, idx: i }; break; }
+  }
+  if (!target) throw new Error('no false-statement poll to test with');
+  delete s.questProgress[window.questKey(mod.id, target.quest.id)];
+  window.startQuest(mod.id, target.quest.id);
+  window.renderChapter(mod, target.idx);
+
+  window.document.querySelector('.poll-choice-btn[data-choice="false"]').click();
+  const truth = window.document.getElementById('poll-truth');
+  if (!truth.classList.contains('is-right')) {
+    throw new Error('a correct answer was tinted ' + truth.className);
+  }
+  if (window.document.getElementById('poll-verdict').textContent !== '✓ CORRECT') {
+    throw new Error('the verdict read: ' + window.document.getElementById('poll-verdict').textContent);
+  }
+});
+
+// 14. Tools: named options, and the loan tool asking only about the loan.
 console.log('\ntools');
 function openTool(tab) {
   window.showPage('tools');
