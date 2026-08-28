@@ -1450,10 +1450,10 @@ select.budget-input { cursor: pointer; }
 /* The illustration has its own shading baked in on the side it covers — drop just the
    bottom-right inset shadow (the part that would otherwise fall right behind the art) but
    keep the top-left highlight, so the head keeps its dimensional look on the left. */
-.hammy-side-avatar.streak .pig-head { box-shadow: inset 16px 16px 30px rgba(255,255,255,.35); }
+.hammy-side-avatar.faces-ready.streak .pig-head { box-shadow: inset 16px 16px 30px rgba(255,255,255,.35); }
 /* The body's own shading peeks up behind the chin/lower-face area where it overlaps the
    head — flatten it too while a mood is active, same reasoning as the head. */
-.hammy-side-avatar.streak .pig-body { box-shadow: none; }
+.hammy-side-avatar.faces-ready.streak .pig-body { box-shadow: none; }
 /* The illustration draws its own nose — the CSS snout is a distinctly different pink oval
    sitting on top of the head gradient, so it reads as a hard outline behind the art. Hide it
    entirely rather than just dropping its shadow. Eyes and cheeks get the same 0.15s opacity

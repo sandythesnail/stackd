@@ -659,6 +659,99 @@ step('the real-life sub-quest pays, counts as activity, and can master a module'
   }
 });
 
+// 10d. Hammy is never blank-faced.
+//
+// jsdom does not fetch images, so every face illustration in this run is permanently
+// undecoded — which is exactly the case these gates exist for (a cold cache, a slow
+// connection, a 404 after a bad deploy). The rule under test is that nothing is ever taken
+// OFF Hammy's face for an illustration that cannot be drawn.
+console.log('\nHammy is never blank-faced');
+function facelessPigs() {
+  // has-face-overlay hides the eyes, cheeks and snout. Nothing may wear it here.
+  return [...window.document.querySelectorAll('.has-face-overlay')];
+}
+step('no face is stripped while its illustration is unavailable', () => {
+  const seen = [];
+  window.showPage('home');
+  window.renderHome();
+  seen.push(...facelessPigs());
+  window.renderLessonPath('home-lesson-path');
+  seen.push(...facelessPigs());
+  window.showLevelUpCard();
+  seen.push(...facelessPigs());
+  if (seen.length) {
+    throw new Error(seen.length + ' pig(s) had their face hidden with nothing to replace it: '
+      + seen.map((e) => e.className).join(' | '));
+  }
+});
+step('a mouth-only face never hides the face underneath it', () => {
+  // The lesson path gives Saving and Loans a mouth-only overlay (face-happy / face-gentle).
+  // Those ADD a mouth to the resting face; pairing them with has-face-overlay — which hides
+  // the eyes, cheeks and snout — left those two module headers as a faceless pig wearing a
+  // 32px mouth. Asserted against the gate directly rather than against whichever module the
+  // path happens to be showing, and with the illustration marked decoded so that "it was
+  // withheld anyway" cannot be what makes this pass.
+  const probe = window.document.createElement('div');
+  window.document.body.appendChild(probe);
+  for (const cls of ['face-happy', 'face-gentle']) {
+    probe.className = '';
+    window.eval(`hammyFaceDecoded['${cls}'] = true`);
+    window.revealFaceOverlay(probe, cls);
+    if (!probe.classList.contains(cls)) throw new Error(cls + ' was not applied at all');
+    if (probe.classList.contains('has-face-overlay')) {
+      throw new Error(cls + ' was paired with has-face-overlay: ' + probe.className);
+    }
+    window.eval(`delete hammyFaceDecoded['${cls}']`);
+  }
+  probe.remove();
+  // Every module still maps to a usable face class, rather than only the one on screen.
+  const faces = window.eval('LP_MODULE_FACE');
+  for (const mod of api.MODULES) {
+    if (!/^(mood|face)-/.test(faces[mod.id] || 'mood-star')) {
+      throw new Error(mod.id + ' has no usable face class: ' + faces[mod.id]);
+    }
+  }
+  window.renderLessonPath('home-lesson-path');
+  const heads = [...window.document.querySelectorAll('.lp-head-hammy')];
+  if (!heads.length) throw new Error('the lesson path drew no module head');
+  if (heads.some((el) => !/(mood-|face-)/.test(el.className))) {
+    throw new Error('a module head was left with no face at all: ' + JSON.stringify(heads.map(h=>h.className)));
+  }
+});
+step('the face appears as soon as its illustration can be drawn', () => {
+  // Stand in for a completed decode, then re-render: the gate should open.
+  window.eval("hammyFaceDecoded['mood-star'] = true");
+  window.showLevelUpCard();
+  const hammy = window.document.getElementById('levelup-hammy');
+  if (!hammy.classList.contains('has-face-overlay')) {
+    throw new Error('a decoded face was still withheld: ' + hammy.className);
+  }
+  window.eval("delete hammyFaceDecoded['mood-star']");
+});
+step('a streak reaction falls back to the plain happy face, and upgrades in place', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  const quest = window.mainQuests(mod)[0];
+  delete s.questProgress[window.questKey(mod.id, quest.id)];
+  window.startQuest(mod.id, quest.id);
+  window.renderChapter(mod, 0);
+  const avatar = window.document.getElementById('hammy-side-avatar');
+
+  // Three right in a row asks for the whole-face swap, which cannot be drawn here.
+  const qp = s.questProgress[window.questKey(mod.id, quest.id)];
+  qp.streak = 2;
+  window.showHammyReaction(mod, true);
+  if (avatar.classList.contains('streak')) throw new Error('the whole-face swap was applied with no art');
+  if (!avatar.classList.contains('happy')) throw new Error('the fallback face was not applied: ' + avatar.className);
+  if (avatar.dataset.hammyFace !== 'streak') throw new Error('the streak was not remembered for later');
+
+  // Once the art lands, the celebration it settled for becomes the real one, in place.
+  window.eval('hammyFacesReady = true; upgradeHammyStreakFaces();');
+  if (!avatar.classList.contains('streak')) throw new Error('the streak face never arrived: ' + avatar.className);
+  if (!avatar.classList.contains('faces-ready')) throw new Error('streak without faces-ready is a blank face');
+  if (avatar.classList.contains('happy')) throw new Error('two face states at once');
+  window.eval('hammyFacesReady = false;');
+});
+
 // 11b. Every chapter in the catalogue, rendered.
 //
 // The other quest tests each pick one representative chapter. This one walks all 1,270 across

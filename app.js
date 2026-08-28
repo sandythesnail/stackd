@@ -17387,8 +17387,9 @@ function showLevelUpCard() {
   if (!overlay) return;
   const hammy = document.getElementById('levelup-hammy');
   if (hammy) {
-    hammy.className = 'levelup-hammy has-face-overlay mood-star';
+    hammy.className = 'levelup-hammy';
     hammy.innerHTML = withFaceOverlay(getPigWithItemMarkup(0.25, getEquippedItems()));
+    revealFaceOverlay(hammy, 'mood-star');
   }
   const sub = document.getElementById('levelup-sub');
   if (sub) sub.textContent = 'You\u2019ve levelled up to level ' + state.level + '.';
@@ -19961,7 +19962,11 @@ function renderHomeMascotCard(done) {
   const satisfiedToday = hasModuleActivityToday();
   const mood = todaysHammyMood();
   const moodClass = satisfiedToday ? 'mood-satisfied' : `mood-${mood.id}`;
-  const pigMarkup = (scale) => `<div class="mascot-pig-wrap has-face-overlay ${moodClass}">${withFaceOverlay(getPigWithItemMarkup(scale, getEquippedItems()))}</div>`;
+  // No has-face-overlay in the markup: revealFaceOverlay adds it once the day's mood image
+  // has actually decoded, so the first load of a new day can't strip his face while the
+  // 200KB-odd PNG behind it is still in flight.
+  const pigMarkup = (scale) => `<div class="mascot-pig-wrap ${moodClass}">${withFaceOverlay(getPigWithItemMarkup(scale, getEquippedItems()))}</div>`;
+  const revealMascotFace = () => card.querySelectorAll('.mascot-pig-wrap').forEach((el) => revealFaceOverlay(el, moodClass));
 
   // Track order, not catalog order — see orderedModulesByTrack.
   const nextModule = nextModuleForUser();
@@ -19978,6 +19983,7 @@ function renderHomeMascotCard(done) {
         </div>
       </div>
       `;
+    revealMascotFace();
     return;
   }
 
@@ -20024,6 +20030,7 @@ function renderHomeMascotCard(done) {
     <button type="button" class="quest-cta-btn" id="quest-cta-btn">${ctaLabel}</button>
     ${satisfiedToday ? `<div class="quest-nudge">🔥 ${state.streak}-day streak. Hammy will be even happier tomorrow</div>` : ''}`;
 
+  revealMascotFace();
   document.getElementById('quest-cta-btn').addEventListener('click', () => startNextLessonFor(nextModule));
 }
 
@@ -22311,7 +22318,7 @@ function renderSubQuestResults(mod, qp, newAchs, coinsEarned) {
   const tally = questTally(qp);
 
   document.getElementById('results-wrap').innerHTML = `
-    <div class="subquest-celebrate-hammy hammy-side-avatar streak">${withFaceOverlay(getPigWithItemMarkup(0.55, getEquippedItems()))}</div>
+    ${celebrationHammyHtml()}
     <div class="results-grade">🎉 REAL-LIFE SUB-QUEST COMPLETE</div>
     <h2 class="results-title">${quest.topic}</h2>
     ${tally.total ? `<p class="results-score results-score-tally">${tally.right}/${tally.total} correct</p>` : ''}
@@ -22336,6 +22343,7 @@ function renderSubQuestResults(mod, qp, newAchs, coinsEarned) {
       <button class="btn-secondary" id="res-replay">Replay guide</button>
     </div>`;
 
+  applyCelebrationHammyFace();
   document.getElementById('res-home').addEventListener('click', exitToModules);
   document.getElementById('res-replay').addEventListener('click', () => startQuest(mod.id, state.activeQuestId));
   wireQuestReport();
@@ -22592,25 +22600,144 @@ const HAMMY_OUTCOME_GENTLE_MSGS = ["Hmm, that one stings a bit.", "That'll cost 
  * resting face without hiding anything, so a missing image there costs the mouth and
  * nothing else. There is no blank state to guard against. */
 let hammyFacesReady = false;
+/** The whole-face swap, and the only thing hammyFacesReady gates. 225KB, so on a cold cache
+ *  this is genuinely not instant and the gate genuinely matters. */
 const HAMMY_SWAP_FACES = ['faces/hammy-happy.png?v=17'];
+/** The two mouth-only overlays. Deliberately NOT gated — they add a mouth on top of the
+ *  resting face without hiding anything, so a slow or missing one costs the mouth and nothing
+ *  else. Warmed anyway, so the first right answer and the first wrong one draw from cache
+ *  instead of popping their mouth in a beat late. Mobile warms all three for the same reason
+ *  (see ReactionFacePreloader). */
+const HAMMY_MOUTH_FACES = ['faces/hammy-mouth-happy.png?v=1', 'faces/hammy-mouth-confused.png?v=1'];
 function preloadHammyFaces() {
+  HAMMY_MOUTH_FACES.forEach(function (src) { new Image().src = src; });
   if (hammyFacesReady) return;
   let pending = HAMMY_SWAP_FACES.length;
   HAMMY_SWAP_FACES.forEach(function (src) {
     const img = new Image();
     // Only a full set counts. A partial load would re-open the same gap for whichever
     // face was still missing.
-    img.onload = function () { if (--pending === 0) hammyFacesReady = true; };
+    img.onload = function () {
+      if (--pending !== 0) return;
+      hammyFacesReady = true;
+      // Anything that had to settle for the plain happy face while this was still loading
+      // becomes the real streak face now, in place. Without this, whether a celebration ever
+      // gets its illustration is decided by whether the download happened to beat the
+      // player's first three-in-a-row — and on a cold cache it usually doesn't.
+      upgradeHammyStreakFaces();
+    };
     img.onerror = function () { /* stays false: the base face is never hidden */ };
     img.src = src;
   });
 }
 preloadHammyFaces();
 
+/** Every illustrated face this app can put on Hammy, and the exact URL the stylesheet asks
+ *  for. The query strings matter: `.mood-satisfied` asks for faces/hammy-happy.png while the
+ *  streak reaction asks for faces/hammy-happy.png?v=17, and those are two different cache
+ *  entries, so warming one does nothing for the other. */
+const HAMMY_FACE_SRC = {
+  'mood-star': 'faces/star-face.png',
+  'mood-sleepy': 'faces/sleepy-face.png',
+  'mood-curious': 'faces/curious-face.png',
+  'mood-angry': 'faces/angry-face.png',
+  'mood-love': 'faces/love-face.png',
+  'mood-nervy': 'faces/nervy-face.png',
+  'mood-sad': 'faces/sad-face.png',
+  'mood-surprise': 'faces/surprise-face.png',
+  'mood-wink': 'faces/wink-face.png',
+  'mood-satisfied': 'faces/hammy-happy.png',
+};
+/** The two mouth-only overlays. They ADD a mouth to the resting face instead of replacing it,
+ *  so they must never be paired with has-face-overlay — see revealFaceOverlay. */
+const HAMMY_MOUTH_FACE_CLASSES = ['face-happy', 'face-gentle'];
+/** Face class -> true once that illustration has decoded and can safely be drawn. */
+const hammyFaceDecoded = Object.create(null);
+
+/** Puts an illustrated face on a pig wrapper WITHOUT ever leaving it blank.
+ *
+ * `has-face-overlay` does two things at once: it reveals the overlay, and it hides Hammy's own
+ * eyes, cheeks and snout so the illustration can take their place. Every caller used to write
+ * both into its markup string, which means the features came off in the same frame the class
+ * landed — while the illustration behind it still had to be fetched and decoded. The gap
+ * between those two is a pig with no face, and these are the biggest images in the set (the
+ * mood faces run 115KB to 325KB). On a cold cache, on a slow connection, or after a bad
+ * deploy, that gap is the blank Hammy. Home picks a different mood every day, so the day's
+ * first load is a cache miss by design.
+ *
+ * The rule here is simply that nothing comes off his face until the thing replacing it is
+ * ready. On failure the class is never added at all and he keeps his own CSS face, which is
+ * the same fail-visible principle the streak reaction already followed (see applyHammyFace).
+ *
+ * A mouth-only face is a different shape of thing and gets a different answer: it is additive,
+ * its own rule already reveals it, and pairing it with has-face-overlay is what produced a
+ * faceless pig wearing a 32px mouth on the lesson path's Saving and Loans headers. */
+function revealFaceOverlay(wrapper, faceClass) {
+  if (!wrapper || !faceClass) return;
+  wrapper.classList.add(faceClass);
+  if (HAMMY_MOUTH_FACE_CLASSES.includes(faceClass)) return;
+  const src = HAMMY_FACE_SRC[faceClass];
+  // An unknown class has no art behind it, so revealing the overlay could only blank him.
+  if (!src) return;
+  if (hammyFaceDecoded[faceClass]) { wrapper.classList.add('has-face-overlay'); return; }
+  const img = new Image();
+  img.onload = function () {
+    hammyFaceDecoded[faceClass] = true;
+    // Everything already on screen waiting on this same face, not just the one that asked —
+    // Home draws its mascot at two sizes in the same card.
+    document.querySelectorAll('.' + faceClass).forEach(function (el) { el.classList.add('has-face-overlay'); });
+  };
+  img.onerror = function () { /* never revealed: Hammy keeps his own face */ };
+  img.src = src;
+}
+
+/** The big celebrating Hammy at the top of a results screen.
+ *
+ * Both results screens used to write `class="... hammy-side-avatar streak"` straight into
+ * their markup, which looks like it asks for the excited face and does not get it: the CSS
+ * that swaps the illustration in is `.faces-ready.streak`, and nothing was ever adding
+ * faces-ready to a hand-built string. So the illustration never appeared on either screen —
+ * while the two shading rules that were NOT gated (they are now) still fired, flattening the
+ * head and body highlights that exist to sit UNDER that illustration. The celebration Hammy
+ * was a washed-out pig wearing its resting face.
+ *
+ * Emitting it with no face class and applying one through applyHammyFace afterwards means
+ * this screen goes through the same gate as every in-lesson reaction: the real streak face
+ * when the art is there, an honest happy one when it isn't, and an upgrade in place the
+ * moment it arrives. */
+function celebrationHammyHtml() {
+  return '<div class="subquest-celebrate-hammy hammy-side-avatar">'
+    + withFaceOverlay(getPigWithItemMarkup(0.55, getEquippedItems()))
+    + '</div>';
+}
+/** Call after painting a results screen — the markup above is inert until this runs. */
+function applyCelebrationHammyFace() {
+  document.querySelectorAll('.subquest-celebrate-hammy')
+    .forEach(function (el) { applyHammyFace(el, 'streak'); });
+}
+
+/** Re-applies the streak face to every Hammy that asked for one and had to make do.
+ *
+ * The selector is the whole bookkeeping: an avatar only matches while it is BOTH still
+ * showing the downgraded happy face and still marked as having wanted a streak. Anything
+ * whose className has since been reset (renderChapter does this on every chapter, and
+ * clearHammyReaction on every advance) drops out of the set on its own, so there is no
+ * subscriber list to grow and nothing to unregister. */
+function upgradeHammyStreakFaces() {
+  document.querySelectorAll('.hammy-side-avatar.happy[data-hammy-face="streak"]')
+    .forEach(function (el) { applyHammyFace(el, 'streak'); });
+}
+
 /** Applies a reaction class, downgrading a whole-face swap to the mouth-only happy face
  *  while its illustration is still unavailable. */
 function applyHammyFace(avatar, cls) {
-  if (cls === 'streak' && !hammyFacesReady) { avatar.classList.add('happy'); return; }
+  // What was ASKED for, which is not always what can be drawn yet. Read back by
+  // upgradeHammyStreakFaces once the illustration lands.
+  avatar.dataset.hammyFace = cls;
+  // A streak is the one reaction that REPLACES the face rather than adding to it, so it is
+  // the only one that can leave nothing behind. Until the illustration has decoded it renders
+  // as the ordinary happy reaction — a less exciting Hammy for a moment beats no Hammy.
+  const drawn = cls === 'streak' && !hammyFacesReady ? 'happy' : cls;
   if (hammyFacesReady) avatar.classList.add('faces-ready');
   /* EXACTLY ONE face state at a time.
    *
@@ -22622,9 +22749,14 @@ function applyHammyFace(avatar, cls) {
    * what "his face breaks and goes extremely small" is, and it fired on every third correct
    * answer in a row.
    *
-   * A streak IS a kind of happy, so it replaces it rather than stacking on it. */
+   * A streak IS a kind of happy, so it replaces it rather than stacking on it.
+   *
+   * This cleanup runs on EVERY path now, including the not-ready downgrade above, which used
+   * to return early and skip it: a streak arriving over a still-showing gentle left the avatar
+   * carrying both, and `gentle` is defined after `happy` in the stylesheet, so a right answer
+   * could be drawn with the confused mouth. */
   avatar.classList.remove('happy', 'gentle', 'streak');
-  avatar.classList.add(cls);
+  avatar.classList.add(drawn);
 }
 function showHammyReaction(mod, isCorrect, context = 'answer') {
   const avatar = document.getElementById('hammy-side-avatar');
@@ -24249,7 +24381,7 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
   document.getElementById('results-wrap').innerHTML = `
     <!-- The 3-in-a-row streak face, not the neutral one: this screen is a celebration, and
          the sub-quest results screen has always opened on Hammy this way. -->
-    <div class="subquest-celebrate-hammy hammy-side-avatar streak">${withFaceOverlay(getPigWithItemMarkup(0.55, getEquippedItems()))}</div>
+    ${celebrationHammyHtml()}
     <div class="results-grade">🎉 LESSON COMPLETE</div>
     <h2 class="results-title">${headline}</h2>
     ${scoreLine ? `<p class="results-score results-score-tally">${scoreLine}</p>` : ''}
@@ -24277,6 +24409,7 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
       <button class="btn-secondary" id="res-replay">Replay lesson</button>
     </div>`;
 
+  applyCelebrationHammyFace();
   document.getElementById('res-home').addEventListener('click', exitToModules);
   document.getElementById('res-replay').addEventListener('click', () => startQuest(mod.id, state.activeQuestId));
   wireQuestReport();

@@ -68,7 +68,12 @@
           '</div>' +
           '<div class="hi-ring"></div>' +
           '<div class="hi-ring hi-ring2"></div>' +
-          '<div class="hi-hammy"><div class="hi-hammy-rig"><div class="has-face-overlay">' +
+          // has-face-overlay is added by setFace, once that beat's illustration has
+          // decoded — see setFace. Written in here it stripped Hammy's eyes, cheeks and
+          // snout the moment the overlay existed, which on this screen is before setFace has
+          // run at all and before any of the three images have been fetched: the first thing
+          // a new player ever sees was a faceless pig climbing out of a piggy bank.
+          '<div class="hi-hammy"><div class="hi-hammy-rig"><div class="hi-face">' +
             withFaceOverlay(getPigMarkup(0.62)) +
           '</div></div></div>' +
           '<div class="hi-bubble"></div>' +
@@ -181,13 +186,33 @@
       } catch (e) { /* never let audio break the intro */ }
     }
 
+    /* Nothing comes off Hammy's face until the thing replacing it can be drawn.
+       The geometry and the image are set immediately — they cost nothing while the overlay
+       is still invisible — and has-face-overlay, which is what actually hides his eyes,
+       cheeks and snout, waits for the decode. A failed image leaves him with his own face
+       rather than none, which is the same rule app.js's revealFaceOverlay follows. */
+    var faceHost = q('.hi-face');
+    var facesDecoded = {};
+    var currentFace = null;
     function setFace(name) {
       var f = FACES[name];
+      currentFace = name;
       faceOverlay.style.backgroundImage = 'url("' + f.image + '")';
       faceOverlay.style.top = f.top + 'px';
       faceOverlay.style.left = f.left + 'px';
       faceOverlay.style.width = f.width + 'px';
       faceOverlay.style.height = f.height + 'px';
+      if (facesDecoded[name]) { faceHost.classList.add('has-face-overlay'); return; }
+      faceHost.classList.remove('has-face-overlay');
+      var probe = new Image();
+      probe.onload = function () {
+        facesDecoded[name] = true;
+        // Only if this is still the beat on screen — a slow first image must not reveal
+        // itself onto a later line that has already moved on to a different face.
+        if (currentFace === name) faceHost.classList.add('has-face-overlay');
+      };
+      probe.onerror = function () { /* never revealed: he keeps his own face */ };
+      probe.src = f.image;
     }
 
     /* Burst origin ≈ the bank body's center, 4vh above the anchor (see CSS). */

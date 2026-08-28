@@ -380,7 +380,15 @@ function lpSectionEl(section, shownIdx, sections, recommendedTrack) {
       '</div>' +
       // Hammy, wearing this module's own face. Mobile puts him here and it is the one
       // thing that made the header read as a module rather than a row of numbers.
-      '<div class="lp-head-hammy has-face-overlay ' + (LP_MODULE_FACE[mod.id] || 'mood-star') + '">' +
+      //
+      // The face class is applied by revealFaceOverlay after this is in the DOM, not written
+      // in here. Two reasons, and the second one was a real defect: it waits for the
+      // illustration to decode before anything is taken off his face, and it knows that
+      // face-happy/face-gentle are MOUTH-only overlays. Saving and Loans use those two, and
+      // pairing them with has-face-overlay — which hides the eyes, cheeks and snout for an
+      // illustration that is only ever a 32x37 mouth — left those two module headers showing
+      // a permanently faceless pig with a mouth floating on it.
+      '<div class="lp-head-hammy">' +
         withFaceOverlay(getHammyFaceMarkup(0.14)) +
       '</div>' +
       (section.mastered ? '<span class="lp-done-pill">DONE</span>' : '') +
@@ -390,6 +398,7 @@ function lpSectionEl(section, shownIdx, sections, recommendedTrack) {
     '</div>' +
     '<div class="lp-position">MODULE ' + (shownIdx + 1) + ' OF ' + sections.length + '</div>';
   wrap.appendChild(head);
+  revealFaceOverlay(head.querySelector('.lp-head-hammy'), LP_MODULE_FACE[mod.id] || 'mood-star');
 
   head.querySelectorAll('[data-lp-page]').forEach(function (btn) {
     btn.addEventListener('click', function () {
