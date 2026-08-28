@@ -22822,35 +22822,45 @@ function renderMatchingChapter(chapter, mod, onDone) {
   const terms = shuffleArray(pairs.map((p, i) => ({ text: p.term, pairIdx: i })));
   const defs = shuffleArray(pairs.map((p, i) => ({ text: p.definition, pairIdx: i })));
 
+  // Two columns — words down the left, definitions down the right — which is mobile's
+  // arrangement (MatchingView's matchGrid) and the shape a matching exercise normally takes.
+  // The web had the words as a wrapping row of pills above a full-width list of definitions,
+  // which reads as two unrelated lists rather than as a board with two sides to join up.
+  //
+  // The two columns are shuffled independently, so row N on the left has nothing to do with
+  // row N on the right; the grid is only there to put the two sets side by side at a
+  // consistent size. Every cell is placed explicitly, so nothing reflows as words leave.
   main.innerHTML = `
     <p class="quest-prompt">Tap a word, then tap the definition that matches it. Take your time, you can try again if you miss.</p>
-    <div class="match-terms" id="match-terms"></div>
-    <div class="match-defs" id="match-defs"></div>
+    <div class="match-grid" id="match-grid"></div>
     <div class="match-progress" id="match-progress">0 of ${pairs.length} matched</div>`;
 
-  const termsEl = document.getElementById('match-terms');
-  const defsEl = document.getElementById('match-defs');
+  const gridEl = document.getElementById('match-grid');
   let selectedTermEl = null;
   let selectedPairIdx = null;
   let matchedCount = 0;
 
-  terms.forEach(t => {
+  terms.forEach((t, i) => {
     const btn = document.createElement('button');
     btn.className = 'match-chip';
+    btn.style.gridColumn = '1';
+    btn.style.gridRow = String(i + 1);
     btn.textContent = t.text;
     btn.addEventListener('click', () => {
       if (btn.classList.contains('matched')) return;
-      termsEl.querySelectorAll('.match-chip').forEach(b => b.classList.remove('selected'));
+      gridEl.querySelectorAll('.match-chip').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       selectedTermEl = btn;
       selectedPairIdx = t.pairIdx;
     });
-    termsEl.appendChild(btn);
+    gridEl.appendChild(btn);
   });
 
-  defs.forEach(d => {
+  defs.forEach((d, i) => {
     const card = document.createElement('div');
     card.className = 'match-def-card';
+    card.style.gridColumn = '2';
+    card.style.gridRow = String(i + 1);
     const defTextEl = document.createElement('span');
     defTextEl.className = 'match-def-text';
     defTextEl.textContent = d.text;
@@ -22894,7 +22904,7 @@ function renderMatchingChapter(chapter, mod, onDone) {
         }, 420);
       }
     });
-    defsEl.appendChild(card);
+    gridEl.appendChild(card);
   });
 }
 

@@ -1659,20 +1659,28 @@ select.budget-input { cursor: pointer; }
 }
 
 /* Matching game — repeated-exposure term-to-definition drill */
-.match-terms { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
-.match-chip {
-  padding: 0.55rem 0.9rem; border-radius: 999px; border: 1.5px solid var(--border); background: #fff;
-  font-size: 0.95rem; font-weight: 600; color: var(--text); cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.15s;
+/* Words on the left, definitions on the right — mobile's matchGrid. grid-auto-rows: 1fr is
+   what mobile does by measuring: it makes every row the height of the tallest one, so a
+   one-word term doesn't sit in a visibly smaller box than the full-sentence definition beside
+   it and the two columns line up instead of reading as two ragged lists. Both cells are placed
+   explicitly by row (see renderMatchingChapter), so a word leaving its column as it gets
+   matched can't reflow the ones still waiting. */
+.match-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; align-items: stretch; margin-bottom: 0.75rem;
 }
-.match-chip:hover:not(.matched) { border-color: var(--green); }
+/* One chip shape for both columns, as on mobile — the pill-vs-card split made the two sides
+   look like different kinds of thing when the whole exercise is joining them up. */
+.match-chip, .match-def-card {
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  width: 100%; text-align: left; font-family: inherit;
+  padding: 0.6rem 0.8rem; border-radius: 14px; border: 1.5px solid var(--border); background: #fff;
+  font-size: 0.9rem; line-height: 1.35; font-weight: 600; color: var(--text);
+  cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+.match-chip:hover:not(.matched), .match-def-card:hover:not(.matched) { border-color: var(--green); }
 .match-chip.selected { border-color: var(--green); background: var(--green-pale); color: var(--green-dark); }
-.match-defs { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.5rem; }
-.match-def-card {
-  padding: 0.85rem 1rem; border-radius: var(--radius); border: 1.5px solid var(--border); background: #fff;
-  font-size: 0.98rem; line-height: 1.45; color: var(--text); cursor: pointer; transition: border-color 0.15s, background 0.15s;
-  display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap;
-}
-.match-def-text { flex: 1; min-width: 0; }
+.match-def-text { flex: 1; min-width: 0; font-weight: 500; }
 .match-def-card:hover:not(.matched) { border-color: var(--green); }
 /* A completed pair is marked by a green border and a check — NOT by fading it out. The old
    treatment dropped matched rows to 0.6 opacity with gray-green text, which made the content
@@ -2704,8 +2712,8 @@ select.budget-input { cursor: pointer; }
   .story-bubble { font-size: 1.02rem; }
   .option-btn { font-size: 0.95rem; }
   .word-check-statement { font-size: 0.95rem; }
-  .match-chip { font-size: 0.85rem; }
-  .match-def-card { font-size: 0.88rem; }
+  .match-grid { gap: 7px; }
+  .match-chip, .match-def-card { font-size: 0.82rem; padding: 0.5rem 0.6rem; }
   .myth-card-front p, .myth-card-back p { font-size: 1rem; }
   .boss-choice-card { font-size: 0.92rem; }
   .explainback-input { font-size: 0.9rem; }

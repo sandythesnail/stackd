@@ -757,6 +757,67 @@ step('an empty answer cannot be submitted, and a real one is quoted back', () =>
   if (!feedback.classList.contains('is-right')) throw new Error('a hit was not coloured as one');
 });
 
+// 13b. Match It is a board with two sides, and it can be finished.
+console.log('\nmatch it');
+step('two columns, and every pair joins up', () => {
+  let found = null;
+  for (const mod of api.MODULES) {
+    for (const q of window.mainQuests(mod)) {
+      const i = q.chapters.findIndex((c) => c.type === 'matching' && (c.pairs || []).length >= 2);
+      if (i >= 0) { found = { mod, quest: q, idx: i, chapter: q.chapters[i] }; break; }
+    }
+    if (found) break;
+  }
+  if (!found) throw new Error('no Match It chapter to test with');
+
+  delete s.questProgress[window.questKey(found.mod.id, found.quest.id)];
+  window.startQuest(found.mod.id, found.quest.id);
+  window.renderChapter(found.mod, found.idx);
+
+  const grid = window.document.getElementById('match-grid');
+  if (!grid) throw new Error('the grid is missing — is this still two columns?');
+  const terms = [...grid.querySelectorAll('.match-chip')];
+  const defs = [...grid.querySelectorAll('.match-def-card')];
+  if (terms.length !== found.chapter.pairs.length) throw new Error(terms.length + ' words for ' + found.chapter.pairs.length + ' pairs');
+  // Words down column one, definitions down column two, each on its own row — the placement
+  // is explicit so a word leaving can't reflow the ones still waiting.
+  if (terms.some((el) => el.style.gridColumn !== '1')) throw new Error('a word is not in the first column');
+  if (defs.some((el) => el.style.gridColumn !== '2')) throw new Error('a definition is not in the second column');
+  if (new Set(terms.map((el) => el.style.gridRow)).size !== terms.length) throw new Error('two words share a row');
+
+  // A wrong pairing is refused, and costs a recorded mistake rather than a match.
+  const qp = s.questProgress[window.questKey(found.mod.id, found.quest.id)];
+  const wrongDef = defs.find((c) => c.querySelector('.match-def-text').textContent
+    !== found.chapter.pairs.find((p) => p.term === terms[0].textContent).definition);
+  if (wrongDef) {
+    terms[0].click();
+    wrongDef.click();
+    if (wrongDef.classList.contains('matched')) throw new Error('a wrong pairing was accepted');
+    if (qp.analytics.matchingMistakes !== 1) throw new Error('the mistake was not recorded');
+  }
+
+  // Then play it properly, all the way to the end.
+  const defOf = (term) => found.chapter.pairs.find((p) => p.term === term).definition;
+  let guard = 0;
+  while (grid.querySelectorAll('.match-chip').length && guard++ < 40) {
+    const chip = grid.querySelector('.match-chip');
+    const want = defOf(chip.textContent);
+    chip.click();
+    [...grid.querySelectorAll('.match-def-card:not(.matched)')]
+      .find((c) => c.querySelector('.match-def-text').textContent === want).click();
+  }
+  if (grid.querySelectorAll('.match-def-card.matched').length !== found.chapter.pairs.length) {
+    throw new Error('the board did not finish');
+  }
+  // Every matched definition carries the word it went with, so the finished board is a
+  // readable list of pairs rather than a set of ticks.
+  if (grid.querySelectorAll('.match-paired-term').length !== found.chapter.pairs.length) {
+    throw new Error('a matched pair does not show which word went with which');
+  }
+  const cont = window.document.getElementById('quest-continue-btn');
+  if (cont.disabled) throw new Error('a finished board left Continue dead');
+});
+
 // 14. Tools: named options, and the loan tool asking only about the loan.
 console.log('\ntools');
 function openTool(tab) {
