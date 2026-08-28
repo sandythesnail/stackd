@@ -23949,9 +23949,26 @@ function showBossVerdict(picked, best, isRight, onFinish) {
 function finishQuest(mod, chosenConsequence) {
   const qp = getQP(mod);
   qp.done = true;
-  const score = qp.chapterScore;
-  const total = qp.chapterTotal || 1;
-  if (qp.chapterTotal > 0 && qp.chapterScore === qp.chapterTotal) state.hadPerfect = true;
+  // ONE definition of "how did I do", used for the score on the results screen AND for what
+  // the lesson pays. These were two different counts.
+  //
+  // qp.chapterScore/chapterTotal are incremented in exactly one place — inside the Quick
+  // Check — so they count Quick Check answers and nothing else: an average of 2.0 graded
+  // moments per lesson, against the 10.5 the lesson actually grades. Every poll, vocab check,
+  // myth card, spot-check, price guess and boss battle was shown to the student with a verdict
+  // and then paid nothing. The results screen has used questTally (the full set) for its score
+  // line since it was written, so the screen said "8/10 correct" while the coins beside it had
+  // been worked out from 2/2.
+  //
+  // The rate had already been halved here (8 to 4) to match mobile's constant — but mobile
+  // halved it precisely BECAUSE it pays over the full set, so the web took the compensation
+  // for a widening it never made. Net effect at 75% accuracy: about 6 coins a lesson here
+  // against about 32 on the phone, on the same synced account, against a shop catalogue the
+  // two apps are guarded to keep identical. This is the widening that rate was for.
+  const tally = questTally(qp);
+  const score = tally.right;
+  const total = tally.total || 1;
+  if (tally.total > 0 && tally.allRight) state.hadPerfect = true;
 
   const bossXP = Math.round(mod.xpReward * (chosenConsequence.xpMultiplier ?? 1));
   // Zero on a replay, matching the XP (see awardQuestXP) and mobile's own `advanced` gate.
@@ -23959,7 +23976,7 @@ function finishQuest(mod, chosenConsequence) {
   // gradeable in it at all — the same basis as mobile's completeLesson.
   const coinsEarned = qp.isReplay
     ? 0
-    : (qp.chapterTotal > 0 ? qp.chapterScore * QUEST_COIN_PER_CORRECT : QUEST_COIN_FLAT_FALLBACK);
+    : (tally.total > 0 ? tally.right * QUEST_COIN_PER_CORRECT : QUEST_COIN_FLAT_FALLBACK);
   state.coins = (state.coins || 0) + coinsEarned;
 
   // Streak/diamonds are earned by opening the app (see boot sequence), not by finishing a lesson.
@@ -24099,6 +24116,14 @@ function buildQuestReport(mod, qp) {
     adviceParts.push(`Reread the explanation for "${kcWrong[0].question}."`);
   } else if (mythWrong.length > 0) {
     adviceParts.push(`The statement "${mythWrong[0].myth}" is worth a second look.`);
+  } else if (checkWrong.length > 0) {
+    // Last, so a missed Quick Check or myth card still leads — but present, which it was not.
+    // Without this branch a lesson whose only misses were checks (a poll, a vocab check, the
+    // boss battle) fell through every arm: weakSpots is non-empty so it skips "Solid handle
+    // on…", and kcWrong/mythWrong are both empty, so advice came out as the empty string and
+    // the report printed a bare "Hammy's advice:" with nothing after it. The boss battle
+    // being graded makes that the common case rather than a corner of it.
+    adviceParts.push(`Worth rereading: "${checkWrong[0].label}"`);
   }
   if (a.explainback && a.explainback.tier === 'retry') {
     adviceParts.push(`Also reread the definition for "${a.explainback.term}."`);

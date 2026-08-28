@@ -488,7 +488,8 @@ step('a first run pays, a replay does not', () => {
   s.xp = 0; s.coins = 0; s.level = 1;
   window.startQuest(mod.id, quest.id);
   const qp = s.questProgress[key];
-  qp.chapterScore = 5; qp.chapterTotal = 5;
+  // Five graded moments, all right — the record the lesson would actually have left behind.
+  qp.analytics.checks = [1, 2, 3, 4, 5].map((n) => ({ label: 'q' + n, isCorrect: true }));
   window.finishQuest(mod, { text: 'ok', xpMultiplier: 1 });
   const firstXp = s.xp, firstCoins = s.coins;
   if (firstXp <= 0 || firstCoins <= 0) throw new Error(`a first run paid ${firstXp} XP / ${firstCoins} coins`);
@@ -497,7 +498,7 @@ step('a first run pays, a replay does not', () => {
   window.startQuest(mod.id, quest.id);
   const qp2 = s.questProgress[key];
   if (!qp2.isReplay) throw new Error('the second run was not flagged as a replay');
-  qp2.chapterScore = 5; qp2.chapterTotal = 5;
+  qp2.analytics.checks = [1, 2, 3, 4, 5].map((n) => ({ label: 'q' + n, isCorrect: true }));
   window.finishQuest(mod, { text: 'ok', xpMultiplier: 1 });
   if (s.xp !== firstXp) throw new Error(`the replay paid ${s.xp - firstXp} XP`);
   if (s.coins !== firstCoins) throw new Error(`the replay paid ${s.coins - firstCoins} coins`);
@@ -545,6 +546,64 @@ step('no hint button where no hint was written', () => {
   window.renderChapter(mod, target.idx);
   if (window.document.getElementById('hint-ask-btn')) {
     throw new Error('offered a hint on a chapter that has none');
+  }
+});
+
+// 10b. What the lesson pays is what the lesson scored.
+step('coins are paid over every graded moment, not just the Quick Check', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  const quest = window.mainQuests(mod)[1];
+  const key = window.questKey(mod.id, quest.id);
+  const RATE = window.eval('QUEST_COIN_PER_CORRECT');
+
+  delete s.questProgress[key];
+  // finishQuest only rewrites a module record when the run beat the last one, and earlier
+  // tests have already finished a credit lesson — clear it so this asserts on this run.
+  delete s.completedModules[mod.id];
+  s.xp = 0; s.coins = 0; s.level = 1;
+  window.startQuest(mod.id, quest.id);
+  const qp = s.questProgress[key];
+  // A lesson graded across three different chapter types: a Quick Check, a myth card and
+  // four checks (a poll, two vocab checks, a boss battle). Seven graded, five right.
+  qp.analytics.knowledgeCheck = [{ question: 'kc1', isCorrect: true }, { question: 'kc2', isCorrect: false }];
+  qp.analytics.mythCards = [{ myth: 'm1', guessedRight: true }];
+  qp.analytics.checks = [
+    { label: 'poll', isCorrect: true },
+    { label: 'word 1', isCorrect: true },
+    { label: 'word 2', isCorrect: false },
+    { label: 'Boss battle', isCorrect: true },
+  ];
+  // The old basis would have paid off these and seen nothing at all.
+  qp.chapterScore = 0; qp.chapterTotal = 0;
+
+  const tally = window.questTally(qp);
+  if (tally.right !== 5 || tally.total !== 7) throw new Error(`tally is ${tally.right}/${tally.total}, expected 5/7`);
+  window.finishQuest(mod, { text: 'ok', xpMultiplier: 1 });
+  if (s.coins !== 5 * RATE) throw new Error(`paid ${s.coins} coins for 5 right, expected ${5 * RATE}`);
+  // And the module's recorded score is the same number the screen shows.
+  const rec = s.completedModules[mod.id];
+  if (rec.score !== 5 || rec.total !== 7) throw new Error(`recorded ${rec.score}/${rec.total}, expected 5/7`);
+  const wrap = window.document.getElementById('results-wrap').textContent;
+  if (!wrap.includes('5/7 correct')) throw new Error('the results screen does not say 5/7');
+
+  // ...and Hammy has something to say about it. A lesson whose only misses are checks used to
+  // fall through every branch of the advice builder and print a bare "Hammy's advice:".
+  const advice = window.document.querySelector('.report-advice p').textContent;
+  if (!/Hammy's advice:\s*\S/.test(advice)) throw new Error('empty advice: ' + JSON.stringify(advice));
+});
+step('a lesson whose only miss is a check still gets advice', () => {
+  const mod = api.MODULES.find((m) => m.id === 'scams');
+  const quest = window.mainQuests(mod)[0];
+  const key = window.questKey(mod.id, quest.id);
+  delete s.questProgress[key];
+  window.startQuest(mod.id, quest.id);
+  const qp = s.questProgress[key];
+  qp.analytics.knowledgeCheck = [{ question: 'kc1', isCorrect: true }];
+  qp.analytics.checks = [{ label: 'The boss battle move', isCorrect: false }];
+  window.finishQuest(mod, { text: 'ok', xpMultiplier: 1 });
+  const advice = window.document.querySelector('.report-advice p').textContent;
+  if (!advice.includes('The boss battle move')) {
+    throw new Error('the advice does not name the thing that was missed: ' + advice);
   }
 });
 
