@@ -548,6 +548,49 @@ step('no hint button where no hint was written', () => {
   }
 });
 
+// 11b. Every chapter in the catalogue, rendered.
+//
+// The other quest tests each pick one representative chapter. This one walks all 1,270 across
+// all 99 quests in all 11 modules and asserts only that nothing throws and nothing reaches
+// console.error — which is the failure mode that actually happens when a chapter renderer or
+// the shared quest chrome changes: not "this looks wrong" but "this one chapter has a field
+// the renderer didn't expect", on content nobody re-reads. It is the cheapest possible check
+// on the widest possible surface, and it costs a few seconds.
+console.log('\nevery chapter renders');
+step('all 1,270 chapters, across all 11 modules', () => {
+  let rendered = 0;
+  const seen = new Set();
+  const failures = [];
+  for (const mod of api.MODULES) {
+    for (const q of mod.quests || []) {
+      delete s.questProgress[window.questKey(mod.id, q.id)];
+      window.startQuest(mod.id, q.id);
+      for (let i = 0; i < q.chapters.length; i++) {
+        const before = problems.length;
+        try {
+          window.renderChapter(mod, i);
+          rendered++;
+          seen.add(q.chapters[i].type);
+        } catch (e) {
+          failures.push(`${mod.id}/${q.id}#${i} (${q.chapters[i].type}): ${e.message}`);
+          continue;
+        }
+        // Anything logged while this chapter was on screen belongs to this chapter. Taken off
+        // the shared list so one bad chapter doesn't also fail the whole run at the end.
+        if (problems.length > before) {
+          failures.push(`${mod.id}/${q.id}#${i} (${q.chapters[i].type}): ${problems.splice(before).join(' | ')}`);
+        }
+      }
+    }
+  }
+  if (rendered < 1200) throw new Error('only ' + rendered + ' chapters rendered — did the catalogue shrink?');
+  // All fifteen types, so this can't quietly stop covering one of them.
+  if (seen.size !== 15) throw new Error('saw ' + seen.size + ' chapter types, expected 15: ' + [...seen].join(', '));
+  if (failures.length) {
+    throw new Error(failures.length + ' chapter(s) failed:\n    ' + failures.slice(0, 8).join('\n    '));
+  }
+});
+
 // 12. The boss battle grades the student, and says so.
 console.log('\nboss battle');
 function openBossChapter() {
