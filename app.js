@@ -17790,29 +17790,35 @@ function updateSidebarStats() {
 // Max XP a single quest chapter can award. Mirrors exactly how each chapter type's renderer
 // actually calls addXP() (see the renderXChapter functions below) so this number is never a
 // guess — knowledgecheck awards no XP at all, mythcards scales with card count, and
-// bossbattle scales off the module's base xpReward times the best available choice's
-// multiplier, everything else is a flat chapter.xpOnComplete.
-function chapterMaxXP(chapter, mod) {
-  if (chapter.type === 'knowledgecheck') return 0;
-  if (chapter.type === 'mythcards') return (chapter.xpPerCorrect || 0) * (chapter.cards ? chapter.cards.length : 0);
-  if (chapter.type === 'bossbattle') {
-    const bestMult = (chapter.choices || []).reduce((max, c) => Math.max(max, c.consequence?.xpMultiplier ?? 1), 1);
-    return Math.round(mod.xpReward * bestMult);
-  }
-  return chapter.xpOnComplete || 0;
-}
-
-// Max XP achievable across an entire quest — the sum every "Lesson N" quest tile shows,
-// and what the module's Total XP figure is built from.
-function questMaxXP(quest, mod) {
-  return (quest.chapters || []).reduce((sum, ch) => sum + chapterMaxXP(ch, mod), 0);
-}
-
-// Max XP for a single plain quiz lesson: a perfect first-attempt score, matching the
-// isPerfect branch in finishQuiz() exactly.
-function lessonMaxXP(lesson, mod) {
-  if (lesson.type) return (lesson.activity && lesson.activity.xpOnComplete) || 0;
-  return Math.round(mod.xpReward * 1.25);
+/** One lesson row, drawn the way mobile's LessonRow draws it (ModuleLessonList.tsx).
+ *
+ * The anatomy is the mobile app's, not the web's old two-column tile: a 40px numbered node
+ * (a tick once the lesson is finished), the lesson's title, and — on the one lesson you would
+ * open next, or on one you left part-way — a short caption and a button. Every other row is
+ * plain: no per-lesson XP badge, no character tagline, no CTA chip, because the mobile row
+ * carries none of those and this list is meant to read identically on both.
+ *
+ * "Next up" vs "Start here" is about the MODULE (have you finished anything in it yet);
+ * "Paused" is about this lesson specifically, and outranks both — a lesson you left at
+ * chapter 4 says so and offers Resume even when it isn't the next-up one.
+ */
+function lessonRowHtml({ done, paused, isNext, started, index, title, chapterIdx, chapterCount, attrs, extraClass = '' }) {
+  const active = isNext || paused;
+  const note = paused
+    ? `Paused · chapter ${chapterIdx + 1} of ${chapterCount}`
+    : isNext
+      ? (started ? 'Next up' : 'Start here')
+      : '';
+  const cta = paused ? 'Resume' : started ? 'Continue' : 'Start';
+  const nodeTone = done ? 'done' : isNext ? 'active' : 'upcoming';
+  return `<div class="lesson-tile${extraClass ? ' ' + extraClass : ''}${done ? ' done' : ''}${active ? ' current' : ''}" ${attrs}>
+    <div class="lt-node lt-node-${nodeTone}">${done ? '✓' : index + 1}</div>
+    <div class="lt-body">
+      <div class="lt-title">${title}</div>
+      ${note ? `<div class="lt-note">${note}</div>` : ''}
+    </div>
+    ${active ? `<button class="lt-btn" type="button" tabindex="-1">${cta}</button>` : ''}
+  </div>`;
 }
 
 // Purely presentational reading aid: breaks a module's flat 8-lesson grid into a couple of
@@ -17843,11 +17849,13 @@ const MODULE_LESSON_SECTIONS = {
 // extraHtml (the real-life sub-quest tile, see renderModuleList) is appended INSIDE the
 // same max-height-collapsed .module-row-lessons wrapper the tiles/sections live in — as a
 // bare sibling of that wrapper it would sit outside the collapse mechanism entirely and
-// stay visible even while the module card is collapsed.
-function groupLessonTiles(moduleId, tiles, extraHtml = '') {
+// stay visible even while the module card is collapsed. leadHtml (the module's progress bar,
+// which mobile draws at the top of an expanded row's body) rides inside it for the same
+// reason, at the other end.
+function groupLessonTiles(moduleId, tiles, extraHtml = '', leadHtml = '') {
   const sections = MODULE_LESSON_SECTIONS[moduleId];
   if (!sections || sections.reduce((sum, s) => sum + s.count, 0) !== tiles.length) {
-    return `<div class="module-row-lessons">${tiles.map(t => t.html).join('')}${extraHtml}</div>`;
+    return `<div class="module-row-lessons">${leadHtml}${tiles.map(t => t.html).join('')}${extraHtml}</div>`;
   }
   const firstIncompleteIdx = tiles.findIndex(t => !t.done);
   let cursor = 0;
@@ -17867,13 +17875,15 @@ function groupLessonTiles(moduleId, tiles, extraHtml = '') {
     return `<div class="lesson-section${isCurrent ? ' expanded' : ''}">
       <div class="lesson-section-header" role="button" tabindex="0" aria-expanded="${isCurrent}">
         <span class="lsh-label">${section.label}</span>
-        <span class="lsh-meta">${metaText}</span>
-        <svg class="lsh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="6 9 12 15 18 9"/></svg>
+        <span class="lsh-right">
+          <span class="lsh-meta">${metaText}</span>
+          <svg class="lsh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="6 9 12 15 18 9"/></svg>
+        </span>
       </div>
       <div class="lesson-section-tiles">${group.map(t => t.html).join('')}</div>
     </div>`;
   }).join('');
-  return `<div class="module-row-lessons module-row-lessons-grouped">${sectionsHtml}${extraHtml}</div>`;
+  return `<div class="module-row-lessons module-row-lessons-grouped">${leadHtml}${sectionsHtml}${extraHtml}</div>`;
 }
 
 // Modules always stay in their fixed numeric order (01–11) — personalization only affects
@@ -17973,21 +17983,35 @@ function renderModuleList(containerId) {
           ? `<span class="card-badge badge-recommend">★ Start here</span>`
           : `<span class="card-badge badge-count">${totalUnits} lessons</span>`;
 
+    // Mobile draws the module's own progress bar at the top of an expanded row's body
+    // (modules.tsx), above the lesson list — pink while there's work left, green once the
+    // module is mastered. The web had the badge in the header and nothing in the body.
+    const barHtml = `<div class="module-row-bar"><div class="module-row-bar-fill${allDone ? ' done' : ''}" style="width:${donePct}%"></div></div>`;
+
     let bodyHtml;
     if (quest) {
       const quests = mainQuests(m);
+      // Mobile's ModuleLessonList, row for row: a numbered node, the lesson's own title, a
+      // caption on the one lesson you'd open next, and a button on that row alone. "Next up"
+      // is the first lesson not yet finished, wherever it sits in the list; a lesson left
+      // part-way says so and offers Resume regardless of whether it's the next-up one.
+      const progressOf = (q) => state.questProgress[questKey(m.id, q.id)];
+      const nextIdx = quests.findIndex(q => { const qp = progressOf(q); return !(qp && qp.done); });
+      const started = unitsDone > 0;
       const tiles = quests.map((q, idx) => {
-        const qp = state.questProgress[questKey(m.id, q.id)];
+        const qp = progressOf(q);
         const done = !!(qp && qp.done);
-        const cta = done ? '↻ Replay Quest' : (qp && qp.chapterIdx > 0 ? `Resume ${questLabel(m, q)} →` : 'Begin Quest →');
-        const html = `<div class="lesson-tile quest-tile${done ? ' done' : ''}" data-module="${m.id}" data-quest="${q.id}">
-          <div class="lt-body">
-            <div class="lt-num"><span class="lt-num-label">Lesson ${idx + 1}</span> <span class="card-badge badge-xp">Up to ${questMaxXP(q, m)} XP</span></div>
-            <div class="lt-title">${q.topic || q.character.name}</div>
-            <div class="lt-meta">${q.character.tagline}</div>
-          </div>
-          <span class="lt-cta">${cta}</span>
-        </div>`;
+        const paused = !!(qp && !qp.done && qp.chapterIdx > 0);
+        const isNext = !done && idx === nextIdx;
+        const html = lessonRowHtml({
+          done, paused, isNext, started,
+          index: idx,
+          title: q.topic || q.character.name,
+          chapterIdx: qp ? qp.chapterIdx : 0,
+          chapterCount: q.chapters.length,
+          attrs: `data-module="${m.id}" data-quest="${q.id}"`,
+          extraClass: 'quest-tile',
+        });
         return { html, done };
       });
       // The real-life sub-quest — a full, separate lesson tile (Lesson 9), matching how the
@@ -17998,41 +18022,42 @@ function renderModuleList(containerId) {
       if (sub) {
         const subQp = state.questProgress[questKey(m.id, sub.id)];
         const subDone = !!(subQp && subQp.done);
-        const subCta = subDone ? '↻ Replay Guide' : (subQp && subQp.chapterIdx > 0 ? `Resume ${questLabel(m, sub)} →` : 'Begin Guide →');
         // Never numbered "Lesson 9". It is a required lesson — moduleUnits counts it and the
         // module isn't complete without it — but it is a different KIND of lesson, and every
         // other surface (the lesson path, Home's continue card, mobile's own list) calls it
-        // by name instead of giving it a number. Mirrors mobile's RealLifeSubQuestRow: a
-        // kicker, the guide's own title, and the module's pink accent.
+        // by name instead of giving it a number.
+        // Mobile's RealLifeSubQuestRow: the same 40px node a lesson row carries (🎯, or ✓
+        // once done), a kicker, the guide's own title, and a chevron — the module's pink
+        // accent throughout, so it reads as a different KIND of lesson rather than as a
+        // lighter one. No XP badge and no CTA text: neither is on the mobile row.
         subHtml = `<div class="lesson-tile quest-tile subquest-tile${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">
+          <div class="lt-node lt-node-sub">${subDone ? '✓' : '🎯'}</div>
           <div class="lt-body">
-            <div class="lt-num"><span class="lt-num-label lt-subquest-kicker">${subDone ? '✓' : '🎯'} Real-life sub-quest</span> <span class="card-badge badge-xp">Up to ${questMaxXP(sub, m)} XP</span></div>
+            <div class="lt-subquest-kicker">REAL-LIFE SUB-QUEST</div>
             <div class="lt-title">${sub.topic}</div>
-            <div class="lt-meta">${sub.character.tagline}</div>
           </div>
-          <span class="lt-cta">${subCta}</span>
+          <svg class="lt-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg>
         </div>`;
       }
-      bodyHtml = groupLessonTiles(m.id, tiles, subHtml);
+      bodyHtml = groupLessonTiles(m.id, tiles, subHtml, barHtml);
     } else {
+      const nextIdx = m.lessons.findIndex((_, i) => !state.completedLessons[`${m.id}_${i}`]);
       const tiles = m.lessons.map((lesson, idx) => {
         const key = `${m.id}_${idx}`;
-        const lessonData = state.completedLessons[key];
-        const done = !!lessonData;
+        const done = !!state.completedLessons[key];
         const isActivity = !!lesson.type;
-        const meta = done ? `Score: ${lessonData.score}/${lessonData.total}` : (isActivity ? 'Interactive' : '');
-        const cta = done ? '↻ Replay' : 'Start →';
-        const html = `<div class="lesson-tile${done ? ' done' : ''}${isActivity ? ' activity-tile' : ''}" data-module="${m.id}" data-lesson="${idx}">
-          <div class="lt-body">
-            <div class="lt-num"><span class="lt-num-label">Lesson ${idx + 1}</span> <span class="card-badge badge-xp">Up to ${lessonMaxXP(lesson, m)} XP</span></div>
-            <div class="lt-title">${lesson.title}${isActivity ? ' <span class="quest-tag">Interactive</span>' : ''}</div>
-            <div class="lt-meta">${meta}</div>
-          </div>
-          <span class="lt-cta">${cta}</span>
-        </div>`;
+        const html = lessonRowHtml({
+          done, paused: false, isNext: !done && idx === nextIdx, started: unitsDone > 0,
+          index: idx,
+          title: lesson.title,
+          chapterIdx: 0,
+          chapterCount: 0,
+          attrs: `data-module="${m.id}" data-lesson="${idx}"`,
+          extraClass: isActivity ? 'activity-tile' : '',
+        });
         return { html, done };
       });
-      bodyHtml = groupLessonTiles(m.id, tiles);
+      bodyHtml = groupLessonTiles(m.id, tiles, '', barHtml);
     }
 
     row.innerHTML = `
@@ -18044,8 +18069,10 @@ function renderModuleList(containerId) {
             <div class="mrh-desc">${m.desc}</div>
           </div>
         </div>
-        <div class="mrh-right">${badge}</div>
-        <svg class="mrh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="6 9 12 15 18 9"/></svg>
+        <div class="mrh-right">
+          ${badge}
+          <svg class="mrh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
       </div>
       ${bodyHtml}`;
 
@@ -21341,11 +21368,14 @@ function startBonusActivity(moduleId, lessonIdx) {
   document.getElementById('hammy-side-avatar').className = 'hammy-side-avatar';
   document.getElementById('hammy-side-msg').textContent = '';
   document.getElementById('hammy-side-msg').className = 'hammy-side-msg';
-  document.getElementById('quest-counter').textContent = lesson.title;
+  // The counter's slot is 38px wide and holds a step count ("4/15"); a lesson title has no
+  // business in it. The title is right below, at the top of the activity's own content.
+  document.getElementById('quest-counter').textContent = '';
   document.getElementById('quest-prog-fill').style.width = '0%';
   const titleRow = document.getElementById('quest-title-row');
   titleRow.textContent = lesson.title;
-  titleRow.classList.remove('centered');
+  titleRow.className = 'quest-title-row';
+  document.getElementById('quest-main').before(titleRow);
   clearQuestContinue();
 
   if (lesson.type === 'decision-chain') renderDecisionChainActivity(mod, lesson);
@@ -21998,24 +22028,31 @@ function startQuest(moduleId, questId) {
   renderChapter(mod, state.questProgress[key].chapterIdx);
 }
 
-// Status label for a specific quest tile in the module list (not necessarily the active quest).
-function questLabel(mod, quest) {
-  const qp = state.questProgress[questKey(mod.id, quest.id)];
-  const total = quest.chapters.length;
-  if (!qp) return `${total} chapters`;
-  if (qp.done) return 'Quest complete';
-  if (qp.chapterIdx > 0) return `Chapter ${qp.chapterIdx + 1}/${total}`;
-  return `${total} chapters`;
+/** Chapter types that get the screen to themselves, with no companion Hammy.
+ *
+ * Ported wholesale from mobile's TALL_CHAPTER_TYPES (quest.tsx), including its reasoning:
+ * each of these stacks a full-width control on an authored explanation that runs to a dozen
+ * lines — a microsim's sliders and running total, a simulator's meter over a list of
+ * decisions, a spotcheck's whole posting, a boss battle's four choices plus its outcome, a
+ * Quick Check's stem/options/explanation, a price slider, a multiline text box. None of them
+ * fits under Hammy without shrinking the part the student is meant to read.
+ *
+ * A fixed list of TYPES, decided before the first paint — never a measurement. Measuring
+ * whether a laid-out chapter overflows means Hammy has to start hidden and appear a frame
+ * later, which is the "Hammy blinks in and out" bug mobile documents at length. */
+const HAMMY_SIDE_HIDDEN_TYPES = ['microsim', 'simulator', 'spotcheck', 'bossbattle', 'knowledgecheck', 'priceisright', 'explainback'];
+/** ...and the one content-dependent exception mobile also makes: a vocab card whose
+ * definition is extremely long. Deliberately "extremely", not "long" — the point is to keep
+ * him for the ordinary definition and drop him only where the student would otherwise be
+ * scrolling a wall of text with a pig taking up the top of the screen. */
+const CONCEPT_FITS_CHARS = 420;
+function hasOverlongConcept(chapter) {
+  return chapter.type === 'teach' && (chapter.concepts || []).some(c => (c.plain || '').length > CONCEPT_FITS_CHARS);
 }
 
-// Chapter types that are pure narrative/reading — no live Hammy reaction avatar needed
-// (their small inline dialogue portrait already appears within the story beats themselves).
-const HAMMY_SIDE_HIDDEN_TYPES = ['story'];
-
-// Every chapter type's big pink title now lives in one shared banner above the two-column
-// layout (flush with the true left edge of the screen) instead of each renderer drawing its
-// own copy indented inside the content column. Chapter types not listed keep their own
-// in-content tag treatment (teach/hint use a small pill instead) and show no shared title.
+// The chapter's title, drawn once at the top of its own content (renderChapter moves the
+// shared node into #quest-main) rather than as a banner across the screen above it — see
+// .quest-title-row. The fallbacks cover the handful of chapters whose data carries no title.
 const CHAPTER_TITLE_FALLBACK = {
   matching: 'Match It!',
   explainback: 'In Your Own Words',
@@ -22027,11 +22064,13 @@ const CHAPTER_TITLE_FALLBACK = {
   poll: 'Quick Poll',
   spotcheck: 'Spot the Red Flags',
   urlinspect: 'Real URL or Fake?',
+  priceisright: 'Price Is Right',
 };
 function getChapterTitle(chapter) {
-  if (chapter.type === 'bossbattle') return chapter.title ? `⚠ Boss Battle: ${chapter.title}` : '⚠ Boss Battle';
-  if (chapter.type === 'priceisright') return 'Price Is Right';
-  if (chapter.type === 'teach' || chapter.type === 'hint') return '';
+  // Hammy's Tip leads with its own tag instead; the boss battle and the vocab card lead with
+  // theirs and then show the plain title underneath, exactly as mobile does — no "⚠ Boss
+  // Battle:" prefix welded onto the front of the title itself.
+  if (chapter.type === 'hint') return '';
   return chapter.title || CHAPTER_TITLE_FALLBACK[chapter.type] || '';
 }
 
@@ -22063,34 +22102,65 @@ function renderChapter(mod, idx) {
   const chapter = chapters[idx];
   const total = chapters.length;
 
-  // The bar fills by steps completed; the counter names the step you're on. Both are shown,
-  // but the numeric percentage that used to sit beside the bar is gone — printing "47%"
-  // next to "Step 9 of 17" put two different (both defensible) readings of progress on
-  // screen at once, which just read as arithmetic that didn't add up.
-  const pct = Math.round((idx / total) * 100);
+  // How far you have got INCLUDING the chapter you are reading — mobile's
+  // (chapterIdx + 1) / chapters.length. Counting only the chapters behind you meant a lesson
+  // opened at a flat 0% and its final chapter reported 93%: the bar could never fill, however
+  // much you did. The count beside it is "4/15" rather than the percentage, which would be
+  // the bar's own information written out twice.
+  const pct = Math.round(((idx + 1) / total) * 100);
   document.getElementById('quest-prog-fill').style.width = pct + '%';
-  document.getElementById('quest-counter').textContent = `Step ${idx + 1} of ${total}`;
+  document.getElementById('quest-counter').textContent = `${idx + 1}/${total}`;
   renderQuestDashboard(mod);
   document.getElementById('quest-dashboard').classList.toggle('highlight', !!chapter.highlightDashboard);
   renderGlossaryTray(mod);
   renderHintButton(mod, chapter.hintText);
   clearQuestContinue();
+  // The title belongs to the chapter, so it rides INSIDE the content column — mobile renders
+  // it as the first line of every chapter view. The one exception is the story, whose title is
+  // the headline of its screen and so sits above the companion (mobile's storyLogTitle),
+  // which here means staying put above the layout.
   const titleRow = document.getElementById('quest-title-row');
+  const layoutEl = document.getElementById('quest-layout');
   titleRow.textContent = getChapterTitle(chapter);
-  titleRow.classList.remove('centered');
+  titleRow.className = 'quest-title-row'
+    + (chapter.type === 'story' ? ' story' : '')
+    + (chapter.type === 'bossbattle' ? ' boss' : '');
   // No forced full-viewport row. It was set so a short chapter still filled the screen, but
   // paired with a centred column that just moved the question into the middle of a lot of
   // nothing. The row is its content's height now and everything sits up at the top.
-  document.getElementById('quest-layout').style.minHeight = '';
+  layoutEl.style.minHeight = '';
 
   // Reset the persistent Hammy to a neutral idle pose for the new chapter.
   const questSide = document.getElementById('quest-side');
   const hammySide = document.getElementById('hammy-side-avatar');
   const hammyMsg = document.getElementById('hammy-side-msg');
-  questSide.style.display = HAMMY_SIDE_HIDDEN_TYPES.includes(chapter.type) ? 'none' : 'flex';
-  // Hammy''s Tip gets its own centred stage — the tip above him rather than beside him,
+  // Mobile's showCompanion, rule for rule: he is there unless this is a chapter type that
+  // takes the whole screen, a vocab card with an extremely long definition, or a screen that
+  // draws its own big Hammy instead (the story's establishing shot — set per BEAT inside
+  // renderStoryChapter — and a full-screen vocab card). Hammy's Tip keeps him because on that
+  // chapter he IS the control you tap; see .quest-layout-hint.
+  const ownsTheScreen = HAMMY_SIDE_HIDDEN_TYPES.includes(chapter.type)
+    || hasOverlongConcept(chapter)
+    || (chapter.type === 'teach' && chapter.fullScreen)
+    || chapter.type === 'story';
+  questSide.style.display = ownsTheScreen && chapter.type !== 'hint' ? 'none' : 'flex';
+  // Centred with his bubble above him for the two chapter types that read as a scene rather
+  // than a question (the story's conversation is with him; Match It is a centred grid), and
+  // beside his bubble everywhere else. The drop classes push him down into the room the
+  // shortest chapter types leave spare, and Match It pulls him up tight under the bar —
+  // mobile's companionDrop / companionWrapRaised, applied to the same types.
+  questSide.className = 'quest-side'
+    + (chapter.type === 'story' || chapter.type === 'matching' ? ' centered' : '')
+    + (chapter.type === 'matching' ? ' raised'
+      : chapter.type === 'decision' ? ' drop-deep'
+      : chapter.type === 'poll' ? ' drop-low'
+      : chapter.type === 'mythcards' ? ' drop-lowest' : '');
+  // Hammy's Tip gets its own centred stage — the tip above him rather than beside him,
   // matching mobile. Toggled here so every other chapter clears it.
-  document.getElementById('quest-layout').classList.toggle('quest-layout-hint', chapter.type === 'hint');
+  layoutEl.classList.toggle('quest-layout-hint', chapter.type === 'hint');
+  // Story titles stay above the companion; every other chapter's leads its own content.
+  if (chapter.type === 'story') layoutEl.parentNode.insertBefore(titleRow, layoutEl);
+  else document.getElementById('quest-main').before(titleRow);
   clearTimeout(hammyMsg._hideTimer);
   clearTimeout(hammySide._faceHideTimer);
   hammySide.className = 'hammy-side-avatar';
@@ -22333,11 +22403,10 @@ function renderGlossaryTray(mod) {
   if (!total) { tray.innerHTML = ''; tray.classList.remove('show'); return; }
   tray.classList.add('show');
   tray.innerHTML =
-    '<button class="glossary-pill" id="glossary-pill" aria-haspopup="dialog">' +
+    '<button class="glossary-pill" id="glossary-pill" aria-haspopup="dialog" aria-label="Look back at the words you have learned">' +
       '<svg class="glossary-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true">' +
         '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>' +
       '</svg>' +
-      '<span>Look back</span>' +
       '<span class="glossary-count">' + total + '</span>' +
     '</button>';
   document.getElementById('glossary-pill').addEventListener('click', () => showGlossaryAllPopup(mod));
@@ -22391,11 +22460,12 @@ function getGlossaryModal() {
 // Step 2: tapping a word within a section shows its definition, with a way back to the
 // section's word list so re-checking a few words in a row doesn't mean re-opening the tray
 // each time.
-function showGlossaryPopup(term, backTo) {
+function showGlossaryPopup(term, backTo, variant) {
   const modal = getGlossaryModal();
-  modal.innerHTML = `<div class="glossary-popup-card">
+  const isHint = variant === 'hint';
+  modal.innerHTML = `<div class="glossary-popup-card${isHint ? ' hint-popup-card' : ''}">
     ${backTo ? `<button class="glossary-popup-back" id="glossary-popup-back">← Back to all words</button>` : ''}
-    <div class="glossary-popup-term">${term.term}</div>
+    <div class="glossary-popup-term${isHint ? ' hint-popup-tag' : ''}">${term.term}</div>
     <p class="glossary-popup-def">${term.plain}</p>
     <button class="btn-primary" id="glossary-popup-close">Got it</button>
   </div>`;
@@ -22430,11 +22500,13 @@ function renderHintButton(mod, hintText) {
   if (!el) return;
   if (!hintText) { el.innerHTML = ''; return; }
   const qp = getQP(mod);
-  el.innerHTML = '<button class="hint-ask-btn" id="hint-ask-btn">💡 Hint</button>';
+  el.innerHTML = '<button class="hint-ask-btn" id="hint-ask-btn">💡 HINT</button>';
   document.getElementById('hint-ask-btn').addEventListener('click', () => {
     qp.hintsUsed = (qp.hintsUsed || 0) + 1;
     saveState();
-    showGlossaryPopup({ term: "🐷 Hammy's Hint", plain: hintText });
+    // A hint is an offer, so it gets the gold "come collect" ring mobile gives it rather than
+    // the plain white card a looked-up definition gets. Same card underneath, one class apart.
+    showGlossaryPopup({ term: "HAMMY'S HINT", plain: hintText }, null, 'hint');
   });
 }
 
@@ -22450,7 +22522,7 @@ const HAMMY_CORRECT_MSGS = ['Nice one! 🎉'];
 // Standardized alongside HAMMY_CORRECT_MSGS above. "Close!" in particular was being shown
 // on answers that weren't close at all — the copy claimed something the app hadn't measured.
 const HAMMY_GENTLE_MSGS = ["Not quite, here's why:"];
-const HAMMY_TRYAGAIN_MSGS = ["Not quite, check the definitions above if you're stuck."];
+const HAMMY_TRYAGAIN_MSGS = ["Not quite, look at the definitions below if you're stuck."];
 const HAMMY_OUTCOME_GENTLE_MSGS = ["Hmm, that one stings a bit.", "That'll cost her some points.", "Not the best move there."];
 
 // Shared emotional-feedback moment, used after EVERY activity across the whole quest (knowledge
@@ -22629,6 +22701,17 @@ function renderTeachChapter(chapter, mod, onDone) {
             if ((b.dataset.answer === 'true') === c.check.isTrue) b.classList.add('correct');
             else if (b === btn) b.classList.add('wrong');
           });
+          // Says which way it went, in words, right under the two buttons — mobile's
+          // AnswerFeedback line on this same check. Without it the only answer the student
+          // got was two recoloured buttons and a reaction from a pig who may not be on screen
+          // at all (a vocab card with a long definition drops the companion entirely, see
+          // hasOverlongConcept), so on those cards a wrong answer said nothing whatsoever.
+          const verdict = document.createElement('p');
+          verdict.className = 'word-check-verdict ' + (isCorrect ? 'correct' : 'wrong');
+          verdict.textContent = isCorrect
+            ? 'Correct!'
+            : `Not quite. That's ${c.check.isTrue ? 'true' : 'false'}.`;
+          checkEl.appendChild(verdict);
           // 'noexplain': the word-check has no explanation text anywhere near it (just the
           // correct/wrong highlight on the two buttons above), so "Here's why:"/"Here's
           // what's true:" would dangle with nothing to point at.
@@ -22845,8 +22928,13 @@ function renderStoryChapter(chapter, mod, onDone) {
     const isLast = beatIdx === chapter.beats.length - 1;
     if (beatIdx === 0 || beatIdx === splitIdx) log.innerHTML = '';
     const entry = document.createElement('div');
-    // Title centers to match the centered establishing shot, then moves back to the left
-    // edge once the beats shift into back-and-forth dialogue.
+    // The establishing shot draws its own full-height Hammy in the content below, so the
+    // companion steps aside for exactly those beats and comes back for the dialogue — mobile
+    // makes the same split (StoryView's own stage vs. the dialogue log's companion). Per BEAT
+    // rather than per chapter, because a story chapter is usually both in turn.
+    document.getElementById('quest-side').style.display = beat.speaker === 'intro' ? 'none' : 'flex';
+    // Title centers to match the centered establishing shot, then goes back to the dialogue
+    // log's own centred heading once the beats shift into back-and-forth.
     document.getElementById('quest-title-row').classList.toggle('centered', beat.speaker === 'intro');
 
     // "intro" beats are a big establishing shot — the character front-and-center with a

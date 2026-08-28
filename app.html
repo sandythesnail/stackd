@@ -214,9 +214,9 @@
     <div id="page-modules" class="page">
       <div class="page-header">
         <div>
-          <h1 class="page-title">Modules</h1>
-          <span class="section-sub" id="modules-sub">Start earning XP</span>
+          <h1 class="page-title">All modules</h1>
         </div>
+        <span class="modules-done-count" id="modules-sub">Start earning XP</span>
       </div>
       <div class="page-body">
         <div id="modules-posttest"></div>
@@ -592,31 +592,34 @@
   </div>
 
   <div id="screen-quest" class="screen">
+    <!-- One row, the way mobile's quest header is built: exit, the bar, how far through you
+         are, and the hint. The step counter used to sit on its own line underneath and the
+         hint in a second sticky bar below that — three bands of chrome above a question. -->
     <div class="quest-topbar">
       <div class="quest-topbar-row">
         <button class="exit-btn" id="quest-exit">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
         <div class="quest-prog-track"><div class="quest-prog-fill" id="quest-prog-fill"></div></div>
-      </div>
-      <span class="quest-counter" id="quest-counter">Step 1 of 8</span>
-    </div>
-    <div class="quest-sticky-header" id="quest-sticky-header">
-      <div class="quest-toolrow">
-        <div class="quest-dashboard" id="quest-dashboard"></div>
-        <div class="quest-action-bar" id="quest-action-bar">
-          <div class="hint-budget" id="hint-budget"></div>
-        </div>
+        <span class="quest-counter" id="quest-counter">1/8</span>
+        <!-- Fixed width whether or not this chapter has a hint, so the bar and the counter
+             beside it don't shift between chapters that have one and chapters that don't. -->
+        <div class="hint-slot" id="hint-budget"></div>
       </div>
     </div>
-    <!-- Pinned bottom-left of the lesson, outside the collapsing sticky header. -->
-    <div class="glossary-tray" id="glossary-tray"></div>
+    <!-- Hidden (see .quest-dashboard) but still written to by the quest's state machine. -->
+    <div class="quest-dashboard" id="quest-dashboard"></div>
     <div class="quest-body" id="quest-body">
       <div class="quest-title-row" id="quest-title-row"></div>
       <div class="quest-layout" id="quest-layout">
+        <!-- Hammy sits ABOVE the chapter, not beside it: a band with him on the left and his
+             bubble in the space next to him, or centred with the bubble over his head for the
+             two chapter types that read as a scene (see companionCentered in renderChapter).
+             Avatar first in the DOM; the centred arrangement flips the band with
+             column-reverse so the bubble lands above him. -->
         <div class="quest-side" id="quest-side">
-          <div class="hammy-side-slot"><div class="hammy-side-msg" id="hammy-side-msg"></div></div>
           <div class="hammy-side-avatar" id="hammy-side-avatar"></div>
+          <div class="hammy-side-slot"><div class="hammy-side-msg" id="hammy-side-msg"></div></div>
         </div>
         <div class="quest-main" id="quest-main"></div>
       </div>
@@ -625,10 +628,16 @@
       </div>
     </div>
     <!-- The lesson's primary action lives here and nowhere else: one fixed spot at the
-         bottom of the content column, full width, present on every step. It is disabled
-         rather than removed while a step is incomplete, so the layout never jumps. -->
+         bottom of the screen, present on every step. It is disabled rather than removed while
+         a step is incomplete, so the layout never jumps.
+
+         Three slots: "Look back" in the left corner, the action on the screen's true centre
+         line, and an empty slot mirroring the first so the action stays centred however wide
+         its label runs. Mobile's bottomBar, slot for slot. -->
     <div class="quest-footer" id="quest-footer">
+      <div class="quest-footer-slot glossary-tray" id="glossary-tray"></div>
       <div class="quest-continue-slot" id="quest-continue-slot"></div>
+      <div class="quest-footer-slot"></div>
     </div>
   </div>
 

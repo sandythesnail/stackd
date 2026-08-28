@@ -160,6 +160,9 @@ body { background: var(--bg); min-height: 100vh; }
   color: var(--text); margin: 0.35rem 0 0.2rem;
 }
 .page-subtitle { font-size: 0.95rem; color: var(--text-mid); margin: 0; line-height: 1.5; }
+/* "7 / 11 done", on the same line as the page title and in the app's green — mobile's
+   Modules head row, where the count is a peer of the heading rather than a subtitle. */
+.modules-done-count { font-size: 12px; font-weight: 700; color: var(--green); flex-shrink: 0; }
 .header-stats-col { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; }
 .home-header-icons { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; flex-shrink: 0; }
 
@@ -359,6 +362,9 @@ body { background: var(--bg); min-height: 100vh; }
    beside the module's real name, so it repeats a label rather than being one. Words drawn on
    a module chip must use --mod-<id>-ink instead. */
 .mod-icon[data-mod] { background: var(--mod-color); color: var(--mod-text); }
+/* Mobile's MIcon at its defaults (42px, 13px radius, 16px glyph) — the module rows are the
+   one place the two apps draw this chip at the same scale beside the same title. */
+.module-row-header .mod-icon { width: 42px; height: 42px; border-radius: 13px; font-size: 16px; }
 
 .card-badge { font-size: 0.68rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: var(--radius-sm); white-space: nowrap; }
 .badge-done { background: var(--green-light); color: var(--green-dark); }
@@ -1022,12 +1028,15 @@ select.budget-input { cursor: pointer; }
   position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid var(--border);
   padding: 0.9rem 1.5rem; display: flex; align-items: center; gap: 1rem;
 }
+/* Mobile's IconButton at the size the quest header uses it (34, circular, white on a 1.5px
+   cool border) — the square cream chip it was read as a different control from the round
+   white one the app uses everywhere else. */
 .exit-btn {
-  width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border);
+  width: 34px; height: 34px; border-radius: 50%; background: #fff; border: 1.5px solid #EAF0E8;
   display: flex; align-items: center; justify-content: center; color: var(--text-mid); flex-shrink: 0;
-  transition: background 0.2s;
+  transition: background 0.2s, border-color 0.2s;
 }
-.exit-btn:hover { background: var(--border); }
+.exit-btn:hover { background: var(--bg); border-color: var(--green-light); }
 .hook-chip {
   font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.7rem; border-radius: var(--radius-sm);
   background: var(--green-pale); border: 1px solid var(--green-light); color: var(--green-dark);
@@ -1119,40 +1128,33 @@ select.budget-input { cursor: pointer; }
    what lets the primary action sit permanently at the bottom of the viewport instead of
    below whatever content happens to be on the step. */
 #screen-quest.active { display: flex; flex-direction: column; overflow: hidden; }
+/* Mobile's "stick" row, metric for metric. No bottom border: a rule straight across the
+   screen under the progress bar reads as a stray line rather than as structure. */
 .quest-topbar {
   flex-shrink: 0; z-index: 10; background: var(--bg);
-  padding: 0.55rem 1rem 0.4rem;
+  padding: 8px 16px 9px;
 }
-.quest-topbar-row { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.2rem; }
-/* The progress track is the only deliberately white surface up top — everything else in
-   the quest chrome stays cream so there's no white band across the top of the lesson. */
-.quest-prog-track { flex: 1; height: 8px; background: #fff; border-radius: 999px; overflow: hidden; }
-.quest-prog-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width 0.4s ease; width: 0%; }
-/* No percentage readout beside the bar. It tracked steps *completed* while the counter
-   below names the step you're *on*, so "Step 9 of 17" sat next to 47% and read as a bug.
-   The bar and the step count already say the same thing without contradicting each other. */
-.quest-counter { display: block; font-size: 0.7rem; font-weight: 600; color: var(--text-soft); padding-left: 42px; }
-
-/* All the "chrome" below the topbar (dashboard, glossary tray, hints, continue) is bundled
-   into one sticky group so it stays pinned together right under the topbar, and the continue
-   button lives here too, so it's always reachable at the top without scrolling. Dashboard and
-   the hint/continue controls share a single row (no separate bar + divider line underneath). */
-.quest-sticky-header { flex-shrink: 0; z-index: 9; background: var(--bg); }
-/* Collapses when there is nothing in it.
-   It used to have to stay reserved, because the glossary lived here and learning a word
-   mid-question would otherwise make a band appear from nowhere and shove the whole lesson —
-   Hammy included — 61px down the page. The glossary is pinned to the corner now, so the only
-   occupant left is the hint button, which is settled per chapter rather than mid-question.
-   Nothing here can change size while a question is on screen, so nothing needs reserving. */
-/* The sticky bar holds the (hidden) dashboard and the hint button and nothing else, so with
-   no hint on this chapter there is nothing in it to show. This fires far more often now that
-   the button only appears where a hint was actually written. */
-.quest-sticky-header:not(:has(.hint-ask-btn)) { display: none; }
-
-.quest-toolrow {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
-  gap: 0.6rem; padding: 0.4rem 1rem;
+.quest-topbar-row {
+  display: flex; align-items: center; gap: 12px;
+  max-width: 640px; width: 100%; margin: 0 auto;
 }
+.quest-prog-track { flex: 1; height: 10px; background: #E7ECE3; border-radius: 8px; overflow: hidden; }
+.quest-prog-fill {
+  height: 100%; border-radius: 8px; width: 0%;
+  background: linear-gradient(90deg, #84AB7B, var(--green));
+  transition: width 0.45s ease;
+}
+/* "4/15", not "Step 4 of 15", and no percentage: the bar already draws the percentage, and
+   the count is the one thing the bar cannot tell you. Fixed width because the label changes
+   LENGTH on the way past chapter 10 and the bar beside it is flex:1 — without a fixed slot
+   the bar shrank by a character's width at exactly one advance in the lesson. */
+.quest-counter {
+  flex-shrink: 0; width: 38px; text-align: center;
+  font-size: 12px; font-weight: 700; color: var(--green);
+}
+/* Holds the hint button's footprint whether or not this chapter has a hint, so the bar and
+   the counter beside it don't jump between chapters that have one and chapters that don't. */
+.hint-slot { flex-shrink: 0; width: 70px; display: flex; justify-content: flex-end; align-items: center; }
 .quest-dashboard {
   /* Hidden per user request — the stat chips (Checking/Savings/Credit Score/Money
      Smarts) read as an irrelevant tab row at the top of every lesson. The underlying
@@ -1173,22 +1175,16 @@ select.budget-input { cursor: pointer; }
 .quest-stat-chip.qs-down .qs-val { color: var(--pink-dark); }
 
 /* Glossary recap tray — terms already taught, tap one to reread its definition.
-   Lives in the sticky header, ABOVE quest-body (the question/Hammy row) — it used to be
-   `display:none` until the first term of the quest was learned, then pop to `display:flex`
-   the instant it landed. That's the exact same category of bug as the reveal/message-
-   bubble/continue-button fixes elsewhere in this file: an empty-to-populated jump in the
-   sticky header grows it and pushes everything below (the whole centered question/Hammy
-   row) down/out of place right when a new term is learned mid-quiz. min-height reserves a
-   single chip row's worth of space from the very first chapter (quietly, at opacity:0,
-   before any term exists yet), so learning a term never changes the sticky header's size. */
+
+   "Look back" lives in the bottom bar's left corner, beside the chapter's action — mobile's
+   bottomSlot. It used to be position:fixed against the viewport, which put it in a different
+   place from the one control it belongs next to. Hidden rather than removed while the lesson
+   has taught no words yet, so the bar's height never changes. */
 .glossary-tray {
-  position: fixed; left: 1rem; bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-  z-index: 12; display: flex; align-items: center; gap: 0.4rem;
+  display: flex; align-items: center; gap: 0.4rem;
   opacity: 0; visibility: hidden; transition: opacity 0.25s ease;
 }
 .glossary-tray.show { opacity: 1; visibility: visible; }
-/* Clear of the Next button's bar, which is fixed to the bottom of the lesson. */
-#screen-quest .glossary-tray { bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)); }
 .glossary-label { font-size: 0.72rem; font-weight: 700; color: var(--text-soft); }
 .glossary-chip {
   padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid var(--border); background: #fff;
@@ -1210,6 +1206,20 @@ select.budget-input { cursor: pointer; }
   background: #fff; border-radius: var(--radius); padding: 1.5rem; max-width: 380px; width: 100%;
   box-shadow: var(--shadow-md); animation: fadeUp 0.3s ease;
 }
+/* Hammy's hint. Mobile wraps this card in a yellow halo and a gold border, and labels it with
+   a gold tag rather than a heading — the same "come collect" treatment a recommended module
+   wears, because a hint is an offer. The halo is a ring of colour around the card, drawn as a
+   spread shadow so it is exactly as thick on all four sides. */
+.glossary-popup-card.hint-popup-card {
+  max-width: 350px; border: 2px solid #F0C22E; border-radius: 20px;
+  box-shadow: 0 0 0 5px rgba(240,194,46,0.30);
+}
+.glossary-popup-term.hint-popup-tag {
+  display: inline-block; font-family: var(--font);
+  font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+  color: #8A6800; background: #FFEDB0; border-radius: 999px; padding: 4px 10px;
+  margin-bottom: 0.85rem;
+}
 .glossary-popup-term { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: 0.65rem; }
 .glossary-popup-def { font-size: 0.92rem; line-height: 1.6; color: var(--text-mid); margin-bottom: 1.1rem; }
 .glossary-popup-section-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 0.9rem; }
@@ -1225,51 +1235,66 @@ select.budget-input { cursor: pointer; }
 }
 .glossary-popup-back:hover { color: var(--green-dark); }
 
-/* Action bar — hint budget only now. The Continue button used to live up here in the
-   top-right; it moved to .quest-footer so the primary action has exactly one home. */
-.quest-action-bar { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
-.hint-budget:empty { display: none; }
+/* Mobile's hintFab: a small white pill up in the header beside the counter, not a pink chip
+   on a bar of its own. */
 .hint-ask-btn {
-  font-size: 0.76rem; font-weight: 600; color: var(--pink-dark); background: var(--pink-pale);
-  border: 1px solid var(--pink-light); border-radius: var(--radius-sm); padding: 0.45rem 0.8rem;
-  font-family: inherit; cursor: pointer; transition: opacity 0.2s;
+  min-width: 34px; height: 30px; padding: 0 9px; border-radius: 15px;
+  background: #fff; border: 1.5px solid #EAF0E8; color: var(--text);
+  font-family: inherit; font-size: 12px; font-weight: 700; white-space: nowrap;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: border-color 0.15s;
 }
+.hint-ask-btn:hover { border-color: var(--green-light); }
 /* No :disabled rule: the hint button has no disabled state any more. It used to grey out
    once a lesson's budget of three was spent — see renderHintButton for why that is gone. */
 /* ── The one and only primary action ──
-   Pinned to the bottom of the quest screen, full width of the content column, on every
-   step. Previously this button appeared top-right on some steps, inline at the bottom of
-   the content on others, and not at all on steps that weren't complete yet — three
-   positions for the same action, so the user had to re-find "next" on every screen. */
+   Pinned to the bottom of the quest screen on every step. It used to appear top-right on some
+   steps, inline at the bottom of the content on others, and not at all on steps that weren't
+   complete yet — three positions for the same action, so the user had to re-find "next" on
+   every screen.
+
+   Mobile's bottomBar: a fixed 78px tall whether or not either control is showing, so the
+   chapter above never shifts when an action appears. No top border — a divider directly above
+   the action button read as a stray rule across the screen rather than as structure. The
+   bottom padding is deliberately heavier than the top, lifting the button off the edge. */
 .quest-footer {
-  flex-shrink: 0; background: var(--bg); border-top: 1px solid var(--border);
-  padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  flex-shrink: 0; background: var(--bg);
+  display: flex; align-items: center; height: 78px;
+  max-width: 640px; width: 100%; margin: 0 auto;
+  padding: 8px 16px calc(22px + env(safe-area-inset-bottom, 0px));
 }
-.quest-continue-slot { max-width: 1360px; margin: 0 auto; }
+/* Equal-width slots flanking the action rather than absolutely positioning "Look back", so
+   the button is genuinely centred on the screen AND can never grow into it however long its
+   label runs ("Reveal the risky parts" is the worst case). */
+.quest-footer-slot { flex-shrink: 0; width: 48px; display: flex; align-items: center; }
+.quest-continue-slot { flex: 1; display: flex; align-items: center; justify-content: center; }
+/* Mobile's Button at size="sm": a face on a solid darker bezel, which here is a hard 2px
+   offset shadow. Hugs its label from a 148px floor rather than spanning the whole screen. */
 .quest-continue-fab {
-  display: block; width: 100%;
-  font-family: inherit; font-size: 0.95rem; font-weight: 700; color: var(--text-soft);
-  background: var(--bg); border: 1.5px solid var(--border); border-radius: 999px;
-  padding: 0.75rem 1.2rem; cursor: not-allowed;
-  transition: background 0.25s, color 0.25s, border-color 0.25s, box-shadow 0.25s;
+  min-width: 148px; height: 48px; padding: 0 20px;
+  font-family: var(--font-display); font-size: 16px; font-weight: 600; color: #A9B7A4;
+  background: #DFE6DA; border: none; border-radius: 16px;
+  box-shadow: 0 2px 0 #CFD9C9; cursor: not-allowed;
+  transition: background 0.25s, color 0.25s, box-shadow 0.07s ease, transform 0.07s ease;
 }
 .quest-continue-fab.ready {
-  color: #fff; background: var(--green); border-color: var(--green); cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(107,143,101,0.22);
+  color: #fff; background: var(--green); box-shadow: 0 2px 0 var(--green-dark); cursor: pointer;
 }
 .quest-continue-fab.ready:hover { background: var(--green-dark); }
+.quest-continue-fab.ready:active { transform: translateY(2px); box-shadow: none; }
 /* Disabled, never absent — the step that isn't finished yet still shows the control in
    place, so nothing below it shifts when the step completes. */
-.quest-continue-fab:disabled { pointer-events: none; opacity: 0.75; }
+.quest-continue-fab:disabled { pointer-events: none; }
 
-/* Wider than the old 1080px cap — on any screen with room to spare, this gives the content
-   column (questions, options, feedback, boss-battle choices) meaningfully more width so text
-   wraps to fewer lines, without changing Hammy's own size at all. Hammy's column is a fixed
-   300px either way, so a wider container just shifts his position further left in absolute
-   terms and hands every extra pixel to the flexible content column beside him. */
+/* One column, the width of the screen the lesson was designed on.
+   This was capped at 1360px and split into two columns; a lesson laid out for a phone and a
+   lesson laid out across a 1360px desktop are not the same lesson, and the mobile app is the
+   one the content is authored against. 640px is that phone screen at a readable desktop size:
+   the same order of line length, the same one-thing-under-another reading order. The topbar
+   and the bottom bar are capped to match, so the three stay aligned as one column. */
 .quest-body {
   flex: 1; min-height: 0; overflow-y: auto; position: relative;
-  max-width: 1360px; width: 100%; margin: 0 auto; padding: 1.4rem 1rem 1.5rem;
+  max-width: 640px; width: 100%; margin: 0 auto; padding: 0 18px 20px;
   scrollbar-width: none; -ms-overflow-style: none;
 }
 .quest-body::-webkit-scrollbar { display: none; width: 0; }
@@ -1293,47 +1318,70 @@ select.budget-input { cursor: pointer; }
 }
 @media (prefers-reduced-motion: reduce) { .quest-scroll-cue { animation: none; } }
 
-/* Two-column layout — Hammy pinned in a wide column on the left, all activity content
-   (questions, choices, definitions) in the column on the right. The side column stretches
-   to match the content column's height so Hammy sits centered across its full height. */
-.quest-layout { display: flex; align-items: stretch; gap: 1rem; }
-/* Hammy at ~60% of his old footprint. At 300px he was the widest, loudest thing on a screen
-   whose job is to ask a question — he took roughly a quarter of the viewport and pulled the
-   eye away from the content column beside him. */
-/* Anchored to the TOP of the row, not centred in it.
-   Centring made Hammy's position a function of how tall the question beside him happened to
-   be — so revealing an explanation, which grows quest-main, slid him down the page by however
-   much the answer added. Measured at 60px on a knowledge check, on top of the 131px the speech
-   bubble was already costing. The row's top edge does not move, so anchoring to it is what
-   actually holds him still; the padding puts him at roughly the height he used to sit at on a
-   typical chapter. */
+/* Hammy ABOVE the chapter, not beside it — mobile's arrangement (quest.tsx's companionWrap).
+   The web used to give him a fixed 272px column down the left, which is a desktop adaptation
+   rather than the layout the app was designed in: on mobile he is a band across the top with
+   his bubble in the space next to him, and the chapter has the full width underneath. */
+.quest-layout { display: flex; flex-direction: column; }
+/* Hammy on the left of the band, his bubble in the room beside him — a real flex row, so the
+   bubble sizes itself to whatever is left over. paddingTop well over paddingBottom on purpose:
+   this row sits directly under the progress header, and at even padding Hammy read as crowded
+   up against it with all the slack left below him. */
 .quest-side {
-  flex-shrink: 0; width: 272px; display: flex; flex-direction: column; align-items: center;
-  /* Enough for a two-line reaction to sit above Hammy without touching him. Short
-     enough that an unanswered chapter does not read as a screen of empty space, which is
-     what 7rem here used to do. */
-  justify-content: flex-start; padding-top: 1.4rem; text-align: center; gap: 0.7rem;
+  display: flex; flex-direction: row; align-items: center; gap: 10px;
+  padding: 16px 0 6px; text-align: left;
 }
-.hammy-side-avatar { position: relative; }
-/* A white speech bubble floats above Hammy's head whenever they react, instead of plain
-   text sitting below them. Deliberately NOT `display:none` while empty (no `:empty` rule
-   here anymore) — it sits in a centered column ABOVE Hammy's avatar, so collapsing to zero
-   height while empty and popping to its real height the instant a reaction message landed
-   pushed Hammy down the page right when you answered. Opacity/transform alone (below) are
-   what actually show/hide it now, so its box — and the space it reserves above Hammy —
-   never changes size, whether or not it currently holds a message. */
+/* The centred arrangement — the story's dialogue and Match It, the two chapter types that
+   read as a scene rather than a question. column-reverse rather than a DOM reorder, so the
+   bubble lands above the avatar without the persistent Hammy node ever moving. */
+.quest-side.centered { flex-direction: column-reverse; align-items: center; padding: 10px 0 6px; text-align: center; }
+/* Short chapter types leave a lot of room under the bottom bar and read as top-heavy at the
+   default padding, so they drop Hammy further down the screen — mobile's companionWrapLow /
+   Lowest / Deep, applied to the same three types. */
+.quest-side.drop-low { padding-top: 28px; padding-bottom: 10px; }
+.quest-side.drop-lowest { padding-top: 40px; padding-bottom: 12px; }
+.quest-side.drop-deep { padding-top: 40px; padding-bottom: 12px; }
+/* Match It pulls him up tight under the progress bar instead. */
+.quest-side.raised { padding-top: 0; padding-bottom: 0; }
+.hammy-side-avatar { position: relative; flex-shrink: 0; }
+/* Mobile's reactionBox: a white bordered bubble with a literal tail pointing at Hammy —
+   left at him when he is beside it, down at him when he is centred below it. Deliberately
+   NOT display:none while empty: opacity alone is what shows and hides it, so its box never
+   changes size and nothing around it can move when a reaction lands. */
 .hammy-side-msg {
-  position: relative; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem;
-  color: var(--text); line-height: 1.3; background: #fff; border: 1.5px solid var(--border);
-  border-radius: var(--radius); padding: 0.7rem 1rem; box-shadow: var(--shadow-sm);
-  opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease;
+  position: relative; align-self: center; font-family: var(--font); font-weight: 700;
+  font-size: 14px; color: #3C4E3D; line-height: 1.32;
+  background: #fff; border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 9px 13px;
+  opacity: 0; transform: translateY(6px); transition: opacity 0.25s ease, transform 0.25s ease;
 }
+/* Two stacked triangles — a larger border-coloured one behind a smaller white one — so the
+   box's own 1.5px stroke appears to carry around the point. */
 .hammy-side-msg::before, .hammy-side-msg::after {
-  content: ''; position: absolute; left: 50%; transform: translateX(-50%); width: 0; height: 0;
-  border-left: 10px solid transparent; border-right: 10px solid transparent;
+  content: ''; position: absolute; width: 0; height: 0;
 }
-.hammy-side-msg::before { bottom: -11px; border-top: 11px solid var(--border); }
-.hammy-side-msg::after { bottom: -9px; border-top: 10px solid #fff; }
+.hammy-side-msg::before {
+  top: 50%; left: -9px; margin-top: -7px;
+  border-top: 7px solid transparent; border-bottom: 7px solid transparent;
+  border-right: 9px solid var(--border);
+}
+.hammy-side-msg::after {
+  top: 50%; left: -6.5px; margin-top: -5.8px;
+  border-top: 5.8px solid transparent; border-bottom: 5.8px solid transparent;
+  border-right: 7.5px solid #fff;
+}
+/* Rotated for the centred arrangement: on the box's bottom edge, pointing down at him. */
+.quest-side.centered .hammy-side-msg { text-align: center; }
+.quest-side.centered .hammy-side-msg::before {
+  top: auto; bottom: -11px; left: 50%; margin: 0 0 0 -9px;
+  border-top: 11px solid var(--border); border-bottom: 0;
+  border-left: 9px solid transparent; border-right: 9px solid transparent;
+}
+.quest-side.centered .hammy-side-msg::after {
+  top: auto; bottom: -8.4px; left: 50%; margin: 0 0 0 -7.4px;
+  border-top: 9px solid #fff; border-bottom: 0;
+  border-left: 7.4px solid transparent; border-right: 7.4px solid transparent;
+}
 .hammy-side-msg.show { opacity: 1; transform: translateY(0); }
 .hammy-side-msg.happy { color: var(--green-dark); }
 .hammy-side-msg.gentle { color: var(--pink-dark); }
@@ -1416,9 +1464,9 @@ select.budget-input { cursor: pointer; }
 .pig-snout, .pig-eye, .pig-cheek { transition: opacity 0.15s ease; }
 .hammy-side-avatar.faces-ready.streak .pig-snout { opacity: 0; }
 
-/* Centers vertically within whatever height the row ends up (quest-layout's min-height is set
-   in JS from the real available space), so short content isn't squished against the top with
-   Hammy floating awkwardly beside empty space below. */
+/* The chapter itself, under the companion band. Top-anchored: centring made the content's
+   position a function of how tall it happened to be, so revealing an explanation slid the
+   whole question up the page. */
 .quest-main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; }
 /* Each chapter/question fades in on entry — matches the mobile app's per-chapter
    `entering={FadeIn.duration(260)}` (quest.tsx), retriggered in renderChapter() by
@@ -1442,17 +1490,35 @@ select.budget-input { cursor: pointer; }
 @keyframes questPageTurn { from { transform: translateX(10px); } to { transform: translateX(0); } }
 .quest-main.chapter-enter { animation: questPageTurn 0.17s ease-out; }
 
-/* Shared chapter title — sits above the two-column layout, bled past quest-body's own padding
-   so it hugs the true left edge of the screen, further left than everything else on the page. */
+/* The chapter's title, sized and coloured like mobile's — a plain dark h2 at the top of the
+   chapter's own content (Txt variant="h2": 19px display, ink), not a 30px uppercase pink
+   banner bled out past the left edge of the screen. renderChapter moves this node into
+   #quest-main for every chapter type except the story, whose title is the headline of its
+   screen and sits above Hammy. */
 .quest-title-row {
-  font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.5px; color: var(--pink-dark); line-height: 1.1; margin: 0.6rem 0 0.6rem;
-  margin-left: calc(-1 * 1rem);
+  font-family: var(--font-display); font-size: 19px; font-weight: 700;
+  color: var(--text); line-height: 1.32; margin: 0 0 9px;
 }
 .quest-title-row:empty { display: none; margin-bottom: 0; }
+/* The story's own title: pink, and sized to lead rather than to label — mobile's storyTitle. */
+.quest-title-row.story {
+  font-size: 27px; line-height: 1.22; color: var(--pink-dark);
+  text-align: center; padding: 6px 0 2px; margin: 0;
+}
 /* Centered for the intro-only "establishing shot" story chapters, to match the centered
-   character + caption below it instead of sitting at the left edge. */
-.quest-title-row.centered { text-align: center; margin-left: 0; }
+   character + caption below it. */
+.quest-title-row.centered { text-align: center; }
+/* Mobile leads the boss battle with a warm tag above the plain title (Tag tone="warm").
+   Drawn here rather than as another node, since the title is the only thing standing above
+   the chapter's own content. */
+.quest-title-row.boss::before {
+  content: '⚔ BOSS CHALLENGE';
+  display: inline-block; margin-bottom: 8px;
+  font-family: var(--font); font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+  color: #C9622A; background: #FFF3E4; border: 1.5px solid #FBE1C2;
+  border-radius: 999px; padding: 4px 10px;
+}
+.quest-title-row.boss { display: flex; flex-direction: column; align-items: flex-start; }
 .quest-prompt { font-size: 1.12rem; font-weight: 500; line-height: 1.5; color: var(--text); margin-bottom: 0.85rem; }
 /* This is the teaching content of the step, not a caption. It was set in the same pale
    gray as secondary UI text and read noticeably lighter than the question above it — the
@@ -1461,6 +1527,12 @@ select.budget-input { cursor: pointer; }
 /* .quest-continue-btn is gone — the myth-card stack was the last chapter type injecting its
    own inline "next" button; it now uses the shared footer slot like everything else. */
 .quest-kc-counter { font-size: 0.78rem; font-weight: 600; color: var(--text-soft); margin-bottom: 0.5rem; }
+/* The vocab card's true/false verdict, in words — mobile's AnswerFeedback line. */
+.word-check-verdict {
+  margin: 0.65rem 0 0; font-size: 13px; font-weight: 700; animation: questRise 0.22s ease-out;
+}
+.word-check-verdict.correct { color: var(--green-dark); }
+.word-check-verdict.wrong { color: var(--pink-dark); }
 
 /* Story beats */
 .story-beat { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; animation: questRise 0.22s ease-out; align-items: flex-start; }
@@ -1653,11 +1725,15 @@ select.budget-input { cursor: pointer; }
 .decision-choice-btn.chosen.correct .choice-mark-yours { background: var(--green-dark); }
 .decision-outcome { margin-top: 1rem; animation: fadeUp 0.4s ease; }
 
-/* Knowledge-check split — options on the left, the correct/incorrect explanation in its own
-   column on the right, instead of a bottom bar that covers the remaining answer choices. */
-.kc-split { display: flex; align-items: flex-start; gap: 1.25rem; margin-top: 0.5rem; }
-.kc-split-left { flex: 1.3; min-width: 0; }
-.kc-split-right { flex: 1; min-width: 0; }
+/* Knowledge check — the explanation lands under the options rather than in a bottom bar that
+   covers the remaining answer choices.
+
+   Stacked, always. Mobile's Quick Check runs question, options, then the explanation card
+   directly underneath them (KnowledgecheckView) — the side-by-side arrangement was a desktop
+   adaptation, and inside the lesson's own column there is no second column to give it. */
+.kc-split { display: flex; flex-direction: column; gap: 9px; margin-top: 0.5rem; }
+.kc-split-left { min-width: 0; }
+.kc-split-right { min-width: 0; }
 .feedback-panel.kc-panel {
   position: static; display: none; max-width: none; width: 100%; margin: 0;
   flex-direction: column; align-items: flex-start; gap: 0.9rem;
@@ -1675,7 +1751,6 @@ select.budget-input { cursor: pointer; }
 .feedback-panel.kc-panel .feedback-exp { font-size: 1.12rem; line-height: 1.5; font-weight: 500; }
 /* The panel no longer holds its own Next button — advancing happens from the shared
    bottom footer, in the same spot on every chapter type. */
-@media (max-width: 640px) { .kc-split { flex-direction: column; } }
 
 /* Micro-sim */
 .microsim-costs { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 0.7rem; }
@@ -1895,11 +1970,12 @@ select.budget-input { cursor: pointer; }
   border: 1.5px solid var(--pink-light); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.25rem;
 }
 .boss-banner .quest-chapter-title { margin-bottom: 0.6rem; }
-/* Choices on the left, the consequence of the pick in its own column on the right,
-   instead of a paragraph stacked below the whole choice list. */
-.boss-split { display: flex; align-items: flex-start; gap: 1.25rem; }
-.boss-choices { flex: 1.1; min-width: 0; display: flex; flex-direction: column; gap: 0.75rem; }
-.boss-outcome-col { flex: 1; min-width: 0; }
+/* Every choice stays on screen, with the consequence of the pick arriving underneath them —
+   mobile's BossbattleView, which keeps the full choice list and puts the verdict below rather
+   than in a second column beside it. */
+.boss-split { display: flex; flex-direction: column; gap: 10px; }
+.boss-choices { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.boss-outcome-col { min-width: 0; }
 .boss-choice-card {
   border: 2.5px solid var(--border); border-radius: var(--radius); padding: 1rem;
   cursor: pointer; transition: border-color 0.2s, background 0.2s; font-size: 1.03rem; font-weight: 500; color: var(--text);
@@ -1911,7 +1987,6 @@ select.budget-input { cursor: pointer; }
   border: 1px solid var(--green-light); background: var(--green-pale);
 }
 .boss-outcome p { color: var(--green-dark); font-weight: 500; line-height: 1.6; margin: 0; }
-@media (max-width: 640px) { .boss-split { flex-direction: column; } }
 
 /* Quest module card/list tag */
 .quest-tag {
@@ -2615,12 +2690,11 @@ select.budget-input { cursor: pointer; }
   .modules-grid { grid-template-columns: 1fr; }
   .header-stats-col { display: none; }
   .pg-stats-row { grid-template-columns: 1fr 1fr; }
-  /* On the narrowest phones (iPhone SE etc.) the "Begin Quest →" / "Start →"
-     button's fixed width plus the lesson text's minimum wrap width together
-     exceed the tile's available space by a few px, clipping the button.
-     Letting it drop to its own full-width row removes the squeeze entirely. */
+  /* On the narrowest phones the row's button plus the lesson title's minimum wrap width
+     together exceed the row's available space, clipping the button. Letting it drop to its
+     own full-width line removes the squeeze entirely. */
   .lesson-tile { flex-wrap: wrap; }
-  .lt-cta { flex: 1 1 100%; text-align: center; margin-top: 0.6rem; }
+  .lt-btn { flex: 1 1 100%; margin-top: 0.6rem; }
 }
 
 /* ── Module detail / lesson picker ── */
@@ -2666,8 +2740,8 @@ select.budget-input { cursor: pointer; }
 /* ─── MODULE ROW (new inline-lessons design) ─── */
 .module-row {
   background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
   overflow: hidden;
   animation: fadeUp 0.25s ease both;
   transition: box-shadow 0.2s;
@@ -2679,176 +2753,167 @@ select.budget-input { cursor: pointer; }
 .module-row:nth-child(5){animation-delay:.20s}
 .module-row:nth-child(6){animation-delay:.24s}
 .module-row.completed { border-color: var(--green-light); }
-.module-row.recommended {
-  border: 2px solid #F0C22E;
-  box-shadow: 0 0 0 3px rgba(240, 194, 46, 0.18);
-}
+/* Border only. The 3px yellow glow was a third weight of highlight on a row that already
+   says "recommended" twice — see the header rule below for the other one mobile dropped. */
+.module-row.recommended { border: 2px solid #F0C22E; }
 
 .module-row-header {
   display: flex; align-items: center;
-  justify-content: space-between; gap: 1rem;
-  padding: 1.1rem 1.4rem;
-  border-bottom: 1px solid transparent;
+  justify-content: space-between; gap: 12px;
+  padding: 12px;
   cursor: pointer;
-  transition: background 0.15s, border-bottom-color 0.2s;
+  transition: background 0.15s;
 }
-.module-row-header:hover { background: var(--green-pale); }
-.module-row.expanded .module-row-header { border-bottom-color: var(--border); }
-.module-row.completed .module-row-header {
-  background: var(--green-pale);
-}
-.module-row.completed.expanded .module-row-header {
-  border-bottom-color: var(--green-light);
-}
-.module-row.recommended .module-row-header {
-  background: #FFF9E6;
-}
-.module-row.recommended.expanded .module-row-header {
-  border-bottom-color: #F0C22E;
-}
+/* Cream on hover, the same feedback mobile's `rowHeadPressed` gives — not the green wash,
+   which read as a status rather than as a press. */
+.module-row-header:hover { background: var(--bg); }
+/* Deliberately no fill on a completed or a recommended header, and no divider under an open
+   one. The completed row already reads as complete from its green border and its ✓ Complete
+   tag, and the recommended one from its gold border and its ★ Start here tag; the yellow
+   wash mobile removed put a third band of colour into a small row and read as a highlight
+   sitting ON the progress bar rather than behind the title. */
 
-.mrh-left { display: flex; align-items: center; gap: 0.85rem; flex: 1; min-width: 0; }
+.mrh-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .mrh-info { flex: 1; min-width: 0; }
 .mrh-title {
   font-family: var(--font-display);
-  font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem;
+  font-size: 14.5px; font-weight: 800; color: var(--text);
 }
+/* One line while the row is closed, so eleven of them stay scannable; two once it is open,
+   where there is room for the whole sentence. Mobile's `numberOfLines={isOpen ? 2 : 1}`. */
 .mrh-desc {
-  font-size: 0.85rem; color: var(--text-mid); line-height: 1.5;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  font-size: 11.5px; font-weight: 500; color: var(--text-soft); line-height: 1.45;
+  margin-top: 2px;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.mrh-right { flex-shrink: 0; }
-.mrh-chevron { flex-shrink: 0; color: var(--text-soft); transition: transform 0.2s ease; }
-.module-row.expanded .mrh-chevron { transform: rotate(180deg); }
+.module-row.expanded .mrh-desc { -webkit-line-clamp: 2; }
+.mrh-right { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+.mrh-chevron { flex-shrink: 0; color: var(--text-soft); transform: rotate(-90deg); transition: transform 0.2s ease; }
+.module-row.expanded .mrh-chevron { transform: rotate(0deg); }
 
+/* The expanded body of a module row — mobile's `rowBody` (modules.tsx): the module's own
+   progress bar, then a single column of lesson rows. It was a two-column grid of flat tiles
+   divided by rules; mobile has neither the second column nor the dividers, and a lesson list
+   read down one column is the same list on both apps. */
 .module-row-lessons {
-  display: grid; grid-template-columns: 1fr 1fr;
-  max-height: 0; overflow: hidden;
-  transition: max-height 0.3s ease;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 0 12px; max-height: 0; overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
 }
 .module-row.expanded .module-row-lessons {
-  max-height: 2200px;
+  max-height: 3000px; padding: 2px 12px 13px;
 }
+
+/* Pink while there is work left, green once the module is mastered — mobile's ProgressBar
+   with tone="pink"/"green" at height 7. */
+.module-row-bar {
+  height: 7px; border-radius: 999px; background: #E7ECE3;
+  overflow: hidden; margin-bottom: 12px; flex-shrink: 0;
+}
+.module-row-bar-fill {
+  height: 100%; border-radius: 999px; background: var(--pink);
+  transition: width 0.4s ease;
+}
+.module-row-bar-fill.done { background: var(--green); }
 
 /* Clusters a module's lessons into a labeled accordion (see MODULE_LESSON_SECTIONS in
-   app.js) instead of one long undifferentiated grid: each section is its own collapsible
-   sub-group, so opening a module reveals 2-3 short header rows rather than 8 tiles at once.
-   Each section's tiles sit in their own nested 2-col grid so the .lesson-tile border rules
-   below (which lean on nth-child parity) keep working per section unmodified. */
-.module-row-lessons.module-row-lessons-grouped { display: block; }
-.lesson-section + .lesson-section { border-top: 1px solid var(--border); }
+   app.js) instead of one long undifferentiated list: each section is its own collapsible
+   sub-group, so opening a module reveals 2-3 short header rows rather than 8 rows at once.
+   Mirrors mobile's LessonSectionBlock. */
+.module-row-lessons.module-row-lessons-grouped { gap: 6px; }
 .lesson-section-header {
-  display: flex; align-items: center; gap: 0.6rem;
-  padding: 0.9rem 1.4rem; cursor: pointer;
-  transition: background 0.15s;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+  padding: 10px 2px; cursor: pointer;
+  border-bottom: 1.5px solid #EFEFE7;
 }
-.lesson-section-header:hover { background: var(--green-pale); }
 .lsh-label {
-  font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
   color: var(--pink-dark);
 }
+.lsh-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .lsh-meta {
-  flex: 1; text-align: right;
-  font-size: 0.72rem; font-weight: 800; color: var(--pink-dark);
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.3px; color: var(--pink-dark);
 }
-.lsh-chevron { flex-shrink: 0; color: var(--text-soft); transition: transform 0.2s ease; }
-.lesson-section.expanded .lsh-chevron { transform: rotate(180deg); }
+/* Pink like the label beside it, and rotated rather than swapped for a second glyph — the
+   same Feather chevron mobile turns from -90deg to 0. */
+.lsh-chevron { flex-shrink: 0; color: var(--pink-dark); transform: rotate(-90deg); transition: transform 0.2s ease; }
+.lesson-section.expanded .lsh-chevron { transform: rotate(0deg); }
 .lesson-section-tiles {
-  display: grid; grid-template-columns: 1fr 1fr;
+  display: flex; flex-direction: column; gap: 10px;
   max-height: 0; overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: max-height 0.3s ease, margin 0.3s ease;
 }
-.lesson-section.expanded .lesson-section-tiles { max-height: 900px; }
+.lesson-section.expanded .lesson-section-tiles { max-height: 1400px; margin: 8px 0 4px; }
 
+/* ─── One lesson row ───
+   Mobile's LessonRow (ModuleLessonList.tsx): a numbered node, a title, and — only on the
+   lesson you would open next, or one you left part-way — a caption and a button. The row
+   itself is a card, not a cell in a grid. */
 .lesson-tile {
-  padding: 1rem 1.4rem; cursor: pointer;
-  display: flex; align-items: center; gap: 0.85rem;
-  transition: background 0.15s;
-  border-bottom: 1px solid var(--border);
-}
-.lesson-tile:nth-child(odd) { border-right: 1px solid var(--border); }
-/* A lone tile left over at the end of an odd-sized row (e.g. a 3-lesson section) spans the
-   full width instead of leaving an empty cell beside it. */
-.lesson-tile:last-child:nth-child(odd) { grid-column: 1 / -1; border-right: none; }
-.lesson-tile:nth-last-child(-n+2):nth-child(odd),
-.lesson-tile:nth-last-child(-n+2):nth-child(odd) ~ .lesson-tile {
-  border-bottom: none;
+  display: flex; align-items: center; gap: 13px;
+  padding: 13px 15px; cursor: pointer;
+  background: #fff; border: 1.5px solid var(--border); border-radius: 18px;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
 }
 .lesson-tile:hover { background: var(--green-pale); }
+.lesson-tile:active { transform: scale(0.98); }
+/* The next-up (or paused) lesson is the one the eye should land on: a heavier green outline
+   and a green wash, exactly the treatment mobile gives it. */
+.lesson-tile.current {
+  border-width: 2px; border-color: var(--green); background: #EAF3E7;
+}
+.lesson-tile.current:hover { background: #E2EEDE; }
 
-.lt-status {
-  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-  border: 2px solid var(--border);
+.lt-node {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  background: #fff; transition: background 0.15s, border-color 0.15s;
+  font-family: var(--font-display); font-size: 15px; font-weight: 700; color: #fff;
 }
-.lesson-tile.done .lt-status {
-  background: var(--green); border-color: var(--green);
-}
+.lt-node-done { background: var(--green); }
+.lt-node-active { background: var(--pink); }
+.lt-node-upcoming { background: var(--green-light); }
+
 .lt-body { flex: 1; min-width: 0; }
-.lt-num {
-  font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--text-soft); margin-bottom: 0.2rem;
-  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; row-gap: 0.3rem;
-}
-/* Keep "Lesson N" on one line — without this it can word-wrap between the
-   label and the number when the XP badge next to it leaves little room. */
-.lt-num-label { white-space: nowrap; }
-/* The real-life sub-quest's kicker, in the module's pink accent — it is a different kind of
-   lesson, not lesson number nine. */
-.lt-subquest-kicker { color: var(--pink-dark); font-weight: 800; }
-.subquest-tile.done .lt-subquest-kicker { color: var(--green-dark); }
-.lt-num .badge-xp { text-transform: none; letter-spacing: normal; }
 .lt-title {
   font-family: var(--font-display);
-  font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.15rem;
+  font-size: 14px; font-weight: 800; color: var(--text);
 }
-.lt-meta { font-size: 0.8rem; color: var(--text-mid); }
-/* The real-life sub-quest is now its own full lesson tile (see subquest-tile below) rather
-   than a small nested link inside another quest's tile — .lt-subquest is retired. As the
-   9th (odd, last) tile in the ungrouped 2-col grid it already gets the existing
-   :last-child:nth-child(odd) treatment above (spans both columns, no stray empty cell). */
-/* Real-life sub-quest — its own outlined card, ported from mobile's RealLifeSubQuestRow
-   (pink border/bg by default, green once done) rather than blending into the plain grid
-   row look every other lesson tile uses. */
+.lt-note { font-size: 12px; font-weight: 700; color: var(--green); margin-top: 1px; }
+
+/* The row's own CTA. Mobile's Button variant="pink" size="sm": a face on a solid darker
+   bezel, which here is a hard 2px offset shadow rather than a second element. */
+.lt-btn {
+  flex-shrink: 0; font-family: var(--font-display);
+  font-size: 16px; font-weight: 600; color: #fff;
+  background: var(--pink); border: none; border-radius: 16px;
+  height: 48px; padding: 0 16px; cursor: pointer;
+  box-shadow: 0 2px 0 var(--pink-dark);
+  transition: transform 0.07s ease, box-shadow 0.07s ease;
+}
+.lesson-tile:active .lt-btn { transform: translateY(2px); box-shadow: none; }
+
+/* ─── The real-life sub-quest ───
+   Mobile's RealLifeSubQuestRow: the same 40px node and title as a lesson row, in the
+   module's pink accent, with a kicker instead of a number and a chevron instead of a button.
+   Green once it is done. */
 .subquest-tile {
-  margin: 0.5rem 1rem 0.75rem;
-  border: 1.5px solid var(--pink-light) !important;
-  border-radius: var(--radius-sm);
-  background: var(--pink-pale);
+  margin-top: 10px;
+  border-color: var(--pink-light); background: #FBEEF2;
 }
-.subquest-tile:hover { background: var(--pink-pale); }
-.subquest-tile .lt-title { color: var(--pink-dark); }
-.subquest-tile.done {
-  border-color: var(--green-light) !important;
-  background: var(--green-pale);
+.subquest-tile:hover { background: #F6E2E9; }
+.lt-node-sub { background: var(--pig-pink); font-size: 17px; }
+.subquest-tile.done { border-color: var(--green-light); background: #EAF3E7; }
+.subquest-tile.done:hover { background: #E2EEDE; }
+.subquest-tile.done .lt-node-sub { background: var(--green); }
+.lt-subquest-kicker {
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.5px; color: var(--pink-dark);
 }
-.subquest-tile.done:hover { background: var(--green-pale); }
+.subquest-tile .lt-title { margin-top: 2px; }
+.subquest-tile.done .lt-subquest-kicker,
 .subquest-tile.done .lt-title { color: var(--green-dark); }
-.lt-cta {
-  flex-shrink: 0; font-size: 0.78rem; font-weight: 700;
-  padding: 0.3rem 0.75rem; border-radius: var(--radius-sm);
-  white-space: nowrap;
-}
-
-.lesson-tile .lt-cta {
-  background: var(--text); color: #fff;
-}
-.lesson-tile.done .lt-cta {
-  background: var(--border); color: var(--text-mid);
-}
-
-@media (max-width: 600px) {
-  .module-row-lessons { grid-template-columns: 1fr; }
-  .lesson-section-tiles { grid-template-columns: 1fr; }
-  .lesson-tile:nth-child(odd) { border-right: none; }
-  .lesson-tile:nth-last-child(-n+2):nth-child(odd),
-  .lesson-tile:nth-last-child(-n+2):nth-child(odd) ~ .lesson-tile {
-    border-bottom: 1px solid var(--border);
-  }
-  .lesson-tile:last-child { border-bottom: none; }
-}
+.lt-chevron { flex-shrink: 0; color: var(--pink-dark); }
+.subquest-tile.done .lt-chevron { color: var(--green-dark); }
 
 .icon-coin, .icon-diamond, .icon-gift { vertical-align: -0.15em; flex-shrink: 0; }
 
@@ -3742,17 +3807,26 @@ select.budget-input { cursor: pointer; }
    off the top of the screen (measured at y = -11) and a chapter with a title had it climbing
    over the title. Down is the only direction with room, because the column starts below the
    title and Hammy is below the bubble. */
-.hammy-side-slot { position: relative; width: 100%; height: 6.5rem; flex-shrink: 0; }
-.hammy-side-msg {
-  position: absolute; bottom: 0; top: auto; left: 0; right: 0;
+/* No reserved height in the side-by-side arrangement: the band's height is Hammy's, and he
+   is far taller than any bubble this can produce — so a message appearing or clearing cannot
+   move him or anything below him. */
+.hammy-side-slot { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+/* Stacked above Hammy in the centred arrangement, where he has no width to hide the bubble
+   in — so there the height IS reserved, and the bubble is taken out of flow inside it. */
+.quest-side.centered .hammy-side-slot {
+  flex: none; width: 100%; height: 71px; align-items: flex-end; justify-content: center;
 }
+.quest-side.centered .hammy-side-msg { position: absolute; bottom: 13px; left: 20px; right: 20px; max-width: 300px; margin: 0 auto; }
 
 /* The Look back pill: one fixed-size control, whatever is behind it. */
+/* Mobile's lookBackBtn: compact enough to leave the centred action button its full width
+   even at its longest label — a book glyph plus a count of everything learned so far reads as
+   "your words" without spending a labelled button's worth of the bar on it. */
 .glossary-pill {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0.32rem 0.8rem; border-radius: 999px;
-  background: #fff; border: 1px solid var(--border); color: var(--text-mid);
-  font-family: var(--font); font-size: 0.76rem; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 38px; padding: 0 9px; border-radius: 14px;
+  background: #fff; border: 1.5px solid #EAF0E8; color: var(--text-mid);
+  font-family: var(--font); font-size: 12px; font-weight: 700;
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 .glossary-pill:hover { border-color: var(--green); color: var(--green-dark); }
@@ -4027,13 +4101,13 @@ input[type="range"].microsim-range {
    left column with the bubble beside him in the content column, which reads as him standing
    next to the tip rather than telling you it. Column order puts the tip above and centres
    both, without moving the persistent avatar node out of the side column it lives in. */
-.quest-layout-hint { flex-direction: column; align-items: center; gap: 0.25rem; }
+.quest-layout-hint { align-items: center; gap: 0.25rem; }
 .quest-layout-hint .quest-main {
-  order: 1; flex: none; width: 100%; max-width: 620px;
+  order: 1; flex: none; width: 100%;
   align-items: center; text-align: center;
 }
 .quest-layout-hint .quest-side {
-  order: 2; width: auto; padding-top: 0;
+  order: 2; width: auto; padding-top: 0; align-self: center;
 }
 /* The reserved band above Hammy is for his REACTION bubble; here the tip is the bubble and
    it sits in the content column, so the band would only add a gap under it. */
