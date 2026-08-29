@@ -1071,28 +1071,37 @@ select.budget-input { cursor: pointer; }
   border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border);
   color: var(--text-mid); margin-bottom: 1.75rem;
 }
+/* Mobile's kcQuestion: the body face at 14/19, not the display face at 18. A Quick Check
+   stem is a sentence to read, and on mobile it is deliberately a notch under the chapter
+   title above it rather than competing with it. */
 .question-text {
-  font-family: var(--font-display);
-  font-size: clamp(1rem, 2.5vw, 1.15rem); font-weight: 600; line-height: 1.6;
-  margin-bottom: 1.75rem; color: var(--text);
+  font-family: var(--font);
+  font-size: 14px; font-weight: 600; line-height: 19px;
+  margin-bottom: 12px; color: var(--text-mid);
 }
-.options { display: flex; flex-direction: column; gap: 0.6rem; }
+/* Mobile's Option component, metric for metric (components/Option.tsx): a 1.75px border at
+   an 18px radius, 12/15 padding, an 11px gap, and a 15/20 bold label. The web's was a 2px
+   border at 14px radius with 17px type — close enough to look related, different enough that
+   the same question occupied a visibly different amount of screen on the two apps.
+   The three state colours are mobile's own tokens too: borderOpt at rest, tagGreenBg when
+   right, and its slightly deeper pink pair when wrong. */
+.options { display: flex; flex-direction: column; gap: 8px; }
 .option-btn {
-  display: flex; align-items: center; gap: 0.85rem; width: 100%;
-  padding: 0.9rem 1.1rem; background: #fff; border: 2px solid var(--border);
-  border-radius: var(--radius); font-size: 1.05rem; font-weight: 500; color: var(--text);
-  text-align: left; transition: border-color 0.15s, background 0.15s; line-height: 1.45; font-family: inherit;
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 12px 15px; background: #fff; border: 1.75px solid #E9EFE5;
+  border-radius: 18px; font-size: 15px; font-weight: 700; color: var(--text);
+  text-align: left; transition: border-color 0.15s, background 0.15s; line-height: 20px; font-family: inherit;
 }
-.option-btn:hover:not(:disabled) { border-color: var(--green); background: var(--green-pale); }
+.option-btn:hover:not(:disabled) { border-color: var(--green); background: #F1F6EF; }
 .opt-letter {
-  min-width: 26px; height: 26px; border-radius: var(--radius-sm); background: var(--bg);
-  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
-  font-size: 0.72rem; font-weight: 700; flex-shrink: 0; transition: background 0.15s;
+  min-width: 22px; height: 22px; border-radius: 7px; background: var(--bg);
+  border: 1.5px solid #E9EFE5; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; flex-shrink: 0; transition: background 0.15s;
 }
-.option-btn.correct { border-color: var(--green); background: var(--green-pale); }
+.option-btn.correct { border-color: var(--green); background: #EAF3E7; }
 .option-btn.correct .opt-letter { background: var(--green); border-color: var(--green); color: #fff; }
-.option-btn.wrong { border-color: var(--pink); background: var(--pink-pale); }
-.option-btn.wrong .opt-letter { background: var(--pink); border-color: var(--pink); color: #fff; }
+.option-btn.wrong { border-color: #D98A9E; background: #FBEEF2; }
+.option-btn.wrong .opt-letter { background: #D98A9E; border-color: #D98A9E; color: #fff; }
 .option-btn:disabled { cursor: default; }
 
 /* FEEDBACK */
@@ -1136,7 +1145,7 @@ select.budget-input { cursor: pointer; }
 }
 .quest-topbar-row {
   display: flex; align-items: center; gap: 12px;
-  max-width: 640px; width: 100%; margin: 0 auto;
+  max-width: 430px; width: 100%; margin: 0 auto;
 }
 .quest-prog-track { flex: 1; height: 10px; background: #E7ECE3; border-radius: 8px; overflow: hidden; }
 .quest-prog-fill {
@@ -1260,7 +1269,7 @@ select.budget-input { cursor: pointer; }
 .quest-footer {
   flex-shrink: 0; background: var(--bg);
   display: flex; align-items: center; height: 78px;
-  max-width: 640px; width: 100%; margin: 0 auto;
+  max-width: 430px; width: 100%; margin: 0 auto;
   padding: 8px 16px calc(22px + env(safe-area-inset-bottom, 0px));
 }
 /* Equal-width slots flanking the action rather than absolutely positioning "Look back", so
@@ -1286,15 +1295,17 @@ select.budget-input { cursor: pointer; }
    place, so nothing below it shifts when the step completes. */
 .quest-continue-fab:disabled { pointer-events: none; }
 
-/* One column, the width of the screen the lesson was designed on.
-   This was capped at 1360px and split into two columns; a lesson laid out for a phone and a
-   lesson laid out across a 1360px desktop are not the same lesson, and the mobile app is the
-   one the content is authored against. 640px is that phone screen at a readable desktop size:
-   the same order of line length, the same one-thing-under-another reading order. The topbar
-   and the bottom bar are capped to match, so the three stay aligned as one column. */
+/* One column, at the width the lesson was drawn for.
+   This was 1360px in two columns, then 640px in one. Both were adaptations: the content is
+   authored against the phone, every metric below it is a phone metric, and 15px type reads as
+   15px type only at the width it was chosen for. 430px is mobile's 390 plus a little desktop
+   breathing room, which puts the line length — the thing that actually decides whether a
+   layout reads the same — within a few characters of the phone's.
+   The topbar and the bottom bar are capped to match, so the three stay one column.
+   If this ever wants to be wider, this number and the two below it are the whole change. */
 .quest-body {
   flex: 1; min-height: 0; overflow-y: auto; position: relative;
-  max-width: 640px; width: 100%; margin: 0 auto; padding: 0 18px 20px;
+  max-width: 430px; width: 100%; margin: 0 auto; padding: 0 18px 20px;
   scrollbar-width: none; -ms-overflow-style: none;
 }
 .quest-body::-webkit-scrollbar { display: none; width: 0; }
@@ -1519,7 +1530,9 @@ select.budget-input { cursor: pointer; }
   border-radius: 999px; padding: 4px 10px;
 }
 .quest-title-row.boss { display: flex; flex-direction: column; align-items: flex-start; }
-.quest-prompt { font-size: 1.12rem; font-weight: 500; line-height: 1.5; color: var(--text); margin-bottom: 0.85rem; }
+/* Mobile's lead variant at the size its chapters actually set it to (13.5-14, not the 15 default):
+   the scenario on a decision, the intro on a poll or a spot-check. */
+.quest-prompt { font-size: 14px; font-weight: 600; line-height: 19px; color: var(--text-mid); margin-bottom: 10px; }
 /* This is the teaching content of the step, not a caption. It was set in the same pale
    gray as secondary UI text and read noticeably lighter than the question above it — the
    one sentence the user is meant to take away was the hardest thing on the screen to read. */
@@ -1547,15 +1560,18 @@ select.budget-input { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .story-beat, .intro-scene, .quest-main.chapter-enter { animation: none; }
 }
+/* 56, mobile's storyAvatar — the head sits beside a bubble whose text is 14.5, and at 46 it
+   read as an icon next to the line rather than as the speaker of it. */
 .story-avatar {
-  width: 46px; height: 46px; border-radius: 50%; background: var(--green-pale);
+  width: 56px; height: 56px; border-radius: 50%; background: var(--green-pale);
   display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--green-dark);
   flex-shrink: 0; font-family: var(--font-display); overflow: hidden;
 }
 .story-avatar.has-character { background: var(--bg); overflow: visible; }
+/* mobile's storyBubble: a 2px borderOpt edge at 16px radius, 12 all round, 14.5/19 text. */
 .story-bubble {
-  background: #fff; border: 2px solid var(--border); border-radius: var(--radius);
-  padding: 0.9rem 1.1rem; font-size: 1.18rem; line-height: 1.55; color: var(--text);
+  background: #fff; border: 2px solid #E9EFE5; border-radius: 16px;
+  padding: 12px; font-size: 14.5px; font-weight: 600; line-height: 19px; color: var(--text);
 }
 .story-bubble.narrator { background: var(--bg); font-style: italic; color: var(--text-mid); }
 
@@ -1595,16 +1611,25 @@ select.budget-input { cursor: pointer; }
   border: 9px solid transparent; border-right-color: var(--border);
 }
 .speech-bubble::after { left: -8px; border-right-color: #fff; border-width: 8px; }
-.teach-term { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--text); margin-bottom: 0.45rem; }
-.teach-plain { font-size: 1rem; line-height: 1.45; color: var(--text-mid); margin-bottom: 0.6rem; }
+/* mobile's term (display 17) and conceptPlain (14/20). The definition is the one block in
+   the app that regularly runs to fifteen lines, which is why mobile sets it tighter than its
+   own default body leading rather than looser. */
+.teach-term { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.teach-plain { font-size: 14px; line-height: 20px; color: var(--text-mid); margin-bottom: 8px; }
 .hint-bubble .teach-plain { margin-bottom: 0; color: var(--text); font-size: 1.05rem; }
+/* mobile's conceptAnalogy is 12.5/16 italic in a muted green. The box and the rule down its
+   left are the web's own and are kept — they separate the analogy from the definition above
+   it, which on mobile is done by the gap alone. */
 .teach-analogy {
   background: var(--bg); border-left: 3px solid var(--green); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  padding: 0.6rem 0.8rem; font-size: 0.9rem; line-height: 1.45; color: var(--text-mid);
+  padding: 0.6rem 0.8rem; font-size: 12.5px; line-height: 16px; color: var(--text-soft); font-style: italic;
 }
 .teach-analogy-tag {
   font-weight: 700; color: var(--green-dark); display: block; margin-bottom: 0.3rem;
   font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.4px;
+  /* The analogy itself is italic (mobile's conceptAnalogy); its label is not — inheriting it
+     made an uppercase bold italic heading, which is three emphases on four words. */
+  font-style: normal;
 }
 .teach-linkout-btn {
   display: block; width: 100%; margin-top: 0.8rem; background: var(--green-pale); border: 1.5px solid var(--green-light);
@@ -1626,7 +1651,9 @@ select.budget-input { cursor: pointer; }
 /* Quick true/false recall check shown after each new word */
 .word-check { margin-top: 0.7rem; padding-top: 0.65rem; border-top: 1px dashed var(--border); }
 .word-check-label { font-size: 0.82rem; font-weight: 700; color: var(--text-soft); margin-bottom: 0.35rem; }
-.word-check-statement { font-size: 1rem; font-weight: 500; color: var(--text); line-height: 1.4; margin-bottom: 0.6rem; }
+/* mobile sets the statement in the display face at 14 — it is the thing being judged, so it
+   reads as a heading for the two buttons under it rather than as more body copy. */
+.word-check-statement { font-family: var(--font-display); font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.4; margin-bottom: 10px; }
 .word-check-btns { display: flex; gap: 0.75rem; }
 .word-check-btn { flex: 1; text-align: center; justify-content: center; padding: 0.75rem 0.5rem; }
 

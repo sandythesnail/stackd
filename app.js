@@ -21371,7 +21371,7 @@ function startBonusActivity(moduleId, lessonIdx) {
   document.getElementById('glossary-tray').classList.remove('show');
   document.getElementById('hint-budget').innerHTML = '';
   document.getElementById('quest-side').style.display = 'flex';
-  document.getElementById('hammy-side-avatar').innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.36 : 0.52, getEquippedItems()));
+  document.getElementById('hammy-side-avatar').innerHTML = withFaceOverlay(getPigWithItemMarkup(HAMMY_COMPANION_SCALE, getEquippedItems()));
   document.getElementById('hammy-side-avatar').className = 'hammy-side-avatar';
   document.getElementById('hammy-side-msg').textContent = '';
   document.getElementById('hammy-side-msg').className = 'hammy-side-msg';
@@ -22035,6 +22035,10 @@ function startQuest(moduleId, questId) {
   renderChapter(mod, state.questProgress[key].chapterIdx);
 }
 
+/** How big the companion Hammy is drawn, as a fraction of his own 440x460 frame. See the
+ *  note in renderChapter for where the number comes from. */
+const HAMMY_COMPANION_SCALE = 0.32;
+
 /** Chapter types that get the screen to themselves, with no companion Hammy.
  *
  * Ported wholesale from mobile's TALL_CHAPTER_TYPES (quest.tsx), including its reasoning:
@@ -22175,12 +22179,19 @@ function renderChapter(mod, idx) {
   clearTimeout(hammyMsg._hideTimer);
   clearTimeout(hammySide._faceHideTimer);
   hammySide.className = 'hammy-side-avatar';
-  // Sized against the Expo app's companion, which is 130pt beside a ~390pt screen — a third
-  // of the width, so he reads as a character in the scene rather than an icon next to it.
-  // The web's pig is drawn in a 440x460 frame, so 0.52 lands at roughly the same presence in
-  // the quest's side column. He is deliberately NOT scaled per chapter type here: changing
+  // A third of the column, which is what the Expo app's companion is: 130pt of a ~390pt
+  // screen. The web's pig is drawn in a 440x460 frame, so a third of the 430px lesson column
+  // is 440 * 0.32.
+  //
+  // 0.52 was the right answer to a different question — it was chosen while Hammy still had a
+  // 272px column of his own down the left, where it read as the same presence. He is a band
+  // across the top of the chapter's own column now, so that number made him half its width.
+  // No viewport branch either: the column is a fixed 430 at every size, so there is nothing
+  // left for a breakpoint to respond to.
+  //
+  // Deliberately ONE scale, not mobile's two (104 on the vocab card, 130 elsewhere): changing
   // size between chapters is movement, and he is supposed to stay put.
-  hammySide.innerHTML = withFaceOverlay(getPigWithItemMarkup(window.innerWidth <= 768 ? 0.36 : 0.52, getEquippedItems()));
+  hammySide.innerHTML = withFaceOverlay(getPigWithItemMarkup(HAMMY_COMPANION_SCALE, getEquippedItems()));
   hammyMsg.className = 'hammy-side-msg';
   hammyMsg.textContent = '';
 
