@@ -1573,7 +1573,12 @@ select.budget-input { cursor: pointer; }
 }
 
 /* Teach / hint chapters — Hammy's whole body on the left, a speech bubble on the right */
+/* align-self, not just inline-block. Both of these live in a flex column (#quest-main), and a
+   flex item is blockified and stretched to the line regardless of its display value — so
+   "💡 NEW WORD" was drawn as a pale green band across the whole width of the lesson rather
+   than as the small pill it is on mobile. */
 .teach-tag, .hint-tag {
+  align-self: flex-start;
   display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
   color: var(--green-dark); background: var(--green-pale); border: 1px solid var(--green-light);
   border-radius: var(--radius-sm); padding: 0.25rem 0.65rem; margin-bottom: 0.6rem;
@@ -2083,7 +2088,10 @@ select.budget-input { cursor: pointer; }
   font-size: 0.82rem; font-weight: 600; color: var(--green-dark);
 }
 .report-stat-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-.report-stat { flex: 1; min-width: 80px; text-align: center; background: var(--bg); border-radius: var(--radius-sm); padding: 0.8rem 0.5rem; }
+/* max-width so a report with only one tile to show — which is most of them, since a lesson
+   rarely has a Quick Check AND myth cards AND matching misses AND a hint used — doesn't
+   stretch that single "1/2 Quick Check" across the whole card. */
+.report-stat { flex: 1 1 0; min-width: 100px; max-width: 190px; text-align: center; background: var(--bg); border-radius: var(--radius-sm); padding: 0.8rem 0.5rem; }
 .report-stat-num { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--text); }
 .report-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.2rem; }
 .report-section { font-size: 0.9rem; line-height: 1.6; color: var(--text-mid); }
@@ -2107,7 +2115,10 @@ select.budget-input { cursor: pointer; }
   display: flex; flex-direction: column; gap: 1.25rem;
 }
 .subquest-celebrate-hammy { display: flex; justify-content: center; margin-bottom: -0.5rem; }
+/* Same fix as .teach-tag: .results-wrap is a flex column, so "🎉 LESSON COMPLETE" was
+   stretched into a full-width bar instead of sitting as a tag above the title. */
 .results-grade {
+  align-self: flex-start;
   display: inline-block; font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
   letter-spacing: 1.2px; padding: 0.25rem 0.7rem; border-radius: var(--radius-sm);
   border: 1px solid var(--border); color: var(--text-mid); background: var(--bg);
@@ -4165,6 +4176,9 @@ input[type="range"].microsim-range {
 /* The reserved band above Hammy is for his REACTION bubble; here the tip is the bubble and
    it sits in the content column, so the band would only add a gap under it. */
 .quest-layout-hint .hammy-side-slot { display: none; }
+/* This stage is centred, so the tag centres with it — .hint-tag's own align-self is
+   flex-start, which is right everywhere the chapter is left-aligned and wrong here. */
+.quest-layout-hint .hint-tag { align-self: center; }
 .quest-layout-hint .hint-bubble { margin: 0 auto; }
 
 /* Light on the wall — ported from mobile's Wallpaper.tsx.

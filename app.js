@@ -22131,7 +22131,11 @@ function renderChapter(mod, idx) {
   titleRow.textContent = getChapterTitle(chapter);
   titleRow.className = 'quest-title-row'
     + (chapter.type === 'story' ? ' story' : '')
-    + (chapter.type === 'bossbattle' ? ' boss' : '');
+    + (chapter.type === 'bossbattle' ? ' boss' : '')
+    // Match It centres its heading over the centred grid and the centred Hammy above it, the
+    // way mobile's matchTitle does — left-aligned it was the one thing on that screen not
+    // sitting on the centre line.
+    + (chapter.type === 'matching' ? ' centered' : '');
   // No forced full-viewport row. It was set so a short chapter still filled the screen, but
   // paired with a centred column that just moved the question into the middle of a lot of
   // nothing. The row is its content's height now and everything sits up at the top.
@@ -24366,10 +24370,16 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
   const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
   const gradHtml = (newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '') + buildMilestoneRewardBanner(newAchs);
 
+  // DASHBOARD_STAT_META, not a second guess at the same thing. This built its own label
+  // ("capitalise the key") and its own money rule ("anything that isn't creditScore"), and
+  // both were wrong for the one stat almost every lesson actually carries: moneyScore is a
+  // 0-100 meter shared by every non-credit module, so it came out as "$62 MoneyScore" — a
+  // dollar sign on a score, under a camelCase label. portfolioValue read "PortfolioValue".
+  // The chips shown DURING the lesson have always used the meta table; only this screen
+  // didn't, so the same number was labelled one way in the lesson and another at the end.
   const dashHtml = Object.entries(qp.dashboard).map(([key, val]) => {
-    const isMoney = key !== 'creditScore';
-    const label = key === 'creditScore' ? 'Credit Score' : key.charAt(0).toUpperCase() + key.slice(1);
-    return `<div class="results-xp-card"><div class="results-xp-num">${isMoney ? formatMoney(val) : Math.round(val)}</div><div class="results-xp-label">${label}</div></div>`;
+    const meta = DASHBOARD_STAT_META[key] || { label: key, isMoney: false };
+    return `<div class="results-xp-card"><div class="results-xp-num">${meta.isMoney ? formatMoney(val) : Math.round(val)}</div><div class="results-xp-label">${meta.label}</div></div>`;
   }).join('');
 
   const quest = getActiveQuest(mod);

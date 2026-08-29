@@ -17,3 +17,6 @@ SecurityAgent/report/reports/*.json
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# Output of scripts/screenshot.js — regenerated on demand, never reviewed as source.
+_shots/
