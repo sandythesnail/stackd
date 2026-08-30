@@ -1137,15 +1137,53 @@ select.budget-input { cursor: pointer; }
    what lets the primary action sit permanently at the bottom of the viewport instead of
    below whatever content happens to be on the step. */
 #screen-quest.active { display: flex; flex-direction: column; overflow: hidden; }
+/* ── How wide the lesson is, and how big it is drawn ──
+   Two knobs, set once here and once per breakpoint below, and used by the only three boxes
+   that have a width of their own: the progress header, the scrolling body, the bottom bar.
+
+     --quest-w      the real on-screen width of the lesson column
+     --quest-scale  how much bigger than the phone the whole thing is drawn
+
+   The second one is the point. The lesson's every metric is a phone metric — 14px body copy,
+   an 18px option radius, a 48px button — and simply stretching the column to fill a monitor
+   leaves all of that at phone size with a hundred characters on a line: a phone screenshot
+   pulled sideways. So the column gets wider AND the drawing gets bigger, together, and the
+   line length (the thing that actually decides whether a layout reads the same) lands in the
+   70-85 character range at every size instead of running away.
+
+   `zoom` rather than a rewrite of a hundred px values into calc(): it scales real font sizes,
+   so text stays selectable, searchable and respectful of the user's own browser zoom in a way
+   transform: scale() is not. It is applied to the three boxes' CONTENT, and their max-widths
+   are divided back out so --quest-w still means what it says. Where it isn't supported the
+   lesson simply renders at phone metrics in a wider column — the old behaviour.
+
+   These two numbers are the whole change if the lesson should be wider or bigger again. */
+#screen-quest { --quest-w: 430px; --quest-scale: 1; }
+/* Laptop, then desktop — where the rest of the site runs to a 1200px page body, so the
+   lesson lands on the same measure the Home and Progress pages already use. */
+@media (min-width: 760px)  { #screen-quest { --quest-w: 640px;  --quest-scale: 1.15; } }
+@media (min-width: 1024px) { #screen-quest { --quest-w: 860px;  --quest-scale: 1.30; } }
+@media (min-width: 1400px) { #screen-quest { --quest-w: 1060px; --quest-scale: 1.40; } }
+@media (min-width: 1800px) { #screen-quest { --quest-w: 1200px; --quest-scale: 1.50; } }
+/* Height is what actually bounds the scale, not width. A lesson is a fixed-height column —
+   header, scrolling body, bottom bar — and the window does not get taller when it gets
+   wider: a 1440x780 laptop has barely more vertical room than the phone this was drawn for.
+   Widening costs nothing there (a wider line wraps less, so text is no taller), but drawing
+   Hammy and the buttons half again as big costs a scroll on steps that used to fit. So a
+   short window keeps the full width and gives the size back. Last, so it wins. */
+@media (min-width: 760px) and (max-height: 860px) { #screen-quest { --quest-scale: 1.18; } }
+@media (min-width: 760px) and (max-height: 720px) { #screen-quest { --quest-scale: 1.06; } }
 /* Mobile's "stick" row, metric for metric. No bottom border: a rule straight across the
    screen under the progress bar reads as a stray line rather than as structure. */
 .quest-topbar {
   flex-shrink: 0; z-index: 10; background: var(--bg);
-  padding: 8px 16px 9px;
+  /* Scaled with the row it holds — the row inside is zoomed, this band is not. */
+  padding: calc(8px * var(--quest-scale)) 16px calc(9px * var(--quest-scale));
 }
 .quest-topbar-row {
   display: flex; align-items: center; gap: 12px;
-  max-width: 430px; width: 100%; margin: 0 auto;
+  max-width: calc(var(--quest-w) / var(--quest-scale)); width: 100%; margin: 0 auto;
+  zoom: var(--quest-scale);
 }
 .quest-prog-track { flex: 1; height: 10px; background: #E7ECE3; border-radius: 8px; overflow: hidden; }
 .quest-prog-fill {
@@ -1269,8 +1307,9 @@ select.budget-input { cursor: pointer; }
 .quest-footer {
   flex-shrink: 0; background: var(--bg);
   display: flex; align-items: center; height: 78px;
-  max-width: 430px; width: 100%; margin: 0 auto;
+  max-width: calc(var(--quest-w) / var(--quest-scale)); width: 100%; margin: 0 auto;
   padding: 8px 16px calc(22px + env(safe-area-inset-bottom, 0px));
+  zoom: var(--quest-scale);
 }
 /* Equal-width slots flanking the action rather than absolutely positioning "Look back", so
    the button is genuinely centred on the screen AND can never grow into it however long its
@@ -1295,20 +1334,62 @@ select.budget-input { cursor: pointer; }
    place, so nothing below it shifts when the step completes. */
 .quest-continue-fab:disabled { pointer-events: none; }
 
-/* One column, at the width the lesson was drawn for.
-   This was 1360px in two columns, then 640px in one. Both were adaptations: the content is
-   authored against the phone, every metric below it is a phone metric, and 15px type reads as
-   15px type only at the width it was chosen for. 430px is mobile's 390 plus a little desktop
-   breathing room, which puts the line length — the thing that actually decides whether a
-   layout reads the same — within a few characters of the phone's.
-   The topbar and the bottom bar are capped to match, so the three stay one column.
-   If this ever wants to be wider, this number and the two below it are the whole change. */
+/* One column, at the width the lesson is drawn for — see --quest-w / --quest-scale above.
+   This was 1360px in two columns, then 640px, then a hard 430px: mobile's 390 plus a little
+   desktop breathing room. That last one was right about WHY (the content is authored against
+   the phone, and 15px type reads as 15px type only at the width it was chosen for) and wrong
+   about what follows from it — it left a laptop showing a phone-shaped strip down the middle
+   of the screen. The answer is to scale the drawing with the column rather than to pin the
+   column to the phone's.
+
+   The scroll lives here and only here, which is what lets the primary action sit permanently
+   at the bottom of the viewport. So this box is NOT itself zoomed — its own clientHeight is
+   measured in real pixels by computeAvailableQuestHeight(); the zoom is on its content, and
+   the padding is scaled by hand to match. */
 .quest-body {
   flex: 1; min-height: 0; overflow-y: auto; position: relative;
-  max-width: 430px; width: 100%; margin: 0 auto; padding: 0 18px 20px;
+  max-width: var(--quest-w); width: 100%; margin: 0 auto;
+  padding: 0 calc(18px * var(--quest-scale)) calc(20px * var(--quest-scale));
   scrollbar-width: none; -ms-overflow-style: none;
 }
+/* Direct children only. The title row is MOVED into #quest-main for every chapter type but
+   the story (see renderChapter), and a descendant selector would then zoom it twice — zoom
+   multiplies through nesting. */
+.quest-body > .quest-title-row,
+.quest-body > .quest-layout { zoom: var(--quest-scale); }
 .quest-body::-webkit-scrollbar { display: none; width: 0; }
+
+/* ── A readable measure inside a wide column ──
+   Everything above scales the drawing with the column, which keeps most of a lesson at a
+   sane line length by itself. These are the blocks that still run long enough to overshoot
+   it — the definition mobile notes "regularly runs to fifteen lines", a story bubble, an
+   explanation after an answer. A cap in `ch` is a cap in characters, so it means the same
+   thing at every scale, and at phone size (55 characters to the column) all of these are
+   inert. Cards, options and grids are deliberately NOT capped: they are what fills the
+   width. */
+.quest-prompt,
+.quest-outcome-text,
+.teach-plain,
+.hint-bubble .teach-plain,
+.teach-analogy,
+.story-bubble,
+.explainback-definition,
+.poll-explanation,
+.microsim-result,
+.feedback-panel.kc-panel .feedback-exp { max-width: 68ch; }
+
+/* ── Two across, once there is room for two ──
+   The other half of filling a wide column. A stack of full-width buttons carrying four words
+   each is the one thing in a lesson that reads as stretched rather than as sized, and a
+   four-option Quick Check drawn as a 2x2 board is also four fewer inches of vertical travel
+   on a screen that is wide but not tall. Grid rather than wrapping flex, so the two columns
+   line up and a long option can't leave a short one floating beside it. */
+@media (min-width: 1024px) {
+  .quest-main .options,
+  .quest-main .decision-choices {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: stretch;
+  }
+}
 
 /* Scroll cue — the scrollbars are hidden throughout this app, so when a step's content runs
    past the fold (e.g. the comparison chart under a decision outcome) there was nothing at all
@@ -1714,24 +1795,23 @@ select.budget-input { cursor: pointer; }
 .match-chip.selected { border-color: var(--green); background: var(--green-pale); color: var(--green-dark); }
 .match-def-text { flex: 1; min-width: 0; font-weight: 500; }
 .match-def-card:hover:not(.matched) { border-color: var(--green); }
-/* A completed pair is marked by a green border and a check — NOT by fading it out. The old
-   treatment dropped matched rows to 0.6 opacity with gray-green text, which made the content
-   the user had just got right the least legible thing on the screen (and put it under WCAG AA).
-   Text stays at full contrast; only the border and the check change. */
+/* A completed pair is marked by a green border, a green wash and a check — on BOTH halves,
+   in place. Nothing is removed and nothing moves: the word stays in the left column where it
+   was tapped and its definition stays in the right, which is mobile's matchChipDone and the
+   only treatment that leaves a finished board still readable as a board.
+   NOT a fade. The old web treatment dropped matched rows to 0.6 opacity with gray-green text,
+   which made the content the user had just got right the least legible thing on the screen
+   (and put it under WCAG AA) — mobile's own 0.6 opacity is deliberately not ported, for the
+   same reason. Text stays at full contrast; only the border, the fill and the check change. */
+.match-chip.matched,
 .match-def-card.matched {
-  border-color: var(--green); border-width: 2px; background: #fff;
+  border-color: var(--green); border-width: 2px; background: var(--green-pale);
   color: var(--text); cursor: default;
 }
+.match-chip.matched::after,
 .match-def-card.matched::after {
-  content: '✓'; flex-shrink: 0; align-self: center;
+  content: '✓'; flex-shrink: 0; align-self: center; margin-left: auto;
   color: var(--green-dark); font-weight: 800; font-size: 1.05rem;
-}
-/* The word that was matched, moved inline into the definition it belongs to. */
-.match-paired-term {
-  flex-shrink: 0; align-self: center;
-  padding: 0.3rem 0.7rem; border-radius: 999px;
-  background: var(--green-pale); border: 1.5px solid var(--green);
-  font-size: 0.88rem; font-weight: 700; color: var(--green-dark);
 }
 .match-chip.shake, .match-def-card.shake { animation: matchShake 0.4s ease; border-color: var(--pink); background: var(--pink-pale); }
 @keyframes matchShake {
@@ -1757,6 +1837,10 @@ select.budget-input { cursor: pointer; }
 }
 
 /* Decision outcome comparison reuses .pg-column-chart/.pg-col/.pg-col-bar from Progress page */
+/* This container had no rule of its own, so a decision's choices stacked flush against each
+   other — two bordered buttons sharing an edge read as one table, not as two things to pick
+   between. Spaced like every other option list in the app (.options, 8px). */
+.decision-choices { display: flex; flex-direction: column; gap: 8px; }
 .decision-choice-btn { margin-bottom: 0; position: relative; flex-wrap: wrap; gap: 0.5rem; }
 .decision-choice-label { flex: 1; min-width: 0; }
 /* After answering, each option says what it was: the one you picked, and the one that was
@@ -4160,14 +4244,27 @@ input[type="range"].microsim-range {
   -webkit-appearance: none; appearance: none;
   width: 100%; height: 22px; background: transparent; cursor: pointer;
 }
+/* The track is drawn as two colours meeting at the thumb: green behind it, plain track ahead
+   of it. Firefox has ::-moz-range-progress for this and WebKit has no equivalent at all —
+   which is why, in Chrome and Safari, dragging one of these moved the handle and changed
+   nothing else. The whole line stayed the same grey from end to end, so there was no reading
+   of "how far along am I" anywhere except the number in the label, and on a slow drag it was
+   genuinely hard to tell the control was responding.
+
+   --range-fill is the thumb's position as a percentage, written by paintRangeFill() in
+   app.js on every input event (and on first paint). The fallback of 0% only shows for the
+   instant before that runs, and on a browser with no custom properties it degrades to the
+   old plain track rather than to something broken. */
 .microsim-range::-webkit-slider-runnable-track {
-  height: 6px; border-radius: 999px; background: #E7ECE3;
+  height: 6px; border-radius: 999px;
+  background: linear-gradient(90deg,
+    var(--green) 0%, var(--green) var(--range-fill, 0%),
+    #E7ECE3 var(--range-fill, 0%), #E7ECE3 100%);
 }
 .microsim-range::-moz-range-track {
   height: 6px; border-radius: 999px; background: #E7ECE3;
 }
-/* Firefox paints the filled portion separately; WebKit has no equivalent, so there the fill
-   is the thumb's position against a plain track. */
+/* Firefox paints the filled portion itself, from its own knowledge of the value. */
 .microsim-range::-moz-range-progress {
   height: 6px; border-radius: 999px; background: var(--green);
 }
@@ -4177,11 +4274,21 @@ input[type="range"].microsim-range {
   background: var(--green); border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(44,62,45,0.25);
   margin-top: -7px;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 .microsim-range::-moz-range-thumb {
   width: 20px; height: 20px; border-radius: 50%;
   background: var(--green); border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(44,62,45,0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+/* Under the finger: the handle grows and picks up a halo, so the control says it has hold of
+   the drag even on the stretch of a long slider where a step doesn't move it far. */
+.microsim-range:active::-webkit-slider-thumb {
+  transform: scale(1.15); box-shadow: 0 0 0 6px rgba(107,143,101,0.18);
+}
+.microsim-range:active::-moz-range-thumb {
+  transform: scale(1.15); box-shadow: 0 0 0 6px rgba(107,143,101,0.18);
 }
 .microsim-range:disabled { cursor: default; opacity: 0.55; }
 .microsim-range:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }

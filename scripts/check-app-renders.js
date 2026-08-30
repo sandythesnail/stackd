@@ -1003,8 +1003,8 @@ step('two columns, and every pair joins up', () => {
   // Then play it properly, all the way to the end.
   const defOf = (term) => found.chapter.pairs.find((p) => p.term === term).definition;
   let guard = 0;
-  while (grid.querySelectorAll('.match-chip').length && guard++ < 40) {
-    const chip = grid.querySelector('.match-chip');
+  while (grid.querySelectorAll('.match-chip:not(.matched)').length && guard++ < 40) {
+    const chip = grid.querySelector('.match-chip:not(.matched)');
     const want = defOf(chip.textContent);
     chip.click();
     [...grid.querySelectorAll('.match-def-card:not(.matched)')]
@@ -1013,10 +1013,17 @@ step('two columns, and every pair joins up', () => {
   if (grid.querySelectorAll('.match-def-card.matched').length !== found.chapter.pairs.length) {
     throw new Error('the board did not finish');
   }
-  // Every matched definition carries the word it went with, so the finished board is a
-  // readable list of pairs rather than a set of ticks.
-  if (grid.querySelectorAll('.match-paired-term').length !== found.chapter.pairs.length) {
-    throw new Error('a matched pair does not show which word went with which');
+  // Nothing leaves the board. Both halves of a pair stay where they were tapped and are
+  // marked done in place — the word used to be pulled out of its column and reinserted
+  // inside the definition, which rearranged the board under the user on every match.
+  if (grid.querySelectorAll('.match-chip').length !== found.chapter.pairs.length) {
+    throw new Error('a matched word was removed from the board');
+  }
+  if (grid.querySelectorAll('.match-chip.matched').length !== found.chapter.pairs.length) {
+    throw new Error('a matched word was not marked done');
+  }
+  if (terms.some((el) => el.style.gridColumn !== '1')) {
+    throw new Error('a matched word moved out of the first column');
   }
   const cont = window.document.getElementById('quest-continue-btn');
   if (cont.disabled) throw new Error('a finished board left Continue dead');

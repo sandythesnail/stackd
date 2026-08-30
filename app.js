@@ -16195,6 +16195,60 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
+// ── Range slider fill ─────────────────────────
+/* WebKit gives a range input no way to colour the part of the track behind the thumb, so
+ * every slider in the app — a lesson's microsim, the budget what-if, the compound-interest
+ * dials — drew one flat grey line from end to end and the handle slid along it without the
+ * line ever changing. Nothing on the control itself said "you are moving this."
+ *
+ * The fill is painted instead: this writes the thumb's position onto the element as
+ * --range-fill, and .microsim-range's track (app.css) is a hard-edged gradient that meets at
+ * that percentage. Firefox has ::-moz-range-progress and needs none of this, but gets it
+ * anyway and ignores it.
+ */
+function paintRangeFill(el) {
+  if (!el) return;
+  const min = parseFloat(el.min);
+  const max = parseFloat(el.max);
+  const val = parseFloat(el.value);
+  const lo = Number.isFinite(min) ? min : 0;
+  const hi = Number.isFinite(max) ? max : 100;
+  const span = hi - lo;
+  const pct = span > 0 && Number.isFinite(val)
+    ? Math.max(0, Math.min(100, ((val - lo) / span) * 100))
+    : 0;
+  // Guarded so the observer below can run over every slider on the page without touching
+  // style on any of them unless something actually moved.
+  if (el._rangeFill === pct) return;
+  el._rangeFill = pct;
+  el.style.setProperty('--range-fill', pct + '%');
+}
+
+/* Wired once, globally, rather than by each of the nine places that builds a slider — those
+ * are all innerHTML writes, so a new one added later would silently get the old flat track
+ * back. The observer is what covers first paint (and re-render); the input listener is what
+ * covers the drag. */
+let rangeFillReady = false;
+function initRangeFills() {
+  if (rangeFillReady) return;
+  rangeFillReady = true;
+  document.addEventListener('input', (e) => {
+    const t = e.target;
+    if (t && t.classList && t.classList.contains('microsim-range')) paintRangeFill(t);
+  }, true);
+  const paintAll = () => document.querySelectorAll('.microsim-range').forEach(paintRangeFill);
+  paintAll();
+  if (typeof MutationObserver === 'undefined') return;
+  // Coalesced to one pass per frame: renderers rebuild whole panels node by node, and the
+  // work per pass is a querySelectorAll plus a no-op on every slider that hasn't moved.
+  let queued = false;
+  new MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; paintAll(); });
+  }).observe(document.body, { childList: true, subtree: true });
+}
+
 // ── Achievements ──────────────────────────────
 // Every achievement below requires real mastery, not just showing up — "mastered" for a
 // quiz-based module means every lesson in it has been answered perfectly at least once
@@ -22085,17 +22139,38 @@ function getChapterTitle(chapter) {
   return chapter.title || CHAPTER_TITLE_FALLBACK[chapter.type] || '';
 }
 
+// How much bigger than phone metrics the lesson's content is currently drawn — the CSS
+// `zoom` on .quest-layout (see --quest-scale in app.css). 1 on a phone, and 1 anywhere the
+// property isn't supported, so every caller below is a no-op in that case.
+function questContentZoom() {
+  const layout = document.getElementById('quest-layout');
+  if (!layout) return 1;
+  // The property is specified as a number here, but its computed value is allowed to come
+  // back as a percentage, and parseFloat('140%') is 140 — a 100x error in the one number
+  // every measurement below is divided by.
+  const raw = String(getComputedStyle(layout).zoom || '');
+  let z = parseFloat(raw);
+  if (raw.trim().endsWith('%')) z /= 100;
+  return Number.isFinite(z) && z > 0 ? z : 1;
+}
+
 // Real pixel measurement of whatever room is left inside the scrolling quest body (instead
 // of a vh guess), used to make the Hammy/content row fill that space so both are vertically
 // centered together rather than sitting squished at the top when content is short.
 // quest-body is now itself the scroll container and already excludes the topbar, the chrome
 // row and the footer, so its own clientHeight is the available space — no subtracting.
+//
+// Returned in the CONTENT's own units, not the viewport's: the body is unzoomed but its
+// children are, so a caller that writes this number back as a style (the establishing shot's
+// minHeight, the size it draws the protagonist at) would otherwise get it multiplied by the
+// zoom and overflow the screen. getBoundingClientRect for the title because it is inside the
+// zoomed content and offsetHeight's units there differ between engines.
 function computeAvailableQuestHeight() {
   const bodyEl = document.getElementById('quest-body');
   const bodyStyles = getComputedStyle(bodyEl);
   const bodyPadV = parseFloat(bodyStyles.paddingTop) + parseFloat(bodyStyles.paddingBottom);
-  const titleH = document.getElementById('quest-title-row').offsetHeight;
-  return bodyEl.clientHeight - bodyPadV - titleH;
+  const titleH = document.getElementById('quest-title-row').getBoundingClientRect().height;
+  return (bodyEl.clientHeight - bodyPadV - titleH) / questContentZoom();
 }
 
 // Shows the scroll chevron only while the step's content actually runs past the fold, and
@@ -23058,17 +23133,17 @@ function renderMatchingChapter(chapter, mod, onDone) {
       const isCorrect = d.pairIdx === selectedPairIdx;
       showHammyReaction(mod, isCorrect, 'match');
       if (isCorrect) {
-        // The matched word moves inline into the definition it belongs to. Previously a
-        // matched pair only showed which word and which definition were used up, never
-        // which went with which — so once the round was over there was nothing on screen
-        // to actually review.
+        // Both halves of the pair stay exactly where they are and go green — mobile's
+        // matchChipDone, applied to the term and its definition together. The word used to
+        // be pulled out of the left column and reinserted as a pill inside the definition,
+        // which answered "which went with which" at the cost of the board rearranging itself
+        // under the user's finger on every single match: the column of remaining words got
+        // shorter and the thing they had just tapped was gone from where they tapped it.
+        // Colour says "done" without moving anything.
         const matchedTermEl = selectedTermEl;
         card.classList.add('matched');
-        const pairedTermEl = document.createElement('span');
-        pairedTermEl.className = 'match-paired-term';
-        pairedTermEl.textContent = matchedTermEl.textContent;
-        card.insertBefore(pairedTermEl, card.firstChild);
-        matchedTermEl.remove();
+        matchedTermEl.classList.remove('selected');
+        matchedTermEl.classList.add('matched');
         matchedCount++;
         selectedTermEl = null;
         selectedPairIdx = null;
@@ -24589,6 +24664,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   document.getElementById('shop-modal-close').addEventListener('click', closeShopModal);
+
+  initRangeFills();
 
   loadState();
   state.lifeEvents.sessionCount++;
