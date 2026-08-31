@@ -1148,8 +1148,12 @@ select.budget-input { cursor: pointer; }
    an 18px option radius, a 48px button — and simply stretching the column to fill a monitor
    leaves all of that at phone size with a hundred characters on a line: a phone screenshot
    pulled sideways. So the column gets wider AND the drawing gets bigger, together, and the
-   line length (the thing that actually decides whether a layout reads the same) lands in the
-   70-85 character range at every size instead of running away.
+   line length (the thing that actually decides whether a layout reads the same) stays in a
+   readable range instead of running away.
+
+   Width is the cheap axis and scale is the expensive one. A wider line wraps less, so going
+   wider makes a step SHORTER; drawing everything bigger makes it taller. Steps that used to
+   need a scroll are the reason the width runs ahead of the scale here.
 
    `zoom` rather than a rewrite of a hundred px values into calc(): it scales real font sizes,
    so text stays selectable, searchable and respectful of the user's own browser zoom in a way
@@ -1161,18 +1165,18 @@ select.budget-input { cursor: pointer; }
 #screen-quest { --quest-w: 430px; --quest-scale: 1; }
 /* Laptop, then desktop — where the rest of the site runs to a 1200px page body, so the
    lesson lands on the same measure the Home and Progress pages already use. */
-@media (min-width: 760px)  { #screen-quest { --quest-w: 640px;  --quest-scale: 1.15; } }
-@media (min-width: 1024px) { #screen-quest { --quest-w: 860px;  --quest-scale: 1.30; } }
-@media (min-width: 1400px) { #screen-quest { --quest-w: 1060px; --quest-scale: 1.40; } }
-@media (min-width: 1800px) { #screen-quest { --quest-w: 1200px; --quest-scale: 1.50; } }
+@media (min-width: 760px)  { #screen-quest { --quest-w: 700px;  --quest-scale: 1.10; } }
+@media (min-width: 1024px) { #screen-quest { --quest-w: 950px;  --quest-scale: 1.18; } }
+@media (min-width: 1400px) { #screen-quest { --quest-w: 1240px; --quest-scale: 1.25; } }
+@media (min-width: 1800px) { #screen-quest { --quest-w: 1440px; --quest-scale: 1.32; } }
 /* Height is what actually bounds the scale, not width. A lesson is a fixed-height column —
    header, scrolling body, bottom bar — and the window does not get taller when it gets
    wider: a 1440x780 laptop has barely more vertical room than the phone this was drawn for.
    Widening costs nothing there (a wider line wraps less, so text is no taller), but drawing
    Hammy and the buttons half again as big costs a scroll on steps that used to fit. So a
    short window keeps the full width and gives the size back. Last, so it wins. */
-@media (min-width: 760px) and (max-height: 860px) { #screen-quest { --quest-scale: 1.18; } }
-@media (min-width: 760px) and (max-height: 720px) { #screen-quest { --quest-scale: 1.06; } }
+@media (min-width: 760px) and (max-height: 860px) { #screen-quest { --quest-scale: 1.08; } }
+@media (min-width: 760px) and (max-height: 720px) { #screen-quest { --quest-scale: 1.00; } }
 /* Mobile's "stick" row, metric for metric. No bottom border: a rule straight across the
    screen under the progress bar reads as a stray line rather than as structure. */
 .quest-topbar {
@@ -1304,10 +1308,16 @@ select.budget-input { cursor: pointer; }
    chapter above never shifts when an action appears. No top border — a divider directly above
    the action button read as a stray rule across the screen rather than as structure. The
    bottom padding is deliberately heavier than the top, lifting the button off the edge. */
+/* Wider than the lesson column on purpose, and the only box here that is. The bar holds
+   chrome, not content: the action is centred on the column's own centre line whatever the
+   bar's width, and the extra 280px is spent pushing "Look back" out to the corner of the
+   SCREEN rather than leaving it tucked against the edge of the text. Clamped to the viewport
+   so it can never be the thing that introduces a horizontal scrollbar. */
 .quest-footer {
   flex-shrink: 0; background: var(--bg);
   display: flex; align-items: center; height: 78px;
-  max-width: calc(var(--quest-w) / var(--quest-scale)); width: 100%; margin: 0 auto;
+  max-width: min(100%, calc((var(--quest-w) + 280px) / var(--quest-scale)));
+  width: 100%; margin: 0 auto;
   padding: 8px 16px calc(22px + env(safe-area-inset-bottom, 0px));
   zoom: var(--quest-scale);
 }
@@ -1365,8 +1375,10 @@ select.budget-input { cursor: pointer; }
    it — the definition mobile notes "regularly runs to fifteen lines", a story bubble, an
    explanation after an answer. A cap in `ch` is a cap in characters, so it means the same
    thing at every scale, and at phone size (55 characters to the column) all of these are
-   inert. Cards, options and grids are deliberately NOT capped: they are what fills the
-   width. */
+   inert. It is deliberately generous rather than the textbook 65 — the column is now wide
+   enough that a strict measure would leave a definition as a narrow ribbon in an empty box,
+   and this is a guard against a runaway line, not a target. Cards, options and grids are not
+   capped at all: they are what fills the width. */
 .quest-prompt,
 .quest-outcome-text,
 .teach-plain,
@@ -1376,7 +1388,7 @@ select.budget-input { cursor: pointer; }
 .explainback-definition,
 .poll-explanation,
 .microsim-result,
-.feedback-panel.kc-panel .feedback-exp { max-width: 68ch; }
+.feedback-panel.kc-panel .feedback-exp { max-width: 88ch; }
 
 /* ── Two across, once there is room for two ──
    The other half of filling a wide column. A stack of full-width buttons carrying four words
@@ -1384,7 +1396,7 @@ select.budget-input { cursor: pointer; }
    four-option Quick Check drawn as a 2x2 board is also four fewer inches of vertical travel
    on a screen that is wide but not tall. Grid rather than wrapping flex, so the two columns
    line up and a long option can't leave a short one floating beside it. */
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .quest-main .options,
   .quest-main .decision-choices {
     display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: stretch;
@@ -1440,8 +1452,12 @@ select.budget-input { cursor: pointer; }
    left at him when he is beside it, down at him when he is centred below it. Deliberately
    NOT display:none while empty: opacity alone is what shows and hides it, so its box never
    changes size and nothing around it can move when a reaction lands. */
+/* Not bold. Everything Hammy says was set at 700 and every line of story dialogue at 600,
+   which made the two voices in the lesson the heaviest text on the screen — heavier than the
+   question being asked. They are prose, and they now read at the weight of prose; what marks
+   a reaction as a reaction is its colour and its bubble, not its stroke. */
 .hammy-side-msg {
-  position: relative; align-self: center; font-family: var(--font); font-weight: 700;
+  position: relative; align-self: center; font-family: var(--font); font-weight: 400;
   font-size: 14px; color: #3C4E3D; line-height: 1.32;
   background: #fff; border: 1.5px solid var(--border);
   border-radius: 16px; padding: 9px 13px;
@@ -1482,9 +1498,8 @@ select.budget-input { cursor: pointer; }
  *
  * These are transforms, so they cost no layout: nothing around Hammy moves, and he returns to
  * exactly the same spot when the animation ends. That is the distinction that matters here.
- * What stays gone is `pigFloat`, the perpetual 14px drift every pig on the site carries — a
- * companion that never stops moving while you are trying to read is a different thing from one
- * that reacts when you answer. See the freeze rule further down. */
+ * !important so they take over from the idle `pigFloat` for the length of the reaction and
+ * hand it straight back — see the float note further down. */
 .hammy-side-avatar.happy .pig { animation: hammyBounce 0.7s ease-in-out !important; }
 .hammy-side-avatar.gentle .pig { animation: hammyWobble 0.6s ease-in-out !important; }
 .hammy-side-avatar.streak .pig { animation: hammyCelebrate 1s ease-in-out !important; }
@@ -1652,7 +1667,7 @@ select.budget-input { cursor: pointer; }
 /* mobile's storyBubble: a 2px borderOpt edge at 16px radius, 12 all round, 14.5/19 text. */
 .story-bubble {
   background: #fff; border: 2px solid #E9EFE5; border-radius: 16px;
-  padding: 12px; font-size: 14.5px; font-weight: 600; line-height: 19px; color: var(--text);
+  padding: 12px; font-size: 14.5px; font-weight: 400; line-height: 19px; color: var(--text);
 }
 .story-bubble.narrator { background: var(--bg); font-style: italic; color: var(--text-mid); }
 
@@ -1791,10 +1806,14 @@ select.budget-input { cursor: pointer; }
   font-size: 0.9rem; line-height: 1.35; font-weight: 600; color: var(--text);
   cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.15s;
 }
-.match-chip:hover:not(.matched), .match-def-card:hover:not(.matched) { border-color: var(--green); }
+/* :not(.shake) because the pointer is, by definition, still sitting on the card the moment
+   a wrong pairing is refused — and hover outranks .shake on specificity, so the card the
+   user had just been told was wrong drew itself in the app's "yes" green until they moved
+   the mouse. */
+.match-chip:hover:not(.matched):not(.shake),
+.match-def-card:hover:not(.matched):not(.shake) { border-color: var(--green); }
 .match-chip.selected { border-color: var(--green); background: var(--green-pale); color: var(--green-dark); }
 .match-def-text { flex: 1; min-width: 0; font-weight: 500; }
-.match-def-card:hover:not(.matched) { border-color: var(--green); }
 /* A completed pair is marked by a green border, a green wash and a check — on BOTH halves,
    in place. Nothing is removed and nothing moves: the word stays in the left column where it
    was tapped and its definition stays in the right, which is mobile's matchChipDone and the
@@ -1813,7 +1832,10 @@ select.budget-input { cursor: pointer; }
   content: '✓'; flex-shrink: 0; align-self: center; margin-left: auto;
   color: var(--green-dark); font-weight: 800; font-size: 1.05rem;
 }
-.match-chip.shake, .match-def-card.shake { animation: matchShake 0.4s ease; border-color: var(--pink); background: var(--pink-pale); }
+.match-chip.shake, .match-def-card.shake {
+  animation: matchShake 0.4s ease;
+  border-color: var(--pink); background: var(--pink-pale); color: var(--pink-dark);
+}
 @keyframes matchShake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-6px); }
@@ -3952,16 +3974,19 @@ select.budget-input { cursor: pointer; }
 }
 .levelup-reward.show { display: inline-flex; }
 
-/* Hammy holds still in a lesson.
-   Every pig on the site carries `pigFloat` (styles.css) — a continuous 14px rise and a ±1deg
-   rock. On the landing page and the Home mascot that reads as life. Beside a question it does
-   not: he is the one fixed thing on a screen whose content changes under him, and a companion
-   that never stops drifting while you are trying to read is what "he keeps moving" means.
-   Scoped to the quest companion only, so nothing else on the site changes. */
-/* At REST only. The reaction states above re-enable an animation on .pig deliberately, and
-   they carry !important for the same reason this does, so :not() is what keeps the two from
-   fighting: idle Hammy is perfectly still, answering Hammy reacts and then settles back. */
-.hammy-side-avatar:not(.happy):not(.gentle):not(.streak) .pig { animation: none !important; }
+/* Hammy breathes in a lesson, the way he does everywhere else on the site and the way he
+   does on the phone.
+   Every pig here carries `pigFloat` (styles.css) — a 14px rise and a ±1deg rock over 4.2s,
+   which mobile's Hammy ports verbatim as its `bob` and leaves ON for the quest companion
+   (quest.tsx passes `bob` with no condition). The web used to switch it off beside a
+   question, on the reasoning that a companion drifting while you read is a distraction. At
+   4.2 seconds it is a breath, not a drift, and a companion that is perfectly still next to a
+   question reads as a picture of Hammy rather than as Hammy.
+   The reaction states carry !important on .pig and so still take the animation over while
+   they play; the float resumes on its own when the class comes off. */
+@media (prefers-reduced-motion: reduce) {
+  .hammy-side-avatar .pig { animation: none !important; }
+}
 .hammy-side-avatar .pig-ear-l,
 .hammy-side-avatar .pig-ear-r,
 .hammy-side-avatar .pig-tail { animation: none !important; }
@@ -4313,7 +4338,25 @@ input[type="range"].microsim-range {
 /* This stage is centred, so the tag centres with it — .hint-tag's own align-self is
    flex-start, which is right everywhere the chapter is left-aligned and wrong here. */
 .quest-layout-hint .hint-tag { align-self: center; }
-.quest-layout-hint .hint-bubble { margin: 0 auto; }
+/* The tip is one or two sentences. Left to fill the lesson column it drew itself as a band
+   right across the screen, which made a short remark look like a wall of text and left the
+   stage reading as one wide box with a small pig under it rather than as Hammy saying
+   something. A measure, and it is a card again. */
+.quest-layout-hint .hint-bubble {
+  margin: 0 auto 18px; max-width: 44ch; text-align: center;
+}
+/* And its tail points DOWN at him, because on this one stage he is below the bubble rather
+   than beside it. Same move .quest-side.centered makes with the reaction bubble. The base
+   rule's `border-right-color` is reset by the shorthand here before the top edge is
+   coloured. */
+.quest-layout-hint .hint-bubble::before {
+  left: 50%; bottom: -18px; margin-left: -9px;
+  border: 9px solid transparent; border-top-color: var(--border); border-bottom: 0;
+}
+.quest-layout-hint .hint-bubble::after {
+  left: 50%; bottom: -15px; margin-left: -8px;
+  border: 8px solid transparent; border-top-color: #fff; border-bottom: 0;
+}
 
 /* Light on the wall — ported from mobile's Wallpaper.tsx.
    The wall was one flat fill standing behind a floor that has real depth, which is what made
