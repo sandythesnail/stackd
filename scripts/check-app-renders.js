@@ -446,6 +446,50 @@ await stepAsync('later chapters promise the place is kept, and name it', async (
 });
 
 
+// 8b. A save written by an older build still opens.
+//
+// Every field of a quest's `analytics` was added at some point after the first one, so a
+// lesson finished before a field existed comes back from localStorage — or from Supabase,
+// which stores the same snapshot — without it. The readers were guarded inconsistently:
+// questWasFlawless calls `.every` straight onto `polls`, so a quest finished before polls
+// were recorded took down the flawless-module badge check, which runs on every award.
+console.log('\nan old save still opens');
+step('a quest saved before polls and checks existed does not throw', () => {
+  const mod = api.MODULES.find((m) => m.id === 'saving');
+  const before = JSON.stringify(s.questProgress);
+  // Exactly what the build before `polls` wrote: no polls, no checks, no learnedTerms.
+  for (const q of window.mainQuests(mod)) {
+    s.questProgress[window.questKey(mod.id, q.id)] = {
+      chapterIdx: 99, dashboard: {}, chapterScore: 0, chapterTotal: 0, streak: 0, done: true,
+      hintsUsed: 0, xpEarned: 30, isReplay: false,
+      analytics: { knowledgeCheck: [{ question: 'q', isCorrect: true }], mythCards: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null },
+    };
+  }
+  window.normalizeStoredQuestProgress();
+  const qp = s.questProgress[window.questKey(mod.id, window.mainQuests(mod)[0].id)];
+  if (!Array.isArray(qp.analytics.polls)) throw new Error('polls was not filled in');
+  if (!Array.isArray(qp.analytics.checks)) throw new Error('checks was not filled in');
+  if (!Array.isArray(qp.learnedTerms)) throw new Error('learnedTerms was not filled in');
+  if (qp.analytics.knowledgeCheck.length !== 1) throw new Error('the real recorded answers were discarded');
+  // The three readers that walk a stored blob without re-entering the quest first.
+  window.moduleQuestsFlawless(s, mod.id);
+  window.questTally(qp);
+  window.buildQuestReport(mod, qp);
+  s.questProgress = JSON.parse(before);
+});
+step('a blob with the wrong shape in it is repaired, not trusted', () => {
+  const before = JSON.stringify(s.questProgress);
+  s.questProgress['bogus::quest'] = { done: true, analytics: { knowledgeCheck: 3, checks: null, matchingMistakes: 'lots' } };
+  s.questProgress['bogus::null'] = null;
+  window.normalizeStoredQuestProgress();
+  const qp = s.questProgress['bogus::quest'];
+  if (!Array.isArray(qp.analytics.knowledgeCheck)) throw new Error('a non-array field survived');
+  if (qp.analytics.matchingMistakes !== 0) throw new Error('a non-number mistake count survived');
+  if ('bogus::null' in s.questProgress) throw new Error('a null entry survived');
+  window.questTally(qp);
+  s.questProgress = JSON.parse(before);
+});
+
 // 9. The badge ceiling has to be a real one.
 console.log('\nbadge ceiling');
 step('every badge on the grid can actually be won', () => {

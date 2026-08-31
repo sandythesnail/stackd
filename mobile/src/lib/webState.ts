@@ -272,17 +272,15 @@ export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState
       const legacyKey = `${modId}_${i}`;
       if (!completedLessons[legacyKey]) completedLessons[legacyKey] = { score: 1, total: 1, xpEarned: 0 };
     }
-    // The real-life sub-quest counts. `total` is the EIGHT main quests, so this used to write
-    // "module complete" into the web blob as soon as those eight were done — while mobile's own
-    // isModuleMastered requires all nine, sub-quest included (moduleTotal = lessons.length).
-    // The two apps disagreed about the same module, and the one that said "complete" was the
-    // one the student hadn't finished: a module could be reported done on the website with its
-    // sub-quest untouched, which is precisely the "I don't remember finishing the real-life
-    // sub-quest" report. Same rule on both sides now.
-    const lifeDone = mobile.completedLifeTaskIds.includes(modId);
-    const hasSubQuest = !!content?.quests.some((q) => q.parentQuestId);
+    // The eight main quests, and only those. The real-life sub-quest is optional on both apps
+    // — mobile's moduleTotal and the website's moduleRequiredUnits both leave it out — so a
+    // module is complete once the eight are done, whether or not the student went and opened
+    // the account. This used to additionally require the sub-quest, which is now the rule
+    // NEITHER app follows: a student who finished all eight on their phone would sync a web
+    // blob that still called the module unfinished, and the website would disagree with the
+    // phone they had just finished it on.
     const allMainDone = !!total && new Set(validIdxs).size >= total;
-    if (allMainDone && (lifeDone || !hasSubQuest) && !completedModules[modId]) {
+    if (allMainDone && !completedModules[modId]) {
       completedModules[modId] = { score: total, total, xpEarned: 0 };
     }
   }

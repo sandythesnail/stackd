@@ -50,7 +50,7 @@ export function ModuleLessonList({
   const nextIdx = lessons.findIndex((_, i) => !doneSet.has(absOf(i)));
   // Per-lesson truth only. This used to short-circuit on `status === 'done'`, ticking EVERY
   // row whenever the module was mastered rather than asking whether that particular lesson was
-  // finished. The two agree today — a module is only mastered once all nine are done — so it
+  // finished. The two agree today — a module is only mastered once all eight are done — so it
   // was never visibly wrong, but it means a lesson row's tick was being derived from an
   // aggregate rather than from the record of that lesson, and any future disagreement between
   // the two (a re-authored module, a partial cloud merge) would show as ticks against lessons

@@ -17059,6 +17059,7 @@ function loadState() {
     // A save written under an older XP ladder carries a level that ladder no longer agrees
     // with. Recomputing here means the rest of the app never sees the two disagree.
     syncLevelToXp();
+    normalizeStoredQuestProgress();
   } catch (_) {}
 }
 
@@ -17164,6 +17165,7 @@ function applyRemoteState(remote) {
   if ((remote.resetToken || 0) > (state.resetToken || 0)) {
     Object.assign(state, remote);
     syncLevelToXp();
+    normalizeStoredQuestProgress();
   saveState();
     renderHome();
     return;
@@ -17251,6 +17253,7 @@ function applyRemoteState(remote) {
   state.completedLessons = { ...(state.completedLessons || {}), ...localCompletedLessons };
   state.questProgress = mergeQuestProgress(localQuestProgress, state.questProgress || {});
   syncLevelToXp();
+  normalizeStoredQuestProgress();
   saveState();
   renderHome();
 }
@@ -17315,6 +17318,42 @@ function levelForXp(xp) {
 function syncLevelToXp() {
   const derived = levelForXp(state.xp || 0);
   if (state.level !== derived) state.level = derived;
+}
+
+/** The analytics blob a finished lesson leaves behind, with anything it is missing filled in.
+ *
+ * Every field in here was added at some point after the first one, and a quest finished
+ * before a field existed comes back from localStorage (or from Supabase, which stores the
+ * same snapshot) without it. `checks` is the newest, `polls` the one before — and the
+ * readers were guarded inconsistently: buildQuestReport/questTally defend `checks` and
+ * nothing else, and questWasFlawless (the flawless-module badge, evaluated on every award)
+ * calls `.every` straight onto `polls`, which is a TypeError on any quest finished before
+ * polls were recorded. A crash there takes down whatever flow was awarding the badge.
+ *
+ * Repaired once on the way in rather than defended at each reader, so a field added tomorrow
+ * is one line here instead of a hunt for every `.filter` that would have thrown. Mirrors
+ * mobile's normalizeAnalytics (questReport.ts), which exists for exactly this. */
+const BLANK_QUEST_ANALYTICS = {
+  knowledgeCheck: [], mythCards: [], polls: [], checks: [],
+  matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null,
+};
+function normalizeStoredQuestProgress() {
+  const all = state.questProgress;
+  if (!all || typeof all !== 'object') { state.questProgress = {}; return; }
+  Object.keys(all).forEach((key) => {
+    const qp = all[key];
+    if (!qp || typeof qp !== 'object') { delete all[key]; return; }
+    qp.learnedTerms = Array.isArray(qp.learnedTerms) ? qp.learnedTerms : [];
+    const a = (qp.analytics && typeof qp.analytics === 'object') ? qp.analytics : {};
+    qp.analytics = { ...BLANK_QUEST_ANALYTICS, ...a };
+    // A field present but of the wrong shape (an older build wrote a number where an array
+    // now lives) survives the spread above, so the array fields are checked rather than
+    // merely defaulted.
+    ['knowledgeCheck', 'mythCards', 'polls', 'checks', 'decisions'].forEach((k) => {
+      if (!Array.isArray(qp.analytics[k])) qp.analytics[k] = [];
+    });
+    if (typeof qp.analytics.matchingMistakes !== 'number') qp.analytics.matchingMistakes = 0;
+  });
 }
 
 function xpForLevel(l) { return LEVEL_THRESHOLDS[Math.min(l, LEVEL_THRESHOLDS.length - 1)]; }
