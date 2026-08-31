@@ -51,3 +51,19 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
 
 ## Run
 - `npm run ios` / `npm run android` / `npm run web` (or `npx expo start`).
+- The native app is a **development build** (`expo-dev-client`), not Expo Go — the custom
+  `stackd://` scheme that native SSO redirects to is the app's own, and Expo Go cannot own it.
+  `eas.json`'s `development` profile has always declared `developmentClient: true`; the package
+  itself was missing until it was added, which is what made the crash below possible.
+- A debug build carries **no embedded JS** — it fetches the bundle from Metro every launch
+  (`AppDelegate.bundleURL()` is `RCTBundleURLProvider` under `#if DEBUG`, and
+  `main.jsbundle` from the app bundle otherwise). If that resolves to nothing, React Native
+  dies on the spot with `No script URL provided … unsanitizedScriptURLString = (null)`.
+  Social sign-in is where this surfaces, because the provider round-trip is the only flow that
+  backgrounds the app long enough for iOS to reclaim it and then cold-launch it on the redirect
+  — a launch with no Xcode and no packager host behind it. `expo-dev-client` is what makes that
+  survivable: it remembers the dev server and shows a reload screen instead of `RCTFatal`.
+- Adding or removing a native module means rebuilding: `npx expo run:ios` on a Mac
+  (the `ios/` and `android/` folders are generated and gitignored — this repo is developed on
+  Windows, so they do not exist here). Testing SSO without a packager at all needs a release
+  build, which embeds `main.jsbundle`.
