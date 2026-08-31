@@ -26,9 +26,15 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   + Supabase project as the web (trystacked.app) → cross-device sync. Real Clerk sign-in/up live in
   `(onboarding)/signin|signup` (stub fallback when disabled); real sign-out + account in Settings.
   Apple/Google/Microsoft SSO is `socialAuth.tsx` on native (a Clerk browser round-trip) and the
-  site's hosted widget on web (`webAuth.tsx` redirects to /login.html). Native SSO additionally needs
-  the app's redirect URL (`stackd://`, or the `exp://…` one under Expo Go) added to the
-  Clerk instance's allowed redirect URLs — `npm run check:sso` asks Clerk and prints what it accepts.
+  site's hosted widget on web (`webAuth.tsx` redirects to /login.html). Native SSO needs two
+  separate things true on the Clerk instance, and they fail at the same call with different
+  errors: the provider must have an **SSO connection** at all, and the app's **redirect URL**
+  (`stackd://`, or the `exp://…` one under Expo Go) must be on the allowed list.
+  `npm run check:sso` asks Clerk about both, for every provider in `socialAuth.tsx`'s
+  `PROVIDERS` (it reads that array rather than hardcoding a list, which is how Apple shipped
+  broken while the check kept passing on Google and Microsoft). **Apple is currently NOT enabled
+  on the instance**, so its button errors on every tap — see `APP_STORE.md` section 7, and note
+  that guideline 4.8 is why the button exists, so this blocks iOS submission.
   The instance requires a username at sign-up that the mobile forms don't collect, so
   `clerkSignUp.ts` derives one from the email; both flows react to Clerk's `missingFields` /
   `unverifiedFields` rather than assuming a dashboard setting (email verification is currently OFF,

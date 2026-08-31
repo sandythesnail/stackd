@@ -191,8 +191,25 @@ above the other two (Apple asks for equal prominence), using the same browser ro
 deliberately does **not** send `oidcPrompt` — Apple's authorize endpoint doesn't document
 `prompt` and an unrecognised parameter risks an `invalid_request` bounce.
 
-**It will not work until Apple is configured on the Clerk instance**, and that needs the Apple
-Developer account:
+**It will not work until Apple is configured on the Clerk instance**, and as of 2026-08-31 it
+is not. Asked directly, the production instance answers:
+
+```
+$ npm run check:sso
+  Clerk SSO connections
+    ✗ oauth_apple       NOT enabled on this instance
+    ✓ oauth_google      enabled
+    ✓ oauth_microsoft   enabled
+```
+
+So today the Apple button is in the app, App Review's 4.8 box looks ticked, and every tap
+fails — Clerk rejects `oauth_apple` with a 422 (`form_param_value_invalid`, "does not match
+one of the allowed values for parameter strategy") before a sign-in sheet ever opens. That is
+the single blocking item for submission. `check:sso` covers every provider the app ships a
+button for and reads that list out of `socialAuth.tsx`, so a fourth provider cannot escape it
+the way Apple did — the check was hardcoded to Google and Microsoft while Apple shipped broken.
+
+Configuring it needs the Apple Developer account:
 
 1. Apple Developer → Certificates, Identifiers & Profiles → **Identifiers** → register a
    **Services ID** (this is the OAuth client id, separate from the bundle identifier).
@@ -222,18 +239,25 @@ integration is wrong.
 
 **Supabase / Clerk (nothing in the repo can do these for you)**
 - [ ] `supabase/account-deletion.sql` run against the production project
-- [ ] Clerk self-deletion enabled (Configure → User & Authentication → User profile)
+- [x] Clerk self-deletion enabled (Configure → User & Authentication → User profile) —
+      verified 2026-08-31: the instance reports `actions.delete_self: true`. This one is done;
+      the SQL above still is not, and it is the half that fails silently.
 - [ ] Account deletion tested end to end on a throwaway account — and the row confirmed **gone
       in the Supabase table editor**, not just the success message in the app. Without the SQL
       above the delete matches zero rows and reports success, so the UI cannot tell you.
-- [ ] Apple configured as an SSO connection on Clerk (section 7) and tested on a device
-- [ ] `stackd://` in the Clerk instance's allowed redirect URLs (`npm run check:sso`)
+- [ ] Apple configured as an SSO connection on Clerk (section 7) and tested on a device —
+      **still outstanding, and it is the one thing blocking submission** (verified 2026-08-31)
+- [x] `stackd://` in the Clerk instance's allowed redirect URLs (`npm run check:sso`) —
+      verified 2026-08-31 for Google and Microsoft; Apple cannot be redirect-checked until the
+      connection above exists, so re-run `check:sso` after adding it
 - [ ] Password reset tested — Settings is not the only way back in; `(onboarding)/reset-password`
       is what a locked-out reviewer needs
 
 **Deploy**
-- [ ] `https://trystacked.app/privacy.html`, `/terms.html` and `/support.html` all live, and all
-      three checked **on a phone** (see section 6 — the viewport redirect used to eat them)
+- [x] `https://trystacked.app/privacy.html`, `/terms.html` and `/support.html` all live —
+      all three verified 200 on 2026-08-31, and `isLegalPage()` in `m-redirect.js` exempts all
+      three. Still worth one look **on a real phone** (see section 6): a 200 proves the page is
+      served, not that the redirect left it on screen.
 - [ ] Three `EXPO_PUBLIC_*` env vars set on EAS production
 
 **App Store Connect**
@@ -261,3 +285,38 @@ integration is wrong.
       doesn't use. Lower severity than the audio permissions above — Face ID access only
       prompts the user if the code actually asks for it, which it doesn't — but the same class
       of "declared, unused" mismatch, and free to remove.
+
+---
+
+## 9. Code-level audit — what was checked against the guidelines
+
+Run on 2026-08-31 against the working tree. These are the guideline-facing things that live in
+the code rather than in App Store Connect, so a future change can break one without anybody
+touching the listing. Everything here passed; it is recorded so the next change can be checked
+against it rather than re-derived.
+
+| Guideline | What it requires | State |
+|---|---|---|
+| **2.3.1** hidden features | No dormant or undisclosed functionality | Pass — no remote config, no feature flags gating undisclosed behaviour |
+| **2.5.4** background modes | Don't declare what you don't use | Pass — `expo-audio` background playback off, no `UIBackgroundModes` |
+| **3.1.1** in-app purchase | Digital goods sold only through IAP | N/A — no IAP, no payments, no external purchase links. Shop currency is earned in-app only |
+| **3.1.1** loot boxes | Odds disclosed before purchase | Pass — `shop.tsx` renders `RARITY_LABEL · mysteryDropChance%` on the item card itself |
+| **4.8** Sign in with Apple | Required alongside third-party login | **Code passes, config does not.** Apple is first in `PROVIDERS`; the Clerk connection is missing (section 7) |
+| **5.1.1(i)** data minimisation | Don't demand data you don't need | Pass — sign-up takes email + password. Username is derived, never asked for (`clerkSignUp.ts`) |
+| **5.1.1(v)** account deletion | Deletable from inside the app | Code passes (`DeleteAccountRow`); needs `account-deletion.sql` run to actually delete rows |
+| **5.1.2** tracking / ATT | Don't request ATT you don't use | Pass — no ad SDK, no analytics SDK, no `NSUserTrackingUsageDescription`, no IDFA reference |
+| **5.1.5** permissions | Purpose strings only for used capabilities | Pass — no camera, location, contacts, photos, mic or Face ID strings requested |
+| **Assets** | 1024×1024 icon, no alpha | Pass — `icon.png` is 1024×1024, PNG colour type 2 (RGB, no alpha channel). An alpha channel here is an automatic upload rejection |
+| **Assets** | 6.7"/6.9" iPhone screenshots | Pass — seven at 1290×2796, RGB |
+| **Listing accuracy** | Description must match the app | Pass — `store-assets/listing.md` claims eleven modules and ninety-nine lessons; `modules.json` holds exactly 11 and 99 |
+
+Two things the audit found that are **not** rejections but are worth knowing:
+
+- Settings' citation links (`settings.tsx`, the references list) use `Linking.openURL`, which
+  leaves the app for Safari, while the legal links use `openLegalPage`'s in-app sheet. Not a
+  guideline problem — just inconsistent, and the citation is the link a curious student is
+  most likely to follow and least likely to come back from.
+- The app is entirely behind a sign-in wall (`RequireAuth` wraps every tab, learn and sheet
+  route). That is defensible for an app whose product is synced progress, and Apple approves
+  this shape routinely — but it is exactly why the demo account in App Review Information is
+  not optional. Without it a reviewer sees the sign-in screen and nothing else.
