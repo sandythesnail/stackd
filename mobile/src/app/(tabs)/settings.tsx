@@ -3,7 +3,7 @@ import { View, ScrollView, Pressable, StyleSheet, Linking, TextInput, Modal } fr
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useUser, useClerk, useAuth } from '@clerk/clerk-expo';
-import { Screen, Header, Txt, Button, Card } from '@/components';
+import { Screen, Header, Txt, Button, Card, DisclaimerCard } from '@/components';
 import { colors, font, selectableInput } from '@/theme';
 import { user, modules } from '@/data';
 import { useStore } from '@/store';
@@ -85,6 +85,12 @@ export default function Settings() {
             <StubSignOutRow onSignOut={() => router.push('/(onboarding)/signin')} />
           )}
         </View>
+
+        {/* First of the cards, and deliberately louder than the ones under it. Stacked is a
+            money app used by students who may act on what it says the same day, so "we are not
+            financial advisers and this is not advice" cannot live only in a Terms page nobody
+            opens. Mirrors the website's #disclaimer-card, word for word. */}
+        <DisclaimerCard />
 
         <PrivacyCard />
 

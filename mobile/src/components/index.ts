@@ -25,3 +25,4 @@ export { DailyRewardsModal } from './DailyRewardsModal';
 export { Select, type SelectOption } from './Select';
 export { StackedAreaChart } from './Chart';
 export { RoomFloor } from './RoomFloor';
+export { DisclaimerCard, DisclaimerStrip, DISCLAIMER_MODULES, DISCLAIMER_TOOLS } from './Disclaimer';

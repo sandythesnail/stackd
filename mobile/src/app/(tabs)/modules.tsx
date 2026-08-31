@@ -5,7 +5,10 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow } from '@/components';
+import {
+  Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow,
+  DisclaimerStrip, DISCLAIMER_MODULES,
+} from '@/components';
 import { colors, font, radius } from '@/theme';
 import { modules } from '@/data';
 import { moduleContentById, mainLessonAbsoluteIndices } from '@/content';
@@ -229,6 +232,12 @@ export default function Modules() {
             );
           })}
         </View>
+
+        {/* The short form of the notice on Settings, repeated where the teaching actually is.
+            Every module above simplifies real rules — tax bands, APRs, aid deadlines — to make
+            them learnable, and a student who reads one and acts on it that afternoon should have
+            seen this without going looking for it. */}
+        <DisclaimerStrip text={DISCLAIMER_MODULES} />
       </ScrollView>
     </Screen>
   );

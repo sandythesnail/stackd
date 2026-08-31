@@ -1498,3 +1498,32 @@ body { background-color: var(--bg); }
   .footer-brand { max-width: 100%; }
   .footer-links { gap: 2.5rem; }
 }
+
+/* ─── NOT-ADVICE NOTICE ───
+   The last band before the footer. Deliberately not styled as fine print: same measure and
+   line-height as the body copy above it, on a warm gold card, because small grey type at the
+   bottom of a landing page is how a site says "we had to put this somewhere". Short section
+   padding so it reads as a closing note rather than a full section competing with the CTA. */
+.l-disclaimer-section { padding: 0 0 4rem; }
+.l-disclaimer {
+  max-width: 780px; margin: 0 auto;
+  background: #FFFBF0; border: 1px solid #F0DFA8; border-left: 4px solid #F0C22E;
+  border-radius: var(--radius); padding: 1.75rem 2rem;
+}
+.l-disclaimer-tag {
+  display: inline-block; margin-bottom: 0.75rem;
+  padding: 0.2rem 0.6rem; border-radius: 999px;
+  background: #F3E2AE; color: #7A5E12;
+  font-size: 0.68rem; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase;
+}
+.l-disclaimer p {
+  font-size: 0.88rem; color: var(--text-mid); line-height: 1.75; margin-bottom: 0.9rem;
+}
+.l-disclaimer p:last-child { margin-bottom: 0; }
+.l-disclaimer strong { color: var(--text); font-weight: 700; }
+.l-disclaimer-links a { color: var(--green-dark); font-weight: 700; text-decoration: none; }
+.l-disclaimer-links a:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .l-disclaimer { padding: 1.4rem 1.3rem; }
+}

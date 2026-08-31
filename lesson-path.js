@@ -16,28 +16,12 @@
 
    ── Where this differs from mobile, and why ──
 
-   1. The real-life sub-quest is not called optional. It is a required 9th lesson: moduleUnits()
-      includes it, and module completion, mastery, the X/9 progress everywhere and the
-      continue-card's next-lesson pointer all key off it (see the comment on moduleUnits in
-      app.js). Calling it optional would tell people they can skip the one lesson that stops
-      their module completing.
-
-      It still reads as "elsewhere" rather than "ahead" — the dashed spur and the position
-      further off the centre line, both keyed off `isLifeTask` rather than off the state, so
-      finishing it doesn't pull it back onto the main line.
-
-      This started as a divergence: mobile labelled it OPTIONAL EXTRA at the time of the port.
-      Mobile has since reached the same conclusion for the same reason (c45e2bb), and its
-      'optional' state now reads REAL LIFE SUB-QUEST. The two agree again; only the mechanism
-      differs, since the web never needed a fifth state to say it.
-
-   2. Module ordering follows the web's, not mobile's. Mobile orders the carousel by the
-      survey track; the web deliberately keeps modules in fixed numeric order and lets
-      personalization affect only which one gets the "Recommended" highlight (see
-      getTrackModuleIds in app.js). The invariant that matters — the path's highlighted node
-      and Home's continue-card can never point at different lessons — is preserved by taking
-      the recommended module from the same MODULES.find(m => !isModuleFullyDone(m)) that
-      renderHomeMascotCard uses.
+   Module ordering follows the web's, not mobile's. Mobile orders the carousel by the survey
+   track; the web deliberately keeps modules in fixed numeric order and lets personalization
+   affect only which one gets the "Recommended" highlight (see getTrackModuleIds in app.js).
+   The invariant that matters — the path's highlighted node and Home's continue-card can never
+   point at different lessons — is preserved by taking the recommended module from the same
+   MODULES.find(m => !isModuleFullyDone(m)) that renderHomeMascotCard uses.
 
    Hover/press handling is a fraction of mobile's, on purpose. PathNode.tsx carries three
    redundant routes into its hover state to work around react-native-web's useHover dropping
@@ -203,12 +187,11 @@ const LP_STATE_LABEL = {
   // read as before. Not a state of its own — see the note on `inProgress`. Mobile's word for
   // the same idea, so the two apps don't have separate vocabulary for one situation.
   started: 'IN PROGRESS',
-  // The sub-quest, when it is neither finished nor the recommended next. Mobile calls this
-  // its 'optional' state, but NOT "optional extra": it is required to finish the module in
-  // its entirety (moduleUnits counts it as the 9th lesson and isModuleFullyDone won't call a
-  // module done without it), so calling it optional told students they could skip the one
-  // lesson that stops the module completing.
-  lifeTask: 'REAL LIFE SUB-QUEST',
+  // The sub-quest, when it is neither finished nor the recommended next. It is genuinely
+  // optional — moduleRequiredUnits leaves it out, so a module completes, masters and reads
+  // 8/8 without it — and the label says so, because a student who doesn't want to go and
+  // open a real account should be able to see that they aren't giving anything up.
+  lifeTask: 'OPTIONAL · REAL LIFE SUB-QUEST',
 };
 /** The hover card's much shorter wording, and the dot colour that carries it.
  *
@@ -221,7 +204,7 @@ const LP_STATE_TIP = {
   current: { label: 'Up next', tone: 'var(--green)' },
   available: { label: 'Not started', tone: '#9DAE99' },
   started: { label: 'In progress', tone: 'var(--green)' },
-  lifeTask: { label: 'Real life sub-quest', tone: '#F0C22E' },
+  lifeTask: { label: 'Optional sub-quest', tone: '#F0C22E' },
 };
 
 /** Which label a node wears, which is NOT the same question as which state it is in.
@@ -253,7 +236,10 @@ function lpReducedMotion() {
  * of this file for why that matters. */
 function lpSection(m, recommended) {
   const quest = hasQuest(m);
-  const units = quest ? moduleUnits(m) : [];
+  // Display order — the 8 counted lessons plus the optional sub-quest, which the path does
+  // show (as a node off the main line) even though nothing counts it. done/total below are
+  // taken off the counted ones only, so an untouched sub-quest never holds the ring at 8/9.
+  const units = quest ? moduleAllUnits(m) : [];
   const sub = quest ? moduleSubQuest(m) : null;
 
   const nodes = units.map(function (q, i) {
@@ -289,13 +275,14 @@ function lpSection(m, recommended) {
     };
   });
 
-  const doneCount = nodes.filter(function (n) { return n.state === 'completed'; }).length;
+  const counted = nodes.filter(function (n) { return !n.isLifeTask; });
+  const doneCount = counted.filter(function (n) { return n.state === 'completed'; }).length;
   return {
     module: m,
     nodes: nodes,
     done: doneCount,
-    total: nodes.length,
-    mastered: nodes.length > 0 && doneCount >= nodes.length,
+    total: counted.length,
+    mastered: counted.length > 0 && doneCount >= counted.length,
   };
 }
 
@@ -309,7 +296,7 @@ function lpRecommended() {
   // fixed 01-11 catalog.
   const mod = nextModuleForUser();
   if (!mod || !hasQuest(mod)) return null;
-  const units = moduleUnits(mod);
+  const units = moduleRequiredUnits(mod);
   const next = units.find(function (q) {
     const qp = state.questProgress[questKey(mod.id, q.id)];
     return !(qp && qp.done);

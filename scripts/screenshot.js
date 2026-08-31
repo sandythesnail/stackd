@@ -110,6 +110,17 @@ window.showPage('modules');
 window.renderModulesPage();
 shots.modules = { w: 1100, h: 1500, body: '<div class="app-main"><div id="page-modules" class="page active">' + window.document.getElementById('page-modules').innerHTML + '</div></div>' };
 
+// Two screens that are mostly prose rather than gameplay, and are where the app's legal and
+// data notices live — the kind of thing that is easy to break and impossible to notice
+// without looking at it.
+window.showPage('tools');
+window.renderToolsPage();
+shots.tools = { w: 1100, h: 1400, body: '<div class="app-main"><div id="page-tools" class="page active">' + window.document.getElementById('page-tools').innerHTML + '</div></div>' };
+
+window.showPage('settings');
+window.renderSettingsPage();
+shots.settings = { w: 1100, h: 2200, body: '<div class="app-main"><div id="page-settings" class="page active">' + window.document.getElementById('page-settings').innerHTML + '</div></div>' };
+
 const quest = mainQuests[1];
 window.startQuest('loans', quest.id);
 for (const type of ['story', 'teach', 'matching', 'hint', 'poll', 'mythcards', 'knowledgecheck', 'decision', 'bossbattle']) {

@@ -122,17 +122,30 @@ export function RealLifeSubQuestRow({ moduleId, onPress }: { moduleId: string; o
   const done = state.completedLifeTaskIds.includes(moduleId);
   return (
     // Built like the lesson rows above rather than as one line of small text in a tinted
-    // box. This is a REQUIRED lesson — moduleTotal counts it, and the module isn't mastered
-    // without it — but it was drawn lighter than the eight rows it ranks alongside, which
-    // read as an optional footnote. Same node/title/chevron anatomy as a LessonRow, in the
-    // module's pink accent so it still reads as a different KIND of lesson.
+    // box: it is a full lesson, with a full lesson's rewards, and drawing it lighter than
+    // the eight rows it sits alongside read as a footnote. Same node/title/chevron anatomy
+    // as a LessonRow, in the module's pink accent so it still reads as a different KIND of
+    // lesson — and an Optional chip plus a plain-language note, because the one thing a
+    // student weighing up whether to go and open a real bank account needs to know is that
+    // nothing is lost by not doing it. moduleTotal leaves it out; the module completes and
+    // masters at 8/8 either way.
     <Pressable onPress={onPress} style={[styles.subQuest, done && styles.subQuestDone]}>
       <View style={[styles.subQuestNode, done && styles.subQuestNodeDone]}>
         <Txt style={styles.subQuestNodeTxt}>{done ? '✓' : '🎯'}</Txt>
       </View>
       <View style={{ flex: 1 }}>
-        <Txt style={[styles.subQuestKicker, done && styles.subQuestTxtDone]}>REAL-LIFE SUB-QUEST</Txt>
+        <View style={styles.subQuestKickerRow}>
+          <View style={[styles.optionalChip, done && styles.optionalChipDone]}>
+            <Txt style={styles.optionalChipTxt}>Optional</Txt>
+          </View>
+          <Txt style={[styles.subQuestKicker, done && styles.subQuestTxtDone]}>REAL-LIFE SUB-QUEST</Txt>
+        </View>
         <Txt style={[styles.subQuestTitle, done && styles.subQuestTxtDone]}>{guide.title}</Txt>
+        <Txt style={[styles.subQuestNote, done && styles.subQuestTxtDone]}>
+          {done
+            ? 'Done — nice work doing it for real.'
+            : 'Skip it any time; the module still completes without it.'}
+        </Txt>
       </View>
       <Feather name="chevron-right" size={18} color={done ? colors.greenDark : colors.pinkDark} />
     </Pressable>
@@ -304,7 +317,15 @@ const styles = StyleSheet.create({
   subQuestNode: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.pinkBright },
   subQuestNodeDone: { backgroundColor: colors.green },
   subQuestNodeTxt: { fontSize: 17 },
+  subQuestKickerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   subQuestKicker: { fontFamily: font.extra, fontSize: 9.5, letterSpacing: 0.5, color: colors.pinkDark },
+  // Solid rather than outlined: at 9px on an already-pink row, an outlined chip disappears.
+  optionalChip: {
+    paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, backgroundColor: colors.pinkDark,
+  },
+  optionalChipDone: { backgroundColor: colors.greenDark },
+  optionalChipTxt: { fontFamily: font.extra, fontSize: 9, letterSpacing: 0.4, color: colors.white },
   subQuestTitle: { fontFamily: font.extra, fontSize: 14, color: colors.ink, marginTop: 2 },
+  subQuestNote: { fontFamily: font.bold, fontSize: 12, color: colors.pinkDark, opacity: 0.85, marginTop: 3 },
   subQuestTxtDone: { color: colors.greenDark },
 });

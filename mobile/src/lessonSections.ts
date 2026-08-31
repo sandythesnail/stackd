@@ -1,8 +1,8 @@
 /** Groups each module's 8 real lessons into labeled sections for the module-detail screen,
  * matching the website's MODULE_LESSON_SECTIONS (app.js) — a pink-labeled, collapsible
- * grouping of lesson tiles, never a gate. The module's 9th lesson (the real-life
- * step-by-step guide, see LessonSummary.isLifeTask) lives in the Real Life tab instead and
- * is excluded here, so every config below sums to 8 — reusing the website's section label
+ * grouping of lesson tiles, never a gate. The module's optional real-life step-by-step
+ * guide (see LessonSummary.isLifeTask) gets its own row below the list instead and is
+ * excluded here, so every config below sums to 8 — reusing the website's section label
  * wording wherever it fits the actual content, adapted where mobile's real quest lineup
  * doesn't match the website's section breakdown 1:1 (e.g. risk's real quests are entirely
  * insurance-themed, with no identity-theft content, unlike the website's config). Counts

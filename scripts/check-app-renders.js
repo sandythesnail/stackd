@@ -62,6 +62,11 @@ window.HTMLElement.prototype.getBoundingClientRect = function () {
   return { top: 10, left: 10, right: 210, bottom: 60, width: 200, height: 50, x: 10, y: 10 };
 };
 window.HTMLElement.prototype.scrollIntoView = function () {};
+// jsdom implements no Pointer Events capture API. The myth-card stack calls
+// setPointerCapture on pointerdown so a drag survives the cursor leaving the card, which is
+// correct in a browser and throws here.
+window.HTMLElement.prototype.setPointerCapture = function () {};
+window.HTMLElement.prototype.releasePointerCapture = function () {};
 window.scrollTo = () => {};
 // jsdom ships no matchMedia; the app asks it on every document click to decide whether the
 // sidebar is a drawer. Desktop-shaped answer.
@@ -153,7 +158,9 @@ run('mid-curriculum, Debt Freedom track', () => {
 run('everything complete', () => {
   s.xp = 5000; s.level = 11; s.streak = 42;
   api.MODULES.forEach((m) => {
-    window.moduleUnits(m).forEach((q) => {
+    // Every lesson the module has, optional sub-quest included — this scenario is
+    // "nothing left undone anywhere", not "the module counts as complete".
+    window.moduleAllUnits(m).forEach((q) => {
       s.questProgress[window.questKey(m.id, q.id)] = { done: true, chapterIdx: 99, xpEarned: 40 };
     });
     s.completedModules[m.id] = { score: 8, total: 8, xpEarned: 320 };
@@ -608,7 +615,7 @@ step('a lesson whose only miss is a check still gets advice', () => {
 });
 
 // 10c. The real-life guide is a lesson, and finishing it is a lesson finish.
-step('the real-life sub-quest pays, counts as activity, and can master a module', () => {
+step('the real-life sub-quest is optional, and still pays and counts as activity', () => {
   const mod = api.MODULES.find((m) => m.id === 'saving');
   const sub = window.moduleSubQuest(mod);
   if (!sub) throw new Error('saving has no real-life sub-quest');
@@ -618,8 +625,8 @@ step('the real-life sub-quest pays, counts as activity, and can master a module'
   delete s.questProgress[key];
   s.coins = 0;
   s.lastModuleActivityDate = null;
-  // Every main quest already done, so finishing the guide is what masters this module — the
-  // moment the module's guaranteed unlock life event is supposed to fire.
+  // Every main quest done and the guide untouched: the state of a student who read "optional"
+  // and took it at its word. The module must already be finished for them.
   for (const q of window.mainQuests(mod)) {
     s.questProgress[window.questKey(mod.id, q.id)] = {
       chapterIdx: 0, dashboard: {}, chapterScore: 0, chapterTotal: 0, streak: 0, done: true,
@@ -628,6 +635,13 @@ step('the real-life sub-quest pays, counts as activity, and can master a module'
     };
   }
   s.lifeEvents.history = [];
+
+  if (!window.isModuleFullyDone(mod)) throw new Error('the guide is optional but the module will not complete without it');
+  const prog = window.moduleUnitsProgress(mod);
+  if (prog.totalUnits !== window.mainQuests(mod).length) {
+    throw new Error(`the module counts ${prog.totalUnits} lessons, expected only its ${window.mainQuests(mod).length} main ones`);
+  }
+  if (!prog.allDone) throw new Error('the module does not read as complete with the guide skipped');
 
   window.startQuest(mod.id, sub.id);
   const qp = s.questProgress[key];
@@ -649,9 +663,9 @@ step('the real-life sub-quest pays, counts as activity, and can master a module'
   const wrap = window.document.getElementById('results-wrap').textContent;
   if (!wrap.includes('2/3 correct')) throw new Error('the guide results screen shows no score');
   if (!/\+\d+ 🪙/.test(wrap)) throw new Error('the guide results screen shows no coins');
-  // Mastering the module here must reach the post-completion overlays, which is where the
-  // module's guaranteed unlock life event lives.
-  if (!window.isModuleFullyDone(mod)) throw new Error('the module did not master');
+  // Doing the guide anyway must not un-complete anything, and must still reach the
+  // post-completion overlays, where the module's guaranteed unlock life event lives.
+  if (!window.isModuleFullyDone(mod)) throw new Error('the module stopped being complete once the guide was done');
   const unlock = window.eval('LIFE_EVENT_UNLOCKS')[mod.id];
   if (unlock && !s.lifeEvents.history.includes(unlock.id)) {
     // showLifeEvent runs on a timer; what matters is that the overlay path was entered at all.
@@ -793,6 +807,73 @@ step('all 1,270 chapters, across all 11 modules', () => {
   if (failures.length) {
     throw new Error(failures.length + ' chapter(s) failed:\n    ' + failures.slice(0, 8).join('\n    '));
   }
+});
+
+// 11b. A myth card can be answered without a pointer.
+//
+// The swipe is the point of this chapter and stays the headline gesture, but it used to be
+// the ONLY way to answer: the card was a plain <div> with a pointerdown/move/up handler and
+// nothing else, so a student on a keyboard could not answer a single card — and the lesson
+// will not advance past an unanswered mythcards chapter. A whole lesson nobody could finish.
+console.log('\na myth card without a pointer');
+function openMythChapter() {
+  const mod = api.MODULES.find((m) => m.id === 'loans');
+  let target = null;
+  for (const q of window.mainQuests(mod)) {
+    const i = q.chapters.findIndex((c) => c.type === 'mythcards');
+    if (i >= 0) { target = { quest: q, idx: i, chapter: q.chapters[i] }; break; }
+  }
+  if (!target) throw new Error('no mythcards chapter to test with');
+  delete s.questProgress[window.questKey(mod.id, target.quest.id)];
+  window.startQuest(mod.id, target.quest.id);
+  window.renderChapter(mod, target.idx);
+  return { mod, target, qp: s.questProgress[window.questKey(mod.id, target.quest.id)] };
+}
+const pressKey = (el, key) => el.dispatchEvent(new window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+step('the top card is reachable by keyboard, and only the top one', () => {
+  openMythChapter();
+  const cards = [...window.document.querySelectorAll('.myth-card')];
+  if (cards.length < 2) throw new Error('expected a stack, got ' + cards.length + ' card(s)');
+  if (cards[0].tabIndex !== 0) throw new Error('the top card cannot be focused');
+  if (!(cards[0].getAttribute('aria-label') || '').includes('arrow key')) {
+    throw new Error('the top card does not say how to answer it');
+  }
+  if (cards.slice(1).some((c) => c.tabIndex === 0)) {
+    throw new Error('a card behind the top one is in the tab order');
+  }
+});
+step('an arrow key answers the card, and the answer is graded', () => {
+  const { target, qp } = openMythChapter();
+  const card = window.document.querySelector('.myth-card');
+  // Right arrow = true, which is the same commit the swipe makes.
+  pressKey(card, 'ArrowRight');
+  if (!card.classList.contains('flipped')) throw new Error('the arrow key did not resolve the card');
+  const rec = qp.analytics.mythCards[0];
+  if (!rec) throw new Error('the keyboard answer was never recorded');
+  if (rec.guessedRight !== (target.chapter.cards[0].isTrue === true)) {
+    throw new Error('the keyboard answer was graded against the wrong guess');
+  }
+  const back = card.querySelector('.myth-card-back');
+  if (!back.classList.contains(rec.guessedRight ? 'is-right' : 'is-wrong')) {
+    throw new Error('the revealed card does not match how it was graded');
+  }
+});
+step('a second key press cannot answer the same card twice', () => {
+  const { qp } = openMythChapter();
+  const card = window.document.querySelector('.myth-card');
+  pressKey(card, 'ArrowRight');
+  pressKey(card, 'ArrowLeft');
+  if (qp.analytics.mythCards.length !== 1) {
+    throw new Error('one card was graded ' + qp.analytics.mythCards.length + ' times');
+  }
+});
+step('a plain click demonstrates the swipe instead of doing nothing', () => {
+  openMythChapter();
+  const card = window.document.querySelector('.myth-card');
+  card.dispatchEvent(new window.Event('pointerdown', { bubbles: true }));
+  card.dispatchEvent(new window.Event('pointerup', { bubbles: true }));
+  if (!card.classList.contains('nudging')) throw new Error('a click on the card did nothing at all');
+  if (card.classList.contains('flipped')) throw new Error('a click answered the card');
 });
 
 // 12. The boss battle grades the student, and says so.
@@ -988,6 +1069,14 @@ step('two columns, and every pair joins up', () => {
   if (terms.some((el) => el.style.gridColumn !== '1')) throw new Error('a word is not in the first column');
   if (defs.some((el) => el.style.gridColumn !== '2')) throw new Error('a definition is not in the second column');
   if (new Set(terms.map((el) => el.style.gridRow)).size !== terms.length) throw new Error('two words share a row');
+
+  // Both sides have to be operable without a pointer. The definitions used to be plain divs
+  // with a click listener, so a keyboard user could pick a word and then had nothing to join
+  // it to — and the lesson will not advance past an unfinished board.
+  const notFocusable = [...terms, ...defs].filter((el) => el.tagName !== 'BUTTON');
+  if (notFocusable.length) {
+    throw new Error(notFocusable.length + ' match cell(s) are not buttons: ' + notFocusable.map((el) => el.tagName).join(', '));
+  }
 
   // A wrong pairing is refused, and costs a recorded mistake rather than a match.
   const qp = s.questProgress[window.questKey(found.mod.id, found.quest.id)];

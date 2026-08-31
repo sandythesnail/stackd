@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, TextInput } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Screen, Header, Txt, Card, Tag, Segmented, StackedAreaChart, Select, type SelectOption } from '@/components';
+import {
+  Screen, Header, Txt, Card, Tag, Segmented, StackedAreaChart, Select, type SelectOption,
+  DisclaimerStrip, DISCLAIMER_TOOLS,
+} from '@/components';
 import { colors, font, selectableInput, noFocusOutline } from '@/theme';
 import { useStore, type BudgetLineItem } from '@/store';
 import { computeCompoundGrowth, computeLoanMinPayment, computeLoanPayoff, SeriesPoint } from '@/simulators';
@@ -168,6 +171,9 @@ export default function Tools() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Txt variant="disp" style={{ fontSize: 23 }}>Tools</Txt>
         <Segmented options={['Budget', 'Loan Payoff', 'Interest']} value={tab} onChange={setTab} />
+        {/* Above the panels, not below them: these three print dollar figures, and a number on
+            a screen is the single most advice-shaped thing this app produces. */}
+        <DisclaimerStrip text={DISCLAIMER_TOOLS} style={{ marginTop: 0 }} />
         {tab === 2 ? <CompoundInterestPanel /> : tab === 1 ? <LoanPayoffPanel /> : <BudgetPanel />}
       </ScrollView>
     </Screen>

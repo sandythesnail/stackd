@@ -16278,9 +16278,10 @@ function questWasFlawless(qp) {
 function moduleQuestsFlawless(s, modId) {
   const mod = MODULES.find(m => m.id === modId);
   if (!mod || !hasQuest(mod)) return false;
-  // Includes the real-life sub-quest — it's a required 9th lesson now, so a module isn't
-  // truly flawless if that one wasn't either.
-  return moduleUnits(mod).every(q => questWasFlawless(s.questProgress[questKey(modId, q.id)]));
+  // The 8 main quests only. The real-life sub-quest is optional, and a badge that can only
+  // be won by doing an optional lesson is not optional — it would make the flawless badge
+  // unreachable for anyone who took the app at its word and skipped it.
+  return moduleRequiredUnits(mod).every(q => questWasFlawless(s.questProgress[questKey(modId, q.id)]));
 }
 
 // Sums every vocab term learned across every quest ever played (both Credit quests + Scams).
@@ -17977,12 +17978,13 @@ function nextModuleForUser() {
 }
 
 // Shared by the full Modules list and the Home preview tiles — how many of a module's
-// units (lessons/quests, including its real-life sub-quest) are done.
+// counted lessons are done. The optional real-life sub-quest is not one of them, so a
+// module reads 8/8 and "✓ Complete" whether or not the student did the guide.
 function moduleUnitsProgress(m) {
   const quest = hasQuest(m);
-  const totalUnits = quest ? moduleUnits(m).length : m.lessons.length;
+  const totalUnits = quest ? moduleRequiredUnits(m).length : m.lessons.length;
   const unitsDone = quest
-    ? moduleUnits(m).filter(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); }).length
+    ? moduleRequiredUnits(m).filter(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); }).length
     : m.lessons.filter((_, i) => !!state.completedLessons[`${m.id}_${i}`]).length;
   return { totalUnits, unitsDone, allDone: unitsDone === totalUnits };
 }
@@ -18069,18 +18071,20 @@ function renderModuleList(containerId) {
         });
         return { html, done };
       });
-      // The real-life sub-quest — a full, separate lesson tile (Lesson 9), matching how the
-      // mobile app surfaces it (RealLifeSubQuestRow, appended after the main list rather
-      // than nested inside whichever quest it's thematically attached to).
+      // The real-life sub-quest — a full, separate lesson tile, matching how the mobile app
+      // surfaces it (RealLifeSubQuestRow, appended after the main list rather than nested
+      // inside whichever quest it's thematically attached to).
       const sub = moduleSubQuest(m);
       let subHtml = '';
       if (sub) {
         const subQp = state.questProgress[questKey(m.id, sub.id)];
         const subDone = !!(subQp && subQp.done);
-        // Never numbered "Lesson 9". It is a required lesson — moduleUnits counts it and the
-        // module isn't complete without it — but it is a different KIND of lesson, and every
-        // other surface (the lesson path, Home's continue card, mobile's own list) calls it
-        // by name instead of giving it a number.
+        // Never numbered. It is a different KIND of lesson — a step-by-step guide to doing
+        // the thing for real — and it is OPTIONAL: moduleRequiredUnits leaves it out, so the
+        // module completes and masters at 8/8 without it. The kicker says so, and the line
+        // underneath says what skipping it costs (nothing) and what doing it pays (the same
+        // XP and coins as any lesson), because a student weighing up whether to go and open
+        // a real bank account deserves to know that before they tap, not after.
         // Mobile's RealLifeSubQuestRow: the same 40px node a lesson row carries (🎯, or ✓
         // once done), a kicker, the guide's own title, and a chevron — the module's pink
         // accent throughout, so it reads as a different KIND of lesson rather than as a
@@ -18088,8 +18092,9 @@ function renderModuleList(containerId) {
         subHtml = `<div class="lesson-tile quest-tile subquest-tile${subDone ? ' done' : ''}" data-module="${m.id}" data-quest="${sub.id}">
           <div class="lt-node lt-node-sub">${subDone ? '✓' : '🎯'}</div>
           <div class="lt-body">
-            <div class="lt-subquest-kicker">REAL-LIFE SUB-QUEST</div>
+            <div class="lt-subquest-kicker"><span class="lt-optional-chip">Optional</span>REAL-LIFE SUB-QUEST</div>
             <div class="lt-title">${sub.topic}</div>
+            <div class="lt-subquest-note">${subDone ? 'Done — nice work doing it for real.' : 'Skip it any time; the module still completes without it.'}</div>
           </div>
           <svg class="lt-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg>
         </div>`;
@@ -18250,8 +18255,8 @@ let surveyDraft = { moduleFamiliarity: {}, focusGoals: [], trackId: null };
 
 function isModuleFullyDone(m) {
   return hasQuest(m)
-    // Includes the real-life sub-quest (moduleUnits' 9th entry) — it's a required lesson now.
-    ? moduleUnits(m).every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
+    // The 8 main quests only — the real-life sub-quest is optional and never gates this.
+    ? moduleRequiredUnits(m).every(q => { const qp = state.questProgress[questKey(m.id, q.id)]; return !!(qp && qp.done); })
     : m.lessons.every((_, i) => !!state.completedLessons[`${m.id}_${i}`]);
 }
 
@@ -20042,26 +20047,20 @@ function renderHomeMascotCard(done) {
   }
 
   const quest = hasQuest(nextModule);
-  // moduleUnits includes the real-life sub-quest as the 9th (and required) lesson.
-  const totalUnits = quest ? moduleUnits(nextModule).length : nextModule.lessons.length;
+  // Counted lessons only — the optional real-life sub-quest is never what this card sends
+  // you to, and never part of the fraction it prints.
+  const totalUnits = quest ? moduleRequiredUnits(nextModule).length : nextModule.lessons.length;
   const doneUnits = quest
-    ? moduleUnits(nextModule).filter(q => state.questProgress[questKey(nextModule.id, q.id)]?.done).length
+    ? moduleRequiredUnits(nextModule).filter(q => state.questProgress[questKey(nextModule.id, q.id)]?.done).length
     : nextModule.lessons.filter((_, i) => !!state.completedLessons[`${nextModule.id}_${i}`]).length;
   // The NEXT lesson to do, by index — not the done COUNT above, which can differ once
   // lessons are finished out of order (mirrors mobile's nextLessonIndex vs moduleDone split).
   const nextIdx = quest
-    ? moduleUnits(nextModule).findIndex(q => !state.questProgress[questKey(nextModule.id, q.id)]?.done)
+    ? moduleRequiredUnits(nextModule).findIndex(q => !state.questProgress[questKey(nextModule.id, q.id)]?.done)
     : nextModule.lessons.findIndex((_, i) => !state.completedLessons[`${nextModule.id}_${i}`]);
   const nextLessonNum = Math.max(0, nextIdx) + 1;
   const nextPct = totalUnits ? Math.round((doneUnits / totalUnits) * 100) : 0;
-  // The real-life sub-quest is never numbered anywhere else — the Modules list and the
-  // lesson path both show it as its own unnumbered "Real-life sub-quest" row. Asked of the
-  // content rather than inferred from "it's the last one", which is only true while the
-  // sub-quest happens to be authored last (true today, enforced nowhere). Same split mobile
-  // makes with nextIsLifeTask.
-  const nextUnit = quest ? moduleUnits(nextModule)[Math.max(0, nextIdx)] : null;
-  const nextIsSubQuest = !!(nextUnit && nextUnit.parentQuestId);
-  const lessonCountLabel = nextIsSubQuest ? 'Real-life sub-quest' : `Lesson ${nextLessonNum} / ${totalUnits}`;
+  const lessonCountLabel = `Lesson ${nextLessonNum} / ${totalUnits}`;
 
   const speechMsg = satisfiedToday ? "Hammy's had a great day already, thanks to you! Keep it going?" : mood.msg;
   // "quest" is otherwise an internal term — Results, Modules and the lesson path all say
@@ -20095,8 +20094,10 @@ function renderHomeMascotCard(done) {
 function startNextLessonFor(mod) {
   dismissTourForLessonStart();
   if (hasQuest(mod)) {
-    // Includes the real-life sub-quest — once the 8 main quests are done, it's next.
-    const units = moduleUnits(mod);
+    // Counted lessons only. The optional real-life sub-quest is reached by choosing it from
+    // the module's own list or the lesson path, never by a generic "continue" — sending a
+    // student out to open a real bank account is not something to do to them by default.
+    const units = moduleRequiredUnits(mod);
     const target = units.find(q => !state.questProgress[questKey(mod.id, q.id)]?.done) || units[units.length - 1];
     startQuest(mod.id, target.id);
   } else {
@@ -22005,11 +22006,21 @@ function subQuestFor(mod, questId) { return (mod.quests || []).find(q => q.paren
 // The module's one real-life "step-by-step guide" quest, regardless of which main quest
 // it's thematically attached to (parentQuestId) — every module has exactly one.
 function moduleSubQuest(mod) { return (mod.quests || []).find(q => q.parentQuestId); }
-// Every real lesson in a quest-type module, in display order: the 8 main quests, then the
-// real-life sub-quest last — 9 total. The sub-quest is a required 9th lesson (module
-// completion/mastery, the "X/9" progress everywhere, and the "Continue quest" card's next-
-// lesson pointer all key off this), not bonus/optional content.
-function moduleUnits(mod) {
+// The lessons a module is MEASURED by: its 8 main quests, and nothing else. The real-life
+// sub-quest is optional — a student who doesn't want to go and open a bank account, file a
+// W-4 or ring a loan servicer can still finish, master and 100% the module without it — so
+// it is deliberately absent from every count that decides whether a module is done: module
+// completion/mastery, the "X/8" progress everywhere, the percentage badge, and the
+// "Continue lesson" card's next-lesson pointer. Finishing one still pays its XP and coins
+// and still counts as activity for the streak; it just can't hold a module hostage.
+// For the list a screen DISPLAYS (which does still show the sub-quest, marked optional),
+// use moduleAllUnits below.
+function moduleRequiredUnits(mod) {
+  return mainQuests(mod);
+}
+// Every lesson a module puts on screen, in display order: the 8 main quests, then the
+// optional real-life sub-quest last. Display only — never count against this (see above).
+function moduleAllUnits(mod) {
   const sub = moduleSubQuest(mod);
   return sub ? [...mainQuests(mod), sub] : mainQuests(mod);
 }
@@ -23120,7 +23131,14 @@ function renderMatchingChapter(chapter, mod, onDone) {
   });
 
   defs.forEach((d, i) => {
-    const card = document.createElement('div');
+    // A <button>, not a <div>. The left column has always been real buttons; the right was a
+    // div with a click listener, so a student on a keyboard could select a WORD and then had
+    // nothing to join it to — a matching chapter could not be finished at all without a
+    // pointer, and the lesson will not advance past an unfinished one. The shared
+    // .match-chip/.match-def-card rule already resets font-family and text-align, so this is
+    // the same card to look at.
+    const card = document.createElement('button');
+    card.type = 'button';
     card.className = 'match-def-card';
     card.style.gridColumn = '2';
     card.style.gridRow = String(i + 1);
@@ -23719,7 +23737,7 @@ function renderMythCardsChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
   clearQuestContinue();
   main.innerHTML = `
-    <p class="quest-prompt">Read the card, then swipe right if you think it's <strong>true</strong>, left if you think it's <strong>false</strong>.</p>
+    <p class="quest-prompt">Read the card, then swipe or drag it right if you think it's <strong>true</strong>, left if you think it's <strong>false</strong>. Or use the <strong>&larr;</strong> and <strong>&rarr;</strong> arrow keys.</p>
     <div class="myth-card-stack" id="myth-card-stack"></div>
     <div class="myth-next-wrap" id="myth-next-wrap"></div>
     <div class="myth-progress" id="myth-progress">Card 1 of ${chapter.cards.length}</div>`;
@@ -23758,6 +23776,14 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
     visible.forEach((card, i) => {
       const el = document.createElement('div');
       el.className = 'myth-card';
+      // Only the top card takes focus. The two behind it are decoration — a stack of three
+      // in the tab order would make a keyboard user press Tab three times to get past one
+      // question, and the lower two cannot be answered at all.
+      if (i === 0) {
+        el.tabIndex = 0;
+        el.setAttribute('role', 'group');
+        el.setAttribute('aria-label', `True or false: ${card.myth}. Press the right arrow key for true, the left arrow key for false.`);
+      }
       el.innerHTML = `
         <div class="myth-card-inner">
           <div class="myth-card-front">
@@ -23779,8 +23805,9 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
   }
 
   function wireDrag(el, card) {
-    let startX = 0, dx = 0, dragging = false;
+    let startX = 0, dx = 0, dragging = false, resolved = false;
     el.addEventListener('pointerdown', (e) => {
+      if (resolved) return;
       dragging = true; startX = e.clientX; el.classList.add('dragging');
       el.setPointerCapture(e.pointerId);
     });
@@ -23790,11 +23817,31 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
       el.style.transform = `translateX(${dx}px) rotate(${dx / 20}deg)`;
       el.style.borderColor = dx > 30 ? 'var(--green)' : dx < -30 ? 'var(--pink)' : '';
     });
+
+    // The keyboard path. The swipe is the point of this chapter and stays the headline
+    // gesture, but it was also the ONLY way to answer: the card was a plain <div> with a
+    // pointer handler on it, so a student working without a mouse or a touchscreen could not
+    // answer a single myth card — and a mythcards chapter has to be answered before the
+    // lesson will advance past it. That is a lesson nobody can finish, not a rough edge.
+    // Arrow keys because the card's own hint already says "← False · True →"; T/F because
+    // they're the obvious guess once you know the question.
+    el.addEventListener('keydown', (e) => {
+      if (resolved) return;
+      const guessedTrue = e.key === 'ArrowRight' || e.key === 't' || e.key === 'T';
+      const guessedFalse = e.key === 'ArrowLeft' || e.key === 'f' || e.key === 'F';
+      if (!guessedTrue && !guessedFalse) return;
+      e.preventDefault();
+      dx = guessedTrue ? 120 : -120;
+      dragging = true;
+      release();
+    });
+
     function release() {
       if (!dragging) return;
       dragging = false;
       el.classList.remove('dragging');
       if (Math.abs(dx) > 90) {
+        resolved = true;
         const guessedTrue = dx > 0;
         const guessedRight = guessedTrue === card.isTrue;
         el.style.transform = `translateX(${dx > 0 ? 40 : -40}px) rotate(${dx / 30}deg)`;
@@ -23833,6 +23880,17 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
             resetQuestScroll();
           }, 400);
         }, true);
+      } else if (Math.abs(dx) < 6) {
+        // A tap/click, not a short drag. The swipe is the only interaction in the player
+        // with no button behind it, which is deliberate — but it does mean a student who
+        // clicks the card the way they click everything else got nothing back, with no way
+        // to find out why. So the card demonstrates itself: it rocks right then left, the
+        // two directions it wants, and settles. It answers nothing — this is the gesture
+        // being taught, not performed. Ported from mobile's MythcardsView, which does
+        // exactly this for the same reason.
+        el.style.borderColor = '';
+        el.classList.add('nudging');
+        el.addEventListener('animationend', () => el.classList.remove('nudging'), { once: true });
       } else {
         el.style.transform = '';
         el.style.borderColor = '';

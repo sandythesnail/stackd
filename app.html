@@ -221,6 +221,16 @@
       <div class="page-body">
         <div id="modules-posttest"></div>
         <div class="modules-grid" id="modules-grid"></div>
+        <!-- The short form of the notice in Settings, repeated where the teaching actually
+             is. Every module below simplifies real rules — tax bands, APRs, aid deadlines —
+             to make them learnable, and a student who reads one and acts on it that afternoon
+             should have seen this without having to go looking for it. -->
+        <p class="disclaimer-strip">
+          <span class="disclaimer-strip-tag">Heads up</span>
+          Stacked teaches general concepts &mdash; it is not financial advice and we are not
+          financial advisers. Figures in lessons are simplified examples.
+          <a href="/terms.html" target="_blank" rel="noopener">Read the full disclaimer &rarr;</a>
+        </p>
       </div>
     </div>
 
@@ -240,6 +250,17 @@
           <button class="tools-tab" data-tab="loan" type="button">Loan Payoff</button>
           <button class="tools-tab" data-tab="compound" type="button">Interest</button>
         </div>
+        <!-- Above the tools, not below them: these three print dollar figures, and a number
+             on a screen is the single most advice-shaped thing this app produces. They work
+             only on what you type in, they reach no bank, and their output is an
+             illustration. -->
+        <p class="disclaimer-strip">
+          <span class="disclaimer-strip-tag">Heads up</span>
+          These are teaching calculators, not financial advice. They use only the numbers you
+          type in, connect to no bank, and their results are illustrations &mdash; not
+          predictions or a recommendation about your money.
+          <a href="/terms.html" target="_blank" rel="noopener">Read the full disclaimer &rarr;</a>
+        </p>
         <div class="tools-panel" id="tools-panel"></div>
       </div>
     </div>
@@ -296,6 +317,42 @@
         <h1 class="page-title">Settings</h1>
       </div>
       <div class="page-body">
+        <!-- First on the page, and deliberately louder than everything under it. Stacked is a
+             money app used by students who may act on what it says the same day, so the fact
+             that nobody here is a licensed adviser and nothing here is personal advice cannot
+             live only in a Terms page nobody opens. Mirrors mobile's DisclaimerCard. -->
+        <div class="referral-card disclaimer-card" id="disclaimer-card">
+          <div class="referral-card-head">
+            <h2>Education, not financial advice</h2>
+            <span class="section-sub">Please read this before acting on anything you learn here.</span>
+          </div>
+          <p class="disclaimer-body"><strong>We are not financial advisers.</strong> Stacked is a
+            financial-literacy learning app. Nobody behind it is a licensed financial adviser,
+            broker, tax preparer, accountant, attorney or lender, and using Stacked does not
+            create an adviser&ndash;client or fiduciary relationship of any kind.</p>
+          <p class="disclaimer-body"><strong>Nothing here is personalised advice.</strong> Stacked
+            knows nothing about your circumstances. Nothing in a lesson, quiz, tool, sub-quest or
+            message from Hammy is investment, tax, legal or credit advice, or a recommendation to
+            buy, sell or hold any financial product, take on any loan, or use any particular bank,
+            broker or service.</p>
+          <p class="disclaimer-body"><strong>The numbers are illustrations.</strong> Lessons use
+            simplified examples, and figures such as interest rates, tax bands, contribution
+            limits, aid deadlines and prices change and may be out of date. The Budget, Loan
+            Payoff and Interest tools work only on numbers you type in yourself, connect to no
+            bank or financial institution, and show an illustration &mdash; not a projection of
+            what will happen to you.</p>
+          <p class="disclaimer-body"><strong>Real-life sub-quests are optional.</strong> The
+            step-by-step guides walk through things like opening an account or filling in a W-4
+            so you know what to expect. They are general walkthroughs, not instructions for your
+            situation, and you never have to do one &mdash; every module completes without them.</p>
+          <p class="disclaimer-body"><strong>Your decisions are your own.</strong> Stacked is
+            provided &ldquo;as is&rdquo;, with no warranty that its content is complete, current or
+            correct. To the fullest extent the law allows, we accept no liability for any loss or
+            damage arising from decisions you make after using it. Before making a real financial
+            decision, talk to a qualified professional who can look at your actual situation.</p>
+          <a class="privacy-link" href="/terms.html" target="_blank" rel="noopener">Read the full Terms of Use &rarr;</a>
+        </div>
+
         <!-- The "Invite Friends" card that used to open this page is gone. Mobile removed
              its own copy when referrals were retired rather than reworked: the inbound half
              still works (a ?ref= link someone already has still pays out, see

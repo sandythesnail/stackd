@@ -466,18 +466,16 @@ function mainIndicesFor(moduleId: string) {
   return mainLessonAbsoluteIndices(moduleContentById(moduleId));
 }
 
-/** Where this module's real-life sub-quest sits in `lessons`, or -1 if it has none. Its own
- * completion lives in completedLifeTaskIds, but callers still need the index to open it. */
-function lifeTaskIndexFor(moduleId: string) {
-  const idx = moduleContentById(moduleId)?.lessons.findIndex((l) => l.isLifeTask) ?? -1;
-  return idx;
-}
-
-/** Every real lesson in a module: 8 main quests + the real-life sub-quest = 9. The
- * sub-quest is a required 9th lesson — a module isn't "done"/mastered until it's finished
- * too, same as any other lesson. */
+/** The lessons a module is MEASURED by: its 8 main quests, and nothing else.
+ *
+ * The real-life sub-quest is optional. A student who doesn't want to go and open a bank
+ * account, file a W-4 or ring a loan servicer can still finish, master and 100% the module
+ * without it, so it is deliberately absent from every count that decides whether a module is
+ * done — this total, moduleDoneCount, mastery, the progress bars, and nextLessonIndex.
+ * Finishing one still pays its XP and coins and still counts as activity for the streak (see
+ * completeLifeTask); it just can't hold a module hostage. */
 function moduleTotal(moduleId: string) {
-  return moduleContentById(moduleId)?.lessons.length ?? 0;
+  return mainIndicesFor(moduleId).length;
 }
 
 /** Adds one lesson's XP/graded results onto a module's running totals — see moduleStats. */
@@ -491,12 +489,16 @@ function accumulateModuleStats(
   };
 }
 
-/** How many of this module's 9 real lessons are done — the 8 main quests (distinct valid
- * indices in moduleProgress) plus the real-life sub-quest (completedLifeTaskIds). */
-function moduleDoneCount(moduleProgress: Record<string, number[]>, completedLifeTaskIds: string[], moduleId: string) {
+/** How many of this module's 8 counted lessons are done — distinct valid main-quest indices
+ * in moduleProgress. completedLifeTaskIds is deliberately NOT added in: the sub-quest is
+ * optional and counting it would push a module to 9/8 for the students who did it while
+ * capping everyone else at 8/8 anyway. See moduleTotal.
+ *
+ * The signature still takes completedLifeTaskIds so its callers (and isModuleMastered below)
+ * don't all have to change shape; it is unused on purpose. */
+function moduleDoneCount(moduleProgress: Record<string, number[]>, _completedLifeTaskIds: string[], moduleId: string) {
   const main = new Set(mainIndicesFor(moduleId));
-  const mainDone = new Set((moduleProgress[moduleId] ?? []).filter((i) => main.has(i))).size;
-  return mainDone + (completedLifeTaskIds.includes(moduleId) ? 1 : 0);
+  return new Set((moduleProgress[moduleId] ?? []).filter((i) => main.has(i))).size;
 }
 
 function isModuleMastered(moduleProgress: Record<string, number[]>, completedLifeTaskIds: string[], moduleId: string) {
@@ -605,9 +607,9 @@ type Ctx = {
   moduleDoneIndices: (moduleId: string) => number[];
   /** First not-yet-completed lesson index (the one to open for "continue"), or -1 if all done. */
   nextLessonIndex: (moduleId: string) => number;
-  /** Total real lessons in the module: 8 main quests + the real-life sub-quest = 9. The
-   * same number for both display ("X out of 9") and mastery/achievement gating — the
-   * sub-quest is a required 9th lesson, not a bonus extra. */
+  /** The lessons a module is measured by: its 8 main quests. The same number for both
+   * display ("X out of 8") and mastery/achievement gating. The real-life sub-quest is
+   * optional and is deliberately not one of them — see moduleTotal's own note. */
   moduleTotal: (moduleId: string) => number;
   moduleMastered: (moduleId: string) => boolean;
   /** 'done' once every lesson is complete, else 'active'. Nothing is level-gated —
@@ -912,12 +914,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       nextLessonIndex: (moduleId) => {
         const done = new Set(state.moduleProgress[moduleId] ?? []);
         for (const idx of mainIndicesFor(moduleId)) if (!done.has(idx)) return idx;
-        // Every main quest is done — the real-life sub-quest is next, unless it's already
-        // finished too, in which case nothing's left. Its REAL index, not the main-quest
-        // count: those coincide only while the sub-quest is the module's last lesson, and
-        // this value is handed straight to quest.tsx as a lessonIndex param.
-        const lifeIdx = lifeTaskIndexFor(moduleId);
-        return lifeIdx >= 0 && !state.completedLifeTaskIds.includes(moduleId) ? lifeIdx : -1;
+        // Every counted lesson is done, so there is nothing left to send anyone to. The
+        // optional real-life sub-quest is reached by choosing it from the module's own list,
+        // never by a generic "continue" — sending a student out to open a real bank account
+        // is not something to do to them by default.
+        return -1;
       },
       moduleTotal,
       moduleMastered: (moduleId) => isModuleMastered(state.moduleProgress, state.completedLifeTaskIds, moduleId),
@@ -1149,9 +1150,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const firstTime = !liveState.current.completedLifeTaskIds.includes(moduleId);
 
         setState((s) => {
-          // Now that the real-life sub-quest is a required 9th lesson, finishing it can
-          // itself be what pushes a module from not-mastered to mastered — same check
-          // completeLesson does, just keyed off completedLifeTaskIds instead of moduleProgress.
+          // Read before the update purely so the unlock-event branch below has something to
+          // compare against. The sub-quest is optional and no longer counts toward mastery,
+          // so finishing one can't be what masters a module — this is all but guaranteed to
+          // be the same value afterwards, and the branch is kept only so that a module
+          // somehow mastered mid-update still gets its unlock event rather than losing it.
           const wasMastered = isModuleMastered(s.moduleProgress, s.completedLifeTaskIds, moduleId);
           let next: AppState = {
             ...s,

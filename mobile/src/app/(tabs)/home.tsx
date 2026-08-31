@@ -12,7 +12,6 @@ import {
 import { useUser } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
 import { user, modules, type Module } from '@/data';
-import { moduleContentById } from '@/content';
 import { useStore, type AchievementView } from '@/store';
 import { LessonPath } from '@/lessonPath/LessonPath';
 import { authEnabled } from '@/lib/env';
@@ -228,11 +227,6 @@ export default function Home() {
   // First lesson not yet completed — progress is per-lesson now, so this can differ from
   // the done COUNT whenever lessons were finished out of order.
   const nextLesson = nextModule ? Math.max(0, nextLessonIndex(nextModule.id)) : 0;
-  // Ask the content whether this lesson IS the sub-quest, rather than inferring it from
-  // "it's the last one" — that arithmetic only held while the sub-quest was authored last in
-  // every module, which nothing enforces, and getting it wrong sends quest.tsx the wrong
-  // isLifeTask flag (wrong reward path, wrong resume behaviour) for an ordinary lesson.
-  const nextIsLifeTask = !!(nextModule && moduleContentById(nextModule.id)?.lessons[nextLesson]?.isLifeTask);
 
   // One mood per calendar day (todaysHammyMood), unless a lesson's already been finished
   // today — then Hammy's just happy (satisfied) about that instead. The copy here is
@@ -311,13 +305,12 @@ export default function Home() {
             <View style={{ marginTop: 14 }}>
               <View style={styles.questMeta}>
                 <Txt style={{ fontFamily: font.displayMed, fontSize: 14, color: colors.ink }}>{nextModule.name}</Txt>
-                {/* The real-life sub-quest is never called "Lesson N" anywhere else — the
-                    Modules tab and ModuleLessonList both show it as its own unnumbered
-                    "🎯 Real-life sub-quest" row below the 8 numbered lessons. This used to
-                    say "Lesson 9 / 9" here specifically, the one place a user would see it
-                    numbered like a regular lesson. */}
+                {/* Always a numbered lesson. nextLessonIndex only ever returns one of the 8
+                    counted lessons — the optional real-life sub-quest is reached from the
+                    module's own list, never from a generic "continue" — so this card can no
+                    longer land on it and call it "Lesson 9 / 9". */}
                 <Txt style={{ fontFamily: font.bold, fontSize: 12, color: colors.pinkDark }}>
-                  {nextIsLifeTask ? 'Real-life sub-quest' : `Lesson ${nextLesson + 1} / ${nextTotal}`}
+                  Lesson {nextLesson + 1} / {nextTotal}
                 </Txt>
               </View>
               <ProgressBar value={nextPct} tone="pink" />
@@ -328,10 +321,7 @@ export default function Home() {
               size="sm"
               onPress={() => router.push({
                 pathname: '/learn/quest',
-                params: {
-                  moduleId: nextModule.id, lessonIndex: String(nextLesson),
-                  ...(nextIsLifeTask ? { isLifeTask: '1' } : {}),
-                },
+                params: { moduleId: nextModule.id, lessonIndex: String(nextLesson) },
               })}
               style={{ marginTop: 13 }}
             />

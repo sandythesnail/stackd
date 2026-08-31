@@ -45,11 +45,10 @@ const STATE_LABEL: Record<NodeState, string> = {
   completed: 'COMPLETED',
   current: 'RECOMMENDED NEXT',
   available: 'NOT STARTED',
-  // Not "optional extra". It is required to finish the module in its entirety — moduleTotal
-  // counts it as the 9th lesson and isModuleMastered will not call a module done without it
-  // (see store.tsx's moduleDoneCount). Calling it optional told students they could skip the
-  // one lesson that stops the module completing, which is the opposite of true.
-  optional: 'REAL LIFE SUB-QUEST',
+  // It is genuinely optional — moduleTotal counts only the 8 main lessons, so a module
+  // completes and masters without this one (see store.tsx's moduleDoneCount) — and the label
+  // says both halves: that you can skip it, and what it actually is.
+  optional: 'OPTIONAL · REAL LIFE SUB-QUEST',
 };
 
 /** The hover card's much shorter wording, and the dot colour that carries it.
@@ -62,7 +61,7 @@ const STATE_TIP: Record<NodeState, { label: string; tone: string }> = {
   completed: { label: 'Completed', tone: colors.greenSoft },
   current: { label: 'Up next', tone: colors.green },
   available: { label: 'Not started', tone: colors.muted5 },
-  optional: { label: 'Real life sub-quest', tone: colors.reward },
+  optional: { label: 'Optional sub-quest', tone: colors.reward },
 };
 
 /** Hover-card width. Its height is measured rather than assumed — see HoverTip. */
@@ -167,24 +166,23 @@ export function LessonPath({ width }: { width: number }) {
         hook: lessons[lifeIdx].hook,
         isLifeTask: true,
         // The real-life step-by-step guide is the one genuinely aside lesson in the content
-        // (isLifeTask), so it carries the optional state rather than one being invented —
-        // but it can also BE the recommended next lesson, and that has to win.
+        // (isLifeTask), so it carries the optional state rather than one being invented. It
+        // can never be 'current' any more: nextLessonIndex stops at the 8 counted lessons, so
+        // the recommendation never lands here and the two surfaces (this path and Home's
+        // continue card) still can't point at different lessons — they simply both stop
+        // pointing anywhere once the counted lessons are done.
         //
-        // Once every main quest is done, nextLessonIndex points here. This node was hardcoded
-        // 'optional' regardless, so no node on the path carried 'current': the recommended
-        // halo, the label and the comet all vanished for the whole last lesson of a module,
-        // while Home's continue card directly above the path went on saying "Continue lesson
-        // · Real-life sub-quest". The two surfaces are supposed to be incapable of pointing
-        // at different lessons (that's why they share an ordering) and here they diverged.
-        //
-        // It keeps reading as "elsewhere" either way — it's `isLifeTask` (not its state) that
-        // puts it out on the dashed spur, further off the centre line than the wave would
-        // take it, and that styling is untouched by this.
-        state: lifeDone ? 'completed' : isRecommended(lifeIdx) ? 'current' : 'optional',
+        // It reads as "elsewhere" rather than "ahead" either way — it's `isLifeTask` (not its
+        // state) that puts it out on the dashed spur, further off the centre line than the
+        // wave would take it, so finishing it doesn't pull it back onto the main line.
+        state: lifeDone ? 'completed' : 'optional',
       });
     }
 
-    const doneCount = done.size + (lifeDone ? 1 : 0);
+    // The optional sub-quest is deliberately absent from both halves of this fraction: it is
+    // shown on the path but never counted, so an untouched guide can't hold a finished module
+    // at 8/9 and a finished one can't push it to 9/8.
+    const doneCount = done.size;
     const total = moduleTotal(m.id);
     return { module: m, nodes, done: doneCount, total, mastered: total > 0 && doneCount >= total };
     // eslint-disable-next-line react-hooks/exhaustive-deps
