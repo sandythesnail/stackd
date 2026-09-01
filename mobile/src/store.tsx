@@ -605,7 +605,12 @@ function computeMetAchievementIds(s: AppState): string[] {
   // slot that can actually still be furnished.
   const roomFull = ROOM_SLOTS.filter((slot) => slot !== 'plant').every((slot) => !!s.equippedRoom[slot]);
   if (roomFull) met.add('homebody');
-  if (masteredCount(s.moduleProgress, s.completedLifeTaskIds) === ALL_MODULE_IDS.length) met.add('stackd_star');
+  // "Master every module" — the same bar the eleven per-module badges are held to, not
+  // merely finishing all eleven. Left on masteredCount when those were fixed, which made it
+  // inconsistent with them inside this very function: a player could hold Stacked Star for
+  // mastering every module while holding none of the eleven module badges. The website has
+  // always read this one as every module ACED (MODULES.every(m => hasMasteredModule(...))).
+  if (ALL_MODULE_IDS.every((id) => moduleWasAced(s.flawlessLessons, id))) met.add('stackd_star');
   if (s.questBossesWon.includes('credit')) met.add('crisis_averted');
   if (s.questBossesWon.includes('scams')) met.add('fraud_fighter');
   if (s.questHintsUsed['credit::maya'] === 0) met.add('no_hints');

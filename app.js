@@ -16311,7 +16311,17 @@ function moduleQuestsFlawless(s, modId) {
 
 // Sums every vocab term learned across every quest ever played (both Credit quests + Scams).
 function totalTermsLearned(s) {
-  return Object.values(s.questProgress || {}).reduce((sum, qp) => sum + (qp.learnedTerms || []).length, 0);
+  // DISTINCT terms. This summed each quest's list, so a term taught in two different quests
+  // counted twice toward "Learn 15+ vocab terms" — 27 of the 662 terms in the content appear
+  // in more than one quest (Pay Stub, Self-Employment Tax, Lifestyle Inflation...), so a
+  // student could be handed Word Nerd for 14 words they had actually learned. Mobile counts
+  // the distinct set (termsLearned is built with a Set), which is also what the badge says.
+  const seen = new Set();
+  for (const qp of Object.values(s.questProgress || {})) {
+    for (const t of (qp.learnedTerms || [])) seen.add(typeof t === 'string' ? t : t && t.term);
+  }
+  seen.delete(undefined);
+  return seen.size;
 }
 
 // True only if that module's boss-challenge activity was finished on the optimal path at
