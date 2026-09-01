@@ -21936,6 +21936,11 @@ function buildQuestionBlock(q, els, onAnswered) {
   q.opts.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
+    // Dealt one at a time rather than landing as a block — mobile's staggered FadeInDown on
+    // the same list. It is 55ms apart, so the whole set is down well before anyone could have
+    // finished reading the stem; it is not a wait, it is the difference between a question
+    // being dealt and a question being pasted.
+    btn.style.animationDelay = (i * 55) + 'ms';
     btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
     btn.addEventListener('click', () => {
       const isCorrect = i === q.correct;
@@ -22319,13 +22324,20 @@ function renderChapter(mod, idx) {
     || (chapter.type === 'teach' && chapter.fullScreen)
     || chapter.type === 'story';
   questSide.style.display = ownsTheScreen && chapter.type !== 'hint' ? 'none' : 'flex';
-  // Centred with his bubble above him for the two chapter types that read as a scene rather
-  // than a question (the story's conversation is with him; Match It is a centred grid), and
-  // beside his bubble everywhere else. The drop classes push him down into the room the
-  // shortest chapter types leave spare, and Match It pulls him up tight under the bar —
-  // mobile's companionDrop / companionWrapRaised, applied to the same types.
-  questSide.className = 'quest-side'
-    + (chapter.type === 'story' || chapter.type === 'matching' ? ' centered' : '')
+  // Always centred: his bubble opens ABOVE him, on the full width of the lesson column, and
+  // he does not move when it appears or clears (the band above him is reserved — see
+  // .quest-side.centered .hammy-side-slot).
+  //
+  // This used to be the story and Match It only, with every other chapter putting the bubble
+  // BESIDE him. Beside meant two things: the bubble was only as wide as whatever was left
+  // over next to a pig, so a one-line remark wrapped into three down a narrow strip; and the
+  // same character spoke to you from two different places depending on which chapter you were
+  // on. One arrangement, and it is the roomier one.
+  //
+  // The drop classes push him further down into the room the shortest chapter types leave
+  // spare, and Match It pulls him up tight under the bar — mobile's companionDrop /
+  // companionWrapRaised, applied to the same types.
+  questSide.className = 'quest-side centered'
     + (chapter.type === 'matching' ? ' raised'
       : chapter.type === 'decision' ? ' drop-deep'
       : chapter.type === 'poll' ? ' drop-low'
@@ -23236,6 +23248,19 @@ function renderMatchingChapter(chapter, mod, onDone) {
         card.classList.add('matched');
         matchedTermEl.classList.remove('selected');
         matchedTermEl.classList.add('matched');
+        // Neither half answers a tap once it is joined up — mobile disables both chips of a
+        // matched pair. The click handlers already ignore a matched chip, but a button that
+        // still depresses under the finger says it did something.
+        card.disabled = true;
+        matchedTermEl.disabled = true;
+        // Both halves pop together, on the same beat — mobile's playPop. Recolouring two
+        // chips is easy to miss when your own hand is over one of them. Restarted rather than
+        // just added, so a fast run of matches animates every pair rather than only the first.
+        [card, matchedTermEl].forEach((el) => {
+          el.classList.remove('pop');
+          void el.offsetWidth;
+          el.classList.add('pop');
+        });
         matchedCount++;
         selectedTermEl = null;
         selectedPairIdx = null;
@@ -23812,7 +23837,7 @@ function renderMythCardsChapter(chapter, mod, onDone) {
   clearQuestContinue();
   main.innerHTML = `
     <p class="quest-prompt">Read the card, then swipe or drag it right if you think it's <strong>true</strong>, left if you think it's <strong>false</strong>. Or use the <strong>&larr;</strong> and <strong>&rarr;</strong> arrow keys.</p>
-    <div class="myth-card-stack" id="myth-card-stack"></div>
+    <div class="myth-card-wrap"><div class="myth-card-stack" id="myth-card-stack"></div></div>
     <div class="myth-next-wrap" id="myth-next-wrap"></div>
     <div class="myth-progress" id="myth-progress">Card 1 of ${chapter.cards.length}</div>`;
 
@@ -23832,6 +23857,11 @@ function renderMythCardsChapter(chapter, mod, onDone) {
     onDone();
   });
 }
+
+/** How far from centre a myth card is ever DRAWN, however far the pointer travels. See the
+ *  pointermove handler for why it is capped at all. Comfortably past the 90px commit
+ *  threshold, so a committing swipe still feels like it left. */
+const MYTH_MAX_TRAVEL = 130;
 
 // Swipeable myth/fact stack. Swiping commits a guess and flips the card to reveal the answer
 // immediately, but the card does NOT auto-advance — the user reads at their own pace and taps
@@ -23888,7 +23918,17 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
     el.addEventListener('pointermove', (e) => {
       if (!dragging) return;
       dx = e.clientX - startX;
-      el.style.transform = `translateX(${dx}px) rotate(${dx / 20}deg)`;
+      // The card is DRAWN no further than MYTH_MAX_TRAVEL from centre however far the pointer
+      // actually goes; `dx` itself is left alone, so the commit threshold and the direction
+      // still read the real gesture.
+      //
+      // .quest-body scrolls vertically, and a box that scrolls on one axis cannot be visible
+      // on the other — so it clips horizontally. A card dragged toward the edge of the column
+      // was being sliced off against it, which is the beige line down the side of the card
+      // mid-swipe. Capping the travel (with .myth-card-wrap reserving room either side)
+      // keeps the whole card on the page for the whole gesture, at any window width.
+      const drawn = Math.max(-MYTH_MAX_TRAVEL, Math.min(MYTH_MAX_TRAVEL, dx));
+      el.style.transform = `translateX(${drawn}px) rotate(${drawn / 20}deg)`;
       el.style.borderColor = dx > 30 ? 'var(--green)' : dx < -30 ? 'var(--pink)' : '';
     });
 
@@ -23918,7 +23958,7 @@ function initMythCardStack(container, cards, onCardResolved, onAllDone) {
         resolved = true;
         const guessedTrue = dx > 0;
         const guessedRight = guessedTrue === card.isTrue;
-        el.style.transform = `translateX(${dx > 0 ? 40 : -40}px) rotate(${dx / 30}deg)`;
+        el.style.transform = `translateX(${dx > 0 ? 40 : -40}px) rotate(${(dx > 0 ? 40 : -40) / 30}deg)`;
         el.classList.add('flipped');
 
         // Leads with the verdict, not the answer. The tag used to show the card's actual

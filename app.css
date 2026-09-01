@@ -162,7 +162,7 @@ body { background: var(--bg); min-height: 100vh; }
 .page-subtitle { font-size: 0.95rem; color: var(--text-mid); margin: 0; line-height: 1.5; }
 /* "7 / 11 done", on the same line as the page title and in the app's green — mobile's
    Modules head row, where the count is a peer of the heading rather than a subtitle. */
-.modules-done-count { font-size: 12px; font-weight: 700; color: var(--green); flex-shrink: 0; }
+.modules-done-count { font-size: 14px; font-weight: 700; color: var(--green); flex-shrink: 0; }
 .header-stats-col { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; }
 .home-header-icons { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; flex-shrink: 0; }
 
@@ -362,7 +362,7 @@ body { background: var(--bg); min-height: 100vh; }
    one place the two apps draw this chip at the same scale beside the same title. */
 .module-row-header .mod-icon { width: 42px; height: 42px; border-radius: 13px; font-size: 16px; }
 
-.card-badge { font-size: 0.68rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: var(--radius-sm); white-space: nowrap; }
+.card-badge { font-size: 0.8rem; font-weight: 700; padding: 0.28rem 0.7rem; border-radius: var(--radius-sm); white-space: nowrap; }
 .badge-done { background: var(--green-light); color: var(--green-dark); }
 .badge-xp   { background: var(--pink-light);  color: var(--pink-dark); }
 .badge-recommend { background: #FFEDB0; color: #8A6800; }
@@ -1150,6 +1150,17 @@ select.budget-input { cursor: pointer; }
 .option-btn.wrong { border-color: #D98A9E; background: #FBEEF2; }
 .option-btn.wrong .opt-letter { background: #D98A9E; border-color: #D98A9E; color: #fff; }
 .option-btn:disabled { cursor: default; }
+/* Dealt in, one after another — see buildQuestionBlock, which sets the per-option delay.
+   `backwards` so an option is invisible during its own delay rather than flashing at full
+   opacity first. */
+.quest-main .option-btn { animation: optionDeal 0.26s ease backwards; }
+@keyframes optionDeal {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .quest-main .option-btn { animation: none; }
+}
 
 /* FEEDBACK */
 .feedback-panel {
@@ -1210,12 +1221,23 @@ select.budget-input { cursor: pointer; }
 
    These two numbers are the whole change if the lesson should be wider or bigger again. */
 #screen-quest { --quest-w: 430px; --quest-scale: 1; }
-/* Laptop, then desktop — where the rest of the site runs to a 1200px page body, so the
-   lesson lands on the same measure the Home and Progress pages already use. */
-@media (min-width: 760px)  { #screen-quest { --quest-w: 700px;  --quest-scale: 1.10; } }
-@media (min-width: 1024px) { #screen-quest { --quest-w: 950px;  --quest-scale: 1.18; } }
-@media (min-width: 1400px) { #screen-quest { --quest-w: 1240px; --quest-scale: 1.25; } }
-@media (min-width: 1800px) { #screen-quest { --quest-w: 1440px; --quest-scale: 1.32; } }
+/* Laptop, then desktop. A share of the viewport with a ceiling, rather than a fixed pixel
+   width per breakpoint: the fixed widths were chosen against the 1200px page body the rest
+   of the site uses, which left a lesson as a column down the middle with a wide margin of
+   empty cream either side of it on anything bigger. The lesson is not a document — it is
+   cards, options and grids, and those are what fill a width. The ceilings keep it from
+   running away on an ultrawide, and prose inside it is capped separately (see the measure
+   block below), so widening the column spends the room on the boards and the buttons rather
+   than on hundred-character lines.
+
+   Widening is also the cheapest way to cut scrolling: a wider line wraps less, so the same
+   step gets SHORTER. That is why the width climbs faster than the scale here, and why the
+   scale is now a touch lower at the top end than it was — height is the axis that costs a
+   scroll (see the max-height rules below). */
+@media (min-width: 760px)  { #screen-quest { --quest-w: min(94vw, 780px);  --quest-scale: 1.10; } }
+@media (min-width: 1024px) { #screen-quest { --quest-w: min(94vw, 1180px); --quest-scale: 1.16; } }
+@media (min-width: 1400px) { #screen-quest { --quest-w: min(93vw, 1560px); --quest-scale: 1.20; } }
+@media (min-width: 1800px) { #screen-quest { --quest-w: min(92vw, 1840px); --quest-scale: 1.24; } }
 /* Height is what actually bounds the scale, not width. A lesson is a fixed-height column —
    header, scrolling body, bottom bar — and the window does not get taller when it gets
    wider: a 1440x780 laptop has barely more vertical room than the phone this was drawn for.
@@ -1435,7 +1457,7 @@ select.budget-input { cursor: pointer; }
 .explainback-definition,
 .poll-explanation,
 .microsim-result,
-.feedback-panel.kc-panel .feedback-exp { max-width: 88ch; }
+.feedback-panel.kc-panel .feedback-exp { max-width: 96ch; margin-left: auto; margin-right: auto; }
 
 /* ── Two across, once there is room for two ──
    The other half of filling a wide column. A stack of full-width buttons carrying four words
@@ -1482,16 +1504,20 @@ select.budget-input { cursor: pointer; }
   display: flex; flex-direction: row; align-items: center; gap: 10px;
   padding: 16px 0 6px; text-align: left;
 }
-/* The centred arrangement — the story's dialogue and Match It, the two chapter types that
-   read as a scene rather than a question. column-reverse rather than a DOM reorder, so the
-   bubble lands above the avatar without the persistent Hammy node ever moving. */
-.quest-side.centered { flex-direction: column-reverse; align-items: center; padding: 10px 0 6px; text-align: center; }
+/* The centred arrangement, which is now every chapter's arrangement (renderChapter always
+   adds the class). column-reverse rather than a DOM reorder, so the bubble lands ABOVE the
+   avatar without the persistent Hammy node ever moving.
+   It used to be the story and Match It only, with everything else putting the bubble beside
+   him. Beside meant the bubble was as narrow as whatever was left over next to a pig, and it
+   meant the two chapter kinds spoke to you from two different places. Above him, on the full
+   width of the column, is one arrangement and the roomier one. */
+.quest-side.centered { flex-direction: column-reverse; align-items: center; padding: 26px 0 6px; text-align: center; }
 /* Short chapter types leave a lot of room under the bottom bar and read as top-heavy at the
    default padding, so they drop Hammy further down the screen — mobile's companionWrapLow /
    Lowest / Deep, applied to the same three types. */
-.quest-side.drop-low { padding-top: 28px; padding-bottom: 10px; }
-.quest-side.drop-lowest { padding-top: 40px; padding-bottom: 12px; }
-.quest-side.drop-deep { padding-top: 40px; padding-bottom: 12px; }
+.quest-side.drop-low { padding-top: 48px; padding-bottom: 10px; }
+.quest-side.drop-lowest { padding-top: 60px; padding-bottom: 12px; }
+.quest-side.drop-deep { padding-top: 60px; padding-bottom: 12px; }
 /* Match It pulls him up tight under the progress bar instead. */
 .quest-side.raised { padding-top: 0; padding-bottom: 0; }
 .hammy-side-avatar { position: relative; flex-shrink: 0; }
@@ -1874,10 +1900,27 @@ select.budget-input { cursor: pointer; }
    which made the content the user had just got right the least legible thing on the screen
    (and put it under WCAG AA) — mobile's own 0.6 opacity is deliberately not ported, for the
    same reason. Text stays at full contrast; only the border, the fill and the check change. */
+/* Every chip the same height, across BOTH columns — mobile's maxChipH. A one-word term sat
+   in a visibly smaller pill than the full-sentence definition beside it, which reads as two
+   ragged lists rather than as a board with two sides to join up. The rows already line up
+   (each pair shares a grid row); this makes the chips themselves match. */
+.match-grid { grid-auto-rows: 1fr; }
+.match-chip, .match-def-card { height: 100%; }
 .match-chip.matched,
 .match-def-card.matched {
   border-color: var(--green); border-width: 2px; background: var(--green-pale);
   color: var(--text); cursor: default;
+}
+/* A match pops both halves of the pair at once — mobile's playPop, which exists because
+   recolouring two chips is easy to miss when your own hand is over one of them. */
+.match-chip.pop, .match-def-card.pop { animation: matchPop 0.34s cubic-bezier(0.34, 1.4, 0.5, 1); }
+@keyframes matchPop {
+  0% { transform: scale(1); }
+  38% { transform: scale(1.09); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .match-chip.pop, .match-def-card.pop { animation: none; }
 }
 .match-chip.matched::after,
 .match-def-card.matched::after {
@@ -1990,7 +2033,22 @@ select.budget-input { cursor: pointer; }
 /* Explicit width (not just max-width) because its only children are position:absolute —
    as a flex item (quest-main is now a centering flex column) an element with no in-flow
    content has no intrinsic size to stretch from and collapses to zero width otherwise. */
-.myth-card-stack { position: relative; width: 340px; height: 320px; max-width: 100%; margin: 0 auto 0.4rem; touch-action: pan-y; flex-shrink: 0; }
+/* Room either side for the card to travel into.
+   .quest-body scrolls vertically, and a box that scrolls on one axis cannot be `visible` on
+   the other — so it clips horizontally, and a card dragged toward the edge of the column was
+   sliced off against it: the "beige line" down the side of the card mid-swipe. The stack is
+   the same size as before; it now reserves the swipe's travel around itself so the card has
+   somewhere to go that is still on the page. Paired with a cap on how far a drag can actually
+   translate the card (see wireDrag in app.js), which is what makes this enough on a narrow
+   screen too. */
+.myth-card-stack {
+  position: relative; width: 340px; height: 320px; max-width: 100%;
+  margin: 0 auto 0.4rem; touch-action: pan-y; flex-shrink: 0;
+}
+.myth-card-wrap {
+  width: 100%; display: flex; justify-content: center;
+  padding: 0 clamp(0px, 12vw, 150px);
+}
 .myth-card {
   position: absolute; inset: 0; cursor: grab; perspective: 1000px;
   transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); will-change: transform;
@@ -3045,14 +3103,18 @@ select.budget-input { cursor: pointer; }
 
 .mrh-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .mrh-info { flex: 1; min-width: 0; }
+/* Sized for the page it is on, not for the phone the layout was ported from. Every figure in
+   this block was a mobile metric (14.5px titles, 11.5px descriptions, 10.5px section counts)
+   sitting in a 1200px desktop column, where they read as small print rather than as the main
+   list of the app. Mobile keeps its own values; these are the same design one step up. */
 .mrh-title {
   font-family: var(--font-display);
-  font-size: 14.5px; font-weight: 800; color: var(--text);
+  font-size: 17px; font-weight: 800; color: var(--text);
 }
 /* One line while the row is closed, so eleven of them stay scannable; two once it is open,
    where there is room for the whole sentence. Mobile's `numberOfLines={isOpen ? 2 : 1}`. */
 .mrh-desc {
-  font-size: 11.5px; font-weight: 500; color: var(--text-soft); line-height: 1.45;
+  font-size: 13.5px; font-weight: 500; color: var(--text-soft); line-height: 1.5;
   margin-top: 2px;
   display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
   overflow: hidden;
@@ -3098,12 +3160,12 @@ select.budget-input { cursor: pointer; }
   border-bottom: 1.5px solid #EFEFE7;
 }
 .lsh-label {
-  font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
   color: var(--pink-dark);
 }
 .lsh-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .lsh-meta {
-  font-size: 10.5px; font-weight: 800; letter-spacing: 0.3px; color: var(--pink-dark);
+  font-size: 12px; font-weight: 800; letter-spacing: 0.3px; color: var(--pink-dark);
 }
 /* Pink like the label beside it, and rotated rather than swapped for a second glyph — the
    same Feather chevron mobile turns from -90deg to 0. */
@@ -3147,9 +3209,9 @@ select.budget-input { cursor: pointer; }
 .lt-body { flex: 1; min-width: 0; }
 .lt-title {
   font-family: var(--font-display);
-  font-size: 14px; font-weight: 800; color: var(--text);
+  font-size: 16.5px; font-weight: 800; color: var(--text);
 }
-.lt-note { font-size: 12px; font-weight: 700; color: var(--green); margin-top: 1px; }
+.lt-note { font-size: 13.5px; font-weight: 700; color: var(--green); margin-top: 2px; }
 
 /* The row's own CTA. Mobile's Button variant="pink" size="sm": a face on a solid darker
    bezel, which here is a hard 2px offset shadow rather than a second element. */
@@ -3177,7 +3239,7 @@ select.budget-input { cursor: pointer; }
 .subquest-tile.done:hover { background: #E2EEDE; }
 .subquest-tile.done .lt-node-sub { background: var(--green); }
 .lt-subquest-kicker {
-  font-size: 9.5px; font-weight: 800; letter-spacing: 0.5px; color: var(--pink-dark);
+  font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--pink-dark);
   display: flex; align-items: center; gap: 6px;
 }
 /* Says the quiet part first. The kicker alone names the KIND of lesson this is; the chip
@@ -3185,13 +3247,13 @@ select.budget-input { cursor: pointer; }
    find out from a progress bar. Solid rather than outlined so it survives the pink tile
    behind it at 9.5px. */
 .lt-optional-chip {
-  display: inline-block; padding: 2px 7px; border-radius: 999px;
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
   background: var(--pink-dark); color: #fff;
-  font-size: 9px; font-weight: 800; letter-spacing: 0.4px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.4px;
 }
 .subquest-tile.done .lt-optional-chip { background: var(--green-dark); }
 .lt-subquest-note {
-  margin-top: 3px; font-size: 12px; font-weight: 600; color: var(--pink-dark);
+  margin-top: 3px; font-size: 13.5px; font-weight: 600; color: var(--pink-dark);
   opacity: 0.85; line-height: 1.35;
 }
 .subquest-tile.done .lt-subquest-note { color: var(--green-dark); }
@@ -3202,6 +3264,19 @@ select.budget-input { cursor: pointer; }
 .subquest-tile.done .lt-chevron { color: var(--green-dark); }
 
 .icon-coin, .icon-diamond, .icon-gift { vertical-align: -0.15em; flex-shrink: 0; }
+
+/* A picked boss move, and any other option-style card, gets the app's own green ring rather
+   than the user agent's default focus outline — which on these dark-bordered cards drew a
+   hard black rectangle that read as an error state on the answer the student had just chosen.
+   :focus-visible only, so a mouse click leaves no ring behind while a keyboard user keeps
+   one. The selected state itself is carried by .selected's border and fill, as before. */
+.boss-choice-card:focus { outline: none; }
+.boss-choice-card:focus-visible,
+.option-btn:focus-visible,
+.match-chip:focus-visible,
+.match-def-card:focus-visible {
+  outline: 3px solid var(--green); outline-offset: 2px;
+}
 
 /* ─── SIDEBAR COINS ─── */
 /* These two are the shop's entire currency, so they get real size and spacing rather than
@@ -3987,6 +4062,12 @@ select.budget-input { cursor: pointer; }
 .dr-missed   { background: #F3F1EA; border-color: #E8E4D9; }
 .dr-today    { background: #FFF9E6; border-color: #F0C22E; border-width: 2.5px; }
 .dr-upcoming { background: #fff; border-color: var(--border); }
+/* A day that is behind you. The gift is already drawn in grey (see the tile builder); this
+   settles the rest of the tile down with it so today's is the one thing on the calendar
+   asking to be looked at. Deliberately a light touch and NOT applied to 'upcoming': a
+   dimmed future day is indistinguishable from a locked one, and nothing here is locked. */
+.dr-opened { opacity: 0.62; }
+.dr-opened .dr-day { color: #A39D8F; }
 
 .dr-day { font-size: 0.5rem; font-weight: 800; letter-spacing: 0.05em; color: #8A9B86; }
 .dr-missed .dr-day { color: #A39D8F; }
@@ -4102,10 +4183,22 @@ select.budget-input { cursor: pointer; }
 .hammy-side-slot { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
 /* Stacked above Hammy in the centred arrangement, where he has no width to hide the bubble
    in — so there the height IS reserved, and the bubble is taken out of flow inside it. */
+/* A reserved band, so a message appearing or clearing cannot move Hammy or anything below
+   him — the bubble is taken out of flow inside it. Two lines' worth at the wider measure
+   below, which is what the longest reaction now needs. */
 .quest-side.centered .hammy-side-slot {
-  flex: none; width: 100%; height: 71px; align-items: flex-end; justify-content: center;
+  flex: none; width: 100%; height: 78px; align-items: flex-end; justify-content: center;
 }
-.quest-side.centered .hammy-side-msg { position: absolute; bottom: 13px; left: 20px; right: 20px; max-width: 300px; margin: 0 auto; }
+/* Spans the lesson column rather than sitting in a 300px ribbon in the middle of it. 300px
+   was the width of the phone's, kept when this arrangement was for two chapter types; now
+   that everything Hammy says arrives here, a remark that fits on one line across the column
+   was being broken into three down a narrow strip. Still capped in characters so it cannot
+   become a single very long line on a wide monitor. */
+.quest-side.centered .hammy-side-msg {
+  position: absolute; bottom: 13px; left: 20px; right: 20px;
+  max-width: min(72ch, 100%); margin: 0 auto;
+  font-size: 15px; padding: 10px 16px;
+}
 
 /* The Look back pill: one fixed-size control, whatever is behind it. */
 /* Mobile's lookBackBtn: compact enough to leave the centred action button its full width

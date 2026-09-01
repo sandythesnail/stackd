@@ -184,6 +184,15 @@ function DayTile({
   // rather than one: face-down (a gift), then collected. Every other state maps straight to
   // a static style.
   const state = isToday && !revealed ? 'today' : isToday ? 'claimed' : day.state;
+  /* A day already dealt with — collected, or gone by unclaimed. Its gift is drawn in grey and
+     the tile settles back, so today's is the one thing on the calendar asking to be looked at.
+     Only 'missed' used to be greyed, so a week in progress showed four or five brightly
+     coloured presents wearing a tick and no way to tell at a glance which was today's.
+     Today's own tile is excluded whatever happens to it while the modal is open: its cover is
+     mid-reveal at that point, and having it turn grey as it opens reads as the reward being
+     taken away. Deliberately NOT applied to 'upcoming' either — a dimmed future day is
+     indistinguishable from a locked one, and nothing here is locked. */
+  const opened = !isToday && (state === 'claimed' || state === 'missed');
 
   // A slow breath on the tile that's waiting to be opened, for the same reason the tour's
   // ring pulses: on a grid of seven near-identical tiles, movement is what says "this one".
@@ -214,7 +223,7 @@ function DayTile({
 
   const isTodayTile = isToday;
   return (
-    <Reanimated.View style={[styles.tile, TILE_STYLE[state], { flex }, isTodayTile && pulseStyle]}>
+    <Reanimated.View style={[styles.tile, TILE_STYLE[state], { flex }, opened && styles.tileOpened, isTodayTile && pulseStyle]}>
       <Txt style={[styles.tileDay, state === 'missed' && styles.tileDayMissed]}>DAY {day.day}</Txt>
 
       {isTodayTile ? (
@@ -239,7 +248,7 @@ function DayTile({
             {/* Present only, no amount. Printing every day's payout up front turned a week of
                 presents back into a price list, and it spoiled the one tile that is supposed
                 to be worth opening. What you get is revealed when you claim it. */}
-            <Gift size={30} {...(state === 'missed' ? GIFT_MISSED : GIFT_COLORS[(day.day - 1) % GIFT_COLORS.length])} />
+            <Gift size={30} {...(opened ? GIFT_MISSED : GIFT_COLORS[(day.day - 1) % GIFT_COLORS.length])} />
           </View>
         </View>
       )}
@@ -275,6 +284,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', minHeight: 70,
   },
   tileDay: { fontFamily: font.extra, fontSize: 9, letterSpacing: 0.4, color: colors.muted4 },
+  /** Laid over the state style for a day that is behind you — see `opened`. */
+  tileOpened: { opacity: 0.62 },
   tileDayMissed: { color: colors.lockText },
   // Fixed height so the crossfading layers below can be absolutely positioned without the
   // tile collapsing around them — and tall enough for the bigger presents, which at 30-34px

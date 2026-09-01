@@ -209,7 +209,15 @@ function renderDailyRewards(modal, st) {
     // Today's tile is the only one that changes while the modal is open, and it has two looks
     // rather than one: face-down (a present), then collected.
     const look = isToday && !st.collected ? 'today' : isToday ? 'claimed' : d.state;
-    const colors = look === 'missed' ? GIFT_MISSED : GIFT_COLORS[(d.day - 1) % GIFT_COLORS.length];
+    /* A day already dealt with — collected, or gone by unclaimed — is drawn in grey.
+       Only 'missed' used to be, so a week in progress showed four or five brightly coloured
+       presents with a tick on them and no way to tell at a glance which one was actually
+       today's. The tick says "done"; the colour should not go on saying "open me".
+       Today's own tile keeps its colour whatever happens to it while the modal is open:
+       its cover is mid-reveal at that point (see the two stacked layers below), and having
+       it turn grey as it opens reads as the reward being taken away. */
+    const opened = !isToday && (look === 'claimed' || look === 'missed');
+    const colors = opened ? GIFT_MISSED : GIFT_COLORS[(d.day - 1) % GIFT_COLORS.length];
     const big = d.day === DAILY_REWARD_CYCLE_DAYS;
 
     let face;
@@ -229,7 +237,7 @@ function renderDailyRewards(modal, st) {
       face = '<span class="dr-layer">' + giftSvg(30, colors) + '</span>';
     }
 
-    return '<div class="dr-tile dr-' + look + (big ? ' dr-big' : '') + (isToday ? ' dr-today-tile' : '') +
+    return '<div class="dr-tile dr-' + look + (opened ? ' dr-opened' : '') + (big ? ' dr-big' : '') + (isToday ? ' dr-today-tile' : '') +
       (isToday && st.collected ? ' dr-revealed' : '') + '">' +
       '<span class="dr-day">DAY ' + d.day + '</span>' +
       '<span class="dr-face">' + face + '</span>' +
