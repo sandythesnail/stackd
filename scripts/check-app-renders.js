@@ -490,6 +490,76 @@ step('a blob with the wrong shape in it is repaired, not trusted', () => {
   s.questProgress = JSON.parse(before);
 });
 
+// 8c. "Ace all 8 lessons" has to mean it.
+//
+// The mastery badges read every finished lesson's stored analytics back and ask whether the
+// run was perfect. Three ways that used to answer yes when it shouldn't: an empty record (what
+// a lesson finished on the phone syncs over as), a run whose only misses are `checks` (the
+// vocab true/falses, the boss battle, the price guess — seven of the nine graded chapter
+// kinds), and a poll counted twice.
+console.log('\naced means aced');
+function questRecord(analytics) {
+  return {
+    chapterIdx: 99, dashboard: {}, chapterScore: 0, chapterTotal: 0, streak: 0, done: true,
+    learnedTerms: [], hintsUsed: 0, xpEarned: 30, isReplay: false,
+    analytics: { knowledgeCheck: [], mythCards: [], polls: [], checks: [], matchingMistakes: 0, explainback: null, decisions: [], bossChoice: null, ...analytics },
+  };
+}
+/** Writes the same record over every main quest of `modId`, and asks for the badge verdict. */
+function masteredWith(modId, analytics) {
+  const mod = api.MODULES.find((m) => m.id === modId);
+  for (const q of window.mainQuests(mod)) s.questProgress[window.questKey(modId, q.id)] = questRecord(analytics);
+  return window.moduleQuestsFlawless(s, modId);
+}
+step('a lesson with no record of how it went is not an ace', () => {
+  const before = JSON.stringify(s.questProgress);
+  // Exactly what mobileToWeb's finishedQuestRecord writes: done, with EMPTY_ANALYTICS.
+  if (masteredWith('taxes', {})) {
+    throw new Error('a module completed with no graded record at all was called flawless');
+  }
+  s.questProgress = JSON.parse(before);
+});
+step('every graded moment counts, not just the Quick Check', () => {
+  const before = JSON.stringify(s.questProgress);
+  // Knowledge check perfect, and every other graded moment in the lesson wrong.
+  const onlyChecksWrong = {
+    knowledgeCheck: [{ question: 'q', isCorrect: true }],
+    checks: [{ label: 'a vocab check', isCorrect: false }, { label: 'the boss battle', isCorrect: false }],
+  };
+  if (masteredWith('taxes', onlyChecksWrong)) {
+    throw new Error('a run that got every vocab check and the boss battle wrong was called flawless');
+  }
+  // A myth card missed is still a miss, and so is a botched matching board.
+  if (masteredWith('taxes', { knowledgeCheck: [{ question: 'q', isCorrect: true }], mythCards: [{ myth: 'm', guessedRight: false }] })) {
+    throw new Error('a missed myth card was not counted');
+  }
+  if (masteredWith('taxes', { knowledgeCheck: [{ question: 'q', isCorrect: true }], matchingMistakes: 2 })) {
+    throw new Error('a botched matching board was not counted');
+  }
+  s.questProgress = JSON.parse(before);
+});
+step('a genuinely perfect run still earns it', () => {
+  const before = JSON.stringify(s.questProgress);
+  const perfect = {
+    knowledgeCheck: [{ question: 'q', isCorrect: true }],
+    mythCards: [{ myth: 'm', guessedRight: true }],
+    // A poll lands in BOTH polls and checks (see renderPollChapter); counting it twice must
+    // not change the verdict either way.
+    polls: [{ statement: 'p', guessedRight: true }],
+    checks: [{ label: 'p', isCorrect: true }, { label: 'the boss battle', isCorrect: true }],
+  };
+  if (!masteredWith('taxes', perfect)) throw new Error('a perfect run did not earn the badge');
+  // And the badge itself is actually handed over, not merely computed.
+  s.unlockedAchievements = [];
+  s.claimedBadgeRewards = [];
+  const got = window.checkAchievementsAndAnnounce() || [];
+  const ids = got.map ? got.map((a) => a.id || a) : [];
+  if (!s.unlockedAchievements.includes('tax_ready') && !ids.includes('tax_ready')) {
+    throw new Error('a perfect Taxes module did not unlock Tax Ready');
+  }
+  s.questProgress = JSON.parse(before);
+});
+
 // 9. The badge ceiling has to be a real one.
 console.log('\nbadge ceiling');
 step('every badge on the grid can actually be won', () => {

@@ -113,6 +113,22 @@ shots.modules = { w: 1100, h: 1500, body: '<div class="app-main"><div id="page-m
 // Two screens that are mostly prose rather than gameplay, and are where the app's legal and
 // data notices live — the kind of thing that is easy to break and impossible to notice
 // without looking at it.
+// The three remaining full pages. Progress and Badges are dense, mostly-generated layouts
+// (a chart, eleven bars, a grid of medals) and Shop is the widest grid in the app — all three
+// are places a spacing or wrapping mistake hides until somebody looks.
+window.showPage('progress');
+window.renderProgressPage();
+shots.progress = { w: 1100, h: 2000, body: '<div class="app-main"><div id="page-progress" class="page active">' + window.document.getElementById('page-progress').innerHTML + '</div></div>' };
+
+window.showPage('badges');
+window.renderBadgesPage();
+shots.badges = { w: 1100, h: 1600, body: '<div class="app-main"><div id="page-badges" class="page active">' + window.document.getElementById('page-badges').innerHTML + '</div></div>' };
+
+window.showPage('shop');
+window.eval("shopActiveTab = 'boutique'");
+window.renderShopPage();
+shots.shop = { w: 1100, h: 1600, body: '<div class="app-main"><div id="page-shop" class="page active">' + window.document.getElementById('page-shop').innerHTML + '</div></div>' };
+
 window.showPage('tools');
 window.renderToolsPage();
 shots.tools = { w: 1100, h: 1400, body: '<div class="app-main"><div id="page-tools" class="page active">' + window.document.getElementById('page-tools').innerHTML + '</div></div>' };

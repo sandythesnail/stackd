@@ -16266,13 +16266,38 @@ function hasMasteredModule(s, modId) {
   });
 }
 
+/** Was this lesson answered perfectly?
+ *
+ * Asked of questTally — the same count the results screen printed at the top of this very
+ * lesson — plus the matching board, which records its misses in a counter of its own rather
+ * than as graded moments. It used to run its own tally, and that tally was wrong three
+ * separate ways:
+ *
+ *  1. It never looked at `checks`, which is where seven of the nine graded chapter kinds
+ *     land: every vocab true/false, the price guess, spot-the-red-flag, inspect-the-link,
+ *     explain-back and the boss battle. A student could get every one of those wrong and
+ *     still be "flawless" on the strength of the knowledge check alone. buildQuestReport and
+ *     questTally were both fixed to count `checks`; this was left behind, so the badge and
+ *     the score on screen were reading two different sets of answers.
+ *
+ *  2. It counted `polls` separately, which double-counts — a poll records into `checks` too
+ *     (see renderPollChapter) — and questTally deliberately leaves `polls` out for exactly
+ *     that reason.
+ *
+ *  3. `.every()` on an empty array is true, so a record with NO analytics at all came back
+ *     flawless. That is not a hypothetical: mobileToWeb writes finishedQuestRecord with
+ *     EMPTY_ANALYTICS for every lesson finished on the phone (mobile keeps no per-lesson
+ *     analytics once a lesson is done), so every module completed on mobile arrived here
+ *     looking like a perfect run and handed over its mastery badge — the "Ace all 8 lessons"
+ *     badges, and Stackd Star and Grandmaster behind them — for work that was never aced.
+ *     questTally already treats "nothing graded" as not-all-right (`total > 0 && ...`); this
+ *     now inherits that, so no record is flawless without evidence that it was.
+ *
+ * Every main quest in the content has at least two graded moments (the thinnest is
+ * psychology/automate_habits), so requiring evidence cannot make a badge unwinnable. */
 function questWasFlawless(qp) {
   if (!qp || !qp.done) return false;
-  const a = qp.analytics;
-  return a.knowledgeCheck.every(x => x.isCorrect)
-    && a.mythCards.every(x => x.guessedRight)
-    && a.polls.every(x => x.guessedRight)
-    && (a.matchingMistakes || 0) === 0;
+  return questTally(qp).allRight && (qp.analytics.matchingMistakes || 0) === 0;
 }
 
 function moduleQuestsFlawless(s, modId) {
@@ -16309,27 +16334,27 @@ function bossChallengeOptimal(s, modId) {
 // a hard optional challenge. Gold = a sustained or precise behavioral bar. Diamond = the
 // small handful of genuinely ultra-hard, multi-week or "beat everything" achievements.
 const ACHIEVEMENTS = [
-  { id: 'first_paycheck', tier: 'bronze', color: '#3FA65C', label: 'First Paycheck',    desc: 'Ace every lesson in the Earning module.', check: s => hasMasteredModule(s, 'earning'),
+  { id: 'first_paycheck', tier: 'bronze', color: '#3FA65C', label: 'First Paycheck',    desc: 'Ace all 8 lessons in the Earning module.', check: s => hasMasteredModule(s, 'earning'),
     icon: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>' },
-  { id: 'budget_boss', tier: 'bronze', color: '#E08A2E', label: 'Budget Boss', desc: 'Ace Spending and finish both activities.', check: s => hasMasteredModule(s, 'spending'),
+  { id: 'budget_boss', tier: 'bronze', color: '#E08A2E', label: 'Budget Boss', desc: 'Ace all 8 lessons in the Spending module.', check: s => hasMasteredModule(s, 'spending'),
     icon: '<path d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 7V4.5A1.5 1.5 0 0 0 14.5 3h-6A1.5 1.5 0 0 0 7 4.5V7"/><circle cx="16" cy="13" r="1.4"/>' },
-  { id: 'safety_net', tier: 'bronze', color: '#1C9C93', label: 'Safety Net', desc: 'Ace every lesson in the Saving module.', check: s => hasMasteredModule(s, 'saving'),
+  { id: 'safety_net', tier: 'bronze', color: '#1C9C93', label: 'Safety Net', desc: 'Ace all 8 lessons in the Saving module.', check: s => hasMasteredModule(s, 'saving'),
     icon: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/>' },
-  { id: 'investor', tier: 'bronze', color: '#3B7FC4', label: 'Future Millionaire', desc: 'Ace every lesson in the Investing module.', check: s => hasMasteredModule(s, 'investing'),
+  { id: 'investor', tier: 'bronze', color: '#3B7FC4', label: 'Future Millionaire', desc: 'Ace all 8 lessons in the Investing module.', check: s => hasMasteredModule(s, 'investing'),
     icon: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>' },
-  { id: 'credit_champ', tier: 'bronze', color: '#2E9BD6', label: 'Credit Champ', desc: 'Ace both of Hammy\'s credit quests.', check: s => hasMasteredModule(s, 'credit'),
+  { id: 'credit_champ', tier: 'bronze', color: '#2E9BD6', label: 'Credit Champ', desc: 'Ace all 8 lessons in the Managing Credit module.', check: s => hasMasteredModule(s, 'credit'),
     icon: '<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>' },
-  { id: 'risk_ready', tier: 'bronze', color: '#5B6B8C', label: 'Risk Ready', desc: 'Ace every lesson in the Managing Risk module.', check: s => hasMasteredModule(s, 'risk'),
+  { id: 'risk_ready', tier: 'bronze', color: '#5B6B8C', label: 'Risk Ready', desc: 'Ace all 8 lessons in the Managing Risk module.', check: s => hasMasteredModule(s, 'risk'),
     icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' },
-  { id: 'loan_smart', tier: 'bronze', color: '#A9713C', label: 'Loan Smart', desc: 'Ace every lesson in the Loans module.', check: s => hasMasteredModule(s, 'loans'),
+  { id: 'loan_smart', tier: 'bronze', color: '#A9713C', label: 'Loan Smart', desc: 'Ace all 8 lessons in the Loans module.', check: s => hasMasteredModule(s, 'loans'),
     icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>' },
-  { id: 'tax_ready', tier: 'bronze', color: '#8B5FBF', label: 'Tax Ready', desc: 'Ace every lesson in the Taxes module.', check: s => hasMasteredModule(s, 'taxes'),
+  { id: 'tax_ready', tier: 'bronze', color: '#8B5FBF', label: 'Tax Ready', desc: 'Ace all 8 lessons in the Taxes module.', check: s => hasMasteredModule(s, 'taxes'),
     icon: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>' },
-  { id: 'mindful_money', tier: 'bronze', color: '#D6538A', label: 'Mindful Spender', desc: 'Ace Consumer Psychology and finish both activities.', check: s => hasMasteredModule(s, 'psychology'),
+  { id: 'mindful_money', tier: 'bronze', color: '#D6538A', label: 'Mindful Spender', desc: 'Ace all 8 lessons in the Consumer Psychology module.', check: s => hasMasteredModule(s, 'psychology'),
     icon: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>' },
-  { id: 'offer_ready', tier: 'bronze', color: '#5C6BC0', label: 'Offer Ready', desc: 'Ace every lesson in Career & Salary.', check: s => hasMasteredModule(s, 'career'),
+  { id: 'offer_ready', tier: 'bronze', color: '#5C6BC0', label: 'Offer Ready', desc: 'Ace all 8 lessons in the Career & Salary module.', check: s => hasMasteredModule(s, 'career'),
     icon: '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>' },
-  { id: 'scam_spotter', tier: 'bronze', color: '#C0453A', label: 'Scam Spotter', desc: 'Ace every scam quest, no wrong answers.', check: s => hasMasteredModule(s, 'scams'),
+  { id: 'scam_spotter', tier: 'bronze', color: '#C0453A', label: 'Scam Spotter', desc: 'Ace all 8 lessons in the Scams & Fraud Prevention module.', check: s => hasMasteredModule(s, 'scams'),
     icon: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
   { id: 'crisis_averted', tier: 'silver', color: '#E0A72E', label: 'Crisis Averted', desc: 'Beat a Credit boss battle.', check: s => (s.questBossesWon || []).includes('credit'),
     icon: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>' },

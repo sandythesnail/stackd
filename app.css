@@ -634,16 +634,27 @@ body { background: var(--bg); min-height: 100vh; }
 .pg-dot-pink  { background: var(--pink); }
 .pg-dot-gray  { background: #E2E9DC; }
 
-/* Horizontal bar chart — fixed label/value widths so every row's track is the same
-   length regardless of module name length (ported concept from mobile's scoreRow). */
-.pg-bar-chart { display: flex; flex-direction: column; gap: 0.7rem; }
-.pg-bar-row { display: flex; align-items: center; gap: 0.65rem; }
+/* Horizontal bar chart — every row's track starts and ends at the same x regardless of how
+   long the module's name is (ported concept from mobile's scoreRow), because a chart whose
+   bars all begin somewhere different is not a chart.
+
+   One grid for the whole list, rows as `display: contents`, rather than a fixed 108px on the
+   label. Same alignment, sized to the content: the name column ends up exactly as wide as the
+   longest name and the tracks line up because they share a column, not because a number was
+   guessed. 108px was a guess, and it was 40px short — "Consumer Psychology" and "Scams &
+   Fraud Prevention" were both clipped to an ellipsis in a card with a hundred spare pixels
+   next to them, which is the one place on the page a module can't be identified. */
+.pg-bar-chart {
+  display: grid; grid-template-columns: auto max-content 1fr auto;
+  gap: 0.7rem 0.65rem; align-items: center;
+}
+.pg-bar-row { display: contents; }
 .mod-icon-sm { width: 28px; height: 28px; border-radius: 9px; font-size: 0.68rem; }
 .pg-bar-label {
   font-size: 0.76rem; font-weight: 600; color: var(--text);
-  width: 108px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.pg-bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.pg-bar-track { height: 8px; min-width: 40px; background: var(--border); border-radius: 999px; overflow: hidden; }
 .pg-bar-fill {
   height: 100%; background: var(--green); border-radius: 999px; transition: width 0.7s ease;
 }
@@ -2895,6 +2906,10 @@ select.budget-input { cursor: pointer; }
   .feedback-panel { max-width: 100%; }
   .pg-stats-row { grid-template-columns: 1fr 1fr; }
   .pg-top-row { grid-template-columns: 1fr; }
+  /* Here the longest name and a track worth looking at genuinely can't both fit, so the name
+     goes back to being capped — a real trade at this width, unlike the desktop case. */
+  .pg-bar-chart { grid-template-columns: auto minmax(0, 108px) 1fr auto; }
+  .pg-bar-val { width: 58px; }
   .pg-level-row { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .quest-body { padding-left: 0.6rem; padding-right: 0.6rem; }
   /* Hammy's band gets less room above the chapter here, so he takes less of it. This used to

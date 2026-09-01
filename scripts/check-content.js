@@ -179,6 +179,44 @@ const note = (m, where) => {
   }
   const wIds = new Set(web.map((a) => a.id));
   for (const a of mob) if (!wIds.has(a.id)) note(`achievement ${a.id}: missing from app.js`);
+
+  /* The eleven per-module mastery badges have to describe the module they are about.
+   *
+   * The two apps matching each other is not enough here: they can be identical and both
+   * wrong, which is exactly what happened. Three of these described content that no longer
+   * exists — two promised "finish both activities" (the pre-quest structure, gone) and Credit
+   * Champ asked for "both of Hammy's credit quests" when Credit has had eight for a long time.
+   * A student who aced two and got nothing had no way to know the badge was describing an
+   * older app.
+   *
+   * So the description is checked against the module itself: it must name the module by title
+   * and quote the module's real main-lesson count. Nothing here dictates the wording beyond
+   * those two facts — it fails only when a description says something about the content that
+   * the content does not say back. If a module's lesson count ever changes, this is what makes
+   * the eleven descriptions part of that change rather than something to notice later. */
+  const MASTERY_BADGE = {
+    earning: 'first_paycheck', spending: 'budget_boss', saving: 'safety_net',
+    investing: 'investor', credit: 'credit_champ', risk: 'risk_ready',
+    loans: 'loan_smart', taxes: 'tax_ready', psychology: 'mindful_money',
+    career: 'offer_ready', scams: 'scam_spotter',
+  };
+  const modules = arrayFromAppJs(appJs, 'MODULES');
+  const wById = new Map(web.map((a) => [a.id, a]));
+  for (const [modId, badgeId] of Object.entries(MASTERY_BADGE)) {
+    const mod = modules.find((m) => m.id === modId);
+    const badge = wById.get(badgeId);
+    if (!mod) { note(`achievement ${badgeId}: no module ${modId} to describe`); continue; }
+    if (!badge) { note(`achievement ${badgeId}: named by MASTERY_BADGE but not in ACHIEVEMENTS`); continue; }
+    // The lessons the badge can actually require: main quests, never the optional real-life
+    // sub-quest (the one quest carrying a parentQuestId). See moduleRequiredUnits in app.js.
+    const mainCount = (mod.quests || []).filter((q) => !q.parentQuestId).length;
+    if (!badge.desc.includes(String(mainCount))) {
+      note(`achievement ${badgeId}.desc: does not mention ${modId}'s ${mainCount} lessons — ${JSON.stringify(badge.desc)}`);
+    }
+    if (!badge.desc.includes(mod.title)) {
+      note(`achievement ${badgeId}.desc: does not name the module "${mod.title}" — ${JSON.stringify(badge.desc)}`);
+    }
+  }
 }
 
 /* ── Hammy's daily moods ── */
