@@ -1,12 +1,15 @@
 /** "Life happens…" events — the interruption that pops up mid-lesson and makes you spend a
  * decision instead of reading about one.
  *
- * The three GENERAL_LIFE_EVENTS below are ported from the website's LIFE_EVENTS (app.js) —
- * same ids, tags, titles and scenarios, so the two platforms tell the same three stories.
- * The wording no longer matches character-for-character: every em dash in the copy on this
- * side has been rewritten into ordinary punctuation, which the website's copy still uses.
- * Everything in MODULE_LIFE_EVENTS is mobile-only for now: with only those
- * three in the pool, the same scenario came back over and over. `effect`
+ * Every event here is shared with the website's LIFE_EVENTS (app.js) — same ids, tags,
+ * titles, scenarios and choices, so the two platforms tell the same stories and neither can
+ * be reworded on its own. scripts/check-life-events.js compares all of it.
+ *
+ * Two things this used to say are no longer true, and are recorded here only because the
+ * comment outlived them: the module-tagged events were mobile-only when they were written
+ * (with only the three general ones in the pool, the same scenario came back over and over),
+ * and mobile's copies had their em dashes rewritten into ordinary punctuation. Both were
+ * resolved on the website's side; the checker has no exemptions left. `effect`
  * (savings/checking/creditScore) isn't modelled here since the mobile app has no financial-
  * simulation state to mutate yet; only `coinDelta` (which maps onto the real coins the app
  * does track) actually changes anything, and ambient events deliberately leave it unset so
