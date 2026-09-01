@@ -302,16 +302,24 @@ type ReportProps = {
  * Only the two chapter types that actually teach vocabulary take this (teach, matching). */
 type LearnTermProps = { learnTerm: (t: LearnedTerm) => void };
 
-/** Ported from app.js's HAMMY_CORRECT_MSGS/HAMMY_GENTLE_MSGS, plus "Good job!"/"Nice try!"
- * added to each pool per direct request. Only two celebration emoji in rotation — hands
- * and confetti — per direct request (no checkmark or others). */
-const HAMMY_CORRECT_MSGS = ['Nice! 🎉', 'Nice one! 🙌', 'You got it! 🙌', 'Great job! 🎉', 'Good job! 🙌', 'Awesome! 🎉'];
-const HAMMY_GENTLE_MSGS = ["Not quite! Here's why:", "Not quite, let's learn from it:", "Close! Here's what's true:", 'Nice try!'];
+/* Hammy's three reaction pools, identical to app.js's — guarded by
+ * scripts/check-hammy-lines.js, because these are lines a student reads on both devices and
+ * there is no reason for the same moment to be spoken two different ways.
+ *
+ * ONE line each, not a random pick from four or six. Getting "Great job!" on one match and
+ * "You got it!" on the very next under identical circumstances read as accidental rather than
+ * responsive — the variation carried no information. The only copy that changes is the streak
+ * line, which changes because something actually changed.
+ *
+ * "Close!" is gone from both wrong-answer pools for a second reason: it was being shown on
+ * answers that were not close at all. The app never measured closeness, so the copy was
+ * claiming something it did not know. */
+const HAMMY_CORRECT_MSGS = ['Nice one! 🎉'];
+const HAMMY_GENTLE_MSGS = ["Not quite, here's why:"];
 /** Matching has no explanation to point to (it's just a retry, not a right-answer reveal),
- * so a wrong match gets its own phrasing instead of HAMMY_GENTLE_MSGS's "here's why" —
- * ported from the website's HAMMY_TRYAGAIN_MSGS. */
+ * so a wrong match gets its own phrasing instead of HAMMY_GENTLE_MSGS's "here's why". */
 // "below", not "above": Match It's definitions sit under the terms now.
-const HAMMY_TRYAGAIN_MSGS = ['Not quite, try again!', 'Close, give it another shot!', "Not quite, look at the definitions below if you're stuck."];
+const HAMMY_TRYAGAIN_MSGS = ["Not quite, look at the definitions below if you're stuck."];
 const pickRandom = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
 
 /** Keeps a spoken reaction message short enough to never need truncating — the reaction
@@ -2318,7 +2326,7 @@ function KnowledgecheckView({
         //
         // This is the text the student just earned by answering, and the reason a wrong
         // answer is worth anything. It gets to be legible in full; if that means the card
-        // runs past the fold, the scroller follows it down (see followContentGrowth).
+        // runs past the fold, it scrolls like the rest of the chapter does.
         <AnswerFeedback>
           <Card style={styles.kcAnswerCard}><Txt variant="lead" style={styles.kcAnswerTxt} color={right ? colors.greenDark : colors.pinkDark}>{question.exp}</Txt></Card>
         </AnswerFeedback>

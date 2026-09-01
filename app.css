@@ -1150,6 +1150,55 @@ select.budget-input { cursor: pointer; }
 .option-btn.wrong { border-color: #D98A9E; background: #FBEEF2; }
 .option-btn.wrong .opt-letter { background: #D98A9E; border-color: #D98A9E; color: #fff; }
 .option-btn:disabled { cursor: default; }
+
+/* ── The verdict, as a movement ──
+   Ported from mobile's Option: answering used to be a 0.15s colour fade and nothing else, so
+   on a four-option board the row that was right and the row you picked changed shade at the
+   same moment and neither one moved. Mobile gives the two different, deliberately unequal
+   treatments:
+
+     correct  a confident pop — this is the row the eye should land on.
+     wrong    smaller, and sideways rather than bigger. The wrong answer should register
+              without becoming the loudest thing on the screen.
+
+   Both are transform-only, so they cost no layout and cannot disturb the rows around them —
+   the same reason mobile runs them on the UI thread. The selectors carry .quest-main so they
+   outrank the deal-in animation above, which they replace rather than stack on.
+
+   This covers every option-shaped control in a lesson: the Quick Check's four rows, the vocab
+   card's True/False (.word-check-btn), the poll, and the boss battle's choices — all of which
+   are one component on mobile and share .option-btn here. */
+.quest-main .option-btn.correct,
+.boss-choice-card.correct { animation: optionCorrectPop 0.42s cubic-bezier(0.34, 1.4, 0.5, 1); }
+.quest-main .option-btn.wrong,
+.boss-choice-card.wrong { animation: optionWrongShake 0.21s linear; }
+@keyframes optionCorrectPop {
+  0%   { transform: scale(1); }
+  36%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+/* mobile's four beats, in its own timings: -4px over 55ms, +4 over 55, -2.5 over 50, 0 over
+   45. Written as percentages of the 210ms total. */
+@keyframes optionWrongShake {
+  0%    { transform: translateX(0); }
+  26%   { transform: translateX(-4px); }
+  52%   { transform: translateX(4px); }
+  76%   { transform: translateX(-2.5px); }
+  100%  { transform: translateX(0); }
+}
+/* Under the finger. mobile's Option presses to 0.975; the web had hover and nothing for the
+   press itself, so a tap on a touchscreen (where there is no hover) gave no feedback at all
+   between the tap and the verdict. */
+.option-btn:not(:disabled):active,
+.boss-choice-card:not(:disabled):active { transform: scale(0.975); }
+@media (prefers-reduced-motion: reduce) {
+  .quest-main .option-btn.correct,
+  .quest-main .option-btn.wrong,
+  .boss-choice-card.correct,
+  .boss-choice-card.wrong { animation: none; }
+  .option-btn:not(:disabled):active,
+  .boss-choice-card:not(:disabled):active { transform: none; }
+}
 /* Dealt in, one after another — see buildQuestionBlock, which sets the per-option delay.
    `backwards` so an option is invisible during its own delay rather than flashing at full
    opacity first. */
