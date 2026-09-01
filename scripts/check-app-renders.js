@@ -990,6 +990,63 @@ step('a plain click demonstrates the swipe instead of doing nothing', () => {
   if (card.classList.contains('flipped')) throw new Error('a click answered the card');
 });
 
+// 11c. The Quick Check answers the question the way mobile does.
+console.log('\nthe Quick Check explains itself');
+step('answering shows the whole explanation, and no verdict heading', () => {
+  const mod = api.MODULES.find((m) => m.id === 'loans');
+  let target = null;
+  for (const q of window.mainQuests(mod)) {
+    const i = q.chapters.findIndex((c) => c.type === 'knowledgecheck');
+    if (i >= 0) { target = { quest: q, idx: i, chapter: q.chapters[i] }; break; }
+  }
+  if (!target) throw new Error('no knowledgecheck chapter to test with');
+  delete s.questProgress[window.questKey(mod.id, target.quest.id)];
+  window.startQuest(mod.id, target.quest.id);
+  window.renderChapter(mod, target.idx);
+
+  const panel = window.document.getElementById('kc-feedback-panel');
+  if (!panel) throw new Error('no answer card');
+  if (panel.classList.contains('visible')) throw new Error('the answer card was up before anything was answered');
+  // Mobile shows the explanation alone: the options carry the verdict, and the explanation's
+  // own colour says which way it went. No heading, no indicator dot.
+  if (panel.querySelector('.feedback-label')) throw new Error('the answer card still carries a verdict heading');
+  if (panel.querySelector('.feedback-indicator')) throw new Error('the answer card still carries an indicator dot');
+
+  const q = mod.questions[target.chapter.qIndices[0]];
+  const opts = [...window.document.querySelectorAll('#kc-options .option-btn')];
+  if (opts.length !== q.opts.length) throw new Error(opts.length + ' options for ' + q.opts.length);
+  opts[q.correct].click();
+
+  if (!panel.classList.contains('visible')) throw new Error('the answer card never appeared');
+  if (!panel.classList.contains('correct-state')) throw new Error('a right answer was not marked right');
+  const shown = window.document.getElementById('kc-feedback-exp').textContent;
+  // In FULL — the whole authored explanation, not a truncation. Mobile documents at length
+  // what shortening this used to cost.
+  if (shown !== q.exp) throw new Error('the explanation was altered: ' + JSON.stringify(shown.slice(0, 60)));
+});
+step('a wrong answer is marked wrong and still explains', () => {
+  const mod = api.MODULES.find((m) => m.id === 'loans');
+  let target = null;
+  for (const q of window.mainQuests(mod)) {
+    const i = q.chapters.findIndex((c) => c.type === 'knowledgecheck');
+    if (i >= 0) { target = { quest: q, idx: i, chapter: q.chapters[i] }; break; }
+  }
+  delete s.questProgress[window.questKey(mod.id, target.quest.id)];
+  window.startQuest(mod.id, target.quest.id);
+  window.renderChapter(mod, target.idx);
+  const q = mod.questions[target.chapter.qIndices[0]];
+  const opts = [...window.document.querySelectorAll('#kc-options .option-btn')];
+  const wrongIdx = q.correct === 0 ? 1 : 0;
+  opts[wrongIdx].click();
+  const panel = window.document.getElementById('kc-feedback-panel');
+  if (!panel.classList.contains('wrong-state')) throw new Error('a wrong answer was not marked wrong');
+  if (window.document.getElementById('kc-feedback-exp').textContent !== q.exp) {
+    throw new Error('a wrong answer did not get the explanation');
+  }
+  // The row that was right is named on the board itself, as it is on mobile.
+  if (!opts[q.correct].classList.contains('correct')) throw new Error('the right answer was not shown');
+});
+
 // 12. The boss battle grades the student, and says so.
 console.log('\nboss battle');
 function openBossChapter() {

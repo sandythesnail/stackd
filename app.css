@@ -1234,10 +1234,10 @@ select.budget-input { cursor: pointer; }
    step gets SHORTER. That is why the width climbs faster than the scale here, and why the
    scale is now a touch lower at the top end than it was — height is the axis that costs a
    scroll (see the max-height rules below). */
-@media (min-width: 760px)  { #screen-quest { --quest-w: min(94vw, 780px);  --quest-scale: 1.10; } }
-@media (min-width: 1024px) { #screen-quest { --quest-w: min(94vw, 1180px); --quest-scale: 1.16; } }
-@media (min-width: 1400px) { #screen-quest { --quest-w: min(93vw, 1560px); --quest-scale: 1.20; } }
-@media (min-width: 1800px) { #screen-quest { --quest-w: min(92vw, 1840px); --quest-scale: 1.24; } }
+@media (min-width: 760px)  { #screen-quest { --quest-w: min(94vw, 720px);  --quest-scale: 1.10; } }
+@media (min-width: 1024px) { #screen-quest { --quest-w: min(90vw, 920px);  --quest-scale: 1.16; } }
+@media (min-width: 1400px) { #screen-quest { --quest-w: min(76vw, 1040px); --quest-scale: 1.20; } }
+@media (min-width: 1800px) { #screen-quest { --quest-w: min(64vw, 1140px); --quest-scale: 1.24; } }
 /* Height is what actually bounds the scale, not width. A lesson is a fixed-height column —
    header, scrolling body, bottom bar — and the window does not get taller when it gets
    wider: a 1440x780 laptop has barely more vertical room than the phone this was drawn for.
@@ -1457,7 +1457,7 @@ select.budget-input { cursor: pointer; }
 .explainback-definition,
 .poll-explanation,
 .microsim-result,
-.feedback-panel.kc-panel .feedback-exp { max-width: 96ch; margin-left: auto; margin-right: auto; }
+.feedback-panel.kc-panel .feedback-exp { max-width: 88ch; }
 
 /* ── Two across, once there is room for two ──
    The other half of filling a wide column. A stack of full-width buttons carrying four words
@@ -1511,13 +1511,17 @@ select.budget-input { cursor: pointer; }
    him. Beside meant the bubble was as narrow as whatever was left over next to a pig, and it
    meant the two chapter kinds spoke to you from two different places. Above him, on the full
    width of the column, is one arrangement and the roomier one. */
-.quest-side.centered { flex-direction: column-reverse; align-items: center; padding: 26px 0 6px; text-align: center; }
+/* Tight. Every pixel here is spent twice — once above Hammy for the bubble's reserved band,
+   and again below him before the content starts — so padding on this row is the most
+   expensive vertical space in a lesson, and generous values on it are what turn a step that
+   fitted into a step you have to scroll. */
+.quest-side.centered { flex-direction: column-reverse; align-items: center; padding: 10px 0 4px; text-align: center; }
 /* Short chapter types leave a lot of room under the bottom bar and read as top-heavy at the
    default padding, so they drop Hammy further down the screen — mobile's companionWrapLow /
    Lowest / Deep, applied to the same three types. */
-.quest-side.drop-low { padding-top: 48px; padding-bottom: 10px; }
-.quest-side.drop-lowest { padding-top: 60px; padding-bottom: 12px; }
-.quest-side.drop-deep { padding-top: 60px; padding-bottom: 12px; }
+.quest-side.drop-low { padding-top: 22px; padding-bottom: 8px; }
+.quest-side.drop-lowest { padding-top: 30px; padding-bottom: 10px; }
+.quest-side.drop-deep { padding-top: 30px; padding-bottom: 10px; }
 /* Match It pulls him up tight under the progress bar instead. */
 .quest-side.raised { padding-top: 0; padding-bottom: 0; }
 .hammy-side-avatar { position: relative; flex-shrink: 0; }
@@ -1982,21 +1986,41 @@ select.budget-input { cursor: pointer; }
 .kc-split { display: flex; flex-direction: column; gap: 9px; margin-top: 0.5rem; }
 .kc-split-left { min-width: 0; }
 .kc-split-right { min-width: 0; }
+/* Mobile's answer card, copied: a plain WHITE card with the app's ordinary border, holding
+   the explanation and nothing else. The verdict is not repeated here — the options above have
+   already gone green and pink, and the explanation's own colour carries it — so there is no
+   "Correct"/"Not quite" heading and no indicator dot, both of which this used to draw. The
+   tinted green/pink panel background went with them: on mobile only the TEXT takes the
+   colour, which keeps the card the same object whichever way the answer went and stops a
+   wrong answer arriving as a large pink slab.
+   See MOBILE: quest.tsx's `<Card style={styles.kcAnswerCard}>` inside <AnswerFeedback>. */
 .feedback-panel.kc-panel {
   position: static; display: none; max-width: none; width: 100%; margin: 0;
-  flex-direction: column; align-items: flex-start; gap: 0.9rem;
-  padding: 1.6rem 1.7rem; border-radius: var(--radius); border: 1.5px solid var(--border);
-  background: #fff; animation: fadeUp 0.35s ease;
+  flex-direction: column; align-items: stretch; gap: 0;
+  padding: 0.95rem 1.05rem; border-radius: var(--radius); border: 1.5px solid var(--border);
+  background: #fff;
+  /* AnswerFeedback: a 240ms fade with two small beats of travel under 3px, so it registers
+     as the block arriving rather than as the block objecting. */
+  animation: kcAnswerIn 0.32s ease;
 }
 .feedback-panel.kc-panel.visible { display: flex; }
-.feedback-panel.kc-panel.correct-state { background: var(--green-pale); border-color: var(--green-light); }
-.feedback-panel.kc-panel.wrong-state { background: var(--pink-pale); border-color: var(--pink-light); }
-.feedback-panel.kc-panel .feedback-indicator { width: 12px; height: 12px; }
-.feedback-panel.kc-panel .feedback-label { font-size: 1.4rem; margin-bottom: 0.4rem; }
+@keyframes kcAnswerIn {
+  0%   { opacity: 0; transform: translateX(0); }
+  40%  { opacity: 1; transform: translateX(-2.5px); }
+  72%  { transform: translateX(1.5px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feedback-panel.kc-panel { animation: none; }
+}
 /* No color here — was hardcoded to green-dark regardless of right/wrong, so a wrong
    knowledge-check answer's own explanation still read as green. Color now comes from the
    shared .correct-state/.wrong-state .feedback-exp rules above. */
-.feedback-panel.kc-panel .feedback-exp { font-size: 1.12rem; line-height: 1.5; font-weight: 500; }
+/* mobile's kcAnswerTxt: Nunito semi-bold, 13/17 on the phone, one step up for this column.
+   The colour is the only thing that changes between a right and a wrong answer. */
+.feedback-panel.kc-panel .feedback-exp { font-size: 0.98rem; line-height: 1.45; font-weight: 600; }
+.feedback-panel.kc-panel.correct-state .feedback-exp { color: var(--green-dark); }
+.feedback-panel.kc-panel.wrong-state .feedback-exp { color: var(--pink-dark); }
 /* The panel no longer holds its own Next button — advancing happens from the shared
    bottom footer, in the same spot on every chapter type. */
 
@@ -2270,9 +2294,16 @@ select.budget-input { cursor: pointer; }
 }
 .boss-choice-card:hover:not(:disabled) { border-color: var(--pink); background: var(--pink-pale); }
 /* Selected, not committed — a highlight the student can move around until they press Check
-   answer. Deliberately the neutral "you picked this" treatment rather than green, which in
-   this app means "and it was right". */
-.boss-choice-card.selected { border-color: var(--text); background: var(--bg); }
+   answer. Mobile's Option `on` state exactly: a green border over a very pale green fill
+   (#F1F6EF), which is a different, lighter thing than the `correct` row below it (a full
+   green-pale fill on the same border).
+   It used to be `border-color: var(--text)` — the darkest ink in the palette, 2.5px thick,
+   which drew as a hard black rectangle around whichever answer the student had just chosen
+   and read as that answer being marked wrong. The reasoning was that green in this app means
+   "and it was right"; mobile's answer is better, because the pale fill and the deeper
+   `correct` fill are plainly two different states when you see them, and neither of them is
+   an error. */
+.boss-choice-card.selected { border-color: var(--green); background: #F1F6EF; }
 /* After checking, the rows carry the answer themselves — same green/pink as the option
    buttons everywhere else. */
 .boss-choice-card.correct { border-color: var(--green); background: var(--green-pale); }
@@ -4184,20 +4215,22 @@ select.budget-input { cursor: pointer; }
 /* Stacked above Hammy in the centred arrangement, where he has no width to hide the bubble
    in — so there the height IS reserved, and the bubble is taken out of flow inside it. */
 /* A reserved band, so a message appearing or clearing cannot move Hammy or anything below
-   him — the bubble is taken out of flow inside it. Two lines' worth at the wider measure
-   below, which is what the longest reaction now needs. */
+   him — the bubble is taken out of flow inside it. Two lines at the measure below, which is
+   what the longest reaction in the content actually needs; anything more is dead space on
+   every chapter that isn't showing one. */
 .quest-side.centered .hammy-side-slot {
-  flex: none; width: 100%; height: 78px; align-items: flex-end; justify-content: center;
+  flex: none; width: 100%; height: 66px; align-items: flex-end; justify-content: center;
 }
-/* Spans the lesson column rather than sitting in a 300px ribbon in the middle of it. 300px
-   was the width of the phone's, kept when this arrangement was for two chapter types; now
-   that everything Hammy says arrives here, a remark that fits on one line across the column
-   was being broken into three down a narrow strip. Still capped in characters so it cannot
-   become a single very long line on a wide monitor. */
+/* Sized to what he actually says. Everything Hammy says is one short remark — "Nice! 🎉",
+   "Not quite, have another look" — so the bubble is capped near the length of the longest of
+   them rather than at the width of the column. Given the column it drew itself as a band
+   right across the screen with four words floating in the middle of it, which reads as a
+   banner rather than as a character speaking. Two lines at this measure is the worst case,
+   which is what the reserved band above is sized for. */
 .quest-side.centered .hammy-side-msg {
-  position: absolute; bottom: 13px; left: 20px; right: 20px;
-  max-width: min(72ch, 100%); margin: 0 auto;
-  font-size: 15px; padding: 10px 16px;
+  position: absolute; bottom: 11px; left: 20px; right: 20px;
+  max-width: min(42ch, 460px); margin: 0 auto;
+  font-size: 14px; padding: 9px 14px;
 }
 
 /* The Look back pill: one fixed-size control, whatever is behind it. */

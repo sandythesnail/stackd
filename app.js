@@ -21951,7 +21951,9 @@ function buildQuestionBlock(q, els, onAnswered) {
       });
       feedbackPanelEl.classList.add('visible', isCorrect ? 'correct-state' : 'wrong-state');
       feedbackPanelEl.classList.remove(isCorrect ? 'wrong-state' : 'correct-state');
-      feedbackLabelEl.textContent = isCorrect ? 'Correct' : 'Not quite';
+      // Absent on the Quick Check, which follows mobile and shows the explanation alone —
+      // see renderKnowledgeCheckChapter. Still present on the legacy flat-quiz screen.
+      if (feedbackLabelEl) feedbackLabelEl.textContent = isCorrect ? 'Correct' : 'Not quite';
       feedbackExpEl.textContent = q.exp;
       onAnswered(isCorrect, i);
     });
@@ -24238,10 +24240,11 @@ function renderKnowledgeCheckChapter(chapter, mod, onDone) {
           <div class="options" id="kc-options"></div>
         </div>
         <div class="kc-split-right">
+          <!-- Mobile's answer card: the explanation, and nothing else. No verdict heading
+               and no indicator dot — the options above have already gone green and pink, and
+               the explanation's own colour says which way it went. -->
           <div class="feedback-panel kc-panel" id="kc-feedback-panel">
-            <div class="feedback-indicator"></div>
             <div class="feedback-text">
-              <p class="feedback-label" id="kc-feedback-label"></p>
               <p class="feedback-exp" id="kc-feedback-exp"></p>
             </div>
           </div>
@@ -24252,7 +24255,7 @@ function renderKnowledgeCheckChapter(chapter, mod, onDone) {
       questionEl: document.getElementById('kc-question'),
       optionsEl: document.getElementById('kc-options'),
       feedbackPanelEl: document.getElementById('kc-feedback-panel'),
-      feedbackLabelEl: document.getElementById('kc-feedback-label'),
+
       feedbackExpEl: document.getElementById('kc-feedback-exp'),
     }, (isCorrect) => {
       qp.chapterTotal++;
