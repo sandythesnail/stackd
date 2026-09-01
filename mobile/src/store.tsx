@@ -254,6 +254,25 @@ export type AppState = {
    * has been completed — tracked separately from moduleProgress/mastery, see
    * RealLifeSubQuestRow and completeLifeTask below. */
   completedLifeTaskIds: string[];
+  /** Lessons answered perfectly at least once, keyed `${moduleId}:${lessonIndex}` (the same
+   * absolute index moduleProgress uses).
+   *
+   * The eleven per-module badges say "Ace all 8 lessons in the X module", and the website
+   * enforces exactly that — it keeps every finished lesson's analytics and asks whether the
+   * run was perfect (app.js's questWasFlawless). Mobile keeps no analytics once a lesson is
+   * done, so it had nothing to ask and awarded these badges for merely FINISHING a module.
+   * Same badge id, same text, two different conditions — and mobile writes
+   * unlockedAchievements into the shared blob, so its looser verdict travelled to the web
+   * too.
+   *
+   * A set of keys rather than a score, because the only question anyone asks of it is
+   * "was this one aced?", and because it is written on EVERY run rather than only the first
+   * (unlike moduleStats, which is gated on `advanced`). That matters: a lesson fumbled the
+   * first time can be replayed and put right, which is what the website means when it says a
+   * mastery badge is "always earnable, just not on the first pass". A tally that could only
+   * ever be written once would have made the badge permanently unwinnable for anyone who
+   * had already finished a module imperfectly, which is a worse bug than the one it fixes. */
+  flawlessLessons: string[];
   /** Whether the first-login spotlight tour (XP, then the Shop tab) has already played —
    * mirrors the website's state.hasSeenOnboardingTour, see components/OnboardingTour.tsx. */
   hasSeenOnboardingTour: boolean;
@@ -343,6 +362,7 @@ const DEFAULT_STATE: AppState = {
   lastModuleActivityDate: null,
   lastModuleId: null,
   completedLifeTaskIds: [],
+  flawlessLessons: [],
   lessonProgress: {},
   hasSeenOnboardingTour: false,
   // Matches app.js's own default state literal exactly — the income/fixed-expense starter
@@ -466,6 +486,22 @@ function mainIndicesFor(moduleId: string) {
   return mainLessonAbsoluteIndices(moduleContentById(moduleId));
 }
 
+/** Key into AppState.flawlessLessons. Same `${moduleId}:${lessonIndex}` shape as
+ * lessonProgressKey and, like it, keyed on the ABSOLUTE lesson index. */
+function lessonAcedKey(moduleId: string, lessonIndex: number) {
+  return `${moduleId}:${lessonIndex}`;
+}
+
+/** Has every one of this module's 8 counted lessons been aced at least once? This is what
+ * the per-module mastery badges require — the same question app.js's moduleQuestsFlawless
+ * asks of its stored analytics. Deliberately NOT "is the module complete": finishing all
+ * eight is moduleMastered, acing all eight is this. */
+function moduleWasAced(flawlessLessons: string[], moduleId: string) {
+  const aced = new Set(flawlessLessons);
+  const main = mainIndicesFor(moduleId);
+  return main.length > 0 && main.every((i) => aced.has(lessonAcedKey(moduleId, i)));
+}
+
 /** The lessons a module is MEASURED by: its 8 main quests, and nothing else.
  *
  * The real-life sub-quest is optional. A student who doesn't want to go and open a bank
@@ -556,8 +592,10 @@ function unionModuleProgress(
  * that the mobile app can actually evaluate today (see Achievement.available). */
 function computeMetAchievementIds(s: AppState): string[] {
   const met = new Set<string>();
+  // "Ace all 8 lessons", not "finish all 8" — see AppState.flawlessLessons for what was
+  // wrong with the latter and why it reached the website too.
   for (const [moduleId, achievementId] of Object.entries(MODULE_MASTERY_ACHIEVEMENT)) {
-    if (isModuleMastered(s.moduleProgress, s.completedLifeTaskIds, moduleId)) met.add(achievementId);
+    if (moduleWasAced(s.flawlessLessons, moduleId)) met.add(achievementId);
   }
   if (s.streak >= 7) met.add('on_fire');
   if (s.streak >= 30) met.add('marathoner');
@@ -861,6 +899,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             // in use since before pruning existed can be carrying saves for lessons finished
             // long ago or for quests that have since been re-authored. See pruneLessonProgress.
             lessonProgress: pruneLessonProgress(parsed.lessonProgress ?? {}),
+            // Absent on every save written before this field existed, and the spread above
+            // would happily let a non-array through — this is read with .includes on a path
+            // that runs after every lesson.
+            flawlessLessons: Array.isArray(parsed.flawlessLessons)
+              ? parsed.flawlessLessons.filter((k: unknown): k is string => typeof k === 'string')
+              : [],
           };
         } catch {
           // corrupt/incompatible saved state — fall back to defaults already set
@@ -1072,6 +1116,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // sub-quest's own index would satisfy a count check the moment it wasn't last, and
         // its completion belongs in completedLifeTaskIds (completeLifeTask), never here.
         const advanced = mainIndicesFor(moduleId).includes(lessonIndex) && !alreadyDone;
+        // Deliberately NOT gated on `advanced`. Everything else here pays out once so a
+        // replay can't farm it, but this is a record of how well the lesson has ever been
+        // answered, and a replay is exactly how a fumbled lesson is put right — the website
+        // says the same of its own mastery badges ("replays count, so it's always earnable").
+        // Only counts a lesson that actually asked something: a chapter run with nothing
+        // gradeable in it is not an ace, matching questTally's `total > 0`.
+        const acedNow = gradedTotal > 0 && correctCount === gradedTotal
+          && mainIndicesFor(moduleId).includes(lessonIndex);
+        const acedKey = lessonAcedKey(moduleId, lessonIndex);
 
         setState((s) => {
           const wasMastered = isModuleMastered(s.moduleProgress, s.completedLifeTaskIds, moduleId);
@@ -1089,6 +1142,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             xp: s.xp + (advanced ? xpEarned : 0),
             coins: s.coins + (advanced ? coinsEarned : 0),
             moduleProgress: nextProgress,
+            flawlessLessons: acedNow && !s.flawlessLessons.includes(acedKey)
+              ? [...s.flawlessLessons, acedKey]
+              : s.flawlessLessons,
             moduleStats: advanced
               ? accumulateModuleStats(s.moduleStats, moduleId, xpEarned, correctCount, gradedTotal)
               : s.moduleStats,

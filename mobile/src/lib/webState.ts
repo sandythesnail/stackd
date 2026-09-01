@@ -32,6 +32,9 @@ import { moduleContent, moduleContentById } from '@/content';
 import { levelForXp } from '@/store';
 import type { AppState, BudgetPlan } from '@/store';
 import type { StatDelta } from '@/content';
+// The web's own "was this lesson aced" rule, kept in its own import-free module so it can
+// be run against the same fixtures as app.js — see webAced.ts and scripts/check-mastery.js.
+import { webLessonWasAced } from './webAced';
 
 const DEFAULT_BUDGET_PLAN: BudgetPlan = {
   incomeSources: [],
@@ -127,6 +130,10 @@ const MOBILE_ONLY_KEYS = [
   'hasCompletedOnboarding',
   'questHintsUsed', 'termsLearned', 'completedLifeTaskIds',
   'hasSeenOnboardingTour', 'lessonProgress',
+  // Stashed, but ALSO unioned with what the web's own analytics say on the way in — see
+  // webToMobile. The web records the same fact in a richer form it has no reason to give up,
+  // so neither side is authoritative and both are read.
+  'flawlessLessons',
 ] as const;
 
 /** `Date.toDateString()` values ("Wed Jul 29 2026") don't order lexicographically, so compare
@@ -160,11 +167,22 @@ export function webToMobile(web: WebState): Partial<AppState> {
   // is a lossless mapping — lesson 3 done on the web is exactly [2] here, never [0,1,2].
   const moduleProgress: Record<string, number[]> = {};
   const webLifeTaskIds: string[] = [];
+  const webAcedKeys: string[] = [];
   for (const m of moduleContent) {
-    const mainQuestIds = m.quests.filter((q) => !q.parentQuestId).map((q) => q.id);
-    const doneIdxs = mainQuestIds
-      .map((qid, i) => (questProgress[`${m.id}::${qid}`]?.done ? i : -1))
-      .filter((i) => i >= 0);
+    const doneIdxs: number[] = [];
+    // ABSOLUTE positions in quests/lessons, not positions within the filtered main-quest
+    // list. The two coincide only while the sub-quest is a module's last lesson — true of
+    // all eleven today, enforced nowhere — and moduleProgress is read against absolute
+    // indices everywhere in the store (mainIndicesFor, lessonProgressKey, quest.tsx's
+    // lessonIndex param). mobileToWeb already had this fix; the read direction did not, so
+    // a sub-quest authored anywhere but last would have shifted every completed lesson
+    // onto its neighbour on the way in. Same hazard the file header describes.
+    m.quests.forEach((q, absIdx) => {
+      if (q.parentQuestId) return;
+      const rec = questProgress[`${m.id}::${q.id}`];
+      if (rec?.done) doneIdxs.push(absIdx);
+      if (webLessonWasAced(rec)) webAcedKeys.push(`${m.id}:${absIdx}`);
+    });
     if (doneIdxs.length) moduleProgress[m.id] = doneIdxs;
 
     const subQuest = m.quests.find((q) => q.parentQuestId);
@@ -177,6 +195,14 @@ export function webToMobile(web: WebState): Partial<AppState> {
   const mobileExtras = (web._mobile ?? {}) as Partial<AppState>;
   const completedLifeTaskIds = Array.from(
     new Set([...(mobileExtras.completedLifeTaskIds ?? []), ...webLifeTaskIds])
+  );
+  // Unioned, not replaced. Each side knows about aces the other cannot see — the web has
+  // analytics for lessons played on the laptop, mobile has keys for lessons played on the
+  // phone (which reach the web as EMPTY_ANALYTICS and so read as "no record") — and a module
+  // aced half on each device is aced. Taking either side alone is how a student could ace all
+  // eight across two devices and be told by both that they hadn't.
+  const flawlessLessons = Array.from(
+    new Set([...(mobileExtras.flawlessLessons ?? []), ...webAcedKeys])
   );
   // Reads the shared top-level field, but still honours a value stashed under `_mobile` by an
   // older mobile build that treated this as mobile-only — whichever day is later wins.
@@ -203,6 +229,7 @@ export function webToMobile(web: WebState): Partial<AppState> {
     ...mobileExtras,
     moduleProgress,
     completedLifeTaskIds,
+    flawlessLessons,
     // After the spread: an old `_mobile` stash must not shadow the merged value above.
     lastModuleActivityDate,
   };

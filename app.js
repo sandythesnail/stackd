@@ -16297,7 +16297,7 @@ function hasMasteredModule(s, modId) {
  * psychology/automate_habits), so requiring evidence cannot make a badge unwinnable. */
 function questWasFlawless(qp) {
   if (!qp || !qp.done) return false;
-  return questTally(qp).allRight && (qp.analytics.matchingMistakes || 0) === 0;
+  return questTally(qp).allRight && gradedLists(qp).matchingMistakes === 0;
 }
 
 function moduleQuestsFlawless(s, modId) {
@@ -24420,26 +24420,45 @@ function recordQuestCheck(mod, label, isCorrect) {
  * it are the same number. Mobile learned this the hard way: it had a headline count, a ring
  * and a payout on three different bases, so one lesson could read "3/4 correct" above a 100%
  * ring. */
+/** The three graded lists on a stored analytics blob, each guaranteed to be an array.
+ *
+ * `checks` was already read this way and the two beside it were not, which is a distinction
+ * nothing justifies: all three are optional on a record written by an older build, and all
+ * three arrive from parsed JSON that has merely been asserted to have the right shape.
+ * normalizeStoredQuestProgress repairs a save on the way in, so in the app these are always
+ * arrays by the time anyone asks — but this is also the rule scripts/check-mastery.js runs
+ * against mobile's own copy (webAced.ts), and that copy is defensive, so a half-guarded
+ * version here would be a difference between the two apps rather than a safety net. */
+function gradedLists(qp) {
+  const a = (qp && qp.analytics) || {};
+  const list = (v) => (Array.isArray(v) ? v : []);
+  return {
+    knowledgeCheck: list(a.knowledgeCheck),
+    mythCards: list(a.mythCards),
+    // See recordQuestCheck: every other graded moment in the lesson, which used to be shown
+    // to the student and then left out of their score.
+    checks: list(a.checks),
+    matchingMistakes: typeof a.matchingMistakes === 'number' ? a.matchingMistakes : 0,
+  };
+}
+
 function questTally(qp) {
-  const a = qp.analytics;
-  const kcRight = a.knowledgeCheck.filter(x => x.isCorrect);
-  const mythRight = a.mythCards.filter(x => x.guessedRight);
-  // See recordQuestCheck: every other graded moment in the lesson, which used to be shown
-  // to the student and then left out of their score.
-  const checks = Array.isArray(a.checks) ? a.checks : [];
-  const checkRight = checks.filter(x => x.isCorrect);
-  const total = a.knowledgeCheck.length + a.mythCards.length + checks.length;
-  const right = kcRight.length + mythRight.length + checkRight.length;
+  const { knowledgeCheck, mythCards, checks } = gradedLists(qp);
+  const right = knowledgeCheck.filter(x => x && x.isCorrect).length
+    + mythCards.filter(x => x && x.guessedRight).length
+    + checks.filter(x => x && x.isCorrect).length;
+  const total = knowledgeCheck.length + mythCards.length + checks.length;
   return { right, total, allRight: total > 0 && right === total };
 }
 
 function buildQuestReport(mod, qp) {
   const a = qp.analytics;
-  const kcRight = a.knowledgeCheck.filter(x => x.isCorrect);
-  const kcWrong = a.knowledgeCheck.filter(x => !x.isCorrect);
-  const mythRight = a.mythCards.filter(x => x.guessedRight);
-  const mythWrong = a.mythCards.filter(x => !x.guessedRight);
-  const checks = Array.isArray(a.checks) ? a.checks : [];
+  const lists = gradedLists(qp);
+  const kcRight = lists.knowledgeCheck.filter(x => x.isCorrect);
+  const kcWrong = lists.knowledgeCheck.filter(x => !x.isCorrect);
+  const mythRight = lists.mythCards.filter(x => x.guessedRight);
+  const mythWrong = lists.mythCards.filter(x => !x.guessedRight);
+  const checks = lists.checks;
   const checkRight = checks.filter(x => x.isCorrect);
   const checkWrong = checks.filter(x => !x.isCorrect);
   const { right: totalRight, total: totalAnswered } = questTally(qp);

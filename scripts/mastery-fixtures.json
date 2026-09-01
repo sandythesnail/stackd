@@ -1,0 +1,144 @@
+{
+  "_comment": [
+    "Lesson records, and whether each one counts as an ACE — a perfect run of that lesson.",
+    "Both apps have to agree on every row. app.js's questWasFlawless decides whether the web",
+    "hands over a per-module mastery badge; mobile/src/lib/webAced.ts decides whether mobile",
+    "believes a lesson played on the laptop was aced (mobile keeps no analytics of its own",
+    "once a lesson is done, so reading the web's record is the only way it can know).",
+    "scripts/check-mastery.js runs this table through both.",
+    "Fields not read by either rule are omitted; `polls` appears only where its double-count",
+    "matters, since a poll records into `checks` too."
+  ],
+  "cases": [
+    {
+      "name": "a perfect run",
+      "aced": true,
+      "record": {
+        "done": true,
+        "analytics": {
+          "knowledgeCheck": [{ "isCorrect": true }, { "isCorrect": true }],
+          "mythCards": [{ "guessedRight": true }],
+          "checks": [{ "isCorrect": true }],
+          "matchingMistakes": 0
+        }
+      }
+    },
+    {
+      "name": "a poll, which records into both polls and checks, must not be counted twice",
+      "aced": true,
+      "record": {
+        "done": true,
+        "analytics": {
+          "knowledgeCheck": [{ "isCorrect": true }],
+          "polls": [{ "guessedRight": true }],
+          "checks": [{ "isCorrect": true }],
+          "matchingMistakes": 0
+        }
+      }
+    },
+    {
+      "name": "no record of how it went is not an ace (what a phone-finished lesson syncs as)",
+      "aced": false,
+      "record": {
+        "done": true,
+        "analytics": {
+          "knowledgeCheck": [],
+          "mythCards": [],
+          "polls": [],
+          "checks": [],
+          "matchingMistakes": 0
+        }
+      }
+    },
+    {
+      "name": "no analytics key at all is not an ace",
+      "aced": false,
+      "record": { "done": true }
+    },
+    {
+      "name": "an unfinished lesson is not an ace, however well it was going",
+      "aced": false,
+      "record": {
+        "done": false,
+        "analytics": { "knowledgeCheck": [{ "isCorrect": true }], "matchingMistakes": 0 }
+      }
+    },
+    {
+      "name": "one missed Quick Check answer",
+      "aced": false,
+      "record": {
+        "done": true,
+        "analytics": {
+          "knowledgeCheck": [{ "isCorrect": true }, { "isCorrect": false }],
+          "matchingMistakes": 0
+        }
+      }
+    },
+    {
+      "name": "one missed myth card",
+      "aced": false,
+      "record": {
+        "done": true,
+        "analytics": {
+          "knowledgeCheck": [{ "isCorrect": true }],
+          "mythCards": [{ "guessedRight": false }],
+          "matchingMistakes": 0
+        }
+      }
+    },
+    {
+      "name": "the Quick Check perfect, every other graded moment wrong",
+      "aced": false,
+      "record": {
+        "done": true,
+        "analytics": {
+          "knowledgeCheck": [{ "isCorrect": true }],
+          "checks": [{ "isCorrect": false }, { "isCorrect": false }],
+          "matchingMistakes": 0
+        }
+      }
+    },
+    {
+      "name": "a botched matching board",
+      "aced": false,
+      "record": {
+        "done": true,
+        "analytics": {
+          "knowledgeCheck": [{ "isCorrect": true }],
+          "matchingMistakes": 2
+        }
+      }
+    },
+    {
+      "name": "checks alone can carry a lesson that had no Quick Check",
+      "aced": true,
+      "record": {
+        "done": true,
+        "analytics": {
+          "checks": [{ "isCorrect": true }, { "isCorrect": true }],
+          "matchingMistakes": 0
+        }
+      }
+    },
+    {
+      "name": "a save written before `checks` existed still reads correctly",
+      "aced": true,
+      "record": {
+        "done": true,
+        "analytics": {
+          "knowledgeCheck": [{ "isCorrect": true }],
+          "mythCards": [{ "guessedRight": true }],
+          "matchingMistakes": 0
+        }
+      }
+    },
+    {
+      "name": "a missing matchingMistakes counts as none",
+      "aced": true,
+      "record": {
+        "done": true,
+        "analytics": { "knowledgeCheck": [{ "isCorrect": true }] }
+      }
+    }
+  ]
+}
