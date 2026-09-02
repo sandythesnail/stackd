@@ -18265,9 +18265,14 @@ function renderModuleList(containerId) {
 // already know, what do you want out of this" check-in that recommends a themed "track" (a
 // short, ordered handful of modules) instead of dumping the full 11-module list on someone
 // who's brand new — without gating anything. Answers persist in state.onboardingSurvey until
-// reset from Settings. One module per screen, each a slider between two relatable "low" and
-// "high" phrases instead of a bank of generic multiple-choice buttons.
+// reset from Settings. One module per screen, answered on a five-point scale with nothing
+// pre-selected — see the long note above renderSurveyStep.
 const SURVEY_MODULE_IDS = MODULES.map(m => m.id);
+/** The old per-module slider anchors. NOT rendered any more, on either platform: the five
+ *  points of the scale are labelled, and these said the same thing again in two long
+ *  differently-shaped sentences. Kept in place because scripts/check-survey.js compares this
+ *  table against mobile/src/survey.ts's identical copy, and deleting it from one side only
+ *  would read as drift rather than as a deliberate removal from both. */
 const SURVEY_FAMILIARITY_LABELS = {
   earning: ["I've never seen an actual paycheck", 'I know exactly what gets taken out before it hits my account'],
   spending: ['I never spend a cent', 'After every paycheck, shopping time!'],
@@ -18288,7 +18293,11 @@ const SURVEY_GOALS = [
   { id: 'negotiate_salary', label: 'Negotiate salary', moduleIds: ['career'] },
   { id: 'curious', label: 'Just curious, exploring', moduleIds: [] },
 ];
-const SURVEY_TOTAL_STEPS = SURVEY_MODULE_IDS.length + 1; // familiarity sliders + one goals step
+// 11 module questions + the goals step + the starting-track screen. The track screen counts:
+// it is a step you act on (you can change the track there), not an epilogue, and mobile's
+// TOTAL_STEPS includes it for the same reason. This used to be modules + 1, so the header
+// counted to 12 and then showed a thirteenth screen.
+const SURVEY_TOTAL_STEPS = SURVEY_MODULE_IDS.length + 2;
 
 // Themed starting paths shown on the survey's results screen. Deliberately short (3 modules
 // each) so a brand-new user gets "start here, then here, then here" instead of an overwhelming
@@ -18396,7 +18405,10 @@ function trackModulesRemaining(track, survey) {
 function showOnboardingSurvey() {
   surveyStep = 1;
   surveyDraft = { moduleFamiliarity: {}, focusGoals: [], trackId: null };
-  document.getElementById('onboarding-mascot').innerHTML = getHammyFaceMarkup(0.32);
+  // No mascot to seed here any more. He belongs to the eleven module questions, where he
+  // reacts to the answer being given, and renderSurveyStep paints him as part of the step —
+  // a Hammy pinned in the card header would have had nothing to respond to on the two steps
+  // that aren't questions.
   renderSurveyStep();
   document.getElementById('onboarding-overlay').classList.add('visible');
 }
@@ -18516,13 +18528,21 @@ const ONBOARDING_TOUR_STEPS = [
     body: 'Tap this one to see what it covers. Finish them in order to complete the module.',
     requiresRealClick: true,
     clickKey: 'lesson-node',
+    // The one step whose target isn't on screen when the step opens — it has to be scrolled
+    // to first, and it is therefore still moving when the step's own two measurements are
+    // taken. See beginTourSettle for what that flag changes.
+    scrollsIntoView: true,
     beforeShow: () => {
       // The path lives on Home, and the step before this left the reader looking at the
       // sidebar's Modules link, so bring Home back and paint the path before measuring it.
       showPage('home');
       renderHome();
       const node = document.querySelector('#home-lesson-path .lp-hit[aria-current="true"]');
-      if (node) node.scrollIntoView({ block: 'center', behavior: 'auto' });
+      // `behavior: 'smooth'` says what actually happens. This asked for 'auto' and got a
+      // smooth scroll anyway, because styles.css sets `html { scroll-behavior: smooth }` and
+      // the CSS property is what 'auto' defers to — which is the whole reason this step
+      // needed a settle: the code read as an instant jump and behaved as a ~400ms animation.
+      if (node) node.scrollIntoView({ block: 'center', behavior: 'smooth' });
     },
   },
   {
@@ -18538,6 +18558,110 @@ const ONBOARDING_TOUR_STEPS = [
 ];
 let tourStepIdx = 0;
 let tourOpenedMobileNav = false;
+
+/* ── keeping the spotlight on the thing it is pointing at ──────────────────────────────
+ *
+ * The spotlight is a position:fixed box driven from getBoundingClientRect(), so it is only
+ * ever correct for the scroll position it was measured at. Two things broke that, and the
+ * "Pick your first lesson" step hit both at once — it was drawn ~150px below the node it was
+ * supposed to be ringing, over blank page.
+ *
+ * 1. Nothing re-measured on scroll. The only listener was `resize`. So any scroll after a
+ *    step opened — the reader's own, or the app's — left the highlight behind, permanently.
+ *    tourScrollHandler below fixes that for every step, and is the reason this is worth
+ *    doing properly rather than special-casing the one step that was visibly wrong.
+ *
+ * 2. That step's beforeShow scrolls the lesson path into view, and `html { scroll-behavior:
+ *    smooth }` in styles.css makes that a ~400ms animation. renderTourStep measures on the
+ *    next frame and again at 120ms — both of them mid-flight, at a scroll position the page
+ *    left behind milliseconds later.
+ *
+ * The fix for (2) is mobile's (see OnboardingTour.tsx's `settling`): a step that scrolls
+ * shows the plain scrim with no hole and no card until the page has stopped moving, then
+ * measures once and reveals everything already in the right place. Following the target down
+ * the screen would be the other option and is the one mobile explicitly rejected — it reads
+ * as the highlight chasing the page.
+ */
+
+/** How long a settling step may wait for the scroll to stop before giving up and measuring
+ *  anyway. Comfortably longer than a smooth scroll across one viewport; a target that never
+ *  settles degrades to a possibly-imperfect highlight rather than to a hang. */
+const TOUR_SETTLE_GRACE_MS = 900;
+/** Don't accept "the scroll has stopped" before this — a smooth scroll doesn't start until
+ *  the frame after it is asked for, so the first few frames read as stationary. */
+const TOUR_SETTLE_MIN_MS = 160;
+/** Consecutive stationary frames that count as settled. */
+const TOUR_SETTLE_STABLE_FRAMES = 3;
+
+/** Bounds on the spotlight's padding — see where it's computed in positionTourStep. The
+ *  floor is what makes a nav row read as a highlighted BLOCK rather than a traced outline;
+ *  the ceiling stops a wide target's highlight from reaching the tiles beside it (Home's
+ *  stat row leaves about 12px between cards). */
+const TOUR_PAD_MIN = 12;
+const TOUR_PAD_MAX = 22;
+/** The hole's corner radius, and .tour-spotlight's own — the two have to agree or the
+ *  clipped hole and the ring drawn at its edge disagree at the corners. Kept in step with the
+ *  bigger padding above: a 14px radius on a 22px-padded box looks pinched. */
+const TOUR_HOLE_RADIUS = 18;
+
+let tourSettleRaf = null;
+let tourScrollIdle = null;
+
+/** Suppresses the 0.25s position transition while the spotlight is tracking a scroll. With it
+ *  left on, every scroll event starts a fresh quarter-second ease and the highlight visibly
+ *  trails the page instead of being stuck to it. Restored once scrolling stops, so step-to-
+ *  step movement still glides. */
+function setTourAnimated(on) {
+  document.getElementById('tour-overlay')?.classList.toggle('tour-instant', !on);
+}
+
+function tourScrollHandler() {
+  setTourAnimated(false);
+  positionTourStep();
+  clearTimeout(tourScrollIdle);
+  tourScrollIdle = setTimeout(() => setTourAnimated(true), 160);
+}
+
+/** Hides the hole and the card, and watches the scroll until it stops. */
+function beginTourSettle() {
+  const overlay = document.getElementById('tour-overlay');
+  if (!overlay) return;
+  cancelTourSettle();
+  overlay.classList.add('tour-settling');
+  overlay.style.clipPath = '';
+  const started = Date.now();
+  let last = null;
+  let stable = 0;
+  const tick = () => {
+    const y = window.scrollY;
+    stable = y === last ? stable + 1 : 0;
+    last = y;
+    const elapsed = Date.now() - started;
+    const settled = elapsed >= TOUR_SETTLE_MIN_MS && stable >= TOUR_SETTLE_STABLE_FRAMES;
+    if (settled || elapsed >= TOUR_SETTLE_GRACE_MS) { endTourSettle(); return; }
+    tourSettleRaf = requestAnimationFrame(tick);
+  };
+  tourSettleRaf = requestAnimationFrame(tick);
+}
+
+/** Reveals the hole and the card, measured where the target has actually come to rest. The
+ *  reveal deliberately does NOT animate: easing in from the pre-scroll position is exactly
+ *  the flight the settle exists to prevent. */
+function endTourSettle() {
+  if (tourSettleRaf) { cancelAnimationFrame(tourSettleRaf); tourSettleRaf = null; }
+  const overlay = document.getElementById('tour-overlay');
+  if (!overlay || !overlay.classList.contains('tour-settling')) return;
+  setTourAnimated(false);
+  overlay.classList.remove('tour-settling');
+  positionTourStep();
+  // One frame with the transition still off, so the jump into position is not eased.
+  requestAnimationFrame(() => setTourAnimated(true));
+}
+
+function cancelTourSettle() {
+  if (tourSettleRaf) { cancelAnimationFrame(tourSettleRaf); tourSettleRaf = null; }
+  document.getElementById('tour-overlay')?.classList.remove('tour-settling');
+}
 
 /** Called from the real controls the tour waits on — the lesson-path node and the preview
  * card's start button — rather than from a listener bolted onto whichever DOM node happened
@@ -18581,6 +18705,9 @@ function startOnboardingTour() {
   window.scrollTo(0, 0);
   document.getElementById('tour-overlay').classList.add('visible');
   window.addEventListener('resize', positionTourStep);
+  // The listener that was missing. Without it the spotlight was correct only for the scroll
+  // position it happened to be measured at — see the note above tourScrollHandler.
+  window.addEventListener('scroll', tourScrollHandler, { passive: true });
   // Suppress the spotlight/tooltip's position transition for the tour's very first paint so
   // it appears already in place instead of visibly sliding in from the top-left corner —
   // matches the mobile app's tour, which lazily seeds its animated position values from the
@@ -18601,7 +18728,10 @@ function startOnboardingTour() {
 
 function renderTourStep() {
   const step = ONBOARDING_TOUR_STEPS[tourStepIdx];
+  cancelTourSettle();
   if (step.beforeShow) step.beforeShow();
+  // Armed AFTER beforeShow, because beforeShow is what starts the scroll this waits on.
+  if (step.scrollsIntoView) beginTourSettle();
   document.getElementById('tour-step-label').textContent = `Step ${tourStepIdx + 1} of ${ONBOARDING_TOUR_STEPS.length}`;
   document.getElementById('tour-title').textContent = step.title;
   document.getElementById('tour-body').textContent = step.body;
@@ -18612,10 +18742,17 @@ function renderTourStep() {
   nextBtn.style.display = step.requiresRealClick ? 'none' : '';
   nextBtn.textContent = tourStepIdx === ONBOARDING_TOUR_STEPS.length - 1 ? 'Got it →' : 'Next →';
   // requestAnimationFrame gives beforeShow's DOM changes (e.g. opening the mobile drawer)
-  // one paint to settle before the target element's rect is measured; a second, delayed
-  // re-measure catches anything that shifts layout a beat later (e.g. a web font swap).
+  // one paint to settle before the target element's rect is measured; the delayed re-measures
+  // catch anything that shifts layout a beat later. 120ms is for a web font swap; 400ms is
+  // for a CSS entrance animation, which is what the last step's target rides in on — the
+  // lesson preview card animates in over 0.3s (fadeUp), so both earlier measurements landed
+  // while its button was still travelling and the ring settled a few pixels high.
+  //
+  // Skipped entirely on a settling step: there the reveal is endTourSettle's job, and an
+  // early measurement is precisely what must not be shown.
   requestAnimationFrame(positionTourStep);
   setTimeout(positionTourStep, 120);
+  setTimeout(positionTourStep, 400);
 }
 
 // SVG path for a rounded rectangle, traced with arc commands — used to clip a rounded hole
@@ -18639,6 +18776,11 @@ function positionTourStep() {
   // .tour-spotlight-yellow in app.css) so it's always exactly aligned with the highlighted
   // rect, never a separately-offset ring on the tile itself.
   spotlight.classList.toggle('tour-spotlight-yellow', !!step.requiresRealClick);
+  // Nothing is drawn in the target's place while the page is still moving towards it — the
+  // scrim stays whole and the card stays hidden until endTourSettle measures. Bailing here
+  // rather than in the callers means a stray resize or scroll event mid-settle can't punch a
+  // hole over whatever happens to be under the old rect.
+  if (overlay.classList.contains('tour-settling')) return;
   const r = targetEl ? targetEl.getBoundingClientRect() : null;
   // offsetParent is null for anything not actually rendered (display:none, or an ancestor
   // that is) — a target in that state still returns a technically-valid all-zero rect from
@@ -18657,12 +18799,18 @@ function positionTourStep() {
   spotlight.style.display = '';
   tooltip.style.transform = 'none';
 
-  // One symmetric padding for every step. The click-me steps used to hug their target with
-  // 1px, and -6px along the bottom, because that target was a wide full-width lesson tile
-  // that the usual 8px made look inflated. They now point at a small round path node and at
-  // a button, where a negative bottom inset crops the highlight into the thing it is
-  // supposed to be drawing a ring around.
-  const pad = 8;
+  // One symmetric padding for every step, sized against the target rather than fixed. The
+  // click-me steps used to hug their target with 1px, and -6px along the bottom, because that
+  // target was a wide full-width lesson tile that the usual 8px made look inflated. They now
+  // point at a path node and at a button, where a negative bottom inset crops the highlight
+  // into the thing it is supposed to be drawing a ring around.
+  //
+  // Proportional because a flat number cannot serve both ends of the range this tour covers:
+  // 8px around a 360px-wide streak tile is a hairline, and the same 8px around a path node is
+  // most of the highlight. Taking a fifth of the target's SHORT side gives small things
+  // proportionally more room, which is what makes them read as highlighted rather than merely
+  // outlined, and the clamp keeps it from swallowing the tiles either side of a wide one.
+  const pad = Math.round(Math.min(TOUR_PAD_MAX, Math.max(TOUR_PAD_MIN, Math.min(r.width, r.height) * 0.2)));
   const padBottom = pad;
   spotlight.style.top = (r.top - pad) + 'px';
   spotlight.style.left = (r.left - pad) + 'px';
@@ -18682,16 +18830,15 @@ function positionTourStep() {
   // overlay — clipping the hole sidesteps that entirely.
   const hx = r.left - pad, hy = r.top - pad, hw = r.width + pad * 2, hh = r.height + pad + padBottom;
   const outer = `M0,0 H${window.innerWidth} V${window.innerHeight} H0 Z`;
-  // Rounded to match .tour-spotlight's own border-radius (14px) — a sharp-cornered hole
-  // clipped under a rounded visual ring left a small sharp-vs-round mismatch right at the
-  // corners.
-  const hole = roundedRectPath(hx, hy, hw, hh, 14);
+  // Rounded to match .tour-spotlight's own border-radius — a sharp-cornered hole clipped
+  // under a rounded visual ring left a small sharp-vs-round mismatch right at the corners.
+  const hole = roundedRectPath(hx, hy, hw, hh, TOUR_HOLE_RADIUS);
   overlay.style.clipPath = `path(evenodd, "${outer} ${hole}")`;
 
   // Prefer below the spotlight; flip above it if there's not enough room under it. Clamped
   // horizontally so it never runs off either edge of a narrow viewport.
   const margin = 14;
-  const tooltipW = tooltip.offsetWidth || 300;
+  const tooltipW = tooltip.offsetWidth || 360;
   const tooltipH = tooltip.offsetHeight || 150;
   let top = r.bottom + pad + margin;
   if (top + tooltipH > window.innerHeight - margin) top = Math.max(margin, r.top - pad - margin - tooltipH);
@@ -18713,7 +18860,11 @@ function endOnboardingTour() {
   const overlay = document.getElementById('tour-overlay');
   overlay.classList.remove('visible');
   overlay.style.clipPath = '';
+  cancelTourSettle();
+  clearTimeout(tourScrollIdle);
+  overlay.classList.remove('tour-instant');
   window.removeEventListener('resize', positionTourStep);
+  window.removeEventListener('scroll', tourScrollHandler);
   if (tourOpenedMobileNav) {
     document.getElementById('sidebar').classList.remove('collapsed');
     tourOpenedMobileNav = false;
@@ -18723,117 +18874,342 @@ function endOnboardingTour() {
   saveState();
 }
 
+/* ── the survey, one question at a time ────────────────────────────────────────────────
+ *
+ * Ported from mobile's (onboarding)/survey.tsx, which rebuilt this screen for a reason worth
+ * restating here because the version it replaces was the WEBSITE's:
+ *
+ *   The first step used to be a slider that started at 3. Every module's did. So the fastest
+ *   way through — and the way most people took — was Next, Next, Next, which recorded
+ *   "moderately familiar with everything" as if it were eleven considered answers. A survey
+ *   whose default output is a lie is worse than no survey, and this is the thing that picks
+ *   your starting track.
+ *
+ * So: nothing is pre-selected, and a module question cannot be advanced until it has an
+ * answer. The button under the scale is white until a number is picked and green once one
+ * is, which is both the receipt for the tap and the way forward — the same colour change
+ * mobile uses, and the reason neither app auto-advances any more. Skipping the whole survey
+ * is still one click away and records NOTHING rather than a fabricated middle.
+ *
+ * The scale is generic and uniform across modules. SURVEY_FAMILIARITY_LABELS' two per-module
+ * end quotes ("I never spend a cent" / "After every paycheck, shopping time!") used to sit
+ * under the question as anchors and are gone from both apps: they said in two long,
+ * differently-shaped sentences what the five labelled points already say. The table stays in
+ * both files because scripts/check-survey.js compares it — see the note on it above.
+ */
+
+/** The five answers, on the same 1-5 scale the scoring expects (see computeModulePriority).
+ *
+ * Each carries a face, so Hammy reacts to the answer as it is given. The run climbs the way
+ * the scale does: sad at "never heard of it", his own resting satisfied face at the shrug,
+ * then the same confused mouth the quest player uses for a near miss, the happy mouth it uses
+ * for a correct answer, and the star face at the top. Nothing here judges the student — 1 is
+ * a perfectly good answer to give — but a face that doesn't move is worse than no face, so it
+ * moves. Same five faces as mobile's SCALE, in the same order. */
+const SURVEY_SCALE = [
+  { value: 1, label: 'Never heard of it', face: 'mood-sad' },
+  { value: 2, label: 'I’ve heard of it', face: 'mood-satisfied' },
+  { value: 3, label: 'I kind of get it', face: 'face-gentle' },
+  { value: 4, label: 'Pretty comfortable', face: 'face-happy' },
+  { value: 5, label: 'I could explain it', face: 'mood-star' },
+];
+/** Before anything is picked. Curious reads as "well?", which is the question being asked. */
+const SURVEY_UNANSWERED_FACE = 'mood-curious';
+
+/** Step numbers, 1-based, mirroring mobile's GOALS_STEP / RESULT_STEP / TOTAL_STEPS. */
+function surveyGoalsStep() { return SURVEY_MODULE_IDS.length + 1; }
+function surveyResultStep() { return SURVEY_MODULE_IDS.length + 2; }
+
+/** Hammy, reacting when his face changes.
+ *
+ * A face that swaps silently reads as a bug — the drawing is identical apart from the eyes
+ * and the mouth, so at a glance nothing appears to have happened. He bounces, which is what
+ * makes the swap read as HIM responding rather than as an image being replaced. It is the
+ * app's own hammyBounce, the same one the quest player plays for a right answer, rather than
+ * a second private idea of how the mascot reacts.
+ *
+ * `replay` re-runs the bounce even when the face is unchanged, so picking the SAME number
+ * twice still gets a response — mobile bumps a reactionKey for exactly this.
+ */
+function setSurveyHammyFace(faceClass, replay) {
+  const el = document.getElementById('survey-hammy');
+  if (!el) return;
+  const already = el.classList.contains(faceClass);
+  if (!already) {
+    // One face at a time. The mood classes and the two mouth-only ones are painted by
+    // different rules (see .has-face-overlay vs .face-happy in app.css), and leaving an old
+    // one on is what squeezes a whole illustrated face into a box meant for a mouth.
+    el.className = 'survey-hammy hammy-side-avatar';
+    revealFaceOverlay(el, faceClass);
+  }
+  if (already && !replay) return;
+  el.classList.remove('survey-hammy-react');
+  void el.offsetWidth; // restart the animation rather than letting the class no-op
+  el.classList.add('survey-hammy-react');
+}
+
+/** The 1-5 scale as an actual scale: five numbered points on one line, low on the left and
+ * high on the right, rather than five stacked rows of prose.
+ *
+ * The number is the answer — it is what gets stored and what the track scoring reads
+ * (computeModulePriority maps 1-5 onto a 0-30 point priority), so it should be the thing the
+ * eye lands on and the thing the pointer hits. Stacked rows made the WORDS the answer and hid
+ * the number in a badge, which left no sense of where an answer sat on a range: whether "I
+ * kind of get it" was the middle or the fourth of five was something you had to work out. A
+ * line of numbers with the two extremes labelled at its ends says it without being read.
+ */
+function surveyScaleMarkup(picked) {
+  const dots = SURVEY_SCALE.map(function (s) {
+    const on = picked === s.value;
+    return '<button type="button" class="survey-dot' + (on ? ' survey-dot-on' : '') + '"'
+      + ' data-scale="' + s.value + '" aria-pressed="' + (on ? 'true' : 'false') + '"'
+      + ' aria-label="' + s.value + ', ' + escapeHtml(s.label) + '">' + s.value + '</button>';
+  }).join('');
+  const readback = picked
+    ? '<span class="survey-scale-pick">' + escapeHtml(SURVEY_SCALE.find(function (s) { return s.value === picked; }).label) + '</span>'
+    : '<span class="survey-scale-hint">Pick a number</span>';
+  return '<div class="survey-scale">'
+      + '<div class="survey-scale-row"><span class="survey-scale-rail" aria-hidden="true"></span>' + dots + '</div>'
+      + '<div class="survey-scale-ends"><span>Nothing yet</span><span>I could explain it</span></div>'
+      // Fixed height, so the line appearing doesn't shove the anchors down under the pointer.
+      + '<div class="survey-scale-readback">' + readback + '</div>'
+    + '</div>';
+}
+
 function renderSurveyStep() {
-  const heading = document.getElementById('onboarding-heading');
-  const sub = document.getElementById('onboarding-subheading');
   const stepLabel = document.getElementById('onboarding-step-label');
   const body = document.getElementById('onboarding-body');
   const nextBtn = document.getElementById('onboarding-next');
   const skipBtn = document.getElementById('onboarding-skip');
   const backBtn = document.getElementById('onboarding-back');
+  const fill = document.getElementById('survey-progress-fill');
+  const bar = document.getElementById('survey-progress');
 
-  backBtn.style.display = surveyStep > 1 ? '' : 'none';
-  backBtn.onclick = () => { surveyStep--; renderSurveyStep(); };
+  const goalsStep = surveyGoalsStep();
+  const resultStep = surveyResultStep();
+  const total = resultStep;
+
+  if (!body.dataset.scrollFadeBound) {
+    body.addEventListener('scroll', surveySyncScrollFade, { passive: true });
+    body.dataset.scrollFadeBound = '1';
+  }
+
+  // The count and the bar both include the result screen, as mobile's do — it is a step you
+  // act on (you can change the track there), not an epilogue.
+  stepLabel.textContent = surveyStep + ' / ' + total;
+  const pct = Math.round((surveyStep / total) * 100);
+  fill.style.width = pct + '%';
+  bar.setAttribute('aria-valuenow', String(pct));
+
+  backBtn.style.visibility = surveyStep > 1 ? '' : 'hidden';
+  backBtn.onclick = function () { surveyStep--; renderSurveyStep(); };
+
+  // Keyed on the step so each question animates in as its own screen rather than the text
+  // swapping in place — the difference between "next question" and "the same form changed".
+  body.classList.remove('survey-step-in');
+  void body.offsetWidth;
+  body.classList.add('survey-step-in');
+  body.classList.toggle('survey-body-question', surveyStep <= SURVEY_MODULE_IDS.length);
 
   if (surveyStep <= SURVEY_MODULE_IDS.length) {
     const modId = SURVEY_MODULE_IDS[surveyStep - 1];
-    const mod = MODULES.find(m => m.id === modId);
-    const [lowLabel, highLabel] = SURVEY_FAMILIARITY_LABELS[modId] || ['Never heard of it', 'Could teach it'];
-    const current = surveyDraft.moduleFamiliarity[modId] ?? 3;
+    const mod = MODULES.find(function (m) { return m.id === modId; });
+    // Deliberately no `?? 3`. An unanswered module is undefined and stays undefined —
+    // computeModulePriority already ignores a familiarity it doesn't have.
+    const picked = surveyDraft.moduleFamiliarity[modId];
 
-    stepLabel.textContent = `Step ${surveyStep} of ${SURVEY_TOTAL_STEPS}`;
-    heading.textContent = mod.title;
-    sub.textContent = "Slide to where you're really at, no wrong answer, it just helps us know where to start you off.";
-    body.innerHTML = `
-      <div class="survey-slider-wrap">
-        <input type="range" class="survey-slider" id="survey-slider" min="1" max="5" step="1" value="${current}" aria-label="Familiarity with ${mod.title}, from ${lowLabel} to ${highLabel}">
-        <div class="survey-slider-ticks">
-          <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
-        </div>
-        <div class="survey-slider-labels">
-          <span class="survey-slider-left">${lowLabel}</span>
-          <span class="survey-slider-right">${highLabel}</span>
-        </div>
-      </div>`;
-    const slider = document.getElementById('survey-slider');
-    slider.addEventListener('input', () => {
-      surveyDraft.moduleFamiliarity[modId] = Number(slider.value);
-    });
-    surveyDraft.moduleFamiliarity[modId] = current;
+    body.innerHTML =
+      '<div class="survey-ask">'
+        + '<div class="survey-hammy hammy-side-avatar" id="survey-hammy">' + withFaceOverlay(getHammyFaceMarkup(0.2)) + '</div>'
+        + '<h2 class="survey-question">How much do you know about this?</h2>'
+      + '</div>'
+      // The card is a lighter wash of the chip sitting on it — the same hue as the numbered
+      // square, mixed down into white, so the two read as one object rather than two colours
+      // that happen to be near each other. The chip keeps full strength and stays the
+      // brightest thing on the card, which is what makes the number what you look at first.
+      + '<div class="survey-topic" data-mod="' + mod.id + '">'
+        // Ringed in white rather than bordered: the card behind the chip is that same colour,
+        // and a border drawn on the tile itself would sit inside its corner radius and read
+        // as a hairline. Outline for contrast, chip for identity — the chip is not recoloured
+        // to solve the contrast, because then it stops being the module's chip.
+        + '<span class="survey-topic-ring"><span class="mod-icon survey-topic-icon" data-mod="' + mod.id + '">' + mod.icon + '</span></span>'
+        + '<span class="survey-topic-text">'
+          + '<span class="survey-topic-eyebrow">MODULE ' + surveyStep + ' OF ' + SURVEY_MODULE_IDS.length + '</span>'
+          + '<span class="survey-topic-name">' + escapeHtml(mod.title) + '</span>'
+        + '</span>'
+      + '</div>'
+      + surveyScaleMarkup(picked);
+
+    setSurveyHammyFace(pickedFace(picked), false);
+    wireSurveyScale(body, modId);
 
     skipBtn.style.display = '';
-    nextBtn.textContent = surveyStep === SURVEY_MODULE_IDS.length ? 'Last one →' : 'Next →';
-    nextBtn.onclick = () => { surveyStep++; renderSurveyStep(); };
-  } else if (surveyStep === SURVEY_MODULE_IDS.length + 1) {
-    stepLabel.textContent = `Step ${surveyStep} of ${SURVEY_TOTAL_STEPS}`;
-    heading.textContent = 'What do you want to get out of Stacked right now?';
-    sub.textContent = 'Pick as many as you like.';
-    body.innerHTML = `<div class="survey-goals-grid">${SURVEY_GOALS.map(g =>
-      `<button type="button" class="survey-goal-chip${surveyDraft.focusGoals.includes(g.id) ? ' selected' : ''}" data-goal="${g.id}">${g.label}</button>`
-    ).join('')}</div>`;
-    body.querySelectorAll('.survey-goal-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const goalId = btn.dataset.goal;
+    nextBtn.textContent = 'Next';
+    setSurveyActionState(picked !== undefined);
+    nextBtn.onclick = function () {
+      // Unanswered, the button simply doesn't go anywhere. It is white rather than disabled
+      // so it still reads as the way forward — the colour is the instruction.
+      if (surveyDraft.moduleFamiliarity[modId] === undefined) return;
+      surveyStep++;
+      renderSurveyStep();
+    };
+  } else if (surveyStep === goalsStep) {
+    body.innerHTML =
+      '<div class="survey-lead">'
+        + '<span class="survey-eyebrow">ALMOST THERE</span>'
+        + '<h2 class="survey-question">What are you hoping to get out of Stacked?</h2>'
+        + '<p class="survey-sub">Pick as many as you like. It helps us choose where to start.</p>'
+      + '</div>'
+      + '<div class="survey-goals">' + SURVEY_GOALS.map(function (g) {
+        const on = surveyDraft.focusGoals.indexOf(g.id) !== -1;
+        return '<button type="button" class="survey-goal' + (on ? ' survey-goal-on' : '') + '"'
+          + ' data-goal="' + g.id + '" aria-pressed="' + (on ? 'true' : 'false') + '">'
+          + '<span class="survey-check" aria-hidden="true">'
+            + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>'
+          + '</span>'
+          + '<span class="survey-goal-label">' + escapeHtml(g.label) + '</span>'
+        + '</button>';
+      }).join('') + '</div>';
+
+    body.querySelectorAll('[data-goal]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const goalId = btn.getAttribute('data-goal');
         const idx = surveyDraft.focusGoals.indexOf(goalId);
         if (idx === -1) surveyDraft.focusGoals.push(goalId); else surveyDraft.focusGoals.splice(idx, 1);
-        btn.classList.toggle('selected');
+        const on = idx === -1;
+        btn.classList.toggle('survey-goal-on', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
       });
     });
+
     skipBtn.style.display = '';
-    nextBtn.textContent = 'See my starting track →';
-    nextBtn.onclick = () => { surveyStep++; renderSurveyStep(); };
+    nextBtn.textContent = 'See my starting track';
+    setSurveyActionState(true);
+    nextBtn.onclick = function () { surveyStep++; renderSurveyStep(); };
   } else {
-    stepLabel.textContent = "You're all set";
-    heading.textContent = 'Your starting track';
-    sub.textContent = '';
+    const recommended = getRecommendedTrack(surveyDraft);
+    const activeTrack = SURVEY_TRACKS.find(function (t) { return t.id === surveyDraft.trackId; }) || recommended;
 
-    const activeTrack = SURVEY_TRACKS.find(t => t.id === surveyDraft.trackId) || getRecommendedTrack(surveyDraft);
-    const trackModules = trackModulesRemaining(activeTrack, surveyDraft);
+    body.innerHTML =
+      '<div class="survey-lead">'
+        + '<span class="survey-eyebrow">YOU’RE ALL SET</span>'
+        + '<h2 class="survey-question">Your starting track</h2>'
+      + '</div>'
+      + '<div class="survey-hero">'
+        + '<span class="survey-hero-tag">' + (activeTrack.id === recommended.id ? 'RECOMMENDED FOR YOU' : 'YOUR PICK') + '</span>'
+        + '<span class="survey-hero-title">' + escapeHtml(activeTrack.title) + '</span>'
+        + '<span class="survey-hero-blurb">' + escapeHtml(trackReason(activeTrack, surveyDraft)) + '</span>'
+      + '</div>'
+      // The track's own modules, in order, as a numbered rail — NOT trackModulesRemaining's
+      // filtered list. This screen is shown to someone who has just answered the survey, so
+      // "the three modules, in this order" is the promise being made; dropping the ones
+      // already finished (which for a retake can be all of them) turned the card that names
+      // your path into an empty box or a two-item version of a three-item track.
+      + '<div class="survey-path">'
+        + '<span class="survey-section-label">YOUR PATH</span>'
+        + '<p class="survey-section-caption">These ' + activeTrack.moduleIds.length
+          + ' modules, in order. You can explore the rest whenever you like.</p>'
+        + '<div class="survey-path-rows">' + activeTrack.moduleIds.map(function (id, i) {
+          const m = MODULES.find(function (x) { return x.id === id; });
+          if (!m) return '';
+          const last = i === activeTrack.moduleIds.length - 1;
+          return '<div class="survey-path-row">'
+              + '<span class="survey-path-rail">'
+                + '<span class="survey-path-dot">' + (i + 1) + '</span>'
+                + (last ? '' : '<span class="survey-path-line"></span>')
+              + '</span>'
+              + '<span class="survey-path-card">'
+                + '<span class="mod-icon" data-mod="' + m.id + '">' + m.icon + '</span>'
+                + '<span class="survey-path-name">' + escapeHtml(m.title) + '</span>'
+                + (isModuleFullyDone(m) ? '<span class="survey-path-done">Done</span>' : '')
+              + '</span>'
+            + '</div>';
+        }).join('') + '</div>'
+      + '</div>'
+      // A vertical list of ALL FOUR, not a row of chips for the other three. Excluding the
+      // current one meant choosing a track re-ordered the list under the pointer that had
+      // just clicked it, and there was no way to see which one you were on except by its
+      // absence.
+      + '<span class="survey-section-label">PREFER A DIFFERENT TRACK?</span>'
+      + '<div class="survey-alts">' + SURVEY_TRACKS.map(function (t) {
+        const on = t.id === activeTrack.id;
+        return '<button type="button" class="survey-alt' + (on ? ' survey-alt-on' : '') + '"'
+          + ' data-track="' + t.id + '" aria-pressed="' + (on ? 'true' : 'false') + '">'
+          + '<span class="survey-alt-body">'
+            + '<span class="survey-alt-title-row">'
+              + '<span class="survey-alt-title">' + escapeHtml(t.title) + '</span>'
+              + (t.id === recommended.id ? '<span class="survey-rec-tag">PICKED FOR YOU</span>' : '')
+            + '</span>'
+            + '<span class="survey-alt-blurb">' + escapeHtml(t.blurb) + '</span>'
+          + '</span>'
+          + (on ? '<span class="survey-alt-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg></span>' : '')
+        + '</button>';
+      }).join('') + '</div>';
 
-    if (!activeTrack || trackModules.length === 0) {
-      body.innerHTML = `<div class="survey-recommend-card">
-          <div>
-            <div class="survey-recommend-title">Explore at your own pace</div>
-            <div class="survey-recommend-text">Jump into whatever module looks interesting on your dashboard, there's no set order.</div>
-          </div>
-        </div>`;
-    } else {
-      body.innerHTML = `
-        <div class="survey-recommend-card survey-track-card">
-          <div>
-            <div class="survey-recommend-title">Your track: ${activeTrack.title}</div>
-            <div class="survey-recommend-text">${trackReason(activeTrack, surveyDraft)}</div>
-            <div class="survey-track-modules">
-              ${trackModules.map((m, i) => `
-                <div class="survey-track-module">
-                  <span class="survey-track-step">${i + 1}</span>
-                  <div class="mod-icon" data-mod="${m.id}">${m.icon}</div>
-                  <span class="survey-track-module-title">${m.title}</span>
-                </div>`).join('')}
-            </div>
-          </div>
-        </div>
-        <div class="survey-track-switch">
-          <span class="survey-track-switch-label">Prefer a different track?</span>
-          <div class="survey-track-switch-options">
-            ${SURVEY_TRACKS.filter(t => t.id !== activeTrack.id).map(t =>
-              `<button type="button" class="survey-track-chip" data-track="${t.id}">${t.title}</button>`
-            ).join('')}
-          </div>
-        </div>`;
-      body.querySelectorAll('.survey-track-chip').forEach(btn => {
-        btn.addEventListener('click', () => {
-          surveyDraft.trackId = btn.dataset.track;
-          renderSurveyStep();
-        });
+    body.querySelectorAll('[data-track]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        surveyDraft.trackId = btn.getAttribute('data-track');
+        renderSurveyStep();
       });
-    }
+    });
 
-    backBtn.style.display = 'none';
+    // Nothing to skip past on the last screen — the track is chosen either way, and "Skip"
+    // here would mean discarding eleven answers the reader has just finished giving.
     skipBtn.style.display = 'none';
-    nextBtn.textContent = 'Take me to my dashboard →';
-    nextBtn.onclick = () => finishOnboardingSurvey(false);
+    // "Start learning" rather than "Save my track": the button leads into the Hammy intro and
+    // then Home, so naming only the smaller half of what it does is what makes people
+    // hesitate over it.
+    nextBtn.textContent = 'Start learning';
+    setSurveyActionState(true);
+    nextBtn.onclick = function () { finishOnboardingSurvey(false); };
   }
+
+  // After the step is painted, so it measures the step that is actually on screen.
+  body.scrollTop = 0;
+  surveySyncScrollFade();
+}
+
+/** Keeps the "more below" fade in step with the scroll position: on while there is content
+ *  past the bottom edge, off the moment there isn't. Bound once per step, and idempotent, so
+ *  repainting a step can't stack listeners on an element that outlives it. */
+function surveySyncScrollFade() {
+  const body = document.getElementById('onboarding-body');
+  if (!body) return;
+  const more = body.scrollHeight - body.clientHeight - body.scrollTop > 4;
+  body.classList.toggle('survey-more-below', more);
+}
+
+/** The face for an answer, or the waiting face when there isn't one yet. */
+function pickedFace(value) {
+  const hit = SURVEY_SCALE.find(function (s) { return s.value === value; });
+  return hit ? hit.face : SURVEY_UNANSWERED_FACE;
+}
+
+/** White until a number is picked, green once one is. The colour IS the receipt for the tap,
+ *  which is what the old auto-advance used to be. */
+function setSurveyActionState(ready) {
+  const btn = document.getElementById('onboarding-next');
+  if (btn) btn.classList.toggle('survey-action-ready', !!ready);
+}
+
+/** The scale's click handlers, re-attached after each repaint.
+ *
+ * Answering repaints ONLY the scale, not the whole step: rebuilding the step would re-create
+ * the mascot element, and a brand-new element cannot play the reaction that is the entire
+ * point of having tapped. Replacing the scale in place drops its listeners with it, hence the
+ * re-wire — the same reason mobile keeps Hammy outside the animated question wrapper. */
+function wireSurveyScale(body, modId) {
+  body.querySelectorAll('[data-scale]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const value = Number(btn.getAttribute('data-scale'));
+      surveyDraft.moduleFamiliarity[modId] = value;
+      const scale = body.querySelector('.survey-scale');
+      scale.outerHTML = surveyScaleMarkup(value);
+      wireSurveyScale(body, modId);
+      setSurveyHammyFace(pickedFace(value), true);
+      setSurveyActionState(true);
+    });
+  });
 }
 
 // onlyUnlocked: Home's version — a trophy case of what's actually been earned, not the

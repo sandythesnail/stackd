@@ -240,6 +240,79 @@ step('track ordering drives the next module', () => {
   const card = window.document.getElementById('home-mascot-card').textContent;
   if (!card.includes('Managing Risk')) throw new Error('continue card names: ' + card.slice(0, 80));
 });
+/* The survey's mechanism, not its copy.
+ *
+ * The one thing that must never come back is the version this replaced: a slider that started
+ * at 3 on every module, so clicking straight through recorded eleven confident "moderately
+ * familiar" answers nobody gave — and those answers pick the starting track. Both halves are
+ * asserted here: an untouched question stores NOTHING, and Next refuses to move until it has
+ * a real answer. */
+step('an unanswered module question records nothing and will not advance', () => {
+  s.onboardingSurvey = { completed: false, moduleFamiliarity: {}, focusGoals: [], trackId: null };
+  window.showOnboardingSurvey();
+  const draft = () => ev('surveyDraft');
+  if (Object.keys(draft().moduleFamiliarity).length) {
+    throw new Error('the first question pre-filled an answer: ' + JSON.stringify(draft().moduleFamiliarity));
+  }
+  const step1 = window.document.getElementById('onboarding-step-label').textContent;
+  window.document.getElementById('onboarding-next').click();
+  const after = window.document.getElementById('onboarding-step-label').textContent;
+  if (after !== step1) throw new Error('Next advanced past an unanswered question (' + step1 + ' -> ' + after + ')');
+  if (window.document.getElementById('onboarding-next').classList.contains('survey-action-ready')) {
+    throw new Error('the action button reads as ready with nothing answered');
+  }
+});
+step('answering records the number, greens the button and lets it advance', () => {
+  const body = window.document.getElementById('onboarding-body');
+  const dots = body.querySelectorAll('[data-scale]');
+  if (dots.length !== 5) throw new Error('scale has ' + dots.length + ' points, expected 5');
+  body.querySelector('[data-scale="4"]').click();
+  const draft = ev('surveyDraft');
+  if (draft.moduleFamiliarity.earning !== 4) {
+    throw new Error('answer stored as ' + JSON.stringify(draft.moduleFamiliarity));
+  }
+  if (!window.document.getElementById('onboarding-next').classList.contains('survey-action-ready')) {
+    throw new Error('the action button stayed white after an answer');
+  }
+  window.document.getElementById('onboarding-next').click();
+  if (window.document.getElementById('onboarding-step-label').textContent !== '2 / 13') {
+    throw new Error('did not advance: ' + window.document.getElementById('onboarding-step-label').textContent);
+  }
+});
+step('the survey ends on the track screen, offering all four', () => {
+  // Straight to the last step rather than clicking through eleven questions.
+  ev('surveyStep = ' + (api.MODULES.length + 2));
+  window.renderSurveyStep();
+  const body = window.document.getElementById('onboarding-body');
+  const tracks = [...body.querySelectorAll('[data-track]')].map((b) => b.getAttribute('data-track'));
+  const want = ev('SURVEY_TRACKS').map((t) => t.id);
+  if (tracks.length !== want.length) {
+    throw new Error('track list offers ' + tracks.length + ' of ' + want.length + ': ' + tracks.join(', '));
+  }
+  // Exactly one is marked as chosen — the list used to EXCLUDE the current track, so nothing
+  // on screen said which one you were on.
+  const on = body.querySelectorAll('.survey-alt-on').length;
+  if (on !== 1) throw new Error(on + ' tracks marked as selected');
+  const label = window.document.getElementById('onboarding-next').textContent;
+  if (label !== 'Start learning') throw new Error('final button reads: ' + label);
+  // Every module in the track, not just the unfinished ones.
+  const active = ev('SURVEY_TRACKS').find((t) => t.id === body.querySelector('.survey-alt-on').getAttribute('data-track'));
+  const rows = body.querySelectorAll('.survey-path-row').length;
+  if (rows !== active.moduleIds.length) {
+    throw new Error('path shows ' + rows + " of the track's " + active.moduleIds.length + ' modules');
+  }
+});
+step('skipping the survey records no familiarity at all', () => {
+  s.onboardingSurvey = { completed: false, moduleFamiliarity: {}, focusGoals: [], trackId: null };
+  window.showOnboardingSurvey();
+  window.document.getElementById('onboarding-body').querySelector('[data-scale="1"]').click();
+  window.document.getElementById('onboarding-skip').click();
+  const saved = s.onboardingSurvey;
+  if (!saved.completed) throw new Error('skip did not mark the survey done');
+  if (Object.keys(saved.moduleFamiliarity).length) {
+    throw new Error('skip saved answers: ' + JSON.stringify(saved.moduleFamiliarity));
+  }
+});
 step('tour runs all six steps', () => {
   s.hasSeenOnboardingTour = false;
   window.startOnboardingTour();

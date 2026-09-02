@@ -30,20 +30,37 @@
    ══════════════════════════════════════════════ */
 
 /* ─────────────────────────── geometry ───────────────────────────
-   Pure math, ported verbatim from mobile/src/lessonPath/geometry.ts. Kept identical rather
-   than re-tuned so the trail has the same shape on both platforms. */
+   The SHAPE is ported verbatim from mobile/src/lessonPath/geometry.ts — same sine, same
+   phase step, same node-gap-to-node-size ratio — so the trail winds the same way on both
+   platforms. The SCALE is not, and deliberately: see LP_SCALE. */
+
+/** How much bigger a node is here than on the phone.
+ *
+ * Mobile's 58px diamond is drawn against a ~390pt screen — about a seventh of its width. The
+ * same 58 CSS pixels on a 1440px desktop is a fifteenth, and the path came out as a row of
+ * small tokens on a lot of empty page: the one control on Home that the whole screen is
+ * pointing at was also the smallest thing on it, and the onboarding tour's "tap this one"
+ * step had to draw a highlight around something the size of a favicon.
+ *
+ * This is the same argument LP_AMPLITUDE_RATIO already makes below about the swing, applied
+ * to the nodes themselves — carrying a phone's pixel values onto a desktop unchanged is not
+ * what porting the design means. Everything derived from it (gap, stroke weights, glyph size,
+ * the halo and ripple) scales together, and the CSS reads the result rather than repeating
+ * it, so there is one number to change and nothing that can drift from it. */
+const LP_SCALE = 1.3;
 
 /** Vertical distance between consecutive nodes. */
-const LP_NODE_GAP = 96;
+const LP_NODE_GAP = Math.round(96 * LP_SCALE);
 /** Rendered width of a node's diamond BEFORE rotation. Rotated 45°, its bounding box is
- *  this × √2 ≈ 82px, which is also the click target — comfortably over the 44px floor. */
-const LP_NODE_SIZE = 58;
+ *  this × √2, which is also the click target — comfortably over the 44px floor. */
+const LP_NODE_SIZE = Math.round(58 * LP_SCALE);
 const LP_NODE_BOX = Math.ceil(LP_NODE_SIZE * Math.SQRT2);
 /** Radians of phase per node. ~0.85 gives roughly seven nodes per full left-right-left
  *  cycle, which reads as a wandering trail rather than a zigzag or a near-straight line. */
 const LP_PHASE_STEP = 0.85;
-/** The trail's column, capped rather than filling the page. */
-const LP_MAX_COL = 640;
+/** The trail's column, capped rather than filling the page. Scaled with the nodes so the
+ *  bigger diamonds keep the same room to swing rather than crowding the centre line. */
+const LP_MAX_COL = Math.round(640 * LP_SCALE);
 /** How far a node swings from the centre line at the extremes, as a FRACTION of the column.
  *
  * Mobile hardcodes 78px against a ~390px phone. Carrying that number over literally is what
@@ -52,6 +69,11 @@ const LP_MAX_COL = 640;
  * of a fifth. Keeping mobile's RATIO (78/390 = 0.2) rather than its pixel value is what
  * actually ports the shape, and it holds at any column width. */
 const LP_AMPLITUDE_RATIO = 0.2;
+
+/** A stroke weight, tuned against mobile's node size and scaled to this one. The trail's
+ * strokes have to grow with the diamonds they connect — left at their original weights
+ * against 30% bigger nodes they read as thread between beads rather than as a path. */
+function lpStroke(w) { return Math.round(w * LP_SCALE * 10) / 10; }
 
 /** Where each node sits, as a sine wave down the column.
  *
@@ -306,6 +328,25 @@ function lpRecommended() {
 
 /* ─────────────────────────── render ─────────────────────────── */
 
+/** The column the trail actually gets, which is LP_MAX_COL only when there is room for it.
+ *
+ * Every node position, the SVG's own width and the header block are all derived from this one
+ * number, and it used to be the constant itself — fine while the constant was 640 and narrower
+ * than any desktop content area, and not fine once LP_SCALE widened it: on a laptop-width
+ * window the trail swung past the right edge of the page and the outermost nodes were clipped.
+ * A stylesheet max-width cannot fix that, because the node coordinates are computed in JS and
+ * would keep pointing outside the box.
+ *
+ * The floor is two node-boxes: below that the sine has nowhere to swing and the "trail" is a
+ * vertical stack, which is worse than a slightly cramped one. A measurement of 0 means the
+ * container has not been laid out yet (jsdom, or a render before first paint) — take the full
+ * column rather than the floor, since that is what it will get once it is on screen. */
+function lpColumnWidth(container) {
+  const avail = container ? container.clientWidth : 0;
+  if (!avail) return LP_MAX_COL;
+  return Math.max(LP_NODE_BOX * 2, Math.min(LP_MAX_COL, avail));
+}
+
 /** Builds Home's lesson path into `containerId`. Safe to call on every render — it tears
  *  down the previous comet loop and rebuilds from current state. */
 function renderLessonPath(containerId) {
@@ -328,16 +369,21 @@ function renderLessonPath(containerId) {
   const recommendedTrack = trackIds.indexOf(section.module.id) >= 0 && !section.mastered
     && recommended && recommended.moduleId === section.module.id;
 
-  container.appendChild(lpSectionEl(section, shownIdx, sections, recommendedTrack));
+  container.appendChild(lpSectionEl(section, shownIdx, sections, recommendedTrack, lpColumnWidth(container)));
 }
 
-function lpSectionEl(section, shownIdx, sections, recommendedTrack) {
+function lpSectionEl(section, shownIdx, sections, recommendedTrack, colW) {
   const mod = section.module;
   const nodes = section.nodes;
   const reduced = lpReducedMotion();
 
   const wrap = document.createElement('div');
   wrap.className = 'lp-section';
+  // The header block reads its width from here rather than repeating LP_MAX_COL as a literal,
+  // which is what let the two drift the moment the column was widened: the stylesheet said
+  // 640px, the trail below it was 832px, and a header narrower than its own path reads as two
+  // separate things stacked.
+  wrap.style.setProperty('--lp-col', colW + 'px');
   wrap.setAttribute('data-mod', mod.id);
 
   /* The recommended row is always rendered at a fixed height and only its CONTENTS are
@@ -400,12 +446,17 @@ function lpSectionEl(section, shownIdx, sections, recommendedTrack) {
   const lastIdx = nodes.length - 1;
   const hasSpur = !!(nodes[lastIdx] && nodes[lastIdx].isLifeTask) && nodes.length >= 2;
   const h = lpPathHeight(nodes.length);
-  const colW = LP_MAX_COL;
 
   const body = document.createElement('div');
   body.className = 'lp-body';
   body.style.height = h + 'px';
   body.style.width = colW + 'px';
+  // The stylesheet sizes every part of a node off these rather than repeating the numbers,
+  // so LP_SCALE is the only place a node's size is written down. Set on .lp-body because
+  // that is the nearest common ancestor of the slots, the halo/ripple and the comet layer.
+  body.style.setProperty('--lp-node', LP_NODE_SIZE + 'px');
+  body.style.setProperty('--lp-box', LP_NODE_BOX + 'px');
+  body.style.setProperty('--lp-scale', String(LP_SCALE));
 
   // The sub-quest swings 1.5× further off the line than the wave would take it, so "not on
   // the main line" is said by position and not only by styling. Keyed off isLifeTask, not
@@ -439,10 +490,10 @@ function lpSectionEl(section, shownIdx, sections, recommendedTrack) {
       '</linearGradient></defs>' +
       // A wider pale under-stroke so the trail sits ON the page rather than being a rule
       // ruled across it.
-      '<path d="' + mainD + '" stroke="#EAF0E8" stroke-width="15" stroke-linecap="round" fill="none"/>' +
-      '<path d="' + mainD + '" stroke="#E2E9DC" stroke-width="9" stroke-linecap="round" fill="none"/>' +
-      (walkedD ? '<path d="' + walkedD + '" stroke="url(#' + gid + ')" stroke-width="9" stroke-linecap="round" fill="none"/>' : '') +
-      (spurD ? '<path d="' + spurD + '" stroke="' + (spurWalked ? '#B2C9AE' : '#E9EFE5') + '" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 12" fill="none"/>' : '') +
+      '<path d="' + mainD + '" stroke="#EAF0E8" stroke-width="' + lpStroke(15) + '" stroke-linecap="round" fill="none"/>' +
+      '<path d="' + mainD + '" stroke="#E2E9DC" stroke-width="' + lpStroke(9) + '" stroke-linecap="round" fill="none"/>' +
+      (walkedD ? '<path d="' + walkedD + '" stroke="url(#' + gid + ')" stroke-width="' + lpStroke(9) + '" stroke-linecap="round" fill="none"/>' : '') +
+      (spurD ? '<path d="' + spurD + '" stroke="' + (spurWalked ? '#B2C9AE' : '#E9EFE5') + '" stroke-width="' + lpStroke(6) + '" stroke-linecap="round" stroke-dasharray="' + lpStroke(2) + ' ' + lpStroke(12) + '" fill="none"/>' : '') +
     '</svg>');
 
   /* ── nodes ── */

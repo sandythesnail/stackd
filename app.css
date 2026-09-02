@@ -2581,108 +2581,292 @@ select.budget-input { cursor: pointer; }
 @keyframes fadeUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 /* ─── ONBOARDING SURVEY OVERLAY ─── */
+/* ─── ONBOARDING SURVEY ───
+   Ported from mobile's (onboarding)/survey.tsx. The shape is a full-height column: a top bar
+   carrying the back chevron, a progress bar and the step count; the question filling the
+   space between; and one full-width button at the bottom. See the long note above
+   renderSurveyStep in app.js for why the slider it replaces had to go. */
 .onboarding-overlay {
   position: fixed; inset: 0; background: rgba(253,250,245,0.92);
   backdrop-filter: blur(8px); z-index: 260; display: none;
   align-items: center; justify-content: center; padding: 1.5rem;
 }
 .onboarding-overlay.visible { display: flex; }
+/* A fixed height rather than one that grows with its contents. Thirteen screens in a row
+   whose card resized under the pointer between each one is the single most restless thing
+   this flow could do — and the button, which is in the same place on every step and is the
+   only control most of them have, would have been the thing that moved most. Mobile gets
+   this for free by being a screen; here it is stated. */
 .onboarding-card {
   background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 2rem; max-width: 560px; width: 100%; max-height: 88vh; overflow-y: auto;
+  padding: 1.5rem 1.75rem 1.4rem; max-width: 560px; width: 100%;
+  height: min(660px, 88vh);
+  display: flex; flex-direction: column;
   box-shadow: 0 8px 40px rgba(38,56,48,0.1); animation: fadeUp 0.3s ease both;
+}
+
+.survey-topbar { display: flex; align-items: center; gap: 0.85rem; flex-shrink: 0; }
+.survey-back {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; color: var(--text-mid); cursor: pointer;
+}
+.survey-back:hover { background: var(--green-pale); color: var(--green-dark); }
+/* visibility rather than display on step 1 — hiding it outright would let the progress bar
+   slide left by 34px between step 1 and step 2, which is the bar appearing to jump backwards
+   at the exact moment it first advances. */
+.survey-progress { flex: 1; height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.survey-progress-fill {
+  display: block; height: 100%; border-radius: 999px; background: var(--green);
+  transition: width 0.3s ease;
+}
+.survey-step-count { flex-shrink: 0; font-size: 0.78rem; font-weight: 700; color: var(--green); }
+
+/* The question area. Scrolls only when it has to (the goals and track steps), so the eleven
+   module questions — which all fit — never show a scrollbar that implies there is more. */
+.onboarding-body {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 1.1rem 0 0.25rem;
+  display: flex; flex-direction: column;
   scrollbar-width: none; -ms-overflow-style: none;
 }
-.onboarding-card::-webkit-scrollbar { display: none; width: 0; height: 0; }
-.onboarding-header { display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 1.5rem; }
-.onboarding-mascot { flex-shrink: 0; }
-.onboarding-step-label {
-  font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
-  color: var(--pink-dark); margin-bottom: 0.3rem;
+/* A module question is a fixed set of three blocks that always fit, so it sits centred in
+   whatever height the card has — mobile's `flex: 1, justifyContent: 'center'`. The other two
+   steps are lists that can outgrow the card, so they stay top-aligned and scroll; centring
+   those would push the top of a long list out of the card's top edge. */
+.onboarding-body.survey-body-question { justify-content: center; }
+.onboarding-body::-webkit-scrollbar { display: none; width: 0; height: 0; }
+/* Says "there is more below" without a scrollbar. The goals and track steps can outgrow the
+   card, and the card's own bottom edge is a straight line that reads as the end of the
+   content — on the track step that hid the entire "prefer a different track?" list, which is
+   the only control on the screen. The mask paints on the scroll PORT, not on the scrolled
+   content, so the fade stays pinned to the bottom edge; renderSurveyStep drops the class once
+   there is nothing further to scroll to (see surveySyncScrollFade). */
+.onboarding-body.survey-more-below {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 38px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 38px), transparent);
 }
-.onboarding-header h2 {
-  font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; color: var(--text);
-  margin-bottom: 0.35rem; letter-spacing: -0.3px;
+/* Each step arrives as its own screen rather than the text changing in place — the
+   difference between "next question" and "the same form changed". */
+.survey-step-in { animation: surveyStepIn 0.24s ease both; }
+@keyframes surveyStepIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: none; }
 }
-.onboarding-header p { font-size: 0.85rem; color: var(--text-mid); line-height: 1.5; }
 
-/* One module per screen: a big slider between two relatable low/high phrases instead of a
-   bank of generic multiple-choice buttons. */
-.survey-slider-wrap { padding: 1.5rem 0 0.5rem; }
-.survey-slider {
-  -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 999px;
-  background: linear-gradient(90deg, var(--pink-light), var(--green-light)); outline: none; cursor: pointer;
+/* ── a module question ── */
+.survey-ask { display: flex; align-items: center; gap: 0.75rem; }
+/* Hammy reacts to the answer as it is given. He is the only thing on this screen that
+   responds to a click besides the number itself, which is what turns eleven identical
+   questions into something with a face on it. overflow: visible so the bounce isn't clipped;
+   the pig is drawn in a 440x460 frame scaled down by --pig-scale. */
+.survey-hammy {
+  position: relative; flex-shrink: 0;
+  width: 92px; height: 92px; overflow: visible;
+  display: flex; align-items: center; justify-content: center;
 }
-.survey-slider::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 50%;
-  background: #fff; border: 3px solid var(--green-dark); cursor: grab;
-  box-shadow: var(--shadow-sm); transition: transform 0.15s;
+/* The app's own hammyBounce, on its own trigger class. Deliberately NOT the `happy` class
+   that .hammy-side-avatar uses for the same animation: that class also paints the happy
+   MOUTH, which would overwrite whichever face the answer just chose. */
+.survey-hammy.survey-hammy-react .pig { animation: hammyBounce 0.7s ease-in-out !important; }
+.survey-question {
+  font-family: var(--font-display); font-size: 1.35rem; font-weight: 700;
+  color: var(--text); letter-spacing: -0.3px; line-height: 1.25; margin: 0;
 }
-.survey-slider::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.1); }
-.survey-slider::-moz-range-thumb {
-  width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 3px solid var(--green-dark);
-  cursor: grab; box-shadow: var(--shadow-sm);
-}
-.survey-slider-ticks { display: flex; justify-content: space-between; padding: 0 1px; margin-top: 0.45rem; }
-.survey-slider-ticks span { font-size: 0.72rem; font-weight: 600; color: var(--text-soft); }
-.survey-slider-labels { display: flex; justify-content: space-between; gap: 1.5rem; margin-top: 0.6rem; }
-.survey-slider-left, .survey-slider-right {
-  font-size: 0.88rem; font-weight: 600; color: var(--text); line-height: 1.4; max-width: 46%;
-}
-.survey-slider-left { text-align: left; }
-.survey-slider-right { text-align: right; }
 
-.survey-goals-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; }
-.survey-goal-chip {
-  padding: 0.65rem 1.1rem; border-radius: 999px; border: 1.5px solid var(--border); background: #fff;
-  font-size: 0.88rem; font-weight: 600; color: var(--text); cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s; font-family: inherit;
+/* The topic card: a lighter wash of the module's own chip, so the two read as one object.
+   color-mix rather than a second hardcoded palette — it derives from the same --mod-color
+   the chip uses, so the eleven washes cannot drift from the eleven chips. */
+.survey-topic {
+  display: flex; align-items: center; gap: 0.9rem; margin-top: 1rem;
+  padding: 0.9rem; border-radius: var(--radius);
+  border: 2px solid var(--mod-color, var(--green));
+  background: color-mix(in srgb, var(--mod-color, var(--green)) 22%, #fff);
 }
-.survey-goal-chip:hover { border-color: var(--green); }
-.survey-goal-chip.selected { border-color: var(--green); background: var(--green-pale); color: var(--green-dark); }
+/* Padding rather than a border, so the ring is a solid band of white with the chip's own
+   rounding showing through it — a border on the tile itself would sit inside the corner
+   radius and read as a hairline. */
+.survey-topic-ring { background: #fff; border-radius: 19px; padding: 3px; flex-shrink: 0; line-height: 0; }
+.survey-topic-icon { width: 54px; height: 54px; border-radius: 16px; font-size: 1.25rem; }
+.survey-topic-text { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+/* Black, and the same black on all eleven. These two lines used to take the module's own ink
+   — a different colour eleven times over — which reads as washed out against a pale card. */
+.survey-topic-eyebrow { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.9px; color: #000; }
+.survey-topic-name { font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; color: #000; }
 
-.onboarding-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 1.75rem; }
-.onboarding-footer-left { display: flex; align-items: center; gap: 0.5rem; }
-.onboarding-skip, .onboarding-back {
+/* ── the 1-5 scale ── */
+.survey-scale { padding-top: 1.6rem; }
+.survey-scale-row { position: relative; display: flex; align-items: center; justify-content: space-between; }
+/* The rail the points sit on. Behind them, inset so it doesn't poke out either end. */
+.survey-scale-rail {
+  position: absolute; left: 26px; right: 26px; top: 50%; height: 3px; margin-top: -1.5px;
+  background: var(--border); border-radius: 2px;
+}
+.survey-dot {
+  position: relative; width: 56px; height: 56px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--border); cursor: pointer;
+  font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--text-soft);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s ease-out, background 0.15s, border-color 0.15s, color 0.15s;
+}
+.survey-dot:hover { border-color: var(--green); color: var(--green-dark); }
+.survey-dot:active { transform: scale(0.94); }
+.survey-dot:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+/* Selection SPRINGS rather than switching: the chosen number swells past its resting size and
+   settles back, which is what makes a click feel like it landed on something. */
+.survey-dot-on {
+  background: var(--green); border-color: var(--green); color: #fff;
+  box-shadow: 0 4px 10px rgba(74,104,68,0.3);
+  animation: surveyDotPop 0.34s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+}
+@keyframes surveyDotPop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+.survey-scale-ends { display: flex; justify-content: space-between; gap: 1rem; margin-top: 0.55rem; }
+.survey-scale-ends span { font-size: 0.72rem; font-weight: 700; color: var(--text-soft); }
+.survey-scale-ends span:last-child { text-align: right; }
+/* Fixed height, so the read-back line appearing doesn't shove the anchors down under the
+   pointer that has just moved there. */
+.survey-scale-readback {
+  height: 28px; display: flex; align-items: center; justify-content: center; margin-top: 0.55rem;
+}
+.survey-scale-pick {
+  font-size: 0.95rem; font-weight: 800; color: var(--green-dark);
+  animation: surveyFadeIn 0.18s ease both;
+}
+@keyframes surveyFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.survey-scale-hint { font-size: 0.85rem; font-weight: 600; color: var(--text-soft); }
+
+/* ── the goals step ── */
+.survey-lead { display: flex; flex-direction: column; gap: 0.35rem; }
+.survey-eyebrow { font-size: 0.74rem; font-weight: 800; letter-spacing: 0.9px; color: var(--green-dark); }
+.survey-sub { font-size: 0.9rem; color: var(--text-mid); line-height: 1.5; margin: 0; }
+.survey-goals { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.15rem; }
+.survey-goal {
+  display: flex; align-items: center; gap: 0.75rem; width: 100%; text-align: left;
+  padding: 0.85rem 1rem; border-radius: var(--radius); cursor: pointer;
+  background: #fff; border: 1.5px solid var(--border); font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+.survey-goal:hover { border-color: var(--green); }
+.survey-goal-on { border-color: var(--green); background: var(--green-pale); }
+.survey-check {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 7px;
+  border: 1.5px solid var(--border); background: #fff; color: transparent;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.survey-goal-on .survey-check { background: var(--green); border-color: var(--green); color: #fff; }
+.survey-goal-label { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+
+/* ── the starting-track step ── */
+.survey-hero {
+  display: flex; flex-direction: column; gap: 0.4rem; margin-top: 1.1rem;
+  padding: 1.25rem 1.4rem; border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--green), var(--green-dark)); color: #fff;
+  animation: surveyHeroIn 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@keyframes surveyHeroIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: none; }
+}
+.survey-hero-tag {
+  align-self: flex-start; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.9px;
+  background: rgba(255,255,255,0.22); padding: 0.22rem 0.6rem; border-radius: 999px;
+}
+.survey-hero-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; letter-spacing: -0.3px; }
+.survey-hero-blurb { font-size: 0.9rem; line-height: 1.5; color: rgba(255,255,255,0.92); }
+
+.survey-path { margin-top: 1.4rem; }
+.survey-section-label {
+  display: block; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.9px;
+  color: var(--text-soft); margin-top: 1.4rem;
+}
+.survey-path .survey-section-label { margin-top: 0; }
+.survey-section-caption { font-size: 0.85rem; color: var(--text-mid); line-height: 1.5; margin: 0.3rem 0 0; }
+.survey-path-rows { margin-top: 0.75rem; }
+.survey-path-row { display: flex; gap: 0.85rem; }
+.survey-path-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.survey-path-dot {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: var(--green-dark); color: #fff;
+  font-size: 0.75rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.survey-path-line { flex: 1; width: 2px; background: var(--green-light); margin: 2px 0; }
+.survey-path-card {
+  flex: 1; display: flex; align-items: center; gap: 0.7rem; min-width: 0;
+  margin-bottom: 0.5rem; padding: 0.6rem 0.85rem;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.survey-path-card .mod-icon { width: 34px; height: 34px; border-radius: 10px; font-size: 0.8rem; }
+.survey-path-name { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+.survey-path-done {
+  margin-left: auto; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em;
+  background: var(--green-pale); color: var(--green-dark); padding: 0.18rem 0.5rem; border-radius: 999px;
+}
+
+.survey-alts { display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.6rem; }
+.survey-alt {
+  display: flex; align-items: center; gap: 0.75rem; width: 100%; text-align: left;
+  padding: 0.8rem 1rem; border-radius: var(--radius); cursor: pointer;
+  background: #fff; border: 1.5px solid var(--border); font-family: inherit;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s;
+}
+.survey-alt:hover { border-color: var(--green); }
+.survey-alt:active { transform: scale(0.99); }
+.survey-alt-on { border-color: var(--green); background: var(--green-pale); }
+.survey-alt-body { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; flex: 1; }
+.survey-alt-title-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.survey-alt-title { font-size: 0.98rem; font-weight: 700; color: var(--text); }
+.survey-alt-on .survey-alt-title { color: var(--green-dark); }
+.survey-rec-tag {
+  font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em;
+  background: var(--green-dark); color: #fff; padding: 0.16rem 0.45rem; border-radius: 999px;
+}
+.survey-alt-blurb { font-size: 0.82rem; color: var(--text-mid); line-height: 1.45; }
+.survey-alt-check {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--green); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── the footer ── */
+.onboarding-footer {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
+  padding-top: 1.1rem;
+}
+/* One button, full width, on every step. The old Back sat beside it duplicating the chevron
+   already in the top bar and spent a third of the row saying so. */
+.survey-action {
+  width: 100%; padding: 0.9rem 1rem; border-radius: var(--radius); cursor: pointer;
+  font-family: inherit; font-size: 1rem; font-weight: 700;
+  background: #fff; border: 1.5px solid var(--border); color: var(--text-mid);
+  transition: background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s;
+}
+/* White until a number is picked, green once one is. The colour IS the receipt for the tap:
+   unanswered, the button simply doesn't go anywhere rather than looking broken or disabled. */
+.survey-action-ready {
+  background: var(--green); border-color: var(--green); color: #fff;
+  box-shadow: 0 3px 10px rgba(74,104,68,0.22);
+}
+.survey-action-ready:hover { background: var(--green-dark); border-color: var(--green-dark); }
+.onboarding-skip {
   font-size: 0.82rem; font-weight: 600; color: var(--text-soft); cursor: pointer;
-  font-family: inherit; background: none; border: none; padding: 0.5rem;
+  font-family: inherit; background: none; border: none; padding: 0.45rem;
 }
-.onboarding-skip:hover, .onboarding-back:hover { color: var(--text-mid); text-decoration: underline; }
-
-.survey-recommend-card {
-  background: var(--green-pale); border: 1px solid var(--green-light); border-radius: var(--radius);
-  padding: 1.25rem 1.4rem; display: flex; gap: 1rem; align-items: center;
-}
-.survey-recommend-icon { flex-shrink: 0; }
-.survey-recommend-title { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 0.3rem; }
-.survey-recommend-text { font-size: 0.85rem; color: var(--text-mid); line-height: 1.5; }
-
-.survey-track-card { display: block; }
-.survey-track-modules { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-top: 1rem; }
-.survey-track-module {
-  display: flex; align-items: center; gap: 0.5rem; background: #fff; border: 1px solid var(--green-light);
-  border-radius: 999px; padding: 0.35rem 0.85rem 0.35rem 0.35rem;
-}
-.survey-track-step {
-  display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%;
-  background: var(--green-dark); color: #fff; font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
-}
-.survey-track-module-title { font-size: 0.85rem; font-weight: 600; color: var(--text); }
-
-.survey-track-switch { margin-top: 1.1rem; }
-.survey-track-switch-label { display: block; font-size: 0.78rem; color: var(--text-soft); margin-bottom: 0.55rem; }
-.survey-track-switch-options { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.survey-track-chip {
-  padding: 0.45rem 0.9rem; border-radius: 999px; border: 1.5px solid var(--border); background: #fff;
-  font-size: 0.8rem; font-weight: 600; color: var(--text-mid); cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s; font-family: inherit;
-}
-.survey-track-chip:hover { border-color: var(--green); background: var(--green-pale); color: var(--green-dark); }
+.onboarding-skip:hover { color: var(--text-mid); text-decoration: underline; }
 
 @media (max-width: 600px) {
-  .onboarding-header { flex-direction: column; align-items: center; text-align: center; }
-  .survey-slider-labels { gap: 0.75rem; }
-  .survey-slider-left, .survey-slider-right { font-size: 0.8rem; max-width: 48%; }
+  .onboarding-overlay { padding: 0.75rem; }
+  .onboarding-card { height: 92vh; padding: 1.1rem 1.15rem 1rem; }
+  .survey-question { font-size: 1.15rem; }
+  .survey-hammy { width: 74px; height: 74px; }
+  .survey-topic-name { font-size: 1.15rem; }
+  /* The dots stay comfortably over the 44px touch floor; only the gaps between them give. */
+  .survey-dot { width: 48px; height: 48px; font-size: 1.1rem; }
+  .survey-scale-ends span { font-size: 0.66rem; }
 }
 
 /* ─── LIFE EVENT OVERLAY ─── */
@@ -2743,10 +2927,33 @@ select.budget-input { cursor: pointer; }
 .tour-overlay { position: fixed; inset: 0; z-index: 290; display: none; }
 .tour-overlay.visible { display: block; }
 .tour-spotlight {
-  position: fixed; border-radius: 14px;
+  position: fixed; border-radius: 18px;
   box-shadow: 0 0 0 9999px rgba(20,26,20,0.62);
   transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease, box-shadow 0.15s ease;
 }
+
+/* While a step's target is still being scrolled towards, and only then: no hole, no card,
+   just the scrim. See beginTourSettle in app.js for why — measuring mid-scroll is what put
+   the highlight 150px below the lesson node it was pointing at, over blank page.
+
+   The scrim survives because it IS this element's box-shadow, which a 0x0 box still casts
+   across the viewport; collapsing the box is therefore the whole trick, and it needs no
+   second scrim layer to fall back on. !important because the JS writes these four as inline
+   styles, and the last measurement it took is exactly what must not be shown here. */
+.tour-overlay.tour-settling .tour-spotlight {
+  top: 50% !important; left: 50% !important;
+  width: 0 !important; height: 0 !important;
+  box-shadow: 0 0 0 9999px rgba(20,26,20,0.62);
+  transition: none;
+}
+.tour-overlay.tour-settling .tour-tooltip { opacity: 0; transition: none; pointer-events: none; }
+
+/* Set while the spotlight is following a scroll, and while it lands after a settle. The
+   0.25s ease is right for step-to-step movement and wrong for both of these: against a
+   scroll it makes the highlight trail the page by a quarter second, and on a settle's
+   reveal it eases in from the position the page has just left. */
+.tour-overlay.tour-instant .tour-spotlight,
+.tour-overlay.tour-instant .tour-tooltip { transition: none; }
 /* "Start a lesson" step only (see positionTourStep toggling this class in app.js): the same
    box-shadow property that punches the dark backdrop's hole also draws a glowing yellow ring
    right at that hole's own edge — an extra layer on the SAME box-shadow, on the SAME element
@@ -2761,29 +2968,33 @@ select.budget-input { cursor: pointer; }
     0 0 20px 4px rgba(240, 194, 46, 0.6),
     0 0 0 3px #F0C22E;
 }
+/* Sized up along with the spotlight it belongs to. At 300px and 0.86rem this was a small
+   card floating on a dimmed full-screen page — the smallest thing on screen carrying the
+   only text on screen. It also reads at a glance now, which matters for a card the reader
+   is meant to take in and then act on the highlighted control. */
 .tour-tooltip {
-  position: fixed; width: 300px; max-width: calc(100vw - 28px);
+  position: fixed; width: 372px; max-width: calc(100vw - 28px);
   background: #fff; border-radius: var(--radius); border: 1px solid var(--border);
-  padding: 1.1rem 1.25rem; box-shadow: 0 8px 40px rgba(38,56,48,0.16);
+  padding: 1.35rem 1.5rem; box-shadow: 0 10px 44px rgba(38,56,48,0.2);
   pointer-events: auto;
-  transition: top 0.25s ease, left 0.25s ease;
+  transition: top 0.25s ease, left 0.25s ease, opacity 0.18s ease;
 }
 .tour-step-label {
-  font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
-  color: var(--text-soft); margin-bottom: 0.35rem;
+  font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;
+  color: var(--text-soft); margin-bottom: 0.4rem;
 }
 .tour-tooltip h3 {
-  font-family: var(--font-display); font-size: 1.05rem; font-weight: 700;
-  color: var(--text); letter-spacing: -0.2px; margin-bottom: 0.4rem;
+  font-family: var(--font-display); font-size: 1.22rem; font-weight: 700;
+  color: var(--text); letter-spacing: -0.2px; margin-bottom: 0.5rem;
 }
-.tour-tooltip p { font-size: 0.86rem; color: var(--text-mid); line-height: 1.5; }
-.tour-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 1rem; }
+.tour-tooltip p { font-size: 0.95rem; color: var(--text-mid); line-height: 1.55; }
+.tour-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 1.15rem; }
 .tour-skip {
-  background: none; border: none; font-family: inherit; font-size: 0.8rem; font-weight: 700;
-  color: var(--text-soft); cursor: pointer; padding: 0.4rem 0.2rem;
+  background: none; border: none; font-family: inherit; font-size: 0.88rem; font-weight: 700;
+  color: var(--text-soft); cursor: pointer; padding: 0.45rem 0.2rem;
 }
 .tour-skip:hover { color: var(--text-mid); }
-.tour-next { padding: 0.6rem 1.15rem; font-size: 0.85rem; }
+.tour-next { padding: 0.68rem 1.3rem; font-size: 0.92rem; }
 
 /* ─── ROOM PAGE ─── */
 #page-room.active { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -3779,7 +3990,7 @@ select.budget-input { cursor: pointer; }
 /* The header and the trail share one width (LP_MAX_COL in lesson-path.js) so the module
    name, the pager chevrons and the wave below them all sit on the same axis — a header
    wider than its path reads as two separate things stacked. */
-.lp-head-block { width: 100%; max-width: 640px; }
+.lp-head-block { width: 100%; max-width: var(--lp-col, 640px); }
 
 /* Fixed height, always occupied, contents conditional — mounting and unmounting this row
    moved the module name, the trail and everything under it on every page. */
@@ -3843,8 +4054,15 @@ select.budget-input { cursor: pointer; }
 .lp-svg { position: absolute; inset: 0; pointer-events: none; }
 
 /* ── one node ── */
+/* Every dimension below comes from --lp-node / --lp-box, which renderLessonPath sets on
+   .lp-body from LP_NODE_SIZE / LP_NODE_BOX (see lesson-path.js's LP_SCALE). They were
+   hardcoded 58px/82px in six places here, which is six places to miss when the scale
+   changes — and the diamond, its hover lift, its halo and its ripple all have to be the
+   same size or the effects sit off the node they belong to. Fallbacks are mobile's own
+   values, so a slot rendered outside .lp-body still looks right rather than collapsing. */
 .lp-slot {
-  position: absolute; width: 82px; height: 82px;
+  position: absolute;
+  width: var(--lp-box, 82px); height: var(--lp-box, 82px);
   display: flex; align-items: center; justify-content: center;
   animation: lpNodeIn 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
@@ -3852,14 +4070,17 @@ select.budget-input { cursor: pointer; }
   from { opacity: 0; transform: scale(0.6); }
   to   { opacity: 1; transform: scale(1); }
 }
-/* The full bounding box of the rotated diamond (~82px) is the click target, not the diamond
-   itself — which keeps it well clear of 44px even at the diamond's pinched corners. */
+/* The full bounding box of the rotated diamond is the click target, not the diamond itself —
+   which keeps it well clear of 44px even at the diamond's pinched corners. */
 .lp-hit {
-  position: relative; width: 82px; height: 82px; padding: 0; border: none; background: none;
+  position: relative;
+  width: var(--lp-box, 82px); height: var(--lp-box, 82px);
+  padding: 0; border: none; background: none;
   display: flex; align-items: center; justify-content: center;
 }
 .lp-diamond {
-  width: 58px; height: 58px; border-radius: 15px; border: 2.25px solid;
+  width: var(--lp-node, 58px); height: var(--lp-node, 58px);
+  border-radius: calc(15px * var(--lp-scale, 1)); border: calc(2.25px * var(--lp-scale, 1)) solid;
   display: flex; align-items: center; justify-content: center;
   transform: rotate(45deg);
   transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
@@ -3868,13 +4089,18 @@ select.budget-input { cursor: pointer; }
 .lp-glyph {
   transform: rotate(-45deg); display: flex; align-items: center; justify-content: center;
 }
-.lp-num { font-family: var(--font-display); font-size: 0.94rem; font-weight: 700; }
+.lp-num {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: calc(0.94rem * var(--lp-scale, 1));
+}
 
 /* Pointer-over and keyboard-focus lift. EVERY node gets it, in its own colour — the point of
    the path is that nothing is dimmed or locked, so "the cursor is on this one" has to be
    sayable about a completed node and a far-ahead one just as much as the recommended one. */
 .lp-lift {
-  position: absolute; width: 58px; height: 58px; border-radius: 20px;
+  position: absolute;
+  width: var(--lp-node, 58px); height: var(--lp-node, 58px);
+  border-radius: calc(20px * var(--lp-scale, 1));
   transform: rotate(45deg) scale(1.04); opacity: 0; pointer-events: none;
   transition: opacity 0.15s ease-out, transform 0.15s ease-out;
 }
@@ -3899,7 +4125,9 @@ select.budget-input { cursor: pointer; }
 
 /* ── the recommended node's additions ── */
 .lp-halo {
-  position: absolute; width: 58px; height: 58px; border-radius: 18px;
+  position: absolute;
+  width: var(--lp-node, 58px); height: var(--lp-node, 58px);
+  border-radius: calc(18px * var(--lp-scale, 1));
   background: var(--green); pointer-events: none;
   animation: lpHalo 1.5s ease-in-out infinite alternate;
 }
@@ -3911,8 +4139,10 @@ select.budget-input { cursor: pointer; }
    node's own footprint, so the recommendation reads at the edge of vision rather than only
    when you're looking straight at it. */
 .lp-ripple {
-  position: absolute; width: 58px; height: 58px; border-radius: 18px;
-  border: 2.5px solid var(--green); pointer-events: none;
+  position: absolute;
+  width: var(--lp-node, 58px); height: var(--lp-node, 58px);
+  border-radius: calc(18px * var(--lp-scale, 1));
+  border: calc(2.5px * var(--lp-scale, 1)) solid var(--green); pointer-events: none;
   animation: lpRipple 2.1s ease-out infinite;
 }
 @keyframes lpRipple {
@@ -3920,16 +4150,18 @@ select.budget-input { cursor: pointer; }
   to   { opacity: 0; transform: rotate(45deg) scale(2.15); }
 }
 .lp-start-tag {
-  position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: calc(-6px * var(--lp-scale, 1)); left: 50%;
+  transform: translateX(-50%);
   background: var(--green-dark); color: #fff;
-  font-size: 0.53rem; font-weight: 800; letter-spacing: 0.07em;
+  font-size: calc(0.53rem * var(--lp-scale, 1)); font-weight: 800; letter-spacing: 0.07em;
   padding: 0.16rem 0.5rem; border-radius: 999px; pointer-events: none; white-space: nowrap;
 }
 
 /* ── travelling dots ── */
 .lp-comet-layer { position: absolute; inset: 0; pointer-events: none; }
 .lp-comet {
-  position: absolute; top: 0; left: 0; width: 10px; height: 10px; border-radius: 50%;
+  position: absolute; top: 0; left: 0; border-radius: 50%;
+  width: calc(10px * var(--lp-scale, 1)); height: calc(10px * var(--lp-scale, 1));
   background: var(--green); opacity: 0; will-change: transform, opacity;
 }
 .lp-comet-faint { background: #84AB7B; }

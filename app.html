@@ -716,24 +716,28 @@
   <!-- The animated "meet Hammy" intro (replaces the old birth popup) builds its
        own overlay at runtime — see hammy-intro.js / runFirstLoadSequence. -->
 
-  <!-- ONBOARDING SURVEY OVERLAY -->
+  <!-- ONBOARDING SURVEY OVERLAY
+       Mobile's shell (see mobile/src/app/(onboarding)/survey.tsx): a back chevron, a
+       progress bar and "n / 13" across the top, the question below it, and ONE full-width
+       button at the bottom. The card no longer carries a fixed header — the mascot, the
+       question and the eyebrow all belong to individual steps and differ between them, so
+       renderSurveyStep paints them into #onboarding-body rather than filling in slots that
+       only two of the thirteen steps use. -->
   <div class="onboarding-overlay" id="onboarding-overlay">
     <div class="onboarding-card">
-      <div class="onboarding-header">
-        <div class="onboarding-mascot" id="onboarding-mascot"></div>
-        <div>
-          <div class="onboarding-step-label" id="onboarding-step-label">Step 1 of 2</div>
-          <h2 id="onboarding-heading"></h2>
-          <p id="onboarding-subheading"></p>
+      <div class="survey-topbar">
+        <button class="survey-back" id="onboarding-back" type="button" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="survey-progress" id="survey-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Survey progress">
+          <div class="survey-progress-fill" id="survey-progress-fill"></div>
         </div>
+        <span class="survey-step-count" id="onboarding-step-label">1 / 13</span>
       </div>
       <div class="onboarding-body" id="onboarding-body"></div>
       <div class="onboarding-footer">
-        <div class="onboarding-footer-left">
-          <button class="onboarding-back" id="onboarding-back">← Back</button>
-          <button class="onboarding-skip" id="onboarding-skip">Skip for now</button>
-        </div>
-        <button class="btn-primary" id="onboarding-next">Continue →</button>
+        <button class="survey-action" id="onboarding-next" type="button">Next</button>
+        <button class="onboarding-skip" id="onboarding-skip" type="button">Skip for now</button>
       </div>
     </div>
   </div>
