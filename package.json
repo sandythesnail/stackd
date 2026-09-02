@@ -19,6 +19,7 @@
     "check:tools": "node scripts/check-tools.js",
     "check:mastery": "node scripts/check-mastery.js",
     "check:hammy": "node scripts/check-hammy-lines.js",
-    "check:renders": "node scripts/check-app-renders.js"
+    "check:renders": "node scripts/check-app-renders.js",
+    "check:sso": "node scripts/check-sso.js"
   }
 }

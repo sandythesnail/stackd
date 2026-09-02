@@ -191,33 +191,51 @@ above the other two (Apple asks for equal prominence), using the same browser ro
 deliberately does **not** send `oidcPrompt` — Apple's authorize endpoint doesn't document
 `prompt` and an unrecognised parameter risks an `invalid_request` bounce.
 
-**It will not work until Apple is configured on the Clerk instance**, and as of 2026-08-31 it
-is not. Asked directly, the production instance answers:
+**Apple is now enabled on the Clerk instance, and Sign in with Apple still does not work —
+on the phone or on the website.** The connection exists; the problem has moved one hop
+further out, to Apple. As of 2026-09-02:
 
 ```
-$ npm run check:sso
-  Clerk SSO connections
-    ✗ oauth_apple       NOT enabled on this instance
+$ npm run check:sso                 # mobile: does Clerk hand out a provider URL?
+    ✓ oauth_apple       enabled
     ✓ oauth_google      enabled
     ✓ oauth_microsoft   enabled
+
+$ npm run check:sso                 # repo root: does the PROVIDER accept the client?
+    ✗ oauth_apple       appleid.apple.com refused the client: invalid_client
+    ✓ oauth_google      accounts.google.com accepts the client (asks which account)
+    ✓ oauth_microsoft   login.microsoftonline.com accepts the client (asks which account)
 ```
 
-So today the Apple button is in the app, App Review's 4.8 box looks ticked, and every tap
-fails — Clerk rejects `oauth_apple` with a 422 (`form_param_value_invalid`, "does not match
-one of the allowed values for parameter strategy") before a sign-in sheet ever opens. That is
-the single blocking item for submission. `check:sso` covers every provider the app ships a
-button for and reads that list out of `socialAuth.tsx`, so a fourth provider cannot escape it
-the way Apple did — the check was hardcoded to Google and Microsoft while Apple shipped broken.
+Those are two different checks and the gap between them is the whole bug. This section's own
+check (`mobile/scripts/check-sso-redirects.js`) asks Clerk whether it will start the flow, and
+Clerk says yes: it produces a perfectly well-formed authorize URL for
+`client_id=app.trystacked.signin`. Nobody was following that URL. Apple answers it with
+`invalid_client` — byte-identical to what it answers for a client id that was never registered
+at all, which is how it was checked.
 
-Configuring it needs the Apple Developer account:
+`invalid_client` from `appleid.apple.com/auth/authorize` means one of three things, and Apple
+reports all three the same way:
 
-1. Apple Developer → Certificates, Identifiers & Profiles → **Identifiers** → register a
-   **Services ID** (this is the OAuth client id, separate from the bundle identifier).
-2. **Keys** → new key with *Sign in with Apple* enabled. The `.p8` downloads **once**.
-3. Clerk Dashboard → SSO Connections → **Apple** → paste the Team ID, Services ID, Key ID and
-   the `.p8`. Clerk shows the return URL Apple needs — add it to the Services ID's domains and
-   return URLs.
-4. `npm run check:sso` to confirm `stackd://` is still an authorized redirect URL.
+- the **Services ID** does not exist, or Clerk was given the App ID (the bundle identifier)
+  where it wanted a Services ID — a common mix-up, and one that can leave native sign-in
+  working while every web sign-in fails;
+- the Services ID exists but is not **enabled for Sign in with Apple**;
+- its **Return URL** is not exactly `https://clerk.trystacked.app/v1/oauth_callback`.
+
+Fixing it needs the Apple Developer account, and no change in this repo can substitute:
+
+1. Apple Developer → Certificates, Identifiers & Profiles → **Identifiers** → the **Services
+   ID** (this is the OAuth client id, separate from the bundle identifier). Confirm it is
+   `app.trystacked.signin`, that *Sign in with Apple* is ticked, and open **Configure**:
+   the domain `clerk.trystacked.app` must be listed, and the Return URL must be exactly
+   `https://clerk.trystacked.app/v1/oauth_callback`.
+2. **Keys** → the key with *Sign in with Apple* enabled. The `.p8` downloads **once**; if it
+   was lost, make a new key rather than guessing.
+3. Clerk Dashboard → SSO Connections → **Apple** → re-paste the Team ID, Services ID, Key ID
+   and the `.p8`.
+4. `npm run check:sso` **from the repo root** — that is the one that asks Apple. The mobile
+   one only asks Clerk, and will keep passing whether or not this is fixed.
 
 Test the Apple button on a real device before submitting. Until step 3 is done the button is
 there and fails, which is worse than not shipping it.
