@@ -78,9 +78,11 @@ export default function Progress() {
           </View>
         </Card>
 
-        {/* Per-module lesson progress — "X out of 9" over every real lesson (8 main quests
-            + the real-life sub-quest, both required — see moduleTotal/moduleDone in
-            store.tsx). The Modules tab keeps its own percent tags for the same count. */}
+        {/* Per-module lesson progress — "X out of 8", the module's counted lessons (see
+            moduleTotal/moduleDone in store.tsx). The optional real-life sub-quest is NOT one
+            of them and never has been since it stopped being able to hold a module hostage:
+            a module reads 8/8 and completes whether or not the guide was done. The Modules
+            tab keeps its own percent tags over the same count. */}
         <Card style={{ gap: 12 }}>
           <Txt variant="h2">Module Progress</Txt>
           <View style={{ gap: 10 }}>
