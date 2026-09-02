@@ -41,7 +41,7 @@ import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { Button, Txt } from '@/components';
 import { colors, font } from '@/theme';
 import { clerkError } from './clerkErrors';
-import { fillMissingUsername } from './clerkSignUp';
+import { fillMissingSignUpFields } from './clerkSignUp';
 
 // Dismisses the auth session's popup on web and, on native, lets a redirect that arrives
 // while the app is warm complete instead of being dropped. Module scope on purpose: it has
@@ -175,14 +175,26 @@ export function SocialAuth({
 
       let sessionId = signUp.createdSessionId ?? signIn.createdSessionId;
 
-      // A brand-new account can be held back for a required field. On this instance that's
-      // `username` (see clerkSignUp.ts), which we can supply without asking.
+      // A brand-new account is held back until every required field is present. On this
+      // instance that is `username` AND `password` (see clerkSignUp.ts) — a provider supplies
+      // neither, and filling only the username left the sign-up in `missing_requirements`
+      // with no session, which is what a completed Google round trip looked like from the
+      // user's side when it "just failed".
       if (!sessionId && signUp.status === 'missing_requirements') {
-        sessionId = (await fillMissingUsername(signUp)).createdSessionId;
+        sessionId = (await fillMissingSignUpFields(signUp)).createdSessionId;
       }
 
       if (!sessionId) {
-        setError(`Couldn't finish signing in with ${name}. Please try again.`);
+        // Say what Clerk is actually still waiting for. The old message here was
+        // "Please try again", which is advice that cannot work — a retry re-runs the same
+        // round trip into the same unmet requirement — and it hid the one detail that
+        // identifies the problem, so three unrelated failures all read identically.
+        const outstanding = [...signUp.missingFields, ...signUp.unverifiedFields];
+        setError(
+          outstanding.length
+            ? `Your account still needs: ${outstanding.join(', ')}. Finish signing up at trystacked.app.`
+            : `Couldn't finish signing in with ${name} (${signUp.status ?? signIn.status ?? 'no session'}).`,
+        );
         return;
       }
 

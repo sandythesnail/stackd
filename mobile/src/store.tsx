@@ -730,6 +730,22 @@ type Ctx = {
   recordPostTest: (score: number, total: number) => void;
   /** Marks first-run onboarding as seen. Idempotent and one-way. */
   markOnboardingComplete: () => void;
+  /** Puts a brand-new ACCOUNT back at the start of onboarding, whatever this device
+   * remembers.
+   *
+   * The three onboarding flags live in the device-global AsyncStorage snapshot, so they
+   * answer "has this PHONE been through onboarding", and every sign-up path used to take
+   * that as its answer (see lib/onboarded.ts). On a phone that has already run onboarding
+   * once — a demo device, a shared laptop, a tester making their fifth account — a genuinely
+   * new account was therefore sent straight to Home: no survey, so no track recorded and no
+   * recommendation anywhere in the app afterwards; no piggy-bank intro; and no spotlight
+   * tour, because Home's tour effect reads the same already-true flag.
+   *
+   * Clearing them at the moment an account is CREATED makes onboarding a property of the
+   * account rather than of the hardware. `onboardingTrackId` goes too, not just the two
+   * booleans: lib/onboarded.ts accepts it as older evidence of a finished survey, so leaving
+   * it set would keep answering "already onboarded" on the new account's behalf. */
+  startOnboardingForNewAccount: () => void;
   /** Dismiss the level-up celebration. The diamonds are already credited by then. */
   dismissLevelUpBanner: () => void;
   /** Marks the first-login spotlight tour as seen, whether it finished or was skipped —
@@ -1395,6 +1411,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...s, postTest: { score, total, takenAt: new Date().toISOString() },
       })),
       markOnboardingComplete: () => setState((s) => (s.hasCompletedOnboarding ? s : { ...s, hasCompletedOnboarding: true })),
+      // Deliberately narrow: only the three fields that decide whether onboarding runs. This
+      // is NOT resetForAccountSwitch — that one exists for a DIFFERENT account signing in and
+      // throws the whole snapshot away, which would also discard progress made locally before
+      // signing up. Someone who played a few lessons and then created an account keeps every
+      // coin; they just get the survey they never took.
+      startOnboardingForNewAccount: () => setState((s) => ({
+        ...s, hasCompletedOnboarding: false, onboardingTrackId: null, hasSeenOnboardingTour: false,
+      })),
       dismissLevelUpBanner: () => setState((s) => (s.levelUpBanner ? { ...s, levelUpBanner: null } : s)),
       markOnboardingTourSeen: () => setState((s) => (s.hasSeenOnboardingTour ? s : { ...s, hasSeenOnboardingTour: true })),
       setBudgetPlan: (next) => setState((s) => ({

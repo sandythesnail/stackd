@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth, useSignIn } from '@clerk/clerk-expo';
-import { Screen, Spacer, Txt, Button, Field, Hammy, Divider } from '@/components';
+import { Screen, Spacer, Txt, Button, Field, Hammy, Divider, KeyboardAwareScroll } from '@/components';
 import { colors, font } from '@/theme';
+import { useStore } from '@/store';
 import { authEnabled } from '@/lib/env';
 import { clerkError } from '@/lib/clerkErrors';
-import { useOnboardedAlready } from '@/lib/onboarded';
 import { WebAuthRedirect } from '@/lib/webAuth';
 import { SocialAuth } from '@/lib/socialAuth';
 
@@ -27,7 +27,7 @@ function ClerkSignIn() {
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const onboardedAlready = useOnboardedAlready();
+  const { startOnboardingForNewAccount } = useStore();
 
   // True from just before setActive until this screen has navigated itself — see the guard.
   const completing = useRef(false);
@@ -84,12 +84,7 @@ function ClerkSignIn() {
           fields and the CTA don't all fit above the keyboard on a small phone, and a fixed
           Screen would simply clip the footer. `flexGrow: 1` keeps <Spacer/> working — the
           content still fills the screen and pins the footer to the bottom when it fits. */}
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        showsVerticalScrollIndicator={false}
-      >
+      <KeyboardAwareScroll contentContainerStyle={styles.scroll}>
       <View style={{ alignItems: 'center', gap: 16, marginTop: 14 }}>
         <Hammy size={104} />
         <Txt variant="disp" style={{ textAlign: 'center' }}>Welcome back!</Txt>
@@ -101,16 +96,17 @@ function ClerkSignIn() {
       <View style={{ marginTop: 20 }}>
         <SocialAuth
           completingRef={completing}
-          // A brand-new account owes the survey, so go straight there — unless this DEVICE
-          // has already been through it, which happens when someone plays locally and only
-          // creates an account afterwards. The account is new; the person is not, and they
-          // should not sit through the intro twice.
+          // A provider round-trip that CREATED the account owes the full onboarding, and it
+          // owes it whatever this DEVICE has seen before — the flags are device-global, so
+          // gating on them sent a new account straight past the survey on any phone that had
+          // onboarded once. See startOnboardingForNewAccount in @/store.
           //
           // Anyone else goes via the splash, which decides once their cloud progress has
           // landed — "not new" does NOT mean "has done the mobile onboarding".
-          onSignedIn={({ isNewUser }) =>
-            router.replace(isNewUser && !onboardedAlready ? '/(onboarding)/survey' : '/')
-          }
+          onSignedIn={({ isNewUser }) => {
+            if (isNewUser) startOnboardingForNewAccount();
+            router.replace(isNewUser ? '/(onboarding)/survey' : '/');
+          }}
         />
       </View>
 
@@ -163,7 +159,7 @@ function ClerkSignIn() {
         <Txt style={styles.footTxt}>New to Stacked? </Txt>
         <Txt style={styles.link} onPress={() => router.push('/(onboarding)/signup')}>Create account</Txt>
       </View>
-      </ScrollView>
+      </KeyboardAwareScroll>
     </Screen>
   );
 }

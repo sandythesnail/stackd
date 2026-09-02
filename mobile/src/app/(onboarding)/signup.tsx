@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Pressable, StyleSheet, Platform, ScrollView } from 'react-native';
+import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuth, useSignUp } from '@clerk/clerk-expo';
-import { Screen, Spacer, Txt, Button, Field, IconButton, CheckBox, Divider } from '@/components';
+import { Screen, Spacer, Txt, Button, Field, IconButton, CheckBox, Divider, KeyboardAwareScroll } from '@/components';
 import { colors, font } from '@/theme';
+import { useStore } from '@/store';
 import { authEnabled } from '@/lib/env';
 import { clerkError } from '@/lib/clerkErrors';
-import { fillMissingUsername, type ClerkSignUpResource } from '@/lib/clerkSignUp';
-import { useOnboardedAlready } from '@/lib/onboarded';
+import { fillMissingSignUpFields, type ClerkSignUpResource } from '@/lib/clerkSignUp';
 import { WebAuthRedirect } from '@/lib/webAuth';
 import { SocialAuth } from '@/lib/socialAuth';
 import { openLegalPage, PRIVACY_URL, TERMS_URL } from '@/lib/legalLinks';
@@ -37,7 +37,7 @@ function ClerkSignUp() {
   const [busy, setBusy] = useState(false);
   const [pendingCode, setPendingCode] = useState(false);
   const [code, setCode] = useState('');
-  const onboardedAlready = useOnboardedAlready();
+  const { startOnboardingForNewAccount } = useStore();
 
   // True from just before setActive until this screen has navigated itself — see the guard.
   const completing = useRef(false);
@@ -77,9 +77,13 @@ function ClerkSignUp() {
       // guard disarmed on a screen that isn't going anywhere.
       completing.current = true;
       await setActive({ session: res.createdSessionId });
-      // Straight to the survey, unless this device has already been through it — see the
-      // SSO handler below for why a new account doesn't always mean a new person.
-      router.replace(onboardedAlready ? '/' : '/(onboarding)/survey');
+      // Onboarding belongs to the ACCOUNT, so clear whatever this device remembers about
+      // having done it before sending the new account through. This used to route on
+      // `onboardedAlready` — a device-global flag — and hand anyone signing up on a phone
+      // that had onboarded once straight to Home instead, with no survey, no intro and no
+      // tour. See startOnboardingForNewAccount in @/store.
+      startOnboardingForNewAccount();
+      router.replace('/(onboarding)/survey');
       return;
     }
     if (res.unverifiedFields.includes('email_address')) {
@@ -102,8 +106,9 @@ function ClerkSignUp() {
     try {
       const res = await signUp.create({ emailAddress: email.trim(), password });
       // This instance requires a username, which this form doesn't collect — see
-      // lib/clerkSignUp.ts. No-op if Clerk isn't asking for one.
-      await finish(await fillMissingUsername(res, email.trim()));
+      // lib/clerkSignUp.ts. No-op for anything Clerk isn't actually asking for (password is
+      // never missing here: the field above supplied it).
+      await finish(await fillMissingSignUpFields(res, email.trim()));
     } catch (e: unknown) {
       completing.current = false;
       setError(clerkError(e));
@@ -122,7 +127,7 @@ function ClerkSignUp() {
         setError('That code didn’t verify. Check your email and try again.');
         return;
       }
-      await finish(await fillMissingUsername(res, email.trim()));
+      await finish(await fillMissingSignUpFields(res, email.trim()));
     } catch (e: unknown) {
       // Re-arm: nothing navigated, so a signed-in user landing here still needs bouncing.
       completing.current = false;
@@ -134,7 +139,11 @@ function ClerkSignUp() {
 
   if (pendingCode) {
     return (
-      <Screen style={{ paddingHorizontal: 22 }}>
+      // Keyboard-aware for the same reason the form below is: this screen is a single field
+      // with the CTA pinned to the bottom by <Spacer/>, so the number pad covers "Verify &
+      // continue" and, on a short phone, the field itself.
+      <Screen>
+        <KeyboardAwareScroll contentContainerStyle={styles.scroll}>
         <View style={{ paddingTop: 2 }}>
           <IconButton name="chevron-left" onPress={() => setPendingCode(false)} />
         </View>
@@ -155,6 +164,7 @@ function ClerkSignUp() {
         {error ? <Txt style={styles.error}>{error}</Txt> : null}
         <Spacer />
         <Button label={busy ? 'Verifying…' : 'Verify & continue'} onPress={onVerify} style={{ marginBottom: 10 }} />
+        </KeyboardAwareScroll>
       </Screen>
     );
   }
@@ -164,12 +174,7 @@ function ClerkSignUp() {
       {/* Scrollable for the same reason sign-in is: the two provider buttons and the divider
           push this past the height of a small phone once the keyboard is up. `flexGrow: 1`
           preserves <Spacer/>, so the CTA still sits at the bottom when everything fits. */}
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        showsVerticalScrollIndicator={false}
-      >
+      <KeyboardAwareScroll contentContainerStyle={styles.scroll}>
       <View style={{ paddingTop: 2 }}>
         <IconButton name="chevron-left" onPress={() => router.back()} />
       </View>
@@ -186,13 +191,14 @@ function ClerkSignUp() {
       <View style={{ marginTop: 18 }}>
         <SocialAuth
           completingRef={completing}
-          // Same split as sign-in: new accounts owe the survey, returning ones go through the
-          // splash so their cloud progress decides (see index.tsx) — and a new account on a
-          // device that has already done onboarding is treated as returning, because the
-          // person has seen it even though the account hasn't.
-          onSignedIn={({ isNewUser }) =>
-            router.replace(isNewUser && !onboardedAlready ? '/(onboarding)/survey' : '/')
-          }
+          onSignedIn={({ isNewUser }) => {
+            // Same rule as the email flow above: a provider round-trip that CREATED the
+            // account owes the full onboarding, no matter what this device has seen.
+            // Anyone else goes via the splash, which decides once their cloud progress has
+            // landed — "not new" does NOT mean "has done the mobile onboarding".
+            if (isNewUser) startOnboardingForNewAccount();
+            router.replace(isNewUser ? '/(onboarding)/survey' : '/');
+          }}
         />
       </View>
 
@@ -235,7 +241,7 @@ function ClerkSignUp() {
         <Txt style={styles.footTxt}>Already have an account? </Txt>
         <Txt style={styles.link} onPress={() => router.push('/(onboarding)/signin')}>Sign in</Txt>
       </View>
-      </ScrollView>
+      </KeyboardAwareScroll>
     </Screen>
   );
 }

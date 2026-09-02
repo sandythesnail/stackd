@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Animated, Easing, ViewStyle, View, StyleSheet, Image as RNImage } from 'react-native';
+import { Animated, Easing, Platform, ViewStyle, View, StyleSheet, Image as RNImage } from 'react-native';
 import Svg, {
   Defs, LinearGradient, RadialGradient, Stop, Ellipse, Circle, Path, Rect, G, ClipPath, SvgXml, Image as SvgImage,
 } from 'react-native-svg';
@@ -29,6 +29,13 @@ import { REACTION_FACES, type FaceOverlay } from '@/hammyFaces';
  * practice there's nothing to wait for. The worst case is a brief blank on a cold first
  * show — self-correcting, and visibly a glitch rather than a mascot that quietly never
  * emotes again. */
+
+/** How long an overlay gets to report that it drew before Hammy puts his default face back
+ * on. Generous on purpose: this is a bundled, pre-warmed asset, so the honest answer is a
+ * frame or two, and anything approaching a second means it is not coming at all. Long enough
+ * that a cold, contended first launch cannot trip it; short enough that a genuinely broken
+ * build shows a face rather than a blank head for the rest of the session. */
+const FACE_DRAW_TIMEOUT_MS = 900;
 
 /** Warms face overlays into the image cache: a 1px offscreen RN <Image> per face, no
  * callbacks and nothing gated on it. Mounted on screens about to show reaction faces (the
@@ -389,10 +396,41 @@ export function Hammy({
   // website's static face masks. See the overlay notes at the top of this file for why this
   // is deliberately ungated.
   const faceOpacity = face ? 1 : 0;
+
+  /* Fail-safe for an overlay that never draws.
+   *
+   * Hiding the base features the instant `face` is set is right when the overlay appears, and
+   * catastrophic when it doesn't: there is nothing underneath, so Hammy renders as a blank
+   * pink head — no eyes, no snout, no expression — with no error anywhere and no way to tell
+   * from a diff. The face PNGs are the only bitmaps this app draws at all (everything else,
+   * icons included, is vector), and they go through react-native-svg's native <Image>, so a
+   * single failure below the JS — a stale native module in an old development build, an
+   * asset the packager isn't serving — takes out every face in the app and nothing else.
+   *
+   * So: hide the base immediately as before, and put it back if the overlay hasn't reported
+   * itself drawn within FACE_DRAW_TIMEOUT_MS. A healthy face is unaffected (the images are
+   * warmed at startup by _layout.tsx, so onLoad lands in the first frames and nothing ever
+   * changes back); a broken one degrades to Hammy's own default expression instead of a void.
+   *
+   * NOT applied on web, where this is measured against a known-bad signal rather than a
+   * missing one: react-native-web's <Image> short-circuits to its loaded state without ever
+   * calling onLoad when the uri is already in its cache, so a web build would time out on
+   * faces that are on screen and correct. See the overlay notes at the top of this file —
+   * that is the same trap the old decode gate fell into, and it is why the gate came out. */
+  const faceImage = face?.image;
+  const [drawnFace, setDrawnFace] = useState<FaceOverlay['image'] | null>(null);
+  const [timedOutFace, setTimedOutFace] = useState<FaceOverlay['image'] | null>(null);
+  useEffect(() => {
+    if (Platform.OS === 'web' || !faceImage || drawnFace === faceImage) return;
+    const t = setTimeout(() => setTimedOutFace(faceImage), FACE_DRAW_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [faceImage, drawnFace]);
+  const faceNeverDrew = !!faceImage && timedOutFace === faceImage && drawnFace !== faceImage;
+
   // A `keepBase` overlay (the mouth-only wrong-answer reaction) is additive: it draws over the
   // resting face rather than replacing it, so the base features and the full body/head shading
   // all stay put. Every other face still swaps them out wholesale.
-  const baseHidden = face && !face.keepBase ? 1 : 0;
+  const baseHidden = face && !face.keepBase && !faceNeverDrew ? 1 : 0;
   const displayFace = face;
 
   // Head-only mode swaps the viewBox for the website's .pig-head-stage window instead of
@@ -633,6 +671,10 @@ export function Hammy({
               height={displayFace.height}
               opacity={faceOpacity}
               preserveAspectRatio="xMidYMid slice"
+              // The "it drew" signal the fail-safe above waits for. Nothing is gated on it
+              // arriving — the overlay is drawn at full opacity either way — so a missing
+              // onLoad can only ever bring the default face back, never hide a good one.
+              onLoad={() => setDrawnFace(displayFace.image)}
             />
           ) : null}
 

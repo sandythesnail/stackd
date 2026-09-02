@@ -8,6 +8,7 @@ export { Header, CurrencyChip, TierBadge } from './Header';
 export { Coin, Diamond, Flame, Gift, GIFT_COLORS, GIFT_MISSED, MYSTERY_BOX_GIFT } from './Currency';
 export { IconButton } from './IconButton';
 export { Field } from './Field';
+export { KeyboardAwareScroll } from './KeyboardAwareScroll';
 export { Option, CheckBox, LetterBadge } from './Option';
 export { Hammy, Slot, ReactionFacePreloader } from './Hammy';
 export { ItemArt } from './ItemArt';

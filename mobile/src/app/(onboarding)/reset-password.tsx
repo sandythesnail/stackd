@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
-import { View, StyleSheet, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSignIn } from '@clerk/clerk-expo';
-import { Screen, Spacer, Txt, Button, Field, IconButton } from '@/components';
+import { Screen, Spacer, Txt, Button, Field, IconButton, KeyboardAwareScroll } from '@/components';
 import { colors, font } from '@/theme';
 import { authEnabled } from '@/lib/env';
 import { clerkError } from '@/lib/clerkErrors';
@@ -112,12 +112,7 @@ function ClerkResetPassword() {
 
   return (
     <Screen>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        showsVerticalScrollIndicator={false}
-      >
+      <KeyboardAwareScroll contentContainerStyle={styles.scroll}>
         <View style={{ paddingTop: 2 }}>
           {/* Back steps within the flow first: from the code screen it returns to the email
               screen (a mistyped address is the likeliest reason the code never arrived), and
@@ -189,7 +184,7 @@ function ClerkResetPassword() {
           onPress={sent ? onReset : onSend}
           style={{ marginBottom: 10 }}
         />
-      </ScrollView>
+      </KeyboardAwareScroll>
     </Screen>
   );
 }
