@@ -649,6 +649,14 @@ body { background: var(--bg); min-height: 100vh; }
   gap: 0.7rem 0.65rem; align-items: center;
 }
 .pg-bar-row { display: contents; }
+/* The same chart without the module chip. .pg-bar-row is `display: contents`, so a row does
+   not own its cells — the CHART's column count is what a row has to match, and Module
+   Progress's rows are four cells (chip, name, track, value) while the budget's Spending by
+   Category is three (name, track, value). Three-cell rows poured into a four-column grid do
+   not simply lose a column, they slide: each row takes the next free cell wherever it is, so
+   the panel rendered as a diagonal of names, bars and dollar amounts belonging to different
+   categories. Mobile's BarRow (tools.tsx) has always drawn one clean row per category. */
+.pg-bar-chart.pg-bar-chart-noicon { grid-template-columns: max-content 1fr auto; }
 .mod-icon-sm { width: 28px; height: 28px; border-radius: 9px; font-size: 0.68rem; }
 .pg-bar-label {
   font-size: 0.76rem; font-weight: 600; color: var(--text);
@@ -3258,6 +3266,7 @@ select.budget-input { cursor: pointer; }
   /* Here the longest name and a track worth looking at genuinely can't both fit, so the name
      goes back to being capped — a real trade at this width, unlike the desktop case. */
   .pg-bar-chart { grid-template-columns: auto minmax(0, 108px) 1fr auto; }
+  .pg-bar-chart.pg-bar-chart-noicon { grid-template-columns: minmax(0, 108px) 1fr auto; }
   .pg-bar-val { width: 58px; }
   .pg-level-row { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .quest-body { padding-left: 0.6rem; padding-right: 0.6rem; }

@@ -21244,7 +21244,7 @@ function renderBudgetCalculatorPanel() {
         <div class="budget-card budget-summary-card" id="budget-summary"></div>
         <div class="budget-card">
           <div class="budget-card-title">Spending by Category</div>
-          <div class="pg-bar-chart" id="budget-bar-chart"></div>
+          <div class="pg-bar-chart pg-bar-chart-noicon" id="budget-bar-chart"></div>
         </div>
         <div class="budget-card">
           <div class="budget-card-title">What If?</div>
