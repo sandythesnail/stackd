@@ -137,6 +137,41 @@ window.showPage('settings');
 window.renderSettingsPage();
 shots.settings = { w: 1100, h: 2200, body: '<div class="app-main"><div id="page-settings" class="page active">' + window.document.getElementById('page-settings').innerHTML + '</div></div>' };
 
+// Hammy's Room, which was the one page of the eight this harness never shot — and the one
+// with most to gain from being looked at. Every other page is text and boxes the browser
+// lays out; this one is a DRAWN scene (paintRoomFloor strokes the boards itself, and the
+// wallpaper, wall art, rug, bed, desk, lamp, window and garland are absolutely positioned
+// against it), so a slot landing in the wrong place, at the wrong size, or behind the
+// furniture in front of it is invisible to every other check in this repo. It is also the
+// page furthest from its mobile counterpart by construction: RoomFloor.tsx draws the same
+// scene with react-native-svg, and nothing but a picture compares the two.
+//
+// The floor needs one extra thing from the harness. paintRoomFloor measures the element and
+// bails out on a zero-sized one -- correctly, there is nothing to draw into -- and jsdom
+// reports clientWidth/clientHeight as 0 for every element alive. Without a size the snapshot
+// carries an EMPTY floor div, so the shot shows a room with no boards and Hammy standing on
+// nothing: a picture of a bug that is not there, which is worse than no picture at all.
+//
+// Stubbed around this one render and then removed, NOT installed globally: clientHeight also
+// feeds the quest player's content zoom (questContentBodyHeight) and clientWidth feeds the
+// lesson path's width, so leaving it in place would quietly change every other shot in this
+// file. Defining on HTMLElement.prototype only SHADOWS jsdom's own definition (which lives on
+// Element.prototype), so the delete below genuinely restores it rather than removing it.
+//
+// What this shot does and doesn't prove, then: the floor is really drawn by roomFloorSvg, so
+// its board convergence, tint and seam are the app's own and worth looking at. Its PROPORTION
+// against the wall is not -- the boards are drawn for an 860x520 box and then laid into
+// whatever box the CSS actually gives .room-floor, so read this for "is the floor right",
+// never for "is the wall/floor split right".
+const sizeStub = (v) => ({ configurable: true, get() { return v; } });
+Object.defineProperty(window.HTMLElement.prototype, 'clientWidth', sizeStub(860));
+Object.defineProperty(window.HTMLElement.prototype, 'clientHeight', sizeStub(520));
+window.showPage('room');
+window.renderRoomPage();
+shots.room = { w: 1100, h: 1500, body: '<div class="app-main"><div id="page-room" class="page active">' + window.document.getElementById('page-room').innerHTML + '</div></div>' };
+delete window.HTMLElement.prototype.clientWidth;
+delete window.HTMLElement.prototype.clientHeight;
+
 const quest = mainQuests[1];
 window.startQuest('loans', quest.id);
 for (const type of ['story', 'teach', 'matching', 'hint', 'poll', 'mythcards', 'knowledgecheck', 'decision', 'bossbattle']) {

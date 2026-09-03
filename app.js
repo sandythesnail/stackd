@@ -16256,6 +16256,20 @@ function initRangeFills() {
 // narrative-quest modules (Credit, Scams) it means every quest in that module finished with
 // a flawless run (every knowledge check, myth card, and poll guessed right, zero matching
 // mistakes) — checked directly against the quest's own analytics rather than a separate flag.
+/** Quotes a piece of the lesson's own content and closes the sentence, without doubling
+ * the punctuation when that content already ends in some.
+ *
+ * Knowledge-check prompts are questions, so the plain `"${...}."` this replaces rendered
+ * Hammy's advice as: Reread the explanation for "When does interest accrue?." — the one
+ * line on the results screen whose whole job is to be read carefully. Vocab terms don't
+ * end in punctuation, so they still get their full stop; both call sites share this so the
+ * next piece of quoted content can't reintroduce it.
+ */
+function quotedContent(s) {
+  const t = String(s == null ? '' : s).trim();
+  return /[.?!]$/.test(t) ? `"${t}"` : `"${t}."`;
+}
+
 function hasMasteredModule(s, modId) {
   const mod = MODULES.find(m => m.id === modId);
   if (!mod) return false;
@@ -24946,7 +24960,7 @@ function buildQuestReport(mod, qp) {
   if (weakSpots.length === 0) {
     adviceParts.push(`Solid handle on ${mod.title.toLowerCase()}.`);
   } else if (kcWrong.length > 0) {
-    adviceParts.push(`Reread the explanation for "${kcWrong[0].question}."`);
+    adviceParts.push(`Reread the explanation for ${quotedContent(kcWrong[0].question)}`);
   } else if (mythWrong.length > 0) {
     adviceParts.push(`The statement "${mythWrong[0].myth}" is worth a second look.`);
   } else if (checkWrong.length > 0) {
@@ -24959,7 +24973,7 @@ function buildQuestReport(mod, qp) {
     adviceParts.push(`Worth rereading: "${checkWrong[0].label}"`);
   }
   if (a.explainback && a.explainback.tier === 'retry') {
-    adviceParts.push(`Also reread the definition for "${a.explainback.term}."`);
+    adviceParts.push(`Also reread the definition for ${quotedContent(a.explainback.term)}`);
   } else if (a.matchingMistakes > 4) {
     adviceParts.push('More repetition on the matching rounds would help.');
   }

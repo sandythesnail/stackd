@@ -54,6 +54,20 @@ export const EMPTY_ANALYTICS: QuestAnalytics = {
  * screen down on `.filter` of undefined, which is about the worst possible moment for it.
  * TypeScript can't help here: the value is parsed JSON that has merely been asserted to fit
  * the type. */
+/** Quotes a piece of the lesson's own content and closes the sentence, without doubling
+ * the punctuation when that content already ends in some.
+ *
+ * Knowledge-check prompts are questions, so the plain `"${...}."` this replaces rendered
+ * Hammy's advice as: Reread the explanation for "When does interest accrue?." — the one
+ * line on the results screen whose whole job is to be read carefully. Vocab terms don't
+ * end in punctuation, so they still get their full stop; both call sites share this so the
+ * next piece of quoted content can't reintroduce it.
+ */
+function quotedContent(s: string): string {
+  const t = String(s ?? '').trim();
+  return /[.?!]$/.test(t) ? `"${t}"` : `"${t}."`;
+}
+
 export function normalizeAnalytics(a: Partial<QuestAnalytics> | null | undefined): QuestAnalytics {
   return { ...EMPTY_ANALYTICS, ...(a ?? {}) };
 }
@@ -135,7 +149,7 @@ export function buildQuestReport(moduleName: string, raw: QuestAnalytics, hintsU
   if (weakSpots.length === 0) {
     adviceParts.push(`Solid handle on ${moduleName.toLowerCase()}.`);
   } else if (kcWrong.length > 0) {
-    adviceParts.push(`Reread the explanation for "${kcWrong[0].question}."`);
+    adviceParts.push(`Reread the explanation for ${quotedContent(kcWrong[0].question)}`);
   } else if (mythWrong.length > 0) {
     adviceParts.push(`The statement "${mythWrong[0].myth}" is worth a second look.`);
   } else if (checkWrong.length > 0) {
@@ -145,7 +159,7 @@ export function buildQuestReport(moduleName: string, raw: QuestAnalytics, hintsU
     adviceParts.push(`Worth rereading: "${checkWrong[0].label}"`);
   }
   if (analytics.explainback && analytics.explainback.tier === 'retry') {
-    adviceParts.push(`Also reread the definition for "${analytics.explainback.term}."`);
+    adviceParts.push(`Also reread the definition for ${quotedContent(analytics.explainback.term)}`);
   } else if (analytics.matchingMistakes > 4) {
     adviceParts.push('More repetition on the matching rounds would help.');
   }
