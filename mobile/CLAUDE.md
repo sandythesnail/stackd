@@ -11,7 +11,12 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
 - Path alias `@/*` → `src/*`.
 
 ## Layout
-- `src/theme.ts` — all design tokens (colors, `moduleColor`, `font` families, radii). Start here.
+- `src/theme.ts` — all design tokens (colors, `moduleColor`, `font` families, radii, **`motion`**).
+  Start here. `motion` is the app's shared answer to "how hard may this move": `press`, `pop`,
+  `settle`, `enter` (Reanimated), `legacySettle`/`legacyDrag` (classic `Animated.spring`, where
+  low `friction` is what "bouncy" means) and `mascotReaction`, the scalar every Hammy reaction
+  keyframe is multiplied by. Springs may overshoot once; they may not oscillate. Don't write
+  spring numbers into a screen, the same way you don't write a hex there.
 - `src/data.ts` — mock content (user Maya, 11 modules, badges, shop, quests). Swap for Supabase/web content later.
 - `src/components/` — shared UI, re-exported from `src/components/index.ts`. Import via `@/components`.
   Key pieces: `Screen`, `Header`/`TierBadge`/`CurrencyChip`, `Button` (3D press), `Card`, `ProgressBar`,
@@ -25,6 +30,15 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   `authEnabled`) loads on sign-in, debounced-upserts on change, flushes on background. Same Clerk instance
   + Supabase project as the web (trystacked.app) → cross-device sync. Real Clerk sign-in/up live in
   `(onboarding)/signin|signup` (stub fallback when disabled); real sign-out + account in Settings.
+  **Keys reach a BUILD differently from how they reach a laptop, and this is the first thing to
+  check when sign-in works locally and not in TestFlight.** `.env` is gitignored, and EAS Build
+  honours .gitignore when it uploads the project — so a cloud build gets nothing from it unless
+  the same three variables exist as EAS environment variables. `npm run check:build-env` reports
+  both sides and `-- --push` copies .env up (all three are publishable by design and end up in
+  the bundle regardless). A build that lost them used to fall back to the *development* sign-in
+  stub, whose Sign in button navigates rather than authenticating — an app with no accounts that
+  looks like it works. The stub is now `__DEV__`-only; a release build shows
+  `lib/AuthUnavailable.tsx`, which names the missing variables on screen.
   Apple/Google/Microsoft SSO is `socialAuth.tsx` on native (a Clerk browser round-trip) and the
   site's hosted widget on web (`webAuth.tsx` redirects to /login.html). Native SSO needs two
   separate things true on the Clerk instance, and they fail at the same call with different
@@ -42,7 +56,14 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   that makes SSO fail rather than degrade: a provider transfer supplies none, so the sign-up
   sits in `missing_requirements` with no session and the round trip ends signed out. Both
   flows react to `missingFields` / `unverifiedFields` rather than assuming a dashboard setting
-  (email verification is currently OFF, and there are no second factors).
+  (email verification is currently OFF, and there are no second factors). Two outcomes the
+  provider round-trip can reach that no amount of retrying fixes, and both now say so:
+  `email_address` still missing (Apple releases one only if the user agrees to share it, so
+  "Hide My Email" declined leaves the sign-up with none), and an existing Stacked account
+  already holding that address (`form_identifier_exists` on the transfer — sign in with the
+  password once and the identity links). Every other SSO failure is reported with Clerk's own
+  error CODE appended (`clerkErrorWithCode`), because this is the one flow whose cause is
+  invisible from the outside and the person hitting it is usually reporting rather than fixing.
 - **Onboarding belongs to the account, not the device.** The survey → hammy-intro → spotlight
   tour chain is gated on `hasCompletedOnboarding` / `onboardingTrackId` / `hasSeenOnboardingTour`,
   which live in the device-global AsyncStorage snapshot. Every sign-up path therefore used to
@@ -51,6 +72,15 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   store's `startOnboardingForNewAccount()` and routes to the survey unconditionally;
   `lib/onboarded.ts` is only for Home's tour gate and the splash. Distinct from
   `resetForAccountSwitch()`, which is for a DIFFERENT account signing in and wipes everything.
+- **The spotlight tour publishes THREE contexts, not one** (`OnboardingTour.tsx`): `useTourApi`
+  (stable callbacks — free to subscribe to), `useTourStep` (which step is live — six changes a
+  tour), `useTourRect` (the measured target, changes constantly; only Home needs it, to compute
+  its scroll delta). `useOnboardingTour()` merges all three and therefore re-renders on every
+  measurement — prefer the narrow hooks. This is not tidiness: a changed context re-renders its
+  consumers regardless of React Compiler, `React.memo` or stable props, so with one context a
+  measurement re-rendered every `TourTarget`, the lesson path and its nine animated nodes, on
+  the exact frames Home was animating a scroll. The tooltip is also moved by `transform` under
+  `useNativeDriver: true` rather than by animating `top`/`left`, which cannot leave the JS thread.
 - `src/app/` routes:
   - `index.tsx` — splash (screen 1), auto-advances to onboarding.
   - `(onboarding)/` — welcome, signup, signin, reset-password, piggy-born, survey (screens 2–6).
@@ -59,7 +89,20 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   - `(tabs)/` — home, modules, tools, room, shop (tabs) + progress, badges, settings (hidden tab siblings; the
     custom `TabBar` only renders the 5 known routes, so the bar persists on these). Screens 7–14.
   - `learn/` — module/[id], hook, lesson, quiz, results (screens 15–19); full-screen, no tab bar.
+    **Nothing in this group is left by swiping.** `gestureEnabled: false` is set on the inner
+    stack AND on the root layout's `learn` screen — when the player is the first screen of the
+    inner stack there is nothing there to pop, so the iOS edge-swipe falls through to the parent
+    and takes the whole group with it. The myth-card chapter is swipe-left/swipe-right by design,
+    which is exactly what was being read as "go back". Android's hardware Back is routed through
+    the same "Leave this lesson?" dialog as the X (a `BackHandler` in `quest.tsx`).
   - `modal/` — levelup, life-event, shop-item (screens 20–22); presented as transparent modals from the root Stack.
+- **The quest player never scrolls itself.** It resets to the top on a new chapter/question and
+  otherwise leaves the scroll position alone — an auto-scroll-to-the-bottom-on-growth was tried
+  and reverted (it yanked the page while you were still reading). What it does instead is SAY
+  there is more: a short cream fade on the scroller's bottom edge whenever content overflows
+  (`moreBelow` in `quest.tsx`). Without it, content is cut off flat against the same cream as
+  the action bar below, with the scroll indicator hidden — so answering a question could look
+  like the remaining options had gone behind a wall.
 
 ## Conventions
 - Match the design tokens in `theme.ts` — don't hardcode hex values in screens.
@@ -69,7 +112,9 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   reach it — `automaticallyAdjustKeyboardInsets` is what makes the focused field reachable.
 - The mascot art is a placeholder (`Hammy`/`Slot`); swap for real art without changing layout.
 - Verify with `npx tsc --noEmit` and `npx expo export -p ios` (bundles Metro, catches route/import errors).
-- `npm run check` (offline route/colour guards); `npm run check:sso` separately — it hits production Clerk.
+- `npm run check` (offline route/colour guards). Separately, because they hit the network:
+  `npm run check:sso` (production Clerk — providers enabled + redirect allowed) and
+  `npm run check:build-env` (are the EXPO_PUBLIC_* keys where a *build* can see them).
 
 ## Run
 - `npm run ios` / `npm run android` / `npm run web` (or `npx expo start`).

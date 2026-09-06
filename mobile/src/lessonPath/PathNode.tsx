@@ -4,7 +4,7 @@ import Reanimated, {
   useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSpring, cancelAnimation, Easing,
 } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
-import { colors } from '@/theme';
+import { colors, motion } from '@/theme';
 import { T } from './bits';
 import { NODE_SIZE, NODE_BOX } from './geometry';
 
@@ -226,7 +226,7 @@ export function PathNode({
         onPress={onPress}
         onPressIn={() => { press.value = withTiming(1, { duration: 80 }); setPressing(true); }}
         onPressOut={() => {
-          press.value = withSpring(0, { damping: 18, stiffness: 400 });
+          press.value = withSpring(0, motion.press);
           setPressing(false);
           if (heldPeek.current) { heldPeek.current = false; onHoverOut?.(); }
         }}

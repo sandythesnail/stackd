@@ -16,7 +16,12 @@ export { Wallpaper } from './Wallpaper';
 export { AchievementToast } from './AchievementToast';
 export { LevelUpModal } from './LevelUpModal';
 export { TabBar } from './TabBar';
-export { OnboardingTourProvider, TourTarget, MaybeTourTarget, TourCallout, useOnboardingTour } from './OnboardingTour';
+export {
+  OnboardingTourProvider, TourTarget, MaybeTourTarget, TourCallout,
+  // useTourApi/useTourStep/useTourRect subscribe to one slice each; useOnboardingTour is the
+  // merged convenience hook and re-renders on every measurement. See OnboardingTour.tsx.
+  useOnboardingTour, useTourApi, useTourStep, useTourRect,
+} from './OnboardingTour';
 export { Stat, SectionHead, Speech, Callout, Segmented, Dots, Divider } from './bits';
 export { MIcon, ModuleTile, ListRow, BadgeMedal, BadgeIcon } from './ModuleBits';
 export { ModuleLessonList, RealLifeSubQuestRow } from './ModuleLessonList';

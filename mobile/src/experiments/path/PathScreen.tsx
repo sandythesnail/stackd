@@ -7,7 +7,7 @@ import Svg, { Path as SvgPath, Defs, LinearGradient as SvgGradient, Stop } from 
 import Reanimated, { FadeInDown, SlideInDown, ZoomIn } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { colors } from '@/theme';
+import { colors, motion } from '@/theme';
 import { user, modules, type Module } from '@/data';
 import { moduleContentById } from '@/content';
 import { SURVEY_TRACKS } from '@/survey';
@@ -589,7 +589,7 @@ function SectionView({
         {nodes.map((n, i) => (
           <Reanimated.View
             key={n.key}
-            entering={reducedMotion ? undefined : ZoomIn.delay(i * 55).duration(320).springify().damping(14)}
+            entering={reducedMotion ? undefined : ZoomIn.delay(i * 55).duration(320).springify().damping(motion.enter.damping)}
             style={{ position: 'absolute', left: pts[i].x - NODE_BOX / 2, top: pts[i].y - NODE_BOX / 2 }}
           >
             <PathNode

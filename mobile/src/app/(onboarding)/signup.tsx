@@ -7,6 +7,7 @@ import { Screen, Spacer, Txt, Button, Field, IconButton, CheckBox, Divider, Keyb
 import { colors, font } from '@/theme';
 import { useStore } from '@/store';
 import { authEnabled } from '@/lib/env';
+import { AuthUnavailable } from '@/lib/AuthUnavailable';
 import { clerkError } from '@/lib/clerkErrors';
 import { fillMissingSignUpFields, type ClerkSignUpResource } from '@/lib/clerkSignUp';
 import { WebAuthRedirect } from '@/lib/webAuth';
@@ -18,7 +19,9 @@ import { openLegalPage, PRIVACY_URL, TERMS_URL } from '@/lib/legalLinks';
  * Clerk email + password flow, or the local stub when auth isn't configured. */
 export default function SignUp() {
   if (Platform.OS === 'web' && authEnabled) return <WebAuthRedirect page="signup" />;
-  return authEnabled ? <ClerkSignUp /> : <StubSignUp />;
+  if (authEnabled) return <ClerkSignUp />;
+  // Development-only, same as the sign-in stub — see the note there.
+  return __DEV__ ? <StubSignUp /> : <AuthUnavailable />;
 }
 
 function ClerkSignUp() {

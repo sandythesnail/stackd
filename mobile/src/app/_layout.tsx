@@ -216,7 +216,10 @@ export default function RootLayout() {
                   out of the onboarding flow (Hammy intro → survey → tour) into the real
                   app, which reads better as a soft reveal than a lateral slide. */}
               <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-              <Stack.Screen name="learn" />
+              {/* The lesson flow refuses the edge-swipe back gesture at BOTH levels — see
+                  learn/_layout.tsx for why, and for why disabling it on the inner stack
+                  alone isn't enough. */}
+              <Stack.Screen name="learn" options={{ gestureEnabled: false }} />
               {/* These live under /sheet, not /modal: the web build's baseUrl is "/m"
                   (app.json) and Expo Router's stripBaseUrl() removes it as a raw string
                   prefix, so any route starting with "/m" (i.e. "/modal/*") gets its "m"

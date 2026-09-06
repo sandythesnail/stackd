@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Animated, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent, KeyboardAvoidingView, Platform } from 'react-native';
+import { Animated, BackHandler, Easing, View, ScrollView, Pressable, PanResponder, TextInput, Modal, StyleSheet, useWindowDimensions, LayoutChangeEvent, KeyboardAvoidingView, Platform } from 'react-native';
 import Reanimated, {
   SlideInDown, FadeInDown, FadeIn, FadeInRight, FadeInUp, ZoomIn,
   useSharedValue, useAnimatedStyle, useReducedMotion, withTiming, withSpring, withSequence,
@@ -8,7 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
 import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, LifeEventCard, ReactionFacePreloader } from '@/components';
-import { colors, font, selectableInput } from '@/theme';
+import { colors, font, motion, selectableInput } from '@/theme';
+import { hexToRgba } from '@/colorMix';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
@@ -513,6 +514,26 @@ function QuestPlayerInner() {
   //
   // The reset-to-top on a new chapter or a new question stays. That one puts you at the START
   // of something you haven't read, which is where you were going anyway.
+  //
+  // What replaced the auto-scroll is a CUE rather than a movement — see `moreBelow` below and
+  // the fade rendered under the scroller. Not scrolling the page was right; saying nothing at
+  // all was not. The player is a fixed column (progress bar, Hammy, scroller, action bar), so
+  // content that overflows is cut off dead flat against the cream of the bar underneath it,
+  // with the scroll indicator hidden. There is nothing on screen that distinguishes "this
+  // chapter ends here" from "there are two more options and an explanation below this line" —
+  // which is why answering a question could look like the options had gone behind a wall.
+  const [moreBelow, setMoreBelow] = useState(false);
+  const scrollViewportH = useRef(0);
+  const scrollContentH = useRef(0);
+  const scrollOffsetY = useRef(0);
+  // 16px of slack: rounding between content and viewport heights routinely leaves a pixel or
+  // two unreached, and a cue that says "there's more" pointing at nothing is worse than none.
+  const OVERFLOW_SLACK = 16;
+  const recomputeMoreBelow = () => {
+    setMoreBelow(
+      scrollContentH.current - scrollOffsetY.current - scrollViewportH.current > OVERFLOW_SLACK,
+    );
+  };
   const [terms, setTerms] = useState<LearnedTerm[]>(resumed?.terms ?? []);
   // Mirrors `terms` synchronously. The final chapter's onComplete builds the results payload
   // in the same handler that can add the last word, and a setState isn't visible yet at that
@@ -662,6 +683,25 @@ function QuestPlayerInner() {
     if (chapterIdx === 0 || !quest) { goBack(); return; }
     setLeaveOpen(true);
   };
+
+  // Android's system Back is the third way out of a lesson, and until now it was the one that
+  // still left without asking: the iOS edge-swipe is refused by the navigator (see
+  // learn/_layout.tsx) and the X goes through the dialog, but hardware Back popped the screen
+  // straight off the stack. It now does exactly what the X does — including closing an open
+  // dialog rather than closing the dialog AND the lesson.
+  //
+  // Returning true from the handler is what says "handled, don't pop"; every path here
+  // returns true for that reason, `leaveOpen` included.
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (leaveOpen) { setLeaveOpen(false); return true; }
+      confirmQuit();
+      return true;
+    });
+    return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leaveOpen, chapterIdx, quest]);
 
   if (!quest || !content) {
     return (
@@ -932,6 +972,9 @@ function QuestPlayerInner() {
           shrank a chapter's content down to fit the viewport instead of scrolling, but
           scaling the screen is exactly what read as "the question minimizes" the moment an
           answer's explanation appeared — content that doesn't fit simply scrolls now. */}
+      {/* The scroller and its "there's more below" fade share this box so the fade can sit on
+          the scroller's own bottom edge — the exact line content gets cut off at. */}
+      <View style={{ flex: 1 }}>
       <ScrollView
         ref={scrollRef}
         style={{ flex: 1 }}
@@ -940,6 +983,14 @@ function QuestPlayerInner() {
           chapter.type === 'matching' && styles.contentCenter,
           raised && { paddingTop: 0, paddingBottom: matchLift },
         ]}
+        onLayout={(e) => { scrollViewportH.current = e.nativeEvent.layout.height; recomputeMoreBelow(); }}
+        onContentSizeChange={(_w, h) => { scrollContentH.current = h; recomputeMoreBelow(); }}
+        onScroll={(e) => { scrollOffsetY.current = e.nativeEvent.contentOffset.y; recomputeMoreBelow(); }}
+        scrollEventThrottle={32}
+        // Deliberately still hidden. The fade below is the affordance; a native scrollbar on
+        // top of it would be two of them, and iOS only draws its one while you are already
+        // scrolling — i.e. it appears once you've discovered the thing it was meant to tell
+        // you about.
         showsVerticalScrollIndicator={false}
         // A student typing their answer on the explainback chapter has the keyboard up over
         // half the screen. Dragging the content now dismisses it, and taps land on what they
@@ -979,6 +1030,19 @@ function QuestPlayerInner() {
           />
         </ChapterFrame>
       </ScrollView>
+      {/* Cream fading up out of nothing, exactly the height of a line of text, pinned to the
+          scroller's bottom edge and only while there IS more below. It reads as the content
+          continuing under the edge rather than stopping at it — which is the whole job, since
+          a hard cut at the same cream as the bar beneath looks like a wall.
+          pointerEvents="none" so it can never take a tap from the option it sits over. */}
+      {moreBelow ? (
+        <LinearGradient
+          pointerEvents="none"
+          colors={[hexToRgba(colors.screen, 0), colors.screen]}
+          style={styles.moreBelowFade}
+        />
+      ) : null}
+      </View>
       {/* Persistent bottom bar: "Look back" pinned bottom-left, the chapter's primary action
           centered. Equal-width slots on both sides (the right one deliberately empty) rather
           than absolutely positioning the Look back button, so the action button is genuinely
@@ -1087,9 +1151,11 @@ function TrueFalseButton({
   const shake = useSharedValue(0);
   useEffect(() => {
     if (state === 'correct') {
+      // Same pop as Option's, from the same token — these two are the app's two answer rows
+      // and had drifted to slightly different springs. See motion.pop.
       verdict.value = withSequence(
-        withSpring(1, { damping: 9, stiffness: 320 }),
-        withSpring(0, { damping: 14, stiffness: 260 }),
+        withSpring(1, motion.pop),
+        withSpring(0, motion.settle),
       );
     } else if (state === 'wrong') {
       shake.value = withSequence(
@@ -1112,7 +1178,7 @@ function TrueFalseButton({
       disabled={state !== 'default' && !onPress}
       onPress={onPress}
       onPressIn={() => { press.value = withTiming(1, { duration: 70 }); }}
-      onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 400 }); }}
+      onPressOut={() => { press.value = withSpring(0, motion.press); }}
       style={[styles.tfBtn, { borderColor: c.border, backgroundColor: c.bg }, animStyle]}
     >
       <Txt style={[styles.tfBtnTxt, { color: c.text }]}>{label}</Txt>
@@ -1656,8 +1722,11 @@ function MatchingView({
     const v = popFor(term);
     v.setValue(1);
     Animated.sequence([
-      Animated.timing(v, { toValue: 1.12, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      Animated.spring(v, { toValue: 1, friction: 4.5, tension: 150, useNativeDriver: true }),
+      // 1.12 → 1.07: a matched chip is already recoloured, so the pop only has to draw the
+      // eye to it, and at friction 4.5 the return leg bounced the pair two or three times
+      // after the match had plainly landed. See motion.legacySettle.
+      Animated.timing(v, { toValue: 1.07, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.spring(v, { toValue: 1, ...motion.legacySettle, useNativeDriver: true }),
     ]).start();
   };
 
@@ -2119,13 +2188,15 @@ function MythcardsView({
       // taught, not performed.
       if (Math.abs(g.dx) < MYTH_TAP_SLOP) {
         Animated.sequence([
-          Animated.timing(pan.x, { toValue: 18, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(pan.x, { toValue: -18, duration: 200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-          Animated.spring(pan.x, { toValue: 0, friction: 6, useNativeDriver: true }),
+          Animated.timing(pan.x, { toValue: 14, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(pan.x, { toValue: -14, duration: 200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.spring(pan.x, { toValue: 0, ...motion.legacyDrag, useNativeDriver: true }),
         ]).start();
         return;
       }
-      Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 6, useNativeDriver: true }).start();
+      // A card that didn't travel far enough to count returns and STOPS. At friction 6 it
+      // sailed past centre and swung back, which reads as the card rejecting the drag.
+      Animated.spring(pan, { toValue: { x: 0, y: 0 }, ...motion.legacyDrag, useNativeDriver: true }).start();
     },
     // If something else steals the gesture mid-drag (e.g. the page's own scroll) instead
     // of a clean release, snap back immediately rather than leaving the card wherever the
@@ -2300,7 +2371,7 @@ function KnowledgecheckView({
         {question.opts.map((c, idx) => {
           const st = !answered ? 'default' : idx === question.correct ? 'correct' : idx === sel ? 'wrong' : 'default';
           return (
-            <Reanimated.View key={c} entering={FadeInDown.delay(idx * 50).duration(260).springify().damping(17)}>
+            <Reanimated.View key={c} entering={FadeInDown.delay(idx * 50).duration(260).springify().damping(motion.enter.damping)}>
               <Option
                 label={c}
                 control="letter"
@@ -2424,12 +2495,12 @@ function HabitChoice({
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 - press.value * 0.02 }] }));
   const good = delta >= 0;
   return (
-    <Reanimated.View entering={FadeInDown.delay(index * 60).duration(280).springify().damping(16)}>
+    <Reanimated.View entering={FadeInDown.delay(index * 60).duration(280).springify().damping(motion.enter.damping)}>
       <Pressable
         disabled={revealed}
         onPress={onPress}
         onPressIn={() => { press.value = withTiming(1, { duration: 80 }); }}
-        onPressOut={() => { press.value = withSpring(0, { damping: 20, stiffness: 400, overshootClamping: true }); }}
+        onPressOut={() => { press.value = withSpring(0, motion.press); }}
       >
         <Reanimated.View style={[styles.habit, revealed && (good ? styles.habitGood : styles.habitBad), animStyle]}>
           <View style={styles.habitHead}>
@@ -2439,7 +2510,7 @@ function HabitChoice({
                 change underneath the same static circle. */}
             <Reanimated.View
               key={revealed ? 'on' : 'off'}
-              entering={revealed ? ZoomIn.duration(300).springify().damping(11) : undefined}
+              entering={revealed ? ZoomIn.duration(300).springify().damping(motion.enter.damping) : undefined}
               style={[styles.habitChip, revealed && (good ? styles.habitChipGood : styles.habitChipBad)]}
             >
               <Txt style={[styles.habitChipTxt, revealed && styles.habitChipTxtOn]}>
@@ -3282,6 +3353,9 @@ const styles = StyleSheet.create({
   },
   ambientLifeSheetContent: { paddingHorizontal: 22, paddingBottom: 34 },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 20, gap: 12, flexGrow: 1 },
+  // See `moreBelow`. Tall enough to read as a fade rather than a band, short enough that it
+  // never obscures more than the last line of whatever is under it.
+  moreBelowFade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 28 },
   // flexGrow, never `flex`, from here all the way down to each chapter view's own root —
   // this box and every descendant that wants to fill the scroller.
   //

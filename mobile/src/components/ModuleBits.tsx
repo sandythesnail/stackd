@@ -2,11 +2,11 @@ import { ReactNode } from 'react';
 import { View, Pressable, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { colors, font, radius } from '@/theme';
+import { colors, font, motion, radius } from '@/theme';
 import { mixHex, hexToRgba } from '@/colorMix';
 import { Txt } from './Txt';
 
-const ROW_PRESS_SPRING = { damping: 16, stiffness: 380 };
+const ROW_PRESS_SPRING = motion.press;
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 /** Rounded module icon badge — a pale background with its paired darker foreground number

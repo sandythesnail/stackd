@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import Animated, {
   useSharedValue, useAnimatedStyle, withSpring, withSequence, withTiming,
 } from 'react-native-reanimated';
-import { colors, font } from '@/theme';
+import { colors, font, motion } from '@/theme';
 import { Txt } from './Txt';
 
 type State = 'default' | 'on' | 'correct' | 'wrong';
@@ -71,10 +71,12 @@ export function Option({
   const shake = useSharedValue(0);
   useEffect(() => {
     if (state === 'correct') {
-      // A confident pop — this is the row the eye should land on.
+      // A confident pop — this is the row the eye should land on. `motion.pop` overshoots
+      // once and stops; at the damping-9 this used to carry, the row swelled, sprang back
+      // past its size and swelled again, which is a wobble rather than a confirmation.
       verdict.value = withSequence(
-        withSpring(1, { damping: 9, stiffness: 320 }),
-        withSpring(0, { damping: 14, stiffness: 260 }),
+        withSpring(1, motion.pop),
+        withSpring(0, motion.settle),
       );
     } else if (state === 'wrong') {
       // Deliberately smaller than the correct row's pop and sideways rather than bigger:
@@ -112,7 +114,7 @@ export function Option({
     <AnimatedPressable
       onPress={onPress}
       onPressIn={() => { press.value = withTiming(1, { duration: 70 }); }}
-      onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 400 }); }}
+      onPressOut={() => { press.value = withSpring(0, motion.press); }}
       accessibilityRole={isCheckbox ? 'checkbox' : 'radio'}
       accessibilityLabel={label}
       accessibilityState={isCheckbox ? { checked: chosen } : { selected: chosen }}

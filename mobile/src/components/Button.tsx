@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { Pressable, StyleSheet, ViewStyle, StyleProp, GestureResponderEvent } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
-import { colors, font, radius } from '@/theme';
+import { colors, font, motion, radius } from '@/theme';
 import { Txt } from './Txt';
 
 type Variant = 'green' | 'pink' | 'dark' | 'ghost' | 'disabled';
@@ -21,7 +21,7 @@ const VARIANTS: Record<Variant, { bg: string; text: string; shadow: string; bord
  * drives translateY negative — the face lifts clear of its bezel and the button appears to
  * pop up off the page before settling. Clamped, the face rises to its resting position and
  * stops there, so the release reads as the button returning rather than recoiling. */
-const PRESS_SPRING = { damping: 20, stiffness: 460, overshootClamping: true };
+const PRESS_SPRING = motion.press;
 /** How far the face sits above its bezel, and therefore how far it travels when pressed.
  * 2px, down from 3 (and 5 before that): the travel is meant to read as the button giving under
  * a finger, not as a drop the eye tracks. Now that the bezel actually disappears under the face

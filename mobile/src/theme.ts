@@ -329,3 +329,51 @@ export const softShadow = {
   shadowOffset: { width: 0, height: 6 },
   elevation: 3,
 } as const;
+
+/**
+ * Motion tokens — how hard anything in the app is allowed to move.
+ *
+ * These exist because the app had no shared answer to that question. Every screen invented
+ * its own spring, and the numbers drifted low on damping and high on overshoot: a selected
+ * survey dot swelled 18% past its size before settling, a correct answer's row popped and
+ * rebounded, the piggy bank sprang in on `bounciness: 9`, a myth card released from a drag
+ * wobbled several times before it stopped. Individually each one reads as "springy"; all of
+ * them together read as an app that can't hold still.
+ *
+ * The rule now is that a spring may OVERSHOOT — that's what makes a tap feel like it landed
+ * on something — but it may not oscillate. Damping is high enough everywhere that a spring
+ * crosses its target at most once and is done; the movement registers and then gets out of
+ * the way. Use these rather than writing spring numbers into a screen, the same way colours
+ * come from `colors` rather than from a hex literal.
+ *
+ * Reanimated and the classic Animated API want different parameters for the same idea, hence
+ * both spellings below; `springify()` on a Reanimated layout animation takes the Reanimated
+ * ones (`.damping(...).stiffness(...)`).
+ */
+export const motion = {
+  /** Finger-down squeeze and its release. Clamped: a press returning past its resting
+   * position reads as the control recoiling off the page rather than coming back. */
+  press: { damping: 22, stiffness: 440, overshootClamping: true },
+  /** "That registered" — a selection landing, a row turning out to be right. Overshoots
+   * once, slightly, and stops. Was damping 9 in four separate places, which is a visible
+   * wobble. */
+  pop: { damping: 18, stiffness: 300 },
+  /** The return leg of a pop, and anything settling into a resting position. */
+  settle: { damping: 20, stiffness: 260 },
+  /** Entrance animations (`ZoomIn`/`FadeInDown`.springify()). Deliberately the calmest of
+   * the three: an element arriving is not feedback on anything the user just did, so it has
+   * the least licence to bounce. */
+  enter: { damping: 22, stiffness: 190 },
+  /** Classic-Animated equivalents of `pop`/`settle`, for the handful of places still on
+   * `Animated.spring` (the myth-card drag, the achievement toast, the piggy bank). Friction
+   * is Animated's damping in disguise — low friction is what "bouncy" means there. */
+  legacySettle: { friction: 9, tension: 120 },
+  legacyDrag: { friction: 11, tension: 130 },
+  /** Multiplier on the mascot's one-shot reaction animations (see Hammy.tsx). The keyframes
+   * are ports of the website's, authored for a 440x460 pig filling a desktop panel; at the
+   * 92–130px he's drawn at on a phone the same travel reads as him leaping off the screen.
+   * Scaling the AMPLITUDE rather than rewriting the keyframes keeps the shape and rhythm of
+   * the website's animation — he still bounces, wobbles and celebrates — at a size that
+   * suits where he's actually drawn. */
+  mascotReaction: 0.55,
+} as const;

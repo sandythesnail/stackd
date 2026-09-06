@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, font } from '@/theme';
+import { colors, font, motion } from '@/theme';
 import { useStore } from '@/store';
 import { Txt } from './Txt';
 import { BadgeMedal } from './ModuleBits';
@@ -31,7 +31,10 @@ export function AchievementToast() {
     // subsequent one starts the spring from wherever the previous toast left `y` (already
     // 0), which is a no-op — the toast just pops into place with no animation.
     y.setValue(-120);
-    Animated.spring(y, { toValue: 0, useNativeDriver: true, friction: 8 }).start();
+    // Slides down and stays there. At friction 8 the toast overshot its resting position
+    // and swung back up, so a notification that arrives on its own — nobody asked for it —
+    // was also the bounciest thing on screen.
+    Animated.spring(y, { toValue: 0, ...motion.legacySettle, useNativeDriver: true }).start();
     const id = first.id;
     const t = setTimeout(() => dismissNewAchievement(id), 3500);
     return () => clearTimeout(t);

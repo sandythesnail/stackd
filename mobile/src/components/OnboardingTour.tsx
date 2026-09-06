@@ -114,7 +114,34 @@ const TOUR_STEPS: TourStep[] = [
 
 type MeasuredRect = { x: number; y: number; width: number; height: number };
 
-type TourCtx = {
+/* ── Three contexts, deliberately, and this is what makes the tour smooth ──────────────
+ *
+ * All of this used to be one context object. That object was rebuilt whenever `rect`
+ * changed, and `rect` changes several times per step — on the opening frame, again at
+ * 200ms, again when the target registers, and once per scroll frame while Home is
+ * following the lesson node. A context value changing re-renders EVERY consumer of it,
+ * and memoization is no defence: React Compiler, React.memo and stable props all get
+ * skipped for a component that reads a changed context.
+ *
+ * The consumers are not cheap. Every <TourTarget> in the tree reads this (for register /
+ * unregister), the lesson path reads it, and so does each of its nine animated path
+ * nodes. So a measurement — a thing that moves a hole in a scrim by a few pixels — was
+ * re-rendering the entire lesson path, on the exact frames Home was animating a scroll.
+ * That is the stutter.
+ *
+ * Split by how often each piece actually changes, so a component subscribes only to what
+ * it uses:
+ *   • TourApiContext  — the callbacks. Referentially stable for the provider's whole
+ *                       life, so subscribing to it costs a consumer nothing, ever.
+ *   • TourStepContext — which step is live. Changes six times per tour.
+ *   • TourRectContext — where the target is. Changes constantly; exactly one screen
+ *                       (Home, which needs it to work out how far to scroll) reads it.
+ *
+ * useOnboardingTour() still returns all of it merged, for anything that genuinely wants
+ * everything — but reaching for it re-subscribes you to the rect, so prefer the narrow
+ * hooks. */
+
+type TourApi = {
   registerTarget: (id: string, ref: RefObject<View | null>) => void;
   unregisterTarget: (id: string) => void;
   startTour: () => void;
@@ -128,35 +155,63 @@ type TourCtx = {
    * acting on it. Ends the tour rather than leaving it pointing at something no longer on
    * screen, which it has no button to escape from. A no-op unless that's the live step. */
   endIfWaitingOn: (targetId: string) => void;
-  /** The current step's targetId, or null when the tour isn't active — lets a real element
-   * (e.g. the recommended lesson node) know it should render its own yellow "tap me"
-   * highlight right now, on top of the tour's own neutral spotlight ring. */
-  activeTargetId: string | null;
   /** Re-measure the CURRENT step's target. For a screen that has to move its own target into
    * view before the spotlight can land on it (Home scrolls its lesson path up for the last
    * step) — the tour's own measurement fires immediately and again 200ms later, both of which
    * can be too early for an animated scroll. No-op when no tour is running. */
   remeasureActive: () => void;
-  /** Where the current step's target actually is, in WINDOW coordinates, or null before it's
-   * been measured. Published so a host screen can scroll its own scroller by the difference
-   * between where the target is and where it wants it — which is the only way to get this
-   * right, since the target's offset inside that scroller isn't something the screen knows.
-   * Home used to scroll to the top of the whole lesson path instead, which only brought the
-   * node into view when the node happened to be the first one. */
-  activeRect: MeasuredRect | null;
-  /** Everything <TourCallout> needs to draw the step card itself, for an in-sheet step the
-   * provider deliberately doesn't overlay. Null when no tour is running. */
-  activeCallout: { targetId: string; stepNum: number; totalSteps: number; title: string; body: string } | null;
   /** Ends the tour and marks it seen — what the callout's own "Skip tour" calls. */
   skipTour: () => void;
 };
 
-const TourContext = createContext<TourCtx | null>(null);
+type TourStepState = {
+  /** The current step's targetId, or null when the tour isn't active — lets a real element
+   * (e.g. the recommended lesson node) know it should render its own yellow "tap me"
+   * highlight right now, on top of the tour's own neutral spotlight ring. */
+  activeTargetId: string | null;
+  /** Everything <TourCallout> needs to draw the step card itself, for an in-sheet step the
+   * provider deliberately doesn't overlay. Null when no tour is running. */
+  activeCallout: { targetId: string; stepNum: number; totalSteps: number; title: string; body: string } | null;
+};
 
-export function useOnboardingTour() {
-  const ctx = useContext(TourContext);
-  if (!ctx) throw new Error('useOnboardingTour must be used within OnboardingTourProvider');
+/** Where the current step's target actually is, in WINDOW coordinates, or null before it's
+ * been measured. Published so a host screen can scroll its own scroller by the difference
+ * between where the target is and where it wants it — which is the only way to get this
+ * right, since the target's offset inside that scroller isn't something the screen knows.
+ * Home used to scroll to the top of the whole lesson path instead, which only brought the
+ * node into view when the node happened to be the first one. */
+type TourRect = MeasuredRect | null;
+
+const TourApiContext = createContext<TourApi | null>(null);
+const TourStepContext = createContext<TourStepState>({ activeTargetId: null, activeCallout: null });
+const TourRectContext = createContext<TourRect>(null);
+
+/** The callbacks. Stable — subscribing to this never causes a re-render. */
+export function useTourApi(): TourApi {
+  const ctx = useContext(TourApiContext);
+  if (!ctx) throw new Error('useTourApi must be used within OnboardingTourProvider');
   return ctx;
+}
+
+/** Which step is live. Re-renders once per step, which is what you want if you draw
+ * something for the active step (a highlight ring, the in-sheet callout). */
+export function useTourStep(): TourStepState {
+  return useContext(TourStepContext);
+}
+
+/** The measured target rect. Re-renders on EVERY measurement — only read this if you
+ * actually need the position (today: Home, to compute its scroll delta). */
+export function useTourRect(): TourRect {
+  return useContext(TourRectContext);
+}
+
+/** Everything at once. Convenient, but it subscribes you to the rect — see the note above
+ * the contexts. Prefer useTourApi + useTourStep unless you need the position. */
+export function useOnboardingTour(): TourApi & TourStepState & { activeRect: TourRect } {
+  const api = useTourApi();
+  const step = useTourStep();
+  const activeRect = useTourRect();
+  return useMemo(() => ({ ...api, ...step, activeRect }), [api, step, activeRect]);
 }
 
 /** Wrap any real, on-screen element in this to make it spotlight-able by id. `collapsable={
@@ -165,7 +220,10 @@ export function useOnboardingTour() {
  * measure. */
 export function TourTarget({ id, children, style }: { id: string; children: ReactNode; style?: ViewStyle }) {
   const ref = useRef<View>(null);
-  const { registerTarget, unregisterTarget } = useOnboardingTour();
+  // The API context only — a TourTarget doesn't care which step is live or where anything
+  // is, and there is one of these around every tour stop in the app. Reading the whole tour
+  // context here is what made a measurement re-render them all.
+  const { registerTarget, unregisterTarget } = useTourApi();
   useEffect(() => {
     registerTarget(id, ref);
     return () => unregisterTarget(id);
@@ -183,7 +241,13 @@ export function MaybeTourTarget({ id, children, style }: { id?: string; children
 }
 
 export function OnboardingTourProvider({ children }: { children: ReactNode }) {
+  // Held in a ref, not closed over. The store's context value is rebuilt on every state
+  // change, so markOnboardingTourSeen changes identity constantly — closing over it would
+  // make finish() (and therefore the whole API context) unstable, which is exactly the
+  // churn the three-context split exists to remove.
   const { markOnboardingTourSeen } = useStore();
+  const markSeenRef = useRef(markOnboardingTourSeen);
+  useEffect(() => { markSeenRef.current = markOnboardingTourSeen; }, [markOnboardingTourSeen]);
   const targets = useRef(new Map<string, RefObject<View | null>>()).current;
   const [stepIdx, setStepIdx] = useState<number | null>(null);
   const [rect, setRect] = useState<MeasuredRect | null>(null);
@@ -274,8 +338,8 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
   const finish = useCallback(() => {
     setStep(null);
     endSettling();
-    markOnboardingTourSeen();
-  }, [markOnboardingTourSeen, setStep, endSettling]);
+    markSeenRef.current();
+  }, [setStep, endSettling]);
 
   // These read the step and call finish()/goToStep() as plain, top-level calls — NOT from
   // inside a setStepIdx(i => ...) updater the way this used to be written. Dispatching a
@@ -372,36 +436,46 @@ export function OnboardingTourProvider({ children }: { children: ReactNode }) {
     [activeStep, stepIdx],
   );
 
-  const ctxValue = useMemo<TourCtx>(
+  // Every dependency here is a useCallback with no changing dependencies of its own, so this
+  // object is created once and never again — a consumer of the API context re-renders only
+  // when its own props or state change.
+  const api = useMemo<TourApi>(
     () => ({
       registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, endIfWaitingOn,
-      remeasureActive, activeCallout, skipTour: finish,
-      activeTargetId: activeStep?.targetId ?? null,
-      activeRect: rect,
+      remeasureActive, skipTour: finish,
     }),
-    [
-      registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, endIfWaitingOn,
-      remeasureActive, activeCallout, finish, activeStep, rect,
-    ],
+    [registerTarget, unregisterTarget, startTour, advanceIfWaitingOn, endIfWaitingOn, remeasureActive, finish],
+  );
+
+  const stepState = useMemo<TourStepState>(
+    () => ({ activeTargetId: activeStep?.targetId ?? null, activeCallout }),
+    [activeStep, activeCallout],
   );
 
   return (
-    <TourContext.Provider value={ctxValue}>
-      {children}
-      {/* inSheet steps draw nothing here on purpose — see TourStep.inSheet. */}
-      {activeStep && !activeStep.inSheet ? (
-        <TourOverlay
-          step={activeStep}
-          stepNum={stepIdx! + 1}
-          totalSteps={TOUR_STEPS.length}
-          rect={rect}
-          settling={settling}
-          isLast={stepIdx === TOUR_STEPS.length - 1}
-          onNext={advance}
-          onSkip={finish}
-        />
-      ) : null}
-    </TourContext.Provider>
+    <TourApiContext.Provider value={api}>
+      <TourStepContext.Provider value={stepState}>
+        {/* Innermost, so the value that changes most often wraps the fewest subscribers.
+            `children` is a prop — re-rendering this provider does not re-render the app
+            below it, only the components that actually read a context whose value moved. */}
+        <TourRectContext.Provider value={rect}>
+          {children}
+          {/* inSheet steps draw nothing here on purpose — see TourStep.inSheet. */}
+          {activeStep && !activeStep.inSheet ? (
+            <TourOverlay
+              step={activeStep}
+              stepNum={stepIdx! + 1}
+              totalSteps={TOUR_STEPS.length}
+              rect={rect}
+              settling={settling}
+              isLast={stepIdx === TOUR_STEPS.length - 1}
+              onNext={advance}
+              onSkip={finish}
+            />
+          ) : null}
+        </TourRectContext.Provider>
+      </TourStepContext.Provider>
+    </TourApiContext.Provider>
   );
 }
 
@@ -488,6 +562,14 @@ function TourOverlay({
   // that actually animate. (There used to be a visible white ring around the spotlighted
   // element too, animated the same way — removed per direct request; the dark-scrim cutout
   // itself is enough of a highlight on its own.)
+  //
+  // TRANSLATE, not top/left. Layout properties can only be animated on the JS thread
+  // (useNativeDriver: false), which meant every frame of every step transition was a
+  // round-trip through JavaScript to re-lay-out an absolutely-positioned view that also
+  // carries a 16px shadow — so the card's own animation was competing for the same thread
+  // as the measuring, the state updates and the host screen's scroll, and lost. A transform
+  // runs entirely on the UI thread and keeps moving even when JS is busy, which is the
+  // difference between the tour gliding and the tour hitching.
   const animTooltipTop = useRef(new Animated.Value(tooltipTop)).current;
   const animTooltipLeft = useRef(new Animated.Value(tooltipLeft)).current;
   // Whether the card is coming back from being hidden. The first positioned frame after that
@@ -504,22 +586,23 @@ function TourOverlay({
       wasHidden.current = false;
       return;
     }
-    const timing = (value: Animated.Value, toValue: number) => Animated.timing(value, { toValue, duration: TOUR_TRANSITION_MS, easing: TOUR_EASING, useNativeDriver: false });
+    const timing = (value: Animated.Value, toValue: number) => Animated.timing(value, { toValue, duration: TOUR_TRANSITION_MS, easing: TOUR_EASING, useNativeDriver: true });
     Animated.parallel([timing(animTooltipTop, tooltipTop), timing(animTooltipLeft, tooltipLeft)]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tooltipTop, tooltipLeft, hideCard]);
 
   // The card fades rather than blinks. It arrives snapped into position (wasHidden above), so
   // without this it appeared as a hard pop the moment the scroll finished — the opposite end
-  // of the same problem the snap exists to solve. `useNativeDriver: false` is not a choice
-  // here: top/left on this same view are JS-driven, and one view can't mix the two drivers.
+  // of the same problem the snap exists to solve. Native-driven like the movement above; a
+  // view can't mix drivers, and now that position is a transform there's nothing JS-driven
+  // left on it to force the slow path.
   const animOpacity = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(animOpacity, {
       toValue: hideCard ? 0 : 1,
       duration: hideCard ? 110 : 200,
       easing: TOUR_EASING,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hideCard]);
@@ -585,7 +668,12 @@ function TourOverlay({
           styles.tooltip,
           // Kept mounted while hidden (opacity, not unmounted), so its onLayout height is
           // already known by the time it appears and it doesn't reposition on arrival.
-          { top: animTooltipTop, left: animTooltipLeft, width: tooltipW, opacity: animOpacity },
+          // Pinned at the origin and moved by transform — see animTooltipTop above.
+          {
+            width: tooltipW,
+            opacity: animOpacity,
+            transform: [{ translateX: animTooltipLeft }, { translateY: animTooltipTop }],
+          },
         ]}
       >
         <Txt style={styles.stepLabel}>{`STEP ${stepNum} OF ${totalSteps}`}</Txt>
@@ -618,7 +706,8 @@ function TourOverlay({
  * safe to leave mounted unconditionally. Carries no Next button: an inSheet step is always a
  * requiresRealClick one, so the real button beside it is the only way forward, plus Skip. */
 export function TourCallout({ forTarget, style }: { forTarget: string; style?: ViewStyle }) {
-  const { activeCallout, skipTour } = useOnboardingTour();
+  const { activeCallout } = useTourStep();
+  const { skipTour } = useTourApi();
   if (!activeCallout || activeCallout.targetId !== forTarget) return null;
   return (
     <View style={[styles.callout, style]}>
@@ -640,7 +729,7 @@ function BlockRect({ x, y, width, height }: { x: number; y: number; width: numbe
 
 const styles = StyleSheet.create({
   tooltip: {
-    position: 'absolute', backgroundColor: colors.white, borderRadius: radius.lg,
+    position: 'absolute', top: 0, left: 0, backgroundColor: colors.white, borderRadius: radius.lg,
     borderWidth: 1, borderColor: colors.border, padding: 16,
     shadowColor: '#2C3E2D', shadowOpacity: 0.16, shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 }, elevation: 6,

@@ -1,6 +1,6 @@
 import { Modal, View, Pressable, StyleSheet } from 'react-native';
 import Reanimated, { FadeIn, ZoomIn } from 'react-native-reanimated';
-import { colors, font, radius } from '@/theme';
+import { colors, font, motion, radius } from '@/theme';
 import { useStore } from '@/store';
 import { MOOD_FACES } from '@/hammyFaces';
 import { Txt } from './Txt';
@@ -31,7 +31,7 @@ export function LevelUpModal() {
     <Modal visible transparent animationType="fade" onRequestClose={dismissLevelUpBanner}>
       <View style={styles.overlay}>
         <Pressable style={StyleSheet.absoluteFill} onPress={dismissLevelUpBanner} accessibilityLabel="Close" />
-        <Reanimated.View entering={ZoomIn.springify().damping(14).stiffness(180)} style={styles.card}>
+        <Reanimated.View entering={ZoomIn.springify().damping(motion.enter.damping).stiffness(motion.enter.stiffness)} style={styles.card}>
           <Hammy size={110} bob={false} face={MOOD_FACES.star} />
 
           <Txt variant="h1" style={styles.title}>Congratulations!</Txt>

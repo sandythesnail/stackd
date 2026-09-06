@@ -7,12 +7,12 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { colors } from '@/theme';
+import { colors, motion } from '@/theme';
 import { modules, type Module } from '@/data';
 import { moduleContentById, mainLessonAbsoluteIndices } from '@/content';
 import { SURVEY_TRACKS } from '@/survey';
 import { useStore } from '@/store';
-import { MIcon, Hammy, MaybeTourTarget, TourCallout, useOnboardingTour } from '@/components';
+import { MIcon, Hammy, MaybeTourTarget, TourCallout, useTourApi, useTourStep } from '@/components';
 import { MOOD_FACES, REACTION_FACES, type FaceOverlay } from '@/hammyFaces';
 import { T, Bar, Pill, useReducedMotion } from './bits';
 import { PathNode, type NodeState } from './PathNode';
@@ -105,7 +105,11 @@ type Section = {
 export function LessonPath({ width }: { width: number }) {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
-  const { endIfWaitingOn, activeTargetId } = useOnboardingTour();
+  // Narrow hooks on purpose: the path and its nodes want to know WHICH step is live, never
+  // where the spotlight currently is. Reading the merged hook here re-rendered the whole
+  // path on every measurement — see OnboardingTour.tsx's context split.
+  const { endIfWaitingOn } = useTourApi();
+  const { activeTargetId } = useTourStep();
   const { state, moduleDoneIndices, moduleStatus, moduleTotal, nextLessonIndex, lessonProgressFor } = useStore();
 
   const [pickedModule, setPickedModule] = useState<string | null>(null);
@@ -276,7 +280,8 @@ function SectionView({
   onPressNode: (node: PathNodeData) => void;
 }) {
   const [hovered, setHovered] = useState<number | null>(null);
-  const { activeTargetId, advanceIfWaitingOn } = useOnboardingTour();
+  const { advanceIfWaitingOn } = useTourApi();
+  const { activeTargetId } = useTourStep();
   const { module: mod, nodes } = section;
   const lastIdx = nodes.length - 1;
   // The optional real-life lesson swings 1.5x further off the line than the wave would take
@@ -420,7 +425,7 @@ function SectionView({
           return (
             <Reanimated.View
               key={n.key}
-              entering={reducedMotion ? undefined : ZoomIn.delay(i * 55).duration(320).springify().damping(14)}
+              entering={reducedMotion ? undefined : ZoomIn.delay(i * 55).duration(320).springify().damping(motion.enter.damping)}
               style={{ position: 'absolute', left: pts[i].x - NODE_BOX / 2, top: pts[i].y - NODE_BOX / 2 }}
             >
               <MaybeTourTarget id={isTourTarget ? 'tour-lesson-node' : undefined}>
@@ -597,7 +602,8 @@ function PreviewSheet({
   onClose: () => void;
   onStart: () => void;
 }) {
-  const { activeTargetId, advanceIfWaitingOn } = useOnboardingTour();
+  const { advanceIfWaitingOn } = useTourApi();
+  const { activeTargetId } = useTourStep();
   const { lessonProgressFor } = useStore();
 
   // Computed up here, above the early return, because the pulse below is a hook.

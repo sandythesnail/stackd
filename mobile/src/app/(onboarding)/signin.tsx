@@ -6,6 +6,7 @@ import { Screen, Spacer, Txt, Button, Field, Hammy, Divider, KeyboardAwareScroll
 import { colors, font } from '@/theme';
 import { useStore } from '@/store';
 import { authEnabled } from '@/lib/env';
+import { AuthUnavailable } from '@/lib/AuthUnavailable';
 import { clerkError } from '@/lib/clerkErrors';
 import { WebAuthRedirect } from '@/lib/webAuth';
 import { SocialAuth } from '@/lib/socialAuth';
@@ -15,7 +16,11 @@ import { SocialAuth } from '@/lib/socialAuth';
  * Clerk email/password form (or the local stub when auth isn't configured). */
 export default function SignIn() {
   if (Platform.OS === 'web' && authEnabled) return <WebAuthRedirect page="login" />;
-  return authEnabled ? <ClerkSignIn /> : <StubSignIn />;
+  if (authEnabled) return <ClerkSignIn />;
+  // The stub is a DEVELOPMENT convenience and nothing else — its Sign in button navigates
+  // rather than authenticating. Shipping it is how a build that lost its EXPO_PUBLIC_* keys
+  // ends up looking like a working app with no accounts in it. See lib/AuthUnavailable.tsx.
+  return __DEV__ ? <StubSignIn /> : <AuthUnavailable />;
 }
 
 function ClerkSignIn() {

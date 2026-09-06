@@ -7,6 +7,7 @@ import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ShopItemReal } from '@/content';
 import { REACTION_FACES, type FaceOverlay } from '@/hammyFaces';
+import { motion } from '@/theme';
 
 /* ─────────────── illustrated-face overlays ───────────────
  * Setting `face` hides the base eyes/cheeks/snout and draws a cropped PNG in their place.
@@ -292,6 +293,9 @@ export function Hammy({
     loop.start();
   };
 
+  /** Scales one reaction keyframe down to phone size — see motion.mascotReaction. */
+  const amp = (n: number) => n * motion.mascotReaction;
+
   // Ported from the website's hammyBounce (happy) / hammyWobble (gentle/wrong) /
   // hammyCelebrate (streak) keyframes — including their rotation channels — replayed every
   // time reactionKey changes (not just when `reaction` changes, so answering "correct" twice
@@ -303,9 +307,13 @@ export function Hammy({
     setReacting(true);
     reactY.setValue(0);
     // hammyBounce's 0% keyframe starts at rotate(-2deg); the other two start at 0.
-    reactRot.setValue(reaction === 'happy' ? -2 : 0);
+    reactRot.setValue(amp(reaction === 'happy' ? -2 : 0));
+    // Every keyframe below is still the website's own number — `amp` scales the DISTANCE and
+    // nothing else. The durations are deliberately untouched: shortening them as well would
+    // trade an exaggerated animation for a twitchy one, and the complaint is travel, not
+    // speed. Same shape, same rhythm, less of it.
     const t = (v: Animated.Value, toValue: number, duration: number) =>
-      Animated.timing(v, { toValue, duration, easing: CSS_EASE, useNativeDriver: true });
+      Animated.timing(v, { toValue: amp(toValue), duration, easing: CSS_EASE, useNativeDriver: true });
     const seq = reaction === 'gentle'
       // hammyWobble, 0.6s: rotate 0 → -6 (25%) → 6 (75%) → 0 (100%)
       ? Animated.sequence([t(reactRot, -6, 150), t(reactRot, 6, 300), t(reactRot, 0, 150)])

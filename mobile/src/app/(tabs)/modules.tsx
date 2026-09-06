@@ -9,7 +9,7 @@ import {
   Screen, Header, Txt, Tag, ProgressBar, MIcon, ModuleLessonList, RealLifeSubQuestRow,
   DisclaimerStrip, DISCLAIMER_MODULES,
 } from '@/components';
-import { colors, font, radius } from '@/theme';
+import { colors, font, motion, radius } from '@/theme';
 import { modules } from '@/data';
 import { moduleContentById, mainLessonAbsoluteIndices } from '@/content';
 import { useStore } from '@/store';
@@ -149,7 +149,7 @@ export default function Modules() {
               // the session's first visit to the tab; see listHasAnimated.
               <Reanimated.View
                 key={m.id}
-                entering={animateRows ? FadeInDown.delay(Math.min(rowIdx, 10) * 45).duration(320).springify().damping(18) : undefined}
+                entering={animateRows ? FadeInDown.delay(Math.min(rowIdx, 10) * 45).duration(320).springify().damping(motion.enter.damping) : undefined}
                 // Deliberately NO `layout` transition. A LinearTransition here animates the
                 // frame of all ELEVEN rows every time one of them opens — inside a
                 // ScrollView, which is where Reanimated's layout animations are least

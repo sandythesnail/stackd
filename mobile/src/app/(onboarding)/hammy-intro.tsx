@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import Svg, { Path, Rect, Ellipse, Circle, Polygon, Defs, ClipPath, G, RadialGradient, Stop } from 'react-native-svg';
 import { Txt, Hammy, Coin, Diamond } from '@/components';
-import { colors, font } from '@/theme';
+import { colors, font, motion } from '@/theme';
 import { useStore } from '@/store';
 import { REACTION_FACES, MOOD_FACES, type FaceOverlay } from '@/hammyFaces';
 
@@ -310,7 +310,9 @@ export default function HammyIntro() {
     // 0.00 bank drops in with a bounce
     Animated.parallel([
       Animated.timing(bankOp, { toValue: 1, duration: 200, useNativeDriver: true }),
-      Animated.spring(bankY, { toValue: 0, speed: 14, bounciness: 9, useNativeDriver: true }),
+      // bounciness 9 made the bank land, rebound and land again — three impacts for one
+      // arrival. It still drops in with weight; it just stops when it gets there.
+      Animated.spring(bankY, { toValue: 0, speed: 14, bounciness: 2, useNativeDriver: true }),
     ]).start();
 
     // 0.80 wobble + crack flicker
@@ -429,7 +431,7 @@ export default function HammyIntro() {
             // small — it should read as him saying it, not as a UI transition.
             <Reanimated.View
               key={bubbleText}
-              entering={ZoomIn.springify().damping(13).stiffness(180)}
+              entering={ZoomIn.springify().damping(motion.enter.damping).stiffness(motion.enter.stiffness)}
               pointerEvents="none"
               style={[styles.bubble, { bottom: hammyBottom + 210 }]}
             >
@@ -500,12 +502,12 @@ function ReplyChip({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <AnimatedPressable
       onPress={onPress}
-      entering={FadeInDown.duration(300).springify().damping(15)}
+      entering={FadeInDown.duration(300).springify().damping(motion.enter.damping)}
       onPressIn={() => { press.value = withTiming(1, { duration: 80 }); }}
       // overshootClamping: without it the spring sails past 0 and the chip pops UP off the
       // page on release, which reads as a bounce rather than a return. Same reasoning as
       // Button's PRESS_SPRING.
-      onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 420, overshootClamping: true }); }}
+      onPressOut={() => { press.value = withSpring(0, motion.press); }}
       onHoverIn={() => { hover.value = withTiming(1, { duration: 140 }); }}
       onHoverOut={() => { hover.value = withTiming(0, { duration: 180 }); }}
       accessibilityRole="button"

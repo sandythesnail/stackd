@@ -40,7 +40,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { Button, Txt } from '@/components';
 import { colors, font } from '@/theme';
-import { clerkError } from './clerkErrors';
+import { clerkErrorWithCode, isIdentifierTaken } from './clerkErrors';
 import { fillMissingSignUpFields } from './clerkSignUp';
 
 // Dismisses the auth session's popup on web and, on native, lets a redirect that arrives
@@ -65,6 +65,12 @@ type Strategy = 'oauth_apple' | 'oauth_google' | 'oauth_microsoft';
  * problem to solve here — it always presents its own account sheet.
  */
 const PROMPT = 'select_account';
+
+/** The rotating-token nonce Clerk appends to the redirect. See its call site for why this
+ * doesn't go through URL/URLSearchParams. */
+function readNonce(url: string): string {
+  return decodeURIComponent(/[?&]rotating_token_nonce=([^&#]*)/.exec(url)?.[1] ?? '');
+}
 
 /**
  * Where the provider sends the browser back to, and it has to be a string Clerk recognises
@@ -164,13 +170,42 @@ export function SocialAuth({
       }
 
       // Clerk hands the session back as a nonce on the redirect, which the reload exchanges.
-      const nonce = new URL(result.url).searchParams.get('rotating_token_nonce') ?? '';
+      //
+      // Parsed by hand rather than through `new URL(...).searchParams`. The redirect is a
+      // bare custom scheme — `stackd://?rotating_token_nonce=…` — with no authority
+      // component, which is exactly the shape URL parsers disagree about; React Native's is
+      // a hand-written subset rather than a spec implementation, and it is the one piece of
+      // this flow with no fallback if it ever returns null on a URL that plainly contains
+      // the parameter. A regex over the query string cannot be wrong about a value we can
+      // see in the string.
+      const nonce = readNonce(result.url);
+      if (!nonce) {
+        setError(`${name} sent us back without a sign-in token. Please try again.`);
+        return;
+      }
       await signIn.reload({ rotatingTokenNonce: nonce });
 
       // "transferable" means the provider authenticated someone with no account here yet, so
       // the OAuth identity gets transferred into a new sign-up.
+      //
+      // This is where an existing account with the same email lands, and it is worth naming
+      // because it looks like a broken button rather than a collision: someone who signed up
+      // on trystacked.app with an email and password, then taps "Continue with Google" for
+      // the same address, has an account Clerk will not silently attach a new identity to.
+      // The generic "couldn't finish signing in" that used to come back sent people to try
+      // the same button again, which fails the same way every time; the fix is a password
+      // sign-in once, after which the identity links.
       if (signIn.firstFactorVerification.status === 'transferable') {
-        await signUp.create({ transfer: true });
+        try {
+          await signUp.create({ transfer: true });
+        } catch (e: unknown) {
+          setError(
+            isIdentifierTaken(e)
+              ? `There's already a Stacked account with that email address. Sign in with your password below, then ${name} will work next time.`
+              : clerkErrorWithCode(e),
+          );
+          return;
+        }
       }
 
       let sessionId = signUp.createdSessionId ?? signIn.createdSessionId;
@@ -189,11 +224,23 @@ export function SocialAuth({
         // "Please try again", which is advice that cannot work — a retry re-runs the same
         // round trip into the same unmet requirement — and it hid the one detail that
         // identifies the problem, so three unrelated failures all read identically.
+        //
+        // `email_address` is called out separately because it is the one requirement this
+        // app cannot fill on the user's behalf, and Apple is the provider that produces it:
+        // Sign in with Apple only releases an email address if the user agrees to share one,
+        // and "Hide My Email" or a declined share leaves the transfer sign-up with no email
+        // at all. Telling someone to "finish signing up at trystacked.app" is useless advice
+        // there — they'd hit the same wall — whereas re-running Apple with the address shown
+        // works. (Revoking the app under Settings → Apple Account → Sign in with Apple is
+        // what makes Apple ask again, which is why that instruction is here.)
         const outstanding = [...signUp.missingFields, ...signUp.unverifiedFields];
+        const needsEmail = outstanding.includes('email_address');
         setError(
-          outstanding.length
-            ? `Your account still needs: ${outstanding.join(', ')}. Finish signing up at trystacked.app.`
-            : `Couldn't finish signing in with ${name} (${signUp.status ?? signIn.status ?? 'no session'}).`,
+          needsEmail
+            ? `${name} didn't share an email address, and Stacked needs one. Try again and choose "Share My Email", or sign up with your email below.`
+            : outstanding.length
+              ? `Your account still needs: ${outstanding.join(', ')}. Finish signing up at trystacked.app.`
+              : `Couldn't finish signing in with ${name} (${signUp.status ?? signIn.status ?? 'no session'}).`,
         );
         return;
       }
@@ -204,7 +251,10 @@ export function SocialAuth({
       onSignedIn({ isNewUser });
     } catch (e: unknown) {
       completingRef.current = false;
-      if (alive.current) setError(clerkError(e));
+      // With the code: this is the one failure path in the app whose cause is invisible from
+      // the outside, and the person hitting it is usually reporting it rather than fixing it.
+      // See clerkErrorWithCode.
+      if (alive.current) setError(clerkErrorWithCode(e));
     } finally {
       if (alive.current) setBusy(null);
     }

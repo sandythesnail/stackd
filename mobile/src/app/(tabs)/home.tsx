@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Screen, Header, Txt, Card, Button, ProgressBar, Stat, Speech, Hammy,
   SectionHead, BadgeMedal, AchievementDetailModal, DailyRewardsModal, Flame, Coin, Diamond,
-  TourTarget, useOnboardingTour,
+  TourTarget, useTourApi, useTourStep, useTourRect,
 } from '@/components';
 import { useUser } from '@clerk/clerk-expo';
 import { colors, font } from '@/theme';
@@ -60,7 +60,13 @@ export default function Home() {
   const [dailyRewardsOpen, setDailyRewardsOpen] = useState(false);
   const [pathWidth, setPathWidth] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
-  const { startTour, activeTargetId, remeasureActive, activeRect } = useOnboardingTour();
+  // Three narrow subscriptions rather than the merged hook. Only `activeRect` changes often,
+  // and keeping it separate means the components BELOW this one (the lesson path and its nine
+  // animated nodes) no longer re-render every time the tour measures anything — see the
+  // context split in OnboardingTour.tsx.
+  const { startTour, remeasureActive } = useTourApi();
+  const { activeTargetId } = useTourStep();
+  const activeRect = useTourRect();
   // Survey + piggy-bank intro both finished. See the tour effect below.
   const onboardedAlready = useOnboardedAlready();
   const { height: winH } = useWindowDimensions();
@@ -194,9 +200,21 @@ export default function Home() {
   // animation it was trying to follow stutter. Nothing needs following there anyway: the
   // provider holds the spotlight back for the length of that scroll and lands it once, at the
   // end, from the landTimer above.
+  //
+  // Coalesced to one measurement per frame. scrollEventThrottle is 16, but iOS is free to
+  // deliver more than one event per display refresh, and each remeasure is a native
+  // measureInWindow plus a state update on the tour provider — so an un-coalesced handler
+  // could queue several of both for a single frame that can only draw once.
+  const remeasurePending = useRef(false);
+  useEffect(() => () => { remeasurePending.current = false; }, []);
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     scrollYRef.current = e.nativeEvent.contentOffset.y;
-    if (tourNeedsPath && !scrollingToNode.current) remeasureActive();
+    if (!tourNeedsPath || scrollingToNode.current || remeasurePending.current) return;
+    remeasurePending.current = true;
+    requestAnimationFrame(() => {
+      remeasurePending.current = false;
+      remeasureActive();
+    });
   };
 
   const activeTrack = SURVEY_TRACKS.find((t) => t.id === state.onboardingTrackId);

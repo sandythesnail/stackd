@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen, Txt, Button, Option, ProgressBar, IconButton, MIcon, Hammy } from '@/components';
-import { colors, font, radius } from '@/theme';
+import { colors, font, motion, radius } from '@/theme';
 import { mixHex } from '@/colorMix';
 import { modules } from '@/data';
 import { SURVEY_GOALS, SURVEY_TRACKS, getRecommendedTrack, trackReason, type SurveyAnswers } from '@/survey';
@@ -245,7 +245,7 @@ export default function Survey() {
             {/* Keyed on the track: picking a different one re-plays this card rather than
                 silently rewriting its text, which is the whole feedback that a choice
                 registered. */}
-            <Reanimated.View key={activeTrack.id} entering={ZoomIn.springify().damping(15).stiffness(160)}>
+            <Reanimated.View key={activeTrack.id} entering={ZoomIn.springify().damping(motion.enter.damping).stiffness(motion.enter.stiffness)}>
               <LinearGradient
                 colors={[colors.greenBrand, colors.greenDark]}
                 start={{ x: 0, y: 0 }}
@@ -426,9 +426,11 @@ function ScaleDot({
 
   useEffect(() => {
     select.value = on
-      // Overshoot and settle. Low damping on the way in is the "pop"; the resting spring is
-      // stiffer so it doesn't wobble afterwards.
-      ? withSequence(withSpring(1.18, { damping: 9, stiffness: 320 }), withSpring(1, { damping: 15, stiffness: 260 }))
+      // Overshoot and settle — one crossing, not a wobble (see motion.pop). The overshoot
+      // itself also came down: 1.18 on top of the 12% the resting state already adds meant
+      // the chosen number swelled by a fifth of its size before falling back, which is a lot
+      // of movement for "this one is selected".
+      ? withSequence(withSpring(1.1, motion.pop), withSpring(1, motion.settle))
       : withTiming(0, { duration: 160 });
   }, [on, select]);
 
@@ -440,7 +442,7 @@ function ScaleDot({
     <AnimatedPressable
       onPress={() => onPick(value)}
       onPressIn={() => { press.value = withTiming(1, { duration: 70 }); }}
-      onPressOut={() => { press.value = withSpring(0, { damping: 18, stiffness: 420, overshootClamping: true }); }}
+      onPressOut={() => { press.value = withSpring(0, motion.press); }}
       accessibilityRole="button"
       accessibilityLabel={`${value}, ${label}`}
       accessibilityState={{ selected: on }}
