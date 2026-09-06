@@ -7,9 +7,8 @@ import Reanimated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RNSlider from '@react-native-community/slider';
-import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, LifeEventCard, ReactionFacePreloader } from '@/components';
+import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, LifeEventCard, ReactionFacePreloader, FadingScroll } from '@/components';
 import { colors, font, motion, selectableInput } from '@/theme';
-import { hexToRgba } from '@/colorMix';
 import { moduleById } from '@/data';
 import { moduleContentById } from '@/content';
 import { useStore } from '@/store';
@@ -515,25 +514,14 @@ function QuestPlayerInner() {
   // The reset-to-top on a new chapter or a new question stays. That one puts you at the START
   // of something you haven't read, which is where you were going anyway.
   //
-  // What replaced the auto-scroll is a CUE rather than a movement — see `moreBelow` below and
-  // the fade rendered under the scroller. Not scrolling the page was right; saying nothing at
-  // all was not. The player is a fixed column (progress bar, Hammy, scroller, action bar), so
-  // content that overflows is cut off dead flat against the cream of the bar underneath it,
-  // with the scroll indicator hidden. There is nothing on screen that distinguishes "this
-  // chapter ends here" from "there are two more options and an explanation below this line" —
-  // which is why answering a question could look like the options had gone behind a wall.
-  const [moreBelow, setMoreBelow] = useState(false);
-  const scrollViewportH = useRef(0);
-  const scrollContentH = useRef(0);
-  const scrollOffsetY = useRef(0);
-  // 16px of slack: rounding between content and viewport heights routinely leaves a pixel or
-  // two unreached, and a cue that says "there's more" pointing at nothing is worse than none.
-  const OVERFLOW_SLACK = 16;
-  const recomputeMoreBelow = () => {
-    setMoreBelow(
-      scrollContentH.current - scrollOffsetY.current - scrollViewportH.current > OVERFLOW_SLACK,
-    );
-  };
+  // What replaced the auto-scroll is a CUE rather than a movement: the scroller is a
+  // <FadingScroll>, which fades its bottom edge whenever there is content below it. Not
+  // moving the page was right; saying nothing at all was not. The player is a fixed column
+  // (progress bar, Hammy, scroller, action bar), so content that overflows is cut off dead
+  // flat against the cream of the bar underneath it, with the scroll indicator hidden —
+  // nothing on screen distinguished "this chapter ends here" from "there are two more options
+  // and an explanation below this line", which is why answering a question could look like
+  // the rest had gone behind a wall.
   const [terms, setTerms] = useState<LearnedTerm[]>(resumed?.terms ?? []);
   // Mirrors `terms` synchronously. The final chapter's onComplete builds the results payload
   // in the same handler that can add the last word, and a setState isn't visible yet at that
@@ -972,10 +960,7 @@ function QuestPlayerInner() {
           shrank a chapter's content down to fit the viewport instead of scrolling, but
           scaling the screen is exactly what read as "the question minimizes" the moment an
           answer's explanation appeared — content that doesn't fit simply scrolls now. */}
-      {/* The scroller and its "there's more below" fade share this box so the fade can sit on
-          the scroller's own bottom edge — the exact line content gets cut off at. */}
-      <View style={{ flex: 1 }}>
-      <ScrollView
+      <FadingScroll
         ref={scrollRef}
         style={{ flex: 1 }}
         contentContainerStyle={[
@@ -983,14 +968,9 @@ function QuestPlayerInner() {
           chapter.type === 'matching' && styles.contentCenter,
           raised && { paddingTop: 0, paddingBottom: matchLift },
         ]}
-        onLayout={(e) => { scrollViewportH.current = e.nativeEvent.layout.height; recomputeMoreBelow(); }}
-        onContentSizeChange={(_w, h) => { scrollContentH.current = h; recomputeMoreBelow(); }}
-        onScroll={(e) => { scrollOffsetY.current = e.nativeEvent.contentOffset.y; recomputeMoreBelow(); }}
-        scrollEventThrottle={32}
-        // Deliberately still hidden. The fade below is the affordance; a native scrollbar on
-        // top of it would be two of them, and iOS only draws its one while you are already
-        // scrolling — i.e. it appears once you've discovered the thing it was meant to tell
-        // you about.
+        // Deliberately still hidden. The fade is the affordance; a native scrollbar on top of
+        // it would be two of them, and iOS only draws its one while you are already scrolling
+        // — i.e. it appears once you've discovered the thing it was meant to tell you about.
         showsVerticalScrollIndicator={false}
         // A student typing their answer on the explainback chapter has the keyboard up over
         // half the screen. Dragging the content now dismisses it, and taps land on what they
@@ -1029,20 +1009,7 @@ function QuestPlayerInner() {
             {...reportProps}
           />
         </ChapterFrame>
-      </ScrollView>
-      {/* Cream fading up out of nothing, exactly the height of a line of text, pinned to the
-          scroller's bottom edge and only while there IS more below. It reads as the content
-          continuing under the edge rather than stopping at it — which is the whole job, since
-          a hard cut at the same cream as the bar beneath looks like a wall.
-          pointerEvents="none" so it can never take a tap from the option it sits over. */}
-      {moreBelow ? (
-        <LinearGradient
-          pointerEvents="none"
-          colors={[hexToRgba(colors.screen, 0), colors.screen]}
-          style={styles.moreBelowFade}
-        />
-      ) : null}
-      </View>
+      </FadingScroll>
       {/* Persistent bottom bar: "Look back" pinned bottom-left, the chapter's primary action
           centered. Equal-width slots on both sides (the right one deliberately empty) rather
           than absolutely positioning the Look back button, so the action button is genuinely
@@ -3353,9 +3320,6 @@ const styles = StyleSheet.create({
   },
   ambientLifeSheetContent: { paddingHorizontal: 22, paddingBottom: 34 },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 20, gap: 12, flexGrow: 1 },
-  // See `moreBelow`. Tall enough to read as a fade rather than a band, short enough that it
-  // never obscures more than the last line of whatever is under it.
-  moreBelowFade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 28 },
   // flexGrow, never `flex`, from here all the way down to each chapter view's own root —
   // this box and every descendant that wants to fill the scroller.
   //

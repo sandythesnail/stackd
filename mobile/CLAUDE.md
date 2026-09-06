@@ -64,6 +64,13 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   password once and the identity links). Every other SSO failure is reported with Clerk's own
   error CODE appended (`clerkErrorWithCode`), because this is the one flow whose cause is
   invisible from the outside and the person hitting it is usually reporting rather than fixing.
+  Read off the live instance rather than assumed, for the record: `email_address`, `username`
+  and `password` are all enabled AND required, `verify_at_sign_up` is false for email, there
+  are no second factors, and `single_session_mode` is on. The instance also lists
+  `oauth_token_apple` among its first factors — that is Clerk's NATIVE Sign in with Apple
+  strategy (hand it a credential from the system sheet instead of a browser round-trip), which
+  needs `expo-apple-authentication` and therefore a rebuild, but is the flow Apple's own
+  guidelines expect on iOS and takes the redirect URL out of the picture entirely.
 - **Onboarding belongs to the account, not the device.** The survey → hammy-intro → spotlight
   tour chain is gated on `hasCompletedOnboarding` / `onboardingTrackId` / `hasSeenOnboardingTour`,
   which live in the device-global AsyncStorage snapshot. Every sign-up path therefore used to
@@ -96,13 +103,20 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
     which is exactly what was being read as "go back". Android's hardware Back is routed through
     the same "Leave this lesson?" dialog as the X (a `BackHandler` in `quest.tsx`).
   - `modal/` — levelup, life-event, shop-item (screens 20–22); presented as transparent modals from the root Stack.
-- **The quest player never scrolls itself.** It resets to the top on a new chapter/question and
-  otherwise leaves the scroll position alone — an auto-scroll-to-the-bottom-on-growth was tried
-  and reverted (it yanked the page while you were still reading). What it does instead is SAY
-  there is more: a short cream fade on the scroller's bottom edge whenever content overflows
-  (`moreBelow` in `quest.tsx`). Without it, content is cut off flat against the same cream as
-  the action bar below, with the scroll indicator hidden — so answering a question could look
-  like the remaining options had gone behind a wall.
+- **A scroller with a button bar under it uses `FadingScroll`, not `ScrollView`.** Both fixed-
+  column screens (the quest player and the survey) hide the native scroll indicator, so content
+  that overflows is cut off dead flat against the same cream as the bar below it, with nothing
+  distinguishing "this is the end" from "there are two more options under this line".
+  `FadingScroll` fades its bottom edge while there is more below; it is a cue, never a movement
+  — the quest player's auto-scroll-on-growth was tried and reverted for yanking the page
+  mid-read, and the note explaining that is still in `quest.tsx`.
+- **The survey's last step keeps the track list under your finger.** Everything above that list
+  changes height when you switch track (the hero blurb is per-track, the path is three modules
+  or four), so picking one from the bottom of the screen used to slide the row you just tapped
+  off the bottom of the scroller. It now notes the list's offset before the switch and scrolls
+  by the delta afterwards, so the page appears not to move at all. The per-module scale steps
+  scroll too, rather than trusting that they "fit any phone" — the failure mode when that is
+  wrong is content with no way to reach it.
 
 ## Conventions
 - Match the design tokens in `theme.ts` — don't hardcode hex values in screens.

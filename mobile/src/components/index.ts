@@ -9,6 +9,7 @@ export { Coin, Diamond, Flame, Gift, GIFT_COLORS, GIFT_MISSED, MYSTERY_BOX_GIFT 
 export { IconButton } from './IconButton';
 export { Field } from './Field';
 export { KeyboardAwareScroll } from './KeyboardAwareScroll';
+export { FadingScroll } from './FadingScroll';
 export { Option, CheckBox, LetterBadge } from './Option';
 export { Hammy, Slot, ReactionFacePreloader } from './Hammy';
 export { ItemArt } from './ItemArt';

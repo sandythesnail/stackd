@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import Reanimated, {
   FadeIn, FadeInDown, FadeInRight, ZoomIn,
   useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming,
@@ -7,7 +7,7 @@ import Reanimated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Screen, Txt, Button, Option, ProgressBar, IconButton, MIcon, Hammy } from '@/components';
+import { Screen, Txt, Button, Option, ProgressBar, IconButton, MIcon, Hammy, FadingScroll } from '@/components';
 import { colors, font, motion, radius } from '@/theme';
 import { mixHex } from '@/colorMix';
 import { modules } from '@/data';
@@ -140,6 +140,50 @@ export default function Survey() {
     router.push('/(onboarding)/hammy-intro');
   };
 
+  /* ── Keeping the track list under your finger ────────────────────────────────────────
+   *
+   * The last step is a long scroller: a hero card, the chosen track's modules listed one per
+   * row, and then all four tracks to switch between. Everything ABOVE that list changes
+   * height when you switch — the hero's blurb is a different length per track (trackReason),
+   * and the path is three modules for some tracks and four for others. So picking a track
+   * from the bottom of the screen moved the whole list under the finger that had just tapped
+   * it: the row you chose slid up or down by the difference, and on the down case it went
+   * under the bottom of the scroller, where the cream of the button bar starts. That is what
+   * "the options go off the screen when you click them" is.
+   *
+   * Rather than freeze the heights above (they're genuinely variable), the scroller absorbs
+   * the difference: note where the list starts before the switch, and when it lands at a new
+   * offset, scroll by exactly that delta. The page appears not to move at all, which is the
+   * point — the only thing that changed is what you asked to change.
+   */
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollY = useRef(0);
+  const altListY = useRef(0);
+  /** The alt list's offset immediately before a track switch, or null when not switching. */
+  const anchorY = useRef<number | null>(null);
+
+  const pickTrack = (id: string) => {
+    anchorY.current = altListY.current;
+    setTrackId(id);
+  };
+
+  const onAltListLayout = (e: LayoutChangeEvent) => {
+    const y = e.nativeEvent.layout.y;
+    const anchor = anchorY.current;
+    altListY.current = y;
+    if (anchor === null) return;
+    anchorY.current = null;
+    const delta = y - anchor;
+    // Sub-pixel deltas are rounding, not movement. `animated: false` because this is a
+    // correction, not a journey — the user should never see it happen.
+    if (Math.abs(delta) < 1) return;
+    scrollRef.current?.scrollTo({ y: Math.max(0, scrollY.current + delta), animated: false });
+  };
+
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    scrollY.current = e.nativeEvent.contentOffset.y;
+  };
+
   const back = () => {
     if (step === 0) { router.back(); return; }
     setStep(step - 1);
@@ -164,13 +208,22 @@ export default function Survey() {
           changed". */}
       <Reanimated.View key={step} entering={FadeInRight.duration(240)} style={{ flex: 1 }}>
         {module ? (
-          // No ScrollView: with the anchor quotes gone this fits any phone, and a flex column
-          // lets the topic card and the scale share the height instead of huddling at the top.
-          <View style={styles.qBody}>
+          // A scroller whose content is `flexGrow: 1`, which behaves as the flex column this
+          // wants — the topic card and the scale share the height rather than huddling at the
+          // top — and scrolls only if a phone turns out to be too short for it. It was a plain
+          // View on the reasoning that it "fits any phone"; that is a claim about every screen
+          // size and every text size, and the failure mode when it is wrong is content with no
+          // way to reach it.
+          <FadingScroll
+            contentContainerStyle={styles.qBody}
+            showsVerticalScrollIndicator={false}
+          >
             {/* The topic sits below the question rather than at the very top of the screen —
                 it was tucked under the progress bar where the eye passes over it on the way
                 down, and it is the one thing that changes between these eleven screens. */}
-            <View style={{ flex: 1, justifyContent: 'center', gap: 14 }}>
+            {/* flexGrow rather than flex, for the reason qBody documents: inside a scroller,
+                `flex: 1` would pin this to the viewport and hang anything taller outside it. */}
+            <View style={{ flexGrow: 1, justifyContent: 'center', gap: 14 }}>
               <View style={styles.qAsk}>
                 {/* Hammy reacts to the answer as it is given. He is the only thing on this
                     screen that responds to a tap besides the number itself, which is what
@@ -214,9 +267,9 @@ export default function Survey() {
 
               <ScalePicker value={familiarity[module.id]} onPick={(v) => answer(module.id, v)} />
             </View>
-          </View>
+          </FadingScroll>
         ) : step === GOALS_STEP ? (
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
+          <FadingScroll showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
             <View style={{ gap: 6 }}>
               <Txt style={styles.eyebrow}>ALMOST THERE</Txt>
               <Txt variant="h1">What are you hoping to get out of Stacked?</Txt>
@@ -234,9 +287,14 @@ export default function Survey() {
                 />
               ))}
             </View>
-          </ScrollView>
+          </FadingScroll>
         ) : (
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
+          <FadingScroll
+            ref={scrollRef}
+            onScroll={onScroll}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.body}
+          >
             <View style={{ gap: 6 }}>
               <Txt style={styles.eyebrow}>YOU’RE ALL SET</Txt>
               <Txt variant="h1">Your starting track</Txt>
@@ -300,13 +358,15 @@ export default function Survey() {
                 say so, and clipped its blurb to three lines mid-sentence; and because it
                 excluded the current track, choosing one re-ordered the list under the finger
                 that had just tapped it. */}
-            <View style={{ gap: 9, marginTop: 10 }}>
+            {/* onLayout is what keeps this list still while the variable-height content above
+                it changes — see pickTrack/onAltListLayout. */}
+            <View style={{ gap: 9, marginTop: 10 }} onLayout={onAltListLayout}>
               {SURVEY_TRACKS.map((t) => {
                 const on = t.id === activeTrack.id;
                 return (
                   <Pressable
                     key={t.id}
-                    onPress={() => setTrackId(t.id)}
+                    onPress={() => pickTrack(t.id)}
                     accessibilityRole="button"
                     accessibilityState={{ selected: on }}
                     style={({ pressed }) => [
@@ -333,7 +393,7 @@ export default function Survey() {
                 );
               })}
             </View>
-          </ScrollView>
+          </FadingScroll>
         )}
       </Reanimated.View>
 
@@ -505,7 +565,10 @@ const styles = StyleSheet.create({
   // A column rather than a scroll: the topic card sits at the top and the scale takes the
   // whole rest of the screen, which is space the anchor quotes used to spend saying in two
   // long sentences what the numbers already say.
-  qBody: { flex: 1, paddingTop: 8, paddingBottom: 8 },
+  // flexGrow, not flex: inside a scroller `flex: 1` means "my content has no height of its
+  // own", so anything taller than the viewport hangs outside it with nothing to scroll to.
+  // Same distinction the quest player's `content` documents.
+  qBody: { flexGrow: 1, paddingTop: 8, paddingBottom: 8 },
   qAsk: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   qHammy: { width: 92, height: 92, alignItems: 'center', justifyContent: 'center' },
   qCard: {

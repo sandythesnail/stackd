@@ -225,22 +225,34 @@ export function SocialAuth({
         // round trip into the same unmet requirement — and it hid the one detail that
         // identifies the problem, so three unrelated failures all read identically.
         //
-        // `email_address` is called out separately because it is the one requirement this
-        // app cannot fill on the user's behalf, and Apple is the provider that produces it:
-        // Sign in with Apple only releases an email address if the user agrees to share one,
-        // and "Hide My Email" or a declined share leaves the transfer sign-up with no email
-        // at all. Telling someone to "finish signing up at trystacked.app" is useless advice
-        // there — they'd hit the same wall — whereas re-running Apple with the address shown
-        // works. (Revoking the app under Settings → Apple Account → Sign in with Apple is
-        // what makes Apple ask again, which is why that instruction is here.)
-        const outstanding = [...signUp.missingFields, ...signUp.unverifiedFields];
-        const needsEmail = outstanding.includes('email_address');
+        // Clerk reports two DIFFERENT things about an email and they need different advice,
+        // so they are read separately rather than concatenated:
+        //
+        //   missingFields  — there is no email on this sign-up at all. Apple is the provider
+        //     that produces this: Sign in with Apple releases an address only if the user
+        //     agrees to share one, so a declined share leaves the transfer with none. Sending
+        //     them to trystacked.app is useless advice — they would hit the same wall —
+        //     whereas running Apple again and sharing works. (Revoking Stacked under
+        //     Settings → Apple Account → Sign in with Apple is what makes Apple ask again.)
+        //
+        //   unverifiedFields — the address is there and Clerk wants a code for it. Nothing
+        //     this button can do: there is no code field on the sign-in screen, and this
+        //     instance has verify_at_sign_up OFF for email, so reaching it means the setting
+        //     changed. The website's hosted widget does have that field, hence the redirect.
+        //
+        // Concatenating them meant a verification prompt was reported as "Apple didn't share
+        // an email" — the wrong instruction for a problem the user could actually solve.
+        const missing = signUp.missingFields;
+        const unverified = signUp.unverifiedFields;
+        const outstanding = [...missing, ...unverified];
         setError(
-          needsEmail
+          missing.includes('email_address')
             ? `${name} didn't share an email address, and Stacked needs one. Try again and choose "Share My Email", or sign up with your email below.`
-            : outstanding.length
-              ? `Your account still needs: ${outstanding.join(', ')}. Finish signing up at trystacked.app.`
-              : `Couldn't finish signing in with ${name} (${signUp.status ?? signIn.status ?? 'no session'}).`,
+            : unverified.includes('email_address')
+              ? `We need to verify ${signUp.emailAddress || 'your email address'} before you can finish. Sign in at trystacked.app once to confirm it, then ${name} will work here.`
+              : outstanding.length
+                ? `Your account still needs: ${outstanding.join(', ')}. Finish signing up at trystacked.app.`
+                : `Couldn't finish signing in with ${name} (${signUp.status ?? signIn.status ?? 'no session'}).`,
         );
         return;
       }
