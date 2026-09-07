@@ -17973,7 +17973,7 @@ function lessonRowHtml({ done, paused, isNext, started, index, title, chapterIdx
 const MODULE_LESSON_SECTIONS = {
   earning:    [{ label: 'Your Paycheck, Explained', count: 3 }, { label: 'Campus & Gig Income', count: 3 }, { label: 'Growing What You Earn', count: 2 }],
   spending:   [{ label: 'Budgeting Basics', count: 3 }, { label: 'Paying for College', count: 3 }, { label: 'Smarter Spending Decisions', count: 2 }],
-  saving:     [{ label: 'Where to Keep Your Money', count: 3 }, { label: 'Making Saving Automatic', count: 3 }, { label: 'Saving With a Goal in Mind', count: 2 }],
+  saving:     [{ label: 'Building Your Safety Net', count: 3 }, { label: 'Growing Your Savings', count: 3 }, { label: 'Saving With a Goal in Mind', count: 2 }],
   investing:  [{ label: 'Investing Fundamentals', count: 3 }, { label: 'Getting Started', count: 3 }, { label: 'Retirement & Account Types', count: 2 }],
   credit:     [{ label: 'Building Credit From Zero', count: 3 }, { label: 'Understanding Your Score & Reports', count: 3 }, { label: 'Leveling Up & Paying It Down', count: 2 }],
   risk:       [{ label: 'Health Coverage', count: 2 }, { label: 'Everyday Insurance: Renters & Auto', count: 2 }, { label: 'Life, Liability & the Fine Print', count: 4 }],
@@ -17981,7 +17981,7 @@ const MODULE_LESSON_SECTIONS = {
   taxes:      [{ label: 'Filing Basics', count: 3 }, { label: 'Getting It Right', count: 3 }, { label: 'The Bigger Picture', count: 2 }],
   psychology: [{ label: 'Why We Overspend', count: 3 }, { label: 'Modern Spending Traps', count: 3 }, { label: 'Breaking the Pattern', count: 2 }],
   career:     [{ label: 'Evaluating & Negotiating an Offer', count: 4 }, { label: 'Thinking Long-Term & Starting Strong', count: 4 }],
-  scams:      [{ label: 'Scams Targeting Students', count: 3 }, { label: 'Digital & Payment Scams', count: 3 }, { label: 'Social Engineering', count: 2 }],
+  scams:      [{ label: 'Scams Targeting Students', count: 3 }, { label: 'Digital & Payment Scams', count: 3 }, { label: 'Social Engineering & Staying Safe', count: 2 }],
 };
 
 // Wraps a flat array of {html, done} lesson tiles into a labeled accordion for modules
