@@ -968,7 +968,59 @@ console.log('\nevery chapter renders');
 const questText = () => ['quest-dashboard', 'quest-body', 'quest-continue-slot']
   .map((id) => (window.document.getElementById(id) || {}).textContent || '')
   .join(' ');
-step('all 1,270 chapters, across all 11 modules', () => {
+
+const questControlsLive = () => {
+  const b = window.document.getElementById('quest-continue-btn');
+  return !!b && !b.disabled;
+};
+/** Plays the chapter currently on screen like a student would, and says whether its
+ *  Continue button ever went live. See the call site for why this exists. */
+function driveChapter(chapter) {
+  const all = (sel) => [...window.document.querySelectorAll(sel)];
+  /** Everything pressable inside the chapter's own content — never Continue itself. */
+  const controls = () => all('#quest-main button:not([disabled]), #quest-main .myth-card[tabindex="0"],'
+    + ' #quest-main .spotcheck-segment, #quest-main .urlinspect-part').filter((el) => !el.disabled);
+
+  // Matching is the one type that has to be played properly rather than mashed: clicking
+  // the first live control repeatedly only reselects the same word. Both columns are
+  // shuffled independently, so each half is found by its own text.
+  if (chapter.type === 'matching') {
+    for (const pair of chapter.pairs) {
+      const chip = all('#quest-main .match-chip').find((b) => b.textContent === pair.term);
+      const card = all('#quest-main .match-def-card').find((b) => b.textContent === pair.definition);
+      if (!chip || !card) break;
+      chip.click();
+      card.click();
+    }
+  }
+
+  // 40 presses is far more than any chapter needs; the widest is a five-pair grid at ten.
+  let guard = 0;
+  while (!questControlsLive() && guard++ < 40) {
+    const box = window.document.querySelector('#quest-main textarea');
+    if (box && !box.value && !box.disabled) {
+      box.value = 'because nothing is withheld for you, so tracking it is your job';
+      box.dispatchEvent(new window.Event('input', { bubbles: true }));
+      continue;
+    }
+    const els = controls();
+    if (els.length) {
+      if (els[0].classList.contains('myth-card')) {
+        els[0].dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+      } else {
+        els[0].click();
+      }
+      continue;
+    }
+    // Hammy's Tip is answered by tapping Hammy, who stands outside quest-main.
+    const hammy = window.document.getElementById('hammy-side-avatar');
+    if (hammy && hammy.classList.contains('hammy-tappable')) { hammy.click(); continue; }
+    break;
+  }
+  return questControlsLive();
+}
+
+step('all 1,270 chapters render, and every one of them can be finished', () => {
   let rendered = 0;
   const seen = new Set();
   const failures = [];
@@ -1001,6 +1053,23 @@ step('all 1,270 chapters, across all 11 modules', () => {
         const painted = questText().match(/\b(?:undefined|NaN)\b|\[object Object\]/);
         if (painted) {
           failures.push(`${mod.id}/${q.id}#${i} (${q.chapters[i].type}): painted "${painted[0]}" on screen`);
+        }
+        // Then FINISH it, which is a different question from whether it paints.
+        //
+        // Rendering is the cheap half. The half that strands a student is a chapter whose
+        // Continue never goes live: the quest will not advance past an unfinished chapter,
+        // so one such chapter is a lesson nobody can complete and a module nobody can
+        // master — and it looks exactly like a lesson that renders perfectly, which is why
+        // everything above this line is blind to it. Both pointer-only traps already fixed
+        // in this file (the myth-card stack, and the matching grid's right column being
+        // divs) were this failure, and both were found by hand.
+        //
+        // What gets pressed is deliberately NOT the right answer — it's the first live
+        // control, whatever that is — because "a wrong answer still lets you move on" is
+        // the rule being checked. Driven in the same pass as the render above rather than
+        // in a walk of its own: two full passes over 1,270 chapters exhausts the heap.
+        if (!driveChapter(q.chapters[i])) {
+          failures.push(`${mod.id}/${q.id}#${i} (${q.chapters[i].type}): Continue never went live`);
         }
       }
     }
