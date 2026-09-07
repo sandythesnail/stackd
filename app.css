@@ -2391,7 +2391,16 @@ select.budget-input { cursor: pointer; }
   background: #fff; cursor: pointer; transition: border-color 0.2s, background 0.2s;
   font-size: 1.03rem; font-weight: 500; color: var(--text);
 }
-.boss-choice-card:hover:not(:disabled) { border-color: var(--pink); background: var(--pink-pale); }
+/* Green, like every other answer button in the app (.option-btn:hover, identical values) —
+   and never over a choice that is already selected.
+
+   Two things were wrong here and they compounded. Pink is this app's colour for a wrong
+   answer, so simply moving the cursor onto a boss choice painted it the colour of a mistake,
+   before anything had been answered at all. And `:hover:not(:disabled)` is three selectors
+   to `.selected`'s two, so hover WON: clicking a choice left it pink under the cursor that
+   had just clicked it, instead of showing the green selected state it was being given. The
+   pick did register — but you had to move the mouse away to see it. */
+.boss-choice-card:hover:not(:disabled):not(.selected) { border-color: var(--green); background: #F1F6EF; }
 /* Selected, not committed — a highlight the student can move around until they press Check
    answer. Mobile's Option `on` state exactly: a green border over a very pale green fill
    (#F1F6EF), which is a different, lighter thing than the `correct` row below it (a full
