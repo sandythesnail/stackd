@@ -812,6 +812,26 @@ body { background: var(--bg); min-height: 100vh; }
   font-size: 0.9rem; color: var(--text); line-height: 1.65; margin: 0 0 0.85rem;
 }
 .disclaimer-body strong { color: var(--text); font-weight: 800; }
+/* Collapsed, and last on the page. The card keeps its amber left rule so it still reads as
+   the legal block whether open or shut; the +/- disclosure is the one the Sources card
+   directly above it already uses, so the two behave the same way. The heading has to lose
+   .referral-card-head's bottom margin while closed, or the summary keeps that card's full
+   open-state spacing with nothing under it. */
+.disclaimer-summary {
+  cursor: pointer; list-style: none;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+}
+.disclaimer-summary::-webkit-details-marker { display: none; }
+.disclaimer-summary::after {
+  content: '+'; color: var(--text-soft); font-weight: 400; font-size: 1.15rem; line-height: 1.2;
+}
+.disclaimer-card[open] .disclaimer-summary::after { content: '-'; }
+.disclaimer-summary h2 {
+  font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--text);
+  margin: 0 0 0.3rem;
+}
+.disclaimer-summary .section-sub { display: block; margin: 0; line-height: 1.5; }
+.disclaimer-card[open] .disclaimer-summary { margin-bottom: 1.1rem; }
 
 /* The short form, repeated on Modules and Tools. One line on a wide screen, wrapping
    sensibly on a narrow one; quiet enough to live under content permanently, loud enough that
@@ -1492,7 +1512,10 @@ select.budget-input { cursor: pointer; }
    the story (see renderChapter), and a descendant selector would then zoom it twice — zoom
    multiplies through nesting. */
 .quest-body > .quest-title-row,
-.quest-body > .quest-layout { zoom: var(--quest-scale); }
+/* --quest-fit is 1 for every step that fits, and is set per chapter by fitQuestChapter (see
+   app.js) only when one would otherwise scroll — so this reads as --quest-scale everywhere
+   except on the handful of tall steps that need the height back. */
+.quest-body > .quest-layout { zoom: calc(var(--quest-scale) * var(--quest-fit, 1)); }
 .quest-body::-webkit-scrollbar { display: none; width: 0; }
 
 /* ── A readable measure inside a wide column ──
@@ -1515,6 +1538,25 @@ select.budget-input { cursor: pointer; }
 .poll-explanation,
 .microsim-result,
 .feedback-panel.kc-panel .feedback-exp { max-width: 88ch; }
+/* Wide but not tall, which is what most laptops are: 1366x768 leaves the lesson body barely
+   600px, less than the phone this was drawn for, and that is where prose capped at 88ch in a
+   920px column costs a scroll it doesn't need to. The line is the cheap axis — a wider one
+   wraps less, so the same paragraph gets shorter — and on a screen with height to spare the
+   88ch measure stays exactly as it is. Paired with fitQuestChapter, which gives back what is
+   still missing after this; between them a 1366x768 laptop scrolls on far fewer steps.
+   Height-only, so nothing about a tall screen changes. */
+@media (min-width: 1024px) and (max-height: 860px) {
+  .quest-prompt,
+  .quest-outcome-text,
+  .teach-plain,
+  .hint-bubble .teach-plain,
+  .teach-analogy,
+  .story-bubble,
+  .explainback-definition,
+  .poll-explanation,
+  .microsim-result,
+  .feedback-panel.kc-panel .feedback-exp { max-width: 112ch; }
+}
 
 /* ── Two across, once there is room for two ──
    The other half of filling a wide column. A stack of full-width buttons carrying four words
@@ -2403,9 +2445,6 @@ select.budget-input { cursor: pointer; }
   border-radius: var(--radius-sm); padding: 0.1rem 0.4rem; vertical-align: middle; margin-left: 0.4rem;
 }
 /* Final quest dashboard summary on results screen */
-.quest-final-dashboard { flex-direction: row !important; flex-wrap: wrap; gap: 0.6rem; border: none !important; }
-.quest-final-dashboard .results-xp-card { flex: 1; min-width: 110px; background: var(--bg); border-color: var(--border); }
-.quest-final-dashboard .results-xp-num { font-size: 1.3rem; color: var(--text); }
 
 /* Comprehensive end-of-quest report */
 .quest-report {
@@ -3170,8 +3209,13 @@ select.budget-input { cursor: pointer; }
   margin: 0 0 0.6rem; line-height: 1.4;
 }
 
-/* The Room / Wardrobe switch on the page itself — mobile's two chips above the scene. */
-.room-tabs { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; }
+/* The Room / Wardrobe switch on the page itself — mobile's two chips above the scene.
+   Capped, because "two flex:1 chips in a row" is the same rule on both sides but not the
+   same result: mobile runs it across a ~390px phone and gets two chips, the web ran it
+   across an 1100px page and got two slabs stretching the full width of the screen, which
+   is the widest, heaviest thing on a page whose subject is the room underneath it. This
+   width lands each chip at roughly the size mobile draws it. */
+.room-tabs { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; max-width: 420px; }
 .room-tab {
   flex: 1; padding: 0.55rem 1rem; border-radius: 16px; cursor: pointer;
   background: #fff; border: 1.5px solid var(--border);
@@ -3392,9 +3436,11 @@ select.budget-input { cursor: pointer; }
   cursor: pointer;
   transition: background 0.15s;
 }
-/* Cream on hover, the same feedback mobile's `rowHeadPressed` gives — not the green wash,
-   which read as a status rather than as a press. */
-.module-row-header:hover { background: var(--bg); }
+/* No fill on hover. This was cream, matching mobile's `rowHeadPressed` — but a press state
+   on a touch screen is a flash you only see while your finger is down, and the same colour
+   sitting under a stationary desktop cursor reads as the row having been selected or
+   disabled rather than as feedback. Removed per user request; the cursor and the row's own
+   chevron already say it is pressable. */
 /* Deliberately no fill on a completed or a recommended header, and no divider under an open
    one. The completed row already reads as complete from its green border and its ✓ Complete
    tag, and the recommended one from its gold border and its ★ Start here tag; the yellow
@@ -4004,19 +4050,19 @@ select.budget-input { cursor: pointer; }
 /* Fixed height, always occupied, contents conditional — mounting and unmounting this row
    moved the module name, the trail and everything under it on every page. */
 .lp-rec-row {
-  height: 22px; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;
+  height: 26px; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;
 }
 .lp-rec-pill {
-  font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em;
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em;
   background: #FFEDB0; color: #8A6800; padding: 0.2rem 0.5rem; border-radius: 999px;
 }
-.lp-rec-note { font-size: 0.62rem; font-weight: 700; color: #8A9B86; }
+.lp-rec-note { font-size: 0.72rem; font-weight: 700; color: #8A9B86; }
 
 /* A transparent 2px border and the same padding in the base style, so turning the gold on
    recolours the box without moving anything. */
 .lp-head {
-  display: flex; align-items: center; gap: 0.5rem;
-  padding: 0.5rem 0.4rem; border-radius: 18px;
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.7rem 0.6rem; border-radius: 18px;
   border: 2px solid transparent; margin-bottom: 0.15rem;
 }
 /* The same treatment the module rows use for "recommended", so the path and the module list
@@ -4026,17 +4072,23 @@ select.budget-input { cursor: pointer; }
   box-shadow: 0 0 6px rgba(240,194,46,0.25);
 }
 .lp-head-main { flex: 1; min-width: 0; }
+/* This row is the header of the whole home screen — the module you are in, how far through
+   it you are, and Hammy wearing that module's own expression. It was set at the size of a
+   list row in a list of eleven, but there is only ever one of it and everything under it
+   (the trail, the nodes) is drawn large, so it read as a caption above a diagram. */
 .lp-head-name {
-  font-family: var(--font-display); font-size: 0.92rem; font-weight: 700; color: var(--text);
+  font-family: var(--font-display); font-size: 1.28rem; font-weight: 700; color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.lp-head-meta { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.15rem; }
-.lp-head-count { font-size: 0.66rem; font-weight: 700; color: #7C8E78; }
+.lp-head-meta { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.28rem; }
+.lp-head-count { font-size: 0.85rem; font-weight: 700; color: #7C8E78; }
 .lp-bar-track {
-  /* Capped rather than flex:1. At the column's full width the bar ran the whole way to the
-     pager chevron, which read as a page-wide rule with a module name parked at one end
-     instead of as that module's own progress. */
-  flex: 1; max-width: 190px; height: 6px;
+  /* Runs the full width of the header's own column, which ends at Hammy's face — so the bar
+     spans the module row rather than stopping a third of the way across it with dead space
+     between its end and him. It was capped at 190px to stop it reaching the pager chevron
+     and reading as a page-wide rule; the cap is no longer what keeps it off the chevron,
+     since it lives inside .lp-head-main and Hammy sits between the two. */
+  flex: 1; height: 9px;
   background: var(--track, #E7ECE3); border-radius: 999px; overflow: hidden;
 }
 .lp-bar-fill {
@@ -4044,7 +4096,7 @@ select.budget-input { cursor: pointer; }
 }
 .lp-bar-done { background: var(--green); }
 .lp-done-pill {
-  font-size: 0.6rem; font-weight: 800; letter-spacing: 0.05em;
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.05em;
   background: #EAF3E7; color: var(--green-dark); padding: 0.2rem 0.5rem; border-radius: 999px;
 }
 .lp-pager {
@@ -4055,7 +4107,7 @@ select.budget-input { cursor: pointer; }
 .lp-pager:hover { background: #E4EBE0; color: var(--text); }
 .lp-pager:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 .lp-position {
-  text-align: center; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.09em;
+  text-align: center; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.09em;
   color: #9DAE99; margin-bottom: 0.4rem;
 }
 
@@ -4744,9 +4796,13 @@ select.budget-input { cursor: pointer; }
 #home-lesson-path .lp-rec-row { height: 18px; margin-bottom: 0.2rem; }
 #home-lesson-path .lp-position { margin-bottom: 0.15rem; }
 
+/* The module's number chip, sized for this header rather than for a row in a list of eleven.
+   Scoped to .lp-head so the module list's own chips are untouched. */
+.lp-head .mod-icon { width: 48px; height: 48px; font-size: 1rem; }
+
 /* Hammy's head in the module header, between the progress bar and the pager. */
 .lp-head-hammy {
-  flex-shrink: 0; width: 44px; height: 44px;
+  flex-shrink: 0; width: 62px; height: 62px;
   display: flex; align-items: center; justify-content: center;
   pointer-events: none; overflow: visible;
 }
@@ -4829,7 +4885,10 @@ input[type="range"].microsim-range {
    left column with the bubble beside him in the content column, which reads as him standing
    next to the tip rather than telling you it. Column order puts the tip above and centres
    both, without moving the persistent avatar node out of the side column it lives in. */
-.quest-layout-hint { align-items: center; gap: 0.25rem; }
+/* Centred in the room the stage was given (renderHintChapter sets its min-height to the
+   measured space under the header), rather than packed to the top with the rest left empty.
+   Hammy is the whole screen on this chapter, so he sits in the middle of it. */
+.quest-layout-hint { align-items: center; justify-content: center; gap: 0; }
 .quest-layout-hint .quest-main {
   order: 1; flex: none; width: 100%;
   align-items: center; text-align: center;
@@ -4848,7 +4907,11 @@ input[type="range"].microsim-range {
    stage reading as one wide box with a small pig under it rather than as Hammy saying
    something. A measure, and it is a card again. */
 .quest-layout-hint .hint-bubble {
-  margin: 0 auto 18px; max-width: 44ch; text-align: center;
+  /* Sits directly on top of him — the tail below it points at his head, so any more gap
+     than the tail's own length reads as a bubble floating near a pig rather than one he is
+     speaking. min-height is set per tip in renderHintChapter so revealing it moves nothing. */
+  margin: 0 auto 12px; max-width: 44ch; text-align: center;
+  display: flex; flex-direction: column; justify-content: center;
 }
 /* And its tail points DOWN at him, because on this one stage he is below the bubble rather
    than beside it. Same move .quest-side.centered makes with the reaction bubble. The base

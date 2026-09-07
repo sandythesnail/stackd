@@ -169,11 +169,27 @@ Object.defineProperty(window.HTMLElement.prototype, 'clientHeight', sizeStub(520
 window.showPage('room');
 window.renderRoomPage();
 shots.room = { w: 1100, h: 1500, body: '<div class="app-main"><div id="page-room" class="page active">' + window.document.getElementById('page-room').innerHTML + '</div></div>' };
+// The Wardrobe half of the same page, with a closet to actually look at — the empty state
+// says "visit the Shop" and shows no tiles, which is not the layout worth checking.
+window.eval("roomActiveTab = 'wardrobe'");
+window.eval('state.ownedItems = SHOP_ITEMS.filter(i => !i.isMysteryBox).map(i => i.id)');
+window.eval("state.equippedItems = ['hat_beanie']");
+window.renderRoomPage();
+shots.wardrobe = { w: 1100, h: 1500, body: '<div class="app-main"><div id="page-room" class="page active">' + window.document.getElementById('page-room').innerHTML + '</div></div>' };
+window.eval("roomActiveTab = 'room'");
 delete window.HTMLElement.prototype.clientWidth;
 delete window.HTMLElement.prototype.clientHeight;
 
 const quest = mainQuests[1];
 window.startQuest('loans', quest.id);
+// Two chapter types SIZE themselves against the room they are given, by measuring it at
+// render time (computeAvailableQuestHeight): the story's establishing shot, and Hammy's Tip,
+// where the pig is scaled to fill whatever is left under his bubble. jsdom reports zero for
+// every box, so without a stub both of them bake their smallest fallback size into the markup
+// and the shot shows a small pig on a mostly empty page — which is a picture of the harness,
+// not of the app. 900 is the shot's own viewport height, so the measurement here is the one a
+// browser this tall would take.
+Object.defineProperty(window.HTMLElement.prototype, 'clientHeight', sizeStub(900 - 120));
 for (const type of ['story', 'teach', 'matching', 'hint', 'poll', 'mythcards', 'knowledgecheck', 'decision', 'bossbattle']) {
   const idx = quest.chapters.findIndex((c) => c.type === type);
   if (idx < 0) continue;
@@ -189,6 +205,7 @@ for (const type of ['story', 'teach', 'matching', 'hint', 'poll', 'mythcards', '
   }
   shots['quest-' + type] = { w: 1000, h: 900, body: screen('screen-quest') };
 }
+delete window.HTMLElement.prototype.clientHeight;
 
 // A results screen with something in every section of the report.
 const qp = s.questProgress[window.questKey('loans', quest.id)];

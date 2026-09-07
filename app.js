@@ -18542,6 +18542,17 @@ const ONBOARDING_TOUR_STEPS = [
     body: 'Tap this one to see what it covers. Finish them in order to complete the module.',
     requiresRealClick: true,
     clickKey: 'lesson-node',
+    // A round highlight, because the thing being highlighted is a diamond.
+    //
+    // .lp-hit is an 82px axis-aligned square that exactly circumscribes the 58px .lp-diamond
+    // once it is rotate(45deg)'d (58 × √2 = 82), so the rect is measured correctly — but a
+    // rounded SQUARE drawn around a diamond meets it only at four points and stands well off
+    // it everywhere else, with the ring's corners hanging over empty page beyond the tile's
+    // flat edges. That is the misalignment: not the position, which is right, but the shape.
+    // A circle through the diamond's four points sits evenly around the whole tile, and is
+    // also the right shape for the one node that isn't a diamond (the current lesson, which
+    // is drawn as a scalloped blob).
+    spotlightShape: 'circle',
     // The one step whose target isn't on screen when the step opens — it has to be scrolled
     // to first, and it is therefore still moving when the step's own two measurements are
     // taken. See beginTourSettle for what that flag changes.
@@ -18826,10 +18837,21 @@ function positionTourStep() {
   // outlined, and the clamp keeps it from swallowing the tiles either side of a wide one.
   const pad = Math.round(Math.min(TOUR_PAD_MAX, Math.max(TOUR_PAD_MIN, Math.min(r.width, r.height) * 0.2)));
   const padBottom = pad;
+  // A step may ask for a round highlight when its target is not a rectangle (see the lesson
+  // node's `spotlightShape`). The box stays exactly where the measurement put it; only the
+  // corner radius changes, and it is taken from the drawn box rather than the target so the
+  // ring and the hole clipped under it agree — half of the shorter side is the largest
+  // radius that is still a circle rather than a stadium.
+  const boxW = r.width + pad * 2;
+  const boxH = r.height + pad + padBottom;
+  const radius = step.spotlightShape === 'circle'
+    ? Math.min(boxW, boxH) / 2
+    : TOUR_HOLE_RADIUS;
   spotlight.style.top = (r.top - pad) + 'px';
   spotlight.style.left = (r.left - pad) + 'px';
-  spotlight.style.width = (r.width + pad * 2) + 'px';
-  spotlight.style.height = (r.height + pad + padBottom) + 'px';
+  spotlight.style.width = boxW + 'px';
+  spotlight.style.height = boxH + 'px';
+  spotlight.style.borderRadius = radius + 'px';
 
   // Any spotlighted element needs to stay genuinely clickable, not just visually
   // not-covered — .tour-overlay still captures clicks everywhere else, but here a literal
@@ -18842,11 +18864,13 @@ function positionTourStep() {
   // doesn't work here either way: .sidebar (z-index 50) is its own stacking context below
   // .tour-overlay's 290, so no z-index a descendant of it sets can ever paint above the
   // overlay — clipping the hole sidesteps that entirely.
-  const hx = r.left - pad, hy = r.top - pad, hw = r.width + pad * 2, hh = r.height + pad + padBottom;
+  const hx = r.left - pad, hy = r.top - pad, hw = boxW, hh = boxH;
   const outer = `M0,0 H${window.innerWidth} V${window.innerHeight} H0 Z`;
   // Rounded to match .tour-spotlight's own border-radius — a sharp-cornered hole clipped
   // under a rounded visual ring left a small sharp-vs-round mismatch right at the corners.
-  const hole = roundedRectPath(hx, hy, hw, hh, TOUR_HOLE_RADIUS);
+  // Which is also why this reads the same `radius` the ring was just given rather than the
+  // constant: a round step would otherwise punch a rounded-rect hole under a circular ring.
+  const hole = roundedRectPath(hx, hy, hw, hh, radius);
   overlay.style.clipPath = `path(evenodd, "${outer} ${hole}")`;
 
   // Prefer below the spotlight; flip above it if there's not enough room under it. Clamped
@@ -22789,8 +22813,54 @@ function renderChapter(mod, idx) {
   }
 
   document.getElementById('quest-body').scrollTop = 0;
+  fitQuestChapter();
   initQuestScrollCue();
   updateQuestScrollCue();
+}
+
+/* ── Making a step fit, when it otherwise wouldn't ──
+ *
+ * --quest-scale above draws the whole lesson bigger on a bigger screen, and its breakpoints
+ * are a judgement about the AVERAGE step at that size. They cannot be a judgement about the
+ * particular one on screen: the tallest chapters in the catalogue (a five-pair Match It, a
+ * six-line spot-check, a boss battle carrying the longest scenario in the app) run half
+ * again the height of the shortest, so any single number either shrinks the short steps for
+ * no reason or lets the tall ones scroll.
+ *
+ * So the scale stays as it is and this gives height back only where a step actually
+ * overflows, measured after it has been laid out. Steps that already fit are untouched, at
+ * exactly the size they are drawn today — this can only ever remove a scrollbar, never
+ * change a step that didn't have one.
+ *
+ * Bounded, because the cure has a cost: below about 0.86 the phone metrics this lesson is
+ * built from stop being comfortable, and a step that still doesn't fit at the floor is one
+ * that SHOULD scroll rather than be shrunk into unreadability. Five steps of 3% reach the
+ * floor, and each one costs a reflow, so the whole thing is bounded at five measurements.
+ */
+const QUEST_FIT_MIN = 0.86;
+const QUEST_FIT_STEP = 0.97;
+function fitQuestChapter() {
+  const screenEl = document.getElementById('screen-quest');
+  const bodyEl = document.getElementById('quest-body');
+  if (!screenEl || !bodyEl) return;
+  // Always from a clean slate: the previous chapter's fit must not decide this one's.
+  screenEl.style.removeProperty('--quest-fit');
+  // Where `zoom` isn't supported the lesson renders at phone metrics anyway (see the note on
+  // --quest-scale), and there is nothing here to give back.
+  if (typeof CSS === 'undefined' || !CSS.supports || !CSS.supports('zoom', '1.1')) return;
+  // Nothing has been laid out (a headless run, or a chapter rendered while the screen is
+  // hidden): every box reports zero, "0 > 0" is false, and shrinking on that would be
+  // shrinking against a measurement that doesn't exist.
+  if (!bodyEl.clientHeight) return;
+  let fit = 1;
+  for (let i = 0; i < 5; i++) {
+    // +1 for the sub-pixel rounding a fractional zoom leaves behind, which would otherwise
+    // read as a permanent one-pixel overflow and shrink every step to the floor.
+    if (bodyEl.scrollHeight <= bodyEl.clientHeight + 1) return;
+    fit = Math.max(QUEST_FIT_MIN, fit * QUEST_FIT_STEP);
+    screenEl.style.setProperty('--quest-fit', String(fit));
+    if (fit === QUEST_FIT_MIN) return;
+  }
 }
 
 // Wires the scroll cue once. A ResizeObserver rather than a one-shot check after render,
@@ -23552,6 +23622,18 @@ function renderTeachChapter(chapter, mod, onDone) {
 }
 
 // ── Chapter type: hint (Hammy's quick tips & fun facts) — tap Hammy to hear it ──
+/** How much of the pig's 460px frame the tip stage gives him, given the room it has.
+ *
+ * Mobile draws this Hammy at 168 against a 130 companion — this is his own screen, and he is
+ * the control you press, so he is the biggest thing on it. A flat multiple of the companion
+ * scale would be a guess at a viewport, so this measures instead: he takes whatever is left
+ * under the bubble, and is clamped so he is never smaller than the companion he replaces nor
+ * big enough to crowd the tip off the top. */
+function hintHammyScale(reservedAbove) {
+  const available = computeAvailableQuestHeight();
+  return Math.max(0.42, Math.min(0.78, (available - reservedAbove - 28) / 460));
+}
+
 function renderHintChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
   clearQuestContinue();
@@ -23560,6 +23642,26 @@ function renderHintChapter(chapter, mod, onDone) {
     <div class="speech-bubble teach-bubble hint-bubble" id="hint-bubble">
       <p class="teach-plain hint-placeholder">Tap Hammy to hear what they have to say.</p>
     </div>`;
+
+  // Reserve the bubble's REVEALED height before showing the placeholder.
+  //
+  // The tip is always longer than "Tap Hammy to hear what they have to say", so sizing the
+  // stage around the placeholder means the bubble grows on the tap that reveals it — which
+  // pushes Hammy down the screen at the exact moment he is reacting, and on the longer tips
+  // pushes him past the fold into a scroll. Measuring the real text first and pinning that
+  // height means nothing moves when the tip appears. Same trick, for the same reason, as
+  // renderPollChapter's pre-rendered reveal.
+  const bubble = document.getElementById('hint-bubble');
+  bubble.innerHTML = `<p class="teach-plain">${chapter.text}</p>`;
+  const revealedHeight = bubble.getBoundingClientRect().height / questContentZoom();
+  bubble.style.minHeight = revealedHeight + 'px';
+  bubble.innerHTML = '<p class="teach-plain hint-placeholder">Tap Hammy to hear what they have to say.</p>';
+
+  // He is the whole stage, so it is centred in the room the chapter actually has rather than
+  // sitting at the top of it with the rest left empty.
+  const layoutEl = document.getElementById('quest-layout');
+  const stageHeight = computeAvailableQuestHeight();
+  layoutEl.style.minHeight = Math.max(260, stageHeight) + 'px';
 
   // hammy-side-avatar is a persistent DOM node reused across every chapter (renderChapter
   // only resets its className/innerHTML, never removes listeners) — re-entering this same
@@ -23572,6 +23674,13 @@ function renderHintChapter(chapter, mod, onDone) {
   let hammySide = document.getElementById('hammy-side-avatar');
   hammySide.replaceWith(hammySide.cloneNode(true));
   hammySide = document.getElementById('hammy-side-avatar');
+  // Redrawn at the tip stage's own size. renderChapter has already put the companion-scale
+  // pig in this node for every chapter alike; this is the one chapter where he is the
+  // subject rather than the narrator, so he is drawn again, bigger, once the bubble above
+  // him has been measured.
+  const tagHeight = main.querySelector('.hint-tag').getBoundingClientRect().height / questContentZoom();
+  hammySide.innerHTML = withFaceOverlay(
+    getPigWithItemMarkup(hintHammyScale(revealedHeight + tagHeight), getEquippedItems()));
   hammySide.classList.add('hammy-tappable');
   hammySide.addEventListener('click', function revealTip() {
     document.getElementById('hint-bubble').innerHTML = `<p class="teach-plain">${chapter.text}</p>`;
@@ -25067,18 +25176,13 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
   const diamondHtml = diamondsEarned > 0 ? buildStreakDiamondBanner(diamondsEarned) : '';
   const gradHtml = (newAchs.some(a => a.id === 'stackd_star') ? buildGraduationBanner() : '') + buildMilestoneRewardBanner(newAchs);
 
-  // DASHBOARD_STAT_META, not a second guess at the same thing. This built its own label
-  // ("capitalise the key") and its own money rule ("anything that isn't creditScore"), and
-  // both were wrong for the one stat almost every lesson actually carries: moneyScore is a
-  // 0-100 meter shared by every non-credit module, so it came out as "$62 MoneyScore" — a
-  // dollar sign on a score, under a camelCase label. portfolioValue read "PortfolioValue".
-  // The chips shown DURING the lesson have always used the meta table; only this screen
-  // didn't, so the same number was labelled one way in the lesson and another at the end.
-  const dashHtml = Object.entries(qp.dashboard).map(([key, val]) => {
-    const meta = DASHBOARD_STAT_META[key] || { label: key, isMoney: false };
-    return `<div class="results-xp-card"><div class="results-xp-num">${meta.isMoney ? formatMoney(val) : Math.round(val)}</div><div class="results-xp-label">${meta.label}</div></div>`;
-  }).join('');
-
+  // No Checking / Savings / Money Smarts row here. The same chips were removed from the top
+  // of the lesson a while back for reading as an irrelevant tab row (see .quest-dashboard,
+  // display:none), and this screen was the last place they still surfaced — the closing
+  // shot of every lesson given over to three numbers from a simulation the student wasn't
+  // really playing. The state itself is untouched: renderQuestDashboard and
+  // applyQuestStateDelta still run, decisions and boss battles still move the numbers, and
+  // the simulator chapter still reads them mid-lesson. Nothing is shown at the end.
   const quest = getActiveQuest(mod);
   const tally = questTally(qp);
   // Mobile's headline: the lesson's own name, finished off by how it went. "Quest Complete"
@@ -25109,7 +25213,6 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
     ${gradHtml}
     ${diamondHtml}
     ${achHtml}
-    <div class="results-breakdown quest-final-dashboard">${dashHtml}</div>
     ${buildQuestReport(mod, qp)}
     <div class="results-actions">
       <button class="btn-primary" id="res-home">Continue</button>

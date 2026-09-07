@@ -422,7 +422,7 @@ function lpSectionEl(section, shownIdx, sections, recommendedTrack, colW) {
       // illustration that is only ever a 32x37 mouth — left those two module headers showing
       // a permanently faceless pig with a mouth floating on it.
       '<div class="lp-head-hammy">' +
-        withFaceOverlay(getHammyFaceMarkup(0.14)) +
+        withFaceOverlay(getHammyFaceMarkup(0.20)) +
       '</div>' +
       (section.mastered ? '<span class="lp-done-pill">DONE</span>' : '') +
       '<button type="button" class="lp-pager" data-lp-page="1" aria-label="Next module">' +
