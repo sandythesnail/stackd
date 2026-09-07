@@ -39,8 +39,16 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   stub, whose Sign in button navigates rather than authenticating — an app with no accounts that
   looks like it works. The stub is now `__DEV__`-only; a release build shows
   `lib/AuthUnavailable.tsx`, which names the missing variables on screen.
-  Apple/Google/Microsoft SSO is `socialAuth.tsx` on native (a Clerk browser round-trip) and the
-  site's hosted widget on web (`webAuth.tsx` redirects to /login.html). Native SSO needs two
+  Apple/Google/Microsoft SSO is `socialAuth.tsx` on native and the site's hosted widget on web
+  (`webAuth.tsx` redirects to /login.html). **Apple on iOS uses the system sheet**
+  (`expo-apple-authentication` → Clerk's `oauth_token_apple`), not the browser round-trip the
+  other two take. That is not polish: the OAuth round-trip gets an email address out of Apple
+  only on the FIRST authorization of an app, and this instance requires one — so the button
+  worked once per device and then failed forever with a sign-up stuck in
+  `missing_requirements`, recoverable only by revoking Stacked in iOS Settings. An identity
+  token carries the email claim every time. It also removes the redirect URL from Apple's path
+  entirely and never backgrounds the app. Android, and any device where the native sheet isn't
+  available, fall back to the round-trip, which is why `check:sso` still checks all three. Native SSO needs two
   separate things true on the Clerk instance, and they fail at the same call with different
   errors: the provider must have an **SSO connection** at all, and the app's **redirect URL**
   (`stackd://`, or the `exp://…` one under Expo Go) must be on the allowed list.

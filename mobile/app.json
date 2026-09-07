@@ -55,6 +55,7 @@
         }
       ],
       "expo-asset",
+      "expo-apple-authentication",
       "expo-image",
       "expo-status-bar",
       "expo-web-browser"

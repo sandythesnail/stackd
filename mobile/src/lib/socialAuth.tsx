@@ -13,6 +13,13 @@
  * auth session (SFAuthenticationSession / Custom Tab, NOT a webview — the providers block
  * those), and come back to `redirectUrl` with a nonce that Clerk exchanges for a session.
  *
+ * WITH ONE EXCEPTION: Apple on iOS goes through the system sheet instead, and hands Clerk an
+ * identity token directly. See nativeAppleToken() for the three reasons, the first of which
+ * is that the round-trip flow cannot get an email address out of Apple twice — which on an
+ * instance that requires one is a button that works exactly once per device and then never
+ * again. Everything after the token/nonce is shared between the two paths; Android and any
+ * device that can't do native Apple still take the round-trip.
+ *
  * One thing outside this file has to be right, and it is not right by default: the redirect
  * URL has to be authorized on the Clerk instance, which rejects anything else with
  * `resource_missmatch` ("Redirect url mismatch") for every provider alike. See
@@ -40,7 +47,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { Button, Txt } from '@/components';
 import { colors, font } from '@/theme';
-import { clerkErrorWithCode, isIdentifierTaken } from './clerkErrors';
+import { clerkErrorWithCode, isAuthenticationInvalid, isIdentifierTaken, isSessionExists } from './clerkErrors';
 import { fillMissingSignUpFields } from './clerkSignUp';
 
 // Dismisses the auth session's popup on web and, on native, lets a redirect that arrives
@@ -70,6 +77,68 @@ const PROMPT = 'select_account';
  * doesn't go through URL/URLSearchParams. */
 function readNonce(url: string): string {
   return decodeURIComponent(/[?&]rotating_token_nonce=([^&#]*)/.exec(url)?.[1] ?? '');
+}
+
+/** Returned by nativeAppleToken() when the user dismissed Apple's sheet. A sentinel rather
+ * than `null`, because null there means "use the browser instead" and the two must not be
+ * confused: one is a decision to say nothing about, the other is a fallback to run. */
+const CANCELLED = Symbol('apple-cancelled');
+
+/** `signIn.create` accepts oauth_token_apple — the instance lists it among its first factors,
+ * and clerk-expo's own useSignInWithApple calls it exactly this way — but @clerk/types at this
+ * version doesn't spell the token-strategy overload out, so the call is typed through this. */
+type SignInCreateParams = Parameters<NonNullable<ReturnType<typeof useSignIn>['signIn']>['create']>[0];
+
+/**
+ * Sign in with Apple through the SYSTEM SHEET, not a browser.
+ *
+ * Every other provider here has to be a browser round-trip; Apple, on an Apple device, does
+ * not, and shouldn't be. Three reasons, in order of how much they hurt:
+ *
+ *  1. THE EMAIL. Apple releases an address only on the FIRST authorization of an app. Every
+ *     time after that, the OAuth round-trip carries no email, and this instance requires one
+ *     (`email_address` is enabled and required) — so a transfer sign-up lands in
+ *     `missing_requirements` with nothing this app can fill, and the button fails forever
+ *     until the user digs into Settings → Apple Account → Sign in with Apple and revokes
+ *     Stacked. Native returns an identity token instead: a signed JWT that carries the email
+ *     claim on every authorization, first or fiftieth, which Clerk verifies server-side.
+ *  2. The redirect URL stops being part of the flow at all — no `stackd://`, no allowed-list
+ *     entry to keep in sync, no scheme for anything else to claim.
+ *  3. The app is never backgrounded, so iOS can't reclaim it mid-sign-in and cold-launch it
+ *     on the way back (the failure mode documented in CLAUDE.md's Run section).
+ *
+ * It is also what Apple's Human Interface Guidelines ask for on iOS: their own sheet, with
+ * Face ID, rather than a web form asking for an Apple ID password.
+ *
+ * Imported dynamically so Android and web never load an iOS-only native module, and falling
+ * back to `null` — i.e. run the browser flow — for anything that isn't a clean success. A
+ * device that can't do native Apple (an old iOS, a simulator without an Apple ID) still gets
+ * the round-trip it had before rather than a dead button.
+ */
+async function nativeAppleToken(): Promise<string | typeof CANCELLED | null> {
+  try {
+    const [AppleAuthentication, Crypto] = await Promise.all([
+      import('expo-apple-authentication'),
+      import('expo-crypto'),
+    ]);
+    if (!(await AppleAuthentication.isAvailableAsync())) return null;
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+      // Ties the token to this one request. Passed raw, matching clerk-expo's own
+      // useSignInWithApple — Clerk is the party that validates it.
+      nonce: Crypto.randomUUID(),
+    });
+    return credential.identityToken ?? null;
+  } catch (e: unknown) {
+    if (e && typeof e === 'object' && 'code' in e && e.code === 'ERR_REQUEST_CANCELED') return CANCELLED;
+    // Anything else — the module missing from a build that predates it, a device that refuses
+    // — is a reason to try the browser, not a reason to fail. The browser flow reports its own
+    // errors if it fails too.
+    return null;
+  }
 }
 
 /**
@@ -148,42 +217,57 @@ export function SocialAuth({
     setBusy(strategy);
     setError(null);
     try {
-      const redirectUrl = ssoRedirectUrl();
+      // Apple on an iPhone doesn't go near a browser — see nativeAppleToken().
+      const appleToken = strategy === 'oauth_apple' && Platform.OS === 'ios'
+        ? await nativeAppleToken()
+        : null;
 
-      // Ask Clerk for the provider's authorization URL. oidcPrompt is the whole reason this
-      // isn't useSSO(): it becomes `prompt=select_account` on the provider URL, which is what
-      // makes Google and Microsoft ASK which account instead of silently reusing the one the
-      // device is already signed into. Passed as undefined for Apple, which does not take it.
-      await signIn.create({ strategy, redirectUrl, ...(prompt ? { oidcPrompt: prompt } : {}) });
-      const providerUrl = signIn.firstFactorVerification.externalVerificationRedirectURL;
-      if (!providerUrl) {
-        setError(`Couldn't reach ${name}. Please try again.`);
-        return;
-      }
+      if (appleToken === CANCELLED) return;
 
-      const result = await WebBrowser.openAuthSessionAsync(providerUrl.toString(), redirectUrl);
-      if (result.type !== 'success' || !result.url) {
-        // Backing out of the provider screen is a decision, not a failure — say nothing.
-        if (result.type === 'cancel' || result.type === 'dismiss' || result.type === 'locked') return;
-        setError(`Couldn't finish signing in with ${name}. Please try again.`);
-        return;
-      }
+      if (appleToken) {
+        // One call, no round trip, no redirect URL involved at all. The identity token is a
+        // signed JWT from Apple; Clerk verifies it server-side and the sign-in is either
+        // complete or transferable exactly as in the browser flow, so everything below this
+        // block is shared.
+        await signIn.create({ strategy: 'oauth_token_apple', token: appleToken } as SignInCreateParams);
+      } else {
+        const redirectUrl = ssoRedirectUrl();
 
-      // Clerk hands the session back as a nonce on the redirect, which the reload exchanges.
-      //
-      // Parsed by hand rather than through `new URL(...).searchParams`. The redirect is a
-      // bare custom scheme — `stackd://?rotating_token_nonce=…` — with no authority
-      // component, which is exactly the shape URL parsers disagree about; React Native's is
-      // a hand-written subset rather than a spec implementation, and it is the one piece of
-      // this flow with no fallback if it ever returns null on a URL that plainly contains
-      // the parameter. A regex over the query string cannot be wrong about a value we can
-      // see in the string.
-      const nonce = readNonce(result.url);
-      if (!nonce) {
-        setError(`${name} sent us back without a sign-in token. Please try again.`);
-        return;
+        // Ask Clerk for the provider's authorization URL. oidcPrompt is the whole reason this
+        // isn't useSSO(): it becomes `prompt=select_account` on the provider URL, which is what
+        // makes Google and Microsoft ASK which account instead of silently reusing the one the
+        // device is already signed into. Passed as undefined for Apple, which does not take it.
+        await signIn.create({ strategy, redirectUrl, ...(prompt ? { oidcPrompt: prompt } : {}) });
+        const providerUrl = signIn.firstFactorVerification.externalVerificationRedirectURL;
+        if (!providerUrl) {
+          setError(`Couldn't reach ${name}. Please try again.`);
+          return;
+        }
+
+        const result = await WebBrowser.openAuthSessionAsync(providerUrl.toString(), redirectUrl);
+        if (result.type !== 'success' || !result.url) {
+          // Backing out of the provider screen is a decision, not a failure — say nothing.
+          if (result.type === 'cancel' || result.type === 'dismiss' || result.type === 'locked') return;
+          setError(`Couldn't finish signing in with ${name}. Please try again.`);
+          return;
+        }
+
+        // Clerk hands the session back as a nonce on the redirect, which the reload exchanges.
+        //
+        // Parsed by hand rather than through `new URL(...).searchParams`. The redirect is a
+        // bare custom scheme — `stackd://?rotating_token_nonce=…` — with no authority
+        // component, which is exactly the shape URL parsers disagree about; React Native's is
+        // a hand-written subset rather than a spec implementation, and it is the one piece of
+        // this flow with no fallback if it ever returns null on a URL that plainly contains
+        // the parameter. A regex over the query string cannot be wrong about a value we can
+        // see in the string.
+        const nonce = readNonce(result.url);
+        if (!nonce) {
+          setError(`${name} sent us back without a sign-in token. Please try again.`);
+          return;
+        }
+        await signIn.reload({ rotatingTokenNonce: nonce });
       }
-      await signIn.reload({ rotatingTokenNonce: nonce });
 
       // "transferable" means the provider authenticated someone with no account here yet, so
       // the OAuth identity gets transferred into a new sign-up.
@@ -247,7 +331,7 @@ export function SocialAuth({
         const outstanding = [...missing, ...unverified];
         setError(
           missing.includes('email_address')
-            ? `${name} didn't share an email address, and Stacked needs one. Try again and choose "Share My Email", or sign up with your email below.`
+            ? `${name} didn't share an email address, and Stacked needs one. If you've used ${name} with Stacked before, revoke it (Settings › your name › Sign in with Apple) and try again choosing "Share My Email" — or sign up with your email below.`
             : unverified.includes('email_address')
               ? `We need to verify ${signUp.emailAddress || 'your email address'} before you can finish. Sign in at trystacked.app once to confirm it, then ${name} will work here.`
               : outstanding.length
@@ -263,10 +347,31 @@ export function SocialAuth({
       onSignedIn({ isNewUser });
     } catch (e: unknown) {
       completingRef.current = false;
-      // With the code: this is the one failure path in the app whose cause is invisible from
-      // the outside, and the person hitting it is usually reporting it rather than fixing it.
-      // See clerkErrorWithCode.
-      if (alive.current) setError(clerkErrorWithCode(e));
+
+      // Already signed in. Not a failure — see isSessionExists — so go where a success goes
+      // rather than showing an error on a screen the user is finished with. `isNewUser` is
+      // false by definition: the session predates this attempt.
+      if (isSessionExists(e)) {
+        completingRef.current = true;
+        onSignedIn({ isNewUser: false });
+        return;
+      }
+
+      if (alive.current) {
+        setError(
+          // Clerk's own words here are "You are signed out", which on a sign-in screen reads
+          // as the app arguing with you. What it actually means is that the attempt expired
+          // in flight — the provider round-trip is the one flow long enough for that to
+          // happen, since it hands control to another app and waits — and the fix is simply
+          // to start it again, which is what this says.
+          isAuthenticationInvalid(e)
+            ? `That took too long and the sign-in expired. Tap “Continue with ${name}” to try again.`
+            // With the code: this is the one failure path in the app whose cause is invisible
+            // from the outside, and the person hitting it is usually reporting it rather than
+            // fixing it. See clerkErrorWithCode.
+            : clerkErrorWithCode(e),
+        );
+      }
     } finally {
       if (alive.current) setBusy(null);
     }

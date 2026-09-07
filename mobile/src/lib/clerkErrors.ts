@@ -40,6 +40,32 @@ export function isIdentifierTaken(e: unknown): boolean {
  * a failure means (a wrong password, an unverified email), say THAT — a code helps nobody
  * who already has an explanation.
  */
+/**
+ * True when Clerk answered with `authentication_invalid` — whose message is the literal
+ * words "You are signed out".
+ *
+ * That is correct and useless at the same time. It means the CLIENT's token was rejected, so
+ * whatever multi-step attempt was in flight no longer exists on Clerk's side; showing its
+ * text on a sign-in screen tells someone who is trying to sign in that they are signed out.
+ * It is worth recognising rather than echoing, because the action it calls for (start the
+ * flow again) is not one the message suggests.
+ */
+export function isAuthenticationInvalid(e: unknown): boolean {
+  return clerkErrors(e).some((err) => err.code === 'authentication_invalid');
+}
+
+/**
+ * True when Clerk refused because a session is ALREADY active (`session_exists`).
+ *
+ * This instance runs single_session_mode, so a sign-in attempt made while a session is live
+ * is rejected rather than queued. It is not a failure — the user is signed in, which is what
+ * they asked for — so the honest response is to carry on into the app rather than to report
+ * an error on a screen they no longer need.
+ */
+export function isSessionExists(e: unknown): boolean {
+  return clerkErrors(e).some((err) => err.code === 'session_exists');
+}
+
 export function clerkErrorWithCode(e: unknown): string {
   const first = clerkErrors(e)[0];
   const message = first?.longMessage || first?.message || 'Something went wrong. Please try again.';
