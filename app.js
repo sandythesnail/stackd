@@ -23425,6 +23425,20 @@ function showHammyMessage(text, isGood) {
 }
 
 // ── Chapter type: teach (plain-English concept explainer) ──
+/** Hint text for a teach chapter's true/false check — mobile's `teachHint` (quest.tsx).
+ *
+ * Not one teach chapter in the content has an authored hintText — 0 of 329, while
+ * knowledgecheck/decision/bossbattle are covered outright — so 💡 HINT was permanently dead
+ * on the true/false question, which is by far the most common graded moment in the app. The
+ * concept's own plain-English definition is sitting right there and is exactly what the
+ * check is testing, so it's offered rather than leaving the button blank.
+ *
+ * Informational concepts (no check statement) get no hint: there's nothing to answer. */
+function teachHintText(concept) {
+  if (!concept || !concept.check || !concept.check.statement || !concept.plain) return '';
+  return `Remember what ${concept.term} means: ${concept.plain}`;
+}
+
 function renderTeachChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
   const concepts = chapter.concepts;
@@ -23433,6 +23447,10 @@ function renderTeachChapter(chapter, mod, onDone) {
   function renderConcept() {
     const c = concepts[idx];
     const isLast = idx === concepts.length - 1;
+    // Per-CONCEPT, so it re-derives as the chapter steps through its words — the same reason
+    // renderKnowledgeCheckChapter re-runs this per question rather than once for the chapter.
+    // renderChapter has already called this with the chapter's own (always absent) hintText.
+    renderHintButton(mod, teachHintText(c));
     // A disabled placeholder, not clearQuestContinue()'s empty slot — same fix as
     // renderPollChapter: the Continue button lives in the sticky header, above quest-body,
     // so an empty-to-populated jump there grows the header and shifts the whole
@@ -23466,7 +23484,16 @@ function renderTeachChapter(chapter, mod, onDone) {
 
     // A quick true/false recall check right after the word — so the student engages with
     // it once before moving on, instead of just clicking through a string of definitions.
-    if (c.check) {
+    //
+    // Gated on the STATEMENT, not on `check` itself — mobile's `hasCheck` rule (quest.tsx).
+    // Sixteen concepts across eight modules, all of them steps in the real-life walkthrough
+    // lessons, are informational and carry `check: {}` (one carries no `check` at all). An
+    // empty object is truthy, so `if (c.check)` built the whole widget out of nothing: the
+    // statement rendered as the literal word "undefined", and since `answer === undefined`
+    // is false either way, BOTH True and False were marked wrong, neither was highlighted
+    // as correct, Hammy reacted badly and recordQuestCheck banked a wrong answer against
+    // the student's report. There was no way to pass it because there was no question.
+    if (c.check && c.check.statement) {
       const checkEl = document.getElementById('word-check');
       checkEl.innerHTML = `
         <div class="word-check-label">Quick check: true or false?</div>

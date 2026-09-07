@@ -962,6 +962,12 @@ step('a streak reaction falls back to the plain happy face, and upgrades in plac
 // the renderer didn't expect", on content nobody re-reads. It is the cheapest possible check
 // on the widest possible surface, and it costs a few seconds.
 console.log('\nevery chapter renders');
+/** Everything a student can actually read on the quest screen: the scrolling body (which
+ *  holds the title row, Hammy's side and the chapter's own content), the stat dashboard
+ *  above it, and the primary button below it. */
+const questText = () => ['quest-dashboard', 'quest-body', 'quest-continue-slot']
+  .map((id) => (window.document.getElementById(id) || {}).textContent || '')
+  .join(' ');
 step('all 1,270 chapters, across all 11 modules', () => {
   let rendered = 0;
   const seen = new Set();
@@ -985,6 +991,17 @@ step('all 1,270 chapters, across all 11 modules', () => {
         if (problems.length > before) {
           failures.push(`${mod.id}/${q.id}#${i} (${q.chapters[i].type}): ${problems.splice(before).join(' | ')}`);
         }
+        // And nothing throws when a field is merely ABSENT — it interpolates. A renderer that
+        // reads an optional field straight into a template writes the word "undefined" onto
+        // the screen and carries on, which is not an error anywhere: it renders, it logs
+        // nothing, and the student reads it. Sixteen teach concepts shipped exactly that way
+        // (`check: {}` is truthy, so the true/false widget was built with no statement and no
+        // answer, and marked both buttons wrong). No lesson string in the catalogue contains
+        // any of these words, so a match here is always a hole in a template, never content.
+        const painted = questText().match(/\b(?:undefined|NaN)\b|\[object Object\]/);
+        if (painted) {
+          failures.push(`${mod.id}/${q.id}#${i} (${q.chapters[i].type}): painted "${painted[0]}" on screen`);
+        }
       }
     }
   }
@@ -993,6 +1010,79 @@ step('all 1,270 chapters, across all 11 modules', () => {
   if (seen.size !== 15) throw new Error('saw ' + seen.size + ' chapter types, expected 15: ' + [...seen].join(', '));
   if (failures.length) {
     throw new Error(failures.length + ' chapter(s) failed:\n    ' + failures.slice(0, 8).join('\n    '));
+  }
+});
+
+// The walk above renders each chapter at its FIRST concept, so it sees 9 of the 16 empty
+// checks and would see a half-written one only if it landed on concept 0. This reads the
+// catalogue directly instead, which covers all 374 concepts and costs nothing.
+//
+// Three states are fine and all three are handled by both apps: no `check` key, an empty
+// `check: {}` (informational — the walkthrough steps), and a complete one. The state that is
+// never fine is HALF written, and it is the one no renderer can defend against: a statement
+// with no `isTrue` puts a real question on screen that grades `guess === undefined` — false
+// both ways — so the student is told they are wrong whichever button they press, and it is
+// recorded against their quest report. None exist today; this is what keeps it that way.
+step('no concept asks a true/false question it has no answer to', () => {
+  const half = [];
+  for (const mod of api.MODULES) {
+    for (const q of mod.quests || []) {
+      for (const c of q.chapters) {
+        if (c.type !== 'teach') continue;
+        for (const [i, concept] of (c.concepts || []).entries()) {
+          const chk = concept.check;
+          if (!chk) continue;
+          const hasStatement = typeof chk.statement === 'string' && chk.statement.trim() !== '';
+          const hasAnswer = typeof chk.isTrue === 'boolean';
+          if (hasStatement !== hasAnswer) {
+            half.push(`${mod.id}/${q.id}/${c.id} concept ${i}: `
+              + (hasStatement ? 'statement with no isTrue' : 'isTrue with no statement'));
+          }
+        }
+      }
+    }
+  }
+  if (half.length) throw new Error(half.length + ' half-written check(s):\n    ' + half.join('\n    '));
+});
+
+// The 💡 HINT button on a vocab card.
+//
+// Not one teach chapter in the catalogue carries an authored hintText — 0 of 329, while
+// knowledgecheck/decision/bossbattle are covered outright — so the button was dead on the
+// true/false check, which is the single most common graded moment in the app. Mobile has
+// always derived one from the concept's own definition (quest.tsx's teachHint); the web now
+// does the same. Both halves are asserted: that it appears where there IS a question, and
+// that it stays away from the informational steps, where there is nothing to hint at.
+/** Opens the first teach chapter whose concept 0 matches `wants`, and returns its concept. */
+function openTeachChapter(wants) {
+  for (const mod of api.MODULES) {
+    for (const q of mod.quests || []) {
+      const i = q.chapters.findIndex((c) => c.type === 'teach' && wants(c.concepts[0]));
+      if (i < 0) continue;
+      delete s.questProgress[window.questKey(mod.id, q.id)];
+      window.startQuest(mod.id, q.id);
+      window.renderChapter(mod, i);
+      return q.chapters[i].concepts[0];
+    }
+  }
+  throw new Error('no teach chapter matched');
+}
+console.log('\na vocab card offers its own definition as the hint');
+step('the hint button appears on a concept that asks something', () => {
+  const concept = openTeachChapter((c) => c && c.check && c.check.statement);
+  const btn = window.document.getElementById('hint-ask-btn');
+  if (!btn) throw new Error('no hint button on a concept with a true/false check');
+  btn.click();
+  const def = window.document.querySelector('.glossary-popup-def');
+  if (!def) throw new Error('the hint button opened nothing');
+  if (!def.textContent.includes(concept.plain)) {
+    throw new Error('the hint does not quote the definition: ' + def.textContent.slice(0, 80));
+  }
+});
+step('and stays away from an informational step, which asks nothing', () => {
+  openTeachChapter((c) => c && (!c.check || !c.check.statement));
+  if (window.document.getElementById('hint-ask-btn')) {
+    throw new Error('a hint was offered on a concept with no question');
   }
 });
 
