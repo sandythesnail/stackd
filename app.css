@@ -552,8 +552,12 @@ body { background: var(--bg); min-height: 100vh; }
 #page-progress .page-body { gap: 1.6rem; }
 
 /* ─── PROGRESS PAGE CHARTS ─── */
+/* Three columns for the three cards. This asked for FOUR — a leftover from when there was a
+   fourth stat here — so the row laid out three cards and then a column of nothing, which is
+   why they sat bunched against the left edge with a card's width of empty page after them
+   instead of spanning the row. */
 .pg-stats-row {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; min-width: 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; min-width: 0;
 }
 .pg-stat-card {
   background: #fff; border: 1px solid var(--border);
@@ -1603,18 +1607,10 @@ select.budget-input { cursor: pointer; }
   display: flex; flex-direction: row; align-items: center; gap: 10px;
   padding: 16px 0 6px; text-align: left;
 }
-/* The centred arrangement, which is now every chapter's arrangement (renderChapter always
-   adds the class). column-reverse rather than a DOM reorder, so the bubble lands ABOVE the
-   avatar without the persistent Hammy node ever moving.
-   It used to be the story and Match It only, with everything else putting the bubble beside
-   him. Beside meant the bubble was as narrow as whatever was left over next to a pig, and it
-   meant the two chapter kinds spoke to you from two different places. Above him, on the full
-   width of the column, is one arrangement and the roomier one. */
-/* Tight. Every pixel here is spent twice — once above Hammy for the bubble's reserved band,
-   and again below him before the content starts — so padding on this row is the most
-   expensive vertical space in a lesson, and generous values on it are what turn a step that
-   fitted into a step you have to scroll. */
-.quest-side.centered { flex-direction: column-reverse; align-items: center; padding: 10px 0 4px; text-align: center; }
+/* There was a `.centered` variant here that flipped this row into a column-reverse, putting
+   the bubble above Hammy instead of beside him, and renderChapter added it to every chapter.
+   Removed with the class: the row above is the arrangement again, which is what the whole
+   .quest-side/.hammy-side-slot layout was written for in the first place. */
 /* Short chapter types leave a lot of room under the bottom bar and read as top-heavy at the
    default padding, so they drop Hammy further down the screen — mobile's companionWrapLow /
    Lowest / Deep, applied to the same three types. */
@@ -1634,9 +1630,9 @@ select.budget-input { cursor: pointer; }
    a reaction as a reaction is its colour and its bubble, not its stroke. */
 .hammy-side-msg {
   position: relative; align-self: center; font-family: var(--font); font-weight: 400;
-  font-size: 14px; color: #3C4E3D; line-height: 1.32;
-  background: #fff; border: 1.5px solid var(--border);
-  border-radius: 16px; padding: 9px 13px;
+  font-size: 17px; color: #3C4E3D; line-height: 1.38;
+  background: #fff; border: none;
+  border-radius: 16px; padding: 11px 15px;
   opacity: 0; transform: translateY(6px); transition: opacity 0.25s ease, transform 0.25s ease;
 }
 /* Two stacked triangles — a larger border-coloured one behind a smaller white one — so the
@@ -1644,28 +1640,17 @@ select.budget-input { cursor: pointer; }
 .hammy-side-msg::before, .hammy-side-msg::after {
   content: ''; position: absolute; width: 0; height: 0;
 }
-.hammy-side-msg::before {
+/* The outer, border-coloured triangle is gone with the border it was carrying around the
+   point — the bubble has no stroke now, so a grey arrowhead on a borderless white box reads
+   as a stray shape rather than as part of it. What was the inner white triangle is now the
+   whole tail, at the outer one's size and position. */
+.hammy-side-msg::before { display: none; }
+.hammy-side-msg::after {
   top: 50%; left: -9px; margin-top: -7px;
   border-top: 7px solid transparent; border-bottom: 7px solid transparent;
-  border-right: 9px solid var(--border);
-}
-.hammy-side-msg::after {
-  top: 50%; left: -6.5px; margin-top: -5.8px;
-  border-top: 5.8px solid transparent; border-bottom: 5.8px solid transparent;
-  border-right: 7.5px solid #fff;
+  border-right: 9px solid #fff;
 }
 /* Rotated for the centred arrangement: on the box's bottom edge, pointing down at him. */
-.quest-side.centered .hammy-side-msg { text-align: center; }
-.quest-side.centered .hammy-side-msg::before {
-  top: auto; bottom: -11px; left: 50%; margin: 0 0 0 -9px;
-  border-top: 11px solid var(--border); border-bottom: 0;
-  border-left: 9px solid transparent; border-right: 9px solid transparent;
-}
-.quest-side.centered .hammy-side-msg::after {
-  top: auto; bottom: -8.4px; left: 50%; margin: 0 0 0 -7.4px;
-  border-top: 9px solid #fff; border-bottom: 0;
-  border-left: 7.4px solid transparent; border-right: 7.4px solid transparent;
-}
 .hammy-side-msg.show { opacity: 1; transform: translateY(0); }
 .hammy-side-msg.happy { color: var(--green-dark); }
 .hammy-side-msg.gentle { color: var(--pink-dark); }
@@ -1843,20 +1828,23 @@ select.budget-input { cursor: pointer; }
 /* mobile's storyBubble: a 2px borderOpt edge at 16px radius, 12 all round, 14.5/19 text. */
 .story-bubble {
   background: #fff; border: 2px solid #E9EFE5; border-radius: 16px;
-  padding: 12px; font-size: 14.5px; font-weight: 400; line-height: 19px; color: var(--text);
+  padding: 14px 16px; font-size: 17.5px; font-weight: 400; line-height: 24px; color: var(--text);
 }
 .story-bubble.narrator { background: var(--bg); font-style: italic; color: var(--text-mid); }
 
 /* Establishing shot — big centered character + caption, filling the available screen height
    to open a story chapter (Hammy's side column is hidden for story chapters, so this has
    the full width and height of quest-main to work with). */
+/* Packed to the TOP of the stage rather than centred in it. The caption is the thing that
+   has to stay on screen, and centring the pair pushed both of them down into the lower half
+   on a tall window — Hammy sits up under the progress bar now and his line follows him. */
 .intro-scene {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
   text-align: center; min-height: 300px; margin-bottom: 0; animation: questPageTurn 0.17s ease-out;
 }
-.intro-avatar { display: flex; justify-content: center; margin-bottom: 1.25rem; }
+.intro-avatar { display: flex; justify-content: center; margin-bottom: 0.9rem; }
 .intro-caption {
-  font-family: var(--font-display); font-size: 1.45rem; font-weight: 500; line-height: 1.5;
+  font-family: var(--font-display); font-size: 1.72rem; font-weight: 500; line-height: 1.45;
   color: var(--text); max-width: 760px; margin: 0 auto;
 }
 
@@ -1865,13 +1853,12 @@ select.budget-input { cursor: pointer; }
    flex item is blockified and stretched to the line regardless of its display value — so
    "💡 NEW WORD" was drawn as a pale green band across the whole width of the lesson rather
    than as the small pill it is on mobile. */
-.teach-tag, .hint-tag {
+.teach-tag {
   align-self: flex-start;
   display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
   color: var(--green-dark); background: var(--green-pale); border: 1px solid var(--green-light);
   border-radius: var(--radius-sm); padding: 0.25rem 0.65rem; margin-bottom: 0.6rem;
 }
-.hint-tag { color: var(--pink-dark); background: var(--pink-pale); border-color: var(--pink-light); }
 /* No tail. It used to have one — a left-pointing wedge at `left: -10px; bottom: 20px` — from
    the old `.teach-scene` layout, where Hammy stood in a flex row immediately to the LEFT of
    the bubble and the wedge pointed at him. That layout is gone: Hammy is drawn above the
@@ -3219,12 +3206,11 @@ select.budget-input { cursor: pointer; }
 }
 
 /* The Room / Wardrobe switch on the page itself — mobile's two chips above the scene.
-   Capped, because "two flex:1 chips in a row" is the same rule on both sides but not the
-   same result: mobile runs it across a ~390px phone and gets two chips, the web ran it
-   across an 1100px page and got two slabs stretching the full width of the screen, which
-   is the widest, heaviest thing on a page whose subject is the room underneath it. This
-   width lands each chip at roughly the size mobile draws it. */
-.room-tabs { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; max-width: 420px; }
+   Full width, as they were: the two chips split the row between them. Pushed down the page
+   instead, so the switch is not jammed against the top edge of the content area — this page
+   has no .page-header of its own (every other one does), so without it the first thing on
+   the screen sits where every other page has a title. */
+.room-tabs { display: flex; gap: 0.5rem; margin: 1.6rem 0 0.9rem; }
 .room-tab {
   flex: 1; padding: 0.55rem 1rem; border-radius: 16px; cursor: pointer;
   background: #fff; border: 1.5px solid var(--border);
@@ -3337,7 +3323,7 @@ select.budget-input { cursor: pointer; }
   .teach-plain { font-size: 1.02rem; }
   .hint-bubble .teach-plain { font-size: 1.05rem; }
   .teach-analogy { font-size: 0.9rem; }
-  .story-bubble { font-size: 1.02rem; }
+  .story-bubble { font-size: 1.1rem; }
   .option-btn { font-size: 0.95rem; }
   .word-check-statement { font-size: 0.95rem; }
   .match-grid { gap: 7px; }
@@ -3345,7 +3331,7 @@ select.budget-input { cursor: pointer; }
   .myth-card-front p, .myth-card-back p { font-size: 1rem; }
   .boss-choice-card { font-size: 0.92rem; }
   .explainback-input { font-size: 0.9rem; }
-  .intro-caption { font-size: 1.15rem; max-width: 90%; }
+  .intro-caption { font-size: 1.32rem; max-width: 92%; }
   .options { gap: 0.4rem; }
   .option-btn { padding: 0.6rem 0.85rem; }
   .quest-kc-counter { margin-bottom: 0.25rem; }
@@ -4569,20 +4555,12 @@ select.budget-input { cursor: pointer; }
    him — the bubble is taken out of flow inside it. Two lines at the measure below, which is
    what the longest reaction in the content actually needs; anything more is dead space on
    every chapter that isn't showing one. */
-.quest-side.centered .hammy-side-slot {
-  flex: none; width: 100%; height: 66px; align-items: flex-end; justify-content: center;
-}
 /* Sized to what he actually says. Everything Hammy says is one short remark — "Nice! 🎉",
    "Not quite, have another look" — so the bubble is capped near the length of the longest of
    them rather than at the width of the column. Given the column it drew itself as a band
    right across the screen with four words floating in the middle of it, which reads as a
    banner rather than as a character speaking. Two lines at this measure is the worst case,
    which is what the reserved band above is sized for. */
-.quest-side.centered .hammy-side-msg {
-  position: absolute; bottom: 11px; left: 20px; right: 20px;
-  max-width: min(42ch, 460px); margin: 0 auto;
-  font-size: 14px; padding: 9px 14px;
-}
 
 /* The Look back pill: one fixed-size control, whatever is behind it. */
 /* Mobile's lookBackBtn: compact enough to leave the centred action button its full width
@@ -4908,9 +4886,6 @@ input[type="range"].microsim-range {
 /* The reserved band above Hammy is for his REACTION bubble; here the tip is the bubble and
    it sits in the content column, so the band would only add a gap under it. */
 .quest-layout-hint .hammy-side-slot { display: none; }
-/* This stage is centred, so the tag centres with it — .hint-tag's own align-self is
-   flex-start, which is right everywhere the chapter is left-aligned and wrong here. */
-.quest-layout-hint .hint-tag { align-self: center; }
 /* The tip is one or two sentences. Left to fill the lesson column it drew itself as a band
    right across the screen, which made a short remark look like a wall of text and left the
    stage reading as one wide box with a small pig under it rather than as Hammy saying
@@ -4954,3 +4929,17 @@ input[type="range"].microsim-range {
     rgba(255, 255, 255, 0) 55%,
     rgba(44, 30, 16, 0.13) 100%);
 }
+
+/* ─── A chapter that centres in the height it is given ───
+   The Quick Check draws no companion Hammy (knowledgecheck is in HAMMY_SIDE_HIDDEN_TYPES),
+   so it is a question and two rows of options and nothing else. Anchored to the top of a
+   laptop-height screen that left the entire lower half of the lesson empty, with the answers
+   up under the progress bar. renderChapter measures the room the chapter has and sets it as
+   this box's min-height; this centres the content inside it, so the question and its answers
+   sit in the middle of the screen and the space is shared above and below them rather than
+   all falling below. Content taller than the box still grows downward and scrolls as before.
+
+   Centred on .quest-main, not on .quest-layout: .quest-main is `flex: 1` inside that column,
+   so it absorbs every spare pixel and the layout's own justify-content has nothing left to
+   distribute. The space to share is the space inside it. */
+.quest-layout-center .quest-main { justify-content: center; }

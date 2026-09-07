@@ -405,6 +405,53 @@ step('results: weak spots cap at two with a "+N more"', () => {
   if (wrap.querySelector('.report-weak-rest').hidden) throw new Error('expander did not open the rest');
   if (!wrap.textContent.includes('done!')) throw new Error('headline should say done!, not nailed it!');
 });
+/* Continue carries on into the module instead of leaving it.
+ *
+ * Finishing a lesson used to land on the Modules page, from which carrying on meant finding
+ * the module you were just inside, opening it, and picking the lesson under the one you had
+ * just finished. Three navigations to keep doing the thing you were already doing. */
+step('results: Continue starts the next unfinished lesson in the module', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  const units = window.mainQuests(mod);
+  for (const q of units) delete s.questProgress[window.questKey(mod.id, q.id)];
+  s.questProgress[window.questKey(mod.id, units[0].id)] = Object.assign(fakeQp(), { done: true });
+  paintResults(fakeQp());
+  window.document.getElementById('res-home').click();
+  if (s.activeQuestId !== units[1].id) {
+    throw new Error('went to ' + s.activeQuestId + ', expected ' + units[1].id);
+  }
+  if (!window.document.getElementById('screen-quest').classList.contains('active')) {
+    throw new Error('did not open the lesson screen');
+  }
+});
+step('results: Continue skips lessons already finished', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  const units = window.mainQuests(mod);
+  for (const q of units) delete s.questProgress[window.questKey(mod.id, q.id)];
+  // Replaying the first, with the next two already done.
+  for (const q of [units[0], units[1], units[2]]) {
+    s.questProgress[window.questKey(mod.id, q.id)] = Object.assign(fakeQp(), { done: true });
+  }
+  paintResults(fakeQp());
+  window.document.getElementById('res-home').click();
+  if (s.activeQuestId !== units[3].id) {
+    throw new Error('went to ' + s.activeQuestId + ', expected ' + units[3].id);
+  }
+});
+step('results: Continue falls back to Modules when the module is finished', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  const units = window.mainQuests(mod);
+  for (const q of units) {
+    s.questProgress[window.questKey(mod.id, q.id)] = Object.assign(fakeQp(), { done: true });
+  }
+  paintResults(fakeQp());
+  window.document.getElementById('res-home').click();
+  if (!window.document.getElementById('page-modules').classList.contains('active')) {
+    throw new Error('did not fall back to the Modules page');
+  }
+  for (const q of units) delete s.questProgress[window.questKey(mod.id, q.id)];
+});
+
 step('results: level bar is present and honest at max level', () => {
   s.level = 4; s.xp = 700;
   let t = paintResults(fakeQp());

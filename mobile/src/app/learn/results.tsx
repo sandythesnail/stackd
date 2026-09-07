@@ -55,7 +55,7 @@ export default function Results() {
   const scoredRight = report.totalRight;
   const allCorrect = scored > 0 && scoredRight === scored;
 
-  const { state, level, tierName, completeLesson, completeLifeTask, equippedMascotItems, newAchievements } = useStore();
+  const { state, level, tierName, completeLesson, completeLifeTask, equippedMascotItems, newAchievements, nextLessonIndex } = useStore();
   // Reserves room at the top of this screen for the global achievement toast.
   //
   // The toast (components/AchievementToast) is absolutely positioned at the top of whatever
@@ -132,9 +132,29 @@ export default function Results() {
   // (tabs) entry already sitting below "learn", and returns to it, dropping the lesson
   // screens on the way. If it ever failed to find one it would push, i.e. degrade to exactly
   // the old behaviour rather than to a broken route.
+  // Continue carries ON into the module rather than leaving it: straight into the next
+  // unfinished lesson, and out to the Modules tab only when there isn't one. Finishing a
+  // lesson used to land on that tab, from which carrying on meant finding the module you
+  // were just inside, opening it, and picking the lesson under the one you had just
+  // finished — three navigations to keep doing the thing you were already doing. The website
+  // does the same (wireResultsContinue in app.js), off this same nextLessonIndex rule.
+  //
+  // REPLACE, not push, and this is the one place replace is right: the destination is a
+  // sibling inside this same "learn" stack, not a hop across to a different top-level branch
+  // (which is the unreliable case the long note above is about). Replacing swaps this
+  // results screen for the next lesson, so a sitting of six lessons leaves one entry behind
+  // rather than six results screens the back button has to walk out through.
+  //
+  // The overlays still come first and still return: a level-up or a life event opens on top,
+  // and pressing Continue again after it lands here with the same state.
   const continuePress = () => {
     if (tieredUp) { router.push({ pathname: '/sheet/levelup' }); return; }
     if (state.pendingLifeEventId) { router.push({ pathname: '/sheet/life-event' }); return; }
+    const nextIdx = nextLessonIndex(mod.id);
+    if (nextIdx >= 0) {
+      router.replace({ pathname: '/learn/quest', params: { moduleId: mod.id, lessonIndex: String(nextIdx) } });
+      return;
+    }
     router.navigate('/(tabs)/modules');
   };
 

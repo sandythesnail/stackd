@@ -20618,6 +20618,43 @@ function exitToModules() {
   renderModulesPage();
 }
 
+/** The lesson to go to when a results screen's Continue is pressed — mobile's
+ *  `nextLessonIndex` (store.tsx), rule for rule.
+ *
+ * Finishing a lesson used to drop the student back on the Modules page, where carrying on
+ * meant finding the module they had just been inside, opening it, and picking the lesson
+ * under the one they had just finished — three navigations to keep doing the thing they were
+ * already doing. Continue now takes them straight into it.
+ *
+ * The first UNFINISHED main lesson, not simply the next one along: replaying an early lesson
+ * should not march back through the eight already behind it. The one just finished is done by
+ * the time this runs, so it is never the answer.
+ *
+ * MAIN lessons only. The optional real-life guide is reached by choosing it from the module's
+ * own list and never by a generic Continue — mobile's rule, and its reasoning is the part
+ * worth keeping: sending a student out to open a real bank account is not something to do to
+ * them by default.
+ *
+ * Returns null when nothing is left, which is exactly when the Modules page IS the right
+ * destination — so the caller falls back to it. */
+function nextLessonInModule(mod) {
+  return mainQuests(mod).find((q) => {
+    const qp = state.questProgress[questKey(mod.id, q.id)];
+    return !(qp && qp.done);
+  }) || null;
+}
+
+/** Wires a results screen's Continue button to the next lesson in the module. */
+function wireResultsContinue(mod) {
+  const btn = document.getElementById('res-home');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const next = nextLessonInModule(mod);
+    if (next) startQuest(mod.id, next.id);
+    else exitToModules();
+  });
+}
+
 // ── BADGES PAGE ────────────────────────────────
 function renderBadgesPage() {
   updateSidebarStats();
@@ -22597,7 +22634,7 @@ function startQuest(moduleId, questId) {
 
 /** How big the companion Hammy is drawn, as a fraction of his own 440x460 frame. See the
  *  note in renderChapter for where the number comes from. */
-const HAMMY_COMPANION_SCALE = 0.32;
+const HAMMY_COMPANION_SCALE = 0.46;
 
 /** Chapter types that get the screen to themselves, with no companion Hammy.
  *
@@ -22674,9 +22711,16 @@ function questContentZoom() {
 function computeAvailableQuestHeight() {
   const bodyEl = document.getElementById('quest-body');
   const bodyStyles = getComputedStyle(bodyEl);
-  const bodyPadV = parseFloat(bodyStyles.paddingTop) + parseFloat(bodyStyles.paddingBottom);
+  // Every term defaulted, because one unreadable value poisons the whole sum. An environment
+  // that reports no padding at all (jsdom, and anything else without a real layout engine)
+  // returns '' here, parseFloat('') is NaN, and NaN propagates: callers then write
+  // "NaNpx" as a min-height, which is silently invalid, and the chapter that was supposed to
+  // fill its screen renders at content height instead — visibly wrong, with nothing thrown.
+  const px = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
+  const bodyPadV = px(bodyStyles.paddingTop) + px(bodyStyles.paddingBottom);
   const titleH = document.getElementById('quest-title-row').getBoundingClientRect().height;
-  return (bodyEl.clientHeight - bodyPadV - titleH) / questContentZoom();
+  const available = (bodyEl.clientHeight - bodyPadV - titleH) / questContentZoom();
+  return Number.isFinite(available) ? available : 0;
 }
 
 // Shows the scroll chevron only while the step's content actually runs past the fold, and
@@ -22716,11 +22760,10 @@ function renderChapter(mod, idx) {
   titleRow.textContent = getChapterTitle(chapter);
   titleRow.className = 'quest-title-row'
     + (chapter.type === 'story' ? ' story' : '')
-    + (chapter.type === 'bossbattle' ? ' boss' : '')
-    // Match It centres its heading over the centred grid and the centred Hammy above it, the
-    // way mobile's matchTitle does — left-aligned it was the one thing on that screen not
-    // sitting on the centre line.
-    + (chapter.type === 'matching' ? ' centered' : '');
+    + (chapter.type === 'bossbattle' ? ' boss' : '');
+  // Match It's heading used to be centred, over a centred Hammy and a centred grid. Hammy is
+  // on the left of every chapter now, so a centred heading was the one thing on the screen
+  // NOT lining up with him — the opposite of the reason it was centred in the first place.
   // No forced full-viewport row. It was set so a short chapter still filled the screen, but
   // paired with a centred column that just moved the question into the middle of a lot of
   // nothing. The row is its content's height now and everything sits up at the top.
@@ -22740,20 +22783,14 @@ function renderChapter(mod, idx) {
     || (chapter.type === 'teach' && chapter.fullScreen)
     || chapter.type === 'story';
   questSide.style.display = ownsTheScreen && chapter.type !== 'hint' ? 'none' : 'flex';
-  // Always centred: his bubble opens ABOVE him, on the full width of the lesson column, and
-  // he does not move when it appears or clears (the band above him is reserved — see
-  // .quest-side.centered .hammy-side-slot).
-  //
-  // This used to be the story and Match It only, with every other chapter putting the bubble
-  // BESIDE him. Beside meant two things: the bubble was only as wide as whatever was left
-  // over next to a pig, so a one-line remark wrapped into three down a narrow strip; and the
-  // same character spoke to you from two different places depending on which chapter you were
-  // on. One arrangement, and it is the roomier one.
+  // Hammy on the LEFT, his bubble in the room to the right of him — the row .quest-side has
+  // always described, restored per user request. Every chapter used to get `centered` added
+  // here, which flips the row into a column-reverse and stacks the bubble above him instead.
   //
   // The drop classes push him further down into the room the shortest chapter types leave
   // spare, and Match It pulls him up tight under the bar — mobile's companionDrop /
   // companionWrapRaised, applied to the same types.
-  questSide.className = 'quest-side centered'
+  questSide.className = 'quest-side'
     + (chapter.type === 'matching' ? ' raised'
       : chapter.type === 'decision' ? ' drop-deep'
       : chapter.type === 'poll' ? ' drop-low'
@@ -22761,6 +22798,12 @@ function renderChapter(mod, idx) {
   // Hammy's Tip gets its own centred stage — the tip above him rather than beside him,
   // matching mobile. Toggled here so every other chapter clears it.
   layoutEl.classList.toggle('quest-layout-hint', chapter.type === 'hint');
+  // The Quick Check has no companion (it is in HAMMY_SIDE_HIDDEN_TYPES) and is one question
+  // over two rows of options, so at the top of a laptop-height screen it left the whole lower
+  // half empty. Given the height the chapter actually has, it centres in it instead.
+  const centresInPlace = chapter.type === 'knowledgecheck';
+  layoutEl.classList.toggle('quest-layout-center', centresInPlace);
+  if (centresInPlace) layoutEl.style.minHeight = Math.max(240, computeAvailableQuestHeight()) + 'px';
   // Story titles stay above the companion; every other chapter's leads its own content.
   if (chapter.type === 'story') layoutEl.parentNode.insertBefore(titleRow, layoutEl);
   else document.getElementById('quest-main').before(titleRow);
@@ -22993,7 +23036,9 @@ function renderSubQuestResults(mod, qp, newAchs, coinsEarned) {
     </div>`;
 
   applyCelebrationHammyFace();
-  document.getElementById('res-home').addEventListener('click', exitToModules);
+  // Straight into the next lesson rather than back out to the Modules page — see
+  // wireResultsContinue. Falls back to Modules when the module has nothing left.
+  wireResultsContinue(mod);
   document.getElementById('res-replay').addEventListener('click', () => startQuest(mod.id, state.activeQuestId));
   wireQuestReport();
 }
@@ -23638,7 +23683,6 @@ function renderHintChapter(chapter, mod, onDone) {
   const main = document.getElementById('quest-main');
   clearQuestContinue();
   main.innerHTML = `
-    <div class="hint-tag">${chapter.tag || "🎉 Hammy's Tip"}</div>
     <div class="speech-bubble teach-bubble hint-bubble" id="hint-bubble">
       <p class="teach-plain hint-placeholder">Tap Hammy to hear what they have to say.</p>
     </div>`;
@@ -23678,9 +23722,10 @@ function renderHintChapter(chapter, mod, onDone) {
   // pig in this node for every chapter alike; this is the one chapter where he is the
   // subject rather than the narrator, so he is drawn again, bigger, once the bubble above
   // him has been measured.
-  const tagHeight = main.querySelector('.hint-tag').getBoundingClientRect().height / questContentZoom();
+  // Only the bubble is above him now — the "Hammy's Tip" pill that used to sit over it has
+  // been removed, so there is no tag height to reserve.
   hammySide.innerHTML = withFaceOverlay(
-    getPigWithItemMarkup(hintHammyScale(revealedHeight + tagHeight), getEquippedItems()));
+    getPigWithItemMarkup(hintHammyScale(revealedHeight), getEquippedItems()));
   hammySide.classList.add('hammy-tappable');
   hammySide.addEventListener('click', function revealTip() {
     document.getElementById('hint-bubble').innerHTML = `<p class="teach-plain">${chapter.text}</p>`;
@@ -23908,8 +23953,11 @@ function renderStoryChapter(chapter, mod, onDone) {
       // guessing with a vh-minus-constant), then size the protagonist to fit inside it — so
       // this is always centered with zero scrolling regardless of viewport height.
       const available = computeAvailableQuestHeight();
-      const captionBudget = 210; // rough space reserved for the caption + gap below the avatar
-      const maxScale = window.innerWidth <= 640 ? 0.62 : 0.85;
+      // Room kept under him for the caption + the gap. Larger than it was, because the
+      // caption is now set larger too (see .intro-caption) and a budget that no longer
+      // covers it is what pushes the last line of a long opening beat off the bottom.
+      const captionBudget = 250;
+      const maxScale = window.innerWidth <= 640 ? 0.72 : 1.05;
       const introScale = Math.max(0.4, Math.min(maxScale, (available - captionBudget) / 460));
       entry.innerHTML = `<div class="intro-avatar">${getPigWithItemMarkup(introScale, getEquippedItems())}</div><p class="intro-caption">${beat.text}</p>`;
       entry.style.minHeight = Math.max(240, available) + 'px';
@@ -25220,7 +25268,9 @@ function renderQuestResults(mod, xpEarned, coinsEarned, newAchs, consequenceText
     </div>`;
 
   applyCelebrationHammyFace();
-  document.getElementById('res-home').addEventListener('click', exitToModules);
+  // Straight into the next lesson rather than back out to the Modules page — see
+  // wireResultsContinue. Falls back to Modules when the module has nothing left.
+  wireResultsContinue(mod);
   document.getElementById('res-replay').addEventListener('click', () => startQuest(mod.id, state.activeQuestId));
   wireQuestReport();
 }
