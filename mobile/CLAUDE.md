@@ -82,6 +82,17 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   password once and the identity links). Every other SSO failure is reported with Clerk's own
   error CODE appended (`clerkErrorWithCode`), because this is the one flow whose cause is
   invisible from the outside and the person hitting it is usually reporting rather than fixing.
+- **Never read the SSO nonce with `URL.searchParams`.** The native round-trip comes back as
+  `stackd://?rotating_token_nonce=…`, and a query string is parsed per spec as
+  application/x-www-form-urlencoded — in which `+` means SPACE. A base64 nonce containing a
+  literal `+` therefore comes back corrupted, from a fully correct implementation, with no
+  error (verified against `whatwg-url-minimum`, which expo/winter installs over React Native's
+  at startup). Clerk answers the resulting reload with HTTP 401 `signed_out` / "You are signed
+  out" — shown on a sign-in screen, to someone who has just signed in successfully. An EMPTY
+  nonce is accepted and returns `needs_identifier`, so the two failures don't even look alike,
+  and since whether a nonce contains `+` is a coin flip per attempt it presents as one provider
+  working and another not. `socialAuth.tsx`'s `readNonce` takes the value with a regex and
+  decodeURIComponent instead.
   Read off the live instance rather than assumed, for the record: `email_address`, `username`
   and `password` are all enabled AND required, `verify_at_sign_up` is false for email, there
   are no second factors, and `single_session_mode` is on. The instance also lists

@@ -254,13 +254,29 @@ export function SocialAuth({
 
         // Clerk hands the session back as a nonce on the redirect, which the reload exchanges.
         //
-        // Parsed by hand rather than through `new URL(...).searchParams`. The redirect is a
-        // bare custom scheme — `stackd://?rotating_token_nonce=…` — with no authority
-        // component, which is exactly the shape URL parsers disagree about; React Native's is
-        // a hand-written subset rather than a spec implementation, and it is the one piece of
-        // this flow with no fallback if it ever returns null on a URL that plainly contains
-        // the parameter. A regex over the query string cannot be wrong about a value we can
-        // see in the string.
+        // PARSED BY HAND, and `searchParams` must not come back here. This is not caution
+        // about a sloppy polyfill — a fully spec-compliant URLSearchParams gets it wrong too,
+        // because the spec says to parse a query string as application/x-www-form-urlencoded,
+        // and that format defines `+` as an encoded SPACE. So a nonce containing a literal `+`
+        // (base64 uses it as one of its 64 characters) comes back with that `+` silently
+        // replaced by a space. Verified against `whatwg-url-minimum`, which is the
+        // implementation actually running here — expo/winter installs it over React Native's
+        // at startup:
+        //
+        //     sent   ab+cd/ef12
+        //     get()  "ab cd/ef12"      ← wrong, and no error anywhere
+        //
+        // A corrupted nonce is not a soft failure. Clerk answers the reload with HTTP 401,
+        // code `signed_out`, long message "You are signed out" — which is what a student saw
+        // on a sign-in screen after successfully signing in with Google, and which sends
+        // whoever investigates it looking at sessions and token caches. (An EMPTY nonce, by
+        // contrast, is accepted and returns `needs_identifier`, so the two failures don't even
+        // look alike.) It is also intermittent by nature: whether a given nonce contains a `+`
+        // is a coin flip per attempt, which is how this read as "Google is broken and
+        // Microsoft is fine".
+        //
+        // decodeURIComponent alone is correct here: it undoes percent-encoding and leaves `+`
+        // as the character Clerk sent.
         const nonce = readNonce(result.url);
         if (!nonce) {
           setError(`${name} sent us back without a sign-in token. Please try again.`);
