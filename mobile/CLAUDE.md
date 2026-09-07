@@ -51,12 +51,22 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   available, fall back to the round-trip, which is why `check:sso` still checks all three. Native SSO needs two
   separate things true on the Clerk instance, and they fail at the same call with different
   errors: the provider must have an **SSO connection** at all, and the app's **redirect URL**
-  (`stackd://`, or the `exp://…` one under Expo Go) must be on the allowed list.
-  `npm run check:sso` asks Clerk about both, for every provider in `socialAuth.tsx`'s
-  `PROVIDERS` (it reads that array rather than hardcoding a list, which is how Apple shipped
-  broken while the check kept passing on Google and Microsoft). All three providers are now
-  enabled on the instance and `stackd://` is authorized — check:sso passes 3/3, so a dead SSO
-  button is no longer a dashboard problem and should be diagnosed as a build one (see Run).
+  (`stackd://`, or the `exp://…` one under Expo Go) must be on the allowed list. **And a
+  third, which is not Clerk's at all: the provider has to accept the credentials Clerk holds.**
+  Clerk does not validate an OAuth client when you paste it in, so a Services ID / OAuth client
+  that was never finished passes both Clerk-side checks and fails on the phone behind an error
+  page in a browser sheet.
+  `npm run check:sso` now tests all three, for every provider in `socialAuth.tsx`'s `PROVIDERS`
+  (it reads that array rather than hardcoding a list, which is how Apple shipped broken while
+  the check kept passing on Google and Microsoft). All three are enabled and `stackd://` is
+  authorized; **Apple currently FAILS the third stage** — `appleid.apple.com` answers
+  `invalid_client` for the Services ID `app.trystacked.signin`, the same answer it gives for a
+  Services ID that doesn't exist. That breaks the browser round-trip for Apple everywhere it is
+  still used (Android, and the website's hosted widget), and it is fixed in the Apple Developer
+  portal, not here: the Services ID must exist, have Sign in with Apple enabled, be tied to the
+  primary App ID `app.trystacked.mobile`, and list `https://clerk.trystacked.app/v1/oauth_callback`
+  as a Return URL. iOS no longer depends on it — see the native Apple path below — but that path
+  needs the app's bundle identifier registered on the Clerk Apple connection instead.
   The instance requires BOTH a username and a password at sign-up that the mobile forms don't
   collect for every path, so `clerkSignUp.ts`'s `fillMissingSignUpFields` supplies whatever
   Clerk's `missingFields` actually asks for: a username derived from the email (either flow),
