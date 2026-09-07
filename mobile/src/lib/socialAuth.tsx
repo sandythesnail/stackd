@@ -224,13 +224,37 @@ export function SocialAuth({
 
       if (appleToken === CANCELLED) return;
 
+      let signedInNatively = false;
       if (appleToken) {
-        // One call, no round trip, no redirect URL involved at all. The identity token is a
-        // signed JWT from Apple; Clerk verifies it server-side and the sign-in is either
-        // complete or transferable exactly as in the browser flow, so everything below this
-        // block is shared.
-        await signIn.create({ strategy: 'oauth_token_apple', token: appleToken } as SignInCreateParams);
-      } else {
+        try {
+          // One call, no round trip, no redirect URL involved at all. The identity token is a
+          // signed JWT from Apple; Clerk verifies it server-side and the sign-in is either
+          // complete or transferable exactly as in the browser flow, so everything below this
+          // block is shared.
+          await signIn.create({ strategy: 'oauth_token_apple', token: appleToken } as SignInCreateParams);
+          signedInNatively = true;
+        } catch {
+          // Clerk refused the token, and this is the one failure worth swallowing rather than
+          // reporting, because the browser flow underneath is a genuine second way in.
+          //
+          // Clerk validates the token's audience against the app's bundle identifier, and
+          // that has to be registered on the Apple connection separately from the Services ID
+          // the web flow uses. Whether it is cannot be checked from outside — every rejection
+          // here comes back as the same flat `authorization_invalid`, whatever the reason — so
+          // an Apple button that silently depended on it would be a button whose correctness
+          // nobody could confirm without shipping a build and pressing it.
+          //
+          // Falling through instead means the native sheet is an OPTIMISATION rather than a
+          // dependency: where it works the user never leaves the app and Apple hands over an
+          // email every time (see nativeAppleToken); where it doesn't, they get exactly the
+          // round-trip they would have got anyway. Deliberately catching everything: a
+          // fallback that only triggers on the error codes someone predicted is a fallback
+          // that fails on the first unpredicted one.
+          signedInNatively = false;
+        }
+      }
+
+      if (!signedInNatively) {
         const redirectUrl = ssoRedirectUrl();
 
         // Ask Clerk for the provider's authorization URL. oidcPrompt is the whole reason this

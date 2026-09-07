@@ -66,7 +66,13 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   portal, not here: the Services ID must exist, have Sign in with Apple enabled, be tied to the
   primary App ID `app.trystacked.mobile`, and list `https://clerk.trystacked.app/v1/oauth_callback`
   as a Return URL. iOS no longer depends on it — see the native Apple path below — but that path
-  needs the app's bundle identifier registered on the Clerk Apple connection instead.
+  needs the app's bundle identifier registered on the Clerk Apple connection instead — which
+  is a field the dashboard may not expose, so `socialAuth.tsx` treats the native sheet as an
+  optimisation and falls back to the round-trip if Clerk refuses the token. Probed directly:
+  `oauth_token_apple` IS an allowed strategy on this instance (a disallowed one answers
+  `form_param_value_invalid`, this one answers `form_param_missing` for a missing token), but
+  every token rejection comes back as a flat `authorization_invalid` whatever the cause, so
+  whether the bundle ID is accepted cannot be established without shipping a build.
   The instance requires BOTH a username and a password at sign-up that the mobile forms don't
   collect for every path, so `clerkSignUp.ts`'s `fillMissingSignUpFields` supplies whatever
   Clerk's `missingFields` actually asks for: a username derived from the email (either flow),
