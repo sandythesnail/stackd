@@ -331,7 +331,13 @@ export function SocialAuth({
         const outstanding = [...missing, ...unverified];
         setError(
           missing.includes('email_address')
-            ? `${name} didn't share an email address, and Stacked needs one. If you've used ${name} with Stacked before, revoke it (Settings › your name › Sign in with Apple) and try again choosing "Share My Email" — or sign up with your email below.`
+            // The revoke instruction is Apple's alone — it is Apple's own Settings path, and
+            // Apple is the only one of the three that withholds an address on a repeat
+            // authorization. Interpolating `name` into it would have told a Google failure to
+            // go and look under Sign in with Apple.
+            ? strategy === 'oauth_apple'
+              ? `Apple didn't share an email address, and Stacked needs one. If you've used Apple with Stacked before, revoke it (Settings › your name › Sign in with Apple › Stacked) and try again, choosing "Share My Email" — or sign up with your email below.`
+              : `${name} didn't share an email address, and Stacked needs one. Sign up with your email below instead.`
             : unverified.includes('email_address')
               ? `We need to verify ${signUp.emailAddress || 'your email address'} before you can finish. Sign in at trystacked.app once to confirm it, then ${name} will work here.`
               : outstanding.length
