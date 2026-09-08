@@ -292,15 +292,6 @@ export default function Home() {
 
   return (
     <Screen edges={['top']}>
-      <Header
-        level={level}
-        name={tierName}
-        coins={state.coins}
-        diamonds={state.diamonds}
-        hideCurrency
-        onReplayTour={replayTour}
-        onGear={() => router.push('/(tabs)/settings')}
-      />
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={styles.content}
@@ -308,6 +299,27 @@ export default function Home() {
         onScroll={onScroll}
         scrollEventThrottle={16}
       >
+        {/* INSIDE the scroller, so the tier badge, the ? and the gear scroll away with the
+            page instead of riding down it. They are things you go to, not things you need
+            in reach of a thumb at every point on a long screen — and pinned they followed
+            the reader all the way to the bottom, where the ? in particular then replayed a
+            tour about content that was by then far above them.
+
+            The negative margin cancels the content container's own 22px so the bar keeps
+            its full width and its own 20px padding, i.e. sits exactly where it did when it
+            was a sibling of the scroller rather than a child of it. */}
+        <View style={styles.headerInScroll}>
+          <Header
+            level={level}
+            name={tierName}
+            coins={state.coins}
+            diamonds={state.diamonds}
+            hideCurrency
+            onReplayTour={replayTour}
+            onGear={() => router.push('/(tabs)/settings')}
+          />
+        </View>
+
         <Greeting />
 
         {/* Three tiles, not four. The raw lifetime XP total used to lead this row, and it was
@@ -432,6 +444,10 @@ const Num = ({ children }: { children: React.ReactNode }) => (
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 22, paddingBottom: 28, gap: 15 },
+  // Cancels the content container's horizontal padding for the header alone, so the bar
+  // keeps its own full-width geometry now that it is a child of the scroller rather than a
+  // sibling of it. See where it is used.
+  headerInScroll: { marginHorizontal: -22 },
   statRow: { flexDirection: 'row', gap: 8 },
   questCard: { backgroundColor: colors.pinkBg, borderColor: colors.pinkBorder },
   questTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
