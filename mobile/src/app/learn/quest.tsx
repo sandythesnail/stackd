@@ -935,8 +935,23 @@ function QuestPlayerInner() {
           <Txt style={styles.titleCardTitle}>{quest.topic ?? quest.character.name}</Txt>
           <Hammy size={150} bob equipped={equippedMascotItems()} />
         </View>
+        {/* The same bar the lesson itself uses, slot for slot — three slots with the action
+            on the screen's true centre line, and the same size/variant/width every chapter's
+            button gets. A bare <Button> in this row inherited the component's `lg` default
+            and sat hard against the left padding, so the very first button of a lesson was
+            the one button in the flow that matched none of the others. */}
         <View style={styles.bottomBar}>
-          <Button label="Start lesson" onPress={() => setShowTitleCard(false)} />
+          <View style={styles.bottomSlot} />
+          <View style={styles.bottomCenter}>
+            <Button
+              label="Start lesson"
+              onPress={() => setShowTitleCard(false)}
+              variant="green"
+              size="sm"
+              style={styles.bottomAction}
+            />
+          </View>
+          <View style={styles.bottomSlot} />
         </View>
       </Screen>
     );
