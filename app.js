@@ -21838,9 +21838,21 @@ function renderLoanPayoffPanel() {
     }
     const final = points[points.length - 1];
     const years = (points.length - 1) / 12;
-    headline.innerHTML = `
-      <span class="ci-headline-num">${years.toFixed(1)} yrs</span>
-      <span class="ci-headline-sub">paid off. Total interest paid: $${Math.round(final.totalInterest).toLocaleString()}, total paid: $${Math.round(sim.loanBalance + final.totalInterest).toLocaleString()}</span>`;
+    // "Paid off in N years" is a claim about the END of the series, so it is checked against
+    // the end of the series rather than inferred from its length. computeLoanPayoff stops at
+    // maxMonths (600) whether or not the balance ever reached zero, so a payment too small to
+    // clear the loan inside fifty years would otherwise be reported as clearing it in exactly
+    // fifty — a false financial statement, stated confidently.
+    //
+    // Not reachable from these controls today: the payment is always the loan's own required
+    // minimum plus a non-negative extra, and paying the minimum retires it in the term, of
+    // which the longest offered is 25 years. It is guarded anyway because what is at stake is
+    // a number a student may act on, and the check costs one comparison.
+    const clearedIt = final.balance <= 0.5;
+    headline.innerHTML = clearedIt
+      ? `<span class="ci-headline-num">${years.toFixed(1)} yrs</span>
+         <span class="ci-headline-sub">paid off. Total interest paid: $${Math.round(final.totalInterest).toLocaleString()}, total paid: $${Math.round(sim.loanBalance + final.totalInterest).toLocaleString()}</span>`
+      : `<span class="ci-headline-sub">At $${totalPayment.toFixed(0)}/month this balance still isn't cleared after ${years.toFixed(0)} years — $${Math.round(final.balance).toLocaleString()} would still be owing. Raise the payment to see a payoff timeline.</span>`;
     const chart = buildStackedAreaChart(points.map(p => ({ ...p, zero: 0 })), 'zero', 'balance');
     chartEl.innerHTML = `
       <svg viewBox="0 0 ${chart.width} ${chart.height}" class="ci-svg" aria-hidden="true">
@@ -21848,7 +21860,9 @@ function renderLoanPayoffPanel() {
         <path d="${chart.totalLine}" class="ci-line-debt" pathLength="1000"></path>
       </svg>`;
     requestAnimationFrame(() => chartEl.querySelector('.ci-line-debt').classList.add('drawn'));
-    milestones.innerHTML = `<div class="ci-milestone-item">💳 A $${totalPayment.toFixed(0)}/month payment clears a $${sim.loanBalance.toLocaleString()} balance at ${sim.annualRatePct}% in <strong>${years.toFixed(1)} years</strong>.</div>`;
+    milestones.innerHTML = clearedIt
+      ? `<div class="ci-milestone-item">💳 A $${totalPayment.toFixed(0)}/month payment clears a $${sim.loanBalance.toLocaleString()} balance at ${sim.annualRatePct}% in <strong>${years.toFixed(1)} years</strong>.</div>`
+      : '';
   }
 
   function renderAll() {
