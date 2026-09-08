@@ -702,6 +702,15 @@ function QuestPlayerInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leaveOpen, chapterIdx, quest]);
 
+  // Gates the chapter page-turn (see ChapterFrame), as the lesson path gates its own.
+  //
+  // ABOVE the early return below, with every other hook, and not down beside the render
+  // code that uses it — the same rule kcQuestion's comment explains at length further up.
+  // A hook called past that return is called conditionally: any render that crossed from
+  // no-quest to quest (or back) would change the hook count and throw. It sat below it and
+  // was caught by react-hooks/rules-of-hooks, which nothing runs on this package today.
+  const reduceMotion = useReducedMotion();
+
   if (!quest || !content) {
     return (
       <Screen edges={['top']}>
@@ -838,9 +847,6 @@ function QuestPlayerInner() {
       advance();
     }
   };
-
-  // Gates the chapter page-turn (see ChapterFrame), as the lesson path gates its own.
-  const reduceMotion = useReducedMotion();
 
   const layoutMode: LayoutMode = reportedLayout?.chapterIdx === chapterIdx
     ? reportedLayout.mode

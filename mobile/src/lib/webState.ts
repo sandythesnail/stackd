@@ -29,7 +29,7 @@
  * completion + mastery + all currencies are exact.
  */
 import { moduleContent, moduleContentById } from '@/content';
-import { levelForXp } from '@/store';
+import { levelForXp, laterPostTest } from '@/store';
 import type { AppState, BudgetPlan } from '@/store';
 import type { StatDelta } from '@/content';
 // The web's own "was this lesson aced" rule, kept in its own import-free module so it can
@@ -91,11 +91,34 @@ export type WebState = {
   budgetPlan?: BudgetPlan;
   /** Mirrors app.js's state.resetToken — see AppState.resetToken in @/store for what it's for. */
   resetToken?: number;
+  /** Mirrors app.js's state.hasSeenOnboardingTour. Same field, same "once seen, never
+   * unset" rule on both sides — see SHARED_BOTH_WAYS. */
+  hasSeenOnboardingTour?: boolean;
+  /** app.js's state.onboardingSurvey. The web keeps the whole survey here; mobile only has
+   * two of its fields (the chosen track and whether it was finished), so this is merged
+   * field-by-field on write rather than replaced — see mobileToWeb. */
+  onboardingSurvey?: WebOnboardingSurvey;
+  /** app.js's state.postTest — the final assessment result, identical in shape to
+   * AppState.postTest. See SHARED_BOTH_WAYS. */
+  postTest?: PostTestResult | null;
   /** Mobile-only fields stashed here so a mobile→mobile round-trip preserves them (the
    * web ignores this key). */
   _mobile?: Partial<AppState>;
   [key: string]: unknown;
 };
+
+/** app.js's onboardingSurvey shape. Only `trackId` and `completed` have mobile equivalents;
+ * the rest is the web's own record of the answers and is preserved untouched. */
+export type WebOnboardingSurvey = {
+  completed?: boolean;
+  trackId?: string | null;
+  /** `Date.now()`, not an ISO string — app.js writes a number here. Never read by either
+   * app; set only so the web's own record of its survey stays internally coherent. */
+  completedAt?: number | null;
+  [key: string]: unknown;
+};
+
+export type PostTestResult = { score: number; total: number; takenAt: string };
 
 /* levelForXp comes from the store rather than being reimplemented here.
  *
@@ -120,21 +143,50 @@ const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is str
 // through Supabase preserves it, while the web simply ignores it. Note that resuming still
 // doesn't cross devices: hydrateFromRemote deliberately keeps the LOCAL copy (see its comment),
 // because the device you're playing on is the only one that knows which chapter you're on.
-// postTest was here until the website grew its own final assessment (post-test.js). Now that
-// both apps have one, stashing it under `_mobile` is the lastModuleActivityDate trap again:
-// the same field on both sides, kept in a place the other can't see, so a student who sat the
-// assessment on their phone would be offered it as untaken on their laptop and vice versa.
-// It's a shared top-level field in both directions now.
+// lastModuleId is here because it is genuinely mobile's own: the website's Modules page has
+// no "the one you're working through" concept to map it onto. Without a home of any kind it
+// was simply dropped, so signing in on a second phone lost which module to carry on with.
+//
+// The four SHARED_BOTH_WAYS fields below are ALSO listed here, and that is deliberate rather
+// than an oversight — see that list for why.
 const MOBILE_ONLY_KEYS = [
   'shownLifeEventIds', 'pendingLifeEventId', 'lifeEventCooldown', 'onboardingTrackId',
   'hasCompletedOnboarding',
   'questHintsUsed', 'termsLearned', 'completedLifeTaskIds',
-  'hasSeenOnboardingTour', 'lessonProgress',
+  'hasSeenOnboardingTour', 'lessonProgress', 'lastModuleId', 'postTest',
   // Stashed, but ALSO unioned with what the web's own analytics say on the way in — see
   // webToMobile. The web records the same fact in a richer form it has no reason to give up,
   // so neither side is authoritative and both are read.
   'flawlessLessons',
 ] as const;
+
+/* SHARED_BOTH_WAYS — the four fields that BOTH apps keep and that used to be stashed under
+ * `_mobile`, where the other side could not see them. This is the lastModuleActivityDate trap
+ * (see the note above it), and it had four more instances:
+ *
+ *  - postTest              ↔ web state.postTest (app.js's save whitelist, post-test.js)
+ *  - hasSeenOnboardingTour ↔ web state.hasSeenOnboardingTour
+ *  - onboardingTrackId     ↔ web state.onboardingSurvey.trackId
+ *  - hasCompletedOnboarding↔ web state.onboardingSurvey.completed
+ *
+ * The track pair is the one that cost the most: the ids are identical on both sides
+ * (starting_fresh / debt_freedom / building_wealth / stay_protected — scripts/check-survey.js
+ * holds them together), so a student who sat the survey on the website arrived on the phone
+ * with no track at all and was put through the whole thing a second time, with no
+ * recommendations anywhere until they finished it.
+ *
+ * postTest is the one that was actively regressing: it was removed from MOBILE_ONLY_KEYS when
+ * the website grew its own final assessment, but never added to the mapping below — so it
+ * stopped round-tripping mobile→mobile without ever starting to reach the web.
+ *
+ * They stay in MOBILE_ONLY_KEYS as WELL as being mapped top-level. That is not belt-and-
+ * braces for its own sake: builds already installed read these only out of `_mobile`, and
+ * dropping the stash would take the fields away from every phone that hasn't updated. Writing
+ * both costs a few bytes in a blob that is already kilobytes, and the two copies cannot
+ * disagree on the way up because both are written from the same local value. On the way down
+ * they are merged rather than picked between — "seen"/"completed" are OR-ed and the
+ * assessment takes whichever sitting is later — so a stale stash can never walk a newer
+ * shared value backwards. */
 
 /** `Date.toDateString()` values ("Wed Jul 29 2026") don't order lexicographically, so compare
  * them as real dates. Used to merge lastModuleActivityDate, which only ever moves forward:
@@ -211,6 +263,17 @@ export function webToMobile(web: WebState): Partial<AppState> {
     mobileExtras.lastModuleActivityDate
   );
 
+  // The other four shared fields, read the same way and for the same reason: prefer the
+  // top-level value both apps write, but merge rather than replace, so a blob last written by
+  // an older mobile build (which knew only `_mobile`) still hands its value over. See
+  // SHARED_BOTH_WAYS. Every merge here is monotonic — a sync can turn onboarding on but never
+  // off, and can move the assessment forward but never unsit it.
+  const survey = web.onboardingSurvey ?? {};
+  const postTest = laterPostTest(web.postTest, mobileExtras.postTest);
+  const onboardingTrackId = survey.trackId ?? mobileExtras.onboardingTrackId ?? null;
+  const hasCompletedOnboarding = !!survey.completed || !!mobileExtras.hasCompletedOnboarding;
+  const hasSeenOnboardingTour = !!web.hasSeenOnboardingTour || !!mobileExtras.hasSeenOnboardingTour;
+
   return {
     coins: num(web.coins),
     diamonds: num(web.diamonds),
@@ -230,8 +293,12 @@ export function webToMobile(web: WebState): Partial<AppState> {
     moduleProgress,
     completedLifeTaskIds,
     flawlessLessons,
-    // After the spread: an old `_mobile` stash must not shadow the merged value above.
+    // After the spread: an old `_mobile` stash must not shadow the merged values above.
     lastModuleActivityDate,
+    postTest,
+    onboardingTrackId,
+    hasCompletedOnboarding,
+    hasSeenOnboardingTour,
   };
 }
 
@@ -267,6 +334,28 @@ function finishedQuestRecord(chapters: number, initialState: StatDelta): QuestPr
     hintsUsed: 0,
     xpEarned: 0,
     analytics: EMPTY_ANALYTICS,
+  };
+}
+
+/** Writes mobile's two halves of the survey back into the web's own survey object, leaving
+ * every other field of it exactly as it was.
+ *
+ * Field-by-field, never a replacement: the web records the answers themselves
+ * (moduleFamiliarity, focusGoals) and mobile has no equivalent of those, so assigning a
+ * mobile-shaped object here would erase the student's answers and leave the website with a
+ * track and no reasoning behind it. `completed` only ever goes true, matching every other
+ * merge in this file, and `completedAt` is filled in only when this push is the thing that
+ * flips it — the web writes `Date.now()` there (a number), so this does too. */
+function mergeSurvey(base: WebOnboardingSurvey | undefined, mobile: AppState): WebOnboardingSurvey {
+  const prev = base ?? {};
+  const completed = !!prev.completed || mobile.hasCompletedOnboarding;
+  return {
+    ...prev,
+    completed,
+    // A track chosen on either device is the student's answer; only a NEWLY chosen one
+    // overwrites, so a phone that has not been through the survey cannot blank the web's.
+    trackId: mobile.onboardingTrackId ?? prev.trackId ?? null,
+    completedAt: completed ? (prev.completedAt ?? Date.now()) : (prev.completedAt ?? null),
   };
 }
 
@@ -328,6 +417,12 @@ export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState
     // Shared with the web's own Home mascot (app.js's hasModuleActivityToday). Merged rather
     // than assigned so a push can't walk it back to an older day than the remote already had.
     lastModuleActivityDate: laterDateString(base.lastModuleActivityDate, mobile.lastModuleActivityDate),
+    // The rest of SHARED_BOTH_WAYS. Merged onto the remote for the same reason: this push may
+    // be carrying a local snapshot that predates something the other device did, and none of
+    // these four is a fact a phone is entitled to retract.
+    hasSeenOnboardingTour: !!base.hasSeenOnboardingTour || mobile.hasSeenOnboardingTour,
+    postTest: laterPostTest(base.postTest, mobile.postTest),
+    onboardingSurvey: mergeSurvey(base.onboardingSurvey, mobile),
     coins: mobile.coins,
     diamonds: mobile.diamonds,
     ownedItems: mobile.ownedItems,

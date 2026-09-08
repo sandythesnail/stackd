@@ -26,7 +26,15 @@ repo root). Ported from the Claude design "Stackd Mobile App UI System" (22 scre
   Clerk key is set, and while false the whole layer stays dormant — the app runs local-only (AsyncStorage),
   exactly as before, so a missing key never breaks it. `webState.ts` does the translate+merge between
   mobile `AppState` and the web's canonical `user_progress.state` blob (web = source of truth; web-only
-  fields preserved on write, mobile-only stashed under `_mobile`). `SupabaseSync.tsx` (mounted only when
+  fields preserved on write, mobile-only stashed under `_mobile`).
+  **A field both apps keep must be mapped top-level, never left in `_mobile`** — that key is one
+  the website ignores, so a shared field parked there makes the two apps disagree forever about
+  something they both record. `webState.ts` calls this the lastModuleActivityDate trap and it has
+  had five instances; `npm run check` (root) now fails on a sixth, and on any `AppState` field
+  with no home at all. Currency is the one thing NOT merged by taking the higher side: see
+  `lib/currencyMerge.ts`, whose rule app.js carries a copy of and `scripts/check-currency-merge.js`
+  holds the two together.
+  `SupabaseSync.tsx` (mounted only when
   `authEnabled`) loads on sign-in, debounced-upserts on change, flushes on background. Same Clerk instance
   + Supabase project as the web (trystacked.app) → cross-device sync. Real Clerk sign-in/up live in
   `(onboarding)/signin|signup` (stub fallback when disabled); real sign-out + account in Settings.

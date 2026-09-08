@@ -14,7 +14,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { AppState as RNAppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@clerk/clerk-expo';
-import { useStore, type AppState } from '@/store';
+import { useStore, type AppState, type CurrencyBaseline } from '@/store';
 import { makeSupabase } from './supabase';
 import { notify } from './confirm';
 import { recordPendingReferral } from './referral';
@@ -23,6 +23,18 @@ import { mobileToWeb, webToMobile, type WebState } from './webState';
 const DEBOUNCE_MS = 1500;
 /** Which account wrote the device-global AsyncStorage snapshot — see the owner check. */
 const OWNER_KEY = 'stackd_state_owner_v1';
+/** Coins/diamonds as this device last SUCCESSFULLY uploaded them, per account. Read once at
+ * sign-in and handed to hydrateFromRemote, which merges the two spendable currencies as a
+ * delta against it instead of taking whichever side is higher — see store.tsx's
+ * mergeCurrency for what that fixes. Written only after a confirmed upsert: a baseline the
+ * server never accepted would make the next merge measure against a fiction, the same
+ * reasoning that keeps lastRemote untouched on a failed push. */
+const CURRENCY_BASELINE_KEY = 'stackd_pushed_currency_v1';
+
+/** Per-account, because the snapshot this baseline describes is per-account. Sharing one key
+ * would let a second account on the same phone measure its delta against the first's
+ * balances, which is the same class of bug the OWNER_KEY check exists to stop. */
+const baselineKeyFor = (uid: string) => `${CURRENCY_BASELINE_KEY}:${uid}`;
 
 /** Paid to a player who signed up through someone's referral link, once they finish a lesson.
  * Must match referrals.sql's own +15 — the function credits the coins into user_progress
@@ -33,6 +45,28 @@ const REFERRAL_ACTIVATION_COINS = 15;
  * referral is marked paid, later calls report nothing to claim. */
 type ActivationResult = { claimed?: boolean; reason?: string } | null;
 type ReferrerResult = { diamonds?: number } | null;
+
+/** The stored baseline for an account, or undefined when there isn't a usable one.
+ *
+ * Undefined rather than zeroes on anything unexpected — a missing key, unparseable JSON, a
+ * shape that isn't two finite numbers. A baseline of 0/0 is not "unknown", it is a claim that
+ * this device last uploaded an empty wallet, and acting on that claim would add the player's
+ * entire local balance on top of the cloud's. Undefined puts the merge back on max(), which
+ * is the conservative fallback. */
+async function readCurrencyBaseline(uid: string): Promise<CurrencyBaseline> {
+  try {
+    const raw = await AsyncStorage.getItem(baselineKeyFor(uid));
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as { coins?: unknown; diamonds?: unknown };
+    const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+    const coins = n(parsed?.coins);
+    const diamonds = n(parsed?.diamonds);
+    if (coins === null || diamonds === null) return undefined;
+    return { coins, diamonds };
+  } catch {
+    return undefined;
+  }
+}
 
 export function SupabaseSync() {
   const { isSignedIn, userId, getToken } = useAuth();
@@ -89,6 +123,18 @@ export function SupabaseSync() {
         return;
       }
       lastRemote.current = blob;
+      // The row now holds exactly these balances, so this is the point they become the
+      // baseline every later merge measures this device's own earning and spending against.
+      // Best-effort: a write that fails here only costs the next merge its delta, and the
+      // fallback for a missing baseline is the old max(), not a wrong number.
+      try {
+        await AsyncStorage.setItem(
+          baselineKeyFor(uid),
+          JSON.stringify({ coins: blob.coins ?? 0, diamonds: blob.diamonds ?? 0 }),
+        );
+      } catch (e) {
+        console.warn('[sync] could not record currency baseline:', e);
+      }
       // Only NOW is it worth asking the server to activate a referral. claim_referral_
       // activation refuses to pay until it can see a finished lesson in this account's
       // user_progress.questProgress, and that row is exactly what the upsert above just
@@ -193,9 +239,19 @@ export function SupabaseSync() {
       // BEFORE any cloud read or write.
       const owner = await AsyncStorage.getItem(OWNER_KEY);
       let localState = stateRef.current;
+      // What this device last uploaded for this account, if anything — the anchor
+      // hydrateFromRemote measures local earning and spending against. Read alongside the
+      // owner check because it is only meaningful for the SAME account: after a reset the
+      // local balances it described are gone, so the baseline is dropped with them and the
+      // merge falls back to taking the cloud's numbers outright, which is correct for an
+      // account this device is meeting for the first time.
+      let spentSince: CurrencyBaseline;
       if (owner !== userId) {
         localState = resetRef.current();
         await AsyncStorage.setItem(OWNER_KEY, userId);
+        await AsyncStorage.removeItem(baselineKeyFor(userId));
+      } else {
+        spentSince = await readCurrencyBaseline(userId);
       }
       if (cancelled) return;
       const { data, error } = await supabase
@@ -215,7 +271,7 @@ export function SupabaseSync() {
       }
       if (data?.state) {
         lastRemote.current = data.state as WebState;
-        hydrateRef.current(webToMobile(data.state as WebState));
+        hydrateRef.current(webToMobile(data.state as WebState), spentSince);
         ready.current = true;
       } else {
         ready.current = true;

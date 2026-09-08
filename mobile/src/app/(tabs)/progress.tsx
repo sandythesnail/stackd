@@ -7,10 +7,14 @@ import { useStore, xpForLevel, xpProgressPct, MAX_LEVEL, TIERS } from '@/store';
 
 
 /** Screen 8 — Progress. Ported from the website's renderProgressPage: 4 stat cards, a
- * "Modules Done" donut with legend, a Module Progress chart, an "XP Earned by
- * Module" column chart, and a Level Progress detail card — covering all 11 modules (the old
- * version only ever rendered 5, and had no per-module XP/score data to chart with; see
- * store.tsx's moduleStats). */
+ * "Modules Done" donut with legend, a Module Progress chart and a Level Progress detail
+ * card, covering all 11 modules (the old version only ever rendered 5).
+ *
+ * Everything here derives from moduleDone/moduleStatus/flawlessLessons. There used to be a
+ * per-module `moduleStats` tally in the store feeding an "XP Earned by Module" column chart;
+ * the chart went and the tally stayed, accumulated on every lesson finish and read by
+ * nothing. It is gone now — if per-module XP is wanted back, note that it is derivable from
+ * moduleProgress and xpForLesson rather than needing its own stored copy. */
 export default function Progress() {
   const {
     state, level, tierName, achievements, moduleDone, moduleTotal, moduleStatus,

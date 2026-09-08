@@ -1,5 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// Import-free by design so scripts/check-currency-merge.js can compile it alone and run
+// it against the same table as app.js's copy — see that file's header.
+import { mergeCurrency, type CurrencyBaseline } from '@/lib/currencyMerge';
 import { shopItemsReal, moduleContentById, mainLessonAbsoluteIndices } from '@/content';
 import type { RoomSlot, ShopItemReal } from '@/content';
 import { ACHIEVEMENTS, EARNABLE_ACHIEVEMENTS, BADGE_TIER_REWARD, MODULE_MASTERY_ACHIEVEMENT, type Achievement } from '@/achievements';
@@ -98,6 +101,34 @@ function applyLevelUp(beforeXp: number, next: AppState): AppState {
   return { ...next, diamonds: next.diamonds + diamonds, levelUpBanner: { level: after, diamonds } };
 }
 
+/** The final assessment, as recorded by either app — see AppState.postTest, which has this
+ * exact shape, and the web's own state.postTest, which has it too. */
+export type PostTestResult = { score: number; total: number; takenAt: string };
+
+/** Later of two assessment results, treating a missing or malformed one as older.
+ *
+ * Lives here rather than in lib/webState.ts, which is the only other caller, because that
+ * file already imports from this one and the reverse would close an import cycle.
+ *
+ * Both apps allow a retake that overwrites, so "the most recent sitting" is the whole rule.
+ * Nothing that merges state may ever null out a result the other device recorded: an
+ * assessment is sat once at the end of the whole curriculum, and losing it means being
+ * offered it again as untaken. */
+export function laterPostTest(
+  a: PostTestResult | null | undefined,
+  b: PostTestResult | null | undefined,
+): PostTestResult | null {
+  const ok = (v: PostTestResult | null | undefined): v is PostTestResult =>
+    !!v && typeof v.score === 'number' && typeof v.total === 'number';
+  if (!ok(a)) return ok(b) ? b : null;
+  if (!ok(b)) return a;
+  const ta = Date.parse(a.takenAt ?? '');
+  const tb = Date.parse(b.takenAt ?? '');
+  if (Number.isNaN(ta)) return b;
+  if (Number.isNaN(tb)) return a;
+  return ta >= tb ? a : b;
+}
+
 /** Ported from app.js's addXP loop, but computed fresh from total xp each time (no
  * incremental state.level field to drift out of sync). */
 export function levelForXp(xp: number) {
@@ -172,6 +203,8 @@ function sanitizeBudgetPlan(plan: BudgetPlan): BudgetPlan {
   };
 }
 
+export type { CurrencyBaseline };
+
 export type AppState = {
   coins: number;
   diamonds: number;
@@ -187,13 +220,6 @@ export type AppState = {
    * lesson too, which is how finishing one lesson could read "3 completed / 38%". Mirrors
    * the website's per-quest questProgress map (see lib/webState.ts). */
   moduleProgress: Record<string, number[]>;
-  /** Per-module XP earned and cumulative graded-question accuracy, accumulated once per
-   * lesson the first time it's completed (mirrors the `advanced`-gated coin payout below, so
-   * replaying an already-completed lesson doesn't re-count or skew the accuracy) — powers the
-   * Progress page's per-module XP/score charts (ported from the website's
-   * state.completedModules[id].xpEarned/score/total, adapted to accumulate across every
-   * lesson in the module rather than a single snapshot). */
-  moduleStats: Record<string, { xp: number; correct: number; total: number }>;
   unlockedAchievementIds: string[];
   /** Life events already shown. Guaranteed-unlock ones (LIFE_EVENT_UNLOCKS) live here so each
    * fires exactly once, ever; ambient ones are recorded too so the rotation doesn't repeat
@@ -219,7 +245,7 @@ export type AppState = {
    * "what did the whole course leave you with"; retaking is allowed and overwrites, which is
    * the honest thing to record when the questions are drawn from a pool the student has now
    * seen. */
-  postTest: { score: number; total: number; takenAt: string } | null;
+  postTest: PostTestResult | null;
   /** Set the moment an XP award crosses a level boundary, cleared when the celebration is
    * dismissed. Transient in spirit but stored like dailyLoginBanner, so a level-up earned
    * on the last lesson before the app is closed is still announced when it reopens. */
@@ -266,8 +292,8 @@ export type AppState = {
    * too.
    *
    * A set of keys rather than a score, because the only question anyone asks of it is
-   * "was this one aced?", and because it is written on EVERY run rather than only the first
-   * (unlike moduleStats, which is gated on `advanced`). That matters: a lesson fumbled the
+   * "was this one aced?", and because it is written on EVERY run rather than only the
+   * first. That matters: a lesson fumbled the
    * first time can be replayed and put right, which is what the website means when it says a
    * mastery badge is "always earnable, just not on the first pass". A tally that could only
    * ever be written once would have made the badge permanently unwinnable for anyone who
@@ -344,7 +370,6 @@ const DEFAULT_STATE: AppState = {
   // — phantom progress they never earned. See LEGACY_DEMO_SEEDS below, which strips those
   // same phantom counts back out of previously-saved states.
   moduleProgress: {},
-  moduleStats: {},
   unlockedAchievementIds: [],
   shownLifeEventIds: [],
   pendingLifeEventId: null,
@@ -512,17 +537,6 @@ function moduleWasAced(flawlessLessons: string[], moduleId: string) {
  * completeLifeTask); it just can't hold a module hostage. */
 function moduleTotal(moduleId: string) {
   return mainIndicesFor(moduleId).length;
-}
-
-/** Adds one lesson's XP/graded results onto a module's running totals — see moduleStats. */
-function accumulateModuleStats(
-  moduleStats: AppState['moduleStats'], moduleId: string, xpEarned: number, correctCount: number, gradedTotal: number,
-): AppState['moduleStats'] {
-  const prev = moduleStats[moduleId] ?? { xp: 0, correct: 0, total: 0 };
-  return {
-    ...moduleStats,
-    [moduleId]: { xp: prev.xp + xpEarned, correct: prev.correct + correctCount, total: prev.total + gradedTotal },
-  };
 }
 
 /** How many of this module's 8 counted lessons are done — distinct valid main-quest indices
@@ -775,7 +789,7 @@ type Ctx = {
   resetForAccountSwitch: () => AppState;
   /** Merge a remote (cloud-synced) snapshot into local state — used by SupabaseSync after
    * translating the web's user_progress blob into mobile's AppState. */
-  hydrateFromRemote: (partial: Partial<AppState>) => void;
+  hydrateFromRemote: (partial: Partial<AppState>, spentSince?: CurrencyBaseline) => void;
   /** Set by SupabaseSync once it has FINISHED consulting the cloud for the signed-in account
    * — row loaded, or no row to load, or the read failed. It says "this state is now as good
    * as it's going to get", which is different from `hydrated` (the local AsyncStorage
@@ -1166,9 +1180,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             flawlessLessons: acedNow && !s.flawlessLessons.includes(acedKey)
               ? [...s.flawlessLessons, acedKey]
               : s.flawlessLessons,
-            moduleStats: advanced
-              ? accumulateModuleStats(s.moduleStats, moduleId, xpEarned, correctCount, gradedTotal)
-              : s.moduleStats,
             lastModuleActivityDate: new Date().toDateString(),
             lastModuleId: moduleId,
             questBossesWon: bossWon && !s.questBossesWon.includes(moduleId)
@@ -1237,9 +1248,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ...s,
             xp: s.xp + (firstTime ? xpEarned : 0),
             coins: s.coins + (firstTime ? coinsEarned : 0),
-            moduleStats: firstTime
-              ? accumulateModuleStats(s.moduleStats, moduleId, xpEarned, correctCount, gradedTotal)
-              : s.moduleStats,
             completedLifeTaskIds: firstTime ? [...s.completedLifeTaskIds, moduleId] : s.completedLifeTaskIds,
             lastModuleActivityDate: new Date().toDateString(),
             lastModuleId: moduleId,
@@ -1469,7 +1477,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // out that fresh local gain the moment the network response lands — this was reported
       // as "logs in and collects the streak reward, but coins/diamonds don't update": the
       // claim's setState really did land, then this hydrate clobbered it a moment later.
-      hydrateFromRemote: (partial) => {
+      hydrateFromRemote: (partial, spentSince) => {
         // A newer resetToken means "Reset all progress" was pushed from this account (web's
         // Settings button, or this same function on another device) since we last synced.
         // That must win completely and skip every union/max merge below — those exist to
@@ -1509,8 +1517,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           moduleProgress: partial.moduleProgress
             ? unionModuleProgress(state.moduleProgress, normalizeModuleProgress(partial.moduleProgress))
             : state.moduleProgress,
-          coins: Math.max(state.coins, partial.coins ?? state.coins),
-          diamonds: Math.max(state.diamonds, partial.diamonds ?? state.diamonds),
+          // Delta-merged against what this device last uploaded, not max()-ed — see
+          // lib/currencyMerge.ts for why max() refunded any purchase made on the other device.
+          coins: mergeCurrency(state.coins, partial.coins, spentSince?.coins),
+          diamonds: mergeCurrency(state.diamonds, partial.diamonds, spentSince?.diamonds),
+          // xp stays on max(). Nothing spends xp — it is the one balance that really does
+          // only ever grow — so the higher side is always the more-progressed one, and there
+          // is no purchase for a stale cache to undo. Same reasoning as app.js's.
           xp: Math.max(state.xp, partial.xp ?? state.xp),
           lastPlayedDate,
           streak,
@@ -1529,6 +1542,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           // it back to false and show the tour again next launch. Once seen locally, it
           // stays seen no matter what a stale remote read says.
           hasSeenOnboardingTour: state.hasSeenOnboardingTour || !!partial.hasSeenOnboardingTour,
+          // The three fields that joined hasSeenOnboardingTour on the shared blob (see
+          // webState.ts's SHARED_BOTH_WAYS), guarded exactly as it is and for exactly the
+          // same race. All three arrive through the `...partial` spread above, where a stale
+          // remote read would have overwritten them wholesale: onboarding would un-complete
+          // itself and put the student back through the survey, and an assessment sat minutes
+          // ago on this device would read as never taken.
+          hasCompletedOnboarding: state.hasCompletedOnboarding || !!partial.hasCompletedOnboarding,
+          // Whichever sitting is later, so neither side can unsit the other's.
+          postTest: laterPostTest(state.postTest, partial.postTest),
+          // A track is a choice, and remote's is the one the other device just made — but a
+          // remote that has none must not blank a choice made here.
+          onboardingTrackId: partial.onboardingTrackId ?? state.onboardingTrackId,
           // Below: the same "stale remote must never regress local" reasoning as coins/
           // diamonds/xp above, extended to fields that previously had no protection at all
           // (plain `...partial` above overwrote them wholesale) — this was reported as

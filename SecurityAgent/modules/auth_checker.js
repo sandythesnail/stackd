@@ -139,21 +139,63 @@ function checkFile(root, file, content, findings) {
   }
 }
 
+/** Whether authentication is delegated to a hosted identity provider rather than absent.
+ *
+ * "No backend" and "no authentication" are not the same claim, and this module used to
+ * conflate them: any static site got a hardcoded finding asserting that login.js "redirects
+ * to app.html with no network call, no credential verification, and no token issuance". That
+ * was true of this repo once. It has been a real Clerk `mountSignIn` since, with Supabase RLS
+ * behind it — so the scanner reported a critical-sounding falsehood on every run, which is
+ * how a report teaches the person reading it to skim. Detected rather than assumed, so it
+ * goes back to saying there is no auth the moment the provider is actually removed. */
+function hostedAuthProvider(root) {
+  const files = walkFiles(root, { extensions: ['.js', '.ts', '.tsx', '.html'] });
+  const PROVIDERS = [
+    { name: 'Clerk', re: /\bClerk\.load\(|@clerk\/|mountSignIn\(|clerk\.[a-z0-9-]+\.(?:com|dev)/i },
+    { name: 'Auth0', re: /@auth0\/|createAuth0Client\(/i },
+    { name: 'Firebase Authentication', re: /firebase\/auth|signInWithPopup\(/i },
+    { name: 'Supabase Auth', re: /supabase\.auth\.signIn/i },
+  ];
+  for (const file of files) {
+    const content = readFileSafe(file);
+    if (!content) continue;
+    for (const p of PROVIDERS) {
+      if (p.re.test(content)) return { name: p.name, where: relPath(root, file) };
+    }
+  }
+  return null;
+}
+
 async function runCheck(codebaseRoot, envConfig) {
   seq = 0;
   const stack = detectStack(codebaseRoot);
   const findings = [];
 
   if (stack.isStaticSiteOnly) {
-    findings.push(makeFinding({
-      id: nextId(), module: MODULE, severity: 'INFO',
-      title: 'No server-side authentication system exists',
-      location: 'login.js, login.html',
-      detail: 'This app has no backend, database, or session store. "Login" (login.js) is a fully client-side simulation: the form submit handler redirects to app.html with no network call, no credential verification, and no token issuance. All app state lives in localStorage and is trivially editable via browser devtools.',
-      remediation: 'This is fine for a static demo/prototype, but before this app ever stores real user data, PII, or anything beyond a local high-score-style save file, replace this with real server-side authentication (verified credentials, hashed passwords via bcrypt/argon2, signed session cookies or short-lived JWTs).',
-      cwe: 'CWE-306', auto_fixable: false,
-    }));
-    return findings;
+    const provider = hostedAuthProvider(codebaseRoot);
+    if (provider) {
+      findings.push(makeFinding({
+        id: nextId(), module: MODULE, severity: 'INFO',
+        title: `Authentication is delegated to a hosted provider (${provider.name})`,
+        location: provider.where,
+        detail: `This app has no backend of its own, but it does not hand out its own sessions either: sign-in is ${provider.name}'s hosted widget, and credential verification, password storage and token issuance all happen on the provider's side. What is worth reviewing here is therefore not "is there a login" but what the issued token is trusted to do — this repo's data access runs through Supabase, so its Row Level Security policies are the real authorization boundary and are not checked by this module.`,
+        remediation: 'No action needed for the sign-in flow itself. Review the Supabase RLS policies (supabase/) separately: a correct login in front of a table that any authenticated user can read is still a broken authorization boundary.',
+        cwe: null, auto_fixable: false, passed: true,
+      }));
+    } else {
+      findings.push(makeFinding({
+        id: nextId(), module: MODULE, severity: 'INFO',
+        title: 'No authentication system exists',
+        location: 'login.js, login.html',
+        detail: 'This app has no backend, database, or session store, and no hosted identity provider was detected either — so there is no credential verification and no token issuance anywhere. All app state lives in localStorage and is trivially editable via browser devtools.',
+        remediation: 'This is fine for a static demo/prototype, but before this app ever stores real user data, PII, or anything beyond a local high-score-style save file, put a real identity provider (or a real backend with verified credentials, hashed passwords via bcrypt/argon2, and signed session cookies) in front of it.',
+        cwe: 'CWE-306', auto_fixable: false,
+      }));
+    }
+    // Deliberately NOT an early return any more. The per-file checks below are about what
+    // the client-side code does with tokens and secrets — a hardcoded JWT signing secret, an
+    // auth token parked in localStorage — none of which needs a backend to be present, and
+    // all of which went unscanned on this repo for as long as the early return stood here.
   }
 
   const files = walkFiles(codebaseRoot, { extensions: ['.js', '.ts', '.py'] });

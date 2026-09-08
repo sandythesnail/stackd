@@ -72,10 +72,26 @@ function checkXss(root, file, content, findings) {
   return { sawInnerHtmlWithTemplate, flaggedAny: flaggedAny || attr };
 }
 
-/** Identifiers that receive a DOM input's `.value` — i.e. free text the user typed. */
+/** Identifiers that receive a DOM input's `.value` — i.e. free text the user typed.
+ *
+ * The `=` has to be an ASSIGNMENT, which is what the lookaround pair is for. Without it an
+ * arrow function's parameter list reads as one: `options.map(o => ...)` is `o`, a space, an
+ * `=`, and then within the next 140 characters something ending `.value` — so `o` was marked
+ * as holding user input, and every `${o.value}` in the arrow body was reported as an
+ * unescaped attribute interpolation. That is how this module reported a HIGH stored-XSS
+ * finding against toolSelectHtml(), whose `options` are three hardcoded module-level arrays
+ * of numbers and authored strings that no user can reach. A comparison (`===`, `!==`, `<=`)
+ * is excluded for the same reason: it reads a value, it does not receive one.
+ *
+ * The right-hand side must also START like JavaScript. Markup written inside a template
+ * literal puts a bare `attr="` in the middle of the scanned text, so `value="${o.value}"`
+ * reads as an assignment to an identifier called `value` — harmless here only because
+ * nothing then interpolates a bare `${value}`, which is too close a miss to leave. An HTML
+ * attribute has no space around its `=` and opens on a quote; an assignment does not. */
 function tainted(scope) {
   const roots = new Set();
-  for (const m of scope.matchAll(/\b([A-Za-z_$][\w$]*)\s*(?:\.[\w$]+|\[[^\]]{1,60}\])?\s*=\s*[^;\n]{0,140}?\.value\b/g)) {
+  const assignment = /\b([A-Za-z_$][\w$]*)\s*(?:\.[\w$]+|\[[^\]]{1,60}\])?\s*(?<![=!<>+\-*/%&|^])=(?![=>])(?=[\s\w$(])\s*[^;\n]{0,140}?\.value\b/g;
+  for (const m of scope.matchAll(assignment)) {
     roots.add(m[1]);
   }
   return roots;

@@ -17148,11 +17148,54 @@ function saveState() {
 
 let supabaseSyncTimeout = null;
 let pendingSyncSnapshot = null;
+
+/* Coins/diamonds as THIS browser last successfully uploaded them, per account.
+ *
+ * Read by applyRemoteState, which merges the two spendable currencies as a delta against
+ * this instead of taking whichever side is higher. See the note there for what max() got
+ * wrong; mirrors mobile's CURRENCY_BASELINE_KEY (lib/SupabaseSync.tsx) exactly, including
+ * being per-account for the same reason ensureLocalStateOwner exists.
+ *
+ * Written only after the upsert comes back without an error. A baseline the server never
+ * accepted would make the next merge measure against a row that does not exist. */
+const CURRENCY_BASELINE_PREFIX = 'stackd_pushed_currency_v1:';
+
+function recordCurrencyBaseline(userId, snapshot) {
+  try {
+    localStorage.setItem(CURRENCY_BASELINE_PREFIX + userId, JSON.stringify({
+      coins: snapshot.coins || 0, diamonds: snapshot.diamonds || 0,
+    }));
+  } catch (e) { /* site data blocked — the merge falls back to max(), see readCurrencyBaseline */ }
+}
+
+/** The stored baseline, or null when there isn't a usable one.
+ *
+ * Null rather than zeroes on anything unexpected. A baseline of 0/0 is not "unknown", it is
+ * a claim that this browser last uploaded an empty wallet — act on that and the whole local
+ * balance gets added on top of the cloud's. Null puts the merge back on max(). */
+function readCurrencyBaseline(userId) {
+  try {
+    const raw = localStorage.getItem(CURRENCY_BASELINE_PREFIX + userId);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    const ok = v => (typeof v === 'number' && isFinite(v));
+    return ok(p && p.coins) && ok(p.diamonds) ? { coins: p.coins, diamonds: p.diamonds } : null;
+  } catch (e) { return null; }
+}
+
+function clearCurrencyBaseline(userId) {
+  try { localStorage.removeItem(CURRENCY_BASELINE_PREFIX + userId); } catch (e) {}
+}
+
 function pushSupabaseSync(snapshot) {
+  const userId = Clerk.user.id;
   window.stackdSupabase
     .from('user_progress')
-    .upsert({ clerk_user_id: Clerk.user.id, state: snapshot })
-    .then(({ error }) => { if (error) console.error('Supabase sync failed:', error); });
+    .upsert({ clerk_user_id: userId, state: snapshot })
+    .then(({ error }) => {
+      if (error) { console.error('Supabase sync failed:', error); return; }
+      recordCurrencyBaseline(userId, snapshot);
+    });
 }
 
 // A mobile tab backgrounding (switching apps, locking the phone) right after a fresh
@@ -17201,6 +17244,33 @@ function mergeQuestProgress(local, remote) {
   return merged;
 }
 
+/**
+ * How much this device has earned or spent since its last confirmed upload, applied on top
+ * of whatever the cloud now says. Kept identical to mobile's mergeCurrency (store.tsx) —
+ * both apps write the same row, so two different merge rules would fight over it.
+ *
+ *   merged = remote + (local - lastPushed)
+ *
+ * Strictly better than the max() it replaces on every case max() was there for, not a trade.
+ * A streak reward claimed seconds ago that the 2s debounce hasn't uploaded yet is
+ * `local - lastPushed = +N` and survives, which was the original bug report, and it survives
+ * whether or not the remote read is stale. Two devices earning while offline no longer take
+ * the larger of the two; they add up. And a purchase made elsewhere is no longer refunded,
+ * because this device's delta is zero when it has nothing of its own outstanding.
+ *
+ * With no baseline — a browser that has never pushed for this account, or blocked site data
+ * — earnings and a stale cache are indistinguishable, so it falls back to max(). That is the
+ * conservative direction: it can hand currency back, never take it.
+ *
+ * Clamped at zero, because two devices can each spend against the same balance while offline
+ * and the arithmetic of that is a negative number rather than a debt to show anyone.
+ */
+function mergeCurrency(local, remote, baseline) {
+  if (typeof remote !== 'number' || !isFinite(remote)) return local;
+  if (typeof baseline !== 'number' || !isFinite(baseline)) return Math.max(local, remote);
+  return Math.max(0, remote + (local - baseline));
+}
+
 function applyRemoteState(remote) {
   if (!remote) return;
   // A newer resetToken means "Reset all progress" was pushed from this account (this
@@ -17229,24 +17299,18 @@ function applyRemoteState(remote) {
   const localLastPlayed = state.lastPlayedDate;
   const localLastSeenTier = state.lastSeenTier;
   const localHasSeenTour = state.hasSeenOnboardingTour;
-  // Same race as the streak/lastPlayedDate guard below, but for currency: this whole
-  // function runs from app-auth.js's async Clerk+Supabase load, which can easily resolve
-  // AFTER this page's own boot sequence already ran updateStreak()/claimDailyLoginBonus()
-  // and awarded today's coins/diamonds locally — but BEFORE the 2s-debounced Supabase push
-  // (scheduleSupabaseSync) has landed. Blindly taking remote's (still pre-bonus) coins/
-  // diamonds here silently reverted whatever was just earned, most visibly the streak
-  // card's reward: claim it right after a fresh page load and this remote read (still
-  // stale) would land moments later and wipe it back down. Keep whichever side is higher.
-  //
-  // NOTE: this max() is a known imperfect heuristic for cross-device use — it assumes
-  // currency only goes up, which isn't true once you consider a purchase made on the
-  // OTHER device after this device's local cache was last written (that spend's coins
-  // would be lower on remote, and max() would keep this device's stale higher balance
-  // and re-upload it, silently "refunding" the purchase). Fixing that for real means
-  // treating currency as a server-applied delta rather than a client-mergeable absolute
-  // number; out of scope for this pass, which only fixes the same-device debounce race.
+  // Currency is merged as a DELTA against what this browser last uploaded, not as
+  // max(local, remote). See mergeCurrency below for the whole argument; in short, max()
+  // assumed currency only ever goes up, and the note that used to sit here admitted it:
+  // a purchase made on the OTHER device leaves remote lower, max() keeps this browser's
+  // stale higher balance and re-uploads it, and the purchase is refunded while the item
+  // is kept. That was left as out of scope pending "a server-applied delta". It turns out
+  // no server is needed — the one thing this client knows for certain is what it itself
+  // last put in the row (recordCurrencyBaseline), so anything its local balance has moved
+  // since is its own unsynced change and nothing else's.
   const localCoins = state.coins || 0;
   const localDiamonds = state.diamonds || 0;
+  const baseline = (window.Clerk && Clerk.user) ? readCurrencyBaseline(Clerk.user.id) : null;
   // The rest of these fields only ever grow by finishing a lesson/quest or buying
   // something — never shrink — so unioning both sides (instead of trusting remote
   // wholesale) can only add back progress a stale remote read would otherwise have
@@ -17270,8 +17334,8 @@ function applyRemoteState(remote) {
   // as earned.
   const localClaimedBadgeRewards = state.claimedBadgeRewards || [];
   Object.assign(state, remote);
-  state.coins = Math.max(state.coins || 0, localCoins);
-  state.diamonds = Math.max(state.diamonds || 0, localDiamonds);
+  state.coins = mergeCurrency(localCoins, state.coins, baseline && baseline.coins);
+  state.diamonds = mergeCurrency(localDiamonds, state.diamonds, baseline && baseline.diamonds);
   if (localLastPlayed && new Date(localLastPlayed) >= new Date(state.lastPlayedDate || 0)) {
     state.streak = Math.max(state.streak || 0, localStreak || 0);
     state.lastPlayedDate = localLastPlayed;
@@ -17329,6 +17393,10 @@ function ensureLocalStateOwner(userId) {
     if (owner === userId) return;
     localStorage.removeItem('stackd_v2');
     localStorage.setItem('stackd_v2_owner', userId);
+    // The snapshot this baseline described is being discarded, so the baseline goes with it.
+    // Left behind, it would have the incoming account measure its delta against balances
+    // belonging to the previous one — the same contamination this function exists to stop.
+    clearCurrencyBaseline(userId);
   } catch (e) {
     warnLocalStorageUnavailable(e);
     return;
