@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="app.css?v=49">
+  <link rel="stylesheet" href="app.css?v=50">
   <link rel="stylesheet" href="hammy-intro.css?v=1">
   <script
     defer
@@ -516,10 +516,14 @@
         <!-- What the app stores, in the app, in plain words — mobile's PrivacyCard. The full
              policy is a page of its own; this is the same information where someone is
              actually likely to look for it. -->
-        <div class="referral-card" id="privacy-card">
-          <div class="referral-card-head">
-            <h2>Your data</h2>
-          </div>
+        <!-- Collapsed, like the disclaimer under it and the Sources card above it: three
+             paragraphs of data policy that almost nobody opens on any given visit, sitting
+             between someone and the rows they came here for. Same <details> disclosure all
+             three now use, so they read as one kind of block rather than three near-misses. -->
+        <details class="referral-card" id="privacy-card">
+          <summary class="disclaimer-summary">
+            <span><h2>Your data</h2></span>
+          </summary>
           <p class="privacy-body">Stacked stores your email address so you can sign in, and your
             progress so it follows you between your laptop and your phone: XP, level, streak,
             coins and diamonds, the lessons you have finished, your badges and room items, and
@@ -530,7 +534,7 @@
           <p class="privacy-body">You can delete all of it at any time with &ldquo;Delete my
             account&rdquo; above.</p>
           <a class="privacy-link" href="/privacy.html" target="_blank" rel="noopener">Read the full privacy policy &rarr;</a>
-        </div>
+        </details>
 
         <!-- Last on the page, and closed. This used to sit FIRST and fully expanded: six
              paragraphs of legal prose above the actual settings, so the page opened on a
@@ -725,7 +729,7 @@
         <span class="ltc-eyebrow" id="ltc-eyebrow"></span>
         <h1 class="ltc-title" id="ltc-title"></h1>
         <div class="ltc-hammy" id="ltc-hammy"></div>
-        <button class="quest-continue-fab ready ltc-start" id="ltc-start">Start lesson →</button>
+        <button class="quest-continue-fab ready ltc-start" id="ltc-start">Start lesson</button>
       </div>
     </div>
   </div>
@@ -829,7 +833,7 @@
 <script src="lesson-path.js?v=3"></script>
 <script src="post-test.js?v=1"></script>
 <script src="daily-rewards.js?v=1"></script>
-<script src="app.js?v=43"></script>
+<script src="app.js?v=44"></script>
 <script src="hammy-intro.js?v=2"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, Linking, TextInput, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -86,17 +86,24 @@ export default function Settings() {
           )}
         </View>
 
-        {/* First of the cards, and deliberately louder than the ones under it. Stacked is a
-            money app used by students who may act on what it says the same day, so "we are not
-            financial advisers and this is not advice" cannot live only in a Terms page nobody
-            opens. Mirrors the website's #disclaimer-card, word for word. */}
-        <DisclaimerCard />
-
-        <PrivacyCard />
-
         <FeedbackCard />
 
         <SourcesSection />
+
+        {/* Last, and both closed. These two are the longest things on the screen — six
+            paragraphs of legal prose and three of data policy — and they used to sit FIRST,
+            so Settings opened on a wall of small print and everything someone actually came
+            here to do was below it. Nothing is softened or removed: the same words are one
+            tap away, under the same disclosure the Sources section above already uses, and
+            the disclaimer keeps its amber rule so it still reads as the legal block whether
+            open or shut. Mirrors the website's own order. */}
+        <CollapsibleSection label="YOUR DATA">
+          <PrivacyCard />
+        </CollapsibleSection>
+
+        <CollapsibleSection label="EDUCATION, NOT FINANCIAL ADVICE">
+          <DisclaimerCard />
+        </CollapsibleSection>
       </ScrollView>
 
       {/* Outside the ScrollView: a Modal is a portal either way, but there's no reason for a
@@ -302,6 +309,22 @@ function FeedbackCardBody({
  * (app.html's `.sources-module` accordions) — see @/references. Previously this was one
  * generic hardcoded line ("CFPB · Investor.gov · UConn Financial Wellness · IRS.gov") that
  * didn't actually correspond to what any given module cites. */
+/** A closed-by-default section with one header row, built on the same head style and chevron
+ *  the Sources section uses — so the three disclosures at the foot of Settings are plainly
+ *  the same kind of control rather than three near-misses. */
+function CollapsibleSection({ label, children }: { label: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={{ gap: 3, marginTop: 6 }}>
+      <Pressable onPress={() => setOpen((o) => !o)} style={styles.srcSectionHead}>
+        <Txt style={styles.srcHead}>{label}</Txt>
+        <Feather name={open ? 'chevron-up' : 'chevron-down'} size={18} color={colors.muted5} />
+      </Pressable>
+      {open ? children : null}
+    </View>
+  );
+}
+
 function SourcesSection() {
   // Closed by default, and it's the whole section that opens now rather than eleven separate
   // module accordions. Each one was already collapsed, but eleven collapsed headers plus a

@@ -329,6 +329,47 @@ step('tour runs all six steps', () => {
   if (titles[4] !== 'Pick your first lesson') throw new Error('step 5 is: ' + titles[4]);
   window.document.getElementById('tour-skip').click();
 });
+/* Opening the tour from the bottom of the page.
+ *
+ * startOnboardingTour scrolls back to the top, but `html { scroll-behavior: smooth }` makes
+ * that an animation — so the first step used to be measured against the scroll position the
+ * page was in the middle of LEAVING, and the highlight was drawn hundreds of pixels from the
+ * thing it was pointing at. It only ever went wrong for someone who had scrolled, which is
+ * why the tour looked correct every time anyone opened it from the top.
+ *
+ * The fix is the settle the "Pick your first lesson" step already uses: hold the hole and the
+ * card back until the page has stopped moving, then measure once. jsdom does not animate a
+ * scroll, so what is asserted here is that the settle is ARMED — the tour-settling class,
+ * which is what suppresses the mid-flight paint. */
+step('opening the tour while scrolled down waits for the page to come back', () => {
+  s.hasSeenOnboardingTour = false;
+  const overlay = window.document.getElementById('tour-overlay');
+  // Pretend the reader is at the bottom of Home.
+  Object.defineProperty(window, 'scrollY', { value: 1400, configurable: true });
+  window.startOnboardingTour();
+  if (!overlay.classList.contains('tour-settling')) {
+    throw new Error('the tour measured immediately instead of waiting for its own scroll');
+  }
+  window.document.getElementById('tour-skip').click();
+
+  // ...and from the top there is nothing to wait for, so it must NOT hold anything back.
+  Object.defineProperty(window, 'scrollY', { value: 0, configurable: true });
+  s.hasSeenOnboardingTour = false;
+  window.startOnboardingTour();
+  if (overlay.classList.contains('tour-settling')) {
+    throw new Error('the tour waited for a scroll that was never going to happen');
+  }
+  // And the flag is one-shot: step 2 must not inherit step 1's wait.
+  Object.defineProperty(window, 'scrollY', { value: 1400, configurable: true });
+  s.hasSeenOnboardingTour = false;
+  window.startOnboardingTour();
+  Object.defineProperty(window, 'scrollY', { value: 0, configurable: true });
+  window.document.getElementById('tour-next').click();
+  if (overlay.classList.contains('tour-settling')) {
+    throw new Error('a later step inherited the opening scroll wait');
+  }
+  window.document.getElementById('tour-skip').click();
+});
 step('lesson-path node click opens the preview and advances the tour', () => {
   s.hasSeenOnboardingTour = false;
   window.startOnboardingTour();

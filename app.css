@@ -5031,8 +5031,12 @@ input[type="range"].microsim-range {
 }
 .ltc-hammy { margin: 6px 0 2px; }
 /* Sized to its label rather than to the bottom bar's full width — this button is the only
-   thing on the card, so a full-bleed one would read as a footer with nothing above it. */
-.ltc-start { width: auto; min-width: 220px; }
+   thing on the card, so a full-bleed one would read as a footer with nothing above it.
+   Set down from Hammy rather than tucked under him: the card is a title, a mascot and one
+   way in, and the way in reads as the next thing to do when it is plainly separate from the
+   picture above it. No arrow on the label either — an arrow is for a step that continues
+   something, and this one starts it. */
+.ltc-start { width: auto; min-width: 220px; margin-top: 26px; }
 @media (max-width: 640px) {
   .ltc-title { font-size: 1.6rem; }
   .lesson-title-inner { max-width: 24ch; }

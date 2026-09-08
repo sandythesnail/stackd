@@ -18583,6 +18583,10 @@ const ONBOARDING_TOUR_STEPS = [
 ];
 let tourStepIdx = 0;
 let tourOpenedMobileNav = false;
+/** Set by startOnboardingTour when the page had been scrolled, and consumed by the first
+ *  renderTourStep — the opening scrollTo(0, 0) is a smooth animation, so step 1 must wait
+ *  for it the same way a step with `scrollsIntoView` waits for its own. */
+let tourNeedsOpeningSettle = false;
 
 /* ── keeping the spotlight on the thing it is pointing at ──────────────────────────────
  *
@@ -18727,6 +18731,19 @@ function startOnboardingTour() {
   renderHome();
   tourStepIdx = 0;
   tourOpenedMobileNav = false;
+  /* The tour's own opening scroll needs a settle, exactly like the "Pick your first lesson"
+   * step's does.
+   *
+   * `html { scroll-behavior: smooth }` (styles.css) makes this scrollTo a ~400ms ANIMATION,
+   * not a jump — so opening the tour from the bottom of Home measured step 1 against the
+   * scroll position the page was leaving, and drew the highlight and its card hundreds of
+   * pixels away from the stat row they were pointing at. It only ever went wrong for someone
+   * who had scrolled, which is why the tour looked fine every time it was opened from the
+   * top. Same failure, same cause, and the same fix as the step that already documents it.
+   *
+   * Recorded rather than acted on here: renderTourStep calls cancelTourSettle() before it
+   * arms anything, so a settle started now would be thrown away a line later. */
+  tourNeedsOpeningSettle = window.scrollY > 0;
   window.scrollTo(0, 0);
   document.getElementById('tour-overlay').classList.add('visible');
   window.addEventListener('resize', positionTourStep);
@@ -18756,7 +18773,10 @@ function renderTourStep() {
   cancelTourSettle();
   if (step.beforeShow) step.beforeShow();
   // Armed AFTER beforeShow, because beforeShow is what starts the scroll this waits on.
-  if (step.scrollsIntoView) beginTourSettle();
+  // The opening flag is one-shot: it belongs to the scroll startOnboardingTour just began,
+  // and must not make every later step wait for a scroll that isn't happening.
+  if (step.scrollsIntoView || tourNeedsOpeningSettle) beginTourSettle();
+  tourNeedsOpeningSettle = false;
   document.getElementById('tour-step-label').textContent = `Step ${tourStepIdx + 1} of ${ONBOARDING_TOUR_STEPS.length}`;
   document.getElementById('tour-title').textContent = step.title;
   document.getElementById('tour-body').textContent = step.body;

@@ -3,7 +3,7 @@ import {
   type NativeSyntheticEvent, type NativeScrollEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Screen, Header, Txt, Card, Button, ProgressBar, Stat, Speech, Hammy,
   SectionHead, BadgeMedal, AchievementDetailModal, DailyRewardsModal, Flame, Coin, Diamond,
@@ -157,6 +157,32 @@ export default function Home() {
   const clearLandTimer = () => {
     if (landTimer.current) { clearTimeout(landTimer.current); landTimer.current = null; }
   };
+  /** The ? in the header. Takes the page back to the top BEFORE the tour places anything.
+   *
+   * The tour's first step points at the stat row, which is the top of this screen — so
+   * replaying it from halfway down measured a target that was off-screen above and drew the
+   * spotlight and its card up there with it, over nothing the reader could see. The tour
+   * itself was right; it was pointing at where the thing actually was.
+   *
+   * startTour already opens blind (openStep's `blind`), so the scrim is up immediately and
+   * nothing is placed until it hears the screen has stopped moving — which is the same
+   * arrangement, and the same remeasureActive handshake, the lesson-path step below uses
+   * once it has scrolled. Skipped entirely when already at the top, so the common case
+   * costs nothing and doesn't wait.  */
+  const replayTour = useCallback(() => {
+    if (scrollYRef.current > 4) {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+      startTour();
+      clearLandTimer();
+      landTimer.current = setTimeout(() => {
+        landTimer.current = null;
+        remeasureActive();
+      }, SCROLL_LAND_MS);
+      return;
+    }
+    startTour();
+  }, [startTour, remeasureActive]);
+
   useEffect(() => clearLandTimer, []);
   useEffect(() => {
     if (tourNeedsPath) return;
@@ -272,7 +298,7 @@ export default function Home() {
         coins={state.coins}
         diamonds={state.diamonds}
         hideCurrency
-        onReplayTour={startTour}
+        onReplayTour={replayTour}
         onGear={() => router.push('/(tabs)/settings')}
       />
       <ScrollView

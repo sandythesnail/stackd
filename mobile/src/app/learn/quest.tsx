@@ -928,7 +928,11 @@ function QuestPlayerInner() {
           <View style={{ flex: 1 }} />
         </View>
         <View style={styles.titleCard}>
-          <Tag tone="warm">{mod.name}</Tag>
+          {/* alignSelf, explicitly: Tag's own style sets `alignSelf: 'flex-start'`, which is
+              right everywhere it sits at the head of a left-aligned block and wrong here —
+              it pinned the module pill to the left edge of a card whose every other line is
+              centred. A parent's alignItems cannot win against a child's own alignSelf. */}
+          <Tag tone="warm" style={{ alignSelf: 'center' }}>{mod.name}</Tag>
           <Txt style={styles.titleCardEyebrow}>
             {pos >= 0 ? `LESSON ${pos + 1} OF ${mainIndices.length}` : 'REAL-LIFE GUIDE'}
           </Txt>
@@ -3106,8 +3110,11 @@ const styles = StyleSheet.create({
   /* The lesson title card — see the early return in QuestPlayerInner. Centred in the whole
      screen the chapter chrome would otherwise occupy. */
   titleCard: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 28 },
+  // No marginTop. The module pill sits directly above this line, so the card's own gap is
+  // already the whole space between them; the extra 6 pushed the pill away from the line it
+  // belongs to and toward the title above it.
   titleCardEyebrow: {
-    fontFamily: font.extra, fontSize: 13, letterSpacing: 1.4, color: colors.muted3, marginTop: 6,
+    fontFamily: font.extra, fontSize: 13, letterSpacing: 1.4, color: colors.muted3,
   },
   titleCardTitle: {
     fontFamily: font.display, fontSize: 27, lineHeight: 33, color: colors.ink,
