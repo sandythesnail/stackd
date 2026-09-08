@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="app.css?v=48">
+  <link rel="stylesheet" href="app.css?v=49">
   <link rel="stylesheet" href="hammy-intro.css?v=1">
   <script
     defer
@@ -659,15 +659,22 @@
          are, and the hint. The step counter used to sit on its own line underneath and the
          hint in a second sticky bar below that — three bands of chrome above a question. -->
     <div class="quest-topbar">
+      <!-- Two equal end-caps with the bar between them, so the bar is centred on the screen
+           rather than merely sitting between whatever the two ends happen to measure. The X
+           is the first thing in the left cap and the counter the last thing in the right, so
+           each lands in its own corner; the hint appears in the space before the counter and
+           the reserved cap width means it can appear and disappear without the bar moving. -->
       <div class="quest-topbar-row">
-        <button class="exit-btn" id="quest-exit">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+        <div class="quest-topbar-end">
+          <button class="exit-btn" id="quest-exit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
         <div class="quest-prog-track"><div class="quest-prog-fill" id="quest-prog-fill"></div></div>
-        <span class="quest-counter" id="quest-counter">1/8</span>
-        <!-- Fixed width whether or not this chapter has a hint, so the bar and the counter
-             beside it don't shift between chapters that have one and chapters that don't. -->
-        <div class="hint-slot" id="hint-budget"></div>
+        <div class="quest-topbar-end quest-topbar-end-right">
+          <div class="hint-slot" id="hint-budget"></div>
+          <span class="quest-counter" id="quest-counter">1/8</span>
+        </div>
       </div>
     </div>
     <!-- Hidden (see .quest-dashboard) but still written to by the quest's state machine. -->
@@ -701,6 +708,25 @@
       <div class="quest-footer-slot glossary-tray" id="glossary-tray"></div>
       <div class="quest-continue-slot" id="quest-continue-slot"></div>
       <div class="quest-footer-slot"></div>
+    </div>
+
+    <!-- The card every lesson opens on: which lesson this is, and what it is called, before
+         the story starts. Covers the whole quest screen (chrome included) rather than being
+         a first chapter, so it reads as a title card and not as step 1 of 16 — and so the
+         progress bar doesn't sit above it already claiming progress through a lesson nobody
+         has started. Shown only when opening at chapter 0; resuming goes straight back to
+         where you were. See renderLessonTitleCard. -->
+    <div class="lesson-title-card" id="lesson-title-card" hidden>
+      <button class="exit-btn lesson-title-exit" id="ltc-exit" aria-label="Leave lesson">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="lesson-title-inner">
+        <span class="ltc-module" id="ltc-module"></span>
+        <span class="ltc-eyebrow" id="ltc-eyebrow"></span>
+        <h1 class="ltc-title" id="ltc-title"></h1>
+        <div class="ltc-hammy" id="ltc-hammy"></div>
+        <button class="quest-continue-fab ready ltc-start" id="ltc-start">Start lesson →</button>
+      </div>
     </div>
   </div>
 
@@ -803,7 +829,7 @@
 <script src="lesson-path.js?v=3"></script>
 <script src="post-test.js?v=1"></script>
 <script src="daily-rewards.js?v=1"></script>
-<script src="app.js?v=41"></script>
+<script src="app.js?v=42"></script>
 <script src="hammy-intro.js?v=2"></script>
 </body>
 </html>

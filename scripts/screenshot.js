@@ -182,6 +182,9 @@ delete window.HTMLElement.prototype.clientHeight;
 
 const quest = mainQuests[1];
 window.startQuest('loans', quest.id);
+// The card every lesson opens on, before its first chapter is reached.
+shots['lesson-title'] = { w: 1000, h: 900, body: screen('screen-quest') };
+window.document.getElementById('ltc-start').click();
 // Two chapter types SIZE themselves against the room they are given, by measuring it at
 // render time (computeAvailableQuestHeight): the story's establishing shot, and Hammy's Tip,
 // where the pig is scaled to fill whatever is left under his bubble. jsdom reports zero for
@@ -204,6 +207,18 @@ for (const type of ['story', 'teach', 'matching', 'hint', 'poll', 'mythcards', '
     }
   }
   shots['quest-' + type] = { w: 1000, h: 900, body: screen('screen-quest') };
+  // The story's DIALOGUE, past its establishing shot — a different arrangement (Hammy
+  // centred with his line above him) from every other chapter, so worth its own picture.
+  if (type === 'story') {
+    for (let n = 0; n < 4; n++) {
+      const btn = window.document.getElementById('quest-continue-btn');
+      if (!btn || btn.disabled) break;
+      btn.click();
+      if (window.document.querySelector('.story-beat')) break;
+    }
+    shots['quest-story-dialogue'] = { w: 1000, h: 900, body: screen('screen-quest') };
+    window.renderChapter(loans, idx);
+  }
 }
 delete window.HTMLElement.prototype.clientHeight;
 

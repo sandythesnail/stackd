@@ -22629,7 +22629,63 @@ function startQuest(moduleId, questId) {
   }
   saveState();
   showScreen('screen-quest');
-  renderChapter(mod, state.questProgress[key].chapterIdx);
+  const startAt = state.questProgress[key].chapterIdx;
+  // Opening a lesson shows its title card first; resuming one goes straight back to the
+  // chapter you left off on, because a title card in front of a lesson already half done is
+  // an interruption rather than an opening.
+  if (startAt === 0) {
+    renderLessonTitleCard(mod, quest, () => renderChapter(mod, 0));
+  } else {
+    // Explicitly cleared, not merely left alone: the card is one persistent node shared by
+    // every lesson, so a resume must not inherit whatever the last opening left on screen.
+    const card = document.getElementById('lesson-title-card');
+    if (card) card.hidden = true;
+    renderChapter(mod, startAt);
+  }
+}
+
+/** Which lesson this is, and what it is called — the card every lesson opens on.
+ *
+ * A lesson used to begin on the first line of its story, with nothing anywhere naming the
+ * lesson or saying where it sat in the module: the only number on screen was "1/16", which
+ * counts CHAPTERS, so a student could not tell lesson three of eight from lesson seven.
+ *
+ * Covers the whole quest screen, chrome included. As a first chapter it would have been step
+ * 1 of 16 with a progress bar above it already claiming progress through a lesson nobody had
+ * started yet; as a cover it is plainly the front of the thing rather than part of it. */
+function renderLessonTitleCard(mod, quest, onStart) {
+  const card = document.getElementById('lesson-title-card');
+  if (!card) { onStart(); return; }
+  const main = mainQuests(mod);
+  const idx = main.findIndex(q => q.id === quest.id);
+  // The optional real-life guide is not one of the eight, so it is named rather than
+  // numbered — calling it "Lesson 9 of 8" would be worse than saying nothing.
+  const eyebrow = idx >= 0
+    ? `LESSON ${idx + 1} OF ${main.length}`
+    : 'REAL-LIFE GUIDE';
+  document.getElementById('ltc-module').textContent = mod.title;
+  document.getElementById('ltc-module').setAttribute('data-mod', mod.id);
+  document.getElementById('ltc-eyebrow').textContent = eyebrow;
+  document.getElementById('ltc-title').textContent = quest.topic || quest.character.name;
+  document.getElementById('ltc-hammy').innerHTML = withFaceOverlay(getPigWithItemMarkup(0.42, getEquippedItems()));
+  card.hidden = false;
+
+  // Cloned before wiring, for the same reason renderHintChapter clones Hammy: this card is a
+  // persistent node reused by every lesson, and only the listener that fires removes itself,
+  // so opening two lessons without starting the first would stack handlers on one button.
+  const start = document.getElementById('ltc-start');
+  start.replaceWith(start.cloneNode(true));
+  document.getElementById('ltc-start').addEventListener('click', () => {
+    card.hidden = true;
+    onStart();
+  }, { once: true });
+
+  const exit = document.getElementById('ltc-exit');
+  exit.replaceWith(exit.cloneNode(true));
+  document.getElementById('ltc-exit').addEventListener('click', () => {
+    card.hidden = true;
+    exitToModules();
+  }, { once: true });
 }
 
 /** How big the companion Hammy is drawn, as a fraction of his own 440x460 frame. See the
@@ -22790,7 +22846,12 @@ function renderChapter(mod, idx) {
   // The drop classes push him further down into the room the shortest chapter types leave
   // spare, and Match It pulls him up tight under the bar — mobile's companionDrop /
   // companionWrapRaised, applied to the same types.
+  // The story is the exception, and the only one: its dialogue is a scene rather than a
+  // question, so Hammy stands in the middle of it with his line above him. Every chapter
+  // that ASKS something keeps him on the left, where he is a companion beside the work
+  // rather than the subject of it.
   questSide.className = 'quest-side'
+    + (chapter.type === 'story' ? ' centered' : '')
     + (chapter.type === 'matching' ? ' raised'
       : chapter.type === 'decision' ? ' drop-deep'
       : chapter.type === 'poll' ? ' drop-low'

@@ -10,7 +10,7 @@ import RNSlider from '@react-native-community/slider';
 import { Screen, Txt, Button, Option, ProgressBar, IconButton, Card, Tag, Hammy, LifeEventCard, ReactionFacePreloader, FadingScroll } from '@/components';
 import { colors, font, motion, selectableInput } from '@/theme';
 import { moduleById } from '@/data';
-import { moduleContentById } from '@/content';
+import { moduleContentById, mainLessonAbsoluteIndices } from '@/content';
 import { useStore } from '@/store';
 import { LIFE_EVENT_SHEET_MAX_HEIGHT_PCT } from '@/lifeEventLayout';
 import type { LifeEvent } from '@/lifeEvents';
@@ -467,6 +467,17 @@ function QuestPlayerInner() {
   const [resumed] = useState(() => lessonProgressFor(mod.id, li));
 
   const [chapterIdx, setChapterIdx] = useState(resumed?.chapterIdx ?? 0);
+  /* The title card every lesson opens on: which lesson this is, and what it is called.
+   *
+   * A lesson used to begin on the first line of its story with nothing naming it — the only
+   * number on screen was the chapter counter, which cannot tell lesson three of eight from
+   * lesson seven. Matches the website's renderLessonTitleCard.
+   *
+   * Seeded from the same resume read as everything else, so a lesson picked up part-way is
+   * NOT interrupted by a title card in front of work already done. Lazy, and off `resumed`
+   * rather than off chapterIdx, so it is decided once at mount and can't come back when the
+   * player later returns to chapter 0 by any other route. */
+  const [showTitleCard, setShowTitleCard] = useState(() => (resumed?.chapterIdx ?? 0) === 0);
   const [xpEarned, setXpEarned] = useState(resumed?.xpEarned ?? 0);
   // No correctCount/gradedTotal state any more — the tally comes from analyticsRef via
   // gradedTally at finish time. See the Complete type.
@@ -902,6 +913,34 @@ function QuestPlayerInner() {
   // scrolling. Match It used to take a larger 144 for having room to spare — it doesn't on a
   // six-pair grid, so it sits at the standard size like everything else now.
   const companionSize = chapter.type === 'teach' ? 104 : 130;
+
+  // Before anything else, and instead of everything else: the chrome behind it would be a
+  // progress bar claiming progress through a lesson nobody has started. The optional
+  // real-life guide is named rather than numbered — "Lesson 9 of 8" would be worse than
+  // saying nothing.
+  if (showTitleCard) {
+    const mainIndices = mainLessonAbsoluteIndices(content);
+    const pos = mainIndices.indexOf(li);
+    return (
+      <Screen edges={['top', 'bottom']}>
+        <View style={styles.stick}>
+          <IconButton name="x" size={34} iconSize={16} onPress={confirmQuit} />
+          <View style={{ flex: 1 }} />
+        </View>
+        <View style={styles.titleCard}>
+          <Tag tone="warm">{mod.name}</Tag>
+          <Txt style={styles.titleCardEyebrow}>
+            {pos >= 0 ? `LESSON ${pos + 1} OF ${mainIndices.length}` : 'REAL-LIFE GUIDE'}
+          </Txt>
+          <Txt style={styles.titleCardTitle}>{quest.topic ?? quest.character.name}</Txt>
+          <Hammy size={150} bob equipped={equippedMascotItems()} />
+        </View>
+        <View style={styles.bottomBar}>
+          <Button label="Start lesson" onPress={() => setShowTitleCard(false)} />
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen edges={['top', 'bottom']}>
@@ -3049,6 +3088,16 @@ const styles = StyleSheet.create({
   // grew by 10px and shoved the whole scroller — question, options, Hammy — up the screen.
   // Pinning it to the tallest state it can ever be means an action appearing or clearing
   // changes nothing above it.
+  /* The lesson title card — see the early return in QuestPlayerInner. Centred in the whole
+     screen the chapter chrome would otherwise occupy. */
+  titleCard: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 28 },
+  titleCardEyebrow: {
+    fontFamily: font.extra, fontSize: 13, letterSpacing: 1.4, color: colors.muted3, marginTop: 6,
+  },
+  titleCardTitle: {
+    fontFamily: font.display, fontSize: 27, lineHeight: 33, color: colors.ink,
+    textAlign: 'center', marginBottom: 6,
+  },
   bottomBar: {
     flexDirection: 'row', alignItems: 'center', height: 78,
     paddingHorizontal: 16, paddingTop: 8, paddingBottom: 22,

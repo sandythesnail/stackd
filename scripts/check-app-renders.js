@@ -1008,6 +1008,60 @@ step('a streak reaction falls back to the plain happy face, and upgrades in plac
 // the shared quest chrome changes: not "this looks wrong" but "this one chapter has a field
 // the renderer didn't expect", on content nobody re-reads. It is the cheapest possible check
 // on the widest possible surface, and it costs a few seconds.
+/* The title card in front of every lesson.
+ *
+ * A lesson used to open on the first line of its story with nothing naming it: the only
+ * number on screen was the chapter counter, which cannot tell lesson three of eight from
+ * lesson seven. */
+console.log('\nevery lesson opens on a title card');
+step('it names the module, the lesson number and the lesson', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  const quest = window.mainQuests(mod)[2];
+  delete s.questProgress[window.questKey(mod.id, quest.id)];
+  window.startQuest(mod.id, quest.id);
+  const card = window.document.getElementById('lesson-title-card');
+  if (card.hidden) throw new Error('no title card on a fresh lesson');
+  const t = card.textContent;
+  if (!t.includes(mod.title)) throw new Error('does not name the module: ' + t.slice(0, 80));
+  if (!t.includes('LESSON 3 OF ' + window.mainQuests(mod).length)) {
+    throw new Error('wrong lesson number: ' + t.slice(0, 120));
+  }
+  if (!t.includes(quest.topic)) throw new Error('does not name the lesson: ' + t.slice(0, 120));
+});
+step('starting it puts the card away and opens chapter one', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  const quest = window.mainQuests(mod)[0];
+  delete s.questProgress[window.questKey(mod.id, quest.id)];
+  window.startQuest(mod.id, quest.id);
+  window.document.getElementById('ltc-start').click();
+  const card = window.document.getElementById('lesson-title-card');
+  if (!card.hidden) throw new Error('the card stayed up');
+  if (!window.document.getElementById('quest-main').textContent.trim()) {
+    throw new Error('no chapter behind it');
+  }
+});
+step('the real-life guide is named, not numbered', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  const guide = window.moduleSubQuest(mod);
+  if (!guide) throw new Error('credit has no real-life guide to test with');
+  delete s.questProgress[window.questKey(mod.id, guide.id)];
+  window.startQuest(mod.id, guide.id);
+  const t = window.document.getElementById('lesson-title-card').textContent;
+  if (!t.includes('REAL-LIFE GUIDE')) throw new Error('reads: ' + t.slice(0, 120));
+  if (/LESSON \d+ OF/.test(t)) throw new Error('numbered the optional guide: ' + t.slice(0, 120));
+});
+step('resuming part-way through skips the card', () => {
+  const mod = api.MODULES.find((m) => m.id === 'credit');
+  const quest = window.mainQuests(mod)[1];
+  delete s.questProgress[window.questKey(mod.id, quest.id)];
+  window.startQuest(mod.id, quest.id);
+  s.questProgress[window.questKey(mod.id, quest.id)].chapterIdx = 4;
+  window.startQuest(mod.id, quest.id);
+  if (!window.document.getElementById('lesson-title-card').hidden) {
+    throw new Error('a half-finished lesson was interrupted by its own title card');
+  }
+});
+
 console.log('\nevery chapter renders');
 /** Everything a student can actually read on the quest screen: the scrolling body (which
  *  holds the title row, Hammy's side and the chapter's own content), the stat dashboard
