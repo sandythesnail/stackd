@@ -13,9 +13,27 @@
   }
   // Shared Clerk sign-in / sign-up pages: usable on ANY viewport (the /m app sends mobile
   // users here to authenticate), so never viewport-redirect away from them.
+  //
+  // PREFIXES, not exact paths, and that distinction is the whole bug this once caused.
+  // clerk-js uses path routing: a mounted SignIn appends its own steps as SUBPATHS of the
+  // page it lives on — /login.html/sso-callback coming back from Google or Microsoft,
+  // /signup.html/verify-email-address, /login.html/factor-one — and the instance also uses a
+  // bare /sso-callback. vercel.json rewrites every one of those onto the page that mounts the
+  // widget, which was added precisely so they stopped 404ing.
+  //
+  // Exact-match exemptions covered none of them. So on a phone the callback page loaded, this
+  // script ran render-blocking in <head>, saw a mobile UA on a path it did not recognise, and
+  // replaced the location with /m/ before clerk-js could read the callback out of the URL —
+  // the round trip ending back in the app, signed out, having been all the way to the
+  // provider and back. Desktop never saw it, being neither narrow nor a mobile UA. The commit
+  // that added those rewrites even ruled this file out on the grounds that it "already exempts
+  // /login.html and /signup.html", which was true of the two paths that existed when that
+  // exemption was written and of none of the ones it was adding.
+  var AUTH_PATH = /^\/(?:login|signup)(?:\.html)?(?:\/|$)/;
+  var CALLBACK_PATH = /^\/sso-callback(?:\/|$)/;
   function isAuthPage() {
     var p = location.pathname;
-    return p === '/login.html' || p === '/signup.html' || p === '/login' || p === '/signup';
+    return AUTH_PATH.test(p) || CALLBACK_PATH.test(p);
   }
   // Legal + support pages, exempt for the same reason and then some: they are DESTINATIONS
   // people are sent to from inside the mobile app, and from the App Store listing.

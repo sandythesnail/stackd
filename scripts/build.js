@@ -66,8 +66,15 @@ const EXCLUDE_AT_ROOT = new Set([
   // versioned alongside the build they depict, but there is no reason to serve them.
   'store-assets', 'scripts',
   'package.json', 'package-lock.json', 'skills-lock.json', '.gitignore', 'vercel.json',
-  '.env', '.env.example',
 ]);
+
+// Anything env-shaped, by PREFIX rather than by name. `.env` and `.env.example` were listed
+// above individually, which covers exactly the two that existed. .gitignore stops `.env`,
+// `.env.local`, `.env.production` and `.env.*.local` from ever reaching a Vercel deploy at
+// all — but it does not stop `.env.staging`, and a blocklist of literal names would not have
+// stopped it here either. Both layers now match the same shape, so a new one is excluded by
+// both rather than by neither.
+const isEnvFile = (name) => /^\.env(\.|$)/i.test(name);
 
 // Office-document extensions are never legitimately served from the site root (unlike
 // images, which the blocklist above can't safely generalize — real favicons/mockups live
@@ -96,6 +103,7 @@ function copyDir(srcDir, destDir, isRoot) {
   fs.mkdirSync(destDir, { recursive: true });
   for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
     if (isRoot && EXCLUDE_AT_ROOT.has(entry.name)) continue;
+    if (isRoot && isEnvFile(entry.name)) continue;
     if (isRoot && !entry.isDirectory() && EXCLUDE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) continue;
     const src = path.join(srcDir, entry.name);
     const dest = path.join(destDir, entry.name);
