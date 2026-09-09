@@ -150,7 +150,11 @@ const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is str
 // The four SHARED_BOTH_WAYS fields below are ALSO listed here, and that is deliberate rather
 // than an oversight — see that list for why.
 const MOBILE_ONLY_KEYS = [
-  'shownLifeEventIds', 'pendingLifeEventId', 'lifeEventCooldown', 'onboardingTrackId',
+  'shownLifeEventIds', 'pendingLifeEventId', 'onboardingTrackId',
+  // Per-device by nature: how many times THIS install has been opened, and which of those
+  // launches last showed a scenario. The website counts its own (state.lifeEvents), and
+  // sharing one counter would have opening the laptop spend the phone's cooldown.
+  'lifeEventSessionCount', 'lifeEventLastTriggeredSession',
   'hasCompletedOnboarding',
   'questHintsUsed', 'termsLearned', 'completedLifeTaskIds',
   'hasSeenOnboardingTour', 'lessonProgress', 'lastModuleId', 'postTest',

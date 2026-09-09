@@ -17187,6 +17187,31 @@ function clearCurrencyBaseline(userId) {
   try { localStorage.removeItem(CURRENCY_BASELINE_PREFIX + userId); } catch (e) {}
 }
 
+/** Advances the baseline by an amount the SERVER just added to the row.
+ *
+ * The baseline means "what the remote row holds, as far as this browser knows". Almost every
+ * change to it comes from this browser pushing, which is why pushSupabaseSync is where it is
+ * normally written — but claim_referral_activation() is SECURITY DEFINER and adds its +15
+ * coins straight into user_progress.state itself (supabase/referrals.sql), and the client then
+ * mirrors the same +15 locally so the player sees it without waiting for a reload.
+ *
+ * Two writes of one payment, and the baseline has to know about both or mergeCurrency counts
+ * it twice: with local and remote each at X+15 but the baseline still at X, the next load
+ * computes remote + (local - baseline) = X+30. The old max() got this right by luck, because
+ * the two sides happened to be equal. Any future server-side write to a balance needs this
+ * same call. No-op when there is no baseline: nothing to correct, and the merge falls back to
+ * max(), which cannot double-count either. */
+function bumpCurrencyBaseline(userId, coins, diamonds) {
+  if (!coins && !diamonds) return;
+  const current = readCurrencyBaseline(userId);
+  if (!current) return;
+  try {
+    localStorage.setItem(CURRENCY_BASELINE_PREFIX + userId, JSON.stringify({
+      coins: current.coins + (coins || 0), diamonds: current.diamonds + (diamonds || 0),
+    }));
+  } catch (e) { /* over-credits by this amount once at worst — the lenient direction */ }
+}
+
 function pushSupabaseSync(snapshot) {
   const userId = Clerk.user.id;
   window.stackdSupabase
@@ -17283,6 +17308,13 @@ function applyRemoteState(remote) {
   // re-upload it, undoing the reset on the very next debounced sync.
   if ((remote.resetToken || 0) > (state.resetToken || 0)) {
     Object.assign(state, remote);
+    // Anchor here too, for the same reason as the merge path below — this branch takes the
+    // row wholesale, so the row's balances are exactly what this browser now holds. Left
+    // un-anchored, the pre-reset baseline would make the very next load subtract the whole
+    // wiped balance again and take anything earned since the reset down with it.
+    if (window.Clerk && Clerk.user) {
+      recordCurrencyBaseline(Clerk.user.id, { coins: state.coins || 0, diamonds: state.diamonds || 0 });
+    }
     syncLevelToXp();
     normalizeStoredQuestProgress();
   saveState();
@@ -17334,8 +17366,26 @@ function applyRemoteState(remote) {
   // as earned.
   const localClaimedBadgeRewards = state.claimedBadgeRewards || [];
   Object.assign(state, remote);
-  state.coins = mergeCurrency(localCoins, state.coins, baseline && baseline.coins);
-  state.diamonds = mergeCurrency(localDiamonds, state.diamonds, baseline && baseline.diamonds);
+  // Read the row's own balances BEFORE merging over them — this is what the baseline is
+  // re-anchored to below.
+  const remoteCoins = state.coins, remoteDiamonds = state.diamonds;
+  state.coins = mergeCurrency(localCoins, remoteCoins, baseline && baseline.coins);
+  state.diamonds = mergeCurrency(localDiamonds, remoteDiamonds, baseline && baseline.diamonds);
+  // Re-anchor on what the row ACTUALLY holds, now that we have read it. The baseline means
+  // "the row's balance as far as this browser knows", and a read is the most direct knowledge
+  // of that there is — more direct than the push that set it, which may be several of the
+  // other device's writes ago.
+  //
+  // This is what makes a load idempotent, and without it the merge drifts. Say the baseline
+  // is 100, this browser earned 20 it has not uploaded, and the phone spent 50, so the row
+  // holds 50. The merge correctly lands on 70. Close the tab before the 2s debounce fires and
+  // the next load computes 50 + (70 - 100) = 20, and the one after that 0: the same purchase
+  // subtracted again on every load until the balance is gone. Anchoring here means the delta
+  // after a load is exactly the local gain the load just preserved, so re-running it changes
+  // nothing.
+  if (window.Clerk && Clerk.user) {
+    recordCurrencyBaseline(Clerk.user.id, { coins: remoteCoins || 0, diamonds: remoteDiamonds || 0 });
+  }
   if (localLastPlayed && new Date(localLastPlayed) >= new Date(state.lastPlayedDate || 0)) {
     state.streak = Math.max(state.streak || 0, localStreak || 0);
     state.lastPlayedDate = localLastPlayed;
@@ -17710,6 +17760,10 @@ async function maybeClaimReferrerRewards() {
     if (error) { console.error('Referrer reward check failed:', error); return; }
     const earned = data && data.diamonds;
     if (earned > 0) {
+      // Deliberately NO baseline bump, unlike the coins in maybeClaimReferralActivation.
+      // claim_referrer_rewards only marks the referral rows credited and reports what they
+      // are worth; it never touches user_progress, so this credit exists locally and nowhere
+      // else and is a genuine unsynced local gain — exactly what the delta is for.
       state.diamonds = (state.diamonds || 0) + earned;
       showToast(`+${earned} diamonds, a friend joined through your referral link!`, '💎');
       updateSidebarStats();
@@ -17732,6 +17786,9 @@ async function maybeClaimReferralActivation() {
     state.referralClaimAttempted = true;
     if (data && data.claimed) {
       state.coins = (state.coins || 0) + REFERRAL_ACTIVATION_COINS;
+      // The RPC already put these coins in the row itself; the line above only mirrors that
+      // locally, so the baseline moves with it. See bumpCurrencyBaseline.
+      bumpCurrencyBaseline(Clerk.user.id, REFERRAL_ACTIVATION_COINS, 0);
       showToast(`+${REFERRAL_ACTIVATION_COINS} coins, thanks for joining through a friend!`, '🪙');
       updateSidebarStats();
     }

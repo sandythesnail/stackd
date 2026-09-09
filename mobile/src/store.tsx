@@ -228,8 +228,17 @@ export type AppState = {
   shownLifeEventIds: string[];
   /** Set when a life event should be shown next; cleared once the player dismisses it. */
   pendingLifeEventId: string | null;
-  /** Sessions remaining before an ambient life event can roll again (LIFE_EVENT_COOLDOWN_SESSIONS). */
-  lifeEventCooldown: number;
+  /** How many times this app has been opened. Incremented once per launch, right after the
+   * saved state loads — the counter the ambient life-event cooldown is measured in.
+   *
+   * Mirrors the website's state.lifeEvents.sessionCount. Kept per-device (under `_mobile`)
+   * rather than shared, because "how many times have I opened this app" is a question about
+   * one install; sharing it would have opening the website count against the phone's cooldown
+   * and vice versa. */
+  lifeEventSessionCount: number;
+  /** The session an ambient life event last fired in. See LIFE_EVENT_COOLDOWN_SESSIONS and
+   * ambientRollAllowed. Mirrors the website's state.lifeEvents.lastTriggeredSession. */
+  lifeEventLastTriggeredSession: number;
   /** toDateString() of the last day the streak/daily-login check ran. */
   lastPlayedDate: string | null;
   /** toDateString() -> coins awarded that day, so the coin drip only ever pays out once/day. */
@@ -373,7 +382,10 @@ const DEFAULT_STATE: AppState = {
   unlockedAchievementIds: [],
   shownLifeEventIds: [],
   pendingLifeEventId: null,
-  lifeEventCooldown: 0,
+  lifeEventSessionCount: 0,
+  // The same sentinel the website uses, so a brand-new player is eligible immediately rather
+  // than having to open the app twice before the first scenario can appear.
+  lifeEventLastTriggeredSession: -99,
   // No streak/login history yet — runDailyCheck seeds this correctly on first real day.
   lastPlayedDate: null,
   dailyLoginLog: {},
@@ -849,6 +861,27 @@ function runDailyCheck(s: AppState): { next: AppState; streakDiamondsEarned: num
   return { next: applyAchievementUnlocks(next), streakDiamondsEarned: streakDiamonds };
 }
 
+/** Whether an ambient life event may roll at all yet.
+ *
+ * Measured in SESSIONS — app launches — which is what LIFE_EVENT_COOLDOWN_SESSIONS has always
+ * been named for and what the website has always actually done (maybeTriggerAmbientLifeEvent:
+ * `le.sessionCount - le.lastTriggeredSession`).
+ *
+ * Mobile used to hold a countdown, `lifeEventCooldown`, and decrement it once per roll
+ * ATTEMPT. Attempts happen on every non-final chapter transition (see quest.tsx), so a
+ * "2 session" cooldown was spent inside two chapter turns of the same lesson, and every
+ * lesson after that had eleven more chances at a coin flip. Simulated over thirty lessons
+ * that fires thirty scenarios where the website fires five: a popup interrupting essentially
+ * every lesson, against one every couple of times you open the app. Nothing about the roll
+ * itself was wrong — the clock it was counted on had no relationship to the unit it was
+ * named in.
+ *
+ * A failed roll now costs nothing, which is the other half of the website's behaviour:
+ * eligibility is a function of which session this is, not a budget an attempt spends. */
+function ambientRollAllowed(s: AppState): boolean {
+  return s.lifeEventSessionCount - s.lifeEventLastTriggeredSession >= LIFE_EVENT_COOLDOWN_SESSIONS;
+}
+
 /** Applies BADGE_TIER_REWARD for any newly-met achievement and records it as unlocked. */
 /** Applies unlocks against `candidate`, reporting (via `report`) any achievement id that
  * wasn't already unlocked in `prev` — used to drive the global achievement-unlock toast. */
@@ -945,7 +978,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           // corrupt/incompatible saved state — fall back to defaults already set
         }
       }
-      const { next, streakDiamondsEarned } = runDailyCheck(loadedState);
+      // One launch, one session — the unit the ambient life-event cooldown is measured in
+      // (see ambientRollAllowed). Counted here, where the website counts it, rather than on
+      // any screen: this effect runs exactly once per app start.
+      const opened: AppState = {
+        ...loadedState,
+        lifeEventSessionCount: loadedState.lifeEventSessionCount + 1,
+      };
+      const { next, streakDiamondsEarned } = runDailyCheck(opened);
       setState(next);
       if (streakDiamondsEarned > 0) bankStreakDiamonds(streakDiamondsEarned);
       loaded.current = true;
@@ -1204,9 +1244,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             const unlockEvent = justMastered ? LIFE_EVENT_UNLOCKS[moduleId] : undefined;
             if (unlockEvent && !next.shownLifeEventIds.includes(unlockEvent.id)) {
               next = { ...next, pendingLifeEventId: unlockEvent.id, shownLifeEventIds: [...next.shownLifeEventIds, unlockEvent.id] };
-            } else if (next.lifeEventCooldown > 0) {
-              next = { ...next, lifeEventCooldown: next.lifeEventCooldown - 1 };
-            } else if (Math.random() < LIFE_EVENT_CHANCE) {
+            } else if (ambientRollAllowed(next) && Math.random() < LIFE_EVENT_CHANCE) {
               // Prefers a scenario tagged to the module just played, and won't repeat one
               // until the pool runs out — see pickAmbientLifeEvent.
               const picked = pickAmbientLifeEvent(moduleId, next.shownLifeEventIds);
@@ -1215,7 +1253,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
                   ...next,
                   pendingLifeEventId: picked.event.id,
                   shownLifeEventIds: picked.seenIds,
-                  lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS,
+                  lifeEventLastTriggeredSession: next.lifeEventSessionCount,
                 };
               }
             }
@@ -1266,9 +1304,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             const unlockEvent = justMastered ? LIFE_EVENT_UNLOCKS[moduleId] : undefined;
             if (unlockEvent && !next.shownLifeEventIds.includes(unlockEvent.id)) {
               next = { ...next, pendingLifeEventId: unlockEvent.id, shownLifeEventIds: [...next.shownLifeEventIds, unlockEvent.id] };
-            } else if (next.lifeEventCooldown > 0) {
-              next = { ...next, lifeEventCooldown: next.lifeEventCooldown - 1 };
-            } else if (Math.random() < LIFE_EVENT_CHANCE) {
+            } else if (ambientRollAllowed(next) && Math.random() < LIFE_EVENT_CHANCE) {
               // Prefers a scenario tagged to the module just played, and won't repeat one
               // until the pool runs out — see pickAmbientLifeEvent.
               const picked = pickAmbientLifeEvent(moduleId, next.shownLifeEventIds);
@@ -1277,7 +1313,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
                   ...next,
                   pendingLifeEventId: picked.event.id,
                   shownLifeEventIds: picked.seenIds,
-                  lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS,
+                  lifeEventLastTriggeredSession: next.lifeEventSessionCount,
                 };
               }
             }
@@ -1340,22 +1376,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
 
       rollAmbientLifeEvent: (moduleId) => {
-        if (state.pendingLifeEventId) return false;
-        if (state.lifeEventCooldown > 0) {
-          setState((s) => ({ ...s, lifeEventCooldown: s.lifeEventCooldown - 1 }));
-          return false;
-        }
+        // Every read goes through liveState, not the `state` closure, and the write below is
+        // applied to liveState too — so a roll that lands on one chapter transition is fully
+        // visible to the next one rather than only after the render. The pending-event guard
+        // and the cooldown both used to read the stale closure while only the seen list read
+        // liveState, so two transitions in the same tick could both pass a guard the first
+        // had already invalidated.
+        const s0 = liveState.current;
+        if (s0.pendingLifeEventId) return false;
+        // No decrement, and nothing written on a miss: eligibility is a function of which
+        // session this is, not a budget an attempt spends. See ambientRollAllowed.
+        if (!ambientRollAllowed(s0)) return false;
         if (Math.random() >= LIFE_EVENT_CHANCE) return false;
-        // Read through liveState rather than the `state` closure: this fires mid-quest, and
-        // a roll on an earlier chapter may already have added to the seen list this tick.
-        const picked = pickAmbientLifeEvent(moduleId, liveState.current.shownLifeEventIds);
+        const picked = pickAmbientLifeEvent(moduleId, s0.shownLifeEventIds);
         if (!picked) return false;
-        setState((s) => ({
-          ...s,
+        const next: AppState = {
+          ...s0,
           pendingLifeEventId: picked.event.id,
           shownLifeEventIds: picked.seenIds,
-          lifeEventCooldown: LIFE_EVENT_COOLDOWN_SESSIONS,
-        }));
+          lifeEventLastTriggeredSession: s0.lifeEventSessionCount,
+        };
+        liveState.current = next;
+        setState(next);
         return true;
       },
 
@@ -1487,7 +1529,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // resurrect everything the reset just wiped, then re-upload it on the next
         // debounced push, undoing the reset. Reset to full DEFAULT_STATE (not just
         // `...state, ...partial`) so mobile-only fields the web reset has no concept of
-        // (lifeEventCooldown, questHintsUsed, …) are wiped too, not left stale.
+        // (lifeEventSessionCount, questHintsUsed, …) are wiped too, not left stale.
         if ((partial.resetToken ?? 0) > state.resetToken) {
           const { next, streakDiamondsEarned } = runDailyCheck({ ...DEFAULT_STATE, ...partial });
           setState(next);

@@ -36,6 +36,10 @@ const CURRENCY_BASELINE_KEY = 'stackd_pushed_currency_v1';
  * balances, which is the same class of bug the OWNER_KEY check exists to stop. */
 const baselineKeyFor = (uid: string) => `${CURRENCY_BASELINE_KEY}:${uid}`;
 
+/** A balance out of the remote blob, treating anything non-numeric as zero — the same
+ *  coercion webState.ts applies when it reads the same fields. */
+const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+
 /** Paid to a player who signed up through someone's referral link, once they finish a lesson.
  * Must match referrals.sql's own +15 — the function credits the coins into user_progress
  * server-side and returns `claimed: true`; this constant is only the local mirror of that. */
@@ -65,6 +69,39 @@ async function readCurrencyBaseline(uid: string): Promise<CurrencyBaseline> {
     return { coins, diamonds };
   } catch {
     return undefined;
+  }
+}
+
+/** Advances the stored baseline by an amount the SERVER just added to the row.
+ *
+ * The baseline means "what the remote row holds, as far as this device knows". Almost every
+ * change to that row comes from this device pushing, which is why push() is where it is
+ * normally written — but claim_referral_activation() is SECURITY DEFINER and adds its +15
+ * coins straight into user_progress.state itself (see supabase/referrals.sql), and the client
+ * then mirrors the same +15 locally so the player sees it without waiting for a reload.
+ *
+ * Two writes of one payment, and the baseline has to know about both or the delta merge
+ * counts it twice: with local and remote each at X+15 but the baseline still at X, the next
+ * sign-in computes remote + (local - baseline) = X+30. max() got this right by luck, because
+ * the two sides happened to be equal. So this is not bookkeeping — it is the invariant that
+ * keeps the merge honest, and any future server-side write to a balance needs the same call.
+ *
+ * A no-op when there is no baseline yet: nothing to correct, and the merge falls back to
+ * max(), which cannot double-count either. */
+async function writeCurrencyBaseline(uid: string, coins: number, diamonds: number) {
+  await AsyncStorage.setItem(baselineKeyFor(uid), JSON.stringify({ coins, diamonds }));
+}
+
+async function bumpCurrencyBaseline(uid: string, coins: number, diamonds: number) {
+  if (!coins && !diamonds) return;
+  try {
+    const current = await readCurrencyBaseline(uid);
+    if (!current) return;
+    await writeCurrencyBaseline(uid, current.coins + coins, current.diamonds + diamonds);
+  } catch (e) {
+    // Worst case the next merge over-credits by this amount once, which is the direction
+    // every fallback in this file already leans. Not worth failing the claim over.
+    console.warn('[sync] could not advance currency baseline:', e);
   }
 }
 
@@ -128,10 +165,7 @@ export function SupabaseSync() {
       // Best-effort: a write that fails here only costs the next merge its delta, and the
       // fallback for a missing baseline is the old max(), not a wrong number.
       try {
-        await AsyncStorage.setItem(
-          baselineKeyFor(uid),
-          JSON.stringify({ coins: blob.coins ?? 0, diamonds: blob.diamonds ?? 0 }),
-        );
+        await writeCurrencyBaseline(uid, blob.coins ?? 0, blob.diamonds ?? 0);
       } catch (e) {
         console.warn('[sync] could not record currency baseline:', e);
       }
@@ -182,6 +216,9 @@ export function SupabaseSync() {
           console.warn('[referral] activation check failed:', error.message);
         } else if ((data as ActivationResult)?.claimed) {
           creditRef.current(REFERRAL_ACTIVATION_COINS, 0);
+          // The RPC already put these coins in the row itself, and the line above is only a
+          // local mirror of that — so the baseline moves with it. See bumpCurrencyBaseline.
+          await bumpCurrencyBaseline(uid, REFERRAL_ACTIVATION_COINS, 0);
           notify('Welcome aboard!', `+${REFERRAL_ACTIVATION_COINS} coins for joining through a friend's link.`);
         }
 
@@ -191,6 +228,10 @@ export function SupabaseSync() {
         } else {
           const diamonds = (owed as ReferrerResult)?.diamonds ?? 0;
           if (diamonds > 0) {
+            // Deliberately NO baseline bump here, unlike the coins above. claim_referrer_
+            // rewards only marks the referral rows credited and reports what they are worth;
+            // it never touches user_progress, so this credit exists locally and nowhere else
+            // and is a genuine unsynced local gain — exactly what the delta is for.
             creditRef.current(0, diamonds);
             notify('A friend joined!', `+${diamonds} diamonds from your referral link.`);
           }
@@ -270,8 +311,29 @@ export function SupabaseSync() {
         return;
       }
       if (data?.state) {
-        lastRemote.current = data.state as WebState;
-        hydrateRef.current(webToMobile(data.state as WebState), spentSince);
+        const remote = data.state as WebState;
+        lastRemote.current = remote;
+        hydrateRef.current(webToMobile(remote), spentSince);
+        // Re-anchor on what the row ACTUALLY holds, now that we have read it. The baseline
+        // means "the row's balance as far as this device knows", and a read is the most
+        // direct knowledge of that there is — more direct than the push that set it, which
+        // may be several of the other device's writes ago.
+        //
+        // This is what makes a sign-in idempotent, and without it the merge drifts. Say the
+        // baseline is 100, this device earned 20 it has not uploaded, and the other device
+        // spent 50, so the row holds 50. The merge correctly lands on 70. If the app is then
+        // killed before the debounced push, the next sign-in computes 50 + (70 - 100) = 20,
+        // and the one after that 0: the same purchase subtracted again on every launch until
+        // the balance is gone. Anchoring here means the delta after a hydrate is exactly the
+        // local gain the hydrate just preserved, so re-running it changes nothing.
+        //
+        // Correct for the resetToken branch inside hydrateFromRemote too, which discards
+        // local state wholesale: the row holds the reset balances, and so does this.
+        try {
+          await writeCurrencyBaseline(userId, num(remote.coins), num(remote.diamonds));
+        } catch (e) {
+          console.warn('[sync] could not anchor currency baseline:', e);
+        }
         ready.current = true;
       } else {
         ready.current = true;

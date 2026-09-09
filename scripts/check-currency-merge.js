@@ -134,6 +134,12 @@ const CASES = [
   // arithmetic is -20; nobody is shown a debt.
   ['both spent offline, past zero', 30, 50, 100, 0],
 
+  // The referral activation, which is the one payment the server writes into the row itself
+  // AND the client mirrors locally. Both writes are 15, so the baseline is bumped by 15 too
+  // and the delta comes out at zero — without that bump this row reads 130. See the
+  // invariant note below the table.
+  ['referral +15, server wrote it and the baseline was bumped', 115, 115, 115, 115],
+
   // Zero is a real balance, not a missing one — a player who has spent everything must not
   // have it handed back by a baseline that reads as absent.
   ['spent down to nothing', 0, 0, 0, 0],
@@ -141,6 +147,46 @@ const CASES = [
 ];
 
 const problems = [];
+
+/* ── the out-of-band-write invariant ────────────────────────────────────────
+ *
+ * The delta merge rests on one assumption: the baseline is what the remote row holds as far
+ * as this device knows. Almost every change to that row is this device pushing, so push() is
+ * where the baseline is written — but a SECURITY DEFINER function can write a balance too,
+ * and a client that also mirrors that credit locally has to advance its baseline by the same
+ * amount or the merge counts the payment twice (local X+15, remote X+15, baseline X, so
+ * remote + (local - baseline) = X+30). max() used to get this right by accident, because the
+ * two sides came out equal.
+ *
+ * There is exactly one such write today — claim_referral_activation's +15 coins — and both
+ * clients call their baseline bump beside it. This is the tripwire for the second one: adding
+ * a server-side write to a balance without handling the baseline is a silent double-credit,
+ * and the person adding it has no reason to know this file exists.
+ */
+const sqlWrites = (read('supabase/referrals.sql').match(/update\s+public\.user_progress/g) || []).length
+  + (read('supabase/feedback.sql').match(/update\s+public\.user_progress/g) || []).length
+  + (read('supabase/account-deletion.sql').match(/update\s+public\.user_progress/g) || []).length;
+const KNOWN_SERVER_WRITES = 1; // claim_referral_activation, +15 coins to the referred player
+if (sqlWrites !== KNOWN_SERVER_WRITES) {
+  problems.push(
+    `supabase/*.sql now has ${sqlWrites} server-side writes to user_progress, not `
+    + `${KNOWN_SERVER_WRITES}. Every one that changes coins or diamonds AND is mirrored `
+    + "locally by a client must also advance that client's currency baseline — see "
+    + 'bumpCurrencyBaseline in app.js and mobile/src/lib/SupabaseSync.tsx. Update this count '
+    + 'once the new write is handled.');
+}
+// Both clients must still HAVE the bump, and must still call it where the referral coins are
+// mirrored. A rename that quietly drops the call reads as a tidy-up and is a double-credit.
+for (const [label, src, decl] of [
+  ['app.js', read('app.js'), 'function bumpCurrencyBaseline('],
+  ['mobile/src/lib/SupabaseSync.tsx', read('mobile/src/lib/SupabaseSync.tsx'), 'function bumpCurrencyBaseline('],
+]) {
+  if (!src.includes(decl)) problems.push(`${label}: bumpCurrencyBaseline is gone — see the invariant note in this file.`);
+  else if ((src.match(/bumpCurrencyBaseline\(/g) || []).length < 2) {
+    problems.push(`${label}: bumpCurrencyBaseline is defined but never called.`);
+  }
+}
+
 for (const [name, local, remote, baseline, expected] of CASES) {
   const web = webMerge(local, remote, baseline);
   const mob = mobileMerge(local, remote, baseline);
@@ -148,6 +194,63 @@ for (const [name, local, remote, baseline, expected] of CASES) {
   if (web !== expected) problems.push(`${name} (${shown}): app.js says ${web}, the table says ${expected}`);
   if (mob !== expected) problems.push(`${name} (${shown}): currencyMerge.ts says ${mob}, the table says ${expected}`);
   if (web !== mob) problems.push(`${name} (${shown}): THE TWO APPS DISAGREE — app.js ${web}, mobile ${mob}`);
+}
+
+/* ── the idempotency property ────────────────────────────────────────────────
+ *
+ * A sign-in that is interrupted before its upload lands must not change the answer when it
+ * happens again. Both clients re-anchor the baseline on the balance the READ returned (see
+ * applyRemoteState in app.js and the load effect in SupabaseSync.tsx), which is what makes
+ * that true; this asserts the property those two lines exist to provide.
+ *
+ * Without the re-anchor the merge drifts, and drifts in the direction that costs the player:
+ * baseline 100, 20 earned here and not yet uploaded, 50 spent on the other device so the row
+ * holds 50. The merge lands on 70. Killed before the push, the next launch computes
+ * 50 + (70 - 100) = 20, and the one after 0 — the same purchase subtracted again on every
+ * launch until the balance is gone.
+ */
+for (let local = 0; local <= 200; local += 20) {
+  for (let remote = 0; remote <= 200; remote += 20) {
+    for (const baseline of [undefined, 0, 40, 100, 200]) {
+      const first = webMerge(local, remote, baseline);
+      // The client now stores `remote` as the baseline, so a repeat of the same sign-in with
+      // no push in between sees (first, remote, remote).
+      const again = webMerge(first, remote, remote);
+      if (again !== first) {
+        problems.push(
+          `idempotency: local ${local}, remote ${remote}, baseline ${baseline} -> ${first}, `
+          + `but signing in again without pushing gives ${again}`);
+      }
+      if (mobileMerge(first, remote, remote) !== again) {
+        problems.push(`idempotency: the two apps disagree at local ${local}, remote ${remote}, baseline ${baseline}`);
+      }
+    }
+  }
+}
+
+// Both clients must actually DO the re-anchoring the property above assumes. A merge that is
+// mathematically idempotent is no help if nobody moves the baseline, so this looks at the READ
+// path specifically rather than counting calls file-wide — the push already writes a baseline,
+// and counting would go on passing with the read-path call deleted.
+//
+// app.js: applyRemoteState has two of them, one in the resetToken branch that returns early
+// and one after the merge. Both matter; the reset branch takes the row wholesale, so leaving
+// it un-anchored makes the next load subtract the whole wiped balance again.
+const applyRemote = functionFromSource(read('app.js'), 'applyRemoteState', 'app.js');
+const anchors = (applyRemote.match(/recordCurrencyBaseline\(/g) || []).length;
+if (anchors < 2) {
+  problems.push(
+    `app.js: applyRemoteState re-anchors the currency baseline ${anchors} time(s), expected 2 `
+    + '(the resetToken branch and the merge path). Without that a load interrupted before its '
+    + 'upload drains the balance a little more every time — see the idempotency note above.');
+}
+
+// mobile: the load effect anchors on `userId`, the push on `uid`. The distinct name is what
+// separates the read path from the write path here.
+if (!/writeCurrencyBaseline\(\s*userId/.test(read('mobile/src/lib/SupabaseSync.tsx'))) {
+  problems.push(
+    'mobile/src/lib/SupabaseSync.tsx: the sign-in load no longer re-anchors the currency '
+    + 'baseline on the row it just read — see the idempotency note above.');
 }
 
 // Neither copy may ever invent currency out of a merge it was not given a reason for. This
@@ -179,6 +282,6 @@ if (problems.length) {
 }
 
 console.log(
-  `Currency merge OK — app.js and mobile agree on all ${CASES.length} cases and across a `
-  + '225-point sweep; a stale read never loses an unsynced reward, and a purchase made on '
+  `Currency merge OK — app.js and mobile agree on all ${CASES.length} cases, across a `
+  + '225-point sweep and a 550-point idempotency sweep; a stale read never loses an unsynced reward, and a purchase made on '
   + 'the other device is never refunded.');
