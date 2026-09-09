@@ -50,6 +50,23 @@ const REFERRAL_ACTIVATION_COINS = 15;
 type ActivationResult = { claimed?: boolean; reason?: string } | null;
 type ReferrerResult = { diamonds?: number } | null;
 
+/** Forgets everything this device recorded ABOUT an account, as opposed to the progress
+ * itself (which lives in the store's own snapshot).
+ *
+ * For account deletion. Both keys are keyed to a Clerk user id that is about to stop
+ * existing, so leaving them behind is at best litter and at worst a trap: the owner marker
+ * still naming a deleted account means the next sign-in on this phone compares against an id
+ * nobody holds, and a currency baseline is a claim about a row that has been dropped.
+ *
+ * Exported from here because this is the file that owns both key names. */
+export async function forgetDeviceAccount(uid: string) {
+  try {
+    await AsyncStorage.multiRemove([OWNER_KEY, baselineKeyFor(uid)]);
+  } catch (e) {
+    console.warn('[sync] could not clear device account keys:', e);
+  }
+}
+
 /** The stored baseline for an account, or undefined when there isn't a usable one.
  *
  * Undefined rather than zeroes on anything unexpected — a missing key, unparseable JSON, a

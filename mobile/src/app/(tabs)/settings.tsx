@@ -10,6 +10,7 @@ import { useStore } from '@/store';
 import { SURVEY_TRACKS } from '@/survey';
 import { authEnabled } from '@/lib/env';
 import { makeSupabase } from '@/lib/supabase';
+import { forgetDeviceAccount } from '@/lib/SupabaseSync';
 import { MODULE_SOURCES } from '@/references';
 import { openLegalPage, PRIVACY_URL } from '@/lib/legalLinks';
 
@@ -481,10 +482,17 @@ function StubSignOutRow({ onSignOut }: { onSignOut: () => void }) {
  * See supabase/account-deletion.sql for the policies this depends on. Without them the
  * deletes are not errors — they match zero rows and report success, which would leave this
  * screen honestly reporting a deletion that did not happen.
+ *
+ * The message on a failure has to track how far it got. Every failure used to say "Nothing
+ * has been deleted", which is true of the first step and false of every one after it: fail on
+ * `feedback` and the progress row — the one actually holding everything personal — is already
+ * gone, while the screen says nothing happened. All three deletes are idempotent, so the
+ * honest instruction in that case is to run it again, and this now says which case it is in.
  */
 function DeleteAccountRow() {
   const { user } = useUser();
   const { getToken, userId } = useAuth();
+  const { forgetLocalProgress } = useStore();
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
   const supabase = useMemo(() => makeSupabase(() => getTokenRef.current()), []);
@@ -496,6 +504,8 @@ function DeleteAccountRow() {
     if (busy || !userId) return;
     setBusy(true);
     setError(null);
+    // Whether the point of no return has been passed — see the catch.
+    let rowsGone = false;
     try {
       // Progress first — it is the row that actually holds personal data. Then the two
       // side tables. `referrals` names the user in either column, hence the .or().
@@ -504,18 +514,51 @@ function DeleteAccountRow() {
         { label: 'feedback', run: () => supabase.from('feedback').delete().eq('clerk_user_id', userId) },
         { label: 'referrals', run: () => supabase.from('referrals').delete().or(`referrer_id.eq.${userId},referred_id.eq.${userId}`) },
       ];
+      let deletedSomething = false;
       for (const step of steps) {
         const { error: e } = await step.run();
-        if (e) throw new Error(`Could not delete your ${step.label}. Nothing has been deleted — please try again.`);
+        if (e) {
+          throw new Error(deletedSomething
+            ? `Could not delete your ${step.label}, and some of your data has already been `
+              + 'removed. Your login still works — tap Delete again to finish.'
+            : `Could not delete your ${step.label}. Nothing has been deleted — please try again.`);
+        }
+        deletedSomething = true;
       }
       // Point of no return. Clerk self-deletion needs "Allow users to delete their accounts"
-      // enabled on the instance; if it is off this throws rather than silently no-opping, and
-      // the message below is what the student sees.
-      await user?.delete();
+      // enabled on the instance; if it is off this throws rather than silently no-opping.
+      // From here the fallback message below must stop claiming nothing happened — by this
+      // line everything except the login is already gone.
+      rowsGone = true;
+      try {
+        await user?.delete();
+      } catch (e) {
+        // Clerk's own message ("You are not allowed to delete this user") describes the API
+        // call, not the student's situation, and would otherwise be shown verbatim in place
+        // of the one sentence that matters here: their data is gone and their login is not.
+        console.error('[account] Clerk user deletion failed:', e);
+        throw new Error('Your data has been deleted, but your login could not be removed. '
+          + 'Please try again, or contact support if it keeps failing.');
+      }
+      // The rows are gone and so is the login; the copy on this phone is the last of it.
+      // The dialog promises "everything saved to it", and an AsyncStorage snapshot holding
+      // the deleted account's XP, coins and finished lessons is squarely inside that promise
+      // — it is also what the next person to use this phone would be one sign-up away from
+      // inheriting, were it not for the owner check. Cleared here rather than relied upon.
+      await forgetDeviceAccount(userId);
+      await forgetLocalProgress();
       // No navigation: RequireAuth sees the session vanish and replaces the route itself,
       // the same way ClerkSignOutRow relies on it.
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong. Nothing has been deleted.');
+      // Three different truths, and saying the wrong one at this moment is its own harm.
+      // A thrown Error from the loop above already carries the accurate sentence for its
+      // stage; anything else lands here, and what is true depends entirely on whether the
+      // rows went first.
+      const fallback = rowsGone
+        ? 'Your data has been deleted, but your login could not be removed. Please try again, '
+          + 'or contact support if it keeps failing.'
+        : 'Something went wrong. Nothing has been deleted.';
+      setError(e instanceof Error ? e.message : fallback);
       setBusy(false);
       return;
     }

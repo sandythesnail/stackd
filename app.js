@@ -21143,21 +21143,51 @@ function wireDeleteAccount() {
       { label: 'feedback', run: () => sb.from('feedback').delete().eq('clerk_user_id', userId) },
       { label: 'referrals', run: () => sb.from('referrals').delete().or(`referrer_id.eq.${userId},referred_id.eq.${userId}`) },
     ];
+    // Whether the point of no return has been passed — the messages below depend on it.
+    let rowsGone = false;
     try {
+      // "Nothing has been deleted" is true of the FIRST step and false of every one after
+      // it: fail on `feedback` and the progress row, the one actually holding everything
+      // personal, is already gone while this screen says nothing happened. All three deletes
+      // are idempotent, so the honest instruction in that case is to run it again.
+      let deletedSomething = false;
       for (const step of steps) {
         const { error } = await step.run();
-        if (error) throw new Error(`Could not delete your ${step.label}. Nothing has been deleted — please try again.`);
+        if (error) {
+          throw new Error(deletedSomething
+            ? `Could not delete your ${step.label}, and some of your data has already been `
+              + 'removed. Your login still works — press Delete again to finish.'
+            : `Could not delete your ${step.label}. Nothing has been deleted — please try again.`);
+        }
+        deletedSomething = true;
       }
       // Point of no return.
+      rowsGone = true;
       clearTimeout(supabaseSyncTimeout);
       localStorage.removeItem('stackd_v2');
       localStorage.removeItem('stackd_v2_owner');
-      await Clerk.user.delete();
+      // The baseline is a claim about a row that no longer exists, keyed to a user id that is
+      // about to stop existing. It goes with the rest.
+      clearCurrencyBaseline(userId);
+      try {
+        await Clerk.user.delete();
+      } catch (e) {
+        // Clerk's own message ("You are not allowed to delete this user", when self-deletion
+        // is off on the instance) describes the API call, not the student's situation, and
+        // would otherwise be shown verbatim in place of the one sentence that matters here.
+        console.error('Clerk user deletion failed:', e);
+        throw new Error('Your data has been deleted, but your login could not be removed. '
+          + 'Please try again, or contact support if it keeps failing.');
+      }
       window.location.href = '/';
       return;
     } catch (e) {
       console.error('Account deletion failed:', e);
-      showError(e instanceof Error ? e.message : 'Something went wrong. Nothing has been deleted.');
+      const fallback = rowsGone
+        ? 'Your data has been deleted, but your login could not be removed. Please try again, '
+          + 'or contact support if it keeps failing.'
+        : 'Something went wrong. Nothing has been deleted.';
+      showError(e instanceof Error ? e.message : fallback);
     }
     btn.disabled = false;
     btn.textContent = originalLabel;

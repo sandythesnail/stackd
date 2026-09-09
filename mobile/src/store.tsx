@@ -799,6 +799,9 @@ type Ctx = {
    * the previous account's progress. Returns the fresh state synchronously so the caller
    * can seed the new account's cloud row without racing React's setState. */
   resetForAccountSwitch: () => AppState;
+  /** Deletes this device's saved snapshot, for account deletion. See the implementation for
+   * why it deliberately leaves the in-memory state alone. */
+  forgetLocalProgress: () => Promise<void>;
   /** Merge a remote (cloud-synced) snapshot into local state — used by SupabaseSync after
    * translating the web's user_progress blob into mobile's AppState. */
   hydrateFromRemote: (partial: Partial<AppState>, spentSince?: CurrencyBaseline) => void;
@@ -1492,6 +1495,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setDailyLoginBanner(null);
         setNewAchievementIds([]);
         clearStreakDiamonds();
+      },
+      /** Removes the persisted snapshot and nothing else.
+       *
+       * Deliberately does NOT reset in-memory state, which is the obvious way to write this
+       * and the wrong one. SupabaseSync uploads on every change to `state`, and the one
+       * caller here is account deletion — so resetting would schedule a push moments after
+       * the Clerk user was deleted, with a token that may still have seconds of life in it,
+       * and a push that lands recreates user_progress for an account nobody can ever sign
+       * into again. That orphaned row is precisely what DeleteAccountRow's rows-before-login
+       * ordering exists to prevent; it would be perverse to reintroduce it while cleaning up.
+       *
+       * Leaving `state` alone means nothing re-persists what this just removed: the write
+       * effect is keyed on `state`, and the caller is signed out and routed away by
+       * RequireAuth before anything can change it. The in-memory copy dies with the process. */
+      forgetLocalProgress: async () => {
+        try {
+          await AsyncStorage.removeItem(STORAGE_KEY);
+        } catch (e) {
+          console.warn('[store] could not clear the local snapshot:', e);
+        }
       },
       resetForAccountSwitch: () => {
         // Same daily bookkeeping the initial load runs, but against pristine defaults —
