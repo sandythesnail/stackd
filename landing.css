@@ -63,11 +63,18 @@ body { background-color: var(--bg); }
   box-shadow: 0 1px 12px rgba(44,62,45,0.06);
 }
 .l-nav-inner {
-  max-width: 1000px; margin: 0 auto; padding: 1.1rem 2rem 1.1rem 0;
+  max-width: 1000px; margin: 0 auto; padding: 1.1rem 2rem;
   display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
 }
-.l-nav-inner .logo { margin-left: -1.2rem; }
-.nav-logo-wrap { display: flex; align-items: center; gap: 0.35rem; margin-left: -1.2rem; }
+/* The mascot sits just outside the nav's own padding, by the same clamped-gutter rule as the
+   hero copy. It used to be a flat -1.2rem against zero left padding, which meant that below a
+   ~1038px window the pig was half off the screen and below 1000px the wordmark was flush
+   against the edge. 3.2rem is the pull that reproduces the old position on a wide screen now
+   that the padding is symmetric. */
+.nav-logo-wrap {
+  display: flex; align-items: center; gap: 0.35rem;
+  margin-left: calc(-1 * clamp(0px, calc((100vw - 1000px) / 2 + 0.75rem), 3.2rem));
+}
 .nav-logo-wrap .logo { margin-left: 0; }
 .l-nav-links { display: flex; align-items: center; gap: 0.6rem; }
 .l-nav-links a:not(.btn-sm):not(.btn-outline-sm) {
@@ -166,7 +173,17 @@ body { background-color: var(--bg); }
   gap: 2rem;
   align-items: center;
 }
-.hero-left { padding-right: 1rem; margin-left: -4rem; margin-top: -3rem; }
+/* The copy is pulled left of the 980px container so the hero reads wider than the sections
+   under it. Same story as --lp-bleed: a flat -4rem is only available while there IS 4rem of
+   gutter to spend, and below ~1110px there wasn't — the pull ran the headline off the left
+   edge of the window, so "Money skills for" rendered as "loney skills for" and the CTA lost
+   its first word. Clamped to the real gutter, it keeps the full -4rem on a wide screen and
+   eases to nothing as the window closes, never leaving less than a 40px margin. */
+.hero-left {
+  padding-right: 1rem;
+  margin-left: calc(-1 * clamp(0px, calc((100vw - 980px) / 2 - 0.5rem), 4rem));
+  margin-top: -3rem;
+}
 
 .hero-h1 {
   font-family: var(--font-display);
@@ -229,10 +246,29 @@ body { background-color: var(--bg); }
   box-shadow: 0 4px 14px rgba(181,96,122,0.2); transform: scale(1.06);
 }
 
-/* ─── FLOATING LAPTOP ─── */
+/* ─── FLOATING LAPTOP ───
+   One <img> (laptop-mockup.png), deliberately oversized so it bleeds past its grid column
+   toward the right edge of the page.
+
+   How far it may bleed is measured, not guessed. It used to be `width: 165%; right: -60px`,
+   which put the image's right edge 321px beyond its column no matter how much room the
+   window actually had — so the laptop only fitted on screen above ~1590px, and every window
+   narrower than that had the right-hand side of it, including the "12 days" streak card,
+   sliced off by the hero's overflow:hidden. --lp-bleed instead spends the gutter that exists
+   beside the 980px container and nothing more, so the laptop is as large as it can be at
+   every width and never crosses the viewport edge. That gutter is (100vw - 980px) / 2; the
+   container's own 2rem of padding is deliberately left unspent, as the margin that keeps the
+   laptop clear of a desktop scrollbar — which 100vw counts and the layout does not. The 260px
+   cap keeps the laptop at the size it has always been on a wide screen, and under the image's
+   own 889px so it is never upscaled.
+
+   The bleed goes on .lp-scene (the grid item) rather than the image: a negative margin widens
+   the item's box, which the width:100% image then fills. A negative margin on the image alone
+   would move it without making it any bigger. */
 .lp-scene {
-  perspective: 8000px;
-  perspective-origin: 50% 50%;
+  --lp-bleed: clamp(0px, calc((100vw - 980px) / 2), 260px);
+  margin-right: calc(-1 * var(--lp-bleed));
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -243,513 +279,9 @@ body { background-color: var(--bg); }
   transform: none;
 }
 .lp-mockup-img {
-  width: 165%; max-width: none; height: auto;
-  position: relative; right: -60px; top: 20px;
-}
-.lp-body {
-  transform-style: preserve-3d;
-  transform: rotateX(18deg) rotateY(10deg) rotateZ(-3deg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* ── LID (screen) ── */
-.lp-lid {
-  width: 100%;
-  transform-style: preserve-3d;
-}
-.lp-bezel {
-  background: linear-gradient(180deg, #1f1f1f 0%, #181818 50%, #141414 100%);
-  border-radius: 12px 12px 2px 2px;
-  padding: 14px 12px 8px;
-  position: relative;
-  border: 2px solid #3a3a3a;
-  border-bottom: none;
-  box-shadow:
-    0 10px 25px rgba(0,0,0,0.2),
-    0 20px 50px rgba(0,0,0,0.25),
-    0 30px 70px rgba(0,0,0,0.1),
-    inset 0 1px 0 rgba(255,255,255,0.08);
-  transform-style: preserve-3d;
-}
-.lp-bezel::before {
-  display: none;
-}
-.lp-bezel::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 6px;
-  background: linear-gradient(90deg, #1a1a1a 0%, #0e0e0e 100%);
-  border-radius: 0 10px 2px 0;
-  transform: translateX(100%) rotateY(90deg);
-  transform-origin: left center;
-}
-.lp-cam {
-  position: absolute;
-  top: 4px; left: 50%;
-  transform: translateX(-50%);
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #e8e8ea 0%, #c0c0c4 30%, #555 70%, #333 100%);
-  border: 1px solid #555;
-  z-index: 2;
-  box-shadow: 0 0 3px rgba(255,255,255,0.3);
-}
-.lp-display {
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-/* ── HINGE ── */
-.lp-lid {
-  position: relative;
-  z-index: 2;
-}
-.lp-lid::after {
-  display: none;
-}
-
-/* ── BASE (keyboard area) ── */
-.lp-base {
-  width: 100%;
-  background:
-    linear-gradient(180deg,
-      #dedee2 0%, #d8d8dc 8%, #d4d4d8 20%,
-      #d0d0d4 40%, #cbcbd0 60%, #c6c6ca 80%,
-      #c0c0c4 95%, #bbbbbf 100%);
-  border-radius: 0 0 8px 8px;
-  padding: 60px 16px 90px;
-  transform-origin: top center;
-  transform: rotateX(-80deg);
-  transform-style: preserve-3d;
-  position: relative;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.7),
-    inset 0 -1px 0 rgba(0,0,0,0.06),
-    inset 0 0 0 0.5px rgba(255,255,255,0.35),
-    0 2px 4px rgba(0,0,0,0.08),
-    0 6px 14px rgba(0,0,0,0.12),
-    0 12px 30px rgba(0,0,0,0.10),
-    0 20px 50px rgba(0,0,0,0.06);
-}
-.lp-base::before,
-.lp-base::after {
-  display: none;
-}
-
-/* ── SIDE PANELS (3D thickness + ports) ── */
-.lp-side-l,
-.lp-side-r {
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 7px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  z-index: 3;
-}
-.lp-side-l {
-  display: none;
-}
-.lp-side-r {
-  display: none;
-}
-.lp-port {
-  background: #2a2a2c;
-  box-shadow: inset 0 0.5px 1px rgba(0,0,0,0.4);
-}
-.lp-port-usbc { width: 5px; height: 2.5px; border-radius: 1.5px; }
-.lp-port-jack { width: 3px; height: 3px; border-radius: 50%; }
-.lp-port-hdmi { width: 5px; height: 3.5px; border-radius: 1px; }
-.lp-port-sd { width: 5px; height: 5px; border-radius: 1px; }
-
-/* keyboard area */
-.lp-base-inner {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
-  background: linear-gradient(180deg, rgba(0,0,0,0.03) 0%, transparent 100%);
-  border-radius: 4px;
-  padding: 4px;
-}
-.lp-speaker-l,
-.lp-speaker-r {
-  width: 20px;
-  flex-shrink: 0;
-  border-radius: 3px;
-  background-color: rgba(0,0,0,0.03);
-  background-image: radial-gradient(circle, rgba(0,0,0,0.2) 0.4px, transparent 0.4px);
-  background-size: 2.5px 2.5px;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
-}
-
-/* ── 3D KEYBOARD WITH KEYS ── */
-.lp-kb {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2.5px;
-  background: linear-gradient(180deg, #1a1a1c 0%, #151517 100%);
-  border-radius: 4px;
-  padding: 4px 3px;
-  box-shadow:
-    inset 0 1px 3px rgba(0,0,0,0.4),
-    inset 0 0 1px rgba(0,0,0,0.3),
-    0 0.5px 0 rgba(255,255,255,0.1);
-}
-.kb-row {
-  display: flex;
-  gap: 2.5px;
-}
-.ky {
-  flex: 1;
-  height: 28px;
-  background: linear-gradient(180deg, #3e3e42 0%, #353538 20%, #2e2e31 60%, #292929 100%);
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 0.32rem;
-  font-weight: 500;
-  color: rgba(255,255,255,0.6);
-  position: relative;
-  box-shadow:
-    0 0 0 0.5px rgba(0,0,0,0.6),
-    0 1.5px 0 0.5px rgba(0,0,0,0.55),
-    0 2px 1px rgba(0,0,0,0.25),
-    0 3px 3px rgba(0,0,0,0.1),
-    inset 0 1px 0 rgba(255,255,255,0.1),
-    inset 0 -0.5px 0 rgba(0,0,0,0.15);
-  cursor: default;
-  line-height: 1;
-  letter-spacing: 0;
-  text-shadow: 0 0.5px 1px rgba(0,0,0,0.5);
-  transform: translateY(-1px);
-}
-.ky::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 3px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 40%, rgba(0,0,0,0.05) 100%);
-  pointer-events: none;
-}
-.ky::after {
-  content: '';
-  position: absolute;
-  top: 1px; left: 2px; right: 2px;
-  height: 40%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 100%);
-  border-radius: 2px 2px 50% 50%;
-  pointer-events: none;
-}
-
-/* function row keys */
-.kf { height: 14px; font-size: 0.24rem; }
-.kf-b { height: 28px; font-size: 0.28rem; }
-.kw-esc { flex: 1.3; }
-.kw-pwr { flex: 1; font-size: 0.3rem; }
-.kw-del { flex: 1.5; }
-.kw-tab { flex: 1.5; }
-.kw-caps { flex: 1.75; }
-.kw-ret { flex: 2.1; }
-.kw-shift { flex: 2.2; }
-.kw-rshift { flex: 1.8; }
-.kw-cmd { flex: 1.25; }
-.kw-space { flex: 5.5; }
-
-/* arrow keys */
-.ky-arrows {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  flex: 2.5;
-}
-.ka-h {
-  height: 13px !important;
-  font-size: 0.22rem !important;
-}
-.ka-u { width: 50%; margin: 0 auto; }
-.ka-lr {
-  display: flex;
-  gap: 1px;
-}
-.ka-lr .ky { flex: 1; }
-
-/* trackpad */
-.lp-pad {
-  width: 46%;
-  aspect-ratio: 4/3;
-  margin: 40px auto 0;
-  background:
-    linear-gradient(180deg, #c8c8cc 0%, #c2c2c6 30%, #bcbcc0 70%, #b8b8bc 100%);
-  border-radius: 6px;
-  border: 0.5px solid rgba(0,0,0,0.12);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.5),
-    inset 0 -1px 2px rgba(0,0,0,0.04),
-    inset 0 0 4px rgba(0,0,0,0.03),
-    0 0.5px 0 rgba(255,255,255,0.3),
-    0 1px 3px rgba(0,0,0,0.06);
-  position: relative;
-}
-.lp-pad::after {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  border-radius: 5px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 30%, rgba(0,0,0,0.02) 100%);
-  pointer-events: none;
-}
-
-/* front scoop */
-.lp-scoop {
-  position: absolute;
-  bottom: -1px; left: 50%;
-  transform: translateX(-50%);
-  width: 16%;
-  height: 3px;
-  background: linear-gradient(180deg, #a0a0a5 0%, #b5b5ba 50%, #c0c0c5 100%);
-  border-radius: 0 0 6px 6px;
-  box-shadow:
-    inset 0 1px 1px rgba(0,0,0,0.1),
-    inset 0 -0.5px 0 rgba(255,255,255,0.2),
-    0 1px 2px rgba(0,0,0,0.08);
-}
-
-/* ── GROUND SHADOW ── */
-.lp-ground {
-  width: 100%;
-  height: 200px;
-  margin-top: -300px;
-  position: relative;
-  pointer-events: none;
-  z-index: -1;
-}
-/* parallelogram shadow — laptop outline cast to the right */
-.lp-ground::before {
-  content: '';
-  position: absolute;
-  top: 10px; left: 5%;
-  width: 140%;
-  height: 50px;
-  background: linear-gradient(to right, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.03) 80%, transparent 100%);
-  transform: skewX(-50deg);
-  transform-origin: top right;
-  filter: blur(6px);
-}
-.lp-ground::after {
-  content: '';
-  position: absolute;
-  top: 5px; left: 8%;
-  width: 130%;
-  height: 40px;
-  background: linear-gradient(to right, rgba(0,0,0,0.14) 0%, rgba(0,0,0,0.05) 50%, transparent 90%);
-  transform: skewX(-50deg);
-  transform-origin: top right;
-  filter: blur(14px);
-}
-.mac-ui {
-  background: var(--bg);
-  border-radius: 4px;
-  display: grid;
-  grid-template-columns: 120px 1fr;
-  height: 280px;
-  overflow: hidden;
-  font-family: var(--font);
-  -webkit-font-smoothing: subpixel-antialiased;
-}
-
-/* sidebar */
-.mac-sidebar {
-  background: var(--green-pale);
-  padding: 1rem 0.7rem;
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-.mac-logo {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--green-dark);
-  margin-bottom: 1rem;
-}
-.mac-nav-item {
-  font-size: 0.62rem;
-  font-weight: 600;
-  color: var(--text-mid);
-  padding: 0.35rem 0.6rem;
-  border-radius: 5px;
-  cursor: default;
-}
-.mac-nav-active {
-  background: var(--green-dark);
-  color: #fff;
-}
-
-/* main content */
-.mac-main {
-  padding: 1rem 1.1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-.mac-header { }
-.mac-greeting {
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 0.1rem;
-}
-.mac-level {
-  font-size: 0.58rem;
-  font-weight: 600;
-  color: var(--text-soft);
-}
-
-/* stats row */
-.mac-stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.4rem;
-}
-.mac-stat {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0.5rem;
-  text-align: center;
-  border-top: 2px solid var(--green);
-}
-.mac-stat-pink { border-top-color: var(--pink); }
-.mac-stat-num {
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1;
-}
-.mac-stat-label {
-  font-size: 0.48rem;
-  font-weight: 600;
-  color: var(--text-soft);
-  margin-top: 0.15rem;
-}
-
-/* charts */
-.mac-charts-row {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.4rem;
-}
-.mac-chart-card {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0.5rem 0.6rem;
-}
-.mac-chart-wide { }
-.mac-chart-full { }
-.mac-chart-title {
-  font-size: 0.52rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 0.35rem;
-}
-
-/* pie chart */
-.mac-pie {
-  position: relative;
-  width: 70px; height: 70px;
-  margin: 0 auto 0.3rem;
-}
-.mac-pie-svg { width: 100%; height: 100%; }
-.mac-pie-center {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text);
-}
-.mac-pie-legend {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-}
-.mac-legend-item {
-  font-size: 0.45rem;
-  font-weight: 600;
-  color: var(--text-mid);
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-.mac-dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  display: inline-block;
-}
-.mac-dot-green { background: var(--green); }
-.mac-dot-pink { background: var(--pink); }
-.mac-dot-gray { background: var(--border); }
-
-/* bar chart */
-.mac-bar-chart { display: flex; flex-direction: column; gap: 0.3rem; }
-.mac-bar-row { display: flex; align-items: center; gap: 0.4rem; }
-.mac-bar-label { font-size: 0.5rem; font-weight: 600; color: var(--text-mid); min-width: 42px; }
-.mac-bar-track { flex: 1; height: 5px; background: var(--border); border-radius: 999px; overflow: hidden; }
-.mac-bar-fill { height: 100%; background: var(--green); border-radius: 999px; }
-.mac-bar-pink { background: var(--pink); }
-.mac-bar-val { font-size: 0.48rem; font-weight: 700; color: var(--text-mid); min-width: 20px; text-align: right; }
-
-/* weekly activity chart */
-.mac-week-chart {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  height: 50px;
-  gap: 3px;
-}
-.mac-week-bar {
-  flex: 1;
-  height: var(--h);
-  background: var(--green);
-  border-radius: 3px 3px 0 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-  position: relative;
-}
-.mac-week-pink { background: var(--pink); }
-.mac-week-bar span {
-  font-size: 0.42rem;
-  font-weight: 700;
-  color: var(--text-soft);
-  position: absolute;
-  bottom: -10px;
-}
-
-.mac-card-progress {
-  height: 4px;
-  background: var(--border);
-  border-radius: 999px;
-  overflow: hidden;
-}
-.mac-card-fill {
-  height: 100%;
-  background: var(--pink);
-  border-radius: 999px;
+  display: block;
+  width: 100%; max-width: none; height: auto;
+  position: relative; top: 20px;
 }
 
 
@@ -1429,7 +961,16 @@ body { background-color: var(--bg); }
 @media (max-width: 900px) {
   .hero-split { grid-template-columns: 1fr; }
   .hero-left { margin-left: 0; margin-top: 0; padding-right: 0; min-width: 0; }
-  .hero-stats { flex-wrap: wrap; row-gap: 1rem; justify-content: center; width: 100%; }
+  /* Left-aligned like every other line in the hero. Centring only this row left the stats
+     floating off under a left-aligned headline and CTA. */
+  .hero-stats { flex-wrap: wrap; row-gap: 1rem; justify-content: flex-start; width: 100%; }
+  /* Stacked under the copy, so the mockup is a normal centred image with no bleed left to
+     spend. This reset used to live at 700px while the grid collapsed here, which left the
+     769–900px band — the narrowest the site is ever seen at, since m-redirect.js sends
+     anything 768px or under to the app — showing a 165%-wide laptop overhanging both edges
+     of a one-column layout and stretching the hero to 1748px tall. */
+  .lp-scene { margin-right: 0; }
+  .lp-mockup-img { width: 100%; max-width: 560px; margin: 0 auto; top: 0; }
   .stats-grid { grid-template-columns: 1fr; }
   .about-layout { grid-template-columns: 1fr; }
   .founder-layout { grid-template-columns: 1fr; }
@@ -1447,14 +988,6 @@ body { background-color: var(--bg); }
   .cc-prev { left: 0.5rem; }
   .cc-next { right: 0.5rem; }
   .l-hero { padding: 6rem 0 2.5rem; }
-  .lp-mockup-img { width: 100%; right: 0; top: 0; }
-  .mac-ui { grid-template-columns: 1fr; }
-  .mac-sidebar { display: none; }
-  .mac-stats-row { grid-template-columns: repeat(2, 1fr); }
-  .mac-charts-row { grid-template-columns: 1fr; }
-  .lp-body { transform: rotateX(-3deg) rotateY(8deg) rotateZ(-1deg); }
-  .lp-base { width: 104%; margin-left: -2%; }
-  .l-nav-inner { padding-left: 2rem; padding-right: 2rem; }
   .nav-logo-wrap { margin-left: 0; }
   .l-nav-links { display: none; }
   .l-nav-links.nav-open {
