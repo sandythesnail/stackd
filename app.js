@@ -21164,8 +21164,15 @@ function wireDeleteAccount() {
       // Point of no return.
       rowsGone = true;
       clearTimeout(supabaseSyncTimeout);
-      localStorage.removeItem('stackd_v2');
-      localStorage.removeItem('stackd_v2_owner');
+      // Guarded: the rows are already gone by this line, and a blocked-storage throw here
+      // would abandon the deletion before the Clerk user was removed — leaving the account
+      // in exactly the half-deleted state the ordering above exists to avoid.
+      try {
+        localStorage.removeItem('stackd_v2');
+        localStorage.removeItem('stackd_v2_owner');
+      } catch (e) {
+        warnLocalStorageUnavailable(e);
+      }
       // The baseline is a claim about a row that no longer exists, keyed to a user id that is
       // about to stop existing. It goes with the rest.
       clearCurrencyBaseline(userId);
@@ -21229,7 +21236,15 @@ function renderSettingsPage() {
       });
       if (!ok) return;
       clearTimeout(supabaseSyncTimeout);
-      localStorage.removeItem('stackd_v2');
+      // Clearing the local cache must not be able to abandon the reset. Unguarded, a browser
+      // with site data blocked threw here — after the confirm dialog and before the Supabase
+      // upsert — so "Reset everything" did nothing at all, silently, with the dialog already
+      // dismissed. The cloud row is the one that matters for a signed-in student anyway.
+      try {
+        localStorage.removeItem('stackd_v2');
+      } catch (e) {
+        warnLocalStorageUnavailable(e);
+      }
       if (window.stackdSupabase && window.Clerk?.user) {
         // Overwrite the synced row with fresh defaults via upsert (the same write path
         // saveState() already uses successfully) instead of deleting it. A delete can look
@@ -25693,7 +25708,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Reopen whichever page was active before a reload, instead of always dumping the user
   // back on Home (see LAST_PAGE_KEY/showPage above) — page-home is the only page marked
   // "active" in the static HTML, so anything else needs an explicit showPage swap first.
-  const lastPage = localStorage.getItem(LAST_PAGE_KEY) || 'home';
+  // Guarded for the same reason its matching WRITE is (see showPage): a browser with site
+  // data blocked throws on the read too, and this one sits in the middle of the boot
+  // sequence — everything after it, including showPage/renderPageContent and the
+  // maybeShowFirstTimeExperience handoff app-auth.js calls, simply never ran. Remembering
+  // the last page is a convenience; starting the app is not.
+  let lastPage = 'home';
+  try {
+    lastPage = localStorage.getItem(LAST_PAGE_KEY) || 'home';
+  } catch (e) {
+    warnLocalStorageUnavailable(e);
+  }
   showPage(lastPage);
   renderPageContent(lastPage);
 

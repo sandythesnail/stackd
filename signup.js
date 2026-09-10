@@ -47,8 +47,21 @@ window.addEventListener('load', async function () {
   // opening two different ?ref= links in separate tabs before finishing sign-up in either
   // used to let whichever tab loaded last silently overwrite the first tab's code — crediting
   // the wrong referrer with no error shown. First link wins instead of last-write-wins.
-  const refCode = new URLSearchParams(window.location.search).get('ref');
-  if (refCode && !localStorage.getItem('stackd_referral_code')) localStorage.setItem('stackd_referral_code', refCode);
+  //
+  // Guarded, and that matters more than the referral does: this runs BEFORE mountSignUp, and
+  // localStorage throws outright in a browser with site data blocked. Unguarded, the throw
+  // escaped an async load handler that has no outer catch, so the widget below never mounted
+  // — a blank sign-up page with no error and no retry, which is the exact failure the
+  // Clerk.load() catch at the top of this file was added to prevent. Losing a referral code
+  // is a missed reward; losing the form is a student who cannot create an account at all.
+  try {
+    const refCode = new URLSearchParams(window.location.search).get('ref');
+    if (refCode && !localStorage.getItem('stackd_referral_code')) {
+      localStorage.setItem('stackd_referral_code', refCode);
+    }
+  } catch (e) {
+    console.warn('Referral code could not be stored (site data blocked):', e);
+  }
 
   Clerk.mountSignUp(document.getElementById('clerk-sign-up'), {
     fallbackRedirectUrl: dest,
