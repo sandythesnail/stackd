@@ -364,7 +364,34 @@ function mergeSurvey(base: WebOnboardingSurvey | undefined, mobile: AppState): W
 }
 
 export function mobileToWeb(mobile: AppState, remote: WebState | null): WebState {
-  const base: WebState = remote ? { ...remote } : {};
+  /* A reset REPLACES the row. It does not merge onto it.
+   *
+   * Every other push in this function is deliberately additive: it merges onto the last-seen
+   * remote so web-only fields it doesn't understand survive, and questProgress only ever
+   * gains entries. A reset is the one case where that is exactly wrong, and it made "Reset
+   * all progress" a lie for anyone signed in.
+   *
+   * resetProgress sets local state to DEFAULT and leaves the ordinary debounced push to carry
+   * it up. That push merged the empty state onto a remote still holding every finished
+   * lesson, so the row kept its whole questProgress. The fresh resetToken did make the next
+   * device recognise a real reset — and then hydrateFromRemote rebuilt moduleProgress from
+   * that untouched questProgress and handed all of it straight back. Worse, the resetting
+   * phone got it back too: its own token now matched the row, so its next sign-in took the
+   * ordinary union path. Coins, XP and badges reset; every lesson you had ever finished, the
+   * assessment result, and the survey did not.
+   *
+   * The website's own reset has always done the right thing here — it upserts
+   * `{...DEFAULT_STATE, resetToken: Date.now()}`, a whole-row replacement. Dropping the base
+   * makes this push identical in effect, and every merge below then falls out correctly on
+   * its own: laterPostTest against nothing clears the assessment, mergeSurvey against nothing
+   * clears the survey, the tour flag stops being OR-ed with a stale true, and the three
+   * progress maps start empty. Web-only fields go too, which is the point — a reset is the
+   * one moment they are supposed to.
+   *
+   * Scoped by the same token comparison hydrateFromRemote uses, so this can only ever fire
+   * for a reset THIS device performed and the row has not seen yet. */
+  const isResetPush = (mobile.resetToken ?? 0) > (remote?.resetToken ?? 0);
+  const base: WebState = remote && !isResetPush ? { ...remote } : {};
 
   const completedLessons: Record<string, LessonRecord> = { ...(base.completedLessons ?? {}) };
   const completedModules: Record<string, LessonRecord> = { ...(base.completedModules ?? {}) };

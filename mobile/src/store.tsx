@@ -364,7 +364,9 @@ export type SavedLessonProgress = {
   savedAt: number;
 };
 
-const DEFAULT_STATE: AppState = {
+/** Exported so scripts/check-sync-roundtrip.js can build a realistic mobile state to push
+ * without hand-maintaining a second copy of this shape that would silently drift. */
+export const DEFAULT_STATE: AppState = {
   coins: 0,
   diamonds: 0,
   xp: 0,
